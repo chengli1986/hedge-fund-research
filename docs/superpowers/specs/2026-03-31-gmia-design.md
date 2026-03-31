@@ -133,8 +133,8 @@ Generates a static HTML page at `/var/www/overview/hedge-fund-research.html`.
 ## Cron Schedule
 
 ```
-# GMIA daily fetch + analyze + publish (05:00 BJT = 21:00 UTC)
-0 21 * * * ~/cron-wrapper.sh --name gmia-daily --timeout 600 --lock -- bash ~/hedge-fund-research/run_pipeline.sh >> ~/logs/gmia.log 2>&1
+# GMIA daily fetch + analyze + publish (03:45 BJT = 19:45 UTC)
+45 19 * * * ~/cron-wrapper.sh --name gmia-daily --timeout 600 --lock -- bash ~/hedge-fund-research/run_pipeline.sh >> ~/logs/gmia.log 2>&1
 ```
 
 `run_pipeline.sh` — sequential wrapper with gate enforcement:
@@ -157,7 +157,7 @@ python3 analyze_articles.py
 python3 publish.py
 ```
 
-05:00 BJT chosen to avoid collision with existing crons and ensure fresh data for morning reading.
+03:45 BJT chosen to avoid collision with existing crons (sap-nightly finishes by 19:15 UTC, us-close starts at 20:00 UTC on weekdays) and ensure fresh data for morning reading.
 
 **Concurrency safety**: `--lock` flag in cron-wrapper prevents overlapping runs. Combined with atomic file writes in Stage 2 and append-only JSONL in Stage 1/3, no concurrent or retried run can corrupt another run's artifacts.
 
@@ -291,8 +291,8 @@ Mark with `@pytest.mark.nightly`. On failure, send alert email (same pattern as 
 ### Cron Entry for Nightly Tests
 
 ```
-# GMIA nightly regression (04:00 BJT = 20:00 UTC, before 05:00 pipeline)
-0 20 * * * ~/cron-wrapper.sh --name gmia-nightly-test --timeout 300 --lock -- python3 -m pytest ~/hedge-fund-research/tests/ -m nightly --tb=short -q >> ~/logs/gmia-nightly.log 2>&1
+# GMIA nightly regression (03:30 BJT = 19:30 UTC, 15min before pipeline)
+30 19 * * * ~/cron-wrapper.sh --name gmia-nightly-test --timeout 300 --lock -- python3 -m pytest ~/hedge-fund-research/tests/ -m nightly --tb=short -q >> ~/logs/gmia-nightly.log 2>&1
 ```
 
 ### File Structure Update
