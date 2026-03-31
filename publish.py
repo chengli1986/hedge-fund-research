@@ -410,6 +410,7 @@ a:hover {{ text-decoration: underline; }}
 <div class="header">
   <div class="container">
     <div>
+      <a href="/" style="font-size:0.82rem;color:var(--text-muted);text-decoration:none;">&larr; <span class="lang-en">Back to Infrastructure</span><span class="lang-zh" style="display:none">返回基础设施</span></a>
       <h1><span class="lang-en">Hedge Fund Research Insights</span><span class="lang-zh" style="display:none">对冲基金研究洞察</span></h1>
       <div class="deck"><span class="lang-en">Bulletin-style research board for fast scanning across funds, themes, and daily flow.</span><span class="lang-zh" style="display:none">公告板式研究看板，快速扫描基金、主题与每日动态。</span></div>
       <div class="stats">
