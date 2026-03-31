@@ -174,6 +174,13 @@ hedge-fund-research/
 │   └── articles.jsonl            # Article metadata + summaries (gitignored)
 ├── templates/
 │   └── page_template.html        # HTML template for publish.py
+├── tests/                         # Test suite (4 tiers)
+│   ├── conftest.py
+│   ├── fixtures/                  # Saved HTML/JSON/PDF snapshots
+│   ├── test_unit_*.py             # Unit tests (fast, no network)
+│   ├── test_functional_*.py       # Functional tests (fixture data)
+│   ├── test_sanity.py             # Live smoke tests (@pytest.mark.live)
+│   └── test_regression.py         # Nightly regression (@pytest.mark.nightly)
 ├── logs/                          # Fetch/analysis logs (gitignored)
 ├── fetch_articles.py             # Stage 1: metadata scraper (existing)
 ├── fetch_content.py              # Stage 2: PDF/HTML content downloader
@@ -188,7 +195,127 @@ hedge-fund-research/
 
 Existing: `requests`, `beautifulsoup4`, `playwright`
 
-New: `pdfplumber` (PDF text extraction), `openai` (GPT-4.1 Mini fallback), `google-genai` or `google-generativeai` (Gemini 2.5 Pro), `anthropic` (Claude Sonnet fallback)
+New: `pdfplumber` (PDF text extraction), `openai` (GPT-4.1 Mini fallback), `google-genai` or `google-generativeai` (Gemini 2.5 Pro), `anthropic` (Claude Sonnet fallback), `pytest` (testing)
+
+## Testing Strategy
+
+Tests live in `tests/` directory, run via `pytest`. Four tiers:
+
+### Unit Tests (`tests/test_unit_*.py`)
+
+Fast, no network, no LLM calls. Mock all external dependencies.
+
+**Stage 1 — fetch_articles.py:**
+- `test_article_id_deterministic` — same source+URL always produces same ID
+- `test_article_id_unique` — different URLs produce different IDs
+- `test_parse_date_formats` — all supported date formats parse correctly (March 18, 2026 / 18 March 2026 / 2026-03-18 / etc.)
+- `test_parse_date_invalid` — garbage input returns None
+- `test_dedup_by_url` — duplicate URLs filtered, first occurrence kept
+- `test_hostname_validation_pass` — article URL matching `expected_hostname` accepted
+- `test_hostname_validation_reject` — mismatched hostname (e.g., oaktree.com URL in AQR source) rejected with SOURCE_MISMATCH
+- `test_hostname_validation_redirect` — URL that redirected to different host rejected
+- `test_load_existing_ids` — existing JSONL correctly parsed for dedup
+
+**Stage 2 — fetch_content.py:**
+- `test_pdf_content_type_validation` — non-PDF content-type rejected
+- `test_json_api_html_error_rejected` — HTML error page in JSON slot detected and rejected
+- `test_json_api_valid_response` — valid GMO JSON parsed correctly
+- `test_html_normalization_strips_chrome` — nav, footer, legal, cookie banners removed from HTML
+- `test_html_normalization_preserves_body` — article body text preserved after stripping
+- `test_min_content_length_gate` — content <100 chars rejected as failed
+- `test_atomic_write` — content written to .tmp first, then renamed (verify no partial files)
+- `test_content_status_failed_on_error` — fetch failure sets `content_status: "failed"` in JSONL
+
+**Stage 3 — analyze_articles.py:**
+- `test_skip_failed_content` — articles with `content_status: "failed"` skipped
+- `test_skip_already_summarized` — articles with `summarized: true` skipped
+- `test_skip_bridgewater` — Bridgewater articles (no content) skipped
+- `test_model_fallback_order` — Gemini failure triggers GPT-4.1 Mini, then Claude Sonnet
+- `test_all_models_fail` — article left as `summarized: false` when all models fail
+- `test_summary_output_schema` — LLM output parsed into correct fields (summary_en, summary_zh, themes, key_takeaway_en, key_takeaway_zh)
+- `test_theme_tags_from_predefined_list` — only tags from the predefined list accepted
+
+**Stage 4 — publish.py:**
+- `test_html_output_valid` — generated HTML passes basic structure checks (has <html>, <body>, required sections)
+- `test_bilingual_toggle` — both CN and EN content present in output
+- `test_timeline_sorted_by_date` — articles appear in reverse chronological order
+- `test_badge_colors_per_fund` — each fund gets its assigned badge color
+- `test_bridgewater_index_only_tag` — Bridgewater entries show "Index only" marker
+- `test_theme_grouping` — articles grouped correctly by theme tags
+- `test_empty_data_graceful` — publish still generates valid page with no articles
+
+### Functional Tests (`tests/test_functional_*.py`)
+
+Test each stage end-to-end with fixture data (saved HTML/JSON snapshots), no live network.
+
+- `test_man_group_parse_fixture` — parse saved Man Group HTML, verify correct titles/dates/summaries extracted
+- `test_bridgewater_parse_fixture` — parse saved Bridgewater HTML, verify titles/dates extracted
+- `test_aqr_parse_fixture` — parse saved AQR rendered HTML, verify titles/dates/categories
+- `test_gmo_api_parse_fixture` — parse saved GMO JSON API response, verify all fields
+- `test_oaktree_parse_fixture` — parse saved Oaktree rendered HTML, verify dedup of audio/text versions
+- `test_gmo_pdf_extraction_fixture` — extract text from a saved sample PDF, verify content
+- `test_full_pipeline_fixtures` — run all 4 stages with fixture data, verify final HTML output has correct articles
+
+**Fixture directory**: `tests/fixtures/` containing saved HTML pages, JSON responses, and sample PDFs per source.
+
+### Sanity Tests (`tests/test_sanity.py`)
+
+Quick smoke tests that hit live sites (run on-demand or nightly, not on every commit). Verify sources are still accessible and parsers produce non-empty results.
+
+- `test_man_group_live_reachable` — fetch Man Group, get ≥1 article with title and date
+- `test_bridgewater_live_reachable` — fetch Bridgewater, get ≥1 article with title
+- `test_aqr_live_reachable` — fetch AQR via Playwright, get ≥1 article with date
+- `test_gmo_api_live_reachable` — fetch GMO JSON API, get valid response with ≥1 article
+- `test_oaktree_live_reachable` — fetch Oaktree via Playwright, get ≥1 article with title and date
+- `test_config_valid` — sources.json loads, all required fields present, all source IDs have matching fetcher
+
+Mark with `@pytest.mark.live` — excluded from default `pytest` runs, included via `pytest -m live`.
+
+### Nightly Regression Tests (`tests/test_regression.py`)
+
+Run via cron (nightly at ~04:00 BJT, before the pipeline). Catch site changes that break parsers.
+
+- `test_man_group_article_count` — Man Group returns 3-10 articles (not 0, not 100+)
+- `test_bridgewater_article_count` — Bridgewater returns 5-20 articles
+- `test_aqr_article_count` — AQR returns 5-15 articles
+- `test_gmo_article_count` — GMO returns 5-15 articles
+- `test_oaktree_article_count` — Oaktree returns 5-20 articles
+- `test_all_articles_have_titles` — every article from every source has a non-empty title
+- `test_date_parsing_coverage` — ≥80% of articles have successfully parsed dates (not None)
+- `test_no_cross_source_contamination` — every article's URL hostname matches its source's `expected_hostname`
+- `test_gmo_api_returns_json` — GMO API returns valid JSON (not HTML error page)
+- `test_pipeline_dry_run` — full pipeline with `--dry-run` completes without error
+
+Mark with `@pytest.mark.nightly`. On failure, send alert email (same pattern as flight-search-cn nightly tests).
+
+### Cron Entry for Nightly Tests
+
+```
+# GMIA nightly regression (04:00 BJT = 20:00 UTC, before 05:00 pipeline)
+0 20 * * * ~/cron-wrapper.sh --name gmia-nightly-test --timeout 300 --lock -- python3 -m pytest ~/hedge-fund-research/tests/ -m nightly --tb=short -q >> ~/logs/gmia-nightly.log 2>&1
+```
+
+### File Structure Update
+
+```
+tests/
+├── conftest.py                    # Shared fixtures, pytest config
+├── fixtures/                      # Saved HTML/JSON/PDF snapshots
+│   ├── man-group-insights.html
+│   ├── bridgewater-research.html
+│   ├── aqr-research-rendered.html
+│   ├── gmo-api-response.json
+│   ├── oaktree-insights-rendered.html
+│   └── sample-research.pdf
+├── test_unit_fetch_articles.py
+├── test_unit_fetch_content.py
+├── test_unit_analyze.py
+├── test_unit_publish.py
+├── test_functional_parsers.py
+├── test_functional_pipeline.py
+├── test_sanity.py
+└── test_regression.py
+```
 
 ## Error Handling & Validation Strategy
 
