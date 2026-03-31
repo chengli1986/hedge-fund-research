@@ -40,6 +40,7 @@ CONFIG_FILE = BASE_DIR / "config" / "sources.json"
 DATA_FILE = BASE_DIR / "data" / "articles.jsonl"
 LOG_FILE = BASE_DIR / "logs" / "fetch.log"
 
+LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -377,6 +378,7 @@ def fetch_oaktree(source: dict) -> list[dict]:
     soup = BeautifulSoup(html, "html.parser")
 
     articles = []
+    expected_host = source.get("expected_hostname", "oaktreecapital.com")
     for item in soup.select("div.insight-item"):
         link = item.select_one("a[href]")
         if not link:
@@ -396,6 +398,9 @@ def fetch_oaktree(source: dict) -> list[dict]:
         if not href:
             continue
         url = urljoin("https://www.oaktreecapital.com", href)
+        if not _validate_hostname(url, expected_host):
+            log.warning("Oaktree: skipping external URL %s", url)
+            continue
 
         date_el = item.select_one("time.date")
         date_str = ""
@@ -456,21 +461,25 @@ def _strip_html_tags(text: str) -> str:
 
 
 def fetch_ark_invest(source: dict) -> list[dict]:
-    """Fetch white papers from ARK Invest RSS feed.
+    """Fetch research articles from ARK Invest RSS feed.
 
-    RSS 2.0 XML at /feed. Filters to 'White Papers' category only.
+    RSS 2.0 XML at /feed (999 items). Filters to high-value categories:
+    Analyst Research, Market Commentary, White Papers.
     pubDate is RFC 2822 format parsed via email.utils.parsedate_to_datetime.
     """
+    WANTED_CATEGORIES = {"analyst research", "market commentary", "white papers", "market insights"}
+
     resp = requests.get(source["url"], headers=HEADERS, timeout=30)
     resp.raise_for_status()
 
-    root = ET.fromstring(resp.text)
+    # Handle BOM
+    text = resp.text.lstrip("\ufeff")
+    root = ET.fromstring(text)
     articles = []
 
     for item in root.iter("item"):
-        # Filter to White Papers category only
         categories = [cat.text.strip() for cat in item.findall("category") if cat.text]
-        if not any("white paper" in c.lower() for c in categories):
+        if not any(c.lower() in WANTED_CATEGORIES for c in categories):
             continue
 
         title_el = item.find("title")
@@ -508,6 +517,8 @@ def fetch_ark_invest(source: dict) -> list[dict]:
             "summary": summary,
         })
 
+    # Sort by date descending (newest first) before truncating
+    articles.sort(key=lambda a: a.get("date") or "0000-00-00", reverse=True)
     return articles[:source.get("max_articles", 10)]
 
 

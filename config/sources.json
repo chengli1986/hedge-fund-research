@@ -59,7 +59,7 @@
       "id": "ark-invest",
       "name": "ARK Invest",
       "short_name": "ARK",
-      "url": "https://ark-invest.com/feed",
+      "url": "https://www.ark-invest.com/feed",
       "method": "rss",
       "frequency": "weekly",
       "expected_hostname": "ark-invest.com",
