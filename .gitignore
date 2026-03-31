@@ -10,3 +10,6 @@ gmo-raw.html
 # Codex debug artifacts
 *-snapshot.md
 *-response.json
+content/
+tests/fixtures/*.html
+tests/fixtures/*.json
