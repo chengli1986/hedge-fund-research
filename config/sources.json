@@ -1,0 +1,60 @@
+{
+  "sources": [
+    {
+      "id": "man-group",
+      "name": "Man Group",
+      "short_name": "Man",
+      "url": "https://www.man.com/insights",
+      "method": "ssr",
+      "frequency": "weekly",
+      "description": "Multi-strategy: macro, quant, credit. Known for AHL systematic trading.",
+      "notable_authors": ["Teun Draaisma", "Ed Cole", "Matthew Sherwood"]
+    },
+    {
+      "id": "bridgewater",
+      "name": "Bridgewater Associates",
+      "short_name": "Bridgewater",
+      "url": "https://www.bridgewater.com/research-and-insights",
+      "method": "ssr",
+      "frequency": "monthly",
+      "description": "World's largest hedge fund. Macro, risk parity, All Weather strategy.",
+      "notable_authors": ["Ray Dalio", "Bob Prince", "Greg Jensen", "Karen Karniol-Tambour"]
+    },
+    {
+      "id": "aqr",
+      "name": "AQR Capital Management",
+      "short_name": "AQR",
+      "url": "https://www.aqr.com/Insights/Research",
+      "method": "playwright",
+      "frequency": "monthly",
+      "description": "Quantitative investing pioneer. Factor investing, alternatives, tax-aware.",
+      "notable_authors": ["Cliff Asness", "Antti Ilmanen", "Jordan Brooks", "Ronen Israel"]
+    },
+    {
+      "id": "gmo",
+      "name": "GMO LLC",
+      "short_name": "GMO",
+      "url": "https://www.gmo.com/americas/research-library/",
+      "method": "api",
+      "frequency": "quarterly",
+      "description": "Value-oriented, contrarian. Famous for bubble calls and 7-Year forecasts.",
+      "notable_authors": ["Jeremy Grantham", "Ben Inker", "Tom Hancock", "John Pease"]
+    },
+    {
+      "id": "oaktree",
+      "name": "Oaktree Capital Management",
+      "short_name": "Oaktree",
+      "url": "https://www.oaktreecapital.com/insights",
+      "method": "playwright",
+      "frequency": "monthly",
+      "description": "Credit/distressed debt specialist. Howard Marks memos are legendary.",
+      "notable_authors": ["Howard Marks", "Bruce Karsh", "Armen Panossian"]
+    }
+  ],
+  "settings": {
+    "max_articles_per_source": 10,
+    "article_lookback_days": 90,
+    "data_dir": "data",
+    "log_dir": "logs"
+  }
+}
