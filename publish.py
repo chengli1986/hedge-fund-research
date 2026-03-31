@@ -121,7 +121,8 @@ def generate_html(articles: list[dict]) -> str:
         url = _esc(a.get("url", "#"))
         date = _esc(a.get("date", "n/a"))
         source_name = _esc(a.get("source_name", sid))
-        hidden = ' style="display:none" class="timeline-extra"' if i >= INITIAL_VISIBLE else ""
+        extra_class = " timeline-extra" if i >= INITIAL_VISIBLE else ""
+        hidden_style = ' style="display:none"' if i >= INITIAL_VISIBLE else ""
         theme_slugs = " ".join(_slugify_theme(t) for t in a.get("themes", [])) if a.get("themes") else "unthemed"
         row_classes = f'timeline-row source-{sid} {"summarized" if a.get("summarized") else "index-only-row"}'
         insight_toggle = ""
@@ -153,7 +154,7 @@ def generate_html(articles: list[dict]) -> str:
             summary_html = ""
 
         timeline_rows.append(
-            f"""<article class="{row_classes}" data-themes="{theme_slugs}"{hidden}>
+            f"""<article class="{row_classes}{extra_class}" data-themes="{theme_slugs}"{hidden_style}>
   <div class="row-main">
     <span class="badge" style="background:{color}">{source_name}</span>
     <span class="date">{date}</span>
