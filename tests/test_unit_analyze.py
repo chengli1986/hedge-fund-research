@@ -7,7 +7,9 @@ from analyze_articles import (
     _should_analyze,
     _parse_llm_output,
     _analyze_with_fallback,
+    _resolve_content_path,
     VALID_THEMES,
+    BASE_DIR,
 )
 
 
@@ -20,9 +22,9 @@ class TestShouldAnalyze:
         article = {"summarized": True, "content_status": "ok", "source_id": "gmo"}
         assert _should_analyze(article) is False
 
-    def test_skip_bridgewater(self):
+    def test_bridgewater_eligible_if_content_ok(self):
         article = {"summarized": False, "content_status": "ok", "source_id": "bridgewater"}
-        assert _should_analyze(article) is False
+        assert _should_analyze(article) is True
 
     def test_skip_failed_content(self):
         article = {"summarized": False, "content_status": "failed", "source_id": "gmo"}
@@ -206,3 +208,13 @@ class TestAnalyzeWithFallback:
         assert result is not None
         assert "gemini" not in call_order
         assert call_order[0] == "openai"
+
+
+class TestResolveContentPath:
+    def test_uses_explicit_relative_content_path(self):
+        article = {"id": "abc123", "content_path": "content/custom.txt"}
+        assert _resolve_content_path(article) == BASE_DIR / "content/custom.txt"
+
+    def test_falls_back_to_id_based_path(self):
+        article = {"id": "abc123"}
+        assert _resolve_content_path(article) == BASE_DIR / "content" / "abc123.txt"

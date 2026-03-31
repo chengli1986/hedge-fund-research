@@ -374,14 +374,42 @@ def _fetch_content_ark(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+def _fetch_content_bridgewater(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Bridgewater article content: requests (SSR) -> extract HTML article body.
+
+    Most articles are publicly accessible despite the disclaimer on some pages.
+    If a page returns a gate/registration form, the min content length check will reject it.
+    """
+    url = article["url"]
+    log.info("  Bridgewater: fetching article page %s", url)
+
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Bridgewater: failed to fetch article page: %s", e)
+        return None
+
+    text = _normalize_html(resp.text, "p")
+
+    if not _check_min_content_length(text):
+        log.warning("  Bridgewater: extracted text too short (%d chars) — may be gated", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Bridgewater: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
     "aqr": _fetch_content_aqr,
     "man-group": _fetch_content_man,
     "ark-invest": _fetch_content_ark,
+    "bridgewater": _fetch_content_bridgewater,
 }
-# Note: bridgewater is intentionally excluded (gated content)
 
 
 # ---------------------------------------------------------------------------

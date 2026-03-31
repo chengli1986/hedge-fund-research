@@ -201,8 +201,8 @@ class TestContentStatusOnFailure:
 # ---------------------------------------------------------------------------
 
 class TestContentFetchers:
-    def test_bridgewater_excluded(self):
-        assert "bridgewater" not in CONTENT_FETCHERS
+    def test_bridgewater_included(self):
+        assert "bridgewater" in CONTENT_FETCHERS
 
     def test_expected_sources_present(self):
         assert "gmo" in CONTENT_FETCHERS

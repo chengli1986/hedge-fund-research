@@ -167,8 +167,6 @@ def _should_analyze(article: dict) -> bool:
     """Return True if article is eligible for analysis."""
     if article.get("summarized"):
         return False
-    if article.get("source_id") == "bridgewater":
-        return False
     if article.get("content_status") != "ok":
         return False
     return True
@@ -298,6 +296,17 @@ def save_articles(articles: list[dict]) -> None:
         raise
 
 
+def _resolve_content_path(article: dict) -> Path:
+    """Resolve the on-disk content path from article metadata."""
+    stored_path = article.get("content_path", "").strip()
+    if stored_path:
+        content_path = Path(stored_path)
+        if not content_path.is_absolute():
+            content_path = BASE_DIR / content_path
+        return content_path
+    return CONTENT_DIR / f"{article['id']}.txt"
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -322,9 +331,10 @@ def main() -> None:
     fail_count = 0
 
     for a in pending:
-        content_path = CONTENT_DIR / f"{a['id']}.txt"
+        content_path = _resolve_content_path(a)
         if not content_path.exists():
             log.warning("Content file missing for %s: %s", a["id"], content_path)
+            a["content_status"] = "failed"
             fail_count += 1
             continue
 
