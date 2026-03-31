@@ -93,6 +93,13 @@ def parse_date(date_str: str) -> Optional[str]:
     return None
 
 
+def _validate_hostname(url: str, expected_hostname: str) -> bool:
+    """Check that a URL's hostname ends with the expected domain."""
+    from urllib.parse import urlparse
+    hostname = urlparse(url).hostname or ""
+    return hostname == expected_hostname or hostname.endswith("." + expected_hostname)
+
+
 # ---------------------------------------------------------------------------
 # SSR Fetchers (requests + BeautifulSoup)
 # ---------------------------------------------------------------------------
@@ -463,9 +470,15 @@ def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False) ->
         log.error("Failed to fetch %s: %s", source_id, e)
         return []
 
+    expected_host = source.get("expected_hostname", "")
+
     new_articles = []
     now = datetime.now(BJT).isoformat()
     for art in raw_articles:
+        if expected_host and not _validate_hostname(art["url"], expected_host):
+            log.warning("SOURCE_MISMATCH: %s article URL %s does not match expected host %s",
+                       source_id, art["url"], expected_host)
+            continue
         aid = article_id(source_id, art["url"])
         if aid in existing_ids:
             continue

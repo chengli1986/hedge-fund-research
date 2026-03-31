@@ -8,7 +8,8 @@
       "method": "ssr",
       "frequency": "weekly",
       "description": "Multi-strategy: macro, quant, credit. Known for AHL systematic trading.",
-      "notable_authors": ["Teun Draaisma", "Ed Cole", "Matthew Sherwood"]
+      "notable_authors": ["Teun Draaisma", "Ed Cole", "Matthew Sherwood"],
+      "expected_hostname": "man.com"
     },
     {
       "id": "bridgewater",
@@ -18,7 +19,8 @@
       "method": "ssr",
       "frequency": "monthly",
       "description": "World's largest hedge fund. Macro, risk parity, All Weather strategy.",
-      "notable_authors": ["Ray Dalio", "Bob Prince", "Greg Jensen", "Karen Karniol-Tambour"]
+      "notable_authors": ["Ray Dalio", "Bob Prince", "Greg Jensen", "Karen Karniol-Tambour"],
+      "expected_hostname": "bridgewater.com"
     },
     {
       "id": "aqr",
@@ -28,7 +30,8 @@
       "method": "playwright",
       "frequency": "monthly",
       "description": "Quantitative investing pioneer. Factor investing, alternatives, tax-aware.",
-      "notable_authors": ["Cliff Asness", "Antti Ilmanen", "Jordan Brooks", "Ronen Israel"]
+      "notable_authors": ["Cliff Asness", "Antti Ilmanen", "Jordan Brooks", "Ronen Israel"],
+      "expected_hostname": "aqr.com"
     },
     {
       "id": "gmo",
@@ -38,7 +41,8 @@
       "method": "api",
       "frequency": "quarterly",
       "description": "Value-oriented, contrarian. Famous for bubble calls and 7-Year forecasts.",
-      "notable_authors": ["Jeremy Grantham", "Ben Inker", "Tom Hancock", "John Pease"]
+      "notable_authors": ["Jeremy Grantham", "Ben Inker", "Tom Hancock", "John Pease"],
+      "expected_hostname": "gmo.com"
     },
     {
       "id": "oaktree",
@@ -48,7 +52,8 @@
       "method": "playwright",
       "frequency": "monthly",
       "description": "Credit/distressed debt specialist. Howard Marks memos are legendary.",
-      "notable_authors": ["Howard Marks", "Bruce Karsh", "Armen Panossian"]
+      "notable_authors": ["Howard Marks", "Bruce Karsh", "Armen Panossian"],
+      "expected_hostname": "oaktreecapital.com"
     }
   ],
   "settings": {
