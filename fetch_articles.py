@@ -8,6 +8,7 @@ Sources:
   - AQR (Playwright)
   - GMO (Playwright)
   - Oaktree Capital (Playwright)
+  - ARK Invest (RSS)
 
 Usage:
   python3 fetch_articles.py                  # fetch all sources
@@ -26,6 +27,9 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Optional
 from urllib.parse import urljoin
+
+import xml.etree.ElementTree as ET
+from email.utils import parsedate_to_datetime
 
 import requests
 from bs4 import BeautifulSoup
@@ -443,6 +447,71 @@ def fetch_oaktree(source: dict) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
+# RSS Fetchers
+# ---------------------------------------------------------------------------
+
+def _strip_html_tags(text: str) -> str:
+    """Remove HTML tags from a string."""
+    return re.sub(r"<[^>]+>", "", text).strip()
+
+
+def fetch_ark_invest(source: dict) -> list[dict]:
+    """Fetch white papers from ARK Invest RSS feed.
+
+    RSS 2.0 XML at /feed. Filters to 'White Papers' category only.
+    pubDate is RFC 2822 format parsed via email.utils.parsedate_to_datetime.
+    """
+    resp = requests.get(source["url"], headers=HEADERS, timeout=30)
+    resp.raise_for_status()
+
+    root = ET.fromstring(resp.text)
+    articles = []
+
+    for item in root.iter("item"):
+        # Filter to White Papers category only
+        categories = [cat.text.strip() for cat in item.findall("category") if cat.text]
+        if not any("white paper" in c.lower() for c in categories):
+            continue
+
+        title_el = item.find("title")
+        link_el = item.find("link")
+        pub_date_el = item.find("pubDate")
+        desc_el = item.find("description")
+
+        title = title_el.text.strip() if title_el is not None and title_el.text else ""
+        link = link_el.text.strip() if link_el is not None and link_el.text else ""
+        if not title or not link:
+            continue
+
+        parsed_date = None
+        date_raw = ""
+        if pub_date_el is not None and pub_date_el.text:
+            date_raw = pub_date_el.text.strip()
+            try:
+                dt = parsedate_to_datetime(date_raw)
+                parsed_date = dt.strftime("%Y-%m-%d")
+            except (ValueError, TypeError):
+                parsed_date = parse_date(date_raw)
+
+        summary = ""
+        if desc_el is not None and desc_el.text:
+            summary = _strip_html_tags(desc_el.text)
+
+        category = ", ".join(categories) if categories else ""
+
+        articles.append({
+            "title": title,
+            "url": link,
+            "date": parsed_date,
+            "date_raw": date_raw,
+            "category": category,
+            "summary": summary,
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
+# ---------------------------------------------------------------------------
 # Dispatcher
 # ---------------------------------------------------------------------------
 
@@ -452,6 +521,7 @@ FETCHERS = {
     "aqr": fetch_aqr,
     "gmo": fetch_gmo,
     "oaktree": fetch_oaktree,
+    "ark-invest": fetch_ark_invest,
 }
 
 

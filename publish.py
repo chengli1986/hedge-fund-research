@@ -27,6 +27,7 @@ BADGE_COLORS: dict[str, str] = {
     "aqr": "#3fb950",
     "gmo": "#bc8cff",
     "oaktree": "#f85149",
+    "ark-invest": "#ff6600",  # ARK orange
 }
 
 INITIAL_VISIBLE = 20
@@ -148,7 +149,7 @@ def generate_html(articles: list[dict]) -> str:
 
     # Fund cards
     fund_cards = []
-    source_order = ["man-group", "bridgewater", "aqr", "gmo", "oaktree"]
+    source_order = ["man-group", "bridgewater", "aqr", "gmo", "oaktree", "ark-invest"]
     for sid in source_order:
         src = sources.get(sid, {})
         color = BADGE_COLORS.get(sid, "#8b949e")

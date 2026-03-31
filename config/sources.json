@@ -54,6 +54,17 @@
       "description": "Credit/distressed debt specialist. Howard Marks memos are legendary.",
       "notable_authors": ["Howard Marks", "Bruce Karsh", "Armen Panossian"],
       "expected_hostname": "oaktreecapital.com"
+    },
+    {
+      "id": "ark-invest",
+      "name": "ARK Invest",
+      "short_name": "ARK",
+      "url": "https://ark-invest.com/feed",
+      "method": "rss",
+      "frequency": "weekly",
+      "expected_hostname": "ark-invest.com",
+      "description": "Disruptive innovation investing. AI, genomics, fintech, space, energy.",
+      "notable_authors": ["Cathie Wood", "Brett Winton", "Sam Korus"]
     }
   ],
   "settings": {

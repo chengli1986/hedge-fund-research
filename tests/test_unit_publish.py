@@ -78,7 +78,7 @@ class TestTimelineSorted:
 
 class TestBadgeColors:
     def test_badge_colors(self) -> None:
-        expected = {"man-group", "bridgewater", "aqr", "gmo", "oaktree"}
+        expected = {"man-group", "bridgewater", "aqr", "gmo", "oaktree", "ark-invest"}
         assert set(BADGE_COLORS.keys()) == expected
 
 
