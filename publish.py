@@ -70,14 +70,14 @@ def generate_html(articles: list[dict]) -> str:
     # Sort by date descending
     sorted_articles = sorted(
         articles,
-        key=lambda a: a.get("date", "1970-01-01"),
+        key=lambda a: a.get("date") or "1970-01-01",
         reverse=True,
     )
 
     # Stats
     total = len(sorted_articles)
     week_ago = (datetime.now(BJT) - timedelta(days=7)).strftime("%Y-%m-%d")
-    new_this_week = sum(1 for a in sorted_articles if a.get("date", "") >= week_ago)
+    new_this_week = sum(1 for a in sorted_articles if (a.get("date") or "") >= week_ago)
     fund_count = len(set(a.get("source_id", "") for a in sorted_articles)) or len(sources) or 5
 
     # Theme grouping (summarized articles only)

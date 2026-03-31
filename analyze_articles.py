@@ -200,7 +200,20 @@ def _parse_llm_output(raw: str) -> Optional[dict]:
 
     # Filter themes to valid set only
     if isinstance(data["themes"], list):
-        data["themes"] = [t for t in data["themes"] if t in VALID_THEMES]
+        # Fuzzy match themes: "Macro" → "Macro/Rates", "Oil" → "Oil/Energy", etc.
+        matched_themes = []
+        for t in data["themes"]:
+            if t in VALID_THEMES:
+                matched_themes.append(t)
+            else:
+                # Try partial match on first part before /
+                t_lower = t.lower().strip()
+                for valid in VALID_THEMES:
+                    parts = valid.lower().split("/")
+                    if t_lower in parts or any(t_lower.startswith(p) for p in parts):
+                        matched_themes.append(valid)
+                        break
+        data["themes"] = list(dict.fromkeys(matched_themes))  # deduplicate, preserve order
     else:
         data["themes"] = []
 

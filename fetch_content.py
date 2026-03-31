@@ -229,9 +229,15 @@ def _fetch_content_oaktree(article: dict) -> Optional[tuple[Path, str]]:
 
     # Look for PDF URL via openPDF() call or direct .pdf href
     pdf_url = None
-    pdf_match = re.search(r'openPDF\(["\']([^"\']+)["\']', html)
-    if pdf_match:
-        pdf_url = pdf_match.group(1)
+    # openPDF('title','url') — capture the second argument (URL)
+    # Find all PDF URLs, prefer English (no _JPN/_KRN/_SC/_TC suffix)
+    pdf_matches = re.findall(r"openPDF\(['\"][^'\"]+['\"],\s*['\"]([^'\"]+\.pdf[^'\"]*)['\"]", html)
+    for match in pdf_matches:
+        if not re.search(r"_(jpn|krn|sc|tc)\.", match, re.IGNORECASE):
+            pdf_url = match
+            break
+    if not pdf_url and pdf_matches:
+        pdf_url = pdf_matches[0]  # fallback to first match
     else:
         pdf_match = re.search(r'href=["\']([^"\']*\.pdf[^"\']*)["\']', html)
         if pdf_match:

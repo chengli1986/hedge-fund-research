@@ -7,3 +7,6 @@ data/
 *.log
 .DS_Store
 gmo-raw.html
+# Codex debug artifacts
+*-snapshot.md
+*-response.json
