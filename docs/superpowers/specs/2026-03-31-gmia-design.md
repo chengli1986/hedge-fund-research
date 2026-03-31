@@ -66,6 +66,8 @@ Downloads full article content for unsummarized articles.
 - PDF sources (GMO, Oaktree): extract text via pdfplumber, strip headers/footers/page numbers
 - This ensures Stage 3 (LLM) receives clean, structured input regardless of source, reducing token waste and improving analysis consistency across model fallbacks
 
+**Atomic file writes**: All content files are written to a temporary file first (`content/{id}.tmp`), then renamed to the final path (`content/{id}.pdf` or `.txt`) via `os.replace()`. This prevents partial writes from being read by Stage 3 if the pipeline crashes mid-download.
+
 **Output**: Sets `content_path` and `content_status` fields in articles.jsonl for each processed article.
 
 ### Stage 3: analyze_articles.py (new)
@@ -157,6 +159,8 @@ python3 publish.py
 
 05:00 BJT chosen to avoid collision with existing crons and ensure fresh data for morning reading.
 
+**Concurrency safety**: `--lock` flag in cron-wrapper prevents overlapping runs. Combined with atomic file writes in Stage 2 and append-only JSONL in Stage 1/3, no concurrent or retried run can corrupt another run's artifacts.
+
 ## File Structure
 
 ```
@@ -223,3 +227,13 @@ Review run via `/codex:adversarial-review` against the initial design. Verdict: 
 | 1 | Critical | Source identity not enforced — cross-source contamination possible | Added `expected_hostname` validation in Stage 1 exit gate |
 | 2 | High | Upstream fetch failures treated as usable payloads | Added hard validation gates in Stage 2 (HTTP status, content-type, schema, min content length) |
 | 3 | Medium | Raw page chrome/junk passed to LLM — token waste, inconsistent analysis | Added content normalization step in Stage 2 (source-specific CSS extraction, strip non-content HTML) |
+
+### Round 2 (2026-03-31)
+
+Verdict: **needs-attention**. Findings #1 and #2 were based on Codex's own debug artifacts (not pipeline output) and were already addressed in round 1. Finding #3 was a genuine new issue:
+
+| # | Severity | Finding | Resolution |
+|---|----------|---------|------------|
+| 1 | High | JSON slot accepts HTML error pages | Already resolved in round 1 (Stage 2 hard gates) |
+| 2 | High | Source provenance cross-contamination | Already resolved in round 1 (`expected_hostname`) |
+| 3 | Medium | Concurrent/retried runs can overwrite files — stale artifact reuse | Added: cron-wrapper `--lock` prevents concurrent runs, Stage 2 uses atomic temp-file + `os.replace()` writes |
