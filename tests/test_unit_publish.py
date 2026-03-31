@@ -1,8 +1,9 @@
 """Unit tests for publish.py — Stage 4 HTML dashboard."""
 
+from pathlib import Path
 import pytest
 
-from publish import BADGE_COLORS, generate_html
+from publish import BADGE_COLORS, generate_html, publish_html
 
 # --- Sample data ---
 
@@ -54,15 +55,16 @@ class TestHtmlOutputValid:
         assert "<body>" in result
         assert "</html>" in result
         assert "<!DOCTYPE html>" in result
+        assert "Bulletin Feed" in result
+        assert "Funds" in result
+        assert "Themes" in result
 
 
 class TestBilingualContent:
     def test_bilingual_content_present(self) -> None:
         result = generate_html(SAMPLE_ARTICLES)
-        # EN summaries
         assert "AI valuations face mean reversion risk." in result
         assert "Man Group analyzes AI investment cycle risks." in result
-        # ZH summaries
         assert "AI估值面临均值回归风险。" in result
         assert "Man Group分析了AI投资周期的风险。" in result
 
@@ -85,7 +87,7 @@ class TestBadgeColors:
 class TestIndexOnly:
     def test_bridgewater_index_only(self) -> None:
         result = generate_html(SAMPLE_ARTICLES)
-        assert "Index only" in result
+        assert 'class="index-chip">Index</span>' in result
 
 
 class TestThemeGrouping:
@@ -94,6 +96,19 @@ class TestThemeGrouping:
         assert "AI/Tech" in result
         assert "China/EM" in result
         assert "Equities/Value" in result
+        assert "filter-pill" in result
+
+
+class TestBulletinLayout:
+    def test_summary_is_in_collapsible_panel(self) -> None:
+        result = generate_html(SAMPLE_ARTICLES)
+        assert 'class="summary-panel"' in result
+        assert 'class="row-toggle"' in result
+
+    def test_sidebar_fund_panels_present(self) -> None:
+        result = generate_html(SAMPLE_ARTICLES)
+        assert 'class="fund-panel"' in result
+        assert "tracked" in result
 
 
 class TestEmptyArticles:
@@ -102,3 +117,13 @@ class TestEmptyArticles:
         assert "<html" in result
         assert "</html>" in result
         assert "0 articles" in result
+
+
+class TestPublishHtml:
+    def test_writes_html_and_gzip(self, tmp_path) -> None:
+        output = tmp_path / "dashboard.html"
+        gzip_path = publish_html(output, "<html>ok</html>")
+
+        assert output.read_text(encoding="utf-8") == "<html>ok</html>"
+        assert gzip_path == Path(str(output) + ".gz")
+        assert gzip_path.exists()

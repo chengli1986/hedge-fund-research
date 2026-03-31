@@ -1,8 +1,9 @@
 """Unit tests for fetch_articles.py — article_id, parse_date, _validate_hostname, load_existing_ids."""
 
 import json
+from unittest.mock import MagicMock, patch
 import pytest
-from fetch_articles import article_id, parse_date, _validate_hostname, load_existing_ids, DATA_FILE
+from fetch_articles import article_id, parse_date, _validate_hostname, load_existing_ids, fetch_oaktree, DATA_FILE
 
 
 # ---------------------------------------------------------------------------
@@ -128,3 +129,43 @@ class TestLoadExistingIds:
         monkeypatch.setattr("fetch_articles.DATA_FILE", jsonl_file)
         ids = load_existing_ids()
         assert ids == {"good", "also_good"}
+
+
+class TestFetchOaktree:
+    def test_filters_external_links_before_truncation(self):
+        html = """
+        <div class="insight-item">
+          <a href="https://www.bloomberg.com/news/videos/foo">
+            <span class="title-link">External Video</span>
+            <span class="read-more">Watch</span>
+            <time class="date" datetime="2026-03-13T00:00:00Z">March 13, 2026</time>
+          </a>
+        </div>
+        <div class="insight-item">
+          <a href="/insights/memo-one">
+            <span class="title-link">Memo One</span>
+            <span class="read-more">Read</span>
+            <time class="date" datetime="2026-03-14T00:00:00Z">March 14, 2026</time>
+          </a>
+        </div>
+        <div class="insight-item">
+          <a href="/insights/memo-two">
+            <span class="title-link">Memo Two</span>
+            <span class="read-more">Read</span>
+            <time class="date" datetime="2026-03-15T00:00:00Z">March 15, 2026</time>
+          </a>
+        </div>
+        """
+        source = {
+            "id": "oaktree",
+            "url": "https://www.oaktreecapital.com/insights",
+            "max_articles": 2,
+            "expected_hostname": "oaktreecapital.com",
+        }
+
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_oaktree(source)
+
+        assert len(articles) == 2
+        assert [a["title"] for a in articles] == ["Memo One", "Memo Two"]
+        assert all("oaktreecapital.com" in a["url"] for a in articles)
