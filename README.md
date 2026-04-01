@@ -42,13 +42,32 @@ python3 fetch_articles.py --dry-run
 python3 fetch_articles.py --list
 ```
 
-## Tests
+## Entrypoint Management
 
-89 tests passing — functional parser tests with saved HTML/JSON fixtures.
+Three-layer architecture for resilient research URL management:
+
+1. **Fixed entrypoints** (`config/entrypoints.json`) — verified URLs used for daily fetching
+2. **Inspection** — quality metrics in `config/inspection_state.json`, warns on anomalies (consecutive zeros, high gate ratio, domain drift)
+3. **Discovery** — `discover_entrypoints.py` scans homepages and scores candidate URLs (domain/path/structure/gate)
 
 ```bash
-python3 -m pytest tests/ -q --ignore=tests/test_sanity.py --ignore=tests/test_regression.py
+# Discover new entrypoints (dry-run)
+python3 discover_entrypoints.py --source bridgewater
+
+# Write discovered entrypoints to config
+python3 discover_entrypoints.py --source bridgewater --write
+
+# Validate existing entrypoints
+python3 validate_entrypoints.py
+python3 validate_entrypoints.py --source gmo --fix
 ```
+
+## Tests
+
+151 tests passing — unit, functional, and integration tests.
+
+```bash
+python3 -m pytest tests/ -q
 
 ## Requirements
 
@@ -61,3 +80,5 @@ python3 -m pytest tests/ -q --ignore=tests/test_sanity.py --ignore=tests/test_re
 - `data/articles.jsonl` — 61 articles (metadata + summaries), gitignored
 - `content/*.txt` — fetched article content files
 - `config/sources.json` — source configuration
+- `config/entrypoints.json` — verified entrypoint URLs per source
+- `config/inspection_state.json` — fetch quality metrics for anomaly detection
