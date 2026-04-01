@@ -37,6 +37,8 @@ from bs4 import BeautifulSoup
 BJT = timezone(timedelta(hours=8))
 BASE_DIR = Path(__file__).resolve().parent
 CONFIG_FILE = BASE_DIR / "config" / "sources.json"
+ENTRYPOINTS_FILE = BASE_DIR / "config" / "entrypoints.json"
+INSPECTION_STATE_FILE = BASE_DIR / "config" / "inspection_state.json"
 DATA_FILE = BASE_DIR / "data" / "articles.jsonl"
 LOG_FILE = BASE_DIR / "logs" / "fetch.log"
 
@@ -75,6 +77,72 @@ def load_existing_ids() -> set[str]:
                 except (json.JSONDecodeError, KeyError):
                     continue
     return ids
+
+
+def load_entrypoints() -> dict:
+    """Load entrypoints config. Returns empty structure if file missing."""
+    if ENTRYPOINTS_FILE.exists():
+        try:
+            return json.loads(ENTRYPOINTS_FILE.read_text())
+        except (json.JSONDecodeError, KeyError):
+            log.warning("Failed to parse %s, using empty entrypoints", ENTRYPOINTS_FILE)
+    return {"version": 1, "sources": {}}
+
+
+def get_source_url(source: dict, entrypoints: dict) -> str:
+    """Get the best URL for a source: active entrypoint > sources.json fallback."""
+    source_id = source["id"]
+    ep_source = entrypoints.get("sources", {}).get(source_id, {})
+    for ep in ep_source.get("entrypoints", []):
+        if ep.get("active", False):
+            return ep["url"]
+    return source["url"]
+
+
+def record_quality_metrics(source_id: str, total_found: int, new_count: int,
+                           gated_count: int, mismatch_count: int) -> None:
+    """Record fetch quality metrics to inspection_state.json."""
+    state: dict = {}
+    if INSPECTION_STATE_FILE.exists():
+        try:
+            state = json.loads(INSPECTION_STATE_FILE.read_text())
+        except json.JSONDecodeError:
+            state = {}
+
+    prev = state.get(source_id, {})
+    consecutive_zero = prev.get("consecutive_zero_count", 0)
+    if total_found == 0:
+        consecutive_zero += 1
+    else:
+        consecutive_zero = 0
+
+    gated_ratio = gated_count / max(total_found, 1)
+    valid_body_ratio = 1.0 - gated_ratio
+
+    state[source_id] = {
+        "last_inspected_at": datetime.now(timezone.utc).isoformat(),
+        "consecutive_zero_count": consecutive_zero,
+        "last_article_count": total_found,
+        "last_valid_body_ratio": round(valid_body_ratio, 2),
+        "last_gated_ratio": round(gated_ratio, 2),
+        "last_mismatch_count": mismatch_count,
+    }
+
+    INSPECTION_STATE_FILE.write_text(json.dumps(state, indent=2, ensure_ascii=False))
+
+
+def check_anomalies(metrics: dict) -> list[str]:
+    """Check metrics for anomaly conditions. Returns list of alert messages."""
+    alerts: list[str] = []
+    if metrics.get("consecutive_zero_count", 0) >= 2:
+        alerts.append("Consecutive zero articles detected — entrypoint may be broken")
+    if metrics.get("last_gated_ratio", 0) > 0.5:
+        alerts.append("High gated page ratio (>50%) — entrypoint may point to gated content")
+    if metrics.get("last_valid_body_ratio", 1.0) < 0.3:
+        alerts.append("Low valid body ratio (<30%) — content extraction failing")
+    if metrics.get("last_mismatch_count", 0) > 3:
+        alerts.append("High source mismatch count (>3) — entrypoint may have drifted")
+    return alerts
 
 
 def parse_date(date_str: str) -> Optional[str]:
@@ -554,12 +622,17 @@ def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False) ->
     expected_host = source.get("expected_hostname", "")
 
     new_articles = []
+    mismatch_count = 0
+    gated_count = 0
     now = datetime.now(BJT).isoformat()
     for art in raw_articles:
         if expected_host and not _validate_hostname(art["url"], expected_host):
             log.warning("SOURCE_MISMATCH: %s article URL %s does not match expected host %s",
                        source_id, art["url"], expected_host)
+            mismatch_count += 1
             continue
+        if art.get("gated"):
+            gated_count += 1
         aid = article_id(source_id, art["url"])
         if aid in existing_ids:
             continue
@@ -581,6 +654,10 @@ def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False) ->
         len(raw_articles),
         len(new_articles),
     )
+
+    # Record quality metrics for inspection
+    record_quality_metrics(source_id, len(raw_articles), len(new_articles),
+                           gated_count, mismatch_count)
 
     if dry_run:
         for a in new_articles:
@@ -612,14 +689,30 @@ def main() -> None:
         return
 
     existing_ids = load_existing_ids()
+    entrypoints = load_entrypoints()
     all_new: list[dict] = []
 
     for source in sources:
         if args.source and source["id"] != args.source:
             continue
+        # Use entrypoint URL if available, fallback to sources.json
+        source = dict(source)  # copy to avoid mutating config
+        source["url"] = get_source_url(source, entrypoints)
+
         new = fetch_source(source, existing_ids, dry_run=args.dry_run)
         all_new.extend(new)
         existing_ids.update(a["id"] for a in new)
+
+        # Check for anomalies after fetch
+        if INSPECTION_STATE_FILE.exists():
+            try:
+                state = json.loads(INSPECTION_STATE_FILE.read_text())
+                source_metrics = state.get(source["id"], {})
+                for alert in check_anomalies(source_metrics):
+                    log.warning("ANOMALY [%s]: %s", source["id"], alert)
+            except json.JSONDecodeError:
+                pass
+
         # Rate-limit between sources
         if source != sources[-1]:
             time.sleep(2)

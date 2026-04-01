@@ -1,9 +1,12 @@
-"""Unit tests for fetch_articles.py — article_id, parse_date, _validate_hostname, load_existing_ids."""
+"""Unit tests for fetch_articles.py — article_id, parse_date, _validate_hostname, load_existing_ids, entrypoints."""
 
 import json
 from unittest.mock import MagicMock, patch
 import pytest
-from fetch_articles import article_id, parse_date, _validate_hostname, load_existing_ids, fetch_oaktree, DATA_FILE
+from fetch_articles import (
+    article_id, parse_date, _validate_hostname, load_existing_ids, fetch_oaktree, DATA_FILE,
+    load_entrypoints, get_source_url, record_quality_metrics, check_anomalies,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -169,3 +172,108 @@ class TestFetchOaktree:
         assert len(articles) == 2
         assert [a["title"] for a in articles] == ["Memo One", "Memo Two"]
         assert all("oaktreecapital.com" in a["url"] for a in articles)
+
+
+# ---------------------------------------------------------------------------
+# Entrypoints integration
+# ---------------------------------------------------------------------------
+
+class TestLoadEntrypoints:
+    def test_loads_from_file(self, tmp_path, monkeypatch):
+        ep_file = tmp_path / "entrypoints.json"
+        ep_file.write_text(json.dumps({
+            "version": 1,
+            "sources": {
+                "aqr": {
+                    "entrypoints": [
+                        {"url": "https://www.aqr.com/new-research", "content_type": "research_index",
+                         "confidence": 0.9, "active": True}
+                    ]
+                }
+            }
+        }))
+        monkeypatch.setattr("fetch_articles.ENTRYPOINTS_FILE", ep_file)
+        ep = load_entrypoints()
+        assert "aqr" in ep["sources"]
+
+    def test_missing_file_returns_empty(self, tmp_path, monkeypatch):
+        monkeypatch.setattr("fetch_articles.ENTRYPOINTS_FILE", tmp_path / "nope.json")
+        ep = load_entrypoints()
+        assert ep == {"version": 1, "sources": {}}
+
+
+class TestGetSourceUrl:
+    def test_uses_entrypoint_when_available(self):
+        ep = {"version": 1, "sources": {
+            "aqr": {"entrypoints": [
+                {"url": "https://www.aqr.com/new", "active": True, "confidence": 0.9, "content_type": "research_index"}
+            ]}
+        }}
+        source = {"id": "aqr", "url": "https://www.aqr.com/old"}
+        assert get_source_url(source, ep) == "https://www.aqr.com/new"
+
+    def test_fallback_to_source_url(self):
+        ep = {"version": 1, "sources": {}}
+        source = {"id": "aqr", "url": "https://www.aqr.com/old"}
+        assert get_source_url(source, ep) == "https://www.aqr.com/old"
+
+    def test_skips_inactive_entrypoint(self):
+        ep = {"version": 1, "sources": {
+            "aqr": {"entrypoints": [
+                {"url": "https://www.aqr.com/new", "active": False, "confidence": 0.9, "content_type": "research_index"}
+            ]}
+        }}
+        source = {"id": "aqr", "url": "https://www.aqr.com/old"}
+        assert get_source_url(source, ep) == "https://www.aqr.com/old"
+
+
+class TestRecordQualityMetrics:
+    def test_records_metrics(self, tmp_path, monkeypatch):
+        state_file = tmp_path / "inspection_state.json"
+        state_file.write_text("{}")
+        monkeypatch.setattr("fetch_articles.INSPECTION_STATE_FILE", state_file)
+        record_quality_metrics("aqr", total_found=5, new_count=3, gated_count=0, mismatch_count=0)
+        state = json.loads(state_file.read_text())
+        assert state["aqr"]["last_article_count"] == 5
+        assert state["aqr"]["consecutive_zero_count"] == 0
+
+    def test_increments_consecutive_zero(self, tmp_path, monkeypatch):
+        state_file = tmp_path / "inspection_state.json"
+        state_file.write_text(json.dumps({"aqr": {"consecutive_zero_count": 1, "last_article_count": 0}}))
+        monkeypatch.setattr("fetch_articles.INSPECTION_STATE_FILE", state_file)
+        record_quality_metrics("aqr", total_found=0, new_count=0, gated_count=0, mismatch_count=0)
+        state = json.loads(state_file.read_text())
+        assert state["aqr"]["consecutive_zero_count"] == 2
+
+    def test_resets_consecutive_zero_on_success(self, tmp_path, monkeypatch):
+        state_file = tmp_path / "inspection_state.json"
+        state_file.write_text(json.dumps({"aqr": {"consecutive_zero_count": 3, "last_article_count": 0}}))
+        monkeypatch.setattr("fetch_articles.INSPECTION_STATE_FILE", state_file)
+        record_quality_metrics("aqr", total_found=5, new_count=2, gated_count=0, mismatch_count=0)
+        state = json.loads(state_file.read_text())
+        assert state["aqr"]["consecutive_zero_count"] == 0
+
+
+class TestCheckAnomalies:
+    def test_no_anomaly(self):
+        metrics = {"consecutive_zero_count": 0, "last_article_count": 5,
+                   "last_valid_body_ratio": 0.8, "last_gated_ratio": 0.0, "last_mismatch_count": 0}
+        assert check_anomalies(metrics) == []
+
+    def test_consecutive_zero(self):
+        metrics = {"consecutive_zero_count": 2, "last_article_count": 0,
+                   "last_valid_body_ratio": 1.0, "last_gated_ratio": 0.0, "last_mismatch_count": 0}
+        alerts = check_anomalies(metrics)
+        assert any("zero" in a.lower() for a in alerts)
+
+    def test_high_gated_ratio(self):
+        metrics = {"consecutive_zero_count": 0, "last_article_count": 10,
+                   "last_valid_body_ratio": 0.4, "last_gated_ratio": 0.6, "last_mismatch_count": 0}
+        alerts = check_anomalies(metrics)
+        assert any("gated" in a.lower() for a in alerts)
+
+    def test_high_mismatch(self):
+        metrics = {"consecutive_zero_count": 0, "last_article_count": 10,
+                   "last_valid_body_ratio": 0.8, "last_gated_ratio": 0.0, "last_mismatch_count": 5}
+        alerts = check_anomalies(metrics)
+        assert any("mismatch" in a.lower() for a in alerts)
