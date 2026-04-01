@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "sources": {
+    "man-group": {
+      "last_verified_at": "2026-04-02T00:00:00Z",
+      "verified_by": "manual",
+      "entrypoints": [
+        {
+          "url": "https://www.man.com/insights",
+          "content_type": "research_index",
+          "confidence": 0.95,
+          "active": true
+        }
+      ],
+      "rejected_pages": []
+    },
+    "bridgewater": {
+      "last_verified_at": "2026-04-02T00:00:00Z",
+      "verified_by": "manual",
+      "entrypoints": [
+        {
+          "url": "https://www.bridgewater.com/research-and-insights",
+          "content_type": "research_index",
+          "confidence": 0.95,
+          "active": true
+        }
+      ],
+      "rejected_pages": []
+    },
+    "aqr": {
+      "last_verified_at": "2026-04-02T00:00:00Z",
+      "verified_by": "manual",
+      "entrypoints": [
+        {
+          "url": "https://www.aqr.com/Insights/Research",
+          "content_type": "research_index",
+          "confidence": 0.95,
+          "active": true
+        }
+      ],
+      "rejected_pages": []
+    },
+    "gmo": {
+      "last_verified_at": "2026-04-02T00:00:00Z",
+      "verified_by": "manual",
+      "entrypoints": [
+        {
+          "url": "https://www.gmo.com/americas/research-library/",
+          "content_type": "research_index",
+          "confidence": 0.95,
+          "active": true
+        }
+      ],
+      "rejected_pages": []
+    },
+    "oaktree": {
+      "last_verified_at": "2026-04-02T00:00:00Z",
+      "verified_by": "manual",
+      "entrypoints": [
+        {
+          "url": "https://www.oaktreecapital.com/insights",
+          "content_type": "research_index",
+          "confidence": 0.95,
+          "active": true
+        }
+      ],
+      "rejected_pages": []
+    },
+    "ark-invest": {
+      "last_verified_at": "2026-04-02T00:00:00Z",
+      "verified_by": "manual",
+      "entrypoints": [
+        {
+          "url": "https://www.ark-invest.com/feed",
+          "content_type": "rss_feed",
+          "confidence": 0.95,
+          "active": true
+        }
+      ],
+      "rejected_pages": []
+    }
+  }
+}
