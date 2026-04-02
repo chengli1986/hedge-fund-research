@@ -218,3 +218,13 @@ class TestResolveContentPath:
     def test_falls_back_to_id_based_path(self):
         article = {"id": "abc123"}
         assert _resolve_content_path(article) == BASE_DIR / "content" / "abc123.txt"
+
+    def test_rejects_path_traversal(self):
+        article = {"id": "abc123", "content_path": "../../escape.txt"}
+        with pytest.raises(ValueError):
+            _resolve_content_path(article)
+
+    def test_rejects_absolute_path_outside_content_dir(self):
+        article = {"id": "abc123", "content_path": "/tmp/escape.txt"}
+        with pytest.raises(ValueError):
+            _resolve_content_path(article)

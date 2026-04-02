@@ -1,1 +1,50 @@
-{}
+{
+  "man-group": {
+    "last_inspected_at": "2026-04-01T19:45:03.353043+00:00",
+    "consecutive_zero_count": 0,
+    "last_article_count": 6,
+    "last_valid_body_ratio": 1.0,
+    "last_gated_ratio": 0.0,
+    "last_mismatch_count": 0
+  },
+  "bridgewater": {
+    "last_inspected_at": "2026-04-01T19:45:05.842833+00:00",
+    "consecutive_zero_count": 0,
+    "last_article_count": 10,
+    "last_valid_body_ratio": 1.0,
+    "last_gated_ratio": 0.0,
+    "last_mismatch_count": 0
+  },
+  "aqr": {
+    "last_inspected_at": "2026-04-01T19:45:15.886850+00:00",
+    "consecutive_zero_count": 0,
+    "last_article_count": 10,
+    "last_valid_body_ratio": 1.0,
+    "last_gated_ratio": 0.0,
+    "last_mismatch_count": 0
+  },
+  "gmo": {
+    "last_inspected_at": "2026-04-01T19:45:18.349581+00:00",
+    "consecutive_zero_count": 0,
+    "last_article_count": 10,
+    "last_valid_body_ratio": 1.0,
+    "last_gated_ratio": 0.0,
+    "last_mismatch_count": 0
+  },
+  "oaktree": {
+    "last_inspected_at": "2026-04-01T19:45:27.145009+00:00",
+    "consecutive_zero_count": 0,
+    "last_article_count": 10,
+    "last_valid_body_ratio": 1.0,
+    "last_gated_ratio": 0.0,
+    "last_mismatch_count": 0
+  },
+  "ark-invest": {
+    "last_inspected_at": "2026-04-01T19:45:29.378082+00:00",
+    "consecutive_zero_count": 0,
+    "last_article_count": 10,
+    "last_valid_body_ratio": 1.0,
+    "last_gated_ratio": 0.0,
+    "last_mismatch_count": 0
+  }
+}

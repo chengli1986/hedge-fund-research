@@ -117,6 +117,74 @@ def _normalize_html(html: str, selector: str) -> str:
     return text
 
 
+def _normalize_whitespace(text: str) -> str:
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _looks_like_bridgewater_gate(text: str) -> bool:
+    """Detect common bridge/gate/disclaimer pages so we do not store them as正文."""
+    lowered = _normalize_whitespace(text).lower()
+    gate_markers = (
+        "subscribe to read",
+        "sign up to read",
+        "register to continue",
+        "register to read",
+        "log in to continue",
+        "log in to read",
+        "accept all cookies",
+        "cookie preferences",
+        "manage cookies",
+        "manage preferences",
+        "privacy policy",
+        "terms of use",
+    )
+    disclaimer_markers = (
+        "this content is available",
+        "bridgewater associates",
+        "disclaimer",
+    )
+    return any(marker in lowered for marker in gate_markers + disclaimer_markers)
+
+
+def _extract_bridgewater_text(html: str) -> Optional[str]:
+    """Extract Bridgewater article text from article-like containers only."""
+    soup = BeautifulSoup(html, "html.parser")
+
+    for tag in soup.select("nav, footer, header, script, style, .cookie, .modal, .pagination, .disclaimer, .subscribe, form"):
+        tag.decompose()
+
+    selectors = [
+        "article",
+        "article p",
+        "main article",
+        "main article p",
+        ".article-body",
+        ".article-body p",
+        ".rich-text",
+        ".rich-text p",
+        ".content-body",
+        ".content-body p",
+        ".body-content",
+        ".body-content p",
+        ".content",
+        ".content p",
+    ]
+
+    for selector in selectors:
+        elements = soup.select(selector)
+        if not elements:
+            continue
+        text = "\n".join(_normalize_whitespace(el.get_text(" ", strip=True)) for el in elements)
+        text = _normalize_whitespace(text)
+        if len(text) < MIN_CONTENT_LENGTH:
+            continue
+        if _looks_like_bridgewater_gate(text):
+            continue
+        return text
+
+    return None
+
+
 def _check_min_content_length(text: str) -> bool:
     """Check that extracted text meets minimum length threshold."""
     return len(text) > MIN_CONTENT_LENGTH
@@ -390,7 +458,10 @@ def _fetch_content_bridgewater(article: dict) -> Optional[tuple[Path, str]]:
         log.error("  Bridgewater: failed to fetch article page: %s", e)
         return None
 
-    text = _normalize_html(resp.text, "p")
+    text = _extract_bridgewater_text(resp.text)
+    if text is None:
+        log.warning("  Bridgewater: no article body found or page looks gated")
+        return None
 
     if not _check_min_content_length(text):
         log.warning("  Bridgewater: extracted text too short (%d chars) — may be gated", len(text))

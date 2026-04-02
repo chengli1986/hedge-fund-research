@@ -296,14 +296,23 @@ def save_articles(articles: list[dict]) -> None:
         raise
 
 
+def _content_root() -> Path:
+    return CONTENT_DIR.resolve()
+
+
 def _resolve_content_path(article: dict) -> Path:
     """Resolve the on-disk content path from article metadata."""
-    stored_path = article.get("content_path", "").strip()
+    stored_path = str(article.get("content_path", "")).strip()
     if stored_path:
         content_path = Path(stored_path)
         if not content_path.is_absolute():
             content_path = BASE_DIR / content_path
-        return content_path
+        resolved_path = content_path.resolve()
+        try:
+            resolved_path.relative_to(_content_root())
+        except ValueError as exc:
+            raise ValueError(f"content_path escapes content dir: {stored_path}") from exc
+        return resolved_path
     return CONTENT_DIR / f"{article['id']}.txt"
 
 
@@ -331,7 +340,13 @@ def main() -> None:
     fail_count = 0
 
     for a in pending:
-        content_path = _resolve_content_path(a)
+        try:
+            content_path = _resolve_content_path(a)
+        except ValueError as e:
+            log.warning("Invalid content path for %s: %s", a["id"], e)
+            a["content_status"] = "failed"
+            fail_count += 1
+            continue
         if not content_path.exists():
             log.warning("Content file missing for %s: %s", a["id"], content_path)
             a["content_status"] = "failed"

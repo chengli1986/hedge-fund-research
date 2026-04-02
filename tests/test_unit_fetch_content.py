@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -14,6 +15,8 @@ from fetch_content import (
     load_articles,
     save_articles,
     CONTENT_FETCHERS,
+    _fetch_content_bridgewater,
+    _extract_bridgewater_text,
 )
 
 
@@ -209,3 +212,86 @@ class TestContentFetchers:
         assert "oaktree" in CONTENT_FETCHERS
         assert "aqr" in CONTENT_FETCHERS
         assert "man-group" in CONTENT_FETCHERS
+
+
+# ---------------------------------------------------------------------------
+# Bridgewater extraction
+# ---------------------------------------------------------------------------
+
+class TestBridgewaterExtraction:
+    def test_extracts_article_body_and_ignores_gate_text(self, tmp_path, monkeypatch):
+        html = """
+        <html>
+          <body>
+            <nav>Navigation</nav>
+            <header>Header</header>
+            <div class="disclaimer">Disclaimer: Bridgewater Associates material.</div>
+            <article class="article-body">
+              <p>Bridgewater argues that markets are changing structurally.</p>
+              <p>Portfolio resilience matters more as dispersion rises.</p>
+              <p>Investors need better diversification and risk control.</p>
+            </article>
+            <footer>Footer</footer>
+          </body>
+        </html>
+        """
+
+        extracted = _extract_bridgewater_text(html)
+        assert extracted is not None
+        assert "markets are changing structurally" in extracted
+        assert "Disclaimer" not in extracted
+        assert "Navigation" not in extracted
+
+        content_dir = tmp_path / "content"
+        monkeypatch.setattr("fetch_content.CONTENT_DIR", content_dir)
+        monkeypatch.setattr("fetch_content.BASE_DIR", tmp_path)
+
+        mock_resp = MagicMock()
+        mock_resp.text = html
+        mock_resp.raise_for_status = MagicMock()
+
+        article = {
+            "id": "bw123",
+            "url": "https://www.bridgewater.com/research-and-insights/test",
+        }
+
+        with patch("fetch_content.requests.get", return_value=mock_resp):
+            result = _fetch_content_bridgewater(article)
+
+        assert result is not None
+        content_path, status = result
+        assert status == "ok"
+        assert content_path == content_dir / "bw123.txt"
+        assert content_path.read_text(encoding="utf-8").startswith("Bridgewater argues")
+
+    def test_rejects_gated_page_even_if_it_is_long(self, tmp_path, monkeypatch):
+        html = """
+        <html>
+          <body>
+            <div class="article-body">
+              <p>Subscribe to read this article.</p>
+              <p>Register to continue and accept all cookies.</p>
+              <p>This content is available to Bridgewater clients only.</p>
+              <p>Cookie preferences, privacy policy, and terms of use apply.</p>
+            </div>
+          </body>
+        </html>
+        """
+
+        content_dir = tmp_path / "content"
+        monkeypatch.setattr("fetch_content.CONTENT_DIR", content_dir)
+        monkeypatch.setattr("fetch_content.BASE_DIR", tmp_path)
+
+        mock_resp = MagicMock()
+        mock_resp.text = html
+        mock_resp.raise_for_status = MagicMock()
+
+        article = {
+            "id": "bw999",
+            "url": "https://www.bridgewater.com/research-and-insights/gated",
+        }
+
+        with patch("fetch_content.requests.get", return_value=mock_resp):
+            result = _fetch_content_bridgewater(article)
+
+        assert result is None
