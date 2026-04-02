@@ -140,7 +140,6 @@ def _looks_like_bridgewater_gate(text: str) -> bool:
     )
     disclaimer_markers = (
         "this content is available",
-        "bridgewater associates",
         "disclaimer",
     )
     return any(marker in lowered for marker in gate_markers + disclaimer_markers)
