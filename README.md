@@ -50,6 +50,8 @@ Three-layer architecture for resilient research URL management:
 2. **Inspection** — quality metrics in `config/inspection_state.json`, warns on anomalies (consecutive zeros, high gate ratio, domain drift)
 3. **Discovery** — `discover_entrypoints.py` scans homepages and scores candidate URLs (domain/path/structure/gate)
 
+**Security**: Content fetcher includes path traversal protection (filename sanitization) and gate detection (paywall/login pages flagged before LLM analysis).
+
 ```bash
 # Discover new entrypoints (dry-run)
 python3 discover_entrypoints.py --source bridgewater
