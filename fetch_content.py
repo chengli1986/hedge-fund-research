@@ -418,27 +418,68 @@ def _fetch_content_man(article: dict) -> Optional[tuple[Path, str]]:
 # ---------------------------------------------------------------------------
 
 def _fetch_content_ark(article: dict) -> Optional[tuple[Path, str]]:
-    """Fetch ARK Invest article content: requests (SSR) -> extract HTML article body."""
+    """Fetch ARK Invest article content with 403 fallback to metadata-only.
+
+    Primary: fetch HTML article body from ark-invest.com.
+    Fallback: if 403 (Cloudflare IP block), save RSS summary as metadata-only
+    content so the analysis pipeline can still process it with reduced confidence.
+    """
     url = article["url"]
     log.info("  ARK: fetching article page %s", url)
 
     try:
         resp = requests.get(url, headers=HEADERS, timeout=30)
         resp.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        if e.response is not None and e.response.status_code == 403:
+            # Cloudflare IP block — fall back to RSS summary as metadata-only
+            return _ark_metadata_fallback(article)
+        log.warning("  ARK: HTTP error fetching article: %s", e)
+        return None
     except Exception as e:
-        log.error("  ARK: failed to fetch article page: %s", e)
+        log.warning("  ARK: failed to fetch article page: %s", e)
         return None
 
     text = _normalize_html(resp.text, "article p, .post-content p, .entry-content p, .wp-block-paragraph")
 
     if not _check_min_content_length(text):
         log.warning("  ARK: extracted text too short (%d chars)", len(text))
-        return None
+        return _ark_metadata_fallback(article)
 
     content_path = CONTENT_DIR / f"{article['id']}.txt"
     _atomic_write(content_path, text.encode("utf-8"))
     log.info("  ARK: saved %d chars to %s", len(text), content_path.name)
     return (content_path, "ok")
+
+
+def _ark_metadata_fallback(article: dict) -> Optional[tuple[Path, str]]:
+    """Save RSS summary as metadata-only content for ARK articles.
+
+    Returns ("metadata_only") status so the analysis pipeline knows to use
+    a lighter prompt and lower confidence scoring.
+    """
+    summary = article.get("summary", "").strip()
+    title = article.get("title", "").strip()
+    category = article.get("category", "").strip()
+
+    if not summary and not title:
+        log.warning("  ARK: no metadata available for fallback on %s", article.get("id"))
+        return None
+
+    # Build metadata-only content from RSS fields
+    parts = []
+    if title:
+        parts.append(f"Title: {title}")
+    if category:
+        parts.append(f"Category: {category}")
+    if summary:
+        parts.append(f"Summary: {summary}")
+    text = "\n".join(parts)
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  ARK: saved metadata-only (%d chars) to %s (source restricted)", len(text), content_path.name)
+    return (content_path, "metadata_only")
 
 
 def _fetch_content_bridgewater(article: dict) -> Optional[tuple[Path, str]]:
@@ -522,10 +563,12 @@ def main() -> None:
     CONTENT_DIR.mkdir(parents=True, exist_ok=True)
 
     articles = load_articles()
+    # Skip articles that already have content or have been classified as metadata-only/restricted
+    terminal_statuses = {"ok", "metadata_only"}
     pending = [
         a for a in articles
         if not a.get("summarized")
-        and a.get("content_status") != "ok"
+        and a.get("content_status") not in terminal_statuses
         and a.get("source_id") in CONTENT_FETCHERS
         and (not args.source or a.get("source_id") == args.source)
     ]

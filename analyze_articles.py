@@ -52,6 +52,18 @@ Article content:
 Respond with ONLY a JSON object (no markdown fences, no explanation):
 {{"summary_en": "...", "summary_zh": "...", "themes": [...], "key_takeaway_en": "...", "key_takeaway_zh": "..."}}"""
 
+METADATA_PROMPT = """You are a senior investment analyst. Based on LIMITED metadata (title, category, summary) from a hedge fund research article, produce a structured JSON response. Note: you only have metadata, not the full article — keep analysis conservative.
+
+Article title: {title}
+Source: {source}
+Date: {date}
+
+Available metadata:
+{content}
+
+Respond with ONLY a JSON object (no markdown fences, no explanation):
+{{"summary_en": "...", "summary_zh": "...", "themes": [...], "key_takeaway_en": "...", "key_takeaway_zh": "..."}}"""
+
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 logging.basicConfig(
     level=logging.INFO,
@@ -167,7 +179,7 @@ def _should_analyze(article: dict) -> bool:
     """Return True if article is eligible for analysis."""
     if article.get("summarized"):
         return False
-    if article.get("content_status") != "ok":
+    if article.get("content_status") not in ("ok", "metadata_only"):
         return False
     return True
 
@@ -224,12 +236,15 @@ def _analyze_with_fallback(
     title: str = "",
     source: str = "",
     date: str = "",
+    metadata_only: bool = False,
 ) -> Optional[dict]:
     """Try each model in MODEL_CHAIN with MAX_ATTEMPTS each.
 
     Returns result dict with _model and _usage metadata, or None if all fail.
+    When metadata_only=True, uses a lighter prompt for RSS-summary-level content.
     """
-    prompt = ANALYSIS_PROMPT.format(
+    template = METADATA_PROMPT if metadata_only else ANALYSIS_PROMPT
+    prompt = template.format(
         title=title,
         source=source,
         date=date,
@@ -354,7 +369,9 @@ def main() -> None:
             continue
 
         content = content_path.read_text(encoding="utf-8")
-        log.info("Analyzing: %s — %s", a.get("source_id", "?"), a.get("title", "?"))
+        is_metadata = a.get("content_status") == "metadata_only"
+        level = "metadata-only" if is_metadata else "full"
+        log.info("Analyzing (%s): %s — %s", level, a.get("source_id", "?"), a.get("title", "?"))
 
         result = _analyze_with_fallback(
             content,
@@ -362,6 +379,7 @@ def main() -> None:
             title=a.get("title", ""),
             source=a.get("source_id", ""),
             date=a.get("date", ""),
+            metadata_only=is_metadata,
         )
 
         if result is not None:
@@ -372,6 +390,8 @@ def main() -> None:
             a["key_takeaway_zh"] = result["key_takeaway_zh"]
             a["summarized"] = True
             a["analysis_model"] = result["_model"]
+            if is_metadata:
+                a["analysis_confidence"] = "low"
             success_count += 1
             log.info("  Success (%s): %d themes", result["_model"], len(result["themes"]))
         else:
