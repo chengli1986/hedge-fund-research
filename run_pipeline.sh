@@ -4,6 +4,40 @@ cd ~/hedge-fund-research || { echo "FATAL: cannot cd to ~/hedge-fund-research"; 
 
 echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Pipeline starting"
 
+# --- Weekly entrypoint validation pre-check (non-fatal) ---
+LAST_VALIDATE_FILE="config/.last_validated"
+RUN_VALIDATION=0
+if [[ ! -f "$LAST_VALIDATE_FILE" ]]; then
+  RUN_VALIDATION=1
+elif [[ -n "$(find "$LAST_VALIDATE_FILE" -mtime +7 2>/dev/null)" ]]; then
+  RUN_VALIDATION=1
+fi
+
+if [[ "$RUN_VALIDATION" -eq 1 ]]; then
+  echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Running entrypoint validation..."
+  if python3 validate_entrypoints.py --json > /tmp/gmia-validate.json 2>/dev/null; then
+    touch "$LAST_VALIDATE_FILE"
+    # Check for any non-"ok" statuses
+    BAD_SOURCES=$(python3 -c "
+import json, sys
+data = json.load(open('/tmp/gmia-validate.json'))
+bad = [src for src, entries in data.items() if any(e.get('status') != 'ok' for e in entries)]
+if bad:
+    print('WARN: entrypoint issues detected for: ' + ', '.join(bad))
+" 2>/dev/null)
+    if [[ -n "$BAD_SOURCES" ]]; then
+      echo "$BAD_SOURCES"
+    else
+      echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Entrypoint validation passed — all sources ok"
+    fi
+  else
+    echo "WARN: entrypoint validation script failed — continuing pipeline anyway"
+  fi
+else
+  echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Skipping entrypoint validation (last run <7d ago)"
+fi
+# --- end entrypoint validation pre-check ---
+
 failed_stages=()
 
 # Stage 1: fetch metadata (source identity validated internally)
