@@ -125,6 +125,12 @@ def main() -> None:
         action="store_true",
         help="Auto-disable degraded/failed entrypoints (set active=False, save to entrypoints.json)",
     )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="json_output",
+        help="Output results as machine-readable JSON to stdout",
+    )
     args = parser.parse_args()
 
     entrypoints_data = json.loads(ENTRYPOINTS_FILE.read_text())
@@ -139,32 +145,42 @@ def main() -> None:
     else:
         sources_to_validate = all_sources
 
+    all_results: dict[str, list[dict]] = {}
     modified = False
     for source_id, source_config in sources_to_validate.items():
         allowed_domains = _load_allowed_domains(sources_data, source_id)
         results = validate_source(source_id, source_config, allowed_domains)
+        all_results[source_id] = results
 
-        for result in results:
-            url = result["url"]
-            status = result["status"]
-            final = result["scores"].get("final", 0.0) if result["scores"] else 0.0
+        if not args.json_output:
+            for result in results:
+                url = result["url"]
+                status = result["status"]
+                final = result["scores"].get("final", 0.0) if result["scores"] else 0.0
 
-            if status == "ok":
-                tag = "[OK]"
-            else:
-                tag = "[FAIL]"
+                if status == "ok":
+                    tag = "[OK]"
+                else:
+                    tag = "[FAIL]"
 
-            print(f"{tag} {source_id} | {url} | score={final:.3f} | status={status}")
-            if result["error"]:
-                print(f"      error: {result['error']}")
+                print(f"{tag} {source_id} | {url} | score={final:.3f} | status={status}")
+                if result["error"]:
+                    print(f"      error: {result['error']}")
 
-            if args.fix and status in ("error", "degraded"):
-                # Disable the entrypoint in the config
-                for ep in source_config.get("entrypoints", []):
-                    if ep["url"] == url:
-                        ep["active"] = False
-                        modified = True
-                        log.info("disabled entrypoint: %s (%s)", url, status)
+        if args.fix:
+            for result in results:
+                url = result["url"]
+                status = result["status"]
+                if status in ("error", "degraded"):
+                    for ep in source_config.get("entrypoints", []):
+                        if ep["url"] == url:
+                            ep["active"] = False
+                            modified = True
+                            log.info("disabled entrypoint: %s (%s)", url, status)
+
+    if args.json_output:
+        print(json.dumps(all_results, indent=2))
+        return
 
     if args.fix and modified:
         ENTRYPOINTS_FILE.write_text(json.dumps(entrypoints_data, indent=4))
