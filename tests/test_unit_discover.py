@@ -116,7 +116,8 @@ class TestScoreCandidates:
 # ---------------------------------------------------------------------------
 
 class TestClassifyWithAi:
-    def test_stub_returns_none(self):
-        """Phase 1 stub always returns None."""
-        result = _classify_with_ai("https://example.com/research", "<html></html>")
+    def test_llm_failure_returns_none(self):
+        """When _call_llm raises, _classify_with_ai returns None (graceful degradation)."""
+        with patch("discover_entrypoints._call_llm", side_effect=Exception("network error")):
+            result = _classify_with_ai("https://example.com/research", "<html></html>")
         assert result is None

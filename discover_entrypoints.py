@@ -18,6 +18,7 @@ import json
 import logging
 import tempfile
 import os
+import urllib.request
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Optional
@@ -112,16 +113,72 @@ def extract_nav_links(
 
 
 # ---------------------------------------------------------------------------
-# AI stub
+# AI classification
 # ---------------------------------------------------------------------------
 
-def _classify_with_ai(url: str, html: str) -> Optional[dict]:
-    """Phase 1 stub: AI classification. Always returns None.
+def _call_llm(prompt: str) -> dict:
+    """Call Gemini 2.5 Pro via OpenAI-compatible endpoint and return parsed JSON.
 
-    In Phase 2 this will call an LLM to classify the page type and return
-    a structured dict with content_type, confidence, and reasoning.
+    Args:
+        prompt: The user prompt to send.
+
+    Returns:
+        Parsed JSON dict from the model response content.
+
+    Raises:
+        Exception: On any network, API, or parse error.
     """
-    return None
+    api_key = os.environ.get("GEMINI_API_KEY", "")
+    if not api_key:
+        raise ValueError("GEMINI_API_KEY not set in environment")
+
+    payload = json.dumps({
+        "model": "gemini-2.5-pro",
+        "messages": [{"role": "user", "content": prompt}],
+        "response_format": {"type": "json_object"},
+        "max_tokens": 300,
+    }).encode("utf-8")
+
+    req = urllib.request.Request(
+        "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+        data=payload,
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        body = json.loads(resp.read().decode("utf-8"))
+
+    content = body["choices"][0]["message"]["content"]
+    return json.loads(content)
+
+
+def _classify_with_ai(url: str, html: str) -> Optional[dict]:
+    """Use LLM to classify whether a page is a research index.
+
+    Returns {"is_research_index": bool, "confidence": float, "reasoning": str}
+    or None on failure (graceful degradation).
+    """
+    truncated_html = html[:4000]
+    prompt = (
+        "You are classifying web pages for a hedge fund research aggregator.\n"
+        "Determine if the following page is a research index page that lists "
+        "research articles, papers, or investment commentary.\n\n"
+        f"URL: {url}\n\n"
+        f"HTML (first 4000 chars):\n{truncated_html}\n\n"
+        "Respond with a JSON object in exactly this format:\n"
+        '{"is_research_index": <bool>, "confidence": <float 0.0-1.0>, '
+        '"reasoning": "<brief explanation>"}'
+    )
+    try:
+        result = _call_llm(prompt)
+        return result
+    except Exception as e:
+        log.warning("_classify_with_ai(%s) failed: %s", url, e)
+        return None
 
 
 # ---------------------------------------------------------------------------
@@ -175,6 +232,15 @@ def score_candidates(
         final = score_final(domain_score, path_score, structure_score, gate_penalty)
 
         ai_classification = _classify_with_ai(url, html)
+
+        # Apply AI score adjustment
+        if ai_classification is not None:
+            confidence = float(ai_classification.get("confidence", 0.0))
+            if confidence >= 0.8:
+                if ai_classification.get("is_research_index"):
+                    final += 0.1
+                else:
+                    final -= 0.1
 
         results.append({
             "url": url,
