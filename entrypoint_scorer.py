@@ -4,6 +4,7 @@ No I/O, no logging, no network calls. All functions are stateless and
 operate only on the arguments passed to them.
 """
 
+import json
 import re
 from urllib.parse import urlparse
 
@@ -227,6 +228,71 @@ def score_gate(html: str) -> float:
 # score_final
 # ---------------------------------------------------------------------------
 
+_DEFAULT_WEIGHTS = {"domain": 0.2, "path": 0.3, "structure": 0.3, "gate": 0.2}
+
+_REQUIRED_WEIGHT_KEYS = frozenset(_DEFAULT_WEIGHTS.keys())
+
+
+def load_weights(path: str | None = None) -> dict:
+    """Load scorer weights from a JSON file.
+
+    Falls back to ``_DEFAULT_WEIGHTS`` if the file is missing, cannot be
+    parsed, is missing any of the four required keys, or the values do not
+    sum to 1.0 (±0.01 tolerance).
+
+    Args:
+        path: Filesystem path to the JSON weights file.  When *None* the
+              function returns the defaults immediately.
+
+    Returns:
+        A dict with keys ``domain``, ``path``, ``structure``, ``gate``.
+    """
+    if path is None:
+        return dict(_DEFAULT_WEIGHTS)
+
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+    except (OSError, json.JSONDecodeError):
+        return dict(_DEFAULT_WEIGHTS)
+
+    if not _REQUIRED_WEIGHT_KEYS.issubset(data.keys()):
+        return dict(_DEFAULT_WEIGHTS)
+
+    total = sum(data[k] for k in _REQUIRED_WEIGHT_KEYS)
+    if abs(total - 1.0) > 0.01:
+        return dict(_DEFAULT_WEIGHTS)
+
+    return {k: data[k] for k in _REQUIRED_WEIGHT_KEYS}
+
+
+def score_final_with_weights(
+    domain: float,
+    path: float,
+    structure: float,
+    gate_penalty: float,
+    weights: dict,
+) -> float:
+    """Combine individual component scores using the provided weights dict.
+
+    Args:
+        domain: Output of :func:`score_domain`.
+        path: Output of :func:`score_path`.
+        structure: Output of :func:`score_structure`.
+        gate_penalty: Output of :func:`score_gate` (higher = worse).
+        weights: Dict with keys ``domain``, ``path``, ``structure``, ``gate``.
+
+    Returns:
+        Weighted final score in the range [0.0, 1.0].
+    """
+    return (
+        domain * weights["domain"]
+        + path * weights["path"]
+        + structure * weights["structure"]
+        + (1.0 - gate_penalty) * weights["gate"]
+    )
+
+
 def score_final(
     domain: float,
     path: float,
@@ -237,10 +303,8 @@ def score_final(
 
     Weights: domain=0.2, path=0.3, structure=0.3, gate=0.2
     Formula: domain*0.2 + path*0.3 + structure*0.3 + (1.0 - gate_penalty)*0.2
+
+    Delegates to :func:`score_final_with_weights` using :data:`_DEFAULT_WEIGHTS`.
+    Signature and return values are 100% backward-compatible.
     """
-    return (
-        domain * 0.2
-        + path * 0.3
-        + structure * 0.3
-        + (1.0 - gate_penalty) * 0.2
-    )
+    return score_final_with_weights(domain, path, structure, gate_penalty, _DEFAULT_WEIGHTS)

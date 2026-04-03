@@ -1,12 +1,16 @@
 """Unit tests for entrypoint_scorer.py — 27 tests covering all five scoring functions."""
 
+import json
 import pytest
 from entrypoint_scorer import (
+    _DEFAULT_WEIGHTS,
+    load_weights,
     score_domain,
+    score_final,
+    score_final_with_weights,
+    score_gate,
     score_path,
     score_structure,
-    score_gate,
-    score_final,
 )
 
 
@@ -199,3 +203,66 @@ class TestScoreFinal:
         result = score_final(1.0, 1.0, 1.0, 0.0)
         expected = 1.0 * 0.2 + 1.0 * 0.3 + 1.0 * 0.3 + (1.0 - 0.0) * 0.2
         assert abs(result - expected) < 1e-9
+
+
+# ---------------------------------------------------------------------------
+# TestLoadWeights  (3 tests)
+# ---------------------------------------------------------------------------
+
+class TestLoadWeights:
+    def test_load_weights_from_file(self, tmp_path):
+        """Loads custom weights from a valid JSON file."""
+        weights_file = tmp_path / "weights.json"
+        custom = {"domain": 0.1, "path": 0.4, "structure": 0.4, "gate": 0.1}
+        weights_file.write_text(json.dumps(custom))
+
+        result = load_weights(str(weights_file))
+
+        assert result == custom
+
+    def test_load_weights_missing_file(self, tmp_path):
+        """Missing file returns default weights without raising."""
+        result = load_weights(str(tmp_path / "nonexistent.json"))
+
+        assert result == _DEFAULT_WEIGHTS
+
+    def test_load_weights_bad_sum(self, tmp_path):
+        """Weights that don't sum to 1.0 (±0.01) return defaults."""
+        weights_file = tmp_path / "bad_weights.json"
+        bad = {"domain": 0.5, "path": 0.5, "structure": 0.5, "gate": 0.5}
+        weights_file.write_text(json.dumps(bad))
+
+        result = load_weights(str(weights_file))
+
+        assert result == _DEFAULT_WEIGHTS
+
+
+# ---------------------------------------------------------------------------
+# TestScoreFinalWithWeights  (2 tests)
+# ---------------------------------------------------------------------------
+
+class TestScoreFinalWithWeights:
+    def test_score_final_with_weights(self):
+        """score_final_with_weights applies provided weights correctly."""
+        weights = {"domain": 0.1, "path": 0.4, "structure": 0.4, "gate": 0.1}
+        result = score_final_with_weights(1.0, 0.5, 0.5, 0.0, weights)
+        expected = 1.0 * 0.1 + 0.5 * 0.4 + 0.5 * 0.4 + (1.0 - 0.0) * 0.1
+        assert abs(result - expected) < 1e-9
+
+    def test_score_final_unchanged(self):
+        """Existing score_final still returns the same values as before refactor."""
+        # Values computed against original hardcoded formula
+        inputs = [
+            (1.0, 1.0, 1.0, 0.0),
+            (0.8, 0.5, 0.5, 0.3),
+            (0.0, 0.2, 0.2, 0.8),
+            (1.0, 0.1, 0.1, 0.8),
+        ]
+        for domain, path, structure, gate in inputs:
+            expected = (
+                domain * 0.2
+                + path * 0.3
+                + structure * 0.3
+                + (1.0 - gate) * 0.2
+            )
+            assert abs(score_final(domain, path, structure, gate) - expected) < 1e-9
