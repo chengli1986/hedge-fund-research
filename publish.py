@@ -27,9 +27,9 @@ BADGE_COLORS: dict[str, str] = {
     "man-group": "#58a6ff",
     "bridgewater": "#d29922",
     "aqr": "#3fb950",
-    "gmo": "#bc8cff",
+    "gmo": "#9b6be0",
     "oaktree": "#f85149",
-    "ark-invest": "#ff6600",  # ARK orange
+    "ark-invest": "#c45000",  # ARK orange (WCAG AA)
 }
 
 INITIAL_VISIBLE = 20
@@ -71,6 +71,60 @@ def _slugify_theme(theme: str) -> str:
     return "-".join(part for part in slug.split("-") if part)
 
 
+def _article_card(a: dict, show_takeaway: bool = False) -> str:
+    """Render a single article as a timeline row."""
+    sid = a.get("source_id", "unknown")
+    color = BADGE_COLORS.get(sid, "#8b949e")
+    title = _esc(a.get("title", "Untitled"))
+    url = _esc(a.get("url", "#"))
+    date = _esc(a.get("date", "n/a"))
+    source_name = _esc(a.get("source_name", sid))
+
+    if a.get("summarized"):
+        takeaway_en = _esc(a.get("key_takeaway_en", ""))
+        takeaway_zh = _esc(a.get("key_takeaway_zh", ""))
+        summary_en = _esc(a.get("summary_en", ""))
+        summary_zh = _esc(a.get("summary_zh", ""))
+        theme_tags = "".join(
+            f'<button class="theme-tag" onclick="filterSingleTheme(\'{_slugify_theme(t)}\')">{_esc(t)}</button>'
+            for t in a.get("themes", [])
+        )
+        toggle = '<button class="row-toggle" type="button">Open</button>'
+        summary_html = f"""<details class="summary-panel">
+  <summary><span class="lang-en">Analysis</span><span class="lang-zh" style="display:none">分析</span></summary>
+  <div class="summary-copy lang-en">
+    <p class="takeaway"><strong>Takeaway:</strong> {takeaway_en}</p>
+    <p>{summary_en}</p>
+  </div>
+  <div class="summary-copy lang-zh" style="display:none">
+    <p class="takeaway"><strong>要点:</strong> {takeaway_zh}</p>
+    <p>{summary_zh}</p>
+  </div>
+  <div class="theme-tags">{theme_tags}</div>
+</details>"""
+        # Inline takeaway for cluster view
+        inline_takeaway = ""
+        if show_takeaway and takeaway_en:
+            inline_takeaway = (
+                f'<p class="inline-takeaway lang-en">{takeaway_en}</p>'
+                f'<p class="inline-takeaway lang-zh" style="display:none">{takeaway_zh}</p>'
+            )
+    else:
+        toggle = '<span class="index-chip">Index</span>'
+        summary_html = ""
+        inline_takeaway = ""
+
+    return f"""<div class="row-main">
+    <span class="badge" style="background:{color}">{source_name}</span>
+    <span class="date">{date}</span>
+    <a class="headline" href="{url}" target="_blank" rel="noopener">{title}</a>
+    <span class="row-spacer"></span>
+    {toggle}
+  </div>
+  {inline_takeaway if show_takeaway else ""}
+  {summary_html}"""
+
+
 def generate_html(articles: list[dict]) -> str:
     """Generate the full HTML dashboard string from a list of article dicts."""
     sources = _load_sources()
@@ -89,7 +143,7 @@ def generate_html(articles: list[dict]) -> str:
     new_this_week = sum(1 for a in sorted_articles if (a.get("date") or "") >= week_ago)
     fund_count = len(set(a.get("source_id", "") for a in sorted_articles)) or len(sources) or 5
 
-    # Theme grouping (summarized articles only)
+    # ── Theme grouping (all articles, for sidebar) ──
     themes: dict[str, list[dict]] = defaultdict(list)
     for a in sorted_articles:
         if a.get("summarized") and a.get("themes"):
@@ -97,89 +151,158 @@ def generate_html(articles: list[dict]) -> str:
                 themes[t].append(a)
     sorted_themes = sorted(themes.items(), key=lambda x: len(x[1]), reverse=True)
 
-    # Fund cards: latest 5 per source
-    fund_articles: dict[str, list[dict]] = defaultdict(list)
+    # ── Theme clusters: assign each article to ONE primary theme ──
+    primary_clusters: dict[str, list[dict]] = defaultdict(list)
+    assigned_ids: set[str] = set()
+    # First pass: assign themed articles to first theme only
     for a in sorted_articles:
-        sid = a.get("source_id", "")
-        if len(fund_articles[sid]) < 5:
-            fund_articles[sid].append(a)
+        article_themes = a.get("themes", [])
+        if article_themes:
+            primary_clusters[article_themes[0]].append(a)
+            assigned_ids.add(a.get("id", ""))
+    # Second pass: unthemed go to General
+    for a in sorted_articles:
+        if a.get("id", "") not in assigned_ids:
+            primary_clusters["General"].append(a)
 
+    # Sort clusters: by count desc, General always last
+    cluster_order = sorted(
+        [(k, v) for k, v in primary_clusters.items() if k != "General"],
+        key=lambda x: len(x[1]),
+        reverse=True,
+    )
+    if "General" in primary_clusters:
+        cluster_order.append(("General", primary_clusters["General"]))
+
+    # ── Build cluster HTML (Themes view) ──
+    cluster_parts = []
+    for theme_name, cluster_arts in cluster_order:
+        source_set = set(a.get("source_id", "") for a in cluster_arts)
+        cross_fund = len(source_set) >= 2
+        new_count = sum(1 for a in cluster_arts if (a.get("date") or "") >= week_ago)
+        slug = _slugify_theme(theme_name) if theme_name != "General" else "general"
+        cross_badge = '<span class="cross-fund-badge">Cross-fund</span>' if cross_fund else ""
+        new_badge = f'<span class="new-badge">{new_count} new</span>' if new_count else ""
+        fund_names = ", ".join(sorted(
+            set(_esc(a.get("source_name", "")) for a in cluster_arts)
+        ))
+
+        if theme_name == "General":
+            # Compact table for unthemed articles
+            table_rows = []
+            for a in cluster_arts:
+                sid = a.get("source_id", "unknown")
+                color = BADGE_COLORS.get(sid, "#8b949e")
+                takeaway_en = _esc(a.get("key_takeaway_en", ""))
+                takeaway_zh = _esc(a.get("key_takeaway_zh", ""))
+                tooltip = f' title="{takeaway_en}"' if takeaway_en else ""
+                table_rows.append(
+                    f'<tr><td class="ct-date">{_esc(a.get("date", ""))}</td>'
+                    f'<td><span class="badge" style="background:{color}">{_esc(a.get("source_name", ""))}</span></td>'
+                    f'<td><a href="{_esc(a.get("url", "#"))}" target="_blank" rel="noopener"{tooltip}>{_esc(a.get("title", ""))}</a></td></tr>'
+                )
+            table_html = "\n".join(table_rows)
+            cluster_parts.append(
+                f"""<section class="cluster general-cluster" data-cluster="{slug}">
+  <div class="cluster-head">
+    <h2>{_esc(theme_name)} <span class="cluster-count">{len(cluster_arts)}</span></h2>
+    <div class="cluster-meta"><span class="lang-en">Uncategorized articles — hover for takeaway</span><span class="lang-zh" style="display:none">未分类文章 — 悬停查看摘要</span></div>
+  </div>
+  <table class="compact-table">{table_html}</table>
+</section>"""
+            )
+        else:
+            # Full cluster card with articles
+            article_items = []
+            for a in cluster_arts:
+                article_items.append(
+                    f'<article class="cluster-item">{_article_card(a, show_takeaway=True)}</article>'
+                )
+            articles_html = "\n".join(article_items)
+            cluster_parts.append(
+                f"""<section class="cluster" data-cluster="{slug}">
+  <div class="cluster-head">
+    <div>
+      <h2>{_esc(theme_name)} <span class="cluster-count">{len(cluster_arts)}</span> {cross_badge} {new_badge}</h2>
+      <div class="cluster-meta">{fund_names}</div>
+    </div>
+  </div>
+  <div class="cluster-articles">{articles_html}</div>
+</section>"""
+            )
+    clusters_html = "\n".join(cluster_parts)
+
+    # ── Timeline rows (existing bulletin view) ──
     theme_filters = []
     for theme_name, theme_arts in sorted_themes:
         theme_filters.append(
             f'<button class="filter-pill" data-theme="{_slugify_theme(theme_name)}" onclick="toggleThemeFilter(this)">'
             f'{_esc(theme_name)} <span>{len(theme_arts)}</span></button>'
         )
+    unthemed_count = sum(1 for a in sorted_articles if not a.get("themes"))
+    if unthemed_count > 0:
+        theme_filters.append(
+            f'<button class="filter-pill" data-theme="unthemed" onclick="toggleThemeFilter(this)">'
+            f'General <span>{unthemed_count}</span></button>'
+        )
     theme_filters_html = "".join(theme_filters) if theme_filters else '<span class="muted">Themes appear after analysis.</span>'
 
-    # --- Build HTML ---
     timeline_rows = []
     for i, a in enumerate(sorted_articles):
         sid = a.get("source_id", "unknown")
-        color = BADGE_COLORS.get(sid, "#8b949e")
-        title = _esc(a.get("title", "Untitled"))
-        url = _esc(a.get("url", "#"))
-        date = _esc(a.get("date", "n/a"))
-        source_name = _esc(a.get("source_name", sid))
         extra_class = " timeline-extra" if i >= INITIAL_VISIBLE else ""
         hidden_style = ' style="display:none"' if i >= INITIAL_VISIBLE else ""
         theme_slugs = " ".join(_slugify_theme(t) for t in a.get("themes", [])) if a.get("themes") else "unthemed"
         row_classes = f'timeline-row source-{sid} {"summarized" if a.get("summarized") else "index-only-row"}'
-        insight_toggle = ""
-
-        if a.get("summarized"):
-            takeaway_en = _esc(a.get("key_takeaway_en", ""))
-            takeaway_zh = _esc(a.get("key_takeaway_zh", ""))
-            summary_en = _esc(a.get("summary_en", ""))
-            summary_zh = _esc(a.get("summary_zh", ""))
-            theme_tags = "".join(
-                f'<button class="theme-tag" onclick="filterSingleTheme(\'{_slugify_theme(t)}\')">{_esc(t)}</button>'
-                for t in a.get("themes", [])
-            )
-            insight_toggle = '<button class="row-toggle" type="button">Open</button>'
-            summary_html = f"""<details class="summary-panel">
-  <summary><span class="lang-en">Analysis</span><span class="lang-zh" style="display:none">分析</span></summary>
-  <div class="summary-copy lang-en">
-    <p class="takeaway"><strong>Takeaway:</strong> {takeaway_en}</p>
-    <p>{summary_en}</p>
-  </div>
-  <div class="summary-copy lang-zh" style="display:none">
-    <p class="takeaway"><strong>要点:</strong> {takeaway_zh}</p>
-    <p>{summary_zh}</p>
-  </div>
-  <div class="theme-tags">{theme_tags}</div>
-</details>"""
-        else:
-            insight_toggle = '<span class="index-chip">Index</span>'
-            summary_html = ""
-
         timeline_rows.append(
-            f"""<article class="{row_classes}{extra_class}" data-themes="{theme_slugs}"{hidden_style}>
-  <div class="row-main">
-    <span class="badge" style="background:{color}">{source_name}</span>
-    <span class="date">{date}</span>
-    <a class="headline" href="{url}" target="_blank" rel="noopener">{title}</a>
-    <span class="row-spacer"></span>
-    {insight_toggle}
-  </div>
-  {summary_html}
-</article>"""
+            f'<article class="{row_classes}{extra_class}" data-themes="{theme_slugs}"{hidden_style}>'
+            f'{_article_card(a)}</article>'
         )
 
     load_more_btn = ""
     if total > INITIAL_VISIBLE:
         load_more_btn = f'<button class="btn-load-more" onclick="showAll()">Load more ({total - INITIAL_VISIBLE} remaining)</button>'
-
     timeline_html = "\n".join(timeline_rows)
 
-    # Fund bulletin
-    fund_cards = []
+    # ── Funds view ──
     source_order = ["man-group", "bridgewater", "aqr", "gmo", "oaktree", "ark-invest"]
+    fund_all: dict[str, list[dict]] = defaultdict(list)
+    for a in sorted_articles:
+        fund_all[a.get("source_id", "")].append(a)
+
+    fund_view_parts = []
     for sid in source_order:
         src = sources.get(sid, {})
         color = BADGE_COLORS.get(sid, "#8b949e")
         name = _esc(src.get("name", sid))
-        arts = fund_articles.get(sid, [])
+        arts = fund_all.get(sid, [])
+        analyzed = sum(1 for a in arts if a.get("summarized"))
+        latest = arts[0].get("date", "n/a") if arts else "n/a"
+        art_items = []
+        for a in arts:
+            art_items.append(
+                f'<article class="cluster-item">{_article_card(a, show_takeaway=True)}</article>'
+            )
+        fund_view_parts.append(
+            f"""<section class="cluster fund-section" style="--fund-accent:{color}">
+  <div class="cluster-head">
+    <div>
+      <h2><span class="badge" style="background:{color}">{name}</span> <span class="cluster-count">{len(arts)} articles · {analyzed} analyzed</span></h2>
+      <div class="cluster-meta"><span class="lang-en">Latest: {latest}</span><span class="lang-zh" style="display:none">最新: {latest}</span></div>
+    </div>
+  </div>
+  <div class="cluster-articles">{"".join(art_items)}</div>
+</section>"""
+        )
+    funds_view_html = "\n".join(fund_view_parts)
+
+    # ── Sidebar fund cards (compact, for Themes/Timeline views) ──
+    fund_cards = []
+    for sid in source_order:
+        src = sources.get(sid, {})
+        color = BADGE_COLORS.get(sid, "#8b949e")
+        name = _esc(src.get("name", sid))
+        arts = fund_all.get(sid, [])[:5]
         latest_date = arts[0].get("date", "n/a") if arts else "n/a"
         analyzed_count = sum(1 for a in arts if a.get("summarized"))
         art_list = "\n".join(
@@ -188,7 +311,7 @@ def generate_html(articles: list[dict]) -> str:
             for a in arts
         )
         if not art_list:
-            art_list = "<li class=\"muted\">No articles yet</li>"
+            art_list = '<li class="muted">No articles yet</li>'
         fund_cards.append(
             f"""<section class="fund-panel" style="--fund-accent:{color}">
   <div class="fund-head">
@@ -204,7 +327,7 @@ def generate_html(articles: list[dict]) -> str:
         )
     fund_grid_html = "\n".join(fund_cards)
 
-    # Theme tracker
+    # ── Sidebar theme tracker ──
     theme_sections = []
     for theme_name, theme_arts in sorted_themes:
         items = "\n".join(
@@ -218,7 +341,7 @@ def generate_html(articles: list[dict]) -> str:
   <ul>{items}</ul>
 </div>"""
         )
-    themes_html = "\n".join(theme_sections) if theme_sections else '<p class="muted">No themes available yet — articles need analysis first.</p>'
+    themes_html = "\n".join(theme_sections) if theme_sections else '<p class="muted">No themes available yet.</p>'
 
     page = f"""<!DOCTYPE html>
 <html lang="en">
@@ -226,6 +349,8 @@ def generate_html(articles: list[dict]) -> str:
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hedge Fund Research Insights</title>
+<meta name="description" content="Research aggregator: Man Group, Bridgewater, AQR, GMO, Oaktree, ARK Invest.">
+<link rel="icon" href="/favicon.ico">
 <style>
 :root {{
   --bg: #0b1220; --surface: #111827; --surface2: #162033; --surface3: #0f1727;
@@ -244,7 +369,7 @@ a {{ color: var(--accent); text-decoration: none; }}
 a:hover {{ text-decoration: underline; }}
 .container {{ max-width: 1360px; margin: 0 auto; padding: 18px 22px 28px; }}
 
-/* Header */
+/* ── Header ── */
 .header {{
   background:
     linear-gradient(135deg, rgba(125, 211, 252, 0.08), transparent 40%),
@@ -265,18 +390,37 @@ a:hover {{ text-decoration: underline; }}
 }}
 .btn-toggle:hover {{ background: var(--border); }}
 
+/* ── View switcher ── */
+.view-bar {{
+  display: flex; gap: 4px; padding: 10px 0 14px;
+  border-bottom: 1px solid var(--border); margin-bottom: 16px;
+}}
+.view-btn {{
+  background: transparent; color: var(--text-muted); border: 1px solid transparent;
+  padding: 7px 16px; border-radius: 999px; cursor: pointer; font-size: 0.82rem;
+  font-weight: 600; letter-spacing: 0.02em; transition: all 0.15s;
+}}
+.view-btn:hover {{ color: var(--text); background: var(--surface2); }}
+.view-btn.active {{
+  color: var(--text); background: var(--surface2);
+  border-color: var(--accent); box-shadow: 0 0 8px rgba(125,211,252,0.12);
+}}
+.view-panel {{ display: none; }}
+.view-panel.active {{ display: block; }}
+
+/* ── Board (2-col for timeline) ── */
 .board {{
   display: grid;
   grid-template-columns: minmax(0, 1.9fr) minmax(320px, 0.95fr);
-  gap: 18px;
-  align-items: start;
+  gap: 18px; align-items: start;
 }}
+.board-full {{ display: block; }}
+
+/* ── Shared: rail, badge, row ── */
 .rail {{
   background: rgba(17, 24, 39, 0.84);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  overflow: hidden;
-  backdrop-filter: blur(10px);
+  border: 1px solid var(--border); border-radius: 18px;
+  overflow: hidden; backdrop-filter: blur(10px);
 }}
 .rail-head {{
   display: flex; justify-content: space-between; align-items: center; gap: 12px;
@@ -295,40 +439,39 @@ a:hover {{ text-decoration: underline; }}
 }}
 .filter-pill span {{ color: var(--text); margin-left: 5px; }}
 .filter-pill.active, .theme-tag:hover, .filter-pill:hover {{
-  color: var(--text); border-color: var(--accent); background: rgba(125, 211, 252, 0.1);
+  color: var(--text); border-color: var(--accent); background: rgba(125,211,252,0.1);
 }}
-.timeline-row {{
-  border-bottom: 1px solid rgba(38, 50, 71, 0.72);
-  padding: 8px 0;
-}}
-.row-main {{
-  display: flex; align-items: center; gap: 9px; min-width: 0;
-}}
+.timeline-row {{ border-bottom: 1px solid rgba(38,50,71,0.72); padding: 8px 0; }}
+.row-main {{ display: flex; align-items: center; gap: 9px; min-width: 0; }}
 .badge {{
   display: inline-block; padding: 2px 8px; border-radius: 999px;
   font-size: 0.69rem; color: #fff; font-weight: 700; white-space: nowrap;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.02em; flex-shrink: 0;
 }}
 .date, .mini-date {{ color: var(--text-muted); font-size: 0.73rem; white-space: nowrap; font-variant-numeric: tabular-nums; }}
 .headline {{
   color: var(--text); font-size: 0.9rem; line-height: 1.3; min-width: 0;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; white-space: normal;
 }}
+.headline:hover {{ color: var(--accent); }}
 .row-spacer {{ flex: 1 1 auto; }}
 .row-toggle, .index-chip {{
   border: 1px solid var(--border); border-radius: 999px; padding: 4px 9px;
-  font-size: 0.7rem; background: transparent; color: var(--text-muted);
+  font-size: 0.7rem; background: transparent; color: var(--text-muted); flex-shrink: 0;
 }}
 .row-toggle {{ cursor: pointer; }}
 .row-toggle:hover {{ color: var(--text); border-color: var(--accent); }}
 .summary-panel {{
-  margin: 8px 0 2px 80px; padding: 10px 12px;
+  margin: 8px 0 2px 60px; padding: 10px 12px;
   background: var(--surface3); border: 1px solid var(--border); border-radius: 12px;
 }}
 .summary-panel summary {{
-  cursor: pointer; color: var(--accent); font-size: 0.8rem;
+  cursor: pointer; list-style: none;
+  color: var(--accent); font-size: 0.8rem;
   text-transform: uppercase; letter-spacing: 0.05em;
 }}
+.summary-panel summary::-webkit-details-marker {{ display: none; }}
 .summary-copy p {{ margin: 8px 0 0; font-size: 0.86rem; color: var(--text-muted); }}
 .takeaway {{ color: var(--accent2); }}
 .theme-tags {{ display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }}
@@ -339,69 +482,118 @@ a:hover {{ text-decoration: underline; }}
 }}
 .btn-load-more:hover {{ background: var(--border); }}
 
-/* Side panels */
-.sidebar {{
-  display: grid; gap: 18px;
+/* ── Theme clusters (Themes view) ── */
+.cluster-grid {{ display: grid; gap: 16px; }}
+.cluster {{
+  background: rgba(17,24,39,0.84); border: 1px solid var(--border);
+  border-radius: 18px; overflow: hidden; backdrop-filter: blur(10px);
 }}
-.sidebar-section {{
-  padding: 12px 14px 14px;
+.cluster-head {{
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 16px; border-bottom: 1px solid var(--border);
+  background: rgba(15,23,39,0.9);
 }}
-.section-title {{
-  margin: 0 0 10px; font-size: 0.96rem; text-transform: uppercase; letter-spacing: 0.04em;
+.cluster-head h2 {{ margin: 0; font-size: 1.05rem; letter-spacing: 0.02em; }}
+.cluster-count {{ color: var(--text-muted); font-weight: 400; font-size: 0.8rem; margin-left: 6px; }}
+.cluster-meta {{ color: var(--text-muted); font-size: 0.76rem; margin-top: 2px; }}
+.cross-fund-badge {{
+  display: inline-block; padding: 2px 8px; border-radius: 999px;
+  font-size: 0.68rem; font-weight: 700; color: #0b1220;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  margin-left: 8px; vertical-align: middle;
 }}
-.fund-stack, .theme-stack {{
-  display: grid; gap: 10px;
+.new-badge {{
+  display: inline-block; padding: 2px 8px; border-radius: 999px;
+  font-size: 0.68rem; font-weight: 700; color: #fff;
+  background: #f85149; margin-left: 6px; vertical-align: middle;
 }}
+.cluster-articles {{ padding: 6px 14px 14px; }}
+.cluster-item {{
+  border-bottom: 1px solid rgba(38,50,71,0.5); padding: 8px 0;
+}}
+.cluster-item:last-child {{ border-bottom: none; }}
+.inline-takeaway {{
+  margin: 4px 0 2px 60px; font-size: 0.82rem; line-height: 1.4;
+  color: var(--accent2); font-style: italic;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}}
+
+/* ── Compact table (General cluster) ── */
+.compact-table {{
+  width: 100%; border-collapse: collapse; font-size: 0.82rem;
+  padding: 0; margin: 0;
+}}
+.compact-table tr {{ border-bottom: 1px solid rgba(38,50,71,0.5); }}
+.compact-table tr:last-child {{ border-bottom: none; }}
+.compact-table td {{ padding: 6px 8px; vertical-align: middle; }}
+.compact-table .ct-date {{ width: 78px; color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }}
+.compact-table a {{ color: var(--text); }}
+.compact-table a:hover {{ color: var(--accent); }}
+.general-cluster .compact-table {{ padding: 4px 14px 10px; }}
+
+/* ── Sidebar ── */
+.sidebar {{ display: grid; gap: 18px; }}
+.sidebar-section {{ padding: 12px 14px 14px; }}
+.section-title {{ margin: 0 0 10px; font-size: 0.96rem; text-transform: uppercase; letter-spacing: 0.04em; }}
+.fund-stack, .theme-stack {{ display: grid; gap: 10px; }}
 .fund-panel {{
   border: 1px solid var(--border); border-left: 3px solid var(--fund-accent);
   border-radius: 14px; padding: 10px 12px; background: var(--surface3);
 }}
-.fund-head, .fund-meta {{
-  display: flex; justify-content: space-between; gap: 10px; align-items: baseline;
-}}
+.fund-head, .fund-meta {{ display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }}
 .fund-head h3 {{ margin: 0; font-size: 0.94rem; }}
-.fund-count, .fund-meta {{
-  color: var(--text-muted); font-size: 0.74rem;
-}}
+.fund-count, .fund-meta {{ color: var(--text-muted); font-size: 0.74rem; }}
 .fund-links {{
-  list-style: none; padding: 0; margin: 10px 0 0;
-  display: grid; gap: 6px;
+  list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 6px;
 }}
 .fund-links li {{
   display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 8px;
   align-items: start; font-size: 0.8rem;
 }}
 .fund-links a {{
-  color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: var(--text); display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden; white-space: normal;
 }}
+.fund-links a:hover {{ color: var(--accent); }}
+.theme-group a {{ color: var(--text); }}
+.theme-group a:hover {{ color: var(--accent); }}
 .theme-group {{
-  border: 1px solid var(--border); border-radius: 14px; padding: 10px 12px; background: var(--surface3);
+  border: 1px solid var(--border); border-radius: 14px;
+  padding: 10px 12px; background: var(--surface3);
 }}
 .theme-group h3 {{ margin: 0 0 8px 0; font-size: 0.88rem; }}
 .theme-group .count {{ color: var(--text-muted); font-weight: normal; font-size: 0.8rem; }}
 .theme-group ul {{
-  list-style: none; padding: 0; margin: 0;
-  display: grid; gap: 6px; font-size: 0.8rem;
+  list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; font-size: 0.8rem;
 }}
 .theme-group li {{ line-height: 1.35; }}
 
 .muted {{ color: var(--text-muted); }}
 .hidden-by-filter {{ display: none !important; }}
 
-/* Footer */
+/* ── Fund section (Funds view) ── */
+.fund-section {{ border-left: 3px solid var(--fund-accent, var(--accent)); }}
+.fund-section .cluster-head h2 {{ display: flex; align-items: center; gap: 10px; }}
+
+/* ── Footer ── */
 .footer {{
   margin-top: 22px; padding: 16px 0; border-top: 1px solid var(--border);
   text-align: center; color: var(--text-muted); font-size: 0.8rem;
 }}
 @media (max-width: 980px) {{
   .board {{ grid-template-columns: 1fr; }}
+  .summary-panel {{ margin-left: 32px; }}
+  .inline-takeaway {{ margin-left: 32px; }}
 }}
 @media (max-width: 720px) {{
   .container {{ padding: 14px 14px 22px; }}
   .row-main {{ flex-wrap: wrap; }}
   .headline {{ white-space: normal; overflow: visible; }}
   .summary-panel {{ margin-left: 0; }}
+  .inline-takeaway {{ margin-left: 0; }}
   .fund-links li {{ grid-template-columns: 1fr; }}
+  .view-bar {{ overflow-x: auto; }}
 }}
 </style>
 </head>
@@ -412,7 +604,7 @@ a:hover {{ text-decoration: underline; }}
     <div>
       <a href="/" style="font-size:0.82rem;color:var(--text-muted);text-decoration:none;">&larr; <span class="lang-en">Back to Infrastructure</span><span class="lang-zh" style="display:none">返回基础设施</span></a>
       <h1><span class="lang-en">Hedge Fund Research Insights</span><span class="lang-zh" style="display:none">对冲基金研究洞察</span></h1>
-      <div class="deck"><span class="lang-en">Bulletin-style research board for fast scanning across funds, themes, and daily flow.</span><span class="lang-zh" style="display:none">公告板式研究看板，快速扫描基金、主题与每日动态。</span></div>
+      <div class="deck"><span class="lang-en">Cross-fund research aggregator — scan by theme, timeline, or fund.</span><span class="lang-zh" style="display:none">跨基金研究聚合 — 按主题、时间线或基金浏览。</span></div>
       <div class="stats">
         <span>{total} articles</span>
         <span>{new_this_week} new this week</span>
@@ -421,45 +613,62 @@ a:hover {{ text-decoration: underline; }}
       </div>
     </div>
     <div class="header-actions">
-      <button class="btn-toggle" onclick="clearThemeFilters()">Clear Filters</button>
       <button class="btn-toggle" onclick="toggleLang()">CN / EN</button>
     </div>
   </div>
 </div>
 
 <div class="container">
-  <div class="board">
-    <section class="rail">
-      <div class="rail-head">
-        <div>
-          <h2><span class="lang-en">Bulletin Feed</span><span class="lang-zh" style="display:none">研究公告</span></h2>
-          <div class="rail-copy"><span class="lang-en">Dense one-line rows. Open only the entries you want to inspect.</span><span class="lang-zh" style="display:none">密排单行，展开查看分析详情。</span></div>
-        </div>
-      </div>
-      <div class="filter-bar">
-        {theme_filters_html}
-      </div>
-      <div class="timeline-wrap">
-        {timeline_html}
-        {load_more_btn}
-      </div>
-    </section>
+  <div class="view-bar">
+    <button class="view-btn active" data-view="themes" onclick="switchView('themes')"><span class="lang-en">Themes</span><span class="lang-zh" style="display:none">主题</span></button>
+    <button class="view-btn" data-view="timeline" onclick="switchView('timeline')"><span class="lang-en">Timeline</span><span class="lang-zh" style="display:none">时间线</span></button>
+    <button class="view-btn" data-view="funds" onclick="switchView('funds')"><span class="lang-en">Funds</span><span class="lang-zh" style="display:none">基金</span></button>
+  </div>
 
-    <aside class="sidebar">
-      <section class="rail sidebar-section">
-        <h2 class="section-title"><span class="lang-en">Funds</span><span class="lang-zh" style="display:none">基金</span></h2>
-        <div class="fund-stack">
-          {fund_grid_html}
+  <!-- ═══ THEMES VIEW (default) ═══ -->
+  <div class="view-panel active" id="view-themes">
+    <div class="cluster-grid">
+      {clusters_html}
+    </div>
+  </div>
+
+  <!-- ═══ TIMELINE VIEW ═══ -->
+  <div class="view-panel" id="view-timeline">
+    <div class="board">
+      <section class="rail">
+        <div class="rail-head">
+          <div>
+            <h2><span class="lang-en">Bulletin Feed</span><span class="lang-zh" style="display:none">研究公告</span></h2>
+            <div class="rail-copy"><span class="lang-en">Chronological feed — expand rows to inspect.</span><span class="lang-zh" style="display:none">按时间排序 — 展开查看详情。</span></div>
+          </div>
+        </div>
+        <div class="filter-bar">
+          {theme_filters_html}
+        </div>
+        <div class="timeline-wrap">
+          {timeline_html}
+          {load_more_btn}
         </div>
       </section>
 
-      <section class="rail sidebar-section">
-        <h2 class="section-title"><span class="lang-en">Themes</span><span class="lang-zh" style="display:none">主题</span></h2>
-        <div class="theme-stack">
-          {themes_html}
-        </div>
-      </section>
-    </aside>
+      <aside class="sidebar">
+        <section class="rail sidebar-section">
+          <h2 class="section-title"><span class="lang-en">Funds</span><span class="lang-zh" style="display:none">基金</span></h2>
+          <div class="fund-stack">{fund_grid_html}</div>
+        </section>
+        <section class="rail sidebar-section">
+          <h2 class="section-title"><span class="lang-en">Themes</span><span class="lang-zh" style="display:none">主题</span></h2>
+          <div class="theme-stack">{themes_html}</div>
+        </section>
+      </aside>
+    </div>
+  </div>
+
+  <!-- ═══ FUNDS VIEW ═══ -->
+  <div class="view-panel" id="view-funds">
+    <div class="cluster-grid">
+      {funds_view_html}
+    </div>
   </div>
 </div>
 
@@ -471,21 +680,45 @@ a:hover {{ text-decoration: underline; }}
 let langZh = false;
 const activeThemes = new Set();
 
+/* ── View switching ── */
+function switchView(name) {{
+  document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+  const panel = document.getElementById('view-' + name);
+  if (panel) panel.classList.add('active');
+  const btn = document.querySelector('.view-btn[data-view="' + name + '"]');
+  if (btn) btn.classList.add('active');
+  /* Re-bind toggles for newly-visible panel */
+  bindRowToggles();
+}}
+
 function toggleLang() {{
   langZh = !langZh;
   document.querySelectorAll('.lang-en').forEach(el => el.style.display = langZh ? 'none' : '');
   document.querySelectorAll('.lang-zh').forEach(el => el.style.display = langZh ? '' : 'none');
 }}
 
-document.querySelectorAll('.row-toggle').forEach(btn => {{
-  btn.addEventListener('click', () => {{
-    const details = btn.closest('.timeline-row').querySelector('.summary-panel');
+/* ── Row toggle (Open/Close) ── */
+function bindRowToggles() {{
+  document.querySelectorAll('.row-toggle').forEach(btn => {{
+    if (btn._bound) return;
+    btn._bound = true;
+    const parent = btn.closest('.timeline-row') || btn.closest('.cluster-item');
+    if (!parent) return;
+    const details = parent.querySelector('.summary-panel');
     if (!details) return;
-    details.open = !details.open;
-    btn.textContent = details.open ? 'Close' : 'Open';
+    btn.addEventListener('click', () => {{
+      details.open = !details.open;
+      btn.textContent = details.open ? 'Close' : 'Open';
+    }});
+    details.addEventListener('toggle', () => {{
+      btn.textContent = details.open ? 'Close' : 'Open';
+    }});
   }});
-}});
+}}
+bindRowToggles();
 
+/* ── Timeline filters ── */
 function applyThemeFilters() {{
   document.querySelectorAll('.timeline-row').forEach(row => {{
     const rowThemes = (row.dataset.themes || '').split(' ').filter(Boolean);
@@ -497,6 +730,20 @@ function applyThemeFilters() {{
     const matches = activeThemes.size === 0 || activeThemes.has(theme);
     group.classList.toggle('hidden-by-filter', !matches);
   }});
+  updateLoadMoreCount();
+}}
+
+function updateLoadMoreCount() {{
+  const btn = document.querySelector('.btn-load-more');
+  if (!btn || btn.style.display === 'none') return;
+  const hidden = document.querySelectorAll('.timeline-extra:not(.hidden-by-filter)');
+  const remaining = Array.from(hidden).filter(el => el.style.display === 'none').length;
+  if (remaining > 0) {{
+    btn.textContent = 'Load more (' + remaining + ' remaining)';
+    btn.style.display = '';
+  }} else {{
+    btn.style.display = 'none';
+  }}
 }}
 
 function toggleThemeFilter(button) {{
@@ -513,15 +760,15 @@ function toggleThemeFilter(button) {{
 
 function clearThemeFilters() {{
   activeThemes.clear();
-  document.querySelectorAll('.filter-pill').forEach(button => button.classList.remove('active'));
+  document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
   applyThemeFilters();
 }}
 
 function filterSingleTheme(theme) {{
   clearThemeFilters();
   activeThemes.add(theme);
-  document.querySelectorAll('.filter-pill').forEach(button => {{
-    if (button.dataset.theme === theme) button.classList.add('active');
+  document.querySelectorAll('.filter-pill').forEach(b => {{
+    if (b.dataset.theme === theme) b.classList.add('active');
   }});
   applyThemeFilters();
 }}
@@ -530,6 +777,7 @@ function showAll() {{
   document.querySelectorAll('.timeline-extra').forEach(el => el.style.display = '');
   const btn = document.querySelector('.btn-load-more');
   if (btn) btn.style.display = 'none';
+  bindRowToggles();
 }}
 </script>
 
