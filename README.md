@@ -66,7 +66,7 @@ python3 validate_entrypoints.py --source gmo --fix
 
 ## Tests
 
-151 tests passing — unit, functional, and integration tests.
+151 tests (verified) passing — unit, functional, and integration tests.
 
 ```bash
 python3 -m pytest tests/ -q
