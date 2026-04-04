@@ -58,7 +58,8 @@
       "h2_tags": 0,
       "article_signals": 0
     },
-    "screening_reason": "Login/paywall detected"
+    "screening_reason": "Login/paywall detected",
+    "last_deep_analyzed_at": "2026-04-04T18:29:56.182174+00:00"
   },
   {
     "id": "de-shaw",
@@ -94,7 +95,8 @@
       "h2_tags": 0,
       "article_signals": 1
     },
-    "screening_reason": "Insufficient article index signals"
+    "screening_reason": "Insufficient article index signals",
+    "last_deep_analyzed_at": "2026-04-04T18:29:56.182174+00:00"
   },
   {
     "id": "blackstone",
@@ -165,7 +167,8 @@
       "h2_tags": 7,
       "article_signals": 3
     },
-    "screening_reason": "Research index detected"
+    "screening_reason": "Research index detected",
+    "last_deep_analyzed_at": "2026-04-04T18:29:56.182174+00:00"
   },
   {
     "id": "two-sigma",
@@ -206,7 +209,8 @@
       "h2_tags": 6,
       "article_signals": 2
     },
-    "screening_reason": "Research index detected"
+    "screening_reason": "Research index detected",
+    "last_deep_analyzed_at": "2026-04-04T18:29:56.182174+00:00"
   },
   {
     "id": "kkr",
@@ -272,6 +276,7 @@
       "h2_tags": 1,
       "article_signals": 1
     },
-    "screening_reason": "Insufficient article index signals"
+    "screening_reason": "Insufficient article index signals",
+    "last_deep_analyzed_at": "2026-04-04T18:29:56.182174+00:00"
   }
 ]

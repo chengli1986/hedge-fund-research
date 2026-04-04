@@ -17,7 +17,13 @@ Read the output. Note which funds changed status.
 
 ## Phase 2: LLM deep analysis
 
-For each candidate with status "discovered" or "validated" in `config/fund_candidates.json`:
+**Skip logic — check BEFORE analyzing each fund:**
+- Read `config/fund_candidates.json`
+- If `last_deep_analyzed_at` exists and is **within 7 days** AND status hasn't changed → **SKIP** (already analyzed recently)
+- If status is `rejected` or `watchlist` and `last_deep_analyzed_at` is **within 30 days** → **SKIP** (low-value candidates recheck monthly)
+- Only analyze funds that are: (a) never analyzed, (b) analysis is stale (>7 days), or (c) status changed since last analysis
+
+For each candidate that NEEDS analysis:
 
 1. **Fetch the research URL** using WebFetch
 2. **Analyze the page content** — answer these questions:
@@ -39,11 +45,14 @@ For each candidate with status "discovered" or "validated" in `config/fund_candi
    Does this candidate fill a gap? Or overlap heavily with existing coverage?
 
 4. **Update fund_candidates.json** with your analysis:
+   - Set `last_deep_analyzed_at` to current UTC ISO timestamp
    - Add a `notes` field with your assessment (1-2 sentences)
    - If quality is HIGH and updated within 30 days: prefix notes with "RECOMMEND: "
    - If clearly not suitable: set status to "watchlist" or "rejected" with reason
 
 ## Phase 3: Discover NEW candidates (beyond seed list)
+
+**Skip logic:** If ALL existing candidates have been deep-analyzed within 7 days, spend this session's budget on discovering new funds. Otherwise, prioritize analyzing existing un-analyzed candidates first.
 
 Use WebSearch to find additional hedge funds with public research:
 
@@ -56,7 +65,7 @@ For any promising new fund NOT already in fund_seeds.json:
 1. Verify it has an official website with a research/insights section
 2. Add it to `config/fund_seeds.json` with appropriate metadata
 3. Run `python3 discover_fund_sites.py --fund <new-id>` to discover it
-4. Maximum 2 new seeds per session (cost control)
+4. **Maximum 1 new seed per session** (slow deliberate growth)
 
 ## Phase 4: Commit and report
 
@@ -67,20 +76,18 @@ git diff --cached --quiet || git commit -m "data(candidate): daily discovery run
 git push
 ```
 
-Output a summary table:
-```
-Fund            Status      Fit Score  Quality  Last Updated  Recommendation
-----            ------      ---------  -------  ------------  --------------
-pimco           validated   0.850      HIGH     2026-04-02    RECOMMEND: deep fixed income research
-de-shaw         validated   1.000      MEDIUM   2026-03-15    Watchlist: infrequent updates
-...
-```
+Output a brief summary:
+- How many funds checked vs skipped (already analyzed)
+- Any status changes
+- Any new seeds added
+- Any recommendations
 
 ## Rules
 
 - **NEVER** modify `config/sources.json` or `config/entrypoints.json` (production files)
-- Maximum 2 new seeds per session
-- Maximum 5 WebSearch queries per session
-- Maximum 10 WebFetch calls per session
+- **Maximum 1 new seed per session** (deliberate growth, not bulk expansion)
+- Maximum 3 WebSearch queries per session
+- Maximum 8 WebFetch calls per session
 - If a page requires login/payment, mark as "rejected: gated content" and move on
 - Keep notes concise (1-2 sentences max)
+- Always set `last_deep_analyzed_at` after analyzing a fund
