@@ -69,3 +69,7 @@ if [ -n "$REMOTE_HEAD" ] && [ "$REMOTE_HEAD" != "$LOCAL_HEAD" ]; then
 else
     echo "$LOG_PREFIX No new commits to push"
 fi
+
+# Sync experiment history to docs page
+echo "$LOG_PREFIX Syncing experiment history to autoresearch.html..."
+python3 /home/ubuntu/infra-scripts/sync-ar-history.py gmia "$REPO_DIR/autoresearch/results.tsv" Yield 2>&1 || echo "$LOG_PREFIX WARNING: history sync failed (non-fatal)"
