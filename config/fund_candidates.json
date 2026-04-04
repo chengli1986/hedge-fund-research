@@ -2,91 +2,276 @@
   {
     "id": "pimco",
     "name": "PIMCO",
-    "status": "seed",
-    "homepage_url": null,
-    "research_url": null,
+    "status": "validated",
+    "homepage_url": "https://www.pimco.com",
+    "research_url": "https://www.pimco.com/us/en/insights#sort=%40publishz32xdate%20descending&f:category=[70341f6de3a142ee89144df0ec44e3b8,8d35ad276c6c4c5caf4d9fed37c5f51d,1a3217a178b04eb18c1e4532665b184c,56ebfd2935044d1eb39b7e661d2d03fb,22ea0773e8f147e38e15655207e73e21,bdd17ed0ae9d4ddd96e9e60e51c47782,78449f5b2f5e4b6ebd2d6e90b7a9f889,9cfdb8bfe49a451a851cf9957c57cd32,eef114e6a525445a81d179b8adb018c7]",
     "rss_url": null,
-    "official_domain": null,
-    "discovery_method": null,
-    "last_discovered_at": null,
-    "last_screened_at": null,
-    "last_validated_at": null,
+    "official_domain": "www.pimco.com",
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-04-05T02:04:51.344849+08:00",
+    "last_screened_at": "2026-04-05T02:04:56.708982+08:00",
+    "last_validated_at": "2026-04-05T02:05:11.104334+08:00",
     "recent_update_at": null,
-    "is_publicly_accessible": null,
-    "has_article_index": null,
-    "fit_score": null,
-    "notes": null
+    "is_publicly_accessible": false,
+    "has_article_index": false,
+    "fit_score": 0.85,
+    "notes": null,
+    "research_links": [
+      {
+        "url": "https://www.pimco.com/us/en/insights#sort=%40publishz32xdate%20descending&f:category=[70341f6de3a142ee89144df0ec44e3b8,8d35ad276c6c4c5caf4d9fed37c5f51d,1a3217a178b04eb18c1e4532665b184c,56ebfd2935044d1eb39b7e661d2d03fb,22ea0773e8f147e38e15655207e73e21,bdd17ed0ae9d4ddd96e9e60e51c47782,78449f5b2f5e4b6ebd2d6e90b7a9f889,9cfdb8bfe49a451a851cf9957c57cd32,eef114e6a525445a81d179b8adb018c7]",
+        "label": "Economic and Market Commentary",
+        "path": "us/en/insights"
+      },
+      {
+        "url": "https://www.pimco.com/us/en/insights#sort=%40publishz32xdate%20descending&f:category=[2ed0cf23194641ed85e6c62992b55c9b]",
+        "label": "Investment Strategies",
+        "path": "us/en/insights"
+      },
+      {
+        "url": "https://www.pimco.com/us/en/insights#sort=%40publishz32xdate%20descending&f:category=[a7b69dc189f64d858cf8c37ff9c9e7fd]",
+        "label": "Research",
+        "path": "us/en/insights"
+      },
+      {
+        "url": "https://www.pimco.com/us/en/insights",
+        "label": "View All",
+        "path": "us/en/insights"
+      },
+      {
+        "url": "https://www.pimco.com/us/en/insights/layered-uncertainty-conflict-credit-stress-and-ai",
+        "label": "Layered Uncertainty: Conflict, Credit Stress, and AI",
+        "path": "us/en/insights/layered-uncertainty-conflict-credit-stress-and-ai"
+      },
+      {
+        "url": "https://www.pimco.com/us/en/insights#sort=%40publishz32xdate%20descending&f:category=[70341f6de3a142ee89144df0ec44e3b8]",
+        "label": "Economic and Market Commentary",
+        "path": "us/en/insights"
+      }
+    ],
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 2,
+      "article_tags": 0,
+      "time_tags": 0,
+      "date_patterns": 0,
+      "h2_tags": 0,
+      "article_signals": 0
+    },
+    "screening_reason": "Login/paywall detected"
   },
   {
     "id": "de-shaw",
     "name": "D. E. Shaw",
-    "status": "seed",
-    "homepage_url": null,
-    "research_url": null,
+    "status": "validated",
+    "homepage_url": "https://www.deshaw.com",
+    "research_url": "https://www.deshaw.com/library",
     "rss_url": null,
-    "official_domain": null,
-    "discovery_method": null,
-    "last_discovered_at": null,
-    "last_screened_at": null,
-    "last_validated_at": null,
+    "official_domain": "www.deshaw.com",
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-04-05T02:04:51.427627+08:00",
+    "last_screened_at": "2026-04-05T02:04:56.792101+08:00",
+    "last_validated_at": "2026-04-05T02:05:11.738914+08:00",
     "recent_update_at": null,
-    "is_publicly_accessible": null,
-    "has_article_index": null,
-    "fit_score": null,
-    "notes": null
+    "is_publicly_accessible": false,
+    "has_article_index": false,
+    "fit_score": 1.0,
+    "notes": null,
+    "research_links": [
+      {
+        "url": "https://www.deshaw.com/library",
+        "label": "Library",
+        "path": "library"
+      }
+    ],
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 0,
+      "article_tags": 36,
+      "time_tags": 0,
+      "date_patterns": 0,
+      "h2_tags": 0,
+      "article_signals": 1
+    },
+    "screening_reason": "Insufficient article index signals"
   },
   {
     "id": "blackstone",
     "name": "Blackstone",
-    "status": "seed",
-    "homepage_url": null,
-    "research_url": null,
-    "rss_url": null,
-    "official_domain": null,
-    "discovery_method": null,
-    "last_discovered_at": null,
-    "last_screened_at": null,
-    "last_validated_at": null,
+    "status": "validated",
+    "homepage_url": "https://www.blackstone.com",
+    "research_url": "https://www.blackstone.com/insights/",
+    "rss_url": "https://www.blackstone.com/feed/",
+    "official_domain": "www.blackstone.com",
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-04-05T02:04:51.664204+08:00",
+    "last_screened_at": "2026-04-05T02:04:56.927982+08:00",
+    "last_validated_at": "2026-04-05T02:05:13.417241+08:00",
     "recent_update_at": null,
-    "is_publicly_accessible": null,
-    "has_article_index": null,
-    "fit_score": null,
-    "notes": null
+    "is_publicly_accessible": true,
+    "has_article_index": true,
+    "fit_score": 0.88,
+    "notes": null,
+    "research_links": [
+      {
+        "url": "https://www.blackstone.com/insights/",
+        "label": "View All",
+        "path": "insights"
+      },
+      {
+        "url": "https://www.blackstone.com/insights/market-views",
+        "label": "Market Views",
+        "path": "insights/market-views"
+      },
+      {
+        "url": "https://www.blackstone.com/pws/insights",
+        "label": "https://www.blackstone.com/pws/insights",
+        "path": "pws/insights"
+      },
+      {
+        "url": "https://www.blackstone.com/insights/article/introducing-tommy-fleetwood-our-first-global-brand-ambassador/",
+        "label": "Introducing Tommy Fleetwood, our first Global Brand Ambassador",
+        "path": "insights/article/introducing-tommy-fleetwood-our-first-global-brand-ambassador"
+      },
+      {
+        "url": "https://www.blackstone.com/insights/firm-news/",
+        "label": "Firm News",
+        "path": "insights/firm-news"
+      },
+      {
+        "url": "https://www.blackstone.com/insights/article/private-credit-myth-vs-fact/",
+        "label": "Private Credit: Myth vs. Fact",
+        "path": "insights/article/private-credit-myth-vs-fact"
+      },
+      {
+        "url": "https://www.blackstone.com/insights/article/market-views-dealmaking-disruption-and-real-estates-recovery/",
+        "label": "Market Views: Dealmaking, Disruption, and Real Estate’s Recovery",
+        "path": "insights/article/market-views-dealmaking-disruption-and-real-estates-recovery"
+      },
+      {
+        "url": "https://www.blackstone.com/insights/article/real-estate-enters-the-next-phase-of-the-cycle/",
+        "label": "Real Estate Enters the Next Phase of the Cycle",
+        "path": "insights/article/real-estate-enters-the-next-phase-of-the-cycle"
+      }
+    ],
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 1,
+      "article_tags": 12,
+      "time_tags": 12,
+      "date_patterns": 12,
+      "h2_tags": 7,
+      "article_signals": 3
+    },
+    "screening_reason": "Research index detected"
   },
   {
     "id": "two-sigma",
     "name": "Two Sigma",
-    "status": "seed",
-    "homepage_url": null,
-    "research_url": null,
-    "rss_url": null,
-    "official_domain": null,
-    "discovery_method": null,
-    "last_discovered_at": null,
-    "last_screened_at": null,
-    "last_validated_at": null,
+    "status": "validated",
+    "homepage_url": "https://www.twosigma.com",
+    "research_url": "https://www.twosigma.com/insights/",
+    "rss_url": "https://www.twosigma.com/feed/",
+    "official_domain": "www.twosigma.com",
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-04-05T02:04:51.804473+08:00",
+    "last_screened_at": "2026-04-05T02:04:57.058340+08:00",
+    "last_validated_at": "2026-04-05T02:05:14.974821+08:00",
     "recent_update_at": null,
-    "is_publicly_accessible": null,
-    "has_article_index": null,
-    "fit_score": null,
-    "notes": null
+    "is_publicly_accessible": true,
+    "has_article_index": true,
+    "fit_score": 0.97,
+    "notes": null,
+    "research_links": [
+      {
+        "url": "https://www.twosigma.com/insights/",
+        "label": "Insights",
+        "path": "insights"
+      },
+      {
+        "url": "http://www.twosigma.com/insights/",
+        "label": "Read more of our Insights",
+        "path": "insights"
+      }
+    ],
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 0,
+      "article_tags": 52,
+      "time_tags": 0,
+      "date_patterns": 52,
+      "h2_tags": 6,
+      "article_signals": 2
+    },
+    "screening_reason": "Research index detected"
   },
   {
     "id": "kkr",
     "name": "KKR",
-    "status": "seed",
-    "homepage_url": null,
-    "research_url": null,
+    "status": "validated",
+    "homepage_url": "https://www.kkr.com",
+    "research_url": "https://www.kkr.com/insights",
     "rss_url": null,
-    "official_domain": null,
-    "discovery_method": null,
-    "last_discovered_at": null,
-    "last_screened_at": null,
-    "last_validated_at": null,
+    "official_domain": "www.kkr.com",
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-04-05T02:04:51.937514+08:00",
+    "last_screened_at": "2026-04-05T02:04:57.352423+08:00",
+    "last_validated_at": "2026-04-05T02:05:17.026146+08:00",
     "recent_update_at": null,
-    "is_publicly_accessible": null,
-    "has_article_index": null,
-    "fit_score": null,
-    "notes": null
+    "is_publicly_accessible": false,
+    "has_article_index": false,
+    "fit_score": 0.94,
+    "notes": null,
+    "research_links": [
+      {
+        "url": "https://www.kkr.com/insights",
+        "label": "Learn more",
+        "path": "insights"
+      },
+      {
+        "url": "https://www.kkr.com/insights#categoryTagId=insights-categories:macro-insights",
+        "label": "Macro Insights",
+        "path": "insights"
+      },
+      {
+        "url": "https://www.kkr.com/insights#categoryTagId=insights-categories:investment-insights",
+        "label": "Investment Insights",
+        "path": "insights"
+      },
+      {
+        "url": "https://www.kkr.com/insights/total-portfolio-approach",
+        "label": "FEATURED INSIGHT The Total Portfolio Approach",
+        "path": "insights/total-portfolio-approach"
+      },
+      {
+        "url": "https://www.kkr.com/insights/flash-macro-markets-update-april-2026",
+        "label": "Macro Insights Flash Macro: U.S. Markets Update April 2026 Learn More",
+        "path": "insights/flash-macro-markets-update-april-2026"
+      },
+      {
+        "url": "https://www.kkr.com/insights/2026-infrastructure-outlook",
+        "label": "Investment Insights 2026 Infrastructure Outlook March 2026 Learn More",
+        "path": "insights/2026-infrastructure-outlook"
+      },
+      {
+        "url": "https://www.kkr.com/insights/2026-japan-thoughts-from-the-road",
+        "label": "Macro Insights Thoughts from the Road: Japan March 2026 Learn More",
+        "path": "insights/2026-japan-thoughts-from-the-road"
+      }
+    ],
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 1,
+      "article_tags": 0,
+      "time_tags": 4,
+      "date_patterns": 0,
+      "h2_tags": 1,
+      "article_signals": 1
+    },
+    "screening_reason": "Insufficient article index signals"
   }
 ]

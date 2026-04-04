@@ -1,4 +1,115 @@
 {
   "version": 1,
-  "sources": {}
+  "sources": {
+    "pimco": {
+      "last_discovered_at": "2026-04-05T02:05:11.104334+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://www.pimco.com/us/en/insights#sort=%40publishz32xdate%20descending&f:category=[70341f6de3a142ee89144df0ec44e3b8,8d35ad276c6c4c5caf4d9fed37c5f51d,1a3217a178b04eb18c1e4532665b184c,56ebfd2935044d1eb39b7e661d2d03fb,22ea0773e8f147e38e15655207e73e21,bdd17ed0ae9d4ddd96e9e60e51c47782,78449f5b2f5e4b6ebd2d6e90b7a9f889,9cfdb8bfe49a451a851cf9957c57cd32,eef114e6a525445a81d179b8adb018c7]",
+          "final_score": 0.85,
+          "active": true
+        },
+        {
+          "url": "https://www.pimco.com/us/en/insights#sort=%40publishz32xdate%20descending&f:category=[2ed0cf23194641ed85e6c62992b55c9b]",
+          "final_score": 0.85,
+          "active": false
+        },
+        {
+          "url": "https://www.pimco.com/us/en",
+          "final_score": 0.82,
+          "active": false
+        }
+      ],
+      "rejected_pages": []
+    },
+    "de-shaw": {
+      "last_discovered_at": "2026-04-05T02:05:11.738914+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://www.deshaw.com/library",
+          "final_score": 1.0,
+          "active": true
+        },
+        {
+          "url": "https://www.deshaw.com/",
+          "final_score": 0.85,
+          "active": false
+        },
+        {
+          "url": "https://www.deshaw.com/who-we-are",
+          "final_score": 0.85,
+          "active": false
+        }
+      ],
+      "rejected_pages": []
+    },
+    "blackstone": {
+      "last_discovered_at": "2026-04-05T02:05:13.417241+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://www.blackstone.com/insights/",
+          "final_score": 0.88,
+          "active": true
+        },
+        {
+          "url": "https://www.blackstone.com/",
+          "final_score": 0.73,
+          "active": false
+        },
+        {
+          "url": "https://www.blackstone.com/blackstone-career-pathways/",
+          "final_score": 0.715,
+          "active": false
+        }
+      ],
+      "rejected_pages": []
+    },
+    "two-sigma": {
+      "last_discovered_at": "2026-04-05T02:05:14.974821+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://www.twosigma.com/insights/",
+          "final_score": 0.97,
+          "active": true
+        },
+        {
+          "url": "https://www.twosigma.com/legal-disclosure/cookies-policy/",
+          "final_score": 0.79,
+          "active": false
+        },
+        {
+          "url": "http://www.twosigma.com/legal-disclosure/privacy-policy/",
+          "final_score": 0.79,
+          "active": false
+        }
+      ],
+      "rejected_pages": []
+    },
+    "kkr": {
+      "last_discovered_at": "2026-04-05T02:05:17.026146+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://www.kkr.com/insights",
+          "final_score": 0.94,
+          "active": true
+        },
+        {
+          "url": "https://www.kkr.com/",
+          "final_score": 0.69,
+          "active": false
+        },
+        {
+          "url": "https://www.kkr.com/wealth",
+          "final_score": 0.66,
+          "active": false
+        }
+      ],
+      "rejected_pages": []
+    }
+  }
 }
