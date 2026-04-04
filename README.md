@@ -64,6 +64,25 @@ python3 validate_entrypoints.py
 python3 validate_entrypoints.py --source gmo --fix
 ```
 
+## Candidate Fund Discovery
+
+Automated pipeline for finding and evaluating new hedge fund research sources:
+
+1. **Site discovery** — crawls candidate fund homepages, extracts research links + RSS feeds
+2. **Rule-based screening** — detects login walls, paywalls, index-only pages
+3. **Entrypoint scoring** — reuses scorer engine with isolated candidate state
+4. **LLM deep analysis** — Claude Code agent judges quality (HIGH/MEDIUM/LOW) and GMIA fit
+5. **Email report** — HTML summary with color-coded quality/status after each run
+
+```bash
+# Manual run
+bash scripts/wrapper-candidate-discovery.sh
+
+# Seed pool: 5 funds (PIMCO, D.E. Shaw, Blackstone, Two Sigma, KKR)
+# Cron: daily at 03:00 BJT (gmia-candidate-discovery)
+# Skip logic: 7-day cooldown for analyzed, 30-day for rejected/watchlist
+```
+
 ## Autoresearch
 
 Scorer weight optimization program using automated experiment loop:
@@ -75,7 +94,7 @@ Scorer weight optimization program using automated experiment loop:
 
 ## Tests
 
-164 tests passing — unit, functional, and integration tests (15 nightly/live tests deselected by default via pytest.ini).
+189 tests passing — unit, functional, and integration tests (15 nightly/live tests deselected by default via pytest.ini).
 
 ```bash
 python3 -m pytest tests/ -q
