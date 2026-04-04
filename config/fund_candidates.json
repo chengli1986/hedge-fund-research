@@ -15,7 +15,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.85,
-    "notes": "Research index requires JS rendering (403 on direct fetch); world-leading fixed-income specialist filling a major gap vs. current 6 funds. Re-validate via direct article URLs or RSS.",
+    "notes": "RECOMMEND: top fixed income research, 403 needs browser",
     "research_links": [
       {
         "url": "https://www.pimco.com/us/en/insights#sort=%40publishz32xdate%20descending&f:category=[70341f6de3a142ee89144df0ec44e3b8,8d35ad276c6c4c5caf4d9fed37c5f51d,1a3217a178b04eb18c1e4532665b184c,56ebfd2935044d1eb39b7e661d2d03fb,22ea0773e8f147e38e15655207e73e21,bdd17ed0ae9d4ddd96e9e60e51c47782,78449f5b2f5e4b6ebd2d6e90b7a9f889,9cfdb8bfe49a451a851cf9957c57cd32,eef114e6a525445a81d179b8adb018c7]",
@@ -59,7 +59,9 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-04-04T18:29:56.182174+00:00"
+    "last_deep_analyzed_at": "2026-04-04T18:29:56.182174+00:00",
+    "quality": "HIGH",
+    "topics": "fixed income, macro, credit"
   },
   {
     "id": "de-shaw",
@@ -77,7 +79,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 1.0,
-    "notes": "Watchlist: library page returns CSS/metadata only — no accessible article index. Publishes sparse academic papers infrequently; insufficient content volume for GMIA aggregation.",
+    "notes": "Watchlist: library page mostly CSS, minimal content",
     "research_links": [
       {
         "url": "https://www.deshaw.com/library",
@@ -96,7 +98,9 @@
       "article_signals": 1
     },
     "screening_reason": "Insufficient article index signals",
-    "last_deep_analyzed_at": "2026-04-04T18:29:56.182174+00:00"
+    "last_deep_analyzed_at": "2026-04-04T18:29:56.182174+00:00",
+    "quality": "LOW",
+    "topics": "quant, systematic"
   },
   {
     "id": "blackstone",
@@ -114,7 +118,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.88,
-    "notes": "RECOMMEND: Freely accessible, publishes weekly on private credit, real estate, and alternatives — fills clear gap vs. existing 6 funds. Most recent article: 2026-03-31.",
+    "notes": "RECOMMEND: weekly insights, fills PE/RE gap",
     "research_links": [
       {
         "url": "https://www.blackstone.com/insights/",
@@ -168,7 +172,9 @@
       "article_signals": 3
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-04-04T18:29:56.182174+00:00"
+    "last_deep_analyzed_at": "2026-04-04T18:29:56.182174+00:00",
+    "quality": "MEDIUM",
+    "topics": "private credit, real estate, alternatives"
   },
   {
     "id": "two-sigma",
@@ -186,7 +192,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.97,
-    "notes": "Watchlist: blog dominated by HR/culture/engineering content; last financial research was Jan 2026 AI outlook. Heavy quant overlap with AQR; insufficient research volume for GMIA.",
+    "notes": "Watchlist: blog is HR/culture, not financial research",
     "research_links": [
       {
         "url": "https://www.twosigma.com/insights/",
@@ -210,7 +216,9 @@
       "article_signals": 2
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-04-04T18:29:56.182174+00:00"
+    "last_deep_analyzed_at": "2026-04-04T18:29:56.182174+00:00",
+    "quality": "LOW",
+    "topics": "quant, engineering"
   },
   {
     "id": "kkr",
@@ -228,7 +236,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.94,
-    "notes": "Watchlist: page returns 403 on direct fetch but pipeline sees April 2026 Flash Macro + March 2026 Infrastructure Outlook articles; covers macro+PE+infrastructure. Re-validate with JS rendering.",
+    "notes": "Watchlist: 403 but has macro/infra articles",
     "research_links": [
       {
         "url": "https://www.kkr.com/insights",
@@ -277,6 +285,8 @@
       "article_signals": 1
     },
     "screening_reason": "Insufficient article index signals",
-    "last_deep_analyzed_at": "2026-04-04T18:29:56.182174+00:00"
+    "last_deep_analyzed_at": "2026-04-04T18:29:56.182174+00:00",
+    "quality": "HIGH",
+    "topics": "macro, infrastructure, credit"
   }
 ]
