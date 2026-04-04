@@ -46,9 +46,11 @@ For each candidate that NEEDS analysis:
 
 4. **Update fund_candidates.json** with your analysis:
    - Set `last_deep_analyzed_at` to current UTC ISO timestamp
-   - Add a `notes` field with your assessment (1-2 sentences)
-   - If quality is HIGH and updated within 30 days: prefix notes with "RECOMMEND: "
-   - If clearly not suitable: set status to "watchlist" or "rejected" with reason
+   - Set `quality` field to "HIGH", "MEDIUM", or "LOW"
+   - Set `topics` field to a short comma-separated list (e.g., "fixed income, macro, credit")
+   - Set `notes` field to a **one-line summary, max 60 characters** (e.g., "Weekly private credit research, fills PE gap")
+   - If quality is HIGH and updated within 30 days: prefix notes with "RECOMMEND: " (still max 60 chars total)
+   - If clearly not suitable: set status to "watchlist" or "rejected" with reason in notes
 
 ## Phase 3: Discover NEW candidates (beyond seed list)
 

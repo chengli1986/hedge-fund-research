@@ -108,10 +108,13 @@ rows = ""
 for c in candidates:
     score = c.get("fit_score")
     score_str = f'{score:.3f}' if score is not None else "—"
-    notes = (c.get("notes") or "")[:100]
+    quality = c.get("quality", "—")
+    topics = c.get("topics", "—")
+    notes = (c.get("notes") or "")[:60]
     is_recommend = notes.startswith("RECOMMEND")
     bg = "#e6ffe6" if is_recommend else ""
     style = f' style="background:{bg}"' if bg else ""
+    q_color = {"HIGH": "#22863a", "MEDIUM": "#e36209", "LOW": "#cb2431"}.get(quality, "#959da5")
     status_pill = {
         "validated": '<span style="color:#22863a;font-weight:bold">validated</span>',
         "screened": '<span style="color:#0366d6">screened</span>',
@@ -120,7 +123,12 @@ for c in candidates:
         "watchlist": '<span style="color:#e36209">watchlist</span>',
         "rejected": '<span style="color:#cb2431">rejected</span>',
     }.get(c["status"], c["status"])
-    rows += f'<tr{style}><td>{c["name"]}</td><td>{status_pill}</td><td>{score_str}</td><td style="font-size:12px">{notes}</td></tr>\n'
+    rows += (f'<tr{style}><td style="padding:4px 6px;border-bottom:1px solid #eee">{c["name"]}</td>'
+             f'<td style="padding:4px 6px;border-bottom:1px solid #eee">{status_pill}</td>'
+             f'<td style="padding:4px 6px;border-bottom:1px solid #eee">{score_str}</td>'
+             f'<td style="padding:4px 6px;border-bottom:1px solid #eee;color:{q_color};font-weight:bold">{quality}</td>'
+             f'<td style="padding:4px 6px;border-bottom:1px solid #eee;font-size:11px;color:#586069">{topics}</td>'
+             f'<td style="padding:4px 6px;border-bottom:1px solid #eee;font-size:12px">{notes}</td></tr>\n')
 
 validated = sum(1 for c in candidates if c["status"] == "validated")
 recommend = sum(1 for c in candidates if (c.get("notes") or "").startswith("RECOMMEND"))
@@ -139,7 +147,9 @@ html = f"""<html><body style="font-family:system-ui,-apple-system,sans-serif;max
 <tr style="background:#f6f8fa">
 <th style="text-align:left;padding:6px;border-bottom:2px solid #e1e4e8">Fund</th>
 <th style="text-align:left;padding:6px;border-bottom:2px solid #e1e4e8">Status</th>
-<th style="text-align:left;padding:6px;border-bottom:2px solid #e1e4e8">Fit Score</th>
+<th style="text-align:left;padding:6px;border-bottom:2px solid #e1e4e8">Fit</th>
+<th style="text-align:left;padding:6px;border-bottom:2px solid #e1e4e8">Quality</th>
+<th style="text-align:left;padding:6px;border-bottom:2px solid #e1e4e8">Topics</th>
 <th style="text-align:left;padding:6px;border-bottom:2px solid #e1e4e8">Notes</th>
 </tr>
 {rows}
