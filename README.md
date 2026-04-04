@@ -64,9 +64,18 @@ python3 validate_entrypoints.py
 python3 validate_entrypoints.py --source gmo --fix
 ```
 
+## Autoresearch
+
+Scorer weight optimization program using automated experiment loop:
+
+- **Program**: `autoresearch/program.md` — experiment definitions + results log
+- **Wrapper**: `scripts/wrapper-autoresearch-gmia.sh` — runs daily at 20:15 BJT via cron
+- **History sync**: after each run, `sync-ar-history.py` auto-updates the `autoresearch.html` experiment table on docs.sinostor.com.cn
+- **Status**: 7 experiments logged (all at 0.9700 precision — weight tuning ongoing)
+
 ## Tests
 
-151 tests (verified) passing — unit, functional, and integration tests.
+164 tests passing — unit, functional, and integration tests (15 nightly/live tests deselected by default via pytest.ini).
 
 ```bash
 python3 -m pytest tests/ -q
