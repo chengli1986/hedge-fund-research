@@ -1,0 +1,7 @@
+[
+  {"id": "pimco", "name": "PIMCO", "aliases": ["Pacific Investment Management Company"], "category": "fixed_income", "homepage": "https://www.pimco.com", "notes": "Largest fixed income manager, extensive public research"},
+  {"id": "de-shaw", "name": "D. E. Shaw", "aliases": ["D.E. Shaw & Co."], "category": "quant", "homepage": "https://www.deshaw.com", "notes": "Quant/systematic, has perspectives page"},
+  {"id": "blackstone", "name": "Blackstone", "aliases": ["Blackstone Inc."], "category": "alternatives", "homepage": "https://www.blackstone.com", "notes": "Largest alternative asset manager, has insights page"},
+  {"id": "two-sigma", "name": "Two Sigma", "aliases": ["Two Sigma Investments"], "category": "quant", "homepage": "https://www.twosigma.com", "notes": "Quant fund, has blog but mostly technical/recruiting"},
+  {"id": "kkr", "name": "KKR", "aliases": ["Kohlberg Kravis Roberts"], "category": "alternatives", "homepage": "https://www.kkr.com", "notes": "PE/credit, has insights page"}
+]
