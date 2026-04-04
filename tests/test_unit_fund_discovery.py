@@ -124,3 +124,33 @@ class TestDetectRss:
         html = '<html><head></head><body></body></html>'
         feeds = dfs.detect_rss(html, "https://example.com")
         assert feeds == []
+
+
+# ---------------------------------------------------------------------------
+# screen_fund_candidates tests
+# ---------------------------------------------------------------------------
+
+import screen_fund_candidates as sfc
+
+
+class TestScreenPage:
+    def test_screen_rejects_non_public_page(self):
+        result = sfc.screen_page("https://example.com/research", status_code=403, html="")
+        assert result["passed"] is False
+        assert "not publicly accessible" in result["reason"].lower()
+
+    def test_screen_rejects_login_page(self):
+        html = '<html><body><form><input type="password" /><button>Log In</button></form></body></html>'
+        result = sfc.screen_page("https://example.com/insights", status_code=200, html=html)
+        assert result["passed"] is False
+        assert "login" in result["reason"].lower()
+
+    def test_screen_passes_research_index(self):
+        html = '<html><body><article><h2>Q1 Outlook</h2><time>2026-03-15</time></article><article><h2>Market Commentary</h2><time>2026-03-01</time></article><article><h2>Investment Perspectives</h2><time>2026-02-15</time></article></body></html>'
+        result = sfc.screen_page("https://example.com/insights", status_code=200, html=html)
+        assert result["passed"] is True
+
+    def test_screen_rejects_single_article(self):
+        html = '<html><body><article><h1>Our 2026 Outlook</h1><p>Long article content here...</p></article></body></html>'
+        result = sfc.screen_page("https://example.com/insights/outlook-2026", status_code=200, html=html)
+        assert result["passed"] is False
