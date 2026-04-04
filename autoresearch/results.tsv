@@ -1,1 +1,8 @@
 commit_hash	yield	status	description
+b07a60122f5ca8fccdd5a8328179f9ddf7d00fa7	0.9700	SAME	structure 0.4, domain 0.1, path 0.3, gate 0.2
+8316e20	0.9700	SAME	path 0.35, gate 0.15, domain 0.2, structure 0.3
+e760d21	0.9700	SAME	equal weights 0.25/0.25/0.25/0.25
+142fda5	0.9700	SAME	structure-dominant 0.1/0.2/0.5/0.2
+46fdc78	0.9700	SAME	path-dominant 0.1/0.5/0.2/0.2
+83006a4	0.9700	SAME	minimize gate 0.25/0.3/0.4/0.05
+d914f4a04db064a40aff50a8f696a2695a77172c	0.9700	SAME	domain-heavy 0.4/0.2/0.2/0.2
