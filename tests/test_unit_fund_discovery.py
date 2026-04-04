@@ -85,3 +85,42 @@ class TestCandidatesFile:
         candidate_ids = {c["id"] for c in candidates}
         missing = seed_ids - candidate_ids
         assert not missing, f"Seeds without candidate entry: {missing}"
+
+
+# ---------------------------------------------------------------------------
+# discover_fund_sites tests
+# ---------------------------------------------------------------------------
+
+import discover_fund_sites as dfs
+
+
+class TestExtractResearchLinks:
+    def test_extract_research_links_finds_insights(self):
+        html = '<html><body><nav><a href="/insights">Insights</a><a href="/about">About Us</a><a href="/research">Research</a><a href="/careers">Careers</a></nav></body></html>'
+        links = dfs.extract_research_links(html, "https://example.com", ["example.com"])
+        urls = [l["url"] for l in links]
+        assert "https://example.com/insights" in urls
+        assert "https://example.com/research" in urls
+        assert "https://example.com/careers" not in urls
+
+    def test_extract_research_links_filters_negative_paths(self):
+        html = '<html><body><a href="/perspectives">Perspectives</a><a href="/login">Login</a><a href="/subscribe">Subscribe</a><a href="/white-papers">White Papers</a></body></html>'
+        links = dfs.extract_research_links(html, "https://example.com", ["example.com"])
+        urls = [l["url"] for l in links]
+        assert "https://example.com/perspectives" in urls
+        assert "https://example.com/white-papers" in urls
+        assert "https://example.com/login" not in urls
+        assert "https://example.com/subscribe" not in urls
+
+
+class TestDetectRss:
+    def test_detect_rss_finds_feed_links(self):
+        html = '<html><head><link rel="alternate" type="application/rss+xml" href="/feed.xml" /></head><body></body></html>'
+        feeds = dfs.detect_rss(html, "https://example.com")
+        assert len(feeds) == 1
+        assert feeds[0] == "https://example.com/feed.xml"
+
+    def test_detect_rss_returns_empty_when_none(self):
+        html = '<html><head></head><body></body></html>'
+        feeds = dfs.detect_rss(html, "https://example.com")
+        assert feeds == []
