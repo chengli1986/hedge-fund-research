@@ -15,7 +15,7 @@ jobs:
           python-version: "3.12"
       - name: Install dependencies
         run: |
-          pip install pytest httpx
+          pip install pytest
           pip install -r requirements.txt
       - name: Run tests
         run: pytest tests/ -v
