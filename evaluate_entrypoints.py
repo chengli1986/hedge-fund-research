@@ -1,149 +1,176 @@
 #!/usr/bin/env python3
 """
-Hedge Fund Research — Article Yield Quality Metric
+Hedge Fund Research — Entrypoint Ranking Quality Metric
 
-Computes per-source "article yield": the fraction of fetched articles that are
-genuine, summarized market insights (not disclaimers/noise).
+Re-scores all candidate entrypoints using current weights from
+config/scorer_weights.json, then measures ranking precision:
+what fraction of "good" URLs rank above all "bad" URLs for each fund?
 
 Usage:
     python3 evaluate_entrypoints.py           # human-readable table
     python3 evaluate_entrypoints.py --json    # JSON output
+
+The metric printed on the last line is:
+    overall_precision: <float>
+This is the value autoresearch optimizes.
 """
 
 import argparse
 import json
-import re
+import sys
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
-DATA_FILE = BASE_DIR / "data" / "articles.jsonl"
+sys.path.insert(0, str(BASE_DIR))
 
-# Compiled noise patterns (case-insensitive where applicable)
-_NOISE_PATTERNS: list[re.Pattern] = [
-    re.compile(r"legal disclaimer", re.IGNORECASE),
-    re.compile(r"no substantive.*(content|analysis|investment)", re.IGNORECASE | re.DOTALL),
-    re.compile(r"cookie preferences|cookie policy", re.IGNORECASE),
-    re.compile(r"terms of use|terms of service", re.IGNORECASE),
-]
+from entrypoint_scorer import score_final_with_weights, load_weights
 
-MIN_TAKEAWAY_CHARS = 20
+CANDIDATE_EP_FILE = BASE_DIR / "config" / "candidate_entrypoints.json"
+WEIGHTS_FILE = BASE_DIR / "config" / "scorer_weights.json"
 
-
-def is_noise(takeaway: str) -> bool:
-    """Return True if the takeaway matches any noise pattern."""
-    return any(p.search(takeaway) for p in _NOISE_PATTERNS)
+# An entrypoint is "correctly ranked" if its re-scored final_score >= THRESHOLD
+# and all bad URLs for the same fund score below THRESHOLD.
+THRESHOLD = 0.5
 
 
-def compute_yield(articles: list[dict]) -> dict[str, dict]:
-    """Compute per-source article yield.
+def rescore_entry(entry: dict, weights: dict) -> float:
+    """Re-compute final_score from stored component scores + current weights."""
+    d = entry.get("domain_score")
+    p = entry.get("path_score")
+    s = entry.get("structure_score")
+    g = entry.get("gate_penalty")
+    if any(v is None for v in (d, p, s, g)):
+        # Fallback: return stored final_score if components missing
+        return entry.get("final_score", 0.0)
+    return round(score_final_with_weights(d, p, s, g, weights), 4)
 
-    Returns:
-        {
-            "source_id": {
-                "total": N,
-                "quality_articles": N,
-                "noise_articles": N,
-                "yield": float,
-            }
+
+def compute_ranking_precision(data: dict, weights: dict) -> dict:
+    """Compute per-fund and overall ranking precision.
+
+    For each fund:
+    - Re-score all good entrypoints and bad rejected pages with current weights
+    - Precision = (good URLs above threshold) / (total good URLs)
+    - Separation = avg(good scores) - avg(bad scores)
+
+    Returns dict with per-fund stats and overall precision.
+    """
+    results = {}
+    total_good_correct = 0
+    total_good = 0
+    total_bad_correct = 0
+    total_bad = 0
+
+    for fund_id, info in data.get("sources", {}).items():
+        good_entries = info.get("entrypoints", [])
+        bad_entries = [r for r in info.get("rejected_pages", []) if isinstance(r, dict)]
+
+        good_scores = [rescore_entry(e, weights) for e in good_entries]
+        bad_scores = [rescore_entry(e, weights) for e in bad_entries]
+
+        # Good URLs above threshold
+        good_above = sum(1 for s in good_scores if s >= THRESHOLD)
+        # Bad URLs below threshold
+        bad_below = sum(1 for s in bad_scores if s < THRESHOLD)
+
+        precision = good_above / len(good_scores) if good_scores else 1.0
+        bad_reject_rate = bad_below / len(bad_scores) if bad_scores else 1.0
+
+        avg_good = sum(good_scores) / len(good_scores) if good_scores else 0.0
+        avg_bad = sum(bad_scores) / len(bad_scores) if bad_scores else 0.0
+        separation = avg_good - avg_bad if bad_scores else avg_good
+
+        results[fund_id] = {
+            "good_count": len(good_scores),
+            "good_above_threshold": good_above,
+            "precision": round(precision, 4),
+            "bad_count": len(bad_scores),
+            "bad_below_threshold": bad_below,
+            "bad_reject_rate": round(bad_reject_rate, 4),
+            "avg_good_score": round(avg_good, 4),
+            "avg_bad_score": round(avg_bad, 4),
+            "separation": round(separation, 4),
         }
 
-    A quality article is: summarized=True AND key_takeaway_en has 20+ chars AND is NOT noise.
-    """
-    stats: dict[str, dict] = {}
+        total_good_correct += good_above
+        total_good += len(good_scores)
+        total_bad_correct += bad_below
+        total_bad += len(bad_scores)
 
-    for article in articles:
-        source_id = article.get("source_id", "unknown")
-        if source_id not in stats:
-            stats[source_id] = {"total": 0, "quality_articles": 0, "noise_articles": 0, "yield": 0.0}
+    # Overall metric: weighted combination of precision + rejection rate
+    overall_precision = total_good_correct / total_good if total_good else 0.0
+    overall_reject_rate = total_bad_correct / total_bad if total_bad else 0.0
+    # Combined metric: 60% good-precision + 40% bad-rejection
+    overall = 0.6 * overall_precision + 0.4 * overall_reject_rate
 
-        stats[source_id]["total"] += 1
-
-        takeaway = article.get("key_takeaway_en", "") or ""
-        summarized = bool(article.get("summarized", False))
-        long_enough = len(takeaway) >= MIN_TAKEAWAY_CHARS
-        noisy = is_noise(takeaway)
-
-        if noisy:
-            stats[source_id]["noise_articles"] += 1
-        elif summarized and long_enough:
-            stats[source_id]["quality_articles"] += 1
-
-    for source_id, data in stats.items():
-        total = data["total"]
-        data["yield"] = data["quality_articles"] / total if total > 0 else 0.0
-
-    return stats
+    return {
+        "per_fund": results,
+        "overall_precision": round(overall_precision, 4),
+        "overall_reject_rate": round(overall_reject_rate, 4),
+        "overall": round(overall, 4),
+        "total_good": total_good,
+        "total_bad": total_bad,
+    }
 
 
-def load_articles() -> list[dict]:
-    """Load articles from JSONL file."""
-    articles: list[dict] = []
-    if not DATA_FILE.exists():
-        return articles
-    with open(DATA_FILE, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if line:
-                try:
-                    articles.append(json.loads(line))
-                except json.JSONDecodeError:
-                    continue
-    return articles
-
-
-def print_table(results: dict[str, dict]) -> None:
-    """Print human-readable per-source yield table."""
-    if not results:
-        print("No articles found.")
+def print_table(metrics: dict) -> None:
+    """Print human-readable ranking quality table."""
+    per_fund = metrics["per_fund"]
+    if not per_fund:
+        print("No entrypoint data found.")
         return
 
-    col_src = max(len(src) for src in results) + 2
+    col_fund = max(len(f) for f in per_fund) + 2
     header = (
-        f"{'Source':<{col_src}}  {'Total':>7}  {'Quality':>8}  {'Noise':>6}  {'Yield':>7}"
+        f"{'Fund':<{col_fund}}  {'Good':>5}  {'Above':>6}  {'Prec':>6}  "
+        f"{'Bad':>4}  {'Below':>6}  {'Rej%':>6}  {'Sep':>6}"
     )
     print(header)
     print("-" * len(header))
 
-    for source_id, data in sorted(results.items()):
-        yield_pct = data["yield"] * 100
+    for fund_id, data in sorted(per_fund.items()):
         print(
-            f"{source_id:<{col_src}}  {data['total']:>7}  "
-            f"{data['quality_articles']:>8}  {data['noise_articles']:>6}  "
-            f"{yield_pct:>6.1f}%"
+            f"{fund_id:<{col_fund}}  {data['good_count']:>5}  "
+            f"{data['good_above_threshold']:>6}  {data['precision']*100:>5.1f}%  "
+            f"{data['bad_count']:>4}  {data['bad_below_threshold']:>6}  "
+            f"{data['bad_reject_rate']*100:>5.1f}%  {data['separation']:>6.3f}"
         )
 
-    # Aggregate totals
-    total = sum(d["total"] for d in results.values())
-    quality = sum(d["quality_articles"] for d in results.values())
-    noise = sum(d["noise_articles"] for d in results.values())
-    overall_yield = quality / total * 100 if total > 0 else 0.0
     print("-" * len(header))
     print(
-        f"{'TOTAL':<{col_src}}  {total:>7}  {quality:>8}  {noise:>6}  "
-        f"{overall_yield:>6.1f}%"
+        f"{'TOTAL':<{col_fund}}  {metrics['total_good']:>5}  "
+        f"{'':>6}  {metrics['overall_precision']*100:>5.1f}%  "
+        f"{metrics['total_bad']:>4}  {'':>6}  "
+        f"{metrics['overall_reject_rate']*100:>5.1f}%"
     )
+    # This line is what autoresearch reads
+    print(f"\noverall_precision: {metrics['overall']:.4f}")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Compute article yield (quality metric) per source."
+        description="Evaluate entrypoint ranking quality with current scorer weights."
     )
     parser.add_argument(
-        "--json",
-        dest="json_output",
-        action="store_true",
-        help="Output results as JSON instead of a human-readable table.",
+        "--json", dest="json_output", action="store_true",
+        help="Output results as JSON.",
     )
     args = parser.parse_args()
 
-    articles = load_articles()
-    results = compute_yield(articles)
+    if not CANDIDATE_EP_FILE.exists():
+        print("ERROR: candidate_entrypoints.json not found", file=sys.stderr)
+        sys.exit(1)
+
+    data = json.loads(CANDIDATE_EP_FILE.read_text(encoding="utf-8"))
+    weights = load_weights(str(WEIGHTS_FILE))
+
+    metrics = compute_ranking_precision(data, weights)
 
     if args.json_output:
-        print(json.dumps(results, indent=2))
+        print(json.dumps(metrics, indent=2))
         return
 
-    print_table(results)
+    print_table(metrics)
 
 
 if __name__ == "__main__":

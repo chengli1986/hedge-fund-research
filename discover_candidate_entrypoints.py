@@ -125,10 +125,16 @@ def pick_top_entrypoints(scored_pages: list[dict]) -> list[dict]:
 
     result = []
     for i, page in enumerate(top):
-        result.append({
-            **page,
+        entry = {
+            "url": page["url"],
+            "final_score": page["final_score"],
+            "domain_score": page.get("domain_score"),
+            "path_score": page.get("path_score"),
+            "structure_score": page.get("structure_score"),
+            "gate_penalty": page.get("gate_penalty"),
             "active": i == 0,
-        })
+        }
+        result.append(entry)
     return result
 
 
