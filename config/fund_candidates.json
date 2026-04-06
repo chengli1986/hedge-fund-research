@@ -8,9 +8,9 @@
     "rss_url": null,
     "official_domain": "www.pimco.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-06T02:30:12.118352+08:00",
-    "last_screened_at": "2026-04-06T02:30:22.321005+08:00",
-    "last_validated_at": "2026-04-06T02:30:35.725493+08:00",
+    "last_discovered_at": "2026-04-07T02:30:11.036964+08:00",
+    "last_screened_at": "2026-04-07T02:30:16.218145+08:00",
+    "last_validated_at": "2026-04-07T02:30:28.427407+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -72,9 +72,9 @@
     "rss_url": null,
     "official_domain": "www.deshaw.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-06T02:30:12.194005+08:00",
-    "last_screened_at": "2026-04-06T02:30:22.400066+08:00",
-    "last_validated_at": "2026-04-06T02:30:36.353586+08:00",
+    "last_discovered_at": "2026-04-07T02:30:11.099158+08:00",
+    "last_screened_at": "2026-04-07T02:30:16.303241+08:00",
+    "last_validated_at": "2026-04-07T02:30:29.074505+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -111,9 +111,9 @@
     "rss_url": "https://www.blackstone.com/feed/",
     "official_domain": "www.blackstone.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-06T02:30:12.431439+08:00",
-    "last_screened_at": "2026-04-06T02:30:22.534740+08:00",
-    "last_validated_at": "2026-04-06T02:30:37.953075+08:00",
+    "last_discovered_at": "2026-04-07T02:30:11.283910+08:00",
+    "last_screened_at": "2026-04-07T02:30:16.452185+08:00",
+    "last_validated_at": "2026-04-07T02:30:31.767036+08:00",
     "recent_update_at": "2026-03-31",
     "is_publicly_accessible": true,
     "has_article_index": true,
@@ -185,9 +185,9 @@
     "rss_url": "https://www.twosigma.com/feed/",
     "official_domain": "www.twosigma.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-06T02:30:12.539717+08:00",
-    "last_screened_at": "2026-04-06T02:30:22.652604+08:00",
-    "last_validated_at": "2026-04-06T02:30:39.328358+08:00",
+    "last_discovered_at": "2026-04-07T02:30:11.443074+08:00",
+    "last_screened_at": "2026-04-07T02:30:16.569723+08:00",
+    "last_validated_at": "2026-04-07T02:30:33.306922+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": true,
     "has_article_index": true,
@@ -229,9 +229,9 @@
     "rss_url": null,
     "official_domain": "www.kkr.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-06T02:30:12.670393+08:00",
-    "last_screened_at": "2026-04-06T02:30:22.760070+08:00",
-    "last_validated_at": "2026-04-06T02:30:40.403603+08:00",
+    "last_discovered_at": "2026-04-07T02:30:11.581405+08:00",
+    "last_screened_at": "2026-04-07T02:30:16.814257+08:00",
+    "last_validated_at": "2026-04-07T02:30:35.439060+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -292,38 +292,283 @@
   {
     "id": "cambridge-associates",
     "name": "Cambridge Associates",
-    "status": "discovered",
+    "status": "validated",
     "homepage_url": "https://www.cambridgeassociates.com",
     "research_url": "https://www.cambridgeassociates.com/insights/private-investments/",
     "rss_url": null,
     "official_domain": "www.cambridgeassociates.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-05T18:32:13.399000+08:00",
-    "last_screened_at": null,
-    "last_validated_at": null,
+    "last_discovered_at": "2026-04-07T02:30:12.518084+08:00",
+    "last_screened_at": "2026-04-07T02:30:17.751301+08:00",
+    "last_validated_at": "2026-04-07T02:30:38.023983+08:00",
     "recent_update_at": "2026-04",
     "is_publicly_accessible": true,
     "has_article_index": true,
-    "fit_score": 0.90,
+    "fit_score": 0.97,
     "notes": "RECOMMEND: PE/VC/endowment research, fills alts gap",
     "research_links": [
-      {"url": "https://www.cambridgeassociates.com/insights/", "label": "Insights", "path": "insights"},
-      {"url": "https://www.cambridgeassociates.com/insights/private-investments/", "label": "Private Investment Insights", "path": "insights/private-investments"},
-      {"url": "https://www.cambridgeassociates.com/insights/market-insights/", "label": "Market Insights", "path": "insights/market-insights"}
+      {
+        "url": "https://www.cambridgeassociates.com/insights/private-investments/",
+        "label": "Private Investment Insights",
+        "path": "insights/private-investments"
+      },
+      {
+        "url": "http://www.cambridgeassociates.com/insights/market-insights/",
+        "label": "Market Insights",
+        "path": "insights/market-insights"
+      },
+      {
+        "url": "https://www.cambridgeassociates.com/insight/2026-outlook-finding-value-amid-the-hype/",
+        "label": "Read Outlook 2026",
+        "path": "insight/2026-outlook-finding-value-amid-the-hype"
+      },
+      {
+        "url": "https://www.cambridgeassociates.com/insight/from-founder-to-investor/",
+        "label": "From Founder to Investor: Helping Founders Turn Business Success into a Lasting Legacy",
+        "path": "insight/from-founder-to-investor"
+      },
+      {
+        "url": "https://www.cambridgeassociates.com/insight/vantagepoint-electrifying-returns-in-the-ai-era/",
+        "label": "VantagePoint: Electrifying Returns in the AI Era",
+        "path": "insight/vantagepoint-electrifying-returns-in-the-ai-era"
+      },
+      {
+        "url": "https://www.cambridgeassociates.com/insight/no-surprises-managing-risk-in-family-portfolios/",
+        "label": "No Surprises: Managing Risk in Family Portfolios",
+        "path": "insight/no-surprises-managing-risk-in-family-portfolios"
+      },
+      {
+        "url": "https://www.cambridgeassociates.com/insight/liquidity-hazard-planning-for-families-of-wealth/",
+        "label": "Liquidity Hazard Planning for Families of Wealth",
+        "path": "insight/liquidity-hazard-planning-for-families-of-wealth"
+      },
+      {
+        "url": "https://www.cambridgeassociates.com/insight/germanys-fiscal-boost/",
+        "label": "Germany’s Fiscal Boost Remains a Tailwind Despite Near-Term Risks",
+        "path": "insight/germanys-fiscal-boost"
+      },
+      {
+        "url": "https://www.cambridgeassociates.com/insight/endowment-radar-study-2025-a-widening-divide/",
+        "label": "Endowment Radar Study 2025: A Widening Divide",
+        "path": "insight/endowment-radar-study-2025-a-widening-divide"
+      },
+      {
+        "url": "https://www.cambridgeassociates.com/insight/sustainable-investing-in-focus-green-horizons-or-gridlocked/",
+        "label": "Sustainable Investing in Focus: Green Horizons or Gridlocked",
+        "path": "insight/sustainable-investing-in-focus-green-horizons-or-gridlocked"
+      },
+      {
+        "url": "https://www.cambridgeassociates.com/insight/does-the-iran-war-change-our-view-on-the-us-dollar/",
+        "label": "Does the Iran War Change Our View on the US Dollar?",
+        "path": "insight/does-the-iran-war-change-our-view-on-the-us-dollar"
+      },
+      {
+        "url": "https://www.cambridgeassociates.com/insight/will-the-iran-conflict-trigger-a-pandemic-style-inflation-spike/",
+        "label": "Will the Iran Conflict Trigger a Pandemic-Style Inflation Spike?",
+        "path": "insight/will-the-iran-conflict-trigger-a-pandemic-style-inflation-spike"
+      },
+      {
+        "url": "https://www.cambridgeassociates.com/insight/building-a-resilient-venture-capital-portfolio/",
+        "label": "The Biggest Mistake Investors Make When Building a Venture Capital Portfolio",
+        "path": "insight/building-a-resilient-venture-capital-portfolio"
+      },
+      {
+        "url": "https://www.cambridgeassociates.com/insights/endowments-foundations/",
+        "label": "Endowments & Foundations",
+        "path": "insights/endowments-foundations"
+      },
+      {
+        "url": "https://www.cambridgeassociates.com/insights/private-clients-family-offices/",
+        "label": "Private Clients & Family Offices",
+        "path": "insights/private-clients-family-offices"
+      },
+      {
+        "url": "https://www.cambridgeassociates.com/insights/retirement-insurance-government/",
+        "label": "Retirement, Insurance & Government",
+        "path": "insights/retirement-insurance-government"
+      },
+      {
+        "url": "https://www.cambridgeassociates.com/insights/healthcare/",
+        "label": "Healthcare Systems",
+        "path": "insights/healthcare"
+      },
+      {
+        "url": "https://www.cambridgeassociates.com/insights/sustainable-impact-investing/",
+        "label": "Sustainable & Impact Investing",
+        "path": "insights/sustainable-impact-investing"
+      },
+      {
+        "url": "https://www.cambridgeassociates.com/insights/market-insights/",
+        "label": "Market Insights",
+        "path": "insights/market-insights"
+      }
     ],
     "screening_signals": {
       "status_code": 200,
       "has_password_input": false,
       "login_marker_count": 1,
-      "article_tags": 13,
+      "article_tags": 8,
       "time_tags": 0,
-      "date_patterns": 13,
-      "h2_tags": 5,
-      "article_signals": 3
+      "date_patterns": 0,
+      "h2_tags": 26,
+      "article_signals": 1
     },
     "screening_reason": "Research index detected",
     "last_deep_analyzed_at": "2026-04-05T10:32:00.000000+00:00",
     "quality": "HIGH",
     "topics": "private equity, venture capital, endowments, macro, sustainable investing"
+  },
+  {
+    "id": "gsam",
+    "name": "Goldman Sachs Asset Management",
+    "status": "watchlist",
+    "homepage_url": "https://am.gs.com",
+    "research_url": "https://am.gs.com/en-us/advisors/insights/list",
+    "rss_url": null,
+    "official_domain": "am.gs.com",
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-04-07T02:32:12.327540+08:00",
+    "last_screened_at": "2026-04-07T02:32:14.019110+08:00",
+    "last_validated_at": "2026-04-07T02:32:15.823347+08:00",
+    "recent_update_at": null,
+    "is_publicly_accessible": false,
+    "has_article_index": false,
+    "fit_score": 0.7,
+    "last_deep_analyzed_at": "2026-04-06T10:32:30.000000+00:00",
+    "quality": "MEDIUM",
+    "topics": "macro, credit, alternatives, fixed income",
+    "notes": "Watchlist: JS-rendered, advisor login required",
+    "research_links": [
+      {
+        "url": "https://am.gs.com/en-us/advisors/insights/list",
+        "label": "See All Insights",
+        "path": "en-us/advisors/insights/list"
+      },
+      {
+        "url": "https://am.gs.com/en-us/advisors/insights/article/2026/market-brief-investment-perspectives-middle-east-conflict",
+        "label": "Macroeconomics Market Brief: Investment Perspectives on the Middle East Conflict 8 minute read",
+        "path": "en-us/advisors/insights/article/2026/market-brief-investment-perspectives-middle-east-conflict"
+      },
+      {
+        "url": "https://am.gs.com/en-us/advisors/insights/article/investment-outlook",
+        "label": "file_document Macroeconomics Investment Outlook 2026 Report",
+        "path": "en-us/advisors/insights/article/investment-outlook"
+      },
+      {
+        "url": "https://am.gs.com/en-us/advisors/insights/report-survey/private-markets-survey",
+        "label": "file_document Alternatives 2025 Private Markets Diagnostic Survey: Turning the Corner? Report",
+        "path": "en-us/advisors/insights/report-survey/private-markets-survey"
+      }
+    ],
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 0,
+      "article_tags": 0,
+      "time_tags": 0,
+      "date_patterns": 0,
+      "h2_tags": 0,
+      "article_signals": 0
+    },
+    "screening_reason": "Insufficient article index signals"
+  },
+  {
+    "id": "wellington",
+    "name": "Wellington Management",
+    "status": "validated",
+    "homepage_url": "https://www.wellington.com",
+    "research_url": "https://www.wellington.com/en/insights",
+    "rss_url": null,
+    "official_domain": "www.wellington.com",
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-04-07T02:33:52.977845+08:00",
+    "last_screened_at": "2026-04-07T02:33:55.098823+08:00",
+    "last_validated_at": "2026-04-07T02:34:14.288608+08:00",
+    "recent_update_at": null,
+    "is_publicly_accessible": false,
+    "has_article_index": false,
+    "fit_score": 0.8843,
+    "notes": "RECOMMEND: free multi-asset research, fills equity gap",
+    "research_links": [
+      {
+        "url": "https://www.wellington.com/en/insights",
+        "label": "View our insights",
+        "path": "en/insights"
+      },
+      {
+        "url": "https://www.wellington.com/en/insights/equity",
+        "label": "Equity",
+        "path": "en/insights/equity"
+      },
+      {
+        "url": "https://www.wellington.com/en/insights/fixed-income",
+        "label": "Fixed income",
+        "path": "en/insights/fixed-income"
+      },
+      {
+        "url": "https://www.wellington.com/en/insights/multi-asset",
+        "label": "Multi-asset",
+        "path": "en/insights/multi-asset"
+      },
+      {
+        "url": "https://www.wellington.com/en/insights/alternatives",
+        "label": "Alternatives",
+        "path": "en/insights/alternatives"
+      },
+      {
+        "url": "https://www.wellington.com/en/insights/topics.category/display/asset-class/private-investing",
+        "label": "Private Investing",
+        "path": "en/insights/topics.category/display/asset-class/private-investing"
+      },
+      {
+        "url": "https://www.wellington.com/en/insights/washington-and-the-world",
+        "label": "Wellington on the World",
+        "path": "en/insights/washington-and-the-world"
+      },
+      {
+        "url": "https://www.wellington.com/en/insights/markets-and-outlooks",
+        "label": "Markets and outlooks",
+        "path": "en/insights/markets-and-outlooks"
+      },
+      {
+        "url": "https://www.wellington.com/en/insights/topics.category/display/series/investment-angles",
+        "label": "Investment Angles",
+        "path": "en/insights/topics.category/display/series/investment-angles"
+      },
+      {
+        "url": "https://www.wellington.com/en/insights/articles",
+        "label": "Articles",
+        "path": "en/insights/articles"
+      },
+      {
+        "url": "https://www.wellington.com/en/insights/videos",
+        "label": "Videos",
+        "path": "en/insights/videos"
+      },
+      {
+        "url": "https://www.wellington.com/en/insights/event-replays",
+        "label": "Event replays",
+        "path": "en/insights/event-replays"
+      },
+      {
+        "url": "https://www.wellington.com/en/insights/investment-outlook",
+        "label": "",
+        "path": "en/insights/investment-outlook"
+      }
+    ],
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 2,
+      "article_tags": 0,
+      "time_tags": 0,
+      "date_patterns": 0,
+      "h2_tags": 0,
+      "article_signals": 0
+    },
+    "screening_reason": "Login/paywall detected",
+    "last_deep_analyzed_at": "2026-04-06T10:35:00.000000+00:00",
+    "quality": "HIGH",
+    "topics": "equity, macro, fixed income, alternatives, private credit, ESG"
   }
 ]

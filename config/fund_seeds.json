@@ -5,5 +5,6 @@
   {"id": "two-sigma", "name": "Two Sigma", "aliases": ["Two Sigma Investments"], "category": "quant", "homepage": "https://www.twosigma.com", "notes": "Quant fund, has blog but mostly technical/recruiting"},
   {"id": "kkr", "name": "KKR", "aliases": ["Kohlberg Kravis Roberts"], "category": "alternatives", "homepage": "https://www.kkr.com", "notes": "PE/credit, has insights page"},
   {"id": "gsam", "name": "Goldman Sachs Asset Management", "aliases": ["GSAM", "Goldman Sachs AM"], "category": "multi_strategy", "homepage": "https://am.gs.com", "notes": "Publishes quarterly Market Know-How and economic outlooks; freely accessible public research"},
-  {"id": "cambridge-associates", "name": "Cambridge Associates", "aliases": ["Cambridge Associates LLC"], "category": "multi_asset", "homepage": "https://www.cambridgeassociates.com", "notes": "Investment consulting firm; public insights on PE, VC, endowments, macro; HIGH quality, April 2026 active"}
+  {"id": "cambridge-associates", "name": "Cambridge Associates", "aliases": ["Cambridge Associates LLC"], "category": "multi_asset", "homepage": "https://www.cambridgeassociates.com", "notes": "Investment consulting firm; public insights on PE, VC, endowments, macro; HIGH quality, April 2026 active"},
+  {"id": "wellington", "name": "Wellington Management", "aliases": ["Wellington Management Company"], "category": "multi_strategy", "homepage": "https://www.wellington.com", "notes": "Freely accessible research on equity, macro, private credit, alternatives, ESG; fills multi-asset equity gap"}
 ]

@@ -2,7 +2,7 @@
   "version": 1,
   "sources": {
     "pimco": {
-      "last_discovered_at": "2026-04-06T02:30:35.725493+08:00",
+      "last_discovered_at": "2026-04-07T02:30:28.427407+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -24,7 +24,7 @@
       "rejected_pages": []
     },
     "de-shaw": {
-      "last_discovered_at": "2026-04-06T02:30:36.353586+08:00",
+      "last_discovered_at": "2026-04-07T02:30:29.074505+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -46,7 +46,7 @@
       "rejected_pages": []
     },
     "blackstone": {
-      "last_discovered_at": "2026-04-06T02:30:37.953075+08:00",
+      "last_discovered_at": "2026-04-07T02:30:31.767036+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -68,7 +68,7 @@
       "rejected_pages": []
     },
     "two-sigma": {
-      "last_discovered_at": "2026-04-06T02:30:39.328358+08:00",
+      "last_discovered_at": "2026-04-07T02:30:33.306922+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -90,7 +90,7 @@
       "rejected_pages": []
     },
     "kkr": {
-      "last_discovered_at": "2026-04-06T02:30:40.403603+08:00",
+      "last_discovered_at": "2026-04-07T02:30:35.439060+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -106,6 +106,62 @@
         {
           "url": "https://www.kkr.com/wealth",
           "final_score": 0.66,
+          "active": false
+        }
+      ],
+      "rejected_pages": []
+    },
+    "cambridge-associates": {
+      "last_discovered_at": "2026-04-07T02:30:38.023983+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://www.cambridgeassociates.com/insights/private-investments/",
+          "final_score": 0.97,
+          "active": true
+        },
+        {
+          "url": "https://www.cambridgeassociates.com",
+          "final_score": 0.82,
+          "active": false
+        },
+        {
+          "url": "https://www.cambridgeassociates.com/locations/",
+          "final_score": 0.82,
+          "active": false
+        }
+      ],
+      "rejected_pages": []
+    },
+    "gsam": {
+      "last_discovered_at": "2026-04-07T02:32:15.823347+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://am.gs.com/en-us/advisors/insights/list",
+          "final_score": 0.7,
+          "active": true
+        }
+      ],
+      "rejected_pages": []
+    },
+    "wellington": {
+      "last_discovered_at": "2026-04-07T02:34:14.288608+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://www.wellington.com/en/insights",
+          "final_score": 0.8843,
+          "active": true
+        },
+        {
+          "url": "https://www.wellington.com/en/insights/multi-asset",
+          "final_score": 0.87,
+          "active": false
+        },
+        {
+          "url": "https://www.wellington.com/en/insights/equity",
+          "final_score": 0.85,
           "active": false
         }
       ],
