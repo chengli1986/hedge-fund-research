@@ -8,9 +8,9 @@
     "rss_url": null,
     "official_domain": "www.pimco.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-07T02:30:11.036964+08:00",
-    "last_screened_at": "2026-04-07T02:30:16.218145+08:00",
-    "last_validated_at": "2026-04-07T02:30:28.427407+08:00",
+    "last_discovered_at": "2026-04-08T02:30:11.081703+08:00",
+    "last_screened_at": "2026-04-08T02:30:21.654413+08:00",
+    "last_validated_at": "2026-04-08T02:30:38.569710+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -72,9 +72,9 @@
     "rss_url": null,
     "official_domain": "www.deshaw.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-07T02:30:11.099158+08:00",
-    "last_screened_at": "2026-04-07T02:30:16.303241+08:00",
-    "last_validated_at": "2026-04-07T02:30:29.074505+08:00",
+    "last_discovered_at": "2026-04-08T02:30:15.238811+08:00",
+    "last_screened_at": "2026-04-08T02:30:21.773710+08:00",
+    "last_validated_at": "2026-04-08T02:30:39.624123+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -111,9 +111,9 @@
     "rss_url": "https://www.blackstone.com/feed/",
     "official_domain": "www.blackstone.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-07T02:30:11.283910+08:00",
-    "last_screened_at": "2026-04-07T02:30:16.452185+08:00",
-    "last_validated_at": "2026-04-07T02:30:31.767036+08:00",
+    "last_discovered_at": "2026-04-08T02:30:15.429222+08:00",
+    "last_screened_at": "2026-04-08T02:30:21.926357+08:00",
+    "last_validated_at": "2026-04-08T02:30:41.445346+08:00",
     "recent_update_at": "2026-03-31",
     "is_publicly_accessible": true,
     "has_article_index": true,
@@ -185,9 +185,9 @@
     "rss_url": "https://www.twosigma.com/feed/",
     "official_domain": "www.twosigma.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-07T02:30:11.443074+08:00",
-    "last_screened_at": "2026-04-07T02:30:16.569723+08:00",
-    "last_validated_at": "2026-04-07T02:30:33.306922+08:00",
+    "last_discovered_at": "2026-04-08T02:30:15.569931+08:00",
+    "last_screened_at": "2026-04-08T02:30:22.105665+08:00",
+    "last_validated_at": "2026-04-08T02:30:42.829039+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": true,
     "has_article_index": true,
@@ -229,9 +229,9 @@
     "rss_url": null,
     "official_domain": "www.kkr.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-07T02:30:11.581405+08:00",
-    "last_screened_at": "2026-04-07T02:30:16.814257+08:00",
-    "last_validated_at": "2026-04-07T02:30:35.439060+08:00",
+    "last_discovered_at": "2026-04-08T02:30:15.682430+08:00",
+    "last_screened_at": "2026-04-08T02:30:22.362911+08:00",
+    "last_validated_at": "2026-04-08T02:30:44.986779+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -259,6 +259,11 @@
         "path": "insights/total-portfolio-approach"
       },
       {
+        "url": "https://www.kkr.com/insights/naic-spring-update-2026",
+        "label": "Investment Insights Highlights from the NAIC’s 2026 Spring National Meeting: CLOs, Collateral Loans,",
+        "path": "insights/naic-spring-update-2026"
+      },
+      {
         "url": "https://www.kkr.com/insights/flash-macro-markets-update-april-2026",
         "label": "Macro Insights Flash Macro: U.S. Markets Update April 2026 Learn More",
         "path": "insights/flash-macro-markets-update-april-2026"
@@ -267,11 +272,6 @@
         "url": "https://www.kkr.com/insights/2026-infrastructure-outlook",
         "label": "Investment Insights 2026 Infrastructure Outlook March 2026 Learn More",
         "path": "insights/2026-infrastructure-outlook"
-      },
-      {
-        "url": "https://www.kkr.com/insights/2026-japan-thoughts-from-the-road",
-        "label": "Macro Insights Thoughts from the Road: Japan March 2026 Learn More",
-        "path": "insights/2026-japan-thoughts-from-the-road"
       }
     ],
     "screening_signals": {
@@ -298,9 +298,9 @@
     "rss_url": null,
     "official_domain": "www.cambridgeassociates.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-07T02:30:12.518084+08:00",
-    "last_screened_at": "2026-04-07T02:30:17.751301+08:00",
-    "last_validated_at": "2026-04-07T02:30:38.023983+08:00",
+    "last_discovered_at": "2026-04-08T02:30:17.532473+08:00",
+    "last_screened_at": "2026-04-08T02:30:24.104343+08:00",
+    "last_validated_at": "2026-04-08T02:30:48.760721+08:00",
     "recent_update_at": "2026-04",
     "is_publicly_accessible": true,
     "has_article_index": true,
@@ -343,6 +343,11 @@
         "path": "insight/liquidity-hazard-planning-for-families-of-wealth"
       },
       {
+        "url": "https://www.cambridgeassociates.com/insight/will-the-iran-war-force-the-ecb-and-boe-to-tighten-as-much-as-markets-expect/",
+        "label": "Will the Iran War Force the ECB and BOE to Tighten as Much as Markets Expect?",
+        "path": "insight/will-the-iran-war-force-the-ecb-and-boe-to-tighten-as-much-as-markets-expect"
+      },
+      {
         "url": "https://www.cambridgeassociates.com/insight/germanys-fiscal-boost/",
         "label": "Germany’s Fiscal Boost Remains a Tailwind Despite Near-Term Risks",
         "path": "insight/germanys-fiscal-boost"
@@ -366,11 +371,6 @@
         "url": "https://www.cambridgeassociates.com/insight/will-the-iran-conflict-trigger-a-pandemic-style-inflation-spike/",
         "label": "Will the Iran Conflict Trigger a Pandemic-Style Inflation Spike?",
         "path": "insight/will-the-iran-conflict-trigger-a-pandemic-style-inflation-spike"
-      },
-      {
-        "url": "https://www.cambridgeassociates.com/insight/building-a-resilient-venture-capital-portfolio/",
-        "label": "The Biggest Mistake Investors Make When Building a Venture Capital Portfolio",
-        "path": "insight/building-a-resilient-venture-capital-portfolio"
       },
       {
         "url": "https://www.cambridgeassociates.com/insights/endowments-foundations/",
@@ -421,15 +421,15 @@
   {
     "id": "gsam",
     "name": "Goldman Sachs Asset Management",
-    "status": "watchlist",
+    "status": "validated",
     "homepage_url": "https://am.gs.com",
     "research_url": "https://am.gs.com/en-us/advisors/insights/list",
     "rss_url": null,
     "official_domain": "am.gs.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-07T02:32:12.327540+08:00",
-    "last_screened_at": "2026-04-07T02:32:14.019110+08:00",
-    "last_validated_at": "2026-04-07T02:32:15.823347+08:00",
+    "last_discovered_at": "2026-04-08T02:30:17.285051+08:00",
+    "last_screened_at": "2026-04-08T02:30:25.822705+08:00",
+    "last_validated_at": "2026-04-08T02:30:50.546505+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -441,22 +441,22 @@
     "research_links": [
       {
         "url": "https://am.gs.com/en-us/advisors/insights/list",
-        "label": "See All Insights",
+        "label": "Voir toutes les analyses",
         "path": "en-us/advisors/insights/list"
       },
       {
         "url": "https://am.gs.com/en-us/advisors/insights/article/2026/market-brief-investment-perspectives-middle-east-conflict",
-        "label": "Macroeconomics Market Brief: Investment Perspectives on the Middle East Conflict 8 minute read",
+        "label": "Macroeconomics Market Brief: Investment Perspectives on the Middle East Conflict 8 minute(s) de lect",
         "path": "en-us/advisors/insights/article/2026/market-brief-investment-perspectives-middle-east-conflict"
       },
       {
         "url": "https://am.gs.com/en-us/advisors/insights/article/investment-outlook",
-        "label": "file_document Macroeconomics Investment Outlook 2026 Report",
+        "label": "file_document Macroeconomics Investment Outlook 2026 Reporting",
         "path": "en-us/advisors/insights/article/investment-outlook"
       },
       {
         "url": "https://am.gs.com/en-us/advisors/insights/report-survey/private-markets-survey",
-        "label": "file_document Alternatives 2025 Private Markets Diagnostic Survey: Turning the Corner? Report",
+        "label": "file_document Alternatives 2025 Private Markets Diagnostic Survey: Turning the Corner? Reporting",
         "path": "en-us/advisors/insights/report-survey/private-markets-survey"
       }
     ],
@@ -481,9 +481,9 @@
     "rss_url": null,
     "official_domain": "www.wellington.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-07T02:33:52.977845+08:00",
-    "last_screened_at": "2026-04-07T02:33:55.098823+08:00",
-    "last_validated_at": "2026-04-07T02:34:14.288608+08:00",
+    "last_discovered_at": "2026-04-08T02:30:17.834297+08:00",
+    "last_screened_at": "2026-04-08T02:30:27.639653+08:00",
+    "last_validated_at": "2026-04-08T02:31:20.145506+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -570,5 +570,44 @@
     "last_deep_analyzed_at": "2026-04-06T10:35:00.000000+00:00",
     "quality": "HIGH",
     "topics": "equity, macro, fixed income, alternatives, private credit, ESG"
+  },
+  {
+    "id": "amundi",
+    "name": "Amundi Research Center",
+    "status": "validated",
+    "homepage_url": "https://research-center.amundi.com",
+    "research_url": "https://research-center.amundi.com",
+    "rss_url": null,
+    "official_domain": "research-center.amundi.com",
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-04-07T18:32:26.000000+08:00",
+    "last_screened_at": "2026-04-07T18:33:00.000000+08:00",
+    "last_validated_at": "2026-04-07T18:33:00.000000+08:00",
+    "recent_update_at": "2026-04-07",
+    "is_publicly_accessible": true,
+    "has_article_index": true,
+    "fit_score": 0.95,
+    "notes": "RECOMMEND: free EU macro/ESG/cross-asset research, fills EU gap",
+    "research_links": [
+      {
+        "url": "https://research-center.amundi.com",
+        "label": "Amundi Research Center",
+        "path": ""
+      }
+    ],
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 0,
+      "article_tags": 10,
+      "time_tags": 5,
+      "date_patterns": 5,
+      "h2_tags": 8,
+      "article_signals": 3
+    },
+    "screening_reason": "Research index detected",
+    "last_deep_analyzed_at": "2026-04-07T10:33:00.000000+00:00",
+    "quality": "HIGH",
+    "topics": "macro, ESG, cross-asset, emerging markets, fixed income, equity"
   }
 ]
