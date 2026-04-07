@@ -395,6 +395,12 @@ def main() -> None:
     parser.add_argument("--write", action="store_true", help="Write results to entrypoints.json")
     args = parser.parse_args()
 
+    # Early check: GEMINI_API_KEY is required for AI classification
+    if not os.environ.get("GEMINI_API_KEY"):
+        log.error("GEMINI_API_KEY not set — AI classification will fail. "
+                  "Set it with: export GEMINI_API_KEY=your_key")
+        raise SystemExit(1)
+
     config = json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
     sources = config["sources"]
 
