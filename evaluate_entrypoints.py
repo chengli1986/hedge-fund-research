@@ -62,8 +62,8 @@ def compute_ranking_precision(data: dict, weights: dict) -> dict:
     total_bad = 0
 
     for fund_id, info in data.get("sources", {}).items():
-        good_entries = info.get("entrypoints", [])
-        bad_entries = [r for r in info.get("rejected_pages", []) if isinstance(r, dict)]
+        good_entries = [e for e in info.get("entrypoints", []) if e.get("label", "good") == "good"]
+        bad_entries = [r for r in info.get("rejected_pages", []) if isinstance(r, dict) and r.get("label", "bad") == "bad"]
 
         good_scores = [rescore_entry(e, weights) for e in good_entries]
         bad_scores = [rescore_entry(e, weights) for e in bad_entries]
@@ -144,7 +144,7 @@ def print_table(metrics: dict) -> None:
         f"{metrics['overall_reject_rate']*100:>5.1f}%"
     )
     # This line is what autoresearch reads
-    print(f"\noverall_precision: {metrics['overall']:.4f}")
+    print(f"\noverall_precision: {metrics['overall_precision']:.4f}")
 
 
 def main() -> None:

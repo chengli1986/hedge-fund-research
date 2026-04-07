@@ -128,7 +128,15 @@ def main():
         domains = get_domain_for_fund(fund_id, candidates)
         print(f"\n{fund_id} (domains: {domains})")
 
+        # Collect all known bad URLs (flat set across all funds)
+        all_known_bad = {u for urls in KNOWN_BAD_URLS.values() for u in urls}
+
         # Backfill component scores for existing entrypoints
+        bad_eps = [ep for ep in info.get("entrypoints", []) if ep["url"] in all_known_bad]
+        for ep in bad_eps:
+            info["entrypoints"].remove(ep)
+            print(f"  REMOVE {ep['url'][:50]} (known bad URL, will not label good)")
+
         for ep in info.get("entrypoints", []):
             if ep.get("domain_score") is not None:
                 print(f"  SKIP {ep['url'][:50]} (already has components)")
