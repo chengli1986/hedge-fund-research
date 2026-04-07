@@ -228,15 +228,16 @@ def score_gate(html: str) -> float:
 # score_final
 # ---------------------------------------------------------------------------
 
-_DEFAULT_WEIGHTS = {"domain": 0.2, "path": 0.3, "structure": 0.3, "gate": 0.2}
+# Default scorer weights — can be overridden via config/scorer_weights.json (see load_weights)
+DEFAULT_SCORER_WEIGHTS = {"domain": 0.2, "path": 0.3, "structure": 0.3, "gate": 0.2}
 
-_REQUIRED_WEIGHT_KEYS = frozenset(_DEFAULT_WEIGHTS.keys())
+_REQUIRED_WEIGHT_KEYS = frozenset(DEFAULT_SCORER_WEIGHTS.keys())
 
 
 def load_weights(path: str | None = None) -> dict:
     """Load scorer weights from a JSON file.
 
-    Falls back to ``_DEFAULT_WEIGHTS`` if the file is missing, cannot be
+    Falls back to ``DEFAULT_SCORER_WEIGHTS`` if the file is missing, cannot be
     parsed, is missing any of the four required keys, or the values do not
     sum to 1.0 (±0.01 tolerance).
 
@@ -248,20 +249,20 @@ def load_weights(path: str | None = None) -> dict:
         A dict with keys ``domain``, ``path``, ``structure``, ``gate``.
     """
     if path is None:
-        return dict(_DEFAULT_WEIGHTS)
+        return dict(DEFAULT_SCORER_WEIGHTS)
 
     try:
         with open(path, "r", encoding="utf-8") as fh:
             data = json.load(fh)
     except (OSError, json.JSONDecodeError):
-        return dict(_DEFAULT_WEIGHTS)
+        return dict(DEFAULT_SCORER_WEIGHTS)
 
     if not _REQUIRED_WEIGHT_KEYS.issubset(data.keys()):
-        return dict(_DEFAULT_WEIGHTS)
+        return dict(DEFAULT_SCORER_WEIGHTS)
 
     total = sum(data[k] for k in _REQUIRED_WEIGHT_KEYS)
     if abs(total - 1.0) > 0.01:
-        return dict(_DEFAULT_WEIGHTS)
+        return dict(DEFAULT_SCORER_WEIGHTS)
 
     return {k: data[k] for k in _REQUIRED_WEIGHT_KEYS}
 
@@ -304,7 +305,7 @@ def score_final(
     Weights: domain=0.2, path=0.3, structure=0.3, gate=0.2
     Formula: domain*0.2 + path*0.3 + structure*0.3 + (1.0 - gate_penalty)*0.2
 
-    Delegates to :func:`score_final_with_weights` using :data:`_DEFAULT_WEIGHTS`.
+    Delegates to :func:`score_final_with_weights` using :data:`DEFAULT_SCORER_WEIGHTS`.
     Signature and return values are 100% backward-compatible.
     """
-    return score_final_with_weights(domain, path, structure, gate_penalty, _DEFAULT_WEIGHTS)
+    return score_final_with_weights(domain, path, structure, gate_penalty, DEFAULT_SCORER_WEIGHTS)

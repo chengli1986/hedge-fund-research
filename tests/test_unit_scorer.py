@@ -3,7 +3,7 @@
 import json
 import pytest
 from entrypoint_scorer import (
-    _DEFAULT_WEIGHTS,
+    DEFAULT_SCORER_WEIGHTS,
     load_weights,
     score_domain,
     score_final,
@@ -224,7 +224,7 @@ class TestLoadWeights:
         """Missing file returns default weights without raising."""
         result = load_weights(str(tmp_path / "nonexistent.json"))
 
-        assert result == _DEFAULT_WEIGHTS
+        assert result == DEFAULT_SCORER_WEIGHTS
 
     def test_load_weights_bad_sum(self, tmp_path):
         """Weights that don't sum to 1.0 (±0.01) return defaults."""
@@ -234,7 +234,7 @@ class TestLoadWeights:
 
         result = load_weights(str(weights_file))
 
-        assert result == _DEFAULT_WEIGHTS
+        assert result == DEFAULT_SCORER_WEIGHTS
 
 
 # ---------------------------------------------------------------------------
