@@ -15,3 +15,4 @@ ae9766e	0.9700	SAME	gate-dominant to penalize paywalls heavily (0.15/0.2/0.05/0.
 b037f40	0.9700	SAME	path-max min-gate (0.1/0.6/0.25/0.05)
 237ca04	0.9700	SAME	structure-max moderate-gate (0.1/0.15/0.6/0.15)
 1d90df5fd00eff3a57ea934c83fca859bc7d2cbe	0.9182	SAME	structure-max 0.1/0.2/0.6/0.1
+b74b3c9	1.0000	IMPROVED	current default weights (0.2/0.3/0.3/0.2) - new baseline after candidate update
