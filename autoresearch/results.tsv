@@ -21,3 +21,4 @@ c95118d	1.0000	SAME	path-dominant (0.1/0.45/0.25/0.2)
 0b19611	1.0000	SAME	min-domain path+gate focus (0.05/0.4/0.25/0.3)
 279143f	1.0000	SAME	max-path min-domain min-structure (0.05/0.6/0.1/0.25)
 652966a	1.0000	SAME	restore balanced defaults (0.2/0.3/0.3/0.2) - robustness check
+d247a89	1.0000	SAME	structure-dominant moderate-gate (0.1/0.25/0.4/0.25)
