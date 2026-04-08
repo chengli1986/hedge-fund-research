@@ -2,7 +2,7 @@
   "version": 1,
   "sources": {
     "pimco": {
-      "last_discovered_at": "2026-04-08T02:30:38.569710+08:00",
+      "last_discovered_at": "2026-04-09T02:30:45.269444+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -24,7 +24,7 @@
       "rejected_pages": []
     },
     "de-shaw": {
-      "last_discovered_at": "2026-04-08T02:30:39.624123+08:00",
+      "last_discovered_at": "2026-04-09T02:30:45.921037+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -46,7 +46,7 @@
       "rejected_pages": []
     },
     "blackstone": {
-      "last_discovered_at": "2026-04-08T02:30:41.445346+08:00",
+      "last_discovered_at": "2026-04-09T02:30:47.735732+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -68,7 +68,7 @@
       "rejected_pages": []
     },
     "two-sigma": {
-      "last_discovered_at": "2026-04-08T02:30:42.829039+08:00",
+      "last_discovered_at": "2026-04-09T02:30:49.302573+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -90,7 +90,7 @@
       "rejected_pages": []
     },
     "kkr": {
-      "last_discovered_at": "2026-04-08T02:30:44.986779+08:00",
+      "last_discovered_at": "2026-04-09T02:30:53.412089+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -112,7 +112,7 @@
       "rejected_pages": []
     },
     "cambridge-associates": {
-      "last_discovered_at": "2026-04-08T02:30:48.760721+08:00",
+      "last_discovered_at": "2026-04-09T02:30:56.054034+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -134,7 +134,7 @@
       "rejected_pages": []
     },
     "gsam": {
-      "last_discovered_at": "2026-04-08T02:30:50.546505+08:00",
+      "last_discovered_at": "2026-04-09T02:30:59.014002+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -146,7 +146,7 @@
       "rejected_pages": []
     },
     "wellington": {
-      "last_discovered_at": "2026-04-08T02:31:20.145506+08:00",
+      "last_discovered_at": "2026-04-09T02:31:18.262357+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -162,6 +162,28 @@
         {
           "url": "https://www.wellington.com/en/insights/equity",
           "final_score": 0.85,
+          "active": false
+        }
+      ],
+      "rejected_pages": []
+    },
+    "jpmam": {
+      "last_discovered_at": "2026-04-09T02:34:09.124340+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://am.jpmorgan.com/us/en/asset-management/adv/insights/market-insights/market-updates/",
+          "final_score": 0.88,
+          "active": true
+        },
+        {
+          "url": "https://am.jpmorgan.com/us/en/asset-management/adv/funds/",
+          "final_score": 0.85,
+          "active": false
+        },
+        {
+          "url": "https://am.jpmorgan.com/us/en/asset-management/adv/",
+          "final_score": 0.7,
           "active": false
         }
       ],
