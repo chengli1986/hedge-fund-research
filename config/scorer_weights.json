@@ -1,6 +1,6 @@
 {
     "domain": 0.1,
-    "path": 0.4,
-    "structure": 0.35,
-    "gate": 0.15
+    "path": 0.35,
+    "structure": 0.2,
+    "gate": 0.35
 }
