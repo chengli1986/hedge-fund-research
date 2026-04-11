@@ -268,6 +268,26 @@ def validate_candidate(candidate: dict, weights: dict, dry_run: bool = False) ->
     else:
         log.warning("  Could not fetch main research page for %s", fund_id)
 
+    # Step 2b: Also crawl homepage nav links for negative examples (careers/about/etc.)
+    homepage_url = candidate.get("homepage_url") or ""
+    if homepage_url and homepage_url.rstrip("/") != research_url.rstrip("/"):
+        home_html = fetch_page(homepage_url)
+        if home_html:
+            home_nav_links = extract_nav_links(home_html, homepage_url, allowed_domains)
+            seen_urls = {p["url"].rstrip("/") for p in scored_pages}
+            for link in home_nav_links[:MAX_NAV_LINKS]:
+                link_url = link["url"]
+                if link_url.rstrip("/") in seen_urls:
+                    continue
+                link_html = fetch_page(link_url)
+                if link_html:
+                    link_scored = score_candidate_page(link_url, link_html, allowed_domains, weights)
+                    scored_pages.append(link_scored)
+                    seen_urls.add(link_url.rstrip("/"))
+            log.info("  Homepage crawl added %d extra pages for %s",
+                     len(scored_pages) - len(seen_urls) + len(home_nav_links[:MAX_NAV_LINKS]),
+                     fund_id)
+
     # Step 3: Pick top entrypoints
     top = pick_top_entrypoints(scored_pages)
     fit_score = top[0]["final_score"] if top else 0.0
@@ -297,6 +317,10 @@ def main() -> None:
         "--dry-run", action="store_true",
         help="Print results without updating state files",
     )
+    parser.add_argument(
+        "--reprocess", action="store_true",
+        help="Re-run validation for already-validated funds (refreshes component scores)",
+    )
     args = parser.parse_args()
 
     weights = load_weights(str(WEIGHTS_FILE))
@@ -304,11 +328,13 @@ def main() -> None:
     ep_data = load_candidate_entrypoints()
     updated_count = 0
 
+    allowed_statuses = {"screened", "validated"} if args.reprocess else {"screened"}
+
     for c in candidates:
-        # Filter: only process candidates with status="screened"
-        if c["status"] != "screened":
+        # Filter: only process candidates with allowed status
+        if c["status"] not in allowed_statuses:
             if args.fund and c["id"] == args.fund:
-                log.warning("Fund %s has status '%s', not 'screened'", c["id"], c["status"])
+                log.warning("Fund %s has status '%s', not in %s", c["id"], c["status"], allowed_statuses)
             continue
 
         # Filter by fund ID if specified
@@ -332,6 +358,19 @@ def main() -> None:
 
             # Write to candidate_entrypoints.json (NEVER production)
             if result["entrypoints"]:
+                rejected = [
+                    {
+                        "url": p["url"],
+                        "final_score": p["final_score"],
+                        "domain_score": p.get("domain_score"),
+                        "path_score": p.get("path_score"),
+                        "structure_score": p.get("structure_score"),
+                        "gate_penalty": p.get("gate_penalty"),
+                        "label": "bad",
+                    }
+                    for p in result.get("all_scored", [])
+                    if p["final_score"] < SCORE_THRESHOLD
+                ]
                 ep_data["sources"][c["id"]] = {
                     "last_discovered_at": now,
                     "discovered_by": "discover_candidate_entrypoints",
@@ -339,11 +378,15 @@ def main() -> None:
                         {
                             "url": ep["url"],
                             "final_score": ep["final_score"],
+                            "domain_score": ep.get("domain_score"),
+                            "path_score": ep.get("path_score"),
+                            "structure_score": ep.get("structure_score"),
+                            "gate_penalty": ep.get("gate_penalty"),
                             "active": ep["active"],
                         }
                         for ep in result["entrypoints"]
                     ],
-                    "rejected_pages": [],
+                    "rejected_pages": rejected,
                 }
 
             updated_count += 1

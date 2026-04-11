@@ -112,26 +112,48 @@
       "rejected_pages": []
     },
     "cambridge-associates": {
-      "last_discovered_at": "2026-04-11T02:30:52.929166+08:00",
+      "last_discovered_at": "2026-04-11T20:10:34.710500+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
           "url": "https://www.cambridgeassociates.com/insights/private-investments/",
           "final_score": 0.97,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 1.0,
+          "gate_penalty": 0.15,
           "active": true
         },
         {
           "url": "https://www.cambridgeassociates.com",
           "final_score": 0.82,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 1.0,
+          "gate_penalty": 0.15,
           "active": false
         },
         {
           "url": "https://www.cambridgeassociates.com/locations/",
           "final_score": 0.82,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 1.0,
+          "gate_penalty": 0.15,
           "active": false
         }
       ],
-      "rejected_pages": []
+      "rejected_pages": [
+        {
+          "url": "https://www.cambridgeassociates.com/leadership/",
+          "final_score": 0.37,
+          "domain_score": 1.0,
+          "path_score": 0.0,
+          "structure_score": 0.0,
+          "gate_penalty": 0.15,
+          "label": "bad"
+        }
+      ]
     },
     "gsam": {
       "last_discovered_at": "2026-04-11T02:30:54.473521+08:00",
@@ -146,66 +168,112 @@
       "rejected_pages": []
     },
     "wellington": {
-      "last_discovered_at": "2026-04-11T02:30:57.492326+08:00",
+      "last_discovered_at": "2026-04-11T20:10:29.121235+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
           "url": "https://www.wellington.com/en/insights",
           "final_score": 0.8843,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.7143,
+          "gate_penalty": 0.15,
           "active": true
         },
         {
           "url": "https://www.wellington.com/en/insights/multi-asset",
           "final_score": 0.87,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.6667,
+          "gate_penalty": 0.15,
           "active": false
         },
         {
           "url": "https://www.wellington.com/en/insights/equity",
           "final_score": 0.85,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.6,
+          "gate_penalty": 0.15,
           "active": false
         }
       ],
       "rejected_pages": []
     },
     "jpmam": {
-      "last_discovered_at": "2026-04-09T02:34:09.124340+08:00",
+      "last_discovered_at": "2026-04-11T20:10:41.483426+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
           "url": "https://am.jpmorgan.com/us/en/asset-management/adv/insights/market-insights/market-updates/",
           "final_score": 0.88,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.6,
+          "gate_penalty": 0.0,
           "active": true
         },
         {
           "url": "https://am.jpmorgan.com/us/en/asset-management/adv/funds/",
           "final_score": 0.85,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 1.0,
+          "gate_penalty": 0.0,
           "active": false
         },
         {
           "url": "https://am.jpmorgan.com/us/en/asset-management/adv/",
           "final_score": 0.7,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.5,
+          "gate_penalty": 0.0,
           "active": false
         }
       ],
-      "rejected_pages": []
+      "rejected_pages": [
+        {
+          "url": "https://am.jpmorgan.com/authe/login?countryCode=us&languageCode=en&roleCode=adv&ref=",
+          "final_score": 0.4,
+          "domain_score": 1.0,
+          "path_score": 0.0,
+          "structure_score": 0.0,
+          "gate_penalty": 0.0,
+          "label": "bad"
+        }
+      ]
     },
     "troweprice": {
-      "last_discovered_at": "2026-04-11T02:30:58.346716+08:00",
+      "last_discovered_at": "2026-04-11T20:10:31.038908+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
           "url": "https://www.troweprice.com/en/us/insights",
           "final_score": 0.97,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 1.0,
+          "gate_penalty": 0.15,
           "active": true
         },
         {
           "url": "https://www.troweprice.com/en/ca/insights",
           "final_score": 0.94,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 1.0,
+          "gate_penalty": 0.3,
           "active": false
         },
         {
           "url": "https://www.troweprice.com/en/au/insights",
           "final_score": 0.94,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 1.0,
+          "gate_penalty": 0.3,
           "active": false
         }
       ],
