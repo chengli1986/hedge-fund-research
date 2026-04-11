@@ -2,114 +2,221 @@
   "version": 1,
   "sources": {
     "pimco": {
-      "last_discovered_at": "2026-04-11T02:30:44.207887+08:00",
+      "last_discovered_at": "2026-04-11T21:44:09.870992+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
           "url": "https://www.pimco.com/us/en/insights#sort=%40publishz32xdate%20descending&f:category=[70341f6de3a142ee89144df0ec44e3b8,8d35ad276c6c4c5caf4d9fed37c5f51d,1a3217a178b04eb18c1e4532665b184c,56ebfd2935044d1eb39b7e661d2d03fb,22ea0773e8f147e38e15655207e73e21,bdd17ed0ae9d4ddd96e9e60e51c47782,78449f5b2f5e4b6ebd2d6e90b7a9f889,9cfdb8bfe49a451a851cf9957c57cd32,eef114e6a525445a81d179b8adb018c7]",
           "final_score": 0.82,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.5,
+          "gate_penalty": 0.15,
           "active": true
         },
         {
           "url": "https://www.pimco.com/us/en",
           "final_score": 0.82,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 1.0,
+          "gate_penalty": 0.15,
           "active": false
         },
         {
           "url": "https://www.pimco.com/us/en/investment-strategies/interval-funds",
           "final_score": 0.82,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 1.0,
+          "gate_penalty": 0.15,
           "active": false
         }
       ],
-      "rejected_pages": []
+      "rejected_pages": [
+        {
+          "url": "https://www.pimco.com/us/en/account/login/",
+          "final_score": 0.47,
+          "domain_score": 1.0,
+          "path_score": 0.0,
+          "structure_score": 0.3333,
+          "gate_penalty": 0.15,
+          "label": "bad"
+        }
+      ]
     },
     "de-shaw": {
-      "last_discovered_at": "2026-04-11T02:30:44.841887+08:00",
+      "last_discovered_at": "2026-04-11T21:44:11.234408+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
           "url": "https://www.deshaw.com/library",
-          "final_score": 1.0,
+          "final_score": 0.97,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 1.0,
+          "gate_penalty": 0.15,
           "active": true
         },
         {
           "url": "https://www.deshaw.com/",
-          "final_score": 0.85,
+          "final_score": 0.82,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 1.0,
+          "gate_penalty": 0.15,
           "active": false
         },
         {
           "url": "https://www.deshaw.com/who-we-are",
-          "final_score": 0.85,
+          "final_score": 0.82,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 1.0,
+          "gate_penalty": 0.15,
           "active": false
         }
       ],
       "rejected_pages": []
     },
     "blackstone": {
-      "last_discovered_at": "2026-04-11T02:30:46.691683+08:00",
+      "last_discovered_at": "2026-04-11T21:44:13.346749+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
           "url": "https://www.blackstone.com/insights/",
           "final_score": 0.88,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.8,
+          "gate_penalty": 0.3,
           "active": true
         },
         {
           "url": "https://www.blackstone.com/",
           "final_score": 0.73,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.8,
+          "gate_penalty": 0.3,
           "active": false
         },
         {
           "url": "https://www.blackstone.com/blackstone-career-pathways/",
           "final_score": 0.715,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.75,
+          "gate_penalty": 0.3,
           "active": false
         }
       ],
       "rejected_pages": []
     },
     "two-sigma": {
-      "last_discovered_at": "2026-04-11T02:30:48.160653+08:00",
+      "last_discovered_at": "2026-04-11T21:44:15.054200+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
           "url": "https://www.twosigma.com/insights/",
           "final_score": 0.97,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 1.0,
+          "gate_penalty": 0.15,
           "active": true
         },
         {
           "url": "https://www.twosigma.com/legal-disclosure/cookies-policy/",
           "final_score": 0.79,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 1.0,
+          "gate_penalty": 0.3,
           "active": false
         },
         {
           "url": "http://www.twosigma.com/legal-disclosure/privacy-policy/",
           "final_score": 0.79,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 1.0,
+          "gate_penalty": 0.3,
           "active": false
         }
       ],
       "rejected_pages": []
     },
     "kkr": {
-      "last_discovered_at": "2026-04-11T02:30:50.282520+08:00",
+      "last_discovered_at": "2026-04-11T21:44:16.429077+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
           "url": "https://www.kkr.com/insights",
           "final_score": 0.94,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 1.0,
+          "gate_penalty": 0.3,
           "active": true
         },
         {
           "url": "https://www.kkr.com/",
           "final_score": 0.69,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.6667,
+          "gate_penalty": 0.3,
           "active": false
         },
         {
           "url": "https://www.kkr.com/wealth",
           "final_score": 0.66,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.6667,
+          "gate_penalty": 0.45,
           "active": false
         }
       ],
-      "rejected_pages": []
+      "rejected_pages": [
+        {
+          "url": "https://www.kkr.com/login",
+          "final_score": 0.44,
+          "domain_score": 1.0,
+          "path_score": 0.0,
+          "structure_score": 0.3333,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        },
+        {
+          "url": "https://www.kkr.com/about",
+          "final_score": 0.415,
+          "domain_score": 1.0,
+          "path_score": 0.0,
+          "structure_score": 0.25,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        },
+        {
+          "url": "https://www.kkr.com/about/global-wealth-solutions",
+          "final_score": 0.415,
+          "domain_score": 1.0,
+          "path_score": 0.0,
+          "structure_score": 0.25,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        },
+        {
+          "url": "https://www.kkr.com/about/family-capital",
+          "final_score": 0.415,
+          "domain_score": 1.0,
+          "path_score": 0.0,
+          "structure_score": 0.25,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        }
+      ]
     },
     "cambridge-associates": {
       "last_discovered_at": "2026-04-11T20:10:34.710500+08:00",
@@ -156,13 +263,35 @@
       ]
     },
     "gsam": {
-      "last_discovered_at": "2026-04-11T02:30:54.473521+08:00",
+      "last_discovered_at": "2026-04-11T21:44:22.754474+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
+          "url": "https://am.gs.com/en-us/advisors/insights/article/investment-outlook",
+          "final_score": 0.9,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.6667,
+          "gate_penalty": 0.0,
+          "active": true
+        },
+        {
           "url": "https://am.gs.com/en-us/advisors/insights/list",
           "final_score": 0.7,
-          "active": true
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.0,
+          "gate_penalty": 0.0,
+          "active": false
+        },
+        {
+          "url": "https://am.gs.com/en-us/advisors/insights/article/2026/market-brief-investment-perspectives-middle-east-conflict",
+          "final_score": 0.7,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.0,
+          "gate_penalty": 0.0,
+          "active": false
         }
       ],
       "rejected_pages": []
