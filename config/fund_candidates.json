@@ -8,9 +8,9 @@
     "rss_url": null,
     "official_domain": "www.pimco.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-11T02:30:10.726188+08:00",
-    "last_screened_at": "2026-04-11T02:30:18.653326+08:00",
-    "last_validated_at": "2026-04-11T21:44:09.870992+08:00",
+    "last_discovered_at": "2026-04-12T02:30:32.214177+08:00",
+    "last_screened_at": "2026-04-12T02:30:40.200473+08:00",
+    "last_validated_at": "2026-04-12T02:31:00.730718+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -59,7 +59,7 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-04-04T18:29:56.182174+00:00",
+    "last_deep_analyzed_at": "2026-04-11T18:32:49.244440+00:00",
     "quality": "HIGH",
     "topics": "fixed income, macro, credit"
   },
@@ -72,9 +72,9 @@
     "rss_url": null,
     "official_domain": "www.deshaw.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-11T02:30:10.809165+08:00",
-    "last_screened_at": "2026-04-11T02:30:19.066227+08:00",
-    "last_validated_at": "2026-04-11T21:44:11.234408+08:00",
+    "last_discovered_at": "2026-04-12T02:30:32.285210+08:00",
+    "last_screened_at": "2026-04-12T02:30:40.278379+08:00",
+    "last_validated_at": "2026-04-12T02:31:01.392250+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -98,9 +98,9 @@
       "article_signals": 1
     },
     "screening_reason": "Insufficient article index signals",
-    "last_deep_analyzed_at": "2026-04-04T18:29:56.182174+00:00",
+    "last_deep_analyzed_at": "2026-04-11T18:32:49.244440+00:00",
     "quality": "LOW",
-    "topics": "quant, systematic"
+    "topics": "quant"
   },
   {
     "id": "blackstone",
@@ -111,14 +111,14 @@
     "rss_url": "https://www.blackstone.com/feed/",
     "official_domain": "www.blackstone.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-11T02:30:11.208711+08:00",
-    "last_screened_at": "2026-04-11T02:30:19.317490+08:00",
-    "last_validated_at": "2026-04-11T21:44:13.346749+08:00",
+    "last_discovered_at": "2026-04-12T02:30:32.556805+08:00",
+    "last_screened_at": "2026-04-12T02:30:40.414021+08:00",
+    "last_validated_at": "2026-04-12T02:31:03.342904+08:00",
     "recent_update_at": "2026-03-31",
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.88,
-    "notes": "RECOMMEND: weekly insights, fills PE/RE gap",
+    "notes": "RECOMMEND: monthly free PE/RE/credit insights, fills alts gap",
     "research_links": [
       {
         "url": "https://www.blackstone.com/insights/",
@@ -152,7 +152,7 @@
       },
       {
         "url": "https://www.blackstone.com/insights/article/market-views-dealmaking-disruption-and-real-estates-recovery/",
-        "label": "Market Views: Dealmaking, Disruption, and Real Estate’s Recovery",
+        "label": "Market Views: Dealmaking, Disruption, and Real Estate\u2019s Recovery",
         "path": "insights/article/market-views-dealmaking-disruption-and-real-estates-recovery"
       },
       {
@@ -172,9 +172,9 @@
       "article_signals": 3
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-04-04T18:29:56.182174+00:00",
-    "quality": "MEDIUM",
-    "topics": "private credit, real estate, alternatives"
+    "last_deep_analyzed_at": "2026-04-11T18:32:49.244440+00:00",
+    "quality": "HIGH",
+    "topics": "private equity, real estate, private credit, infrastructure"
   },
   {
     "id": "two-sigma",
@@ -185,9 +185,9 @@
     "rss_url": "https://www.twosigma.com/feed/",
     "official_domain": "www.twosigma.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-11T02:30:11.390275+08:00",
-    "last_screened_at": "2026-04-11T02:30:19.520870+08:00",
-    "last_validated_at": "2026-04-11T21:44:15.054200+08:00",
+    "last_discovered_at": "2026-04-12T02:30:32.680208+08:00",
+    "last_screened_at": "2026-04-12T02:30:40.580004+08:00",
+    "last_validated_at": "2026-04-12T02:31:04.953038+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": true,
     "has_article_index": true,
@@ -216,9 +216,9 @@
       "article_signals": 2
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-04-04T18:29:56.182174+00:00",
+    "last_deep_analyzed_at": "2026-04-11T18:32:49.244440+00:00",
     "quality": "LOW",
-    "topics": "quant, engineering"
+    "topics": ""
   },
   {
     "id": "kkr",
@@ -229,14 +229,14 @@
     "rss_url": null,
     "official_domain": "www.kkr.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-11T02:30:11.794175+08:00",
-    "last_screened_at": "2026-04-11T02:30:19.860157+08:00",
-    "last_validated_at": "2026-04-11T21:44:16.429077+08:00",
+    "last_discovered_at": "2026-04-12T02:30:32.995756+08:00",
+    "last_screened_at": "2026-04-12T02:30:40.828350+08:00",
+    "last_validated_at": "2026-04-12T02:31:06.903930+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.94,
-    "notes": "Watchlist: 403 but has macro/infra articles",
+    "notes": "Watchlist: HIGH quality but 403 blocks access",
     "research_links": [
       {
         "url": "https://www.kkr.com/insights",
@@ -265,7 +265,7 @@
       },
       {
         "url": "https://www.kkr.com/insights/naic-spring-update-2026",
-        "label": "Investment Insights Highlights from the NAIC’s 2026 Spring National Meeting: CLOs, Collateral Loans,",
+        "label": "Investment Insights Highlights from the NAIC\u2019s 2026 Spring National Meeting: CLOs, Collateral Loans,",
         "path": "insights/naic-spring-update-2026"
       },
       {
@@ -285,9 +285,9 @@
       "article_signals": 1
     },
     "screening_reason": "Insufficient article index signals",
-    "last_deep_analyzed_at": "2026-04-04T18:29:56.182174+00:00",
+    "last_deep_analyzed_at": "2026-04-11T18:32:49.244440+00:00",
     "quality": "HIGH",
-    "topics": "macro, infrastructure, credit"
+    "topics": "private equity, macro, infrastructure, credit"
   },
   {
     "id": "cambridge-associates",
@@ -298,9 +298,9 @@
     "rss_url": null,
     "official_domain": "www.cambridgeassociates.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-11T02:30:12.560277+08:00",
-    "last_screened_at": "2026-04-11T02:30:20.799897+08:00",
-    "last_validated_at": "2026-04-11T20:10:34.710500+08:00",
+    "last_discovered_at": "2026-04-12T02:30:33.898392+08:00",
+    "last_screened_at": "2026-04-12T02:30:41.608911+08:00",
+    "last_validated_at": "2026-04-12T02:31:09.742056+08:00",
     "recent_update_at": "2026-04",
     "is_publicly_accessible": true,
     "has_article_index": true,
@@ -343,13 +343,23 @@
         "path": "insight/liquidity-hazard-planning-for-families-of-wealth"
       },
       {
+        "url": "https://www.cambridgeassociates.com/insight/a-new-era-of-dispersion-in-direct-lending-favors-disciplined-managers/",
+        "label": "A New Era of Dispersion in Direct Lending Favors Disciplined Managers",
+        "path": "insight/a-new-era-of-dispersion-in-direct-lending-favors-disciplined-managers"
+      },
+      {
+        "url": "https://www.cambridgeassociates.com/insight/how-munis-fit/",
+        "label": "US Private Families Should Revisit How Munis Fit Within a Broader Diversification Strategy",
+        "path": "insight/how-munis-fit"
+      },
+      {
         "url": "https://www.cambridgeassociates.com/insight/will-the-iran-war-force-the-ecb-and-boe-to-tighten-as-much-as-markets-expect/",
         "label": "Will the Iran War Force the ECB and BOE to Tighten as Much as Markets Expect?",
         "path": "insight/will-the-iran-war-force-the-ecb-and-boe-to-tighten-as-much-as-markets-expect"
       },
       {
         "url": "https://www.cambridgeassociates.com/insight/germanys-fiscal-boost/",
-        "label": "Germany’s Fiscal Boost Remains a Tailwind Despite Near-Term Risks",
+        "label": "Germany\u2019s Fiscal Boost Remains a Tailwind Despite Near-Term Risks",
         "path": "insight/germanys-fiscal-boost"
       },
       {
@@ -361,16 +371,6 @@
         "url": "https://www.cambridgeassociates.com/insight/sustainable-investing-in-focus-green-horizons-or-gridlocked/",
         "label": "Sustainable Investing in Focus: Green Horizons or Gridlocked",
         "path": "insight/sustainable-investing-in-focus-green-horizons-or-gridlocked"
-      },
-      {
-        "url": "https://www.cambridgeassociates.com/insight/does-the-iran-war-change-our-view-on-the-us-dollar/",
-        "label": "Does the Iran War Change Our View on the US Dollar?",
-        "path": "insight/does-the-iran-war-change-our-view-on-the-us-dollar"
-      },
-      {
-        "url": "https://www.cambridgeassociates.com/insight/will-the-iran-conflict-trigger-a-pandemic-style-inflation-spike/",
-        "label": "Will the Iran Conflict Trigger a Pandemic-Style Inflation Spike?",
-        "path": "insight/will-the-iran-conflict-trigger-a-pandemic-style-inflation-spike"
       },
       {
         "url": "https://www.cambridgeassociates.com/insights/endowments-foundations/",
@@ -427,9 +427,9 @@
     "rss_url": null,
     "official_domain": "am.gs.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-11T02:30:12.243476+08:00",
-    "last_screened_at": "2026-04-11T02:30:22.558045+08:00",
-    "last_validated_at": "2026-04-11T21:44:22.754474+08:00",
+    "last_discovered_at": "2026-04-12T02:30:33.709464+08:00",
+    "last_screened_at": "2026-04-12T02:30:43.158608+08:00",
+    "last_validated_at": "2026-04-12T02:31:14.389197+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -481,9 +481,9 @@
     "rss_url": null,
     "official_domain": "www.wellington.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-11T02:30:13.046228+08:00",
-    "last_screened_at": "2026-04-11T02:30:24.781938+08:00",
-    "last_validated_at": "2026-04-11T20:10:29.121235+08:00",
+    "last_discovered_at": "2026-04-12T02:30:34.653738+08:00",
+    "last_screened_at": "2026-04-12T02:30:44.551607+08:00",
+    "last_validated_at": "2026-04-12T02:31:32.325524+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -580,7 +580,7 @@
     "rss_url": null,
     "official_domain": "research-center.amundi.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-11T02:30:13.637565+08:00",
+    "last_discovered_at": "2026-04-12T02:30:35.224411+08:00",
     "last_screened_at": "2026-04-07T18:33:00.000000+08:00",
     "last_validated_at": "2026-04-07T18:33:00.000000+08:00",
     "recent_update_at": "2026-04-07",
@@ -613,7 +613,7 @@
     "rss_url": null,
     "official_domain": "am.jpmorgan.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-11T02:30:14.168152+08:00",
+    "last_discovered_at": "2026-04-12T02:30:35.834667+08:00",
     "last_screened_at": "2026-04-09T02:33:58.182308+08:00",
     "last_validated_at": "2026-04-11T20:10:41.483426+08:00",
     "recent_update_at": null,
@@ -646,9 +646,9 @@
     "rss_url": null,
     "official_domain": "www.troweprice.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-11T02:30:14.338004+08:00",
-    "last_screened_at": "2026-04-11T02:30:25.006508+08:00",
-    "last_validated_at": "2026-04-11T20:10:31.038908+08:00",
+    "last_discovered_at": "2026-04-12T02:30:36.014237+08:00",
+    "last_screened_at": "2026-04-12T02:30:44.708910+08:00",
+    "last_validated_at": "2026-04-12T02:31:33.940315+08:00",
     "recent_update_at": "2026-03-09",
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -699,13 +699,39 @@
   {
     "id": "fidelity",
     "name": "Fidelity Investments",
-    "status": "discovered",
+    "status": "rejected",
     "homepage_url": "https://www.fidelity.com",
-    "research_url": "https://www.fidelity.com/viewpoints/market-and-economic-insights",
+    "research_url": "https://www.fidelity.com/viewpoints/personal-finance/how-to-start-investing",
     "rss_url": null,
     "official_domain": "www.fidelity.com",
-    "discovery_method": "manual",
-    "last_discovered_at": "2026-04-10T18:35:00.000000+08:00",
-    "notes": "Added as new seed: public viewpoints page, multi-asset/equity/macro"
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-04-12T02:30:37.239055+08:00",
+    "notes": "Rejected: retail education portal, not institutional research",
+    "research_links": [
+      {
+        "url": "https://www.fidelity.com/viewpoints/personal-finance/how-to-start-investing",
+        "label": "Clicking this link will open a new browser window How to start investing It doesn't have to be overl",
+        "path": "viewpoints/personal-finance/how-to-start-investing"
+      }
+    ],
+    "is_publicly_accessible": false,
+    "has_article_index": false,
+    "last_screened_at": "2026-04-12T02:30:45.392750+08:00",
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 2,
+      "article_tags": 0,
+      "time_tags": 0,
+      "date_patterns": 0,
+      "h2_tags": 0,
+      "article_signals": 0
+    },
+    "screening_reason": "Login/paywall detected",
+    "fit_score": 0.82,
+    "last_validated_at": "2026-04-12T02:31:44.080348+08:00",
+    "last_deep_analyzed_at": "2026-04-11T18:32:49.244440+00:00",
+    "quality": "LOW",
+    "topics": "retail education"
   }
 ]
