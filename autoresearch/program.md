@@ -1,9 +1,9 @@
 # GMIA Entrypoint Autoresearch: Scorer Weight Optimization
 
 ## Goal
-Maximize **overall_precision** — a composite metric that measures how well the
-scorer weights separate good research pages from bad pages (careers, legal, cookie).
-Higher is better. Baseline: 0.9182.
+Maximize **overall_precision** — a combined metric: `0.6 × good_precision + 0.4 × bad_reject_rate`.
+This measures how well the scorer separates research pages (high score) from
+non-research pages like careers/about/contact (low score). Higher is better.
 
 ## The ONE file you can edit
 `config/scorer_weights.json` — the four scorer weights.
@@ -11,7 +11,8 @@ Higher is better. Baseline: 0.9182.
 ## The metric
 Run: `cd ~/hedge-fund-research && python3 evaluate_entrypoints.py`
 Read the last line: `overall_precision: 0.XXXX`
-Higher is better.
+Higher is better. This is the **combined** metric (60% good precision + 40% bad reject rate).
+A fund with no negative examples contributes 0.0 to the reject_rate component.
 
 ## How scoring works
 The entrypoint scorer grades candidate research pages on 4 dimensions:

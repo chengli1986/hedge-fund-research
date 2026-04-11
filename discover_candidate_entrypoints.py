@@ -351,6 +351,15 @@ def main() -> None:
         now = datetime.now(BJT).isoformat()
 
         if not args.dry_run:
+            # Only mark validated when at least one entrypoint was found.
+            # If scored_pages came back empty (main page fetch failed), keep
+            # status as "screened" so the fund is retried on the next run.
+            if not result["entrypoints"]:
+                log.warning("%s: no entrypoints found (fetch failed?), keeping status=%s",
+                            c["id"], c["status"])
+                updated_count += 1
+                continue
+
             # Update candidate state
             c["status"] = "validated"
             c["fit_score"] = result["fit_score"]

@@ -74,7 +74,7 @@ def compute_ranking_precision(data: dict, weights: dict) -> dict:
         bad_below = sum(1 for s in bad_scores if s < THRESHOLD)
 
         precision = good_above / len(good_scores) if good_scores else 1.0
-        bad_reject_rate = bad_below / len(bad_scores) if bad_scores else 1.0
+        bad_reject_rate = bad_below / len(bad_scores) if bad_scores else 0.0
 
         avg_good = sum(good_scores) / len(good_scores) if good_scores else 0.0
         avg_bad = sum(bad_scores) / len(bad_scores) if bad_scores else 0.0
@@ -143,8 +143,8 @@ def print_table(metrics: dict) -> None:
         f"{metrics['total_bad']:>4}  {'':>6}  "
         f"{metrics['overall_reject_rate']*100:>5.1f}%"
     )
-    # This line is what autoresearch reads
-    print(f"\noverall_precision: {metrics['overall_precision']:.4f}")
+    # This line is what autoresearch reads (combined: 0.6*precision + 0.4*reject_rate)
+    print(f"\noverall_precision: {metrics['overall']:.4f}")
 
 
 def main() -> None:

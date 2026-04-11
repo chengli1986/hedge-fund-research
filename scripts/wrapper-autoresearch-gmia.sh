@@ -21,6 +21,16 @@ trap cleanup EXIT
 
 echo "$LOG_PREFIX Starting GMIA autoresearch session..."
 
+# Skip if last 5 experiments are all SAME (scorer saturated, nothing to optimize)
+RESULTS_TSV="$REPO_DIR/autoresearch/results.tsv"
+if [ -f "$RESULTS_TSV" ] && [ "$(wc -l < "$RESULTS_TSV")" -ge 5 ]; then
+    CONSECUTIVE_SAME=$(tail -5 "$RESULTS_TSV" | awk -F'\t' '{print $3}' | grep -c "^SAME$" || true)
+    if [ "$CONSECUTIVE_SAME" -eq 5 ]; then
+        echo "$LOG_PREFIX Skipping: last 5 experiments all SAME — scorer saturated, collect more negative samples first"
+        exit 0
+    fi
+fi
+
 # CRITICAL: Unset API key so Claude uses Max plan auth (not paid API)
 unset ANTHROPIC_API_KEY
 unset CLAUDECODE

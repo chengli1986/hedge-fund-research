@@ -243,16 +243,26 @@ def main() -> None:
         "--dry-run", action="store_true",
         help="Print results without updating fund_candidates.json",
     )
+    parser.add_argument(
+        "--reprocess", action="store_true",
+        help="Re-screen already-screened or previously-failed funds",
+    )
     args = parser.parse_args()
 
     candidates = load_candidates()
     updated_count = 0
 
+    allowed_statuses = (
+        {"discovered", "screened", "screen_failed"} if args.reprocess
+        else {"discovered", "screen_failed"}
+    )
+
     for c in candidates:
-        # Filter: only screen candidates with status="discovered"
-        if c["status"] != "discovered":
+        # Filter: only screen candidates with allowed status
+        if c["status"] not in allowed_statuses:
             if args.fund and c["id"] == args.fund:
-                log.warning("Fund %s has status '%s', not 'discovered'", c["id"], c["status"])
+                log.warning("Fund %s has status '%s', not in %s",
+                            c["id"], c["status"], allowed_statuses)
             continue
 
         # Filter by fund ID if specified
@@ -262,11 +272,17 @@ def main() -> None:
         result = screen_one(c)
         print(json.dumps(result, indent=2, ensure_ascii=False))
 
-        if result.get("error"):
-            log.warning("Skipping %s due to error: %s", c["id"], result["error"])
-            continue
-
         now = datetime.now(BJT).isoformat()
+
+        if result.get("error"):
+            log.warning("Screening failed for %s: %s", c["id"], result["error"])
+            if not args.dry_run:
+                # Record failure so it's visible; auto-retried next run
+                c["status"] = "screen_failed"
+                c["last_screened_at"] = now
+                c["screening_reason"] = result.get("reason", result["error"])
+                updated_count += 1
+            continue
 
         if not args.dry_run:
             c["status"] = "screened"
