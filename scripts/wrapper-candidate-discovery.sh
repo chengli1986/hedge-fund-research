@@ -79,6 +79,22 @@ else
     echo "$LOG_PREFIX No new commits to push"
 fi
 
+# --- Trial manager (runs regardless of discovery exit code) ---
+echo "$LOG_PREFIX Running GMIA trial manager..."
+python3 "$REPO_DIR/gmia-trial-manager.py" run 2>&1
+TRIAL_EXIT=$?
+if [ $TRIAL_EXIT -ne 0 ]; then
+    echo "$LOG_PREFIX WARNING: trial manager exited with code $TRIAL_EXIT"
+fi
+
+# Commit trial state if changed
+cd "$REPO_DIR"
+if ! git diff --quiet config/trial-state.json config/fund_candidates.json 2>/dev/null; then
+    git add config/trial-state.json config/fund_candidates.json
+    git diff --cached --quiet || git commit -m "trial: update GMIA trial state $(TZ='Asia/Shanghai' date '+%Y-%m-%d')"
+    echo "$LOG_PREFIX Trial state committed"
+fi
+
 # --- Email report ---
 echo "$LOG_PREFIX Sending email report..."
 source ~/.stock-monitor.env 2>/dev/null || true
