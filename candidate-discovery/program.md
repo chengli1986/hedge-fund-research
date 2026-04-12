@@ -73,8 +73,9 @@ For any promising new fund NOT already in fund_seeds.json:
 
 ```bash
 cd /home/ubuntu/hedge-fund-research
+DISCOVERY_DATE=$(TZ='Asia/Shanghai' date '+%Y-%m-%d')
 git add config/fund_seeds.json config/fund_candidates.json config/candidate_entrypoints.json
-git diff --cached --quiet || git commit -m "data(candidate): daily discovery run $(TZ=Asia/Shanghai date +%Y-%m-%d)"
+git diff --cached --quiet || git commit -m "data(candidate): daily discovery run ${DISCOVERY_DATE}"
 git push
 ```
 
@@ -90,6 +91,7 @@ Output a brief summary:
 - **Maximum 1 new seed per session** (deliberate growth, not bulk expansion)
 - Maximum 3 WebSearch queries per session
 - Maximum 8 WebFetch calls per session
+- **Maximum 4 deep analyses per session** — if more candidates need analysis, pick the 4 highest priority (never-analyzed first, then stalest `last_deep_analyzed_at`), defer the rest to the next session
 - If a page requires login/payment, mark as "rejected: gated content" and move on
 - Keep notes concise (1-2 sentences max)
 - Always set `last_deep_analyzed_at` after analyzing a fund
