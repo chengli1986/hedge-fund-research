@@ -93,6 +93,7 @@ if ! git diff --quiet config/trial-state.json config/fund_candidates.json 2>/dev
     git add config/trial-state.json config/fund_candidates.json
     git diff --cached --quiet || git commit -m "trial: update GMIA trial state $(TZ='Asia/Shanghai' date '+%Y-%m-%d')"
     echo "$LOG_PREFIX Trial state committed"
+    git push 2>&1 || echo "$LOG_PREFIX WARNING: git push (trial state) failed"
 fi
 
 # --- Email report ---
