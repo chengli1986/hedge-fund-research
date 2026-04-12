@@ -2,7 +2,7 @@
   "version": 1,
   "sources": {
     "pimco": {
-      "last_discovered_at": "2026-04-12T02:31:00.730718+08:00",
+      "last_discovered_at": "2026-04-12T21:46:36.835070+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -80,7 +80,7 @@
       "rejected_pages": []
     },
     "blackstone": {
-      "last_discovered_at": "2026-04-12T02:31:03.342904+08:00",
+      "last_discovered_at": "2026-04-12T21:46:38.539641+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -148,7 +148,7 @@
       "rejected_pages": []
     },
     "kkr": {
-      "last_discovered_at": "2026-04-12T02:31:06.903930+08:00",
+      "last_discovered_at": "2026-04-12T21:46:40.529532+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -219,7 +219,7 @@
       ]
     },
     "cambridge-associates": {
-      "last_discovered_at": "2026-04-12T02:31:09.742056+08:00",
+      "last_discovered_at": "2026-04-12T21:46:43.539768+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -263,7 +263,7 @@
       ]
     },
     "gsam": {
-      "last_discovered_at": "2026-04-12T02:31:14.389197+08:00",
+      "last_discovered_at": "2026-04-12T21:46:48.479992+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -297,7 +297,7 @@
       "rejected_pages": []
     },
     "wellington": {
-      "last_discovered_at": "2026-04-12T02:31:32.325524+08:00",
+      "last_discovered_at": "2026-04-12T21:47:08.324959+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -375,7 +375,7 @@
       ]
     },
     "troweprice": {
-      "last_discovered_at": "2026-04-12T02:31:33.940315+08:00",
+      "last_discovered_at": "2026-04-12T21:47:09.823347+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -397,10 +397,10 @@
           "active": false
         },
         {
-          "url": "https://www.troweprice.com/en/au/insights",
-          "final_score": 0.94,
+          "url": "https://www.troweprice.com/en/ae/home",
+          "final_score": 0.79,
           "domain_score": 1.0,
-          "path_score": 1.0,
+          "path_score": 0.5,
           "structure_score": 1.0,
           "gate_penalty": 0.3,
           "active": false
@@ -409,7 +409,7 @@
       "rejected_pages": []
     },
     "fidelity": {
-      "last_discovered_at": "2026-04-12T02:31:44.080348+08:00",
+      "last_discovered_at": "2026-04-12T21:47:17.776315+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -432,6 +432,74 @@
         },
         {
           "url": "https://www.fidelity.com/tax-information/overview",
+          "final_score": 0.82,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 1.0,
+          "gate_penalty": 0.15,
+          "active": false
+        }
+      ],
+      "rejected_pages": []
+    },
+    "research-affiliates": {
+      "last_discovered_at": "2026-04-12T21:47:18.994974+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://www.researchaffiliates.com/insights/smart-beta",
+          "final_score": 0.94,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 1.0,
+          "gate_penalty": 0.3,
+          "active": true
+        },
+        {
+          "url": "https://www.researchaffiliates.com/insights/esg",
+          "final_score": 0.94,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 1.0,
+          "gate_penalty": 0.3,
+          "active": false
+        },
+        {
+          "url": "https://www.researchaffiliates.com/insights/publications",
+          "final_score": 0.79,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.5,
+          "gate_penalty": 0.3,
+          "active": false
+        }
+      ],
+      "rejected_pages": []
+    },
+    "blackrock-institute": {
+      "last_discovered_at": "2026-04-12T21:47:23.716227+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://www.blackrock.com/us/individual/insights/blackrock-investment-institute/weekly-commentary",
+          "final_score": 0.92,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.8333,
+          "gate_penalty": 0.15,
+          "active": true
+        },
+        {
+          "url": "https://www.blackrock.com/us/individual/sign-on.oauth?redirectUrl=%2Fus%2Findividual%2Finsights%2Fblackrock-investment-institute%2Fweekly-commentary%3FsignInAppWithOkta%3Dtrue",
+          "final_score": 0.82,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 1.0,
+          "gate_penalty": 0.15,
+          "active": false
+        },
+        {
+          "url": "https://www.blackrock.com/us/individual/sign-on.saml?redirectUrl=%2Fus%2Findividual%2Finsights%2Fblackrock-investment-institute%2Fweekly-commentary%3FsignInAppWithOkta%3Dtrue",
           "final_score": 0.82,
           "domain_score": 1.0,
           "path_score": 0.5,

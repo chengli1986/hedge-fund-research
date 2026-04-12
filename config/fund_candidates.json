@@ -8,9 +8,9 @@
     "rss_url": null,
     "official_domain": "www.pimco.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-12T02:30:32.214177+08:00",
-    "last_screened_at": "2026-04-12T02:30:40.200473+08:00",
-    "last_validated_at": "2026-04-12T02:31:00.730718+08:00",
+    "last_discovered_at": "2026-04-12T21:46:08.084819+08:00",
+    "last_screened_at": "2026-04-12T21:46:18.466389+08:00",
+    "last_validated_at": "2026-04-12T21:46:36.835070+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -113,9 +113,9 @@
     "rss_url": "https://www.blackstone.com/feed/",
     "official_domain": "www.blackstone.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-12T02:30:32.556805+08:00",
-    "last_screened_at": "2026-04-12T02:30:40.414021+08:00",
-    "last_validated_at": "2026-04-12T02:31:03.342904+08:00",
+    "last_discovered_at": "2026-04-12T21:46:08.331157+08:00",
+    "last_screened_at": "2026-04-12T21:46:18.583815+08:00",
+    "last_validated_at": "2026-04-12T21:46:38.539641+08:00",
     "recent_update_at": "2026-03-31",
     "is_publicly_accessible": true,
     "has_article_index": true,
@@ -154,7 +154,7 @@
       },
       {
         "url": "https://www.blackstone.com/insights/article/market-views-dealmaking-disruption-and-real-estates-recovery/",
-        "label": "Market Views: Dealmaking, Disruption, and Real Estate’s Recovery",
+        "label": "Market Views: Dealmaking, Disruption, and Real Estate\u2019s Recovery",
         "path": "insights/article/market-views-dealmaking-disruption-and-real-estates-recovery"
       },
       {
@@ -233,9 +233,9 @@
     "rss_url": null,
     "official_domain": "www.kkr.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-12T02:30:32.995756+08:00",
-    "last_screened_at": "2026-04-12T02:30:40.828350+08:00",
-    "last_validated_at": "2026-04-12T02:31:06.903930+08:00",
+    "last_discovered_at": "2026-04-12T21:46:08.625278+08:00",
+    "last_screened_at": "2026-04-12T21:46:18.800524+08:00",
+    "last_validated_at": "2026-04-12T21:46:40.529532+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -269,7 +269,7 @@
       },
       {
         "url": "https://www.kkr.com/insights/naic-spring-update-2026",
-        "label": "Investment Insights Highlights from the NAIC’s 2026 Spring National Meeting: CLOs, Collateral Loans,",
+        "label": "Investment Insights Highlights from the NAIC\u2019s 2026 Spring National Meeting: CLOs, Collateral Loans,",
         "path": "insights/naic-spring-update-2026"
       },
       {
@@ -302,14 +302,14 @@
     "rss_url": null,
     "official_domain": "www.cambridgeassociates.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-12T02:30:33.898392+08:00",
-    "last_screened_at": "2026-04-12T02:30:41.608911+08:00",
-    "last_validated_at": "2026-04-12T02:31:09.742056+08:00",
+    "last_discovered_at": "2026-04-12T21:46:09.243748+08:00",
+    "last_screened_at": "2026-04-12T21:46:19.604889+08:00",
+    "last_validated_at": "2026-04-12T21:46:43.539768+08:00",
     "recent_update_at": "2026-04",
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.97,
-    "notes": "RECOMMEND: PE/VC/endowment research, fills alts gap",
+    "notes": "RECOMMEND: Monthly PE/VC research, fills alts gap",
     "research_links": [
       {
         "url": "https://www.cambridgeassociates.com/insights/private-investments/",
@@ -363,7 +363,7 @@
       },
       {
         "url": "https://www.cambridgeassociates.com/insight/germanys-fiscal-boost/",
-        "label": "Germany’s Fiscal Boost Remains a Tailwind Despite Near-Term Risks",
+        "label": "Germany\u2019s Fiscal Boost Remains a Tailwind Despite Near-Term Risks",
         "path": "insight/germanys-fiscal-boost"
       },
       {
@@ -418,9 +418,9 @@
       "article_signals": 1
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-04-05T10:32:00.000000+00:00",
+    "last_deep_analyzed_at": "2026-04-12T13:48:51.331495+00:00",
     "quality": "HIGH",
-    "topics": "private equity, venture capital, endowments, macro, sustainable investing"
+    "topics": "private equity, venture capital, co-investment, private credit"
   },
   {
     "id": "gsam",
@@ -431,9 +431,9 @@
     "rss_url": null,
     "official_domain": "am.gs.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-12T02:30:33.709464+08:00",
-    "last_screened_at": "2026-04-12T02:30:43.158608+08:00",
-    "last_validated_at": "2026-04-12T02:31:14.389197+08:00",
+    "last_discovered_at": "2026-04-12T21:46:09.066787+08:00",
+    "last_screened_at": "2026-04-12T21:46:21.076861+08:00",
+    "last_validated_at": "2026-04-12T21:46:48.479992+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -485,9 +485,9 @@
     "rss_url": null,
     "official_domain": "www.wellington.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-12T02:30:34.653738+08:00",
-    "last_screened_at": "2026-04-12T02:30:44.551607+08:00",
-    "last_validated_at": "2026-04-12T02:31:32.325524+08:00",
+    "last_discovered_at": "2026-04-12T21:46:10.028462+08:00",
+    "last_screened_at": "2026-04-12T21:46:22.772798+08:00",
+    "last_validated_at": "2026-04-12T21:47:08.324959+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -584,7 +584,7 @@
     "rss_url": null,
     "official_domain": "research-center.amundi.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-12T02:30:35.224411+08:00",
+    "last_discovered_at": "2026-04-12T21:46:10.634698+08:00",
     "last_screened_at": "2026-04-07T18:33:00.000000+08:00",
     "last_validated_at": "2026-04-07T18:33:00.000000+08:00",
     "recent_update_at": "2026-04-07",
@@ -617,7 +617,7 @@
     "rss_url": null,
     "official_domain": "am.jpmorgan.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-12T02:30:35.834667+08:00",
+    "last_discovered_at": "2026-04-12T21:46:11.267741+08:00",
     "last_screened_at": "2026-04-09T02:33:58.182308+08:00",
     "last_validated_at": "2026-04-11T20:10:41.483426+08:00",
     "recent_update_at": null,
@@ -650,9 +650,9 @@
     "rss_url": null,
     "official_domain": "www.troweprice.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-12T02:30:36.014237+08:00",
-    "last_screened_at": "2026-04-12T02:30:44.708910+08:00",
-    "last_validated_at": "2026-04-12T02:31:33.940315+08:00",
+    "last_discovered_at": "2026-04-12T21:46:11.421599+08:00",
+    "last_screened_at": "2026-04-12T21:46:22.864070+08:00",
+    "last_validated_at": "2026-04-12T21:47:09.823347+08:00",
     "recent_update_at": "2026-03-09",
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -703,13 +703,13 @@
   {
     "id": "fidelity",
     "name": "Fidelity Investments",
-    "status": "rejected",
+    "status": "validated",
     "homepage_url": "https://www.fidelity.com",
     "research_url": "https://www.fidelity.com/viewpoints/personal-finance/how-to-start-investing",
     "rss_url": null,
     "official_domain": "www.fidelity.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-12T02:30:37.239055+08:00",
+    "last_discovered_at": "2026-04-12T21:46:12.613340+08:00",
     "notes": "Rejected: retail education portal, not institutional research",
     "research_links": [
       {
@@ -720,7 +720,7 @@
     ],
     "is_publicly_accessible": false,
     "has_article_index": false,
-    "last_screened_at": "2026-04-12T02:30:45.392750+08:00",
+    "last_screened_at": "2026-04-12T21:46:23.433552+08:00",
     "screening_signals": {
       "status_code": 200,
       "has_password_input": false,
@@ -733,7 +733,7 @@
     },
     "screening_reason": "Login/paywall detected",
     "fit_score": 0.82,
-    "last_validated_at": "2026-04-12T02:31:44.080348+08:00",
+    "last_validated_at": "2026-04-12T21:47:17.776315+08:00",
     "last_deep_analyzed_at": "2026-04-11T18:32:49.244440+00:00",
     "quality": "LOW",
     "topics": "retail education"
@@ -741,13 +741,18 @@
   {
     "id": "msci-research",
     "name": "MSCI Research",
-    "status": "seed",
+    "status": "watchlist",
     "homepage_url": "https://www.msci.com/research-and-insights",
     "research_url": null,
     "rss_url": null,
-    "official_domain": null,
-    "discovery_method": "seed",
-    "notes": "Global index and analytics provider; free research on factor investing, ESG, risk, and portfolio construction; highly cited in institutional space"
+    "official_domain": "www.msci.com",
+    "discovery_method": "discover_fund_sites",
+    "notes": "Broad research hub, gated, overlaps AQR factor coverage",
+    "research_links": [],
+    "last_discovered_at": "2026-04-12T21:46:14.833730+08:00",
+    "quality": "MEDIUM",
+    "topics": "factor investing, ESG, climate, multi-asset, risk",
+    "last_deep_analyzed_at": "2026-04-12T13:48:51.331495+00:00"
   },
   {
     "id": "carlyle",
@@ -763,24 +768,208 @@
   {
     "id": "research-affiliates",
     "name": "Research Affiliates",
-    "status": "seed",
+    "status": "watchlist",
     "homepage_url": "https://www.researchaffiliates.com",
-    "research_url": null,
+    "research_url": "https://www.researchaffiliates.com/insights/publications",
     "rss_url": null,
-    "official_domain": null,
-    "discovery_method": "seed",
-    "notes": "Rob Arnott's firm; pioneered smart beta/RAFI; free high-quality papers on valuation, factor investing, expected returns, and asset allocation"
+    "official_domain": "www.researchaffiliates.com",
+    "discovery_method": "discover_fund_sites",
+    "notes": "Gated (free acct needed), advocacy research for RAFI",
+    "research_links": [
+      {
+        "url": "https://www.researchaffiliates.com/insights/publications",
+        "label": "Insights",
+        "path": "insights/publications"
+      },
+      {
+        "url": "https://www.researchaffiliates.com/insights/journal-papers",
+        "label": "Journal & Working Papers",
+        "path": "insights/journal-papers"
+      },
+      {
+        "url": "https://www.researchaffiliates.com/insights/multimedia",
+        "label": "Multimedia",
+        "path": "insights/multimedia"
+      },
+      {
+        "url": "https://www.researchaffiliates.com/insights/smart-beta",
+        "label": "Explore Smart Beta",
+        "path": "insights/smart-beta"
+      },
+      {
+        "url": "https://www.researchaffiliates.com/insights/esg",
+        "label": "ESG Investing",
+        "path": "insights/esg"
+      },
+      {
+        "url": "https://www.researchaffiliates.com/publications/articles/1111-when-will-ai-be-both-powerful-and-profitable",
+        "label": "When Will AI Be Both Powerful and Profitable? By Chris Brightman April 2026 Historic infrastructure ",
+        "path": "publications/articles/1111-when-will-ai-be-both-powerful-and-profitable"
+      },
+      {
+        "url": "https://www.researchaffiliates.com/publications/articles/1112-winning-the-long-game-with-rafi",
+        "label": "Winning the Long Game with RAFI By Grant Kasser, Ari Polychronopoulos March 2026 The Research Affili",
+        "path": "publications/articles/1112-winning-the-long-game-with-rafi"
+      },
+      {
+        "url": "https://www.researchaffiliates.com/publications/articles/1110-why-value-quality-and-momentum-belong-together",
+        "label": "Why Value, Quality, and Momentum Belong Together By Noah Beck, Que Nguyen March 2026 Research Affili",
+        "path": "publications/articles/1110-why-value-quality-and-momentum-belong-together"
+      },
+      {
+        "url": "https://www.researchaffiliates.com/publications/articles/1107-should-trend-follow-carry-lessons-from-bonds-gold-and-2022",
+        "label": "Should Trend Follow Carry: Lessons from Bonds, Gold, and 2022 By Jim Masturzo, Colin Suvak February ",
+        "path": "publications/articles/1107-should-trend-follow-carry-lessons-from-bonds-gold-and-2022"
+      },
+      {
+        "url": "https://www.researchaffiliates.com/publications/articles/1105-everything-everywhere-all-at-once-conglomerates-and-the-disappearing-diversification-discount",
+        "label": "Everything Everywhere All at Once: Conglomerates and the Disappearing Diversification Discount By No",
+        "path": "publications/articles/1105-everything-everywhere-all-at-once-conglomerates-and-the-disappearing-diversification-discount"
+      },
+      {
+        "url": "https://www.researchaffiliates.com/publications/articles/1103-2025-implications-for-the-future-some-like-it-hot",
+        "label": "2025\u2019s Implications for the Future: \u201cSome Like it Hot\"? By Jim Masturzo January 2026 A review of maj",
+        "path": "publications/articles/1103-2025-implications-for-the-future-some-like-it-hot"
+      },
+      {
+        "url": "https://www.researchaffiliates.com/publications/articles/1106-trifecta-a-fundamental-revolution-in-indexing",
+        "label": "Trifecta: A Fundamental Revolution in Indexing By Rob Arnott, Chris Brightman January 2026 Research ",
+        "path": "publications/articles/1106-trifecta-a-fundamental-revolution-in-indexing"
+      },
+      {
+        "url": "https://www.researchaffiliates.com/publications/articles/1101-financialization-how-deficits-inflate-profits-and-equity-valuations",
+        "label": "Financialization: How Deficits Inflate Profits and Equity Valuations By Chris Brightman, Alex Pickar",
+        "path": "publications/articles/1101-financialization-how-deficits-inflate-profits-and-equity-valuations"
+      },
+      {
+        "url": "https://www.researchaffiliates.com/publications/articles/1100-why-hold-expensive-slow-growing-stocks",
+        "label": "Why Hold Expensive Slow-Growing Stocks? An Alternative Framework for Value and Growth Indices By Chr",
+        "path": "publications/articles/1100-why-hold-expensive-slow-growing-stocks"
+      },
+      {
+        "url": "https://www.researchaffiliates.com/publications/articles/1099-stop-the-losses",
+        "label": "Stop the Losses! By Jay Jeon, Jim Masturzo October 2025 Stop losses help mitigate downside risk by l",
+        "path": "publications/articles/1099-stop-the-losses"
+      }
+    ],
+    "last_discovered_at": "2026-04-12T21:46:13.090427+08:00",
+    "is_publicly_accessible": false,
+    "has_article_index": false,
+    "last_screened_at": "2026-04-12T21:46:23.542743+08:00",
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 0,
+      "article_tags": 0,
+      "time_tags": 0,
+      "date_patterns": 0,
+      "h2_tags": 0,
+      "article_signals": 0
+    },
+    "screening_reason": "Insufficient article index signals",
+    "fit_score": 0.94,
+    "last_validated_at": "2026-04-12T21:47:18.994974+08:00",
+    "quality": "MEDIUM",
+    "topics": "factor investing, smart beta, fundamental indexing",
+    "last_deep_analyzed_at": "2026-04-12T13:48:51.331495+00:00"
   },
   {
     "id": "blackrock-institute",
     "name": "BlackRock Investment Institute",
-    "status": "seed",
+    "status": "rejected",
     "homepage_url": "https://www.blackrock.com/us/individual/insights/blackrock-investment-institute",
-    "research_url": null,
+    "research_url": "https://www.blackrock.com/us/individual/insights/blackrock-investment-institute/weekly-commentary",
     "rss_url": null,
-    "official_domain": null,
-    "discovery_method": "seed",
-    "notes": "World's largest asset manager; free macro, factor, and portfolio research; weekly/monthly updates; covers geopolitics, sustainability, and asset allocation"
+    "official_domain": "www.blackrock.com",
+    "discovery_method": "discover_fund_sites",
+    "notes": "All pages return 403, cannot access content",
+    "research_links": [
+      {
+        "url": "https://www.blackrock.com/us/individual/insights/blackrock-investment-institute/weekly-commentary",
+        "label": "Weekly commentary",
+        "path": "us/individual/insights/blackrock-investment-institute/weekly-commentary"
+      },
+      {
+        "url": "https://www.blackrock.com/us/individual/insights/blackrock-investment-institute/outlook",
+        "label": "Global investment outlook",
+        "path": "us/individual/insights/blackrock-investment-institute/outlook"
+      },
+      {
+        "url": "https://www.blackrock.com/us/individual/insights/blackrock-investment-institute",
+        "label": "BlackRock Investment Institute",
+        "path": "us/individual/insights/blackrock-investment-institute"
+      },
+      {
+        "url": "https://www.blackrock.com/us/individual/insights?filter-by=portfolio-management-views",
+        "label": "Portfolio management views",
+        "path": "us/individual/insights"
+      },
+      {
+        "url": "https://www.blackrock.com/us/individual/insights",
+        "label": "All insights",
+        "path": "us/individual/insights"
+      },
+      {
+        "url": "https://www.blackrock.com/us/individual/library",
+        "label": "Document library",
+        "path": "us/individual/library"
+      },
+      {
+        "url": "https://www.blackrock.com/us/individual/library?materialType=fact+sheet",
+        "label": "Factsheets",
+        "path": "us/individual/library"
+      },
+      {
+        "url": "https://www.blackrock.com/us/individual/library?materialType=shareholder+letters",
+        "label": "Shareholder reports",
+        "path": "us/individual/library"
+      },
+      {
+        "url": "https://www.blackrock.com/us/individual/insights/blackrock-investment-institute/global-macro-outlook",
+        "label": "Read our latest investment perspectives",
+        "path": "us/individual/insights/blackrock-investment-institute/global-macro-outlook"
+      },
+      {
+        "url": "https://www.blackrock.com/corporate/insights/blackrock-investment-institute/meet-the-bii-team",
+        "label": "Learn more about bii team",
+        "path": "corporate/insights/blackrock-investment-institute/meet-the-bii-team"
+      },
+      {
+        "url": "https://www.blackrock.com/corporate/insights/blackrock-investment-institute/interactive-charts",
+        "label": "Explore now interactive charts",
+        "path": "corporate/insights/blackrock-investment-institute/interactive-charts"
+      },
+      {
+        "url": "https://www.blackrock.com/corporate/insights/blackrock-investment-institute/interactive-charts/geopolitical-risk-dashboard",
+        "label": "Explore BlackRock Investment Institute's geopolitical dashboard",
+        "path": "corporate/insights/blackrock-investment-institute/interactive-charts/geopolitical-risk-dashboard"
+      },
+      {
+        "url": "https://www.blackrock.com/corporate/insights/blackrock-investment-institute/publications",
+        "label": "Read BlackRock Investment Institute's publications",
+        "path": "corporate/insights/blackrock-investment-institute/publications"
+      }
+    ],
+    "last_discovered_at": "2026-04-12T21:46:12.980931+08:00",
+    "is_publicly_accessible": false,
+    "has_article_index": false,
+    "last_screened_at": "2026-04-12T21:46:23.834795+08:00",
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 2,
+      "article_tags": 0,
+      "time_tags": 0,
+      "date_patterns": 0,
+      "h2_tags": 0,
+      "article_signals": 0
+    },
+    "screening_reason": "Login/paywall detected",
+    "fit_score": 0.92,
+    "last_validated_at": "2026-04-12T21:47:23.716227+08:00",
+    "quality": "LOW",
+    "topics": "macro, equity, multi-asset, fixed income",
+    "last_deep_analyzed_at": "2026-04-12T13:48:51.331495+00:00"
   },
   {
     "id": "schroders",
@@ -789,8 +978,10 @@
     "homepage_url": "https://www.schroders.com/en/insights",
     "research_url": null,
     "rss_url": null,
-    "official_domain": null,
-    "discovery_method": "seed",
-    "notes": "Major UK asset manager; free insights covering global macro, EM, sustainability/ESG, private assets; fills international and ESG gap"
+    "official_domain": "www.schroders.com",
+    "discovery_method": "discover_fund_sites",
+    "notes": "Major UK asset manager; free insights covering global macro, EM, sustainability/ESG, private assets; fills international and ESG gap",
+    "research_links": [],
+    "last_discovered_at": "2026-04-12T21:46:14.602282+08:00"
   }
 ]
