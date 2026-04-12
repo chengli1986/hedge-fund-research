@@ -83,7 +83,7 @@ fi
 echo "$LOG_PREFIX Sending email report..."
 source ~/.stock-monitor.env 2>/dev/null || true
 
-export REPO_DIR EXIT_CODE
+export REPO_DIR EXIT_CODE SMTP_USER SMTP_PASS
 python3 << 'PYEOF'
 import json, os, smtplib
 from email.mime.text import MIMEText
