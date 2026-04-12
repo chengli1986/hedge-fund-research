@@ -66,7 +66,7 @@
   {
     "id": "de-shaw",
     "name": "D. E. Shaw",
-    "status": "validated",
+    "status": "rejected",
     "homepage_url": "https://www.deshaw.com",
     "research_url": "https://www.deshaw.com/library",
     "rss_url": null,
@@ -100,7 +100,9 @@
     "screening_reason": "Insufficient article index signals",
     "last_deep_analyzed_at": "2026-04-11T18:32:49.244440+00:00",
     "quality": "LOW",
-    "topics": "quant"
+    "topics": "quant",
+    "reject_reason": "no_public_research",
+    "rejected_at": "2026-04-12T19:21:09.876510+08:00"
   },
   {
     "id": "blackstone",
@@ -152,7 +154,7 @@
       },
       {
         "url": "https://www.blackstone.com/insights/article/market-views-dealmaking-disruption-and-real-estates-recovery/",
-        "label": "Market Views: Dealmaking, Disruption, and Real Estate\u2019s Recovery",
+        "label": "Market Views: Dealmaking, Disruption, and Real Estate’s Recovery",
         "path": "insights/article/market-views-dealmaking-disruption-and-real-estates-recovery"
       },
       {
@@ -179,7 +181,7 @@
   {
     "id": "two-sigma",
     "name": "Two Sigma",
-    "status": "validated",
+    "status": "rejected",
     "homepage_url": "https://www.twosigma.com",
     "research_url": "https://www.twosigma.com/insights/",
     "rss_url": "https://www.twosigma.com/feed/",
@@ -218,7 +220,9 @@
     "screening_reason": "Research index detected",
     "last_deep_analyzed_at": "2026-04-11T18:32:49.244440+00:00",
     "quality": "LOW",
-    "topics": ""
+    "topics": "",
+    "reject_reason": "content_not_research",
+    "rejected_at": "2026-04-12T19:21:09.876510+08:00"
   },
   {
     "id": "kkr",
@@ -265,7 +269,7 @@
       },
       {
         "url": "https://www.kkr.com/insights/naic-spring-update-2026",
-        "label": "Investment Insights Highlights from the NAIC\u2019s 2026 Spring National Meeting: CLOs, Collateral Loans,",
+        "label": "Investment Insights Highlights from the NAIC’s 2026 Spring National Meeting: CLOs, Collateral Loans,",
         "path": "insights/naic-spring-update-2026"
       },
       {
@@ -359,7 +363,7 @@
       },
       {
         "url": "https://www.cambridgeassociates.com/insight/germanys-fiscal-boost/",
-        "label": "Germany\u2019s Fiscal Boost Remains a Tailwind Despite Near-Term Risks",
+        "label": "Germany’s Fiscal Boost Remains a Tailwind Despite Near-Term Risks",
         "path": "insight/germanys-fiscal-boost"
       },
       {
@@ -733,5 +737,60 @@
     "last_deep_analyzed_at": "2026-04-11T18:32:49.244440+00:00",
     "quality": "LOW",
     "topics": "retail education"
+  },
+  {
+    "id": "msci-research",
+    "name": "MSCI Research",
+    "status": "seed",
+    "homepage_url": "https://www.msci.com/research-and-insights",
+    "research_url": null,
+    "rss_url": null,
+    "official_domain": null,
+    "discovery_method": "seed",
+    "notes": "Global index and analytics provider; free research on factor investing, ESG, risk, and portfolio construction; highly cited in institutional space"
+  },
+  {
+    "id": "carlyle",
+    "name": "The Carlyle Group",
+    "status": "seed",
+    "homepage_url": "https://www.carlyle.com/insights",
+    "research_url": null,
+    "rss_url": null,
+    "official_domain": null,
+    "discovery_method": "seed",
+    "notes": "Global PE/credit/real assets manager; public insights on alternatives, private credit, macro outlook"
+  },
+  {
+    "id": "research-affiliates",
+    "name": "Research Affiliates",
+    "status": "seed",
+    "homepage_url": "https://www.researchaffiliates.com",
+    "research_url": null,
+    "rss_url": null,
+    "official_domain": null,
+    "discovery_method": "seed",
+    "notes": "Rob Arnott's firm; pioneered smart beta/RAFI; free high-quality papers on valuation, factor investing, expected returns, and asset allocation"
+  },
+  {
+    "id": "blackrock-institute",
+    "name": "BlackRock Investment Institute",
+    "status": "seed",
+    "homepage_url": "https://www.blackrock.com/us/individual/insights/blackrock-investment-institute",
+    "research_url": null,
+    "rss_url": null,
+    "official_domain": null,
+    "discovery_method": "seed",
+    "notes": "World's largest asset manager; free macro, factor, and portfolio research; weekly/monthly updates; covers geopolitics, sustainability, and asset allocation"
+  },
+  {
+    "id": "schroders",
+    "name": "Schroders",
+    "status": "seed",
+    "homepage_url": "https://www.schroders.com/en/insights",
+    "research_url": null,
+    "rss_url": null,
+    "official_domain": null,
+    "discovery_method": "seed",
+    "notes": "Major UK asset manager; free insights covering global macro, EM, sustainability/ESG, private assets; fills international and ESG gap"
   }
 ]

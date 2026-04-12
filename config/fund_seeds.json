@@ -1,14 +1,163 @@
 [
-  {"id": "pimco", "name": "PIMCO", "aliases": ["Pacific Investment Management Company"], "category": "fixed_income", "homepage": "https://www.pimco.com", "notes": "Largest fixed income manager, extensive public research"},
-  {"id": "de-shaw", "name": "D. E. Shaw", "aliases": ["D.E. Shaw & Co."], "category": "quant", "homepage": "https://www.deshaw.com", "notes": "Quant/systematic, has perspectives page"},
-  {"id": "blackstone", "name": "Blackstone", "aliases": ["Blackstone Inc."], "category": "alternatives", "homepage": "https://www.blackstone.com", "notes": "Largest alternative asset manager, has insights page"},
-  {"id": "two-sigma", "name": "Two Sigma", "aliases": ["Two Sigma Investments"], "category": "quant", "homepage": "https://www.twosigma.com", "notes": "Quant fund, has blog but mostly technical/recruiting"},
-  {"id": "kkr", "name": "KKR", "aliases": ["Kohlberg Kravis Roberts"], "category": "alternatives", "homepage": "https://www.kkr.com", "notes": "PE/credit, has insights page"},
-  {"id": "gsam", "name": "Goldman Sachs Asset Management", "aliases": ["GSAM", "Goldman Sachs AM"], "category": "multi_strategy", "homepage": "https://am.gs.com", "notes": "Publishes quarterly Market Know-How and economic outlooks; freely accessible public research"},
-  {"id": "cambridge-associates", "name": "Cambridge Associates", "aliases": ["Cambridge Associates LLC"], "category": "multi_asset", "homepage": "https://www.cambridgeassociates.com", "notes": "Investment consulting firm; public insights on PE, VC, endowments, macro; HIGH quality, April 2026 active"},
-  {"id": "wellington", "name": "Wellington Management", "aliases": ["Wellington Management Company"], "category": "multi_strategy", "homepage": "https://www.wellington.com", "notes": "Freely accessible research on equity, macro, private credit, alternatives, ESG; fills multi-asset equity gap"},
-  {"id": "amundi", "name": "Amundi Research Center", "aliases": ["Amundi Asset Management", "Amundi Institute"], "category": "multi_asset", "homepage": "https://research-center.amundi.com", "notes": "Europe's largest asset manager; free public research center with macro, ESG, cross-asset, EM; weekly updates"},
-  {"id": "jpmam", "name": "J.P. Morgan Asset Management", "aliases": ["JPMorgan AM", "JPMAM", "J.P. Morgan AM"], "category": "multi_asset", "homepage": "https://am.jpmorgan.com", "notes": "Weekly market commentary (On the Minds of Investors, Weekly Recap); freely accessible; multi-asset macro/equity/fixed income"},
-  {"id": "troweprice", "name": "T. Rowe Price", "aliases": ["T. Rowe Price Group", "TRP"], "category": "equity", "homepage": "https://www.troweprice.com", "notes": "Active equity/fixed income manager; public insights hub covering equity, markets, multi-asset, AI; fills active equity gap"},
-  {"id": "fidelity", "name": "Fidelity Investments", "aliases": ["Fidelity Management & Research", "FMR LLC", "Fidelity"], "category": "multi_asset", "homepage": "https://www.fidelity.com", "notes": "Major US asset manager $4T+ AUM; public market insights at fidelity.com/viewpoints covering equity, fixed income, macro, alternatives; institutional research also available"}
+  {
+    "id": "pimco",
+    "name": "PIMCO",
+    "aliases": [
+      "Pacific Investment Management Company"
+    ],
+    "category": "fixed_income",
+    "homepage": "https://www.pimco.com",
+    "notes": "Largest fixed income manager, extensive public research"
+  },
+  {
+    "id": "blackstone",
+    "name": "Blackstone",
+    "aliases": [
+      "Blackstone Inc."
+    ],
+    "category": "alternatives",
+    "homepage": "https://www.blackstone.com",
+    "notes": "Largest alternative asset manager, has insights page"
+  },
+  {
+    "id": "kkr",
+    "name": "KKR",
+    "aliases": [
+      "Kohlberg Kravis Roberts"
+    ],
+    "category": "alternatives",
+    "homepage": "https://www.kkr.com",
+    "notes": "PE/credit, has insights page"
+  },
+  {
+    "id": "gsam",
+    "name": "Goldman Sachs Asset Management",
+    "aliases": [
+      "GSAM",
+      "Goldman Sachs AM"
+    ],
+    "category": "multi_strategy",
+    "homepage": "https://am.gs.com",
+    "notes": "Publishes quarterly Market Know-How and economic outlooks; freely accessible public research"
+  },
+  {
+    "id": "cambridge-associates",
+    "name": "Cambridge Associates",
+    "aliases": [
+      "Cambridge Associates LLC"
+    ],
+    "category": "multi_asset",
+    "homepage": "https://www.cambridgeassociates.com",
+    "notes": "Investment consulting firm; public insights on PE, VC, endowments, macro; HIGH quality, April 2026 active"
+  },
+  {
+    "id": "wellington",
+    "name": "Wellington Management",
+    "aliases": [
+      "Wellington Management Company"
+    ],
+    "category": "multi_strategy",
+    "homepage": "https://www.wellington.com",
+    "notes": "Freely accessible research on equity, macro, private credit, alternatives, ESG; fills multi-asset equity gap"
+  },
+  {
+    "id": "amundi",
+    "name": "Amundi Research Center",
+    "aliases": [
+      "Amundi Asset Management",
+      "Amundi Institute"
+    ],
+    "category": "multi_asset",
+    "homepage": "https://research-center.amundi.com",
+    "notes": "Europe's largest asset manager; free public research center with macro, ESG, cross-asset, EM; weekly updates"
+  },
+  {
+    "id": "jpmam",
+    "name": "J.P. Morgan Asset Management",
+    "aliases": [
+      "JPMorgan AM",
+      "JPMAM",
+      "J.P. Morgan AM"
+    ],
+    "category": "multi_asset",
+    "homepage": "https://am.jpmorgan.com",
+    "notes": "Weekly market commentary (On the Minds of Investors, Weekly Recap); freely accessible; multi-asset macro/equity/fixed income"
+  },
+  {
+    "id": "troweprice",
+    "name": "T. Rowe Price",
+    "aliases": [
+      "T. Rowe Price Group",
+      "TRP"
+    ],
+    "category": "equity",
+    "homepage": "https://www.troweprice.com",
+    "notes": "Active equity/fixed income manager; public insights hub covering equity, markets, multi-asset, AI; fills active equity gap"
+  },
+  {
+    "id": "fidelity",
+    "name": "Fidelity Investments",
+    "aliases": [
+      "Fidelity Management & Research",
+      "FMR LLC",
+      "Fidelity"
+    ],
+    "category": "multi_asset",
+    "homepage": "https://www.fidelity.com",
+    "notes": "Major US asset manager $4T+ AUM; public market insights at fidelity.com/viewpoints covering equity, fixed income, macro, alternatives; institutional research also available"
+  },
+  {
+    "id": "blackrock-institute",
+    "name": "BlackRock Investment Institute",
+    "aliases": [
+      "BII",
+      "BlackRock Institute"
+    ],
+    "category": "multi_asset",
+    "homepage": "https://www.blackrock.com/us/individual/insights/blackrock-investment-institute",
+    "notes": "World's largest asset manager; free macro, factor, and portfolio research; weekly/monthly updates; covers geopolitics, sustainability, and asset allocation"
+  },
+  {
+    "id": "research-affiliates",
+    "name": "Research Affiliates",
+    "aliases": [
+      "RAFI",
+      "Rob Arnott"
+    ],
+    "category": "quant",
+    "homepage": "https://www.researchaffiliates.com",
+    "notes": "Rob Arnott's firm; pioneered smart beta/RAFI; free high-quality papers on valuation, factor investing, expected returns, and asset allocation"
+  },
+  {
+    "id": "schroders",
+    "name": "Schroders",
+    "aliases": [
+      "Schroders Investment Management"
+    ],
+    "category": "multi_asset",
+    "homepage": "https://www.schroders.com/en/insights",
+    "notes": "Major UK asset manager; free insights covering global macro, EM, sustainability/ESG, private assets; fills international and ESG gap"
+  },
+  {
+    "id": "carlyle",
+    "name": "The Carlyle Group",
+    "aliases": [
+      "Carlyle",
+      "Carlyle Group"
+    ],
+    "category": "alternatives",
+    "homepage": "https://www.carlyle.com/insights",
+    "notes": "Global PE/credit/real assets manager; public insights on alternatives, private credit, macro outlook"
+  },
+  {
+    "id": "msci-research",
+    "name": "MSCI Research",
+    "aliases": [
+      "MSCI",
+      "MSCI Inc."
+    ],
+    "category": "quant",
+    "homepage": "https://www.msci.com/research-and-insights",
+    "notes": "Global index and analytics provider; free research on factor investing, ESG, risk, and portfolio construction; highly cited in institutional space"
+  }
 ]
