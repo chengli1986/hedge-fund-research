@@ -1,0 +1,24 @@
+{
+  "active_trial": {
+    "id": "cambridge-associates",
+    "name": "Cambridge Associates",
+    "research_url": "https://www.cambridgeassociates.com/insights/private-investments/",
+    "homepage_url": "https://www.cambridgeassociates.com",
+    "fit_score": 0.97,
+    "quality": "HIGH",
+    "topics": "private equity, venture capital, co-investment, private credit",
+    "start_date": "2026-04-12",
+    "end_date": null,
+    "daily_checks": {
+      "2026-04-12": {
+        "accessible": true,
+        "article_count": 15,
+        "date_count": 0,
+        "error": null
+      }
+    },
+    "auto_decided": false,
+    "outcome": null
+  },
+  "history": []
+}
