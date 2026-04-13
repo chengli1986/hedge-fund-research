@@ -105,6 +105,7 @@ python3 << 'PYEOF'
 import json, os, smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.utils import make_msgid
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
@@ -178,10 +179,12 @@ Repo: <a href="https://github.com/chengli1986/hedge-fund-research">chengli1986/h
 </p>
 </body></html>"""
 
+msg_id = make_msgid(domain="ec2.sinostor.com.cn")
 msg = MIMEMultipart("alternative")
 msg["Subject"] = f"GMIA Fund Discovery: {len(seeds)} seeds, {validated} validated, {recommend} recommend — {now}"
 msg["From"] = os.environ.get("SMTP_USER", "")
 msg["To"] = "ch_w10@outlook.com"
+msg["Message-ID"] = msg_id
 msg["MIME-Version"] = "1.0"
 msg.attach(MIMEText(html, "html"))
 
@@ -189,7 +192,7 @@ try:
     with smtplib.SMTP_SSL("smtp.163.com", 465, timeout=30) as s:
         s.login(os.environ.get("SMTP_USER", ""), os.environ.get("SMTP_PASS", ""))
         s.send_message(msg)
-    print("Email sent to ch_w10@outlook.com")
+    print(f"Email sent to ch_w10@outlook.com (Message-ID: {msg_id})")
 except Exception as e:
     print(f"WARNING: Email failed: {e}")
 PYEOF
