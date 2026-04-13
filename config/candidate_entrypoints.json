@@ -2,7 +2,7 @@
   "version": 1,
   "sources": {
     "pimco": {
-      "last_discovered_at": "2026-04-12T21:46:36.835070+08:00",
+      "last_discovered_at": "2026-04-13T09:00:37.937971+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -80,7 +80,7 @@
       "rejected_pages": []
     },
     "blackstone": {
-      "last_discovered_at": "2026-04-12T21:46:38.539641+08:00",
+      "last_discovered_at": "2026-04-13T09:00:39.806054+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -148,7 +148,7 @@
       "rejected_pages": []
     },
     "kkr": {
-      "last_discovered_at": "2026-04-12T21:46:40.529532+08:00",
+      "last_discovered_at": "2026-04-13T09:00:41.841707+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -219,7 +219,7 @@
       ]
     },
     "cambridge-associates": {
-      "last_discovered_at": "2026-04-12T21:46:43.539768+08:00",
+      "last_discovered_at": "2026-04-13T09:00:44.854236+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -263,7 +263,7 @@
       ]
     },
     "gsam": {
-      "last_discovered_at": "2026-04-12T21:46:48.479992+08:00",
+      "last_discovered_at": "2026-04-13T09:00:51.841875+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -297,7 +297,7 @@
       "rejected_pages": []
     },
     "wellington": {
-      "last_discovered_at": "2026-04-12T21:47:08.324959+08:00",
+      "last_discovered_at": "2026-04-13T09:01:18.292469+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -375,7 +375,7 @@
       ]
     },
     "troweprice": {
-      "last_discovered_at": "2026-04-12T21:47:09.823347+08:00",
+      "last_discovered_at": "2026-04-13T09:01:19.952829+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -397,10 +397,10 @@
           "active": false
         },
         {
-          "url": "https://www.troweprice.com/en/ae/home",
-          "final_score": 0.79,
+          "url": "https://www.troweprice.com/en/au/insights",
+          "final_score": 0.94,
           "domain_score": 1.0,
-          "path_score": 0.5,
+          "path_score": 1.0,
           "structure_score": 1.0,
           "gate_penalty": 0.3,
           "active": false
@@ -409,7 +409,7 @@
       "rejected_pages": []
     },
     "fidelity": {
-      "last_discovered_at": "2026-04-12T21:47:17.776315+08:00",
+      "last_discovered_at": "2026-04-13T09:01:26.771647+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -443,7 +443,7 @@
       "rejected_pages": []
     },
     "research-affiliates": {
-      "last_discovered_at": "2026-04-12T21:47:18.994974+08:00",
+      "last_discovered_at": "2026-04-13T09:01:28.290276+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -477,7 +477,7 @@
       "rejected_pages": []
     },
     "blackrock-institute": {
-      "last_discovered_at": "2026-04-12T21:47:23.716227+08:00",
+      "last_discovered_at": "2026-04-13T09:01:38.255065+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
