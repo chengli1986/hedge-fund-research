@@ -23,6 +23,7 @@ CLI:
   python3 gmia-trial-manager.py skip     — skip active trial, move to next candidate
 """
 
+import html
 import json
 import os
 import re
@@ -322,13 +323,29 @@ The "overall" score should be: 0.4*relevance + 0.4*depth + 0.2*extractable.
         return {"sampled": len(article_texts), "articles": [], "avg_score": 0.0,
                 "error": "Haiku returned invalid response"}
 
+    # Build lookup by article_num so missing entries can be detected
+    haiku_by_num: dict[int, dict] = {}
+    for art in result.get("articles", []):
+        try:
+            num = int(art.get("article_num", 0))
+            haiku_by_num[num] = art
+        except (TypeError, ValueError):
+            pass
+
+    def _safe_float(val) -> float:
+        try:
+            return float(val) if val is not None else 0.0
+        except (TypeError, ValueError):
+            return 0.0
+
+    # Require exactly one scored entry per sampled article;
+    # articles the model dropped or returned with bad fields get score 0
     scored_articles = []
-    for art in result["articles"]:
-        idx = art.get("article_num", 0) - 1
-        url = article_texts[idx][0] if 0 <= idx < len(article_texts) else "unknown"
-        rel = float(art.get("relevance", 0))
-        dep = float(art.get("depth", 0))
-        ext = float(art.get("extractable", 0))
+    for i, (url, _) in enumerate(article_texts, 1):
+        art = haiku_by_num.get(i, {})
+        rel = _safe_float(art.get("relevance"))
+        dep = _safe_float(art.get("depth"))
+        ext = _safe_float(art.get("extractable"))
         overall = round(0.4 * rel + 0.4 * dep + 0.2 * ext, 3)
         scored_articles.append({
             "url": url,
@@ -423,7 +440,7 @@ def send_trial_email(trial: dict, passed: bool, total_articles: int) -> None:
             for art in sample.get("articles", []):
                 score = art.get("overall", 0)
                 sc = "#1a7f37" if score >= 0.6 else "#e3b341" if score >= 0.4 else "#cf222e"
-                notes = art.get("notes", "")[:80]
+                notes = html.escape(art.get("notes", "")[:80])
                 url_short = art.get("url", "")[-50:]
                 quality_rows += (
                     f"<tr><td style='padding:4px 8px'>Day {sample.get('day','?')}</td>"
@@ -595,13 +612,15 @@ def cmd_run() -> None:
                 if c["id"] == active["id"]:
                     if not passed:
                         if not quantity_ok:
-                            reason = f"only {total_articles} articles"
+                            c["status"] = "watchlist"
+                            c["notes"] = f"Trial failed: only {total_articles} articles"
                         elif not all_scores:
-                            reason = "no quality samples obtained"
+                            # Quality sampling never ran (API key missing, outage, etc.)
+                            # — leave candidate status unchanged so it can be re-trialed
+                            c["notes"] = "Trial inconclusive: no quality samples obtained"
                         else:
-                            reason = f"low quality ({avg_quality:.2f})"
-                        c["status"] = "watchlist"
-                        c["notes"] = f"Trial failed: {reason}"
+                            c["status"] = "watchlist"
+                            c["notes"] = f"Trial failed: low quality ({avg_quality:.2f})"
                     else:
                         c["notes"] = (f"RECOMMEND: trial passed "
                                       f"({total_articles} articles/7d, quality={avg_quality:.2f})")
