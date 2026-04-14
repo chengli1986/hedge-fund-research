@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 """
-GMIA Trial Manager — validates candidate sources with 7-day live article checks.
+GMIA Trial Manager — validates candidate sources with 7-day live article checks
+and Haiku-powered quality sampling.
 
 After the nightly discovery agent marks a candidate as validated (HIGH/MEDIUM quality),
 this manager picks one at a time, fetches its research URL daily for 7 days, counts
 detectable articles, and auto-decides whether to send a graduation recommendation.
 
-Trial SUCCESS (≥ MIN_ARTICLES_TOTAL over 7 days) → email "READY TO INTEGRATE" report
-Trial FAIL   (< MIN_ARTICLES_TOTAL)               → candidate downgraded to watchlist
+On days 1 and 4, the manager samples up to 3 article links, extracts their text,
+and sends them to Claude Haiku for quality assessment (relevance, depth,
+extractability).  The quality score is factored into the pass/fail decision.
+
+Trial SUCCESS = quantity (≥ MIN_ARTICLES_TOTAL) AND quality (avg score ≥ 0.5)
+Trial FAIL    = either condition not met → candidate downgraded to watchlist
 
 The manager does NOT automatically modify sources.json — graduation requires a human
 decision (adding the source with the correct fetch method, entrypoints, etc.).
@@ -42,6 +47,10 @@ ENV_FILE = Path.home() / ".stock-monitor.env"
 TRIAL_DAYS = 7
 MIN_ARTICLES_TOTAL = 3      # articles needed over trial to pass
 MIN_QUALITY = {"HIGH", "MEDIUM"}
+MIN_QUALITY_SCORE = 0.5     # avg Haiku quality score to pass (0-1)
+SAMPLE_DAYS = {1, 4}        # trial days on which to run quality sampling
+SAMPLE_SIZE = 3             # articles to sample per quality check
+HAIKU_MODEL = "claude-haiku-4-5-20251001"
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -138,6 +147,209 @@ def count_articles(url: str, timeout: int = 20) -> dict:
                 "error": str(exc)[:120]}
 
 
+# ── quality sampling (Haiku) ─────────────────────────────────────────────────
+
+def _extract_article_links(base_url: str, soup: BeautifulSoup) -> list[str]:
+    """Extract up to SAMPLE_SIZE article-like links from a research index page."""
+    from urllib.parse import urljoin
+
+    seen: set[str] = set()
+    links: list[str] = []
+    parsed_base = urlparse(base_url)
+
+    for a in soup.find_all("a", href=True):
+        href = a["href"]
+        full = urljoin(base_url, href)
+        parsed = urlparse(full)
+
+        # Same domain only
+        if parsed.netloc != parsed_base.netloc:
+            continue
+        # Skip anchors, category/tag pages, non-article patterns
+        if parsed.path in ("", "/") or parsed.path == parsed_base.path:
+            continue
+        if any(seg in parsed.path.lower() for seg in
+               ("/tag/", "/category/", "/page/", "/author/", "/login", "/search")):
+            continue
+        # Prefer paths with date-like segments or /insights/ /research/ depth
+        path_parts = [p for p in parsed.path.split("/") if p]
+        if len(path_parts) < 2:
+            continue
+
+        canon = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+        if canon in seen:
+            continue
+        seen.add(canon)
+        links.append(canon)
+
+        if len(links) >= SAMPLE_SIZE * 3:  # collect extras for fallback
+            break
+
+    return links
+
+
+def _extract_article_text(url: str, timeout: int = 20) -> str | None:
+    """Fetch a single article page and extract clean body text."""
+    try:
+        resp = httpx.get(url, headers=HEADERS, timeout=timeout, follow_redirects=True)
+        if resp.status_code != 200:
+            return None
+        soup = BeautifulSoup(resp.text, "html.parser")
+        for tag in soup.select("nav, footer, header, .nav, .footer, .header, "
+                               "script, style, aside, .sidebar"):
+            tag.decompose()
+
+        # Try <article> first, fall back to <main>, then full body
+        content = soup.find("article") or soup.find("main") or soup.find("body")
+        if not content:
+            return None
+        text = content.get_text(" ", strip=True)
+        # Return first 3000 chars (enough for Haiku to judge quality)
+        return text[:3000] if len(text) > 200 else None
+    except Exception:
+        return None
+
+
+def _call_haiku(prompt: str) -> dict | None:
+    """Call Claude Haiku for quality assessment. Returns parsed JSON or None."""
+    env = load_env()
+    api_key = env.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        print("WARNING: ANTHROPIC_API_KEY not set, skipping quality sampling")
+        return None
+
+    try:
+        resp = httpx.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "Content-Type": "application/json",
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+            },
+            json={
+                "model": HAIKU_MODEL,
+                "max_tokens": 1024,
+                "temperature": 0,
+                "messages": [{"role": "user", "content": prompt}],
+            },
+            timeout=30,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        text = data["content"][0]["text"]
+        # Extract JSON from response
+        json_match = re.search(r"\{[\s\S]*\}", text)
+        if json_match:
+            return json.loads(json_match.group())
+        return None
+    except Exception as exc:
+        print(f"WARNING: Haiku call failed: {exc}")
+        return None
+
+
+def sample_article_quality(research_url: str) -> dict:
+    """Sample articles from a source and assess quality via Haiku.
+
+    Returns dict with keys: sampled, articles, avg_score, error
+    Each article entry: {url, title_hint, score, relevance, depth, extractable, notes}
+    """
+    # Step 1: fetch the index page and extract article links
+    try:
+        resp = httpx.get(research_url, headers=HEADERS, timeout=20,
+                         follow_redirects=True)
+        if resp.status_code != 200:
+            return {"sampled": 0, "articles": [], "avg_score": 0.0,
+                    "error": f"Index page HTTP {resp.status_code}"}
+        soup = BeautifulSoup(resp.text, "html.parser")
+        for tag in soup.select("nav, footer, header, script, style"):
+            tag.decompose()
+    except Exception as exc:
+        return {"sampled": 0, "articles": [], "avg_score": 0.0,
+                "error": str(exc)[:120]}
+
+    links = _extract_article_links(research_url, soup)
+    if not links:
+        return {"sampled": 0, "articles": [], "avg_score": 0.0,
+                "error": "No article links found on index page"}
+
+    # Step 2: extract text from each article, using fallback links if needed
+    article_texts: list[tuple[str, str]] = []  # (url, text)
+    for url in links:
+        text = _extract_article_text(url)
+        if text:
+            article_texts.append((url, text))
+        if len(article_texts) >= SAMPLE_SIZE:
+            break
+
+    if not article_texts:
+        return {"sampled": 0, "articles": [], "avg_score": 0.0,
+                "error": "Could not extract text from any article"}
+
+    # Step 3: batch assess via Haiku
+    articles_block = ""
+    for i, (url, text) in enumerate(article_texts, 1):
+        articles_block += f"\n--- Article {i} (URL: {url}) ---\n{text}\n"
+
+    prompt = f"""You are evaluating articles from a hedge fund / investment research source.
+For each article below, score it on three dimensions (0.0 to 1.0):
+
+1. **relevance**: Is this investment research, macro analysis, or portfolio strategy?
+   (1.0 = deep investment research, 0.5 = tangentially related, 0.0 = marketing/HR/unrelated)
+2. **depth**: Is this substantive analysis with data, reasoning, or original insight?
+   (1.0 = detailed research paper, 0.5 = brief commentary, 0.0 = press release/summary)
+3. **extractable**: Is the text clean and complete enough to be useful if auto-collected?
+   (1.0 = full article text, 0.5 = partial/truncated, 0.0 = login wall/JS placeholder)
+
+Return a JSON object with this exact structure:
+{{
+  "articles": [
+    {{
+      "article_num": 1,
+      "relevance": 0.8,
+      "depth": 0.7,
+      "extractable": 0.9,
+      "overall": 0.8,
+      "notes": "one-line summary of what this article is about"
+    }}
+  ]
+}}
+
+The "overall" score should be: 0.4*relevance + 0.4*depth + 0.2*extractable.
+{articles_block}"""
+
+    result = _call_haiku(prompt)
+    if not result or "articles" not in result:
+        return {"sampled": len(article_texts), "articles": [], "avg_score": 0.0,
+                "error": "Haiku returned invalid response"}
+
+    scored_articles = []
+    for art in result["articles"]:
+        idx = art.get("article_num", 0) - 1
+        url = article_texts[idx][0] if 0 <= idx < len(article_texts) else "unknown"
+        rel = float(art.get("relevance", 0))
+        dep = float(art.get("depth", 0))
+        ext = float(art.get("extractable", 0))
+        overall = round(0.4 * rel + 0.4 * dep + 0.2 * ext, 3)
+        scored_articles.append({
+            "url": url,
+            "relevance": rel,
+            "depth": dep,
+            "extractable": ext,
+            "overall": overall,
+            "notes": art.get("notes", ""),
+        })
+
+    avg_score = (sum(a["overall"] for a in scored_articles) / len(scored_articles)
+                 if scored_articles else 0.0)
+
+    return {
+        "sampled": len(article_texts),
+        "articles": scored_articles,
+        "avg_score": round(avg_score, 3),
+        "error": None,
+    }
+
+
 # ── queue logic ───────────────────────────────────────────────────────────────
 
 def get_trial_queue(state: dict) -> list[dict]:
@@ -179,8 +391,17 @@ def send_trial_email(trial: dict, passed: bool, total_articles: int) -> None:
 
     now_bjt = datetime.now(BJT).strftime("%Y-%m-%d %H:%M BJT")
     result_icon = "✅" if passed else "❌"
-    result_text = "READY TO INTEGRATE" if passed else "INSUFFICIENT CONTENT"
+    outcome = trial.get("outcome", "")
+    if outcome == "fail_quality":
+        result_text = "FAILED — LOW QUALITY"
+    elif outcome.startswith("fail"):
+        result_text = "FAILED — INSUFFICIENT CONTENT"
+    else:
+        result_text = "READY TO INTEGRATE"
     result_color = "#1a7f37" if passed else "#cf222e"
+
+    avg_quality = trial.get("avg_quality_score", 0)
+    quality_color = "#1a7f37" if avg_quality >= MIN_QUALITY_SCORE else "#cf222e"
 
     daily_rows = ""
     for date, info in sorted(trial.get("daily_checks", {}).items()):
@@ -192,6 +413,49 @@ def send_trial_email(trial: dict, passed: bool, total_articles: int) -> None:
             else f'<span style="color:#cf222e">unreachable — {err[:40]}</span>'
         )
         daily_rows += f"<tr><td style='padding:4px 8px'>{date}</td><td style='padding:4px 8px'>{status_cell}</td></tr>\n"
+
+    # Quality sampling section
+    quality_html = ""
+    samples = trial.get("quality_samples", [])
+    if samples:
+        quality_rows = ""
+        for sample in samples:
+            for art in sample.get("articles", []):
+                score = art.get("overall", 0)
+                sc = "#1a7f37" if score >= 0.6 else "#e3b341" if score >= 0.4 else "#cf222e"
+                notes = art.get("notes", "")[:80]
+                url_short = art.get("url", "")[-50:]
+                quality_rows += (
+                    f"<tr><td style='padding:4px 8px'>Day {sample.get('day','?')}</td>"
+                    f"<td style='padding:4px 8px;color:{sc};font-weight:bold'>{score:.2f}</td>"
+                    f"<td style='padding:4px 8px'>{art.get('relevance',0):.1f}</td>"
+                    f"<td style='padding:4px 8px'>{art.get('depth',0):.1f}</td>"
+                    f"<td style='padding:4px 8px'>{art.get('extractable',0):.1f}</td>"
+                    f"<td style='padding:4px 8px;font-size:12px'>{notes}</td></tr>\n"
+                )
+            if sample.get("error"):
+                quality_rows += (
+                    f"<tr><td style='padding:4px 8px'>Day {sample.get('day','?')}</td>"
+                    f"<td colspan='5' style='padding:4px 8px;color:#cf222e'>"
+                    f"Error: {sample['error'][:60]}</td></tr>\n"
+                )
+        quality_html = f"""
+<h3 style="margin:12px 0 6px">Article Quality Sampling (Haiku)</h3>
+<table style="width:100%;border-collapse:collapse;font-size:13px;">
+  <tr style="background:#f6f8fa">
+    <th style="padding:4px 8px;text-align:left">Day</th>
+    <th style="padding:4px 8px;text-align:left">Score</th>
+    <th style="padding:4px 8px;text-align:left">Rel</th>
+    <th style="padding:4px 8px;text-align:left">Depth</th>
+    <th style="padding:4px 8px;text-align:left">Extr</th>
+    <th style="padding:4px 8px;text-align:left">Notes</th></tr>
+{quality_rows}
+</table>
+<p style="font-size:12px;color:#586069;margin:4px 0">
+  Avg quality: <strong style="color:{quality_color}">{avg_quality:.2f}</strong>
+  (threshold: {MIN_QUALITY_SCORE}) &nbsp;|&nbsp;
+  Score = 0.4*relevance + 0.4*depth + 0.2*extractable
+</p>"""
 
     action_html = ""
     if passed:
@@ -214,6 +478,8 @@ def send_trial_email(trial: dict, passed: bool, total_articles: int) -> None:
       <td style="padding:8px">{trial.get('start_date','')} → {trial.get('end_date','')}</td></tr>
   <tr><td style="padding:8px"><strong>Total articles detected</strong></td>
       <td style="padding:8px">{total_articles} (threshold: {MIN_ARTICLES_TOTAL})</td></tr>
+  <tr><td style="padding:8px"><strong>Avg quality score</strong></td>
+      <td style="padding:8px;color:{quality_color};font-weight:bold">{avg_quality:.2f} (threshold: {MIN_QUALITY_SCORE})</td></tr>
   <tr><td style="padding:8px"><strong>Fit score</strong></td>
       <td style="padding:8px">{trial.get('fit_score', '?')}</td></tr>
 </table>
@@ -224,12 +490,13 @@ def send_trial_email(trial: dict, passed: bool, total_articles: int) -> None:
       <th style="padding:4px 8px;text-align:left">Articles detected</th></tr>
 {daily_rows}
 </table>
+{quality_html}
 {action_html}
 <p style="color:#8b949e;font-size:11px;margin-top:20px">GMIA Candidate Trial Manager — auto-generated</p>
 </body></html>"""
 
     msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"GMIA Trial {'PASS' if passed else 'FAIL'}: {trial['name']} ({total_articles} articles)"
+    msg["Subject"] = f"GMIA Trial {'PASS' if passed else 'FAIL'}: {trial['name']} ({total_articles} articles, Q={avg_quality:.2f})"
     msg["From"] = smtp_user
     msg["To"] = mail_to
     msg["MIME-Version"] = "1.0"
@@ -268,31 +535,76 @@ def cmd_run() -> None:
                 print(f"[trial]   → unreachable: {result['error']}")
             save_state(state)
 
-        # Check if trial period complete
+        # ── Quality sampling on designated days ──────────────────────────────
         start = datetime.strptime(active["start_date"], "%Y-%m-%d").replace(tzinfo=BJT)
         elapsed = (datetime.now(BJT).replace(tzinfo=BJT) - start).days
+        trial_day = elapsed + 1  # 1-indexed
 
+        if trial_day in SAMPLE_DAYS:
+            existing_samples = active.get("quality_samples", [])
+            already_sampled_today = any(s.get("day") == trial_day for s in existing_samples)
+            if not already_sampled_today:
+                url = active.get("research_url") or active.get("homepage_url", "")
+                print(f"[trial] Quality sampling day {trial_day} for {active['name']}...")
+                qr = sample_article_quality(url)
+                qr["day"] = trial_day
+                qr["date"] = today
+                active.setdefault("quality_samples", []).append(qr)
+                save_state(state)
+                if qr["error"]:
+                    print(f"[trial]   Quality sampling error: {qr['error']}")
+                else:
+                    print(f"[trial]   Sampled {qr['sampled']} articles, "
+                          f"avg quality score: {qr['avg_score']:.2f}")
+                    for art in qr.get("articles", []):
+                        print(f"[trial]     {art['overall']:.1f} — {art['notes'][:60]}")
+
+        # Check if trial period complete
         if elapsed >= TRIAL_DAYS and not active.get("auto_decided"):
             total_articles = sum(
                 d.get("article_count", 0)
                 for d in active.get("daily_checks", {}).values()
                 if d.get("accessible")
             )
-            passed = total_articles >= MIN_ARTICLES_TOTAL
+            quantity_ok = total_articles >= MIN_ARTICLES_TOTAL
+
+            # Compute average quality score across all samples
+            all_scores = [
+                a["overall"]
+                for s in active.get("quality_samples", [])
+                for a in s.get("articles", [])
+            ]
+            avg_quality = (sum(all_scores) / len(all_scores)) if all_scores else 0.0
+            quality_ok = bool(all_scores) and avg_quality >= MIN_QUALITY_SCORE
+
+            passed = quantity_ok and quality_ok
             active["auto_decided"] = True
             active["end_date"] = today
             active["total_articles"] = total_articles
-            active["outcome"] = "pass" if passed else "fail"
+            active["avg_quality_score"] = round(avg_quality, 3)
+            if not quantity_ok:
+                active["outcome"] = "fail_quantity"
+            elif not quality_ok:
+                active["outcome"] = "fail_quality"
+            else:
+                active["outcome"] = "pass"
 
             # Update candidate status
             candidates = load_candidates()
             for c in candidates:
                 if c["id"] == active["id"]:
                     if not passed:
+                        if not quantity_ok:
+                            reason = f"only {total_articles} articles"
+                        elif not all_scores:
+                            reason = "no quality samples obtained"
+                        else:
+                            reason = f"low quality ({avg_quality:.2f})"
                         c["status"] = "watchlist"
-                        c["notes"] = f"Trial failed: only {total_articles} articles in 7 days"
+                        c["notes"] = f"Trial failed: {reason}"
                     else:
-                        c["notes"] = f"RECOMMEND: trial passed ({total_articles} articles/7d)"
+                        c["notes"] = (f"RECOMMEND: trial passed "
+                                      f"({total_articles} articles/7d, quality={avg_quality:.2f})")
                     break
             save_candidates(candidates)
 
@@ -300,8 +612,9 @@ def cmd_run() -> None:
             state["active_trial"] = None
             save_state(state)
             send_trial_email(active, passed, total_articles)
-            print(f"[trial] Trial complete for {active['name']}: {'PASS' if passed else 'FAIL'} "
-                  f"({total_articles} articles)")
+            print(f"[trial] Trial complete for {active['name']}: "
+                  f"{'PASS' if passed else 'FAIL'} "
+                  f"({total_articles} articles, quality={avg_quality:.2f})")
             # Fall through to start next trial below
             active = None
 
@@ -348,6 +661,22 @@ def cmd_run() -> None:
         else:
             print(f"[trial]   Day 1: unreachable — {result['error']}")
 
+        # Day 1 quality sampling
+        if 1 in SAMPLE_DAYS:
+            print(f"[trial] Quality sampling day 1 for {next_candidate['name']}...")
+            qr = sample_article_quality(url)
+            qr["day"] = 1
+            qr["date"] = today
+            state["active_trial"].setdefault("quality_samples", []).append(qr)
+            save_state(state)
+            if qr["error"]:
+                print(f"[trial]   Quality sampling error: {qr['error']}")
+            else:
+                print(f"[trial]   Sampled {qr['sampled']} articles, "
+                      f"avg quality score: {qr['avg_score']:.2f}")
+                for art in qr.get("articles", []):
+                    print(f"[trial]     {art['overall']:.2f} — {art['notes'][:60]}")
+
 
 def cmd_status() -> None:
     state = load_state()
@@ -370,10 +699,28 @@ def cmd_status() -> None:
         print(f"  URL: {active.get('research_url','')}")
         print(f"  Quality: {active.get('quality','?')}  Fit: {active.get('fit_score','?')}")
         print(f"  Total articles so far: {total} (need {MIN_ARTICLES_TOTAL} to pass)")
+
+        # Quality sampling info
+        samples = active.get("quality_samples", [])
+        all_scores = [a["overall"] for s in samples for a in s.get("articles", [])]
+        if all_scores:
+            avg_q = sum(all_scores) / len(all_scores)
+            print(f"  Avg quality score: {avg_q:.2f} (need {MIN_QUALITY_SCORE} to pass)")
+        else:
+            next_sample = min(SAMPLE_DAYS - set(s.get("day", 0) for s in samples), default=None)
+            if next_sample:
+                print(f"  Quality sampling: pending (next on day {next_sample})")
+
         print()
         for date, info in sorted(active.get("daily_checks", {}).items()):
             status = f"{info.get('article_count',0)} articles" if info.get("accessible") else f"unreachable ({info.get('error','')})"
             print(f"  {date}: {status}")
+        for sample in samples:
+            print(f"  Quality sample day {sample.get('day','?')}: "
+                  f"avg={sample.get('avg_score',0):.2f}, "
+                  f"sampled={sample.get('sampled',0)} articles")
+            for art in sample.get("articles", []):
+                print(f"    {art['overall']:.2f} — {art.get('notes','')[:60]}")
 
     queue = get_trial_queue(state)
     prod_ids = existing_source_ids()

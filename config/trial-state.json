@@ -30,7 +30,42 @@
       }
     },
     "auto_decided": false,
-    "outcome": null
+    "outcome": null,
+    "quality_samples": [
+      {
+        "sampled": 3,
+        "articles": [
+          {
+            "url": "https://www.cambridgeassociates.com/insight/a-look-inside-our-co-investment-playbook/",
+            "relevance": 0.9,
+            "depth": 0.7,
+            "extractable": 1.0,
+            "overall": 0.82,
+            "notes": "Portfolio strategy guidance on co-investment implementation with three key pillars: access, selection, execution; addresses diversification targets and fee considerations."
+          },
+          {
+            "url": "https://www.cambridgeassociates.com/insight/has-private-equity-hit-peak-software/",
+            "relevance": 0.95,
+            "depth": 0.8,
+            "extractable": 0.7,
+            "overall": 0.83,
+            "notes": "Investment research on PE software sector exposure amid AI disruption; analyzes valuation compression (19x to 3.4x revenue multiples) and vintage cohort risk differentiation."
+          },
+          {
+            "url": "https://www.cambridgeassociates.com/insight/us-pe-vc-benchmark-commentary-first-half-2025/",
+            "relevance": 0.95,
+            "depth": 0.85,
+            "extractable": 0.8,
+            "overall": 0.87,
+            "notes": "Benchmark performance analysis with detailed data on US PE/VC returns (H1 2025), vintage year performance, sector drivers, and capital flow metrics; includes comparative public market analysis."
+          }
+        ],
+        "avg_score": 0.84,
+        "error": null,
+        "day": 3,
+        "date": "2026-04-14"
+      }
+    ]
   },
   "history": []
 }
