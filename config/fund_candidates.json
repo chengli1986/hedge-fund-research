@@ -8,9 +8,9 @@
     "rss_url": null,
     "official_domain": "www.pimco.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-13T09:00:09.412240+08:00",
-    "last_screened_at": "2026-04-13T09:00:20.526999+08:00",
-    "last_validated_at": "2026-04-13T09:00:37.937971+08:00",
+    "last_discovered_at": "2026-04-14T09:00:10.777060+08:00",
+    "last_screened_at": "2026-04-14T09:00:22.482333+08:00",
+    "last_validated_at": "2026-04-14T09:01:03.727844+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -154,7 +154,7 @@
       },
       {
         "url": "https://www.blackstone.com/insights/article/market-views-dealmaking-disruption-and-real-estates-recovery/",
-        "label": "Market Views: Dealmaking, Disruption, and Real Estate’s Recovery",
+        "label": "Market Views: Dealmaking, Disruption, and Real Estate\u2019s Recovery",
         "path": "insights/article/market-views-dealmaking-disruption-and-real-estates-recovery"
       },
       {
@@ -233,9 +233,9 @@
     "rss_url": null,
     "official_domain": "www.kkr.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-13T09:00:09.747406+08:00",
-    "last_screened_at": "2026-04-13T09:00:21.060099+08:00",
-    "last_validated_at": "2026-04-13T09:00:41.841707+08:00",
+    "last_discovered_at": "2026-04-14T09:00:11.124747+08:00",
+    "last_screened_at": "2026-04-14T09:00:22.768247+08:00",
+    "last_validated_at": "2026-04-14T09:01:06.033417+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -269,7 +269,7 @@
       },
       {
         "url": "https://www.kkr.com/insights/naic-spring-update-2026",
-        "label": "Investment Insights Highlights from the NAIC’s 2026 Spring National Meeting: CLOs, Collateral Loans,",
+        "label": "Investment Insights Highlights from the NAIC\u2019s 2026 Spring National Meeting: CLOs, Collateral Loans,",
         "path": "insights/naic-spring-update-2026"
       },
       {
@@ -302,9 +302,9 @@
     "rss_url": null,
     "official_domain": "www.cambridgeassociates.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-13T09:00:10.498104+08:00",
-    "last_screened_at": "2026-04-13T09:00:21.948731+08:00",
-    "last_validated_at": "2026-04-13T09:00:44.854236+08:00",
+    "last_discovered_at": "2026-04-14T09:00:12.044235+08:00",
+    "last_screened_at": "2026-04-14T09:00:24.208649+08:00",
+    "last_validated_at": "2026-04-14T09:01:08.985216+08:00",
     "recent_update_at": "2026-04",
     "is_publicly_accessible": true,
     "has_article_index": true,
@@ -363,7 +363,7 @@
       },
       {
         "url": "https://www.cambridgeassociates.com/insight/germanys-fiscal-boost/",
-        "label": "Germany’s Fiscal Boost Remains a Tailwind Despite Near-Term Risks",
+        "label": "Germany\u2019s Fiscal Boost Remains a Tailwind Despite Near-Term Risks",
         "path": "insight/germanys-fiscal-boost"
       },
       {
@@ -431,17 +431,17 @@
     "rss_url": null,
     "official_domain": "am.gs.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-13T09:00:10.186844+08:00",
-    "last_screened_at": "2026-04-13T09:00:23.906548+08:00",
-    "last_validated_at": "2026-04-13T09:00:51.841875+08:00",
+    "last_discovered_at": "2026-04-14T09:00:11.749101+08:00",
+    "last_screened_at": "2026-04-14T09:00:25.935528+08:00",
+    "last_validated_at": "2026-04-14T09:01:14.138680+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.9,
-    "last_deep_analyzed_at": "2026-04-06T10:32:30.000000+00:00",
+    "last_deep_analyzed_at": "2026-04-14T01:02:52.000000+00:00",
     "quality": "MEDIUM",
     "topics": "macro, credit, alternatives, fixed income",
-    "notes": "Watchlist: JS-rendered, advisor login required",
+    "notes": "JS-rendered, advisor login; limited public access",
     "research_links": [
       {
         "url": "https://am.gs.com/en-us/advisors/insights/list",
@@ -485,14 +485,14 @@
     "rss_url": null,
     "official_domain": "www.wellington.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-13T09:00:10.772016+08:00",
-    "last_screened_at": "2026-04-13T09:00:25.599183+08:00",
-    "last_validated_at": "2026-04-13T09:01:18.292469+08:00",
+    "last_discovered_at": "2026-04-14T09:00:13.360635+08:00",
+    "last_screened_at": "2026-04-14T09:00:51.298444+08:00",
+    "last_validated_at": "2026-04-14T09:01:45.860838+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.8843,
-    "notes": "RECOMMEND: free multi-asset research, fills equity gap",
+    "notes": "RECOMMEND: multi-asset weekly research, fills equity gap",
     "research_links": [
       {
         "url": "https://www.wellington.com/en/insights",
@@ -571,9 +571,9 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-04-06T10:35:00.000000+00:00",
+    "last_deep_analyzed_at": "2026-04-14T01:02:52.000000+00:00",
     "quality": "HIGH",
-    "topics": "equity, macro, fixed income, alternatives, private credit, ESG"
+    "topics": "equity, macro, fixed income, alternatives, ESG, geopolitics"
   },
   {
     "id": "amundi",
@@ -584,7 +584,7 @@
     "rss_url": null,
     "official_domain": "research-center.amundi.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-13T09:00:11.367233+08:00",
+    "last_discovered_at": "2026-04-14T09:00:14.033414+08:00",
     "last_screened_at": "2026-04-07T18:33:00.000000+08:00",
     "last_validated_at": "2026-04-07T18:33:00.000000+08:00",
     "recent_update_at": "2026-04-07",
@@ -617,7 +617,7 @@
     "rss_url": null,
     "official_domain": "am.jpmorgan.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-13T09:00:12.431437+08:00",
+    "last_discovered_at": "2026-04-14T09:00:14.623649+08:00",
     "last_screened_at": "2026-04-09T02:33:58.182308+08:00",
     "last_validated_at": "2026-04-11T20:10:41.483426+08:00",
     "recent_update_at": null,
@@ -650,9 +650,9 @@
     "rss_url": null,
     "official_domain": "www.troweprice.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-13T09:00:12.657799+08:00",
-    "last_screened_at": "2026-04-13T09:00:25.679594+08:00",
-    "last_validated_at": "2026-04-13T09:01:19.952829+08:00",
+    "last_discovered_at": "2026-04-14T09:00:14.856582+08:00",
+    "last_screened_at": "2026-04-14T09:00:51.385343+08:00",
+    "last_validated_at": "2026-04-14T09:01:47.762878+08:00",
     "recent_update_at": "2026-03-09",
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -709,7 +709,7 @@
     "rss_url": null,
     "official_domain": "www.fidelity.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-13T09:00:14.470588+08:00",
+    "last_discovered_at": "2026-04-14T09:00:15.828026+08:00",
     "notes": "Rejected: retail education portal, not institutional research",
     "research_links": [
       {
@@ -720,7 +720,7 @@
     ],
     "is_publicly_accessible": false,
     "has_article_index": false,
-    "last_screened_at": "2026-04-13T09:00:26.301364+08:00",
+    "last_screened_at": "2026-04-14T09:00:51.982943+08:00",
     "screening_signals": {
       "status_code": 200,
       "has_password_input": false,
@@ -733,7 +733,7 @@
     },
     "screening_reason": "Login/paywall detected",
     "fit_score": 0.82,
-    "last_validated_at": "2026-04-13T09:01:26.771647+08:00",
+    "last_validated_at": "2026-04-14T09:01:54.113422+08:00",
     "last_deep_analyzed_at": "2026-04-11T18:32:49.244440+00:00",
     "quality": "LOW",
     "topics": "retail education"
@@ -749,7 +749,7 @@
     "discovery_method": "discover_fund_sites",
     "notes": "Broad research hub, gated, overlaps AQR factor coverage",
     "research_links": [],
-    "last_discovered_at": "2026-04-13T09:00:16.894214+08:00",
+    "last_discovered_at": "2026-04-14T09:00:18.735040+08:00",
     "quality": "MEDIUM",
     "topics": "factor investing, ESG, climate, multi-asset, risk",
     "last_deep_analyzed_at": "2026-04-12T13:48:51.331495+00:00"
@@ -805,6 +805,11 @@
         "path": "insights/esg"
       },
       {
+        "url": "https://www.researchaffiliates.com/publications/articles/1113-cio-insights-the-impact-of-ai-on-saas-s-risk-framework-for-investors",
+        "label": "The Impact of AI on SaaS: A Risk Framework for Investors By Jim Masturzo April 2026 Artificial intel",
+        "path": "publications/articles/1113-cio-insights-the-impact-of-ai-on-saas-s-risk-framework-for-investors"
+      },
+      {
         "url": "https://www.researchaffiliates.com/publications/articles/1111-when-will-ai-be-both-powerful-and-profitable",
         "label": "When Will AI Be Both Powerful and Profitable? By Chris Brightman April 2026 Historic infrastructure ",
         "path": "publications/articles/1111-when-will-ai-be-both-powerful-and-profitable"
@@ -831,7 +836,7 @@
       },
       {
         "url": "https://www.researchaffiliates.com/publications/articles/1103-2025-implications-for-the-future-some-like-it-hot",
-        "label": "2025’s Implications for the Future: “Some Like it Hot\"? By Jim Masturzo January 2026 A review of maj",
+        "label": "2025\u2019s Implications for the Future: \u201cSome Like it Hot\"? By Jim Masturzo January 2026 A review of maj",
         "path": "publications/articles/1103-2025-implications-for-the-future-some-like-it-hot"
       },
       {
@@ -848,17 +853,12 @@
         "url": "https://www.researchaffiliates.com/publications/articles/1100-why-hold-expensive-slow-growing-stocks",
         "label": "Why Hold Expensive Slow-Growing Stocks? An Alternative Framework for Value and Growth Indices By Chr",
         "path": "publications/articles/1100-why-hold-expensive-slow-growing-stocks"
-      },
-      {
-        "url": "https://www.researchaffiliates.com/publications/articles/1099-stop-the-losses",
-        "label": "Stop the Losses! By Jay Jeon, Jim Masturzo October 2025 Stop losses help mitigate downside risk by l",
-        "path": "publications/articles/1099-stop-the-losses"
       }
     ],
-    "last_discovered_at": "2026-04-13T09:00:14.967490+08:00",
+    "last_discovered_at": "2026-04-14T09:00:16.442246+08:00",
     "is_publicly_accessible": false,
     "has_article_index": false,
-    "last_screened_at": "2026-04-13T09:00:26.479863+08:00",
+    "last_screened_at": "2026-04-14T09:00:52.030204+08:00",
     "screening_signals": {
       "status_code": 200,
       "has_password_input": false,
@@ -871,7 +871,7 @@
     },
     "screening_reason": "Insufficient article index signals",
     "fit_score": 0.94,
-    "last_validated_at": "2026-04-13T09:01:28.290276+08:00",
+    "last_validated_at": "2026-04-14T09:02:14.764019+08:00",
     "quality": "MEDIUM",
     "topics": "factor investing, smart beta, fundamental indexing",
     "last_deep_analyzed_at": "2026-04-12T13:48:51.331495+00:00"
@@ -953,10 +953,10 @@
         "path": "corporate/insights/blackrock-investment-institute/publications"
       }
     ],
-    "last_discovered_at": "2026-04-13T09:00:14.821790+08:00",
+    "last_discovered_at": "2026-04-14T09:00:16.272911+08:00",
     "is_publicly_accessible": false,
     "has_article_index": false,
-    "last_screened_at": "2026-04-13T09:00:26.833094+08:00",
+    "last_screened_at": "2026-04-14T09:00:52.383494+08:00",
     "screening_signals": {
       "status_code": 200,
       "has_password_input": false,
@@ -968,8 +968,8 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "fit_score": 0.92,
-    "last_validated_at": "2026-04-13T09:01:38.255065+08:00",
+    "fit_score": 0.91,
+    "last_validated_at": "2026-04-14T09:02:20.963428+08:00",
     "quality": "LOW",
     "topics": "macro, equity, multi-asset, fixed income",
     "last_deep_analyzed_at": "2026-04-12T13:48:51.331495+00:00"
@@ -985,7 +985,7 @@
     "discovery_method": "discover_fund_sites",
     "notes": "JS-rendered only; ESG/EM/multi-asset, needs Playwright",
     "research_links": [],
-    "last_discovered_at": "2026-04-13T09:00:16.360858+08:00",
+    "last_discovered_at": "2026-04-14T09:00:17.957152+08:00",
     "last_deep_analyzed_at": "2026-04-13T01:02:56.306881+00:00",
     "quality": "MEDIUM",
     "topics": "ESG, emerging markets, multi-asset, fixed income"

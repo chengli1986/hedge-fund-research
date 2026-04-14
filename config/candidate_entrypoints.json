@@ -2,7 +2,7 @@
   "version": 1,
   "sources": {
     "pimco": {
-      "last_discovered_at": "2026-04-13T09:00:37.937971+08:00",
+      "last_discovered_at": "2026-04-14T09:01:03.727844+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -148,7 +148,7 @@
       "rejected_pages": []
     },
     "kkr": {
-      "last_discovered_at": "2026-04-13T09:00:41.841707+08:00",
+      "last_discovered_at": "2026-04-14T09:01:06.033417+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -219,7 +219,7 @@
       ]
     },
     "cambridge-associates": {
-      "last_discovered_at": "2026-04-13T09:00:44.854236+08:00",
+      "last_discovered_at": "2026-04-14T09:01:08.985216+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -263,7 +263,7 @@
       ]
     },
     "gsam": {
-      "last_discovered_at": "2026-04-13T09:00:51.841875+08:00",
+      "last_discovered_at": "2026-04-14T09:01:14.138680+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -297,7 +297,7 @@
       "rejected_pages": []
     },
     "wellington": {
-      "last_discovered_at": "2026-04-13T09:01:18.292469+08:00",
+      "last_discovered_at": "2026-04-14T09:01:45.860838+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -375,7 +375,7 @@
       ]
     },
     "troweprice": {
-      "last_discovered_at": "2026-04-13T09:01:19.952829+08:00",
+      "last_discovered_at": "2026-04-14T09:01:47.762878+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -409,7 +409,7 @@
       "rejected_pages": []
     },
     "fidelity": {
-      "last_discovered_at": "2026-04-13T09:01:26.771647+08:00",
+      "last_discovered_at": "2026-04-14T09:01:54.113422+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -443,7 +443,7 @@
       "rejected_pages": []
     },
     "research-affiliates": {
-      "last_discovered_at": "2026-04-13T09:01:28.290276+08:00",
+      "last_discovered_at": "2026-04-14T09:02:14.764019+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -477,15 +477,15 @@
       "rejected_pages": []
     },
     "blackrock-institute": {
-      "last_discovered_at": "2026-04-13T09:01:38.255065+08:00",
+      "last_discovered_at": "2026-04-14T09:02:20.963428+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
           "url": "https://www.blackrock.com/us/individual/insights/blackrock-investment-institute/weekly-commentary",
-          "final_score": 0.92,
+          "final_score": 0.91,
           "domain_score": 1.0,
           "path_score": 1.0,
-          "structure_score": 0.8333,
+          "structure_score": 0.8,
           "gate_penalty": 0.15,
           "active": true
         },
