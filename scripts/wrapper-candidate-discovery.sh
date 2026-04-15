@@ -24,6 +24,8 @@ trap cleanup EXIT
 echo "$LOG_PREFIX Starting candidate fund discovery session..."
 
 # CRITICAL: Unset API key so Claude uses Max plan auth (not paid API)
+# Save it first — the trial manager needs it later for direct Haiku API calls
+SAVED_ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-}"
 unset ANTHROPIC_API_KEY
 unset CLAUDECODE
 
@@ -80,6 +82,8 @@ else
 fi
 
 # --- Trial manager (runs regardless of discovery exit code) ---
+# Re-export the API key for Haiku quality sampling
+export ANTHROPIC_API_KEY="$SAVED_ANTHROPIC_API_KEY"
 echo "$LOG_PREFIX Running GMIA trial manager..."
 python3 "$REPO_DIR/gmia-trial-manager.py" run 2>&1
 TRIAL_EXIT=$?
