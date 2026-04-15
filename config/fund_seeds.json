@@ -159,5 +159,16 @@
     "category": "quant",
     "homepage": "https://www.msci.com/research-and-insights",
     "notes": "Global index and analytics provider; free research on factor investing, ESG, risk, and portfolio construction; highly cited in institutional space"
+  },
+  {
+    "id": "neuberger-berman",
+    "name": "Neuberger Berman",
+    "aliases": [
+      "NB",
+      "Neuberger Berman Group"
+    ],
+    "category": "multi_asset",
+    "homepage": "https://www.nb.com",
+    "notes": "Multi-asset manager, public insights page covers macro, fixed income, alternatives, hedge fund perspectives"
   }
 ]
