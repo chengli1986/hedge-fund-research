@@ -328,7 +328,7 @@ def main() -> None:
     ep_data = load_candidate_entrypoints()
     updated_count = 0
 
-    allowed_statuses = {"screened", "validated"} if args.reprocess else {"screened"}
+    allowed_statuses = {"screened", "validated", "inaccessible"} if args.reprocess else {"screened"}
 
     for c in candidates:
         # Filter: only process candidates with allowed status
@@ -360,8 +360,8 @@ def main() -> None:
                 updated_count += 1
                 continue
 
-            # Update candidate state
-            c["status"] = "validated"
+            # Update candidate state — distinguish accessible vs inaccessible
+            c["status"] = "validated" if c.get("is_publicly_accessible") else "inaccessible"
             c["fit_score"] = result["fit_score"]
             c["last_validated_at"] = now
 

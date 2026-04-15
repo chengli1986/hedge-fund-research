@@ -2,7 +2,7 @@
   {
     "id": "pimco",
     "name": "PIMCO",
-    "status": "validated",
+    "status": "inaccessible",
     "homepage_url": "https://www.pimco.com",
     "research_url": "https://www.pimco.com/us/en/insights#sort=%40publishz32xdate%20descending&f:category=[70341f6de3a142ee89144df0ec44e3b8,8d35ad276c6c4c5caf4d9fed37c5f51d,1a3217a178b04eb18c1e4532665b184c,56ebfd2935044d1eb39b7e661d2d03fb,22ea0773e8f147e38e15655207e73e21,bdd17ed0ae9d4ddd96e9e60e51c47782,78449f5b2f5e4b6ebd2d6e90b7a9f889,9cfdb8bfe49a451a851cf9957c57cd32,eef114e6a525445a81d179b8adb018c7]",
     "rss_url": null,
@@ -154,7 +154,7 @@
       },
       {
         "url": "https://www.blackstone.com/insights/article/market-views-dealmaking-disruption-and-real-estates-recovery/",
-        "label": "Market Views: Dealmaking, Disruption, and Real Estate\u2019s Recovery",
+        "label": "Market Views: Dealmaking, Disruption, and Real Estate’s Recovery",
         "path": "insights/article/market-views-dealmaking-disruption-and-real-estates-recovery"
       },
       {
@@ -227,7 +227,7 @@
   {
     "id": "kkr",
     "name": "KKR",
-    "status": "validated",
+    "status": "inaccessible",
     "homepage_url": "https://www.kkr.com",
     "research_url": "https://www.kkr.com/insights",
     "rss_url": null,
@@ -269,7 +269,7 @@
       },
       {
         "url": "https://www.kkr.com/insights/naic-spring-update-2026",
-        "label": "Investment Insights Highlights from the NAIC\u2019s 2026 Spring National Meeting: CLOs, Collateral Loans,",
+        "label": "Investment Insights Highlights from the NAIC’s 2026 Spring National Meeting: CLOs, Collateral Loans,",
         "path": "insights/naic-spring-update-2026"
       },
       {
@@ -363,7 +363,7 @@
       },
       {
         "url": "https://www.cambridgeassociates.com/insight/germanys-fiscal-boost/",
-        "label": "Germany\u2019s Fiscal Boost Remains a Tailwind Despite Near-Term Risks",
+        "label": "Germany’s Fiscal Boost Remains a Tailwind Despite Near-Term Risks",
         "path": "insight/germanys-fiscal-boost"
       },
       {
@@ -425,7 +425,7 @@
   {
     "id": "gsam",
     "name": "Goldman Sachs Asset Management",
-    "status": "validated",
+    "status": "inaccessible",
     "homepage_url": "https://am.gs.com",
     "research_url": "https://am.gs.com/en-us/advisors/insights/list",
     "rss_url": null,
@@ -479,7 +479,7 @@
   {
     "id": "wellington",
     "name": "Wellington Management",
-    "status": "validated",
+    "status": "inaccessible",
     "homepage_url": "https://www.wellington.com",
     "research_url": "https://www.wellington.com/en/insights",
     "rss_url": null,
@@ -644,7 +644,7 @@
   {
     "id": "troweprice",
     "name": "T. Rowe Price",
-    "status": "validated",
+    "status": "inaccessible",
     "homepage_url": "https://www.troweprice.com",
     "research_url": "https://www.troweprice.com/en/us/insights",
     "rss_url": null,
@@ -703,7 +703,7 @@
   {
     "id": "fidelity",
     "name": "Fidelity Investments",
-    "status": "validated",
+    "status": "inaccessible",
     "homepage_url": "https://www.fidelity.com",
     "research_url": "https://www.fidelity.com/viewpoints/personal-finance/how-to-start-investing",
     "rss_url": null,
@@ -771,7 +771,7 @@
   {
     "id": "research-affiliates",
     "name": "Research Affiliates",
-    "status": "validated",
+    "status": "inaccessible",
     "homepage_url": "https://www.researchaffiliates.com",
     "research_url": "https://www.researchaffiliates.com/insights/publications",
     "rss_url": null,
@@ -846,7 +846,7 @@
       },
       {
         "url": "https://www.researchaffiliates.com/publications/articles/1103-2025-implications-for-the-future-some-like-it-hot",
-        "label": "2025\u2019s Implications for the Future: \u201cSome Like it Hot\"? By Jim Masturzo January 2026 A review of maj",
+        "label": "2025’s Implications for the Future: “Some Like it Hot\"? By Jim Masturzo January 2026 A review of maj",
         "path": "publications/articles/1103-2025-implications-for-the-future-some-like-it-hot"
       },
       {
@@ -889,7 +889,7 @@
   {
     "id": "blackrock-institute",
     "name": "BlackRock Investment Institute",
-    "status": "validated",
+    "status": "inaccessible",
     "homepage_url": "https://www.blackrock.com/us/individual/insights/blackrock-investment-institute",
     "research_url": "https://www.blackrock.com/us/individual/insights/blackrock-investment-institute/weekly-commentary",
     "rss_url": null,

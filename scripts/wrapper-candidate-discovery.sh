@@ -139,6 +139,7 @@ for c in candidates:
     q_color = {"HIGH": "#22863a", "MEDIUM": "#e36209", "LOW": "#cb2431"}.get(quality, "#959da5")
     status_pill = {
         "validated": '<span style="color:#22863a;font-weight:bold">validated</span>',
+        "inaccessible": '<span style="color:#cb2431">inaccessible</span>',
         "screened": '<span style="color:#0366d6">screened</span>',
         "discovered": '<span style="color:#6f42c1">discovered</span>',
         "seed": '<span style="color:#959da5">seed</span>',
@@ -153,6 +154,7 @@ for c in candidates:
              f'<td style="padding:4px 6px;border-bottom:1px solid #eee;font-size:12px">{notes}</td></tr>\n')
 
 validated = sum(1 for c in candidates if c["status"] == "validated")
+inaccessible = sum(1 for c in candidates if c["status"] == "inaccessible")
 recommend = sum(1 for c in candidates if (c.get("notes") or "").startswith("RECOMMEND"))
 
 html = f"""<html><body style="font-family:system-ui,-apple-system,sans-serif;max-width:700px;margin:0 auto;padding:20px">
@@ -162,6 +164,7 @@ html = f"""<html><body style="font-family:system-ui,-apple-system,sans-serif;max
 <table style="width:100%;border-collapse:collapse;font-size:13px;margin:16px 0">
 <tr style="background:#f6f8fa"><td style="padding:8px"><strong>Seeds</strong></td><td>{len(seeds)}</td>
 <td><strong>Validated</strong></td><td>{validated}</td>
+<td><strong>Inaccessible</strong></td><td style="color:#cb2431">{inaccessible}</td>
 <td><strong>Recommend</strong></td><td style="color:#22863a;font-weight:bold">{recommend}</td></tr>
 </table>
 

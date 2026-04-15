@@ -42,9 +42,10 @@ for c in candidates:
     print(f\"  {c['id']:15s} status={c['status']:12s} fit={score_str:8s} research={c.get('research_url', 'none')}\")
 print()
 validated = [c for c in candidates if c['status'] == 'validated']
+inaccessible = [c for c in candidates if c['status'] == 'inaccessible']
 screened = [c for c in candidates if c['status'] == 'screened']
 discovered = [c for c in candidates if c['status'] == 'discovered']
-print(f'  Total: {len(candidates)} candidates, {len(validated)} validated, {len(screened)} screened, {len(discovered)} discovered')
+print(f'  Total: {len(candidates)} candidates, {len(validated)} validated, {len(inaccessible)} inaccessible, {len(screened)} screened, {len(discovered)} discovered')
 "
 
 echo "$LOG_PREFIX Done."
