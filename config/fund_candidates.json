@@ -15,7 +15,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.82,
-    "notes": "RECOMMEND: top fixed income research, 403 needs browser",
+    "notes": "RECOMMEND: top fixed income research; JS-rendered (no SSR), needs Playwright",
     "research_links": [
       {
         "url": "https://www.pimco.com/us/en/insights#sort=%40publishz32xdate%20descending&f:category=[70341f6de3a142ee89144df0ec44e3b8,8d35ad276c6c4c5caf4d9fed37c5f51d,1a3217a178b04eb18c1e4532665b184c,56ebfd2935044d1eb39b7e661d2d03fb,22ea0773e8f147e38e15655207e73e21,bdd17ed0ae9d4ddd96e9e60e51c47782,78449f5b2f5e4b6ebd2d6e90b7a9f889,9cfdb8bfe49a451a851cf9957c57cd32,eef114e6a525445a81d179b8adb018c7]",
@@ -240,7 +240,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.94,
-    "notes": "Watchlist: HIGH quality but 403 blocks access",
+    "notes": "Watchlist: HIGH quality; JS-rendered (Adobe Helix CMS), needs Playwright",
     "research_links": [
       {
         "url": "https://www.kkr.com/insights",
@@ -492,7 +492,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.8843,
-    "notes": "RECOMMEND: multi-asset weekly research, fills equity gap",
+    "notes": "RECOMMEND: multi-asset weekly research, fills equity gap; JS-rendered (Adobe Helix CMS), needs Playwright",
     "research_links": [
       {
         "url": "https://www.wellington.com/en/insights",
@@ -657,7 +657,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.97,
-    "notes": "RECOMMEND: free equity research, fills active mgmt gap",
+    "notes": "RECOMMEND: free equity research, fills active mgmt gap; JS-rendered (no SSR), needs Playwright",
     "research_links": [
       {
         "url": "https://www.troweprice.com/en/us/insights",
@@ -895,7 +895,7 @@
     "rss_url": null,
     "official_domain": "www.blackrock.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "All pages return 403, cannot access content",
+    "notes": "JS-rendered (no SSR), cannot extract content without Playwright",
     "research_links": [
       {
         "url": "https://www.blackrock.com/us/individual/insights/blackrock-investment-institute/weekly-commentary",
