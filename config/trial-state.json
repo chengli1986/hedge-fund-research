@@ -27,6 +27,12 @@
         "article_count": 15,
         "date_count": 0,
         "error": null
+      },
+      "2026-04-15": {
+        "accessible": true,
+        "article_count": 15,
+        "date_count": 0,
+        "error": null
       }
     },
     "auto_decided": false,
@@ -64,6 +70,14 @@
         "error": null,
         "day": 3,
         "date": "2026-04-14"
+      },
+      {
+        "sampled": 3,
+        "articles": [],
+        "avg_score": 0.0,
+        "error": "Haiku returned invalid response",
+        "day": 4,
+        "date": "2026-04-15"
       }
     ]
   },
