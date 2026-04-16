@@ -25,7 +25,12 @@ echo "$LOG_PREFIX Starting candidate fund discovery session..."
 
 # CRITICAL: Unset API key so Claude uses Max plan auth (not paid API)
 # Save it first — the trial manager needs it later for direct Haiku API calls
-SAVED_ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-}"
+# Read from env file if not already in environment (cron doesn't source ~/.stock-monitor.env)
+if [[ -z "${ANTHROPIC_API_KEY:-}" ]]; then
+    SAVED_ANTHROPIC_API_KEY="$(grep '^ANTHROPIC_API_KEY=' "$HOME/.stock-monitor.env" 2>/dev/null | cut -d= -f2-)"
+else
+    SAVED_ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY}"
+fi
 unset ANTHROPIC_API_KEY
 unset CLAUDECODE
 
