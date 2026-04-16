@@ -10,7 +10,7 @@ CANDIDATES_FILE = CONFIG_DIR / "fund_candidates.json"
 SOURCES_FILE = CONFIG_DIR / "sources.json"
 
 VALID_STATUSES = {
-    "seed", "discovered", "screened", "validated", "inaccessible",
+    "seed", "discovered", "screened", "screen_failed", "validated", "inaccessible",
     "watchlist", "rejected", "promoted",
 }
 
