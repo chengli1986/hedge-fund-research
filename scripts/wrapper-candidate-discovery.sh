@@ -135,30 +135,37 @@ seeds = json.loads((repo / "config/fund_seeds.json").read_text())
 status_icon = "✅" if exit_code == 0 else ("⏰" if exit_code == 124 else "❌")
 status_text = "Success" if exit_code == 0 else ("Timeout" if exit_code == 124 else f"Failed (exit {exit_code})")
 
+STATUS_ORDER = ["validated", "watchlist", "inaccessible", "screen_failed", "screened", "discovered", "seed", "rejected"]
+sorted_candidates = sorted(candidates, key=lambda c: (STATUS_ORDER.index(c["status"]) if c["status"] in STATUS_ORDER else 99))
+
+STATUS_PILL = {
+    "validated":     '<span style="color:#22863a;font-weight:bold">validated</span>',
+    "inaccessible":  '<span style="color:#cb2431">inaccessible</span>',
+    "screen_failed": '<span style="color:#e36209">screen_failed</span>',
+    "screened":      '<span style="color:#0366d6">screened</span>',
+    "discovered":    '<span style="color:#6f42c1">discovered</span>',
+    "seed":          '<span style="color:#959da5">seed</span>',
+    "watchlist":     '<span style="color:#e36209">watchlist</span>',
+    "rejected":      '<span style="color:#959da5;text-decoration:line-through">rejected</span>',
+}
+
 rows = ""
-for c in candidates:
+for c in sorted_candidates:
     score = c.get("fit_score")
     score_str = f'{score:.3f}' if score is not None else "—"
     quality = c.get("quality", "—")
     topics = c.get("topics", "—")
-    notes = (c.get("notes") or "")[:60]
-    is_recommend = notes.startswith("RECOMMEND")
-    bg = "#e6ffe6" if is_recommend else ""
+    notes_full = (c.get("notes") or "")
+    is_recommend = notes_full.startswith("RECOMMEND")
+    notes = notes_full[:100] + ("…" if len(notes_full) > 100 else "")
+    bg = "#e6ffe6" if is_recommend else ("#fff8f8" if c["status"] == "rejected" else "")
     style = f' style="background:{bg}"' if bg else ""
     q_color = {"HIGH": "#22863a", "MEDIUM": "#e36209", "LOW": "#cb2431"}.get(quality, "#959da5")
-    status_pill = {
-        "validated": '<span style="color:#22863a;font-weight:bold">validated</span>',
-        "inaccessible": '<span style="color:#cb2431">inaccessible</span>',
-        "screened": '<span style="color:#0366d6">screened</span>',
-        "discovered": '<span style="color:#6f42c1">discovered</span>',
-        "seed": '<span style="color:#959da5">seed</span>',
-        "watchlist": '<span style="color:#e36209">watchlist</span>',
-        "rejected": '<span style="color:#cb2431">rejected</span>',
-    }.get(c["status"], c["status"])
+    status_pill = STATUS_PILL.get(c["status"], f'<span style="color:#959da5">{c["status"]}</span>')
     rows += (f'<tr{style}><td style="padding:4px 6px;border-bottom:1px solid #eee">{c["name"]}</td>'
-             f'<td style="padding:4px 6px;border-bottom:1px solid #eee">{status_pill}</td>'
-             f'<td style="padding:4px 6px;border-bottom:1px solid #eee">{score_str}</td>'
-             f'<td style="padding:4px 6px;border-bottom:1px solid #eee;color:{q_color};font-weight:bold">{quality}</td>'
+             f'<td style="padding:4px 6px;border-bottom:1px solid #eee;white-space:nowrap">{status_pill}</td>'
+             f'<td style="padding:4px 6px;border-bottom:1px solid #eee;white-space:nowrap">{score_str}</td>'
+             f'<td style="padding:4px 6px;border-bottom:1px solid #eee;color:{q_color};font-weight:bold;white-space:nowrap">{quality}</td>'
              f'<td style="padding:4px 6px;border-bottom:1px solid #eee;font-size:11px;color:#586069">{topics}</td>'
              f'<td style="padding:4px 6px;border-bottom:1px solid #eee;font-size:12px">{notes}</td></tr>\n')
 
@@ -166,25 +173,29 @@ validated = sum(1 for c in candidates if c["status"] == "validated")
 inaccessible = sum(1 for c in candidates if c["status"] == "inaccessible")
 recommend = sum(1 for c in candidates if (c.get("notes") or "").startswith("RECOMMEND"))
 
-html = f"""<html><body style="font-family:system-ui,-apple-system,sans-serif;max-width:700px;margin:0 auto;padding:20px">
+stats_bar = (
+    f'<span style="margin-right:16px"><strong>Seeds</strong>&nbsp;{len(seeds)}</span>'
+    f'<span style="margin-right:16px;color:#22863a"><strong>Validated</strong>&nbsp;{validated}</span>'
+    f'<span style="margin-right:16px;color:#cb2431"><strong>Inaccessible</strong>&nbsp;{inaccessible}</span>'
+    f'<span style="color:#22863a;font-weight:bold"><strong>Recommend</strong>&nbsp;{recommend}</span>'
+)
+
+html = f"""<html><body style="font-family:system-ui,-apple-system,sans-serif;max-width:760px;margin:0 auto;padding:20px">
 <h2 style="margin:0">🔍 GMIA Candidate Fund Discovery</h2>
-<p style="color:#586069;margin:4px 0">{now} &nbsp; {status_icon} {status_text}</p>
+<p style="color:#586069;margin:4px 0 12px">{now} &nbsp; {status_icon} {status_text}</p>
 
-<table style="width:100%;border-collapse:collapse;font-size:13px;margin:16px 0">
-<tr style="background:#f6f8fa"><td style="padding:8px"><strong>Seeds</strong></td><td>{len(seeds)}</td>
-<td><strong>Validated</strong></td><td>{validated}</td>
-<td><strong>Inaccessible</strong></td><td style="color:#cb2431">{inaccessible}</td>
-<td><strong>Recommend</strong></td><td style="color:#22863a;font-weight:bold">{recommend}</td></tr>
-</table>
+<p style="background:#f6f8fa;border:1px solid #e1e4e8;border-radius:4px;padding:10px 14px;margin:0 0 16px;font-size:13px">
+{stats_bar}
+</p>
 
-<table style="width:100%;border-collapse:collapse;font-size:13px;margin:16px 0">
+<table style="width:100%;border-collapse:collapse;font-size:13px;margin:0 0 16px">
 <tr style="background:#f6f8fa">
-<th style="text-align:left;padding:6px;border-bottom:2px solid #e1e4e8">Fund</th>
-<th style="text-align:left;padding:6px;border-bottom:2px solid #e1e4e8">Status</th>
-<th style="text-align:left;padding:6px;border-bottom:2px solid #e1e4e8">Fit</th>
-<th style="text-align:left;padding:6px;border-bottom:2px solid #e1e4e8">Quality</th>
-<th style="text-align:left;padding:6px;border-bottom:2px solid #e1e4e8">Topics</th>
-<th style="text-align:left;padding:6px;border-bottom:2px solid #e1e4e8">Notes</th>
+<th style="text-align:left;padding:6px 8px;border-bottom:2px solid #e1e4e8">Fund</th>
+<th style="text-align:left;padding:6px 8px;border-bottom:2px solid #e1e4e8">Status</th>
+<th style="text-align:left;padding:6px 8px;border-bottom:2px solid #e1e4e8">Fit</th>
+<th style="text-align:left;padding:6px 8px;border-bottom:2px solid #e1e4e8">Quality</th>
+<th style="text-align:left;padding:6px 8px;border-bottom:2px solid #e1e4e8">Topics</th>
+<th style="text-align:left;padding:6px 8px;border-bottom:2px solid #e1e4e8">Notes</th>
 </tr>
 {rows}
 </table>
