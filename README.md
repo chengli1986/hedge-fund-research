@@ -92,9 +92,13 @@ Scorer weight optimization program using automated experiment loop:
 - **History sync**: after each run, `sync-ar-history.py` auto-updates the `autoresearch.html` experiment table on docs.sinostor.com.cn
 - **Status**: 7 experiments logged (all at 0.9700 precision — weight tuning ongoing)
 
+## Trial Manager
+
+`gmia-trial-manager.py` — 7-day live trial window for candidate funds. Runs daily, requires ≥3 articles to pass, and performs Haiku quality sampling on day 1/4 (3 articles each, relevance/depth/extractable scores). Outcomes: APPROVE (add to sources), REJECT (remove from candidates).
+
 ## Tests
 
-189 tests passing — unit, functional, and integration tests (15 nightly/live tests deselected by default via pytest.ini).
+197 tests passing, 1 failing (neuberger-berman seed without candidate entry) — unit, functional, and integration tests (15 nightly/live tests deselected by default via pytest.ini).
 
 ```bash
 python3 -m pytest tests/ -q
