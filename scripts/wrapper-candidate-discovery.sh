@@ -27,7 +27,11 @@ echo "$LOG_PREFIX Starting candidate fund discovery session..."
 # Save it first — the trial manager needs it later for direct Haiku API calls
 # Read from env file if not already in environment (cron doesn't source ~/.stock-monitor.env)
 if [[ -z "${ANTHROPIC_API_KEY:-}" ]]; then
-    SAVED_ANTHROPIC_API_KEY="$(grep '^ANTHROPIC_API_KEY=' "$HOME/.stock-monitor.env" 2>/dev/null | cut -d= -f2-)"
+    # cron doesn't source env files; search both locations, strip surrounding quotes
+    SAVED_ANTHROPIC_API_KEY="$(
+        grep '^ANTHROPIC_API_KEY=' "$HOME/.openclaw/.env" "$HOME/.stock-monitor.env" 2>/dev/null \
+        | head -1 | cut -d= -f2- | tr -d '"'"'"
+    )"
 else
     SAVED_ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY}"
 fi
