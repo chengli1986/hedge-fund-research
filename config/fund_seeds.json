@@ -170,5 +170,16 @@
     "category": "multi_asset",
     "homepage": "https://www.nb.com",
     "notes": "Multi-asset manager, public insights page covers macro, fixed income, alternatives, hedge fund perspectives"
+  },
+  {
+    "id": "pgim",
+    "name": "PGIM",
+    "aliases": [
+      "Prudential Global Investment Management",
+      "Prudential Financial"
+    ],
+    "category": "fixed_income",
+    "homepage": "https://www.pgim.com/us/en/institutional/insights",
+    "notes": "Prudential's institutional asset manager; free public research on fixed income, private credit, alternatives, ESG; fills credit/alternatives gap"
   }
 ]

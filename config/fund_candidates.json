@@ -8,9 +8,9 @@
     "rss_url": null,
     "official_domain": "www.pimco.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-16T09:00:08.021538+08:00",
-    "last_screened_at": "2026-04-16T09:00:19.409370+08:00",
-    "last_validated_at": "2026-04-16T09:01:07.125194+08:00",
+    "last_discovered_at": "2026-04-17T09:03:21.447614+08:00",
+    "last_screened_at": "2026-04-17T09:03:32.765222+08:00",
+    "last_validated_at": "2026-04-17T09:04:03.827126+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -113,9 +113,9 @@
     "rss_url": "https://www.blackstone.com/feed/",
     "official_domain": "www.blackstone.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-16T09:00:08.272595+08:00",
-    "last_screened_at": "2026-04-16T09:00:19.572805+08:00",
-    "last_validated_at": "2026-04-16T09:01:08.914556+08:00",
+    "last_discovered_at": "2026-04-17T09:03:21.655958+08:00",
+    "last_screened_at": "2026-04-17T09:03:32.880996+08:00",
+    "last_validated_at": "2026-04-17T09:04:05.367075+08:00",
     "recent_update_at": "2026-03-31",
     "is_publicly_accessible": true,
     "has_article_index": true,
@@ -154,7 +154,7 @@
       },
       {
         "url": "https://www.blackstone.com/insights/article/market-views-dealmaking-disruption-and-real-estates-recovery/",
-        "label": "Market Views: Dealmaking, Disruption, and Real Estate\u2019s Recovery",
+        "label": "Market Views: Dealmaking, Disruption, and Real Estate’s Recovery",
         "path": "insights/article/market-views-dealmaking-disruption-and-real-estates-recovery"
       },
       {
@@ -233,9 +233,9 @@
     "rss_url": null,
     "official_domain": "www.kkr.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-16T09:00:08.427791+08:00",
-    "last_screened_at": "2026-04-16T09:00:19.967444+08:00",
-    "last_validated_at": "2026-04-16T09:01:11.037349+08:00",
+    "last_discovered_at": "2026-04-17T09:03:21.942055+08:00",
+    "last_screened_at": "2026-04-17T09:03:32.964781+08:00",
+    "last_validated_at": "2026-04-17T09:04:06.082165+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -269,7 +269,7 @@
       },
       {
         "url": "https://www.kkr.com/insights/naic-spring-update-2026",
-        "label": "Investment Insights Highlights from the NAIC\u2019s 2026 Spring National Meeting: CLOs, Collateral Loans,",
+        "label": "Investment Insights Highlights from the NAIC’s 2026 Spring National Meeting: CLOs, Collateral Loans,",
         "path": "insights/naic-spring-update-2026"
       },
       {
@@ -302,9 +302,9 @@
     "rss_url": null,
     "official_domain": "www.cambridgeassociates.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-16T09:00:10.061153+08:00",
-    "last_screened_at": "2026-04-16T09:00:20.907976+08:00",
-    "last_validated_at": "2026-04-16T09:01:13.828753+08:00",
+    "last_discovered_at": "2026-04-17T09:03:22.657744+08:00",
+    "last_screened_at": "2026-04-17T09:03:33.814053+08:00",
+    "last_validated_at": "2026-04-17T09:04:09.003696+08:00",
     "recent_update_at": "2026-04",
     "is_publicly_accessible": true,
     "has_article_index": true,
@@ -363,7 +363,7 @@
       },
       {
         "url": "https://www.cambridgeassociates.com/insight/germanys-fiscal-boost/",
-        "label": "Germany\u2019s Fiscal Boost Remains a Tailwind Despite Near-Term Risks",
+        "label": "Germany’s Fiscal Boost Remains a Tailwind Despite Near-Term Risks",
         "path": "insight/germanys-fiscal-boost"
       },
       {
@@ -431,9 +431,9 @@
     "rss_url": null,
     "official_domain": "am.gs.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-16T09:00:09.774577+08:00",
-    "last_screened_at": "2026-04-16T09:00:22.400942+08:00",
-    "last_validated_at": "2026-04-16T09:01:19.265727+08:00",
+    "last_discovered_at": "2026-04-17T09:03:22.433409+08:00",
+    "last_screened_at": "2026-04-17T09:03:35.399610+08:00",
+    "last_validated_at": "2026-04-17T09:04:15.118363+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -479,15 +479,15 @@
   {
     "id": "wellington",
     "name": "Wellington Management",
-    "status": "screen_failed",
+    "status": "inaccessible",
     "homepage_url": "https://www.wellington.com",
     "research_url": "https://www.wellington.com/en/insights",
     "rss_url": null,
     "official_domain": "www.wellington.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-16T09:00:10.815720+08:00",
-    "last_screened_at": "2026-04-16T09:00:52.487182+08:00",
-    "last_validated_at": "2026-04-15T09:01:28.280789+08:00",
+    "last_discovered_at": "2026-04-17T09:03:22.955600+08:00",
+    "last_screened_at": "2026-04-17T09:03:36.272268+08:00",
+    "last_validated_at": "2026-04-17T09:04:22.705518+08:00",
     "recent_update_at": null,
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -570,7 +570,7 @@
       "h2_tags": 0,
       "article_signals": 0
     },
-    "screening_reason": "Fetch error: The read operation timed out",
+    "screening_reason": "Login/paywall detected",
     "last_deep_analyzed_at": "2026-04-14T01:02:52.000000+00:00",
     "quality": "HIGH",
     "topics": "equity, macro, fixed income, alternatives, ESG, geopolitics"
@@ -584,7 +584,7 @@
     "rss_url": null,
     "official_domain": "research-center.amundi.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-16T09:00:11.729426+08:00",
+    "last_discovered_at": "2026-04-17T09:03:23.573672+08:00",
     "last_screened_at": "2026-04-07T18:33:00.000000+08:00",
     "last_validated_at": "2026-04-07T18:33:00.000000+08:00",
     "recent_update_at": "2026-04-07",
@@ -617,7 +617,7 @@
     "rss_url": null,
     "official_domain": "am.jpmorgan.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-16T09:00:12.349024+08:00",
+    "last_discovered_at": "2026-04-17T09:03:23.993183+08:00",
     "last_screened_at": "2026-04-09T02:33:58.182308+08:00",
     "last_validated_at": "2026-04-11T20:10:41.483426+08:00",
     "recent_update_at": null,
@@ -650,9 +650,9 @@
     "rss_url": null,
     "official_domain": "www.troweprice.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-16T09:00:12.521848+08:00",
-    "last_screened_at": "2026-04-16T09:00:52.591716+08:00",
-    "last_validated_at": "2026-04-16T09:01:21.610043+08:00",
+    "last_discovered_at": "2026-04-17T09:03:24.152340+08:00",
+    "last_screened_at": "2026-04-17T09:03:36.319676+08:00",
+    "last_validated_at": "2026-04-17T09:04:23.448304+08:00",
     "recent_update_at": "2026-03-09",
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -709,15 +709,9 @@
     "rss_url": null,
     "official_domain": "www.fidelity.com",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-16T09:00:13.416500+08:00",
+    "last_discovered_at": "2026-04-17T09:03:24.953980+08:00",
     "notes": "Rejected: retail education portal, not institutional research",
-    "research_links": [
-      {
-        "url": "https://www.fidelity.com/viewpoints/personal-finance/how-to-start-investing",
-        "label": "Clicking this link will open a new browser window How to start investing It doesn't have to be overl",
-        "path": "viewpoints/personal-finance/how-to-start-investing"
-      }
-    ],
+    "research_links": [],
     "is_publicly_accessible": false,
     "has_article_index": false,
     "last_screened_at": "2026-04-16T09:00:53.172973+08:00",
@@ -749,7 +743,7 @@
     "discovery_method": "discover_fund_sites",
     "notes": "Broad research hub, gated, overlaps AQR factor coverage",
     "research_links": [],
-    "last_discovered_at": "2026-04-16T09:00:15.667725+08:00",
+    "last_discovered_at": "2026-04-17T09:03:27.078987+08:00",
     "quality": "MEDIUM",
     "topics": "factor investing, ESG, climate, multi-asset, risk",
     "last_deep_analyzed_at": "2026-04-12T13:48:51.331495+00:00"
@@ -846,7 +840,7 @@
       },
       {
         "url": "https://www.researchaffiliates.com/publications/articles/1103-2025-implications-for-the-future-some-like-it-hot",
-        "label": "2025\u2019s Implications for the Future: \u201cSome Like it Hot\"? By Jim Masturzo January 2026 A review of maj",
+        "label": "2025’s Implications for the Future: “Some Like it Hot\"? By Jim Masturzo January 2026 A review of maj",
         "path": "publications/articles/1103-2025-implications-for-the-future-some-like-it-hot"
       },
       {
@@ -865,10 +859,10 @@
         "path": "publications/articles/1100-why-hold-expensive-slow-growing-stocks"
       }
     ],
-    "last_discovered_at": "2026-04-16T09:00:13.834315+08:00",
+    "last_discovered_at": "2026-04-17T09:03:25.525867+08:00",
     "is_publicly_accessible": false,
     "has_article_index": false,
-    "last_screened_at": "2026-04-16T09:00:53.221449+08:00",
+    "last_screened_at": "2026-04-17T09:03:36.362601+08:00",
     "screening_signals": {
       "status_code": 200,
       "has_password_input": false,
@@ -881,7 +875,7 @@
     },
     "screening_reason": "Insufficient article index signals",
     "fit_score": 0.94,
-    "last_validated_at": "2026-04-16T09:01:29.491065+08:00",
+    "last_validated_at": "2026-04-17T09:04:24.078258+08:00",
     "quality": "MEDIUM",
     "topics": "factor investing, smart beta, fundamental indexing",
     "last_deep_analyzed_at": "2026-04-12T13:48:51.331495+00:00"
@@ -963,10 +957,10 @@
         "path": "corporate/insights/blackrock-investment-institute/publications"
       }
     ],
-    "last_discovered_at": "2026-04-16T09:00:13.721448+08:00",
+    "last_discovered_at": "2026-04-17T09:03:25.425949+08:00",
     "is_publicly_accessible": false,
     "has_article_index": false,
-    "last_screened_at": "2026-04-16T09:00:53.561492+08:00",
+    "last_screened_at": "2026-04-17T09:03:36.752410+08:00",
     "screening_signals": {
       "status_code": 200,
       "has_password_input": false,
@@ -979,7 +973,7 @@
     },
     "screening_reason": "Login/paywall detected",
     "fit_score": 0.91,
-    "last_validated_at": "2026-04-16T09:01:35.962374+08:00",
+    "last_validated_at": "2026-04-17T09:04:30.305333+08:00",
     "quality": "LOW",
     "topics": "macro, equity, multi-asset, fixed income",
     "last_deep_analyzed_at": "2026-04-12T13:48:51.331495+00:00"
@@ -995,9 +989,45 @@
     "discovery_method": "discover_fund_sites",
     "notes": "JS-rendered only; ESG/EM/multi-asset, needs Playwright",
     "research_links": [],
-    "last_discovered_at": "2026-04-16T09:00:15.336960+08:00",
+    "last_discovered_at": "2026-04-17T09:03:26.821740+08:00",
     "last_deep_analyzed_at": "2026-04-13T01:02:56.306881+00:00",
     "quality": "MEDIUM",
     "topics": "ESG, emerging markets, multi-asset, fixed income"
+  },
+  {
+    "id": "pgim",
+    "name": "PGIM",
+    "status": "validated",
+    "homepage_url": "https://www.pgim.com/us/en/institutional/insights",
+    "research_url": "https://www.pgim.com/us/en/institutional/insights",
+    "rss_url": null,
+    "official_domain": "www.pgim.com",
+    "discovery_method": "discover_fund_sites",
+    "notes": "RECOMMEND: free institutional research, fills credit/PE gap",
+    "research_links": [
+      {
+        "url": "https://www.pgim.com/us/en/institutional/insights",
+        "label": "Insights",
+        "path": "us/en/institutional/insights"
+      }
+    ],
+    "last_discovered_at": "2026-04-17T01:04:54+00:00",
+    "is_publicly_accessible": true,
+    "has_article_index": true,
+    "last_screened_at": "2026-04-17T09:05:48.627784+08:00",
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 1,
+      "article_tags": 0,
+      "time_tags": 0,
+      "date_patterns": 0,
+      "h2_tags": 3,
+      "article_signals": 0
+    },
+    "screening_reason": "Research index detected",
+    "last_deep_analyzed_at": "2026-04-17T01:05:58.401480+00:00",
+    "quality": "HIGH",
+    "topics": "fixed income, private credit, alternatives, ESG, multi-asset"
   }
 ]
