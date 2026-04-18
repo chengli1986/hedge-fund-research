@@ -7,7 +7,8 @@
     ],
     "category": "fixed_income",
     "homepage": "https://www.pimco.com",
-    "notes": "Largest fixed income manager, extensive public research"
+    "notes": "Largest fixed income manager, extensive public research",
+    "strategy_tags": ["fixed_income", "macro", "multi_asset"]
   },
   {
     "id": "blackstone",
@@ -17,7 +18,8 @@
     ],
     "category": "alternatives",
     "homepage": "https://www.blackstone.com",
-    "notes": "Largest alternative asset manager, has insights page"
+    "notes": "Largest alternative asset manager, has insights page",
+    "strategy_tags": ["private_equity", "real_assets", "private_credit", "multi_asset"]
   },
   {
     "id": "kkr",
@@ -27,7 +29,8 @@
     ],
     "category": "alternatives",
     "homepage": "https://www.kkr.com",
-    "notes": "PE/credit, has insights page"
+    "notes": "PE/credit, has insights page",
+    "strategy_tags": ["private_equity", "real_assets", "private_credit", "macro"]
   },
   {
     "id": "gsam",
@@ -38,7 +41,8 @@
     ],
     "category": "multi_strategy",
     "homepage": "https://am.gs.com",
-    "notes": "Publishes quarterly Market Know-How and economic outlooks; freely accessible public research"
+    "notes": "Publishes quarterly Market Know-How and economic outlooks; freely accessible public research",
+    "strategy_tags": ["macro", "fixed_income", "equity", "multi_asset"]
   },
   {
     "id": "cambridge-associates",
@@ -48,7 +52,8 @@
     ],
     "category": "multi_asset",
     "homepage": "https://www.cambridgeassociates.com",
-    "notes": "Investment consulting firm; public insights on PE, VC, endowments, macro; HIGH quality, April 2026 active"
+    "notes": "Investment consulting firm; public insights on PE, VC, endowments, macro; HIGH quality, April 2026 active",
+    "strategy_tags": ["private_equity", "venture_capital", "private_credit", "multi_asset"]
   },
   {
     "id": "wellington",
@@ -58,7 +63,8 @@
     ],
     "category": "multi_strategy",
     "homepage": "https://www.wellington.com",
-    "notes": "Freely accessible research on equity, macro, private credit, alternatives, ESG; fills multi-asset equity gap"
+    "notes": "Freely accessible research on equity, macro, private credit, alternatives, ESG; fills multi-asset equity gap",
+    "strategy_tags": ["equity", "macro", "fixed_income", "multi_asset", "esg_climate"]
   },
   {
     "id": "amundi",
@@ -69,7 +75,8 @@
     ],
     "category": "multi_asset",
     "homepage": "https://research-center.amundi.com",
-    "notes": "Europe's largest asset manager; free public research center with macro, ESG, cross-asset, EM; weekly updates"
+    "notes": "Europe's largest asset manager; free public research center with macro, ESG, cross-asset, EM; weekly updates",
+    "strategy_tags": ["macro", "fixed_income", "emerging_markets", "multi_asset", "esg_climate"]
   },
   {
     "id": "jpmam",
@@ -81,7 +88,8 @@
     ],
     "category": "multi_asset",
     "homepage": "https://am.jpmorgan.com",
-    "notes": "Weekly market commentary (On the Minds of Investors, Weekly Recap); freely accessible; multi-asset macro/equity/fixed income"
+    "notes": "Weekly market commentary (On the Minds of Investors, Weekly Recap); freely accessible; multi-asset macro/equity/fixed income",
+    "strategy_tags": ["macro", "equity", "fixed_income", "multi_asset"]
   },
   {
     "id": "troweprice",
@@ -92,7 +100,8 @@
     ],
     "category": "equity",
     "homepage": "https://www.troweprice.com",
-    "notes": "Active equity/fixed income manager; public insights hub covering equity, markets, multi-asset, AI; fills active equity gap"
+    "notes": "Active equity/fixed income manager; public insights hub covering equity, markets, multi-asset, AI; fills active equity gap",
+    "strategy_tags": ["equity", "macro", "fixed_income"]
   },
   {
     "id": "fidelity",
@@ -104,7 +113,8 @@
     ],
     "category": "multi_asset",
     "homepage": "https://www.fidelity.com",
-    "notes": "Major US asset manager $4T+ AUM; public market insights at fidelity.com/viewpoints covering equity, fixed income, macro, alternatives; institutional research also available"
+    "notes": "Major US asset manager $4T+ AUM; public market insights at fidelity.com/viewpoints covering equity, fixed income, macro, alternatives; institutional research also available",
+    "strategy_tags": ["equity", "multi_asset", "fixed_income"]
   },
   {
     "id": "blackrock-institute",
@@ -115,7 +125,8 @@
     ],
     "category": "multi_asset",
     "homepage": "https://www.blackrock.com/us/individual/insights/blackrock-investment-institute",
-    "notes": "World's largest asset manager; free macro, factor, and portfolio research; weekly/monthly updates; covers geopolitics, sustainability, and asset allocation"
+    "notes": "World's largest asset manager; free macro, factor, and portfolio research; weekly/monthly updates; covers geopolitics, sustainability, and asset allocation",
+    "strategy_tags": ["macro", "equity", "fixed_income", "multi_asset", "esg_climate"]
   },
   {
     "id": "research-affiliates",
@@ -126,7 +137,8 @@
     ],
     "category": "quant",
     "homepage": "https://www.researchaffiliates.com",
-    "notes": "Rob Arnott's firm; pioneered smart beta/RAFI; free high-quality papers on valuation, factor investing, expected returns, and asset allocation"
+    "notes": "Rob Arnott's firm; pioneered smart beta/RAFI; free high-quality papers on valuation, factor investing, expected returns, and asset allocation",
+    "strategy_tags": ["quant", "equity", "multi_asset"]
   },
   {
     "id": "schroders",
@@ -136,7 +148,8 @@
     ],
     "category": "multi_asset",
     "homepage": "https://www.schroders.com/en/insights",
-    "notes": "Major UK asset manager; free insights covering global macro, EM, sustainability/ESG, private assets; fills international and ESG gap"
+    "notes": "Major UK asset manager; free insights covering global macro, EM, sustainability/ESG, private assets; fills international and ESG gap",
+    "strategy_tags": ["esg_climate", "emerging_markets", "multi_asset", "fixed_income"]
   },
   {
     "id": "carlyle",
@@ -147,7 +160,8 @@
     ],
     "category": "alternatives",
     "homepage": "https://www.carlyle.com/insights",
-    "notes": "Global PE/credit/real assets manager; public insights on alternatives, private credit, macro outlook"
+    "notes": "Global PE/credit/real assets manager; public insights on alternatives, private credit, macro outlook",
+    "strategy_tags": ["private_equity", "real_assets", "fixed_income"]
   },
   {
     "id": "msci-research",
@@ -158,7 +172,8 @@
     ],
     "category": "quant",
     "homepage": "https://www.msci.com/research-and-insights",
-    "notes": "Global index and analytics provider; free research on factor investing, ESG, risk, and portfolio construction; highly cited in institutional space"
+    "notes": "Global index and analytics provider; free research on factor investing, ESG, risk, and portfolio construction; highly cited in institutional space",
+    "strategy_tags": ["quant", "esg_climate", "multi_asset"]
   },
   {
     "id": "neuberger-berman",
@@ -169,7 +184,8 @@
     ],
     "category": "multi_asset",
     "homepage": "https://www.nb.com",
-    "notes": "Multi-asset manager, public insights page covers macro, fixed income, alternatives, hedge fund perspectives"
+    "notes": "Multi-asset manager, public insights page covers macro, fixed income, alternatives, hedge fund perspectives",
+    "strategy_tags": ["multi_asset", "fixed_income", "private_credit"]
   },
   {
     "id": "pgim",
@@ -180,7 +196,8 @@
     ],
     "category": "fixed_income",
     "homepage": "https://www.pgim.com/us/en/institutional/insights",
-    "notes": "Prudential's institutional asset manager; free public research on fixed income, private credit, alternatives, ESG; fills credit/alternatives gap"
+    "notes": "Prudential's institutional asset manager; free public research on fixed income, private credit, alternatives, ESG; fills credit/alternatives gap",
+    "strategy_tags": ["fixed_income", "private_credit", "multi_asset"]
   },
   {
     "id": "aberdeen",
@@ -192,6 +209,7 @@
     ],
     "category": "multi_asset",
     "homepage": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research",
-    "notes": "Major asset manager; free institutional research on hedge fund strategies, event-driven, credit, macro; fills event-driven/M&A arbitrage gap"
+    "notes": "Major asset manager; free institutional research on hedge fund strategies, event-driven, credit, macro; fills event-driven/M&A arbitrage gap",
+    "strategy_tags": ["event_driven", "macro", "fixed_income", "multi_asset"]
   }
 ]
