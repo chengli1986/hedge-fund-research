@@ -519,6 +519,61 @@ def fetch_oaktree(source: dict) -> list[dict]:
     return unique[:source.get("max_articles", 10)]
 
 
+def fetch_wellington(source: dict) -> list[dict]:
+    """Fetch articles from Wellington Management (Playwright — CSR/AEM).
+
+    Structure: section.insight.article containing:
+      a.insight__title (title + href), a.insight__link (href fallback),
+      date[datetime] (ISO date attr), div.insight__contentType > span (category)
+    """
+    base_url = "https://www.wellington.com"
+    html = _get_playwright_page(source["url"], wait_selector="section.insight.article")
+    soup = BeautifulSoup(html, "html.parser")
+    expected_host = source.get("expected_hostname", "wellington.com")
+
+    articles = []
+    for item in soup.select("section.insight.article"):
+        title_el = item.select_one("a.insight__title")
+        if not title_el:
+            continue
+        title = title_el.get_text(strip=True)
+        if not title:
+            continue
+
+        link_el = item.select_one("a.insight__link") or title_el
+        href = link_el.get("href", "") or title_el.get("href", "")
+        if not href:
+            continue
+        url = urljoin(base_url, href)
+        if not _validate_hostname(url, expected_host):
+            continue
+
+        date_el = item.select_one("date[datetime]")
+        parsed_date = None
+        date_raw = ""
+        if date_el:
+            dt_attr = date_el.get("datetime", "")
+            if dt_attr:
+                try:
+                    parsed_date = datetime.fromisoformat(dt_attr).strftime("%Y-%m-%d")
+                except ValueError:
+                    parsed_date = parse_date(dt_attr)
+            date_raw = date_el.get_text(strip=True)
+
+        category_el = item.select_one("div.insight__contentType span")
+        category = category_el.get_text(strip=True) if category_el else ""
+
+        articles.append({
+            "title": title,
+            "category": category,
+            "url": url,
+            "date": parsed_date,
+            "date_raw": date_raw,
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
 # ---------------------------------------------------------------------------
 # RSS Fetchers
 # ---------------------------------------------------------------------------

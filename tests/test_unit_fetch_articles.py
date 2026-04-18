@@ -4,7 +4,7 @@ import json
 from unittest.mock import MagicMock, patch
 import pytest
 from fetch_articles import (
-    article_id, parse_date, _validate_hostname, load_existing_ids, fetch_oaktree, DATA_FILE,
+    article_id, parse_date, _validate_hostname, load_existing_ids, fetch_oaktree, fetch_wellington, DATA_FILE,
     load_entrypoints, get_source_url, record_quality_metrics, check_anomalies,
 )
 
@@ -277,3 +277,116 @@ class TestCheckAnomalies:
                    "last_valid_body_ratio": 0.8, "last_gated_ratio": 0.0, "last_mismatch_count": 5}
         alerts = check_anomalies(metrics)
         assert any("mismatch" in a.lower() for a in alerts)
+
+
+class TestFetchWellington:
+    def test_parses_articles(self):
+        html = """
+        <html><body>
+        <section class="insight article has-image">
+          <div class="insight__content">
+            <div class="insight__head">
+              <div class="insight__contentType"><span>Article</span></div>
+              <div class="insight__date">
+                <date datetime="2026-04-08"><span>April 2026</span></date>
+              </div>
+            </div>
+            <a class="insight__title" href="/en/insights/quarterly-outlook-q2-2026">
+              Quarterly Asset Allocation Outlook Q2 2026
+            </a>
+            <a class="insight__link" href="/en/insights/quarterly-outlook-q2-2026">Read more</a>
+          </div>
+        </section>
+        <section class="insight article has-image">
+          <div class="insight__content">
+            <div class="insight__head">
+              <div class="insight__contentType"><span>Whitepaper</span></div>
+              <div class="insight__date">
+                <date datetime="2026-03-15"><span>March 2026</span></date>
+              </div>
+            </div>
+            <a class="insight__title" href="/en/insights/credit-outlook-2026">
+              Credit Outlook 2026
+            </a>
+            <a class="insight__link" href="/en/insights/credit-outlook-2026">Read more</a>
+          </div>
+        </section>
+        </body></html>
+        """
+        source = {
+            "id": "wellington",
+            "url": "https://www.wellington.com/en/insights",
+            "max_articles": 10,
+            "expected_hostname": "wellington.com",
+        }
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_wellington(source)
+
+        assert len(articles) == 2
+        assert articles[0]["title"] == "Quarterly Asset Allocation Outlook Q2 2026"
+        assert articles[0]["url"] == "https://www.wellington.com/en/insights/quarterly-outlook-q2-2026"
+        assert articles[0]["date"] == "2026-04-08"
+        assert articles[0]["category"] == "Article"
+        assert articles[1]["title"] == "Credit Outlook 2026"
+        assert articles[1]["date"] == "2026-03-15"
+
+    def test_respects_max_articles(self):
+        html = """
+        <html><body>
+        <section class="insight article">
+          <a class="insight__title" href="/en/insights/a1">Article One</a>
+          <a class="insight__link" href="/en/insights/a1">Read</a>
+          <div class="insight__date"><date datetime="2026-04-01"></date></div>
+          <div class="insight__contentType"><span>Article</span></div>
+        </section>
+        <section class="insight article">
+          <a class="insight__title" href="/en/insights/a2">Article Two</a>
+          <a class="insight__link" href="/en/insights/a2">Read</a>
+          <div class="insight__date"><date datetime="2026-03-01"></date></div>
+          <div class="insight__contentType"><span>Article</span></div>
+        </section>
+        <section class="insight article">
+          <a class="insight__title" href="/en/insights/a3">Article Three</a>
+          <a class="insight__link" href="/en/insights/a3">Read</a>
+          <div class="insight__date"><date datetime="2026-02-01"></date></div>
+          <div class="insight__contentType"><span>Article</span></div>
+        </section>
+        </body></html>
+        """
+        source = {
+            "id": "wellington",
+            "url": "https://www.wellington.com/en/insights",
+            "max_articles": 2,
+            "expected_hostname": "wellington.com",
+        }
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_wellington(source)
+        assert len(articles) == 2
+
+    def test_skips_external_urls(self):
+        html = """
+        <html><body>
+        <section class="insight article">
+          <a class="insight__title" href="https://other-site.com/article">External</a>
+          <a class="insight__link" href="https://other-site.com/article">Read</a>
+          <div class="insight__date"><date datetime="2026-04-01"></date></div>
+          <div class="insight__contentType"><span>Article</span></div>
+        </section>
+        <section class="insight article">
+          <a class="insight__title" href="/en/insights/valid">Valid Article</a>
+          <a class="insight__link" href="/en/insights/valid">Read</a>
+          <div class="insight__date"><date datetime="2026-04-02"></date></div>
+          <div class="insight__contentType"><span>Article</span></div>
+        </section>
+        </body></html>
+        """
+        source = {
+            "id": "wellington",
+            "url": "https://www.wellington.com/en/insights",
+            "max_articles": 10,
+            "expected_hostname": "wellington.com",
+        }
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_wellington(source)
+        assert len(articles) == 1
+        assert "wellington.com" in articles[0]["url"]
