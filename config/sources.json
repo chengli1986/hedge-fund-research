@@ -2,6 +2,7 @@
   "sources": [
     {
       "id": "man-group",
+      "strategy_tags": ["macro", "quant", "fixed_income", "multi_asset"],
       "name": "Man Group",
       "short_name": "Man",
       "url": "https://www.man.com/insights",
@@ -13,6 +14,7 @@
     },
     {
       "id": "bridgewater",
+      "strategy_tags": ["macro", "multi_asset"],
       "name": "Bridgewater Associates",
       "short_name": "Bridgewater",
       "url": "https://www.bridgewater.com/research-and-insights",
@@ -24,6 +26,7 @@
     },
     {
       "id": "aqr",
+      "strategy_tags": ["quant", "multi_asset", "equity"],
       "name": "AQR Capital Management",
       "short_name": "AQR",
       "url": "https://www.aqr.com/Insights/Research",
@@ -35,6 +38,7 @@
     },
     {
       "id": "gmo",
+      "strategy_tags": ["equity", "multi_asset", "emerging_markets"],
       "name": "GMO LLC",
       "short_name": "GMO",
       "url": "https://www.gmo.com/americas/research-library/",
@@ -46,6 +50,7 @@
     },
     {
       "id": "oaktree",
+      "strategy_tags": ["fixed_income", "private_credit", "event_driven"],
       "name": "Oaktree Capital Management",
       "short_name": "Oaktree",
       "url": "https://www.oaktreecapital.com/insights",
@@ -57,6 +62,7 @@
     },
     {
       "id": "ark-invest",
+      "strategy_tags": ["equity", "venture_capital"],
       "name": "ARK Invest",
       "short_name": "ARK",
       "url": "https://www.ark-invest.com/feed",
