@@ -419,22 +419,22 @@ class TestFetchTroweprice:
         html = """
         <html><body>
         <div class="b-grid-item--12-col">
-          <a href="/personal-investing/insights/markets-and-economy/q2-outlook-2026">Read</a>
-          <span class="cmp-tile__heading">Q2 2026 Market Outlook</span>
-          <span class="cmp-tile__eyebrow">Markets &amp; Economy</span>
-          <span class="cmp-tile__eyebrow">April 17, 2026</span>
+          <h2 class="beacon-article-tile__title">
+            <a href="/en/us/insights/q2-2026-market-outlook">Q2 2026 Market Outlook</a>
+          </h2>
+          <span class="beacon-article-tile__eyebrow">April 17, 2026 · Markets &amp; Economy</span>
         </div>
         <div class="b-grid-item--12-col">
-          <a href="/personal-investing/insights/fixed-income/bond-outlook">Read</a>
-          <span class="cmp-tile__heading">Fixed Income Perspectives</span>
-          <span class="cmp-tile__eyebrow">Fixed Income</span>
-          <span class="cmp-tile__eyebrow">March 5, 2026</span>
+          <h2 class="beacon-article-tile__title">
+            <a href="/en/us/insights/bond-outlook">Fixed Income Perspectives</a>
+          </h2>
+          <span class="beacon-article-tile__eyebrow">Mar 2026 · Fixed Income</span>
         </div>
         </body></html>
         """
         source = {
             "id": "troweprice",
-            "url": "https://www.troweprice.com/personal-investing/insights.html",
+            "url": "https://www.troweprice.com/en/us/insights",
             "max_articles": 10,
             "expected_hostname": "troweprice.com",
         }
@@ -443,30 +443,29 @@ class TestFetchTroweprice:
 
         assert len(articles) == 2
         assert articles[0]["title"] == "Q2 2026 Market Outlook"
-        assert articles[0]["url"] == "https://www.troweprice.com/personal-investing/insights/markets-and-economy/q2-outlook-2026"
+        assert articles[0]["url"] == "https://www.troweprice.com/en/us/insights/q2-2026-market-outlook"
         assert articles[0]["date"] == "2026-04-17"
         assert articles[0]["category"] == "Markets & Economy"
         assert articles[1]["title"] == "Fixed Income Perspectives"
-        assert articles[1]["date"] == "2026-03-05"
 
-    def test_skips_cards_without_insights_link(self):
+    def test_skips_cards_without_beacon_title(self):
         html = """
         <html><body>
         <div class="b-grid-item--12-col">
-          <a href="/personal-investing/navigation-link">Nav Item</a>
-          <span class="cmp-tile__heading">Navigation</span>
+          <p>Navigation item with no title</p>
+          <a href="/en/us/insights/orphan-link">Link without beacon title</a>
         </div>
         <div class="b-grid-item--12-col">
-          <a href="/personal-investing/insights/equity/growth-2026">Read</a>
-          <span class="cmp-tile__heading">Growth Equity Outlook</span>
-          <span class="cmp-tile__eyebrow">Equity</span>
-          <span class="cmp-tile__eyebrow">April 10, 2026</span>
+          <h2 class="beacon-article-tile__title">
+            <a href="/en/us/insights/growth-2026">Growth Equity Outlook</a>
+          </h2>
+          <span class="beacon-article-tile__eyebrow">Apr 2026 · Equity</span>
         </div>
         </body></html>
         """
         source = {
             "id": "troweprice",
-            "url": "https://www.troweprice.com/personal-investing/insights.html",
+            "url": "https://www.troweprice.com/en/us/insights",
             "max_articles": 10,
             "expected_hostname": "troweprice.com",
         }
@@ -479,16 +478,17 @@ class TestFetchTroweprice:
     def test_respects_max_articles(self):
         cards = "".join(
             f'<div class="b-grid-item--12-col">'
-            f'<a href="/personal-investing/insights/article-{i}">Read</a>'
-            f'<span class="cmp-tile__heading">Article {i}</span>'
-            f'<span class="cmp-tile__eyebrow">April {i}, 2026</span>'
+            f'<h2 class="beacon-article-tile__title">'
+            f'<a href="/en/us/insights/article-{i}">Article {i}</a>'
+            f'</h2>'
+            f'<span class="beacon-article-tile__eyebrow">April {i}, 2026 · Markets</span>'
             f'</div>'
             for i in range(1, 6)
         )
         html = f"<html><body>{cards}</body></html>"
         source = {
             "id": "troweprice",
-            "url": "https://www.troweprice.com/personal-investing/insights.html",
+            "url": "https://www.troweprice.com/en/us/insights",
             "max_articles": 3,
             "expected_hostname": "troweprice.com",
         }

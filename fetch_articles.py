@@ -600,8 +600,8 @@ def fetch_troweprice(source: dict) -> list[dict]:
     """Fetch articles from T. Rowe Price (Playwright — CSR/AEM).
 
     Structure: div.b-grid-item--12-col cards containing:
-      a[href*='/insights/'] (link), span.cmp-tile__heading (title),
-      span.cmp-tile__eyebrow (date/category — multiple; distinguished by _is_date_eyebrow)
+      h2.beacon-article-tile__title > a (link + title),
+      span.beacon-article-tile__eyebrow ("Date · Category" combined)
     """
     base_url = "https://www.troweprice.com"
     html = _get_playwright_page(source["url"], wait_selector="div.b-grid-item--12-col")
@@ -610,7 +610,7 @@ def fetch_troweprice(source: dict) -> list[dict]:
 
     articles = []
     for item in soup.select("div.b-grid-item--12-col"):
-        link_el = item.select_one("a[href*='/insights/']")
+        link_el = item.select_one("h2.beacon-article-tile__title a")
         if not link_el:
             continue
         href = link_el.get("href", "")
@@ -620,14 +620,18 @@ def fetch_troweprice(source: dict) -> list[dict]:
         if not _validate_hostname(url, expected_host):
             continue
 
-        heading_el = item.select_one("span.cmp-tile__heading")
-        title = heading_el.get_text(strip=True) if heading_el else link_el.get_text(strip=True)
+        title = link_el.get_text(strip=True)
         if not title:
             continue
 
-        eyebrows = [el.get_text(strip=True) for el in item.select("span.cmp-tile__eyebrow") if el.get_text(strip=True)]
-        date_raw = next((e for e in eyebrows if _is_date_eyebrow(e)), "")
-        category = next((e for e in eyebrows if not _is_date_eyebrow(e)), "")
+        eyebrow_el = item.select_one("span.beacon-article-tile__eyebrow")
+        date_raw = ""
+        category = ""
+        if eyebrow_el:
+            eyebrow_text = eyebrow_el.get_text(strip=True)
+            parts = [p.strip() for p in eyebrow_text.split("·", 1)]
+            date_raw = parts[0] if parts else ""
+            category = parts[1] if len(parts) > 1 else ""
         parsed_date = parse_date(date_raw) if date_raw else None
 
         articles.append({

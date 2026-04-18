@@ -78,7 +78,7 @@
       "strategy_tags": ["equity", "macro", "fixed_income"],
       "name": "T. Rowe Price",
       "short_name": "T. Rowe Price",
-      "url": "https://www.troweprice.com/personal-investing/insights.html",
+      "url": "https://www.troweprice.com/en/us/insights",
       "method": "playwright",
       "frequency": "weekly",
       "description": "Active equity and fixed income manager. Research insights.",
