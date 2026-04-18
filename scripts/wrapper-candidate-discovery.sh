@@ -130,6 +130,8 @@ exit_code = int(os.environ.get("EXIT_CODE", "1"))
 # Load candidates
 candidates = json.loads((repo / "config/fund_candidates.json").read_text())
 seeds = json.loads((repo / "config/fund_seeds.json").read_text())
+sources_data = json.loads((repo / "config/sources.json").read_text())
+active_sources = sources_data.get("sources", [])
 
 # Build summary
 status_icon = "✅" if exit_code == 0 else ("⏰" if exit_code == 124 else "❌")
@@ -149,6 +151,61 @@ STATUS_PILL = {
     "rejected":      '<span style="color:#959da5;text-decoration:line-through">rejected</span>',
 }
 
+# 策略覆盖地图
+ALL_TAGS = [
+    "fixed_income", "private_credit", "event_driven", "macro",
+    "quant", "private_equity", "real_assets", "equity",
+    "multi_asset", "esg_climate", "emerging_markets", "venture_capital"
+]
+TAG_LABELS = {
+    "fixed_income": "Fixed Income", "private_credit": "Private Credit",
+    "event_driven": "Event Driven", "macro": "Macro",
+    "quant": "Quant", "private_equity": "Private Equity",
+    "real_assets": "Real Assets", "equity": "Equity",
+    "multi_asset": "Multi Asset", "esg_climate": "ESG/Climate",
+    "emerging_markets": "Emerging Mkts", "venture_capital": "Venture Capital"
+}
+
+tag_counts = {t: 0 for t in ALL_TAGS}
+for s in active_sources:
+    for t in s.get("strategy_tags", []):
+        if t in tag_counts:
+            tag_counts[t] += 1
+for c in candidates:
+    if c.get("status") == "validated":
+        for t in c.get("strategy_tags", []):
+            if t in tag_counts:
+                tag_counts[t] += 1
+
+def coverage_bar(count):
+    filled = min(count, 5)
+    return "█" * filled + "░" * (5 - filled)
+
+map_cells = ""
+for i, tag in enumerate(ALL_TAGS):
+    count = tag_counts[tag]
+    color = "#22863a" if count > 0 else "#cb2431"
+    bar = coverage_bar(count)
+    label = TAG_LABELS[tag]
+    map_cells += (
+        f'<td style="padding:4px 8px;width:25%">'
+        f'<span style="color:{color};font-family:monospace;font-size:11px">{bar}</span> '
+        f'<span style="font-size:12px">{label}</span> '
+        f'<span style="color:#586069;font-size:11px">({count})</span>'
+        f'</td>'
+    )
+    if (i + 1) % 4 == 0:
+        map_cells += "</tr><tr>"
+
+coverage_map_html = f"""
+<div style="margin:0 0 16px">
+<div style="font-weight:600;font-size:13px;margin-bottom:6px">策略覆盖地图 — 活跃来源 + 已验证候选</div>
+<table style="width:100%;border-collapse:collapse;background:#f6f8fa;border:1px solid #e1e4e8;border-radius:4px">
+<tr>{map_cells}</tr>
+</table>
+</div>
+"""
+
 rows = ""
 for c in sorted_candidates:
     score = c.get("fit_score")
@@ -167,6 +224,7 @@ for c in sorted_candidates:
              f'<td style="padding:4px 6px;border-bottom:1px solid #eee;white-space:nowrap">{score_str}</td>'
              f'<td style="padding:4px 6px;border-bottom:1px solid #eee;color:{q_color};font-weight:bold;white-space:nowrap">{quality}</td>'
              f'<td style="padding:4px 6px;border-bottom:1px solid #eee;font-size:11px;color:#586069">{topics}</td>'
+             f'<td style="padding:4px 6px;border-bottom:1px solid #eee">{" ".join(f"<span style=\\"background:#ddf4ff;color:#0969da;border-radius:3px;padding:1px 5px;font-size:10px;margin-right:2px\\">{t}</span>" for t in c.get("strategy_tags", []))}</td>'
              f'<td style="padding:4px 6px;border-bottom:1px solid #eee;font-size:12px">{notes}</td></tr>\n')
 
 validated = sum(1 for c in candidates if c["status"] == "validated")
@@ -188,6 +246,7 @@ html = f"""<html><body style="font-family:system-ui,-apple-system,sans-serif;max
 {stats_bar}
 </p>
 
+{coverage_map_html}
 <table style="width:100%;border-collapse:collapse;font-size:13px;margin:0 0 16px">
 <tr style="background:#f6f8fa">
 <th style="text-align:left;padding:6px 8px;border-bottom:2px solid #e1e4e8">Fund</th>
@@ -195,6 +254,7 @@ html = f"""<html><body style="font-family:system-ui,-apple-system,sans-serif;max
 <th style="text-align:left;padding:6px 8px;border-bottom:2px solid #e1e4e8">Fit</th>
 <th style="text-align:left;padding:6px 8px;border-bottom:2px solid #e1e4e8">Quality</th>
 <th style="text-align:left;padding:6px 8px;border-bottom:2px solid #e1e4e8">Topics</th>
+<th style="text-align:left;padding:6px 8px;border-bottom:2px solid #e1e4e8">Tags</th>
 <th style="text-align:left;padding:6px 8px;border-bottom:2px solid #e1e4e8">Notes</th>
 </tr>
 {rows}
