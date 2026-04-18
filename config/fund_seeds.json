@@ -181,5 +181,17 @@
     "category": "fixed_income",
     "homepage": "https://www.pgim.com/us/en/institutional/insights",
     "notes": "Prudential's institutional asset manager; free public research on fixed income, private credit, alternatives, ESG; fills credit/alternatives gap"
+  },
+  {
+    "id": "aberdeen",
+    "name": "Aberdeen Investments",
+    "aliases": [
+      "Aberdeen",
+      "Aberdeen Standard Investments",
+      "abrdn"
+    ],
+    "category": "multi_asset",
+    "homepage": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research",
+    "notes": "Major asset manager; free institutional research on hedge fund strategies, event-driven, credit, macro; fills event-driven/M&A arbitrage gap"
   }
 ]
