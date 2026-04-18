@@ -158,6 +158,11 @@ def test_trial_fails_without_quality_scores(trial_env, monkeypatch):
     assert len(state["history"]) == 1
     assert state["history"][0]["outcome"] == "fail_quality"
 
+    # Also verify candidate status was set to watchlist
+    candidates = json.loads(tm.CANDIDATES_FILE.read_text())
+    test_candidate = next(c for c in candidates if c["id"] == "test-fund")
+    assert test_candidate["status"] == "watchlist", "Inconclusive trial must set status to watchlist"
+
 
 def test_trial_fails_with_low_quality_scores(trial_env, monkeypatch):
     """A trial with enough articles but low quality scores must fail."""

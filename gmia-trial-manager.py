@@ -542,7 +542,6 @@ def cmd_run() -> None:
     actives = state.setdefault("active_trials", [])
 
     # ── Step 1: process each active trial ─────────────────────────────────────
-    completed_ids = []
     for active in list(actives):  # iterate copy; we may remove items
         # Skip if already checked today
         if today in active.get("daily_checks", {}):
@@ -560,7 +559,7 @@ def cmd_run() -> None:
 
         # Quality sampling on designated days
         start = datetime.strptime(active["start_date"], "%Y-%m-%d").replace(tzinfo=BJT)
-        elapsed = (datetime.now(BJT).replace(tzinfo=BJT) - start).days
+        elapsed = (datetime.now(BJT) - start).days
         trial_day = elapsed + 1  # 1-indexed
 
         if trial_day in SAMPLE_DAYS:
@@ -619,6 +618,7 @@ def cmd_run() -> None:
                             c["status"] = "watchlist"
                             c["notes"] = f"Trial failed: only {total_articles} articles"
                         elif not all_scores:
+                            c["status"] = "watchlist"
                             c["notes"] = "Trial inconclusive: no quality samples obtained"
                         else:
                             c["status"] = "watchlist"
@@ -630,30 +630,24 @@ def cmd_run() -> None:
             save_candidates(candidates)
 
             state.setdefault("history", []).append(active)
-            completed_ids.append(active["id"])
+            state["active_trials"] = [t for t in state["active_trials"] if t["id"] != active["id"]]
             save_state(state)
             send_trial_email(active, passed, total_articles)
             print(f"[trial] Trial complete for {active['name']}: "
                   f"{'PASS' if passed else 'FAIL'} "
                   f"({total_articles} articles, quality={avg_quality:.2f})")
 
-    # Remove completed trials from active list
-    if completed_ids:
-        state["active_trials"] = [t for t in actives if t["id"] not in completed_ids]
-        save_state(state)
-        actives = state["active_trials"]
-
     # ── Step 2: fill open slots up to MAX_CONCURRENT_TRIALS ───────────────────
-    if len(actives) < MAX_CONCURRENT_TRIALS:
+    if len(state["active_trials"]) < MAX_CONCURRENT_TRIALS:
         queue = get_trial_queue(state)
         prod_ids = existing_source_ids()
         queue = [c for c in queue if c["id"] not in prod_ids]
 
-        slots_available = MAX_CONCURRENT_TRIALS - len(actives)
+        slots_available = MAX_CONCURRENT_TRIALS - len(state["active_trials"])
         to_start = queue[:slots_available]
 
         if not to_start:
-            if not actives:
+            if not state["active_trials"]:
                 print("[trial] No candidates queued for trial")
             return
 
@@ -716,7 +710,7 @@ def cmd_status() -> None:
         for active in actives:
             start = active["start_date"]
             start_dt = datetime.strptime(start, "%Y-%m-%d").replace(tzinfo=BJT)
-            elapsed = (datetime.now(BJT).replace(tzinfo=BJT) - start_dt).days
+            elapsed = (datetime.now(BJT) - start_dt).days
             total = sum(
                 d.get("article_count", 0)
                 for d in active.get("daily_checks", {}).values()
