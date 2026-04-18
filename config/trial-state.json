@@ -1,103 +1,105 @@
 {
-  "active_trial": {
-    "id": "cambridge-associates",
-    "name": "Cambridge Associates",
-    "research_url": "https://www.cambridgeassociates.com/insights/private-investments/",
-    "homepage_url": "https://www.cambridgeassociates.com",
-    "fit_score": 0.97,
-    "quality": "HIGH",
-    "topics": "private equity, venture capital, co-investment, private credit",
-    "start_date": "2026-04-12",
-    "end_date": null,
-    "daily_checks": {
-      "2026-04-12": {
-        "accessible": true,
-        "article_count": 15,
-        "date_count": 0,
-        "error": null
+  "history": [],
+  "active_trials": [
+    {
+      "id": "cambridge-associates",
+      "name": "Cambridge Associates",
+      "research_url": "https://www.cambridgeassociates.com/insights/private-investments/",
+      "homepage_url": "https://www.cambridgeassociates.com",
+      "fit_score": 0.97,
+      "quality": "HIGH",
+      "topics": "private equity, venture capital, co-investment, private credit",
+      "start_date": "2026-04-12",
+      "end_date": null,
+      "daily_checks": {
+        "2026-04-12": {
+          "accessible": true,
+          "article_count": 15,
+          "date_count": 0,
+          "error": null
+        },
+        "2026-04-13": {
+          "accessible": true,
+          "article_count": 15,
+          "date_count": 0,
+          "error": null
+        },
+        "2026-04-14": {
+          "accessible": true,
+          "article_count": 15,
+          "date_count": 0,
+          "error": null
+        },
+        "2026-04-15": {
+          "accessible": true,
+          "article_count": 15,
+          "date_count": 0,
+          "error": null
+        },
+        "2026-04-16": {
+          "accessible": true,
+          "article_count": 15,
+          "date_count": 0,
+          "error": null
+        },
+        "2026-04-17": {
+          "accessible": true,
+          "article_count": 15,
+          "date_count": 0,
+          "error": null
+        },
+        "2026-04-18": {
+          "accessible": true,
+          "article_count": 15,
+          "date_count": 0,
+          "error": null
+        }
       },
-      "2026-04-13": {
-        "accessible": true,
-        "article_count": 15,
-        "date_count": 0,
-        "error": null
-      },
-      "2026-04-14": {
-        "accessible": true,
-        "article_count": 15,
-        "date_count": 0,
-        "error": null
-      },
-      "2026-04-15": {
-        "accessible": true,
-        "article_count": 15,
-        "date_count": 0,
-        "error": null
-      },
-      "2026-04-16": {
-        "accessible": true,
-        "article_count": 15,
-        "date_count": 0,
-        "error": null
-      },
-      "2026-04-17": {
-        "accessible": true,
-        "article_count": 15,
-        "date_count": 0,
-        "error": null
-      },
-      "2026-04-18": {
-        "accessible": true,
-        "article_count": 15,
-        "date_count": 0,
-        "error": null
-      }
-    },
-    "auto_decided": false,
-    "outcome": null,
-    "quality_samples": [
-      {
-        "sampled": 3,
-        "articles": [
-          {
-            "url": "https://www.cambridgeassociates.com/insight/a-look-inside-our-co-investment-playbook/",
-            "relevance": 0.9,
-            "depth": 0.7,
-            "extractable": 1.0,
-            "overall": 0.82,
-            "notes": "Portfolio strategy guidance on co-investment implementation with three key pillars: access, selection, execution; addresses diversification targets and fee considerations."
-          },
-          {
-            "url": "https://www.cambridgeassociates.com/insight/has-private-equity-hit-peak-software/",
-            "relevance": 0.95,
-            "depth": 0.8,
-            "extractable": 0.7,
-            "overall": 0.83,
-            "notes": "Investment research on PE software sector exposure amid AI disruption; analyzes valuation compression (19x to 3.4x revenue multiples) and vintage cohort risk differentiation."
-          },
-          {
-            "url": "https://www.cambridgeassociates.com/insight/us-pe-vc-benchmark-commentary-first-half-2025/",
-            "relevance": 0.95,
-            "depth": 0.85,
-            "extractable": 0.8,
-            "overall": 0.87,
-            "notes": "Benchmark performance analysis with detailed data on US PE/VC returns (H1 2025), vintage year performance, sector drivers, and capital flow metrics; includes comparative public market analysis."
-          }
-        ],
-        "avg_score": 0.84,
-        "error": null,
-        "day": 3,
-        "date": "2026-04-14"
-      },
-      {
-        "sampled": 3,
-        "articles": [],
-        "avg_score": 0.0,
-        "error": "Haiku returned invalid response",
-        "day": 4,
-        "date": "2026-04-15"
-      }
-    ]
-  },
-  "history": []
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.cambridgeassociates.com/insight/a-look-inside-our-co-investment-playbook/",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 1.0,
+              "overall": 0.82,
+              "notes": "Portfolio strategy guidance on co-investment implementation with three key pillars: access, selection, execution; addresses diversification targets and fee considerations."
+            },
+            {
+              "url": "https://www.cambridgeassociates.com/insight/has-private-equity-hit-peak-software/",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.7,
+              "overall": 0.83,
+              "notes": "Investment research on PE software sector exposure amid AI disruption; analyzes valuation compression (19x to 3.4x revenue multiples) and vintage cohort risk differentiation."
+            },
+            {
+              "url": "https://www.cambridgeassociates.com/insight/us-pe-vc-benchmark-commentary-first-half-2025/",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.8,
+              "overall": 0.87,
+              "notes": "Benchmark performance analysis with detailed data on US PE/VC returns (H1 2025), vintage year performance, sector drivers, and capital flow metrics; includes comparative public market analysis."
+            }
+          ],
+          "avg_score": 0.84,
+          "error": null,
+          "day": 3,
+          "date": "2026-04-14"
+        },
+        {
+          "sampled": 3,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "Haiku returned invalid response",
+          "day": 4,
+          "date": "2026-04-15"
+        }
+      ]
+    }
+  ]
 }

@@ -54,7 +54,7 @@ def _make_sources_file(tmp_path: Path) -> Path:
 
 def _make_trial_state(tmp_path: Path, state: dict | None = None) -> Path:
     f = tmp_path / "trial-state.json"
-    f.write_text(json.dumps(state or {"active_trial": None, "history": []}))
+    f.write_text(json.dumps(state or {"active_trials": [], "history": []}))
     return f
 
 
@@ -101,8 +101,8 @@ def test_new_trial_triggers_day1_quality_sampling(trial_env, monkeypatch):
 
     # Verify it's stored in state
     state = tm.load_state()
-    active = state["active_trial"]
-    assert active is not None
+    assert len(state["active_trials"]) > 0
+    active = state["active_trials"][0]
     samples = active.get("quality_samples", [])
     assert len(samples) == 1
     assert samples[0]["day"] == 1
@@ -117,7 +117,7 @@ def test_trial_fails_without_quality_scores(trial_env, monkeypatch):
 
     # Create a trial state that's past the 7-day window with no quality samples
     trial_state = {
-        "active_trial": {
+        "active_trials": [{
             "id": "test-fund",
             "name": "Test Fund",
             "research_url": "https://example.com/research",
@@ -137,7 +137,7 @@ def test_trial_fails_without_quality_scores(trial_env, monkeypatch):
             "quality_samples": [],  # No quality data!
             "auto_decided": False,
             "outcome": None,
-        },
+        }],
         "history": [],
     }
 
@@ -154,7 +154,7 @@ def test_trial_fails_without_quality_scores(trial_env, monkeypatch):
 
     state = tm.load_state()
     # Trial should be decided and failed
-    assert state["active_trial"] is None
+    assert len(state["active_trials"]) == 0
     assert len(state["history"]) == 1
     assert state["history"][0]["outcome"] == "fail_quality"
 
@@ -165,7 +165,7 @@ def test_trial_fails_with_low_quality_scores(trial_env, monkeypatch):
     start = today - timedelta(days=8)
 
     trial_state = {
-        "active_trial": {
+        "active_trials": [{
             "id": "test-fund",
             "name": "Test Fund",
             "research_url": "https://example.com/research",
@@ -197,7 +197,7 @@ def test_trial_fails_with_low_quality_scores(trial_env, monkeypatch):
             }],
             "auto_decided": False,
             "outcome": None,
-        },
+        }],
         "history": [],
     }
 
@@ -211,7 +211,7 @@ def test_trial_fails_with_low_quality_scores(trial_env, monkeypatch):
     tm.cmd_run()
 
     state = tm.load_state()
-    assert state["active_trial"] is None
+    assert len(state["active_trials"]) == 0
     assert state["history"][0]["outcome"] == "fail_quality"
 
 
@@ -312,7 +312,7 @@ def test_trial_passes_with_both_quantity_and_quality(trial_env, monkeypatch):
     start = today - timedelta(days=8)
 
     trial_state = {
-        "active_trial": {
+        "active_trials": [{
             "id": "test-fund",
             "name": "Test Fund",
             "research_url": "https://example.com/research",
@@ -344,7 +344,7 @@ def test_trial_passes_with_both_quantity_and_quality(trial_env, monkeypatch):
             }],
             "auto_decided": False,
             "outcome": None,
-        },
+        }],
         "history": [],
     }
 
@@ -358,7 +358,7 @@ def test_trial_passes_with_both_quantity_and_quality(trial_env, monkeypatch):
     tm.cmd_run()
 
     state = tm.load_state()
-    assert state["active_trial"] is None
+    assert len(state["active_trials"]) == 0
     assert len(state["history"]) == 1
     assert state["history"][0]["outcome"] == "pass"
     assert state["history"][0]["avg_quality_score"] > 0

@@ -46,6 +46,7 @@ TRIAL_STATE_FILE = BASE_DIR / "config" / "trial-state.json"
 ENV_FILE = Path.home() / ".stock-monitor.env"
 
 TRIAL_DAYS = 7
+MAX_CONCURRENT_TRIALS = 3
 MIN_ARTICLES_TOTAL = 3      # articles needed over trial to pass
 MIN_QUALITY = {"HIGH", "MEDIUM"}
 MIN_QUALITY_SCORE = 0.5     # avg Haiku quality score to pass (0-1)
@@ -65,8 +66,13 @@ HEADERS = {
 
 def load_state() -> dict:
     if TRIAL_STATE_FILE.exists():
-        return json.loads(TRIAL_STATE_FILE.read_text())
-    return {"active_trial": None, "history": []}
+        data = json.loads(TRIAL_STATE_FILE.read_text())
+        # Migrate old single-trial format to multi-trial list
+        if "active_trial" in data:
+            old = data.pop("active_trial")
+            data["active_trials"] = [old] if old else []
+        return data
+    return {"active_trials": [], "history": []}
 
 
 def save_state(state: dict) -> None:
@@ -373,7 +379,7 @@ def get_trial_queue(state: dict) -> list[dict]:
     """Return validated HIGH/MEDIUM candidates not yet trialed, sorted by fit_score desc."""
     candidates = load_candidates()
     trialed_ids = {h["id"] for h in state.get("history", [])}
-    active_id = (state.get("active_trial") or {}).get("id")
+    active_ids = {t["id"] for t in state.get("active_trials", [])}
 
     queue = []
     for c in candidates:
@@ -383,7 +389,7 @@ def get_trial_queue(state: dict) -> list[dict]:
             continue
         if c["id"] in trialed_ids:
             continue
-        if c["id"] == active_id:
+        if c["id"] in active_ids:
             continue
         queue.append(c)
 
@@ -533,11 +539,11 @@ def send_trial_email(trial: dict, passed: bool, total_articles: int) -> None:
 def cmd_run() -> None:
     state = load_state()
     today = datetime.now(BJT).strftime("%Y-%m-%d")
+    actives = state.setdefault("active_trials", [])
 
-    # ── Step 1: process active trial ──────────────────────────────────────────
-    active = state.get("active_trial")
-
-    if active:
+    # ── Step 1: process each active trial ─────────────────────────────────────
+    completed_ids = []
+    for active in list(actives):  # iterate copy; we may remove items
         # Skip if already checked today
         if today in active.get("daily_checks", {}):
             print(f"[trial] Already checked {active['name']} today, skipping")
@@ -552,7 +558,7 @@ def cmd_run() -> None:
                 print(f"[trial]   → unreachable: {result['error']}")
             save_state(state)
 
-        # ── Quality sampling on designated days ──────────────────────────────
+        # Quality sampling on designated days
         start = datetime.strptime(active["start_date"], "%Y-%m-%d").replace(tzinfo=BJT)
         elapsed = (datetime.now(BJT).replace(tzinfo=BJT) - start).days
         trial_day = elapsed + 1  # 1-indexed
@@ -585,7 +591,6 @@ def cmd_run() -> None:
             )
             quantity_ok = total_articles >= MIN_ARTICLES_TOTAL
 
-            # Compute average quality score across all samples
             all_scores = [
                 a["overall"]
                 for s in active.get("quality_samples", [])
@@ -606,7 +611,6 @@ def cmd_run() -> None:
             else:
                 active["outcome"] = "pass"
 
-            # Update candidate status
             candidates = load_candidates()
             for c in candidates:
                 if c["id"] == active["id"]:
@@ -615,8 +619,6 @@ def cmd_run() -> None:
                             c["status"] = "watchlist"
                             c["notes"] = f"Trial failed: only {total_articles} articles"
                         elif not all_scores:
-                            # Quality sampling never ran (API key missing, outage, etc.)
-                            # — leave candidate status unchanged so it can be re-trialed
                             c["notes"] = "Trial inconclusive: no quality samples obtained"
                         else:
                             c["status"] = "watchlist"
@@ -628,118 +630,124 @@ def cmd_run() -> None:
             save_candidates(candidates)
 
             state.setdefault("history", []).append(active)
-            state["active_trial"] = None
+            completed_ids.append(active["id"])
             save_state(state)
             send_trial_email(active, passed, total_articles)
             print(f"[trial] Trial complete for {active['name']}: "
                   f"{'PASS' if passed else 'FAIL'} "
                   f"({total_articles} articles, quality={avg_quality:.2f})")
-            # Fall through to start next trial below
-            active = None
 
-    # ── Step 2: start next trial if slot is free ──────────────────────────────
-    if not state.get("active_trial"):
+    # Remove completed trials from active list
+    if completed_ids:
+        state["active_trials"] = [t for t in actives if t["id"] not in completed_ids]
+        save_state(state)
+        actives = state["active_trials"]
+
+    # ── Step 2: fill open slots up to MAX_CONCURRENT_TRIALS ───────────────────
+    if len(actives) < MAX_CONCURRENT_TRIALS:
         queue = get_trial_queue(state)
-
-        # Skip candidates already in production sources
         prod_ids = existing_source_ids()
         queue = [c for c in queue if c["id"] not in prod_ids]
 
-        if not queue:
-            print("[trial] No candidates queued for trial")
+        slots_available = MAX_CONCURRENT_TRIALS - len(actives)
+        to_start = queue[:slots_available]
+
+        if not to_start:
+            if not actives:
+                print("[trial] No candidates queued for trial")
             return
 
-        next_candidate = queue[0]
-        print(f"[trial] Starting trial for {next_candidate['name']} "
-              f"(fit={next_candidate.get('fit_score', '?')}, "
-              f"quality={next_candidate.get('quality', '?')})")
+        for next_candidate in to_start:
+            print(f"[trial] Starting trial for {next_candidate['name']} "
+                  f"(fit={next_candidate.get('fit_score', '?')}, "
+                  f"quality={next_candidate.get('quality', '?')})")
 
-        state["active_trial"] = {
-            "id": next_candidate["id"],
-            "name": next_candidate["name"],
-            "research_url": next_candidate.get("research_url") or next_candidate.get("homepage_url", ""),
-            "homepage_url": next_candidate.get("homepage_url", ""),
-            "fit_score": next_candidate.get("fit_score"),
-            "quality": next_candidate.get("quality"),
-            "topics": next_candidate.get("topics"),
-            "start_date": today,
-            "end_date": None,
-            "daily_checks": {},
-            "auto_decided": False,
-            "outcome": None,
-        }
-        save_state(state)
-
-        # Run first check immediately
-        url = state["active_trial"]["research_url"]
-        result = count_articles(url)
-        state["active_trial"]["daily_checks"][today] = result
-        save_state(state)
-        if result["accessible"]:
-            print(f"[trial]   Day 1: {result['article_count']} articles detected")
-        else:
-            print(f"[trial]   Day 1: unreachable — {result['error']}")
-
-        # Day 1 quality sampling
-        if 1 in SAMPLE_DAYS:
-            print(f"[trial] Quality sampling day 1 for {next_candidate['name']}...")
-            qr = sample_article_quality(url)
-            qr["day"] = 1
-            qr["date"] = today
-            state["active_trial"].setdefault("quality_samples", []).append(qr)
+            new_trial = {
+                "id": next_candidate["id"],
+                "name": next_candidate["name"],
+                "research_url": next_candidate.get("research_url") or next_candidate.get("homepage_url", ""),
+                "homepage_url": next_candidate.get("homepage_url", ""),
+                "fit_score": next_candidate.get("fit_score"),
+                "quality": next_candidate.get("quality"),
+                "topics": next_candidate.get("topics"),
+                "start_date": today,
+                "end_date": None,
+                "daily_checks": {},
+                "auto_decided": False,
+                "outcome": None,
+            }
+            state["active_trials"].append(new_trial)
             save_state(state)
-            if qr["error"]:
-                print(f"[trial]   Quality sampling error: {qr['error']}")
+
+            url = new_trial["research_url"]
+            result = count_articles(url)
+            new_trial["daily_checks"][today] = result
+            save_state(state)
+            if result["accessible"]:
+                print(f"[trial]   Day 1: {result['article_count']} articles detected")
             else:
-                print(f"[trial]   Sampled {qr['sampled']} articles, "
-                      f"avg quality score: {qr['avg_score']:.2f}")
-                for art in qr.get("articles", []):
-                    print(f"[trial]     {art['overall']:.2f} — {art['notes'][:60]}")
+                print(f"[trial]   Day 1: unreachable — {result['error']}")
+
+            # Day 1 quality sampling
+            if 1 in SAMPLE_DAYS:
+                print(f"[trial] Quality sampling day 1 for {next_candidate['name']}...")
+                qr = sample_article_quality(url)
+                qr["day"] = 1
+                qr["date"] = today
+                new_trial.setdefault("quality_samples", []).append(qr)
+                save_state(state)
+                if qr["error"]:
+                    print(f"[trial]   Quality sampling error: {qr['error']}")
+                else:
+                    print(f"[trial]   Sampled {qr['sampled']} articles, "
+                          f"avg quality score: {qr['avg_score']:.2f}")
+                    for art in qr.get("articles", []):
+                        print(f"[trial]     {art['overall']:.2f} — {art['notes'][:60]}")
 
 
 def cmd_status() -> None:
     state = load_state()
-    active = state.get("active_trial")
+    actives = state.get("active_trials", [])
 
-    if not active:
-        print("No active trial.")
+    if not actives:
+        print("No active trials.")
     else:
-        start = active["start_date"]
-        today = datetime.now(BJT).strftime("%Y-%m-%d")
-        start_dt = datetime.strptime(start, "%Y-%m-%d").replace(tzinfo=BJT)
-        elapsed = (datetime.now(BJT).replace(tzinfo=BJT) - start_dt).days
-        total = sum(
-            d.get("article_count", 0)
-            for d in active.get("daily_checks", {}).values()
-            if d.get("accessible")
-        )
-        print(f"Active trial: {active['name']} ({active['id']})")
-        print(f"  Started: {start}  |  Day {elapsed+1}/{TRIAL_DAYS}")
-        print(f"  URL: {active.get('research_url','')}")
-        print(f"  Quality: {active.get('quality','?')}  Fit: {active.get('fit_score','?')}")
-        print(f"  Total articles so far: {total} (need {MIN_ARTICLES_TOTAL} to pass)")
+        print(f"Active trials: {len(actives)}/{MAX_CONCURRENT_TRIALS}")
+        for active in actives:
+            start = active["start_date"]
+            start_dt = datetime.strptime(start, "%Y-%m-%d").replace(tzinfo=BJT)
+            elapsed = (datetime.now(BJT).replace(tzinfo=BJT) - start_dt).days
+            total = sum(
+                d.get("article_count", 0)
+                for d in active.get("daily_checks", {}).values()
+                if d.get("accessible")
+            )
+            print(f"\n  [{active['id']}] {active['name']}")
+            print(f"    Started: {start}  |  Day {elapsed+1}/{TRIAL_DAYS}")
+            print(f"    URL: {active.get('research_url','')}")
+            print(f"    Quality: {active.get('quality','?')}  Fit: {active.get('fit_score','?')}")
+            print(f"    Total articles so far: {total} (need {MIN_ARTICLES_TOTAL} to pass)")
 
-        # Quality sampling info
-        samples = active.get("quality_samples", [])
-        all_scores = [a["overall"] for s in samples for a in s.get("articles", [])]
-        if all_scores:
-            avg_q = sum(all_scores) / len(all_scores)
-            print(f"  Avg quality score: {avg_q:.2f} (need {MIN_QUALITY_SCORE} to pass)")
-        else:
-            next_sample = min(SAMPLE_DAYS - set(s.get("day", 0) for s in samples), default=None)
-            if next_sample:
-                print(f"  Quality sampling: pending (next on day {next_sample})")
+            samples = active.get("quality_samples", [])
+            all_scores = [a["overall"] for s in samples for a in s.get("articles", [])]
+            if all_scores:
+                avg_q = sum(all_scores) / len(all_scores)
+                print(f"    Avg quality score: {avg_q:.2f} (need {MIN_QUALITY_SCORE} to pass)")
+            else:
+                next_sample = min(SAMPLE_DAYS - set(s.get("day", 0) for s in samples), default=None)
+                if next_sample:
+                    print(f"    Quality sampling: pending (next on day {next_sample})")
 
-        print()
-        for date, info in sorted(active.get("daily_checks", {}).items()):
-            status = f"{info.get('article_count',0)} articles" if info.get("accessible") else f"unreachable ({info.get('error','')})"
-            print(f"  {date}: {status}")
-        for sample in samples:
-            print(f"  Quality sample day {sample.get('day','?')}: "
-                  f"avg={sample.get('avg_score',0):.2f}, "
-                  f"sampled={sample.get('sampled',0)} articles")
-            for art in sample.get("articles", []):
-                print(f"    {art['overall']:.2f} — {art.get('notes','')[:60]}")
+            for date, info in sorted(active.get("daily_checks", {}).items()):
+                status = (f"{info.get('article_count',0)} articles" if info.get("accessible")
+                          else f"unreachable ({info.get('error','')})")
+                print(f"    {date}: {status}")
+            for sample in samples:
+                print(f"    Quality sample day {sample.get('day','?')}: "
+                      f"avg={sample.get('avg_score',0):.2f}, "
+                      f"sampled={sample.get('sampled',0)} articles")
+                for art in sample.get("articles", []):
+                    print(f"      {art['overall']:.2f} — {art.get('notes','')[:60]}")
 
     queue = get_trial_queue(state)
     prod_ids = existing_source_ids()
@@ -759,18 +767,36 @@ def cmd_status() -> None:
 
 def cmd_skip() -> None:
     state = load_state()
-    active = state.get("active_trial")
-    if not active:
-        print("No active trial to skip.")
+    actives = state.get("active_trials", [])
+    if not actives:
+        print("No active trials to skip.")
         return
+
+    # Optional: --id <fund_id> to skip a specific trial
+    target_id = None
+    args = sys.argv[2:]
+    if "--id" in args:
+        idx = args.index("--id")
+        if idx + 1 < len(args):
+            target_id = args[idx + 1]
+
+    if target_id:
+        match = next((t for t in actives if t["id"] == target_id), None)
+        if not match:
+            print(f"No active trial with id '{target_id}'. Active: {[t['id'] for t in actives]}")
+            return
+        to_skip = match
+    else:
+        to_skip = actives[0]  # skip oldest by default
+
     today = datetime.now(BJT).strftime("%Y-%m-%d")
-    active["auto_decided"] = True
-    active["end_date"] = today
-    active["outcome"] = "skipped"
-    state.setdefault("history", []).append(active)
-    state["active_trial"] = None
+    to_skip["auto_decided"] = True
+    to_skip["end_date"] = today
+    to_skip["outcome"] = "skipped"
+    state.setdefault("history", []).append(to_skip)
+    state["active_trials"] = [t for t in actives if t["id"] != to_skip["id"]]
     save_state(state)
-    print(f"Skipped trial for {active['name']}")
+    print(f"Skipped trial for {to_skip['name']}")
 
 
 # ── entry point ───────────────────────────────────────────────────────────────
