@@ -48,6 +48,11 @@ For each candidate that NEEDS analysis:
    - Set `last_deep_analyzed_at` to current UTC ISO timestamp
    - Set `quality` field to "HIGH", "MEDIUM", or "LOW"
    - Set `topics` field to a short comma-separated list (e.g., "fixed income, macro, credit")
+   - Set `strategy_tags` to a JSON array using ONLY tags from this fixed set:
+     `fixed_income`, `private_credit`, `event_driven`, `macro`, `quant`,
+     `private_equity`, `real_assets`, `equity`, `multi_asset`, `esg_climate`,
+     `emerging_markets`, `venture_capital`
+     Pick all that apply (1–4 tags typical). Example: `["fixed_income", "macro", "multi_asset"]`
    - Set `notes` field to a **one-line summary, max 60 characters** (e.g., "Weekly private credit research, fills PE gap")
    - If quality is HIGH and updated within 30 days: prefix notes with "RECOMMEND: " (still max 60 chars total)
    - If clearly not suitable: set status to "watchlist" or "rejected" with reason in notes
