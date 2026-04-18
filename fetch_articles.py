@@ -579,11 +579,16 @@ _DATE_WORDS: frozenset[str] = frozenset([
     "jul", "aug", "sep", "oct", "nov", "dec",
     "january", "february", "march", "april", "june", "july",
     "august", "september", "october", "november", "december",
+    # "may" omitted — identical to its abbreviation, already present above
 ])
 
 
 def _is_date_eyebrow(text: str) -> bool:
-    """Return True if an eyebrow label looks like a date rather than a category."""
+    """Return True if an eyebrow label looks like a date rather than a category.
+
+    Note: short month names that double as common words ("may", "mar") may
+    produce false positives for unusual category labels.
+    """
     lower = text.lower()
     return (
         any(re.search(r"\b" + w + r"\b", lower) for w in _DATE_WORDS)

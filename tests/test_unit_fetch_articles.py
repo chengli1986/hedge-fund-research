@@ -409,6 +409,10 @@ class TestIsDateEyebrow:
     def test_empty_string_is_not_date(self):
         assert _is_date_eyebrow("") is False
 
+    def test_may_auxiliary_known_limitation(self):
+        # "may" as auxiliary verb is a known false positive
+        assert _is_date_eyebrow("You May Also Like") is True
+
 
 class TestFetchTroweprice:
     def test_parses_articles(self):
@@ -492,3 +496,4 @@ class TestFetchTroweprice:
             articles = fetch_troweprice(source)
 
         assert len(articles) == 3
+        assert articles[0]["title"] == "Article 1"
