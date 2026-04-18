@@ -235,7 +235,7 @@ for c in sorted_candidates:
 
 validated = sum(1 for c in candidates if c["status"] == "validated")
 inaccessible = sum(1 for c in candidates if c["status"] == "inaccessible")
-recommend = sum(1 for c in candidates if (c.get("notes") or "").startswith("RECOMMEND"))
+recommend = sum(1 for c in candidates if c["status"] == "validated" and (c.get("notes") or "").startswith("RECOMMEND"))
 
 stats_bar = (
     f'<span style="margin-right:16px"><strong>Seeds</strong>&nbsp;{len(seeds)}</span>'
