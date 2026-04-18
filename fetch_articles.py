@@ -722,6 +722,8 @@ FETCHERS = {
     "aqr": fetch_aqr,
     "gmo": fetch_gmo,
     "oaktree": fetch_oaktree,
+    "wellington": fetch_wellington,
+    "troweprice": fetch_troweprice,
     "ark-invest": fetch_ark_invest,
 }
 

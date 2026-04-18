@@ -61,6 +61,32 @@
       "expected_hostname": "oaktreecapital.com"
     },
     {
+      "id": "wellington",
+      "strategy_tags": ["equity", "macro", "fixed_income", "multi_asset", "esg_climate"],
+      "name": "Wellington Management",
+      "short_name": "Wellington",
+      "url": "https://www.wellington.com/en/insights",
+      "method": "playwright",
+      "frequency": "weekly",
+      "description": "Multi-asset research firm. Equity, fixed income, alternatives, ESG.",
+      "notable_authors": [],
+      "expected_hostname": "wellington.com",
+      "max_articles": 10
+    },
+    {
+      "id": "troweprice",
+      "strategy_tags": ["equity", "macro", "fixed_income"],
+      "name": "T. Rowe Price",
+      "short_name": "T. Rowe Price",
+      "url": "https://www.troweprice.com/personal-investing/insights.html",
+      "method": "playwright",
+      "frequency": "weekly",
+      "description": "Active equity and fixed income manager. Research insights.",
+      "notable_authors": [],
+      "expected_hostname": "troweprice.com",
+      "max_articles": 10
+    },
+    {
       "id": "ark-invest",
       "strategy_tags": ["equity", "venture_capital"],
       "name": "ARK Invest",

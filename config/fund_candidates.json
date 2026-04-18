@@ -514,7 +514,7 @@
   {
     "id": "wellington",
     "name": "Wellington Management",
-    "status": "inaccessible",
+    "status": "validated",
     "homepage_url": "https://www.wellington.com",
     "research_url": "https://www.wellington.com/en/insights",
     "rss_url": null,
@@ -699,7 +699,7 @@
   {
     "id": "troweprice",
     "name": "T. Rowe Price",
-    "status": "inaccessible",
+    "status": "validated",
     "homepage_url": "https://www.troweprice.com",
     "research_url": "https://www.troweprice.com/en/us/insights",
     "rss_url": null,
