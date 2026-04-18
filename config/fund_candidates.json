@@ -61,7 +61,12 @@
     "screening_reason": "Login/paywall detected",
     "last_deep_analyzed_at": "2026-04-11T18:32:49.244440+00:00",
     "quality": "HIGH",
-    "topics": "fixed income, macro, credit"
+    "topics": "fixed income, macro, credit",
+    "strategy_tags": [
+      "fixed_income",
+      "macro",
+      "multi_asset"
+    ]
   },
   {
     "id": "de-shaw",
@@ -102,7 +107,10 @@
     "quality": "LOW",
     "topics": "quant",
     "reject_reason": "no_public_research",
-    "rejected_at": "2026-04-12T19:21:09.876510+08:00"
+    "rejected_at": "2026-04-12T19:21:09.876510+08:00",
+    "strategy_tags": [
+      "quant"
+    ]
   },
   {
     "id": "blackstone",
@@ -154,7 +162,7 @@
       },
       {
         "url": "https://www.blackstone.com/insights/article/market-views-dealmaking-disruption-and-real-estates-recovery/",
-        "label": "Market Views: Dealmaking, Disruption, and Real Estate’s Recovery",
+        "label": "Market Views: Dealmaking, Disruption, and Real Estate\u2019s Recovery",
         "path": "insights/article/market-views-dealmaking-disruption-and-real-estates-recovery"
       },
       {
@@ -176,7 +184,13 @@
     "screening_reason": "Research index detected",
     "last_deep_analyzed_at": "2026-04-11T18:32:49.244440+00:00",
     "quality": "HIGH",
-    "topics": "private equity, real estate, private credit, infrastructure"
+    "topics": "private equity, real estate, private credit, infrastructure",
+    "strategy_tags": [
+      "private_equity",
+      "real_assets",
+      "private_credit",
+      "multi_asset"
+    ]
   },
   {
     "id": "two-sigma",
@@ -222,7 +236,10 @@
     "quality": "LOW",
     "topics": "",
     "reject_reason": "content_not_research",
-    "rejected_at": "2026-04-12T19:21:09.876510+08:00"
+    "rejected_at": "2026-04-12T19:21:09.876510+08:00",
+    "strategy_tags": [
+      "quant"
+    ]
   },
   {
     "id": "kkr",
@@ -269,7 +286,7 @@
       },
       {
         "url": "https://www.kkr.com/insights/naic-spring-update-2026",
-        "label": "Investment Insights Highlights from the NAIC’s 2026 Spring National Meeting: CLOs, Collateral Loans,",
+        "label": "Investment Insights Highlights from the NAIC\u2019s 2026 Spring National Meeting: CLOs, Collateral Loans,",
         "path": "insights/naic-spring-update-2026"
       },
       {
@@ -291,7 +308,13 @@
     "screening_reason": "Insufficient article index signals",
     "last_deep_analyzed_at": "2026-04-11T18:32:49.244440+00:00",
     "quality": "HIGH",
-    "topics": "private equity, macro, infrastructure, credit"
+    "topics": "private equity, macro, infrastructure, credit",
+    "strategy_tags": [
+      "private_equity",
+      "real_assets",
+      "private_credit",
+      "macro"
+    ]
   },
   {
     "id": "cambridge-associates",
@@ -363,7 +386,7 @@
       },
       {
         "url": "https://www.cambridgeassociates.com/insight/germanys-fiscal-boost/",
-        "label": "Germany’s Fiscal Boost Remains a Tailwind Despite Near-Term Risks",
+        "label": "Germany\u2019s Fiscal Boost Remains a Tailwind Despite Near-Term Risks",
         "path": "insight/germanys-fiscal-boost"
       },
       {
@@ -420,7 +443,13 @@
     "screening_reason": "Research index detected",
     "last_deep_analyzed_at": "2026-04-12T13:48:51.331495+00:00",
     "quality": "HIGH",
-    "topics": "private equity, venture capital, co-investment, private credit"
+    "topics": "private equity, venture capital, co-investment, private credit",
+    "strategy_tags": [
+      "private_equity",
+      "venture_capital",
+      "private_credit",
+      "multi_asset"
+    ]
   },
   {
     "id": "gsam",
@@ -474,7 +503,13 @@
       "h2_tags": 0,
       "article_signals": 0
     },
-    "screening_reason": "Insufficient article index signals"
+    "screening_reason": "Insufficient article index signals",
+    "strategy_tags": [
+      "macro",
+      "fixed_income",
+      "equity",
+      "multi_asset"
+    ]
   },
   {
     "id": "wellington",
@@ -573,7 +608,14 @@
     "screening_reason": "Login/paywall detected",
     "last_deep_analyzed_at": "2026-04-14T01:02:52.000000+00:00",
     "quality": "HIGH",
-    "topics": "equity, macro, fixed income, alternatives, ESG, geopolitics"
+    "topics": "equity, macro, fixed income, alternatives, ESG, geopolitics",
+    "strategy_tags": [
+      "equity",
+      "macro",
+      "fixed_income",
+      "multi_asset",
+      "esg_climate"
+    ]
   },
   {
     "id": "amundi",
@@ -606,7 +648,14 @@
     "screening_reason": "Research index detected",
     "last_deep_analyzed_at": "2026-04-15T01:02:26.000000+00:00",
     "quality": "HIGH",
-    "topics": "macro, ESG, geopolitics, portfolio strategy, fixed income, emerging markets, private assets"
+    "topics": "macro, ESG, geopolitics, portfolio strategy, fixed income, emerging markets, private assets",
+    "strategy_tags": [
+      "macro",
+      "fixed_income",
+      "emerging_markets",
+      "multi_asset",
+      "esg_climate"
+    ]
   },
   {
     "id": "jpmam",
@@ -639,7 +688,13 @@
     "screening_reason": "Research index detected",
     "last_deep_analyzed_at": "2026-04-16T01:12:00.000000+00:00",
     "quality": "MEDIUM",
-    "topics": "macro, equity, fixed income, alternatives, capital markets"
+    "topics": "macro, equity, fixed income, alternatives, capital markets",
+    "strategy_tags": [
+      "macro",
+      "equity",
+      "fixed_income",
+      "multi_asset"
+    ]
   },
   {
     "id": "troweprice",
@@ -698,7 +753,12 @@
     "screening_reason": "Login/paywall detected",
     "last_deep_analyzed_at": "2026-04-16T01:12:00.000000+00:00",
     "quality": "HIGH",
-    "topics": "equity, AI, macro, fixed income, active management"
+    "topics": "equity, AI, macro, fixed income, active management",
+    "strategy_tags": [
+      "equity",
+      "macro",
+      "fixed_income"
+    ]
   },
   {
     "id": "fidelity",
@@ -730,7 +790,11 @@
     "last_validated_at": "2026-04-16T09:01:28.399090+08:00",
     "last_deep_analyzed_at": "2026-04-11T18:32:49.244440+00:00",
     "quality": "LOW",
-    "topics": "retail education"
+    "topics": "retail education",
+    "strategy_tags": [
+      "equity",
+      "multi_asset"
+    ]
   },
   {
     "id": "msci-research",
@@ -746,7 +810,12 @@
     "last_discovered_at": "2026-04-18T09:00:17.751809+08:00",
     "quality": "MEDIUM",
     "topics": "factor investing, ESG, climate, multi-asset, risk",
-    "last_deep_analyzed_at": "2026-04-12T13:48:51.331495+00:00"
+    "last_deep_analyzed_at": "2026-04-12T13:48:51.331495+00:00",
+    "strategy_tags": [
+      "quant",
+      "esg_climate",
+      "multi_asset"
+    ]
   },
   {
     "id": "carlyle",
@@ -760,7 +829,12 @@
     "notes": "403 blocks server access; PE/credit/macro, manual only",
     "last_deep_analyzed_at": "2026-04-13T01:02:56.306881+00:00",
     "quality": "MEDIUM",
-    "topics": "private equity, credit, real assets, macro"
+    "topics": "private equity, credit, real assets, macro",
+    "strategy_tags": [
+      "private_equity",
+      "real_assets",
+      "fixed_income"
+    ]
   },
   {
     "id": "research-affiliates",
@@ -840,7 +914,7 @@
       },
       {
         "url": "https://www.researchaffiliates.com/publications/articles/1103-2025-implications-for-the-future-some-like-it-hot",
-        "label": "2025’s Implications for the Future: “Some Like it Hot\"? By Jim Masturzo January 2026 A review of maj",
+        "label": "2025\u2019s Implications for the Future: \u201cSome Like it Hot\"? By Jim Masturzo January 2026 A review of maj",
         "path": "publications/articles/1103-2025-implications-for-the-future-some-like-it-hot"
       },
       {
@@ -878,7 +952,12 @@
     "last_validated_at": "2026-04-18T09:01:14.797511+08:00",
     "quality": "MEDIUM",
     "topics": "factor investing, smart beta, fundamental indexing",
-    "last_deep_analyzed_at": "2026-04-12T13:48:51.331495+00:00"
+    "last_deep_analyzed_at": "2026-04-12T13:48:51.331495+00:00",
+    "strategy_tags": [
+      "quant",
+      "equity",
+      "multi_asset"
+    ]
   },
   {
     "id": "blackrock-institute",
@@ -976,7 +1055,14 @@
     "last_validated_at": "2026-04-18T09:01:21.330983+08:00",
     "quality": "LOW",
     "topics": "macro, equity, multi-asset, fixed income",
-    "last_deep_analyzed_at": "2026-04-12T13:48:51.331495+00:00"
+    "last_deep_analyzed_at": "2026-04-12T13:48:51.331495+00:00",
+    "strategy_tags": [
+      "macro",
+      "equity",
+      "fixed_income",
+      "multi_asset",
+      "esg_climate"
+    ]
   },
   {
     "id": "schroders",
@@ -992,7 +1078,13 @@
     "last_discovered_at": "2026-04-18T09:00:17.177520+08:00",
     "last_deep_analyzed_at": "2026-04-13T01:02:56.306881+00:00",
     "quality": "MEDIUM",
-    "topics": "ESG, emerging markets, multi-asset, fixed income"
+    "topics": "ESG, emerging markets, multi-asset, fixed income",
+    "strategy_tags": [
+      "esg_climate",
+      "emerging_markets",
+      "multi_asset",
+      "fixed_income"
+    ]
   },
   {
     "id": "pgim",
@@ -1125,7 +1217,12 @@
     "quality": "HIGH",
     "topics": "fixed income, private credit, alternatives, ESG, multi-asset",
     "fit_score": 0.67,
-    "last_validated_at": "2026-04-18T09:01:42.873870+08:00"
+    "last_validated_at": "2026-04-18T09:01:42.873870+08:00",
+    "strategy_tags": [
+      "fixed_income",
+      "private_credit",
+      "multi_asset"
+    ]
   },
   {
     "id": "aberdeen",
@@ -1162,6 +1259,12 @@
     "quality": "HIGH",
     "topics": "hedge fund strategies, event-driven, credit, macro, fixed income",
     "last_deep_analyzed_at": "2026-04-18T01:04:14.693868+00:00",
-    "fit_score": 0.75
+    "fit_score": 0.75,
+    "strategy_tags": [
+      "event_driven",
+      "macro",
+      "fixed_income",
+      "multi_asset"
+    ]
   }
 ]
