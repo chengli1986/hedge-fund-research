@@ -98,7 +98,7 @@ Scorer weight optimization program using automated experiment loop:
 
 ## Tests
 
-197 tests passing, 1 failing (neuberger-berman seed without candidate entry) — unit, functional, and integration tests (15 nightly/live tests deselected by default via pytest.ini).
+196 tests passing, 2 failing (wellington `screen_failed` status not in VALID_STATUSES — test code bug; neuberger-berman seed without candidate entry — data gap) — unit, functional, and integration tests (15 nightly/live tests deselected by default via pytest.ini).
 
 ```bash
 python3 -m pytest tests/ -q
@@ -111,7 +111,7 @@ python3 -m pytest tests/ -q
 
 ## Data
 
-- `data/articles.jsonl` — 61 articles (metadata + summaries), gitignored
+- `data/articles.jsonl` — 74 articles (metadata + summaries), gitignored
 - `content/*.txt` — fetched article content files
 - `config/sources.json` — source configuration
 - `config/entrypoints.json` — verified entrypoint URLs per source
