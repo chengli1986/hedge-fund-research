@@ -4,7 +4,8 @@ import json
 from unittest.mock import MagicMock, patch
 import pytest
 from fetch_articles import (
-    article_id, parse_date, _validate_hostname, load_existing_ids, fetch_oaktree, fetch_wellington, DATA_FILE,
+    article_id, parse_date, _validate_hostname, load_existing_ids, fetch_oaktree, fetch_wellington,
+    fetch_troweprice, _is_date_eyebrow, DATA_FILE,
     load_entrypoints, get_source_url, record_quality_metrics, check_anomalies,
 )
 
@@ -390,3 +391,104 @@ class TestFetchWellington:
             articles = fetch_wellington(source)
         assert len(articles) == 1
         assert "wellington.com" in articles[0]["url"]
+
+
+class TestIsDateEyebrow:
+    def test_month_name_is_date(self):
+        assert _is_date_eyebrow("April 17, 2026") is True
+
+    def test_abbreviated_month_is_date(self):
+        assert _is_date_eyebrow("Jan 2026") is True
+
+    def test_digit_start_is_date(self):
+        assert _is_date_eyebrow("2026-04-17") is True
+
+    def test_category_is_not_date(self):
+        assert _is_date_eyebrow("Markets & Economy") is False
+
+    def test_empty_string_is_not_date(self):
+        assert _is_date_eyebrow("") is False
+
+
+class TestFetchTroweprice:
+    def test_parses_articles(self):
+        html = """
+        <html><body>
+        <div class="b-grid-item--12-col">
+          <a href="/personal-investing/insights/markets-and-economy/q2-outlook-2026">Read</a>
+          <span class="cmp-tile__heading">Q2 2026 Market Outlook</span>
+          <span class="cmp-tile__eyebrow">Markets &amp; Economy</span>
+          <span class="cmp-tile__eyebrow">April 17, 2026</span>
+        </div>
+        <div class="b-grid-item--12-col">
+          <a href="/personal-investing/insights/fixed-income/bond-outlook">Read</a>
+          <span class="cmp-tile__heading">Fixed Income Perspectives</span>
+          <span class="cmp-tile__eyebrow">Fixed Income</span>
+          <span class="cmp-tile__eyebrow">March 5, 2026</span>
+        </div>
+        </body></html>
+        """
+        source = {
+            "id": "troweprice",
+            "url": "https://www.troweprice.com/personal-investing/insights.html",
+            "max_articles": 10,
+            "expected_hostname": "troweprice.com",
+        }
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_troweprice(source)
+
+        assert len(articles) == 2
+        assert articles[0]["title"] == "Q2 2026 Market Outlook"
+        assert articles[0]["url"] == "https://www.troweprice.com/personal-investing/insights/markets-and-economy/q2-outlook-2026"
+        assert articles[0]["date"] == "2026-04-17"
+        assert articles[0]["category"] == "Markets & Economy"
+        assert articles[1]["title"] == "Fixed Income Perspectives"
+        assert articles[1]["date"] == "2026-03-05"
+
+    def test_skips_cards_without_insights_link(self):
+        html = """
+        <html><body>
+        <div class="b-grid-item--12-col">
+          <a href="/personal-investing/navigation-link">Nav Item</a>
+          <span class="cmp-tile__heading">Navigation</span>
+        </div>
+        <div class="b-grid-item--12-col">
+          <a href="/personal-investing/insights/equity/growth-2026">Read</a>
+          <span class="cmp-tile__heading">Growth Equity Outlook</span>
+          <span class="cmp-tile__eyebrow">Equity</span>
+          <span class="cmp-tile__eyebrow">April 10, 2026</span>
+        </div>
+        </body></html>
+        """
+        source = {
+            "id": "troweprice",
+            "url": "https://www.troweprice.com/personal-investing/insights.html",
+            "max_articles": 10,
+            "expected_hostname": "troweprice.com",
+        }
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_troweprice(source)
+
+        assert len(articles) == 1
+        assert articles[0]["title"] == "Growth Equity Outlook"
+
+    def test_respects_max_articles(self):
+        cards = "".join(
+            f'<div class="b-grid-item--12-col">'
+            f'<a href="/personal-investing/insights/article-{i}">Read</a>'
+            f'<span class="cmp-tile__heading">Article {i}</span>'
+            f'<span class="cmp-tile__eyebrow">April {i}, 2026</span>'
+            f'</div>'
+            for i in range(1, 6)
+        )
+        html = f"<html><body>{cards}</body></html>"
+        source = {
+            "id": "troweprice",
+            "url": "https://www.troweprice.com/personal-investing/insights.html",
+            "max_articles": 3,
+            "expected_hostname": "troweprice.com",
+        }
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_troweprice(source)
+
+        assert len(articles) == 3

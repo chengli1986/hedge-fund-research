@@ -574,6 +574,68 @@ def fetch_wellington(source: dict) -> list[dict]:
     return articles[:source.get("max_articles", 10)]
 
 
+_DATE_WORDS: frozenset[str] = frozenset([
+    "jan", "feb", "mar", "apr", "may", "jun",
+    "jul", "aug", "sep", "oct", "nov", "dec",
+    "january", "february", "march", "april", "june", "july",
+    "august", "september", "october", "november", "december",
+])
+
+
+def _is_date_eyebrow(text: str) -> bool:
+    """Return True if an eyebrow label looks like a date rather than a category."""
+    lower = text.lower()
+    return (
+        any(re.search(r"\b" + w + r"\b", lower) for w in _DATE_WORDS)
+        or bool(re.match(r"\d", text.strip()))
+    )
+
+
+def fetch_troweprice(source: dict) -> list[dict]:
+    """Fetch articles from T. Rowe Price (Playwright — CSR/AEM).
+
+    Structure: div.b-grid-item--12-col cards containing:
+      a[href*='/insights/'] (link), span.cmp-tile__heading (title),
+      span.cmp-tile__eyebrow (date/category — multiple; distinguished by _is_date_eyebrow)
+    """
+    base_url = "https://www.troweprice.com"
+    html = _get_playwright_page(source["url"], wait_selector="div.b-grid-item--12-col")
+    soup = BeautifulSoup(html, "html.parser")
+    expected_host = source.get("expected_hostname", "troweprice.com")
+
+    articles = []
+    for item in soup.select("div.b-grid-item--12-col"):
+        link_el = item.select_one("a[href*='/insights/']")
+        if not link_el:
+            continue
+        href = link_el.get("href", "")
+        if not href:
+            continue
+        url = urljoin(base_url, href)
+        if not _validate_hostname(url, expected_host):
+            continue
+
+        heading_el = item.select_one("span.cmp-tile__heading")
+        title = heading_el.get_text(strip=True) if heading_el else link_el.get_text(strip=True)
+        if not title:
+            continue
+
+        eyebrows = [el.get_text(strip=True) for el in item.select("span.cmp-tile__eyebrow") if el.get_text(strip=True)]
+        date_raw = next((e for e in eyebrows if _is_date_eyebrow(e)), "")
+        category = next((e for e in eyebrows if not _is_date_eyebrow(e)), "")
+        parsed_date = parse_date(date_raw) if date_raw else None
+
+        articles.append({
+            "title": title,
+            "category": category,
+            "url": url,
+            "date": parsed_date,
+            "date_raw": date_raw,
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
 # ---------------------------------------------------------------------------
 # RSS Fetchers
 # ---------------------------------------------------------------------------
