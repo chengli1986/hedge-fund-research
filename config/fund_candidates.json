@@ -774,7 +774,7 @@
   {
     "id": "fidelity",
     "name": "Fidelity Investments",
-    "status": "inaccessible",
+    "status": "rejected",
     "homepage_url": "https://www.fidelity.com",
     "research_url": "https://www.fidelity.com/viewpoints/personal-finance/how-to-start-investing",
     "rss_url": null,
