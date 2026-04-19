@@ -2,7 +2,7 @@
   "version": 1,
   "sources": {
     "pimco": {
-      "last_discovered_at": "2026-04-18T09:00:41.757994+08:00",
+      "last_discovered_at": "2026-04-19T09:01:01.176798+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -80,7 +80,7 @@
       "rejected_pages": []
     },
     "blackstone": {
-      "last_discovered_at": "2026-04-18T09:00:44.529420+08:00",
+      "last_discovered_at": "2026-04-19T09:01:02.962237+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -148,7 +148,7 @@
       "rejected_pages": []
     },
     "kkr": {
-      "last_discovered_at": "2026-04-18T09:00:47.075729+08:00",
+      "last_discovered_at": "2026-04-19T09:01:04.025696+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -219,7 +219,7 @@
       ]
     },
     "cambridge-associates": {
-      "last_discovered_at": "2026-04-18T09:00:50.163524+08:00",
+      "last_discovered_at": "2026-04-19T09:01:06.895069+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -263,7 +263,7 @@
       ]
     },
     "gsam": {
-      "last_discovered_at": "2026-04-18T09:00:56.182131+08:00",
+      "last_discovered_at": "2026-04-19T09:01:12.817041+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -297,7 +297,7 @@
       "rejected_pages": []
     },
     "wellington": {
-      "last_discovered_at": "2026-04-18T09:01:09.980521+08:00",
+      "last_discovered_at": "2026-04-19T09:01:46.368072+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -375,7 +375,7 @@
       ]
     },
     "troweprice": {
-      "last_discovered_at": "2026-04-18T09:01:13.715796+08:00",
+      "last_discovered_at": "2026-04-19T09:01:47.537259+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -443,7 +443,7 @@
       "rejected_pages": []
     },
     "research-affiliates": {
-      "last_discovered_at": "2026-04-18T09:01:14.797511+08:00",
+      "last_discovered_at": "2026-04-19T09:01:48.873166+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -477,7 +477,7 @@
       "rejected_pages": []
     },
     "blackrock-institute": {
-      "last_discovered_at": "2026-04-18T09:01:21.330983+08:00",
+      "last_discovered_at": "2026-04-19T09:01:56.296708+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -511,7 +511,7 @@
       "rejected_pages": []
     },
     "pgim": {
-      "last_discovered_at": "2026-04-18T09:01:42.873870+08:00",
+      "last_discovered_at": "2026-04-19T09:02:19.020103+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -543,6 +543,68 @@
         }
       ],
       "rejected_pages": []
+    },
+    "aberdeen": {
+      "last_discovered_at": "2026-04-19T09:02:22.948295+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://www.aberdeeninvestments.com/en-us/institutional/accessibility",
+          "final_score": 0.82,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 1.0,
+          "gate_penalty": 0.15,
+          "active": true
+        },
+        {
+          "url": "https://www.aberdeeninvestments.com/en-us/investor",
+          "final_score": 0.75,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.6667,
+          "gate_penalty": 0.0,
+          "active": false
+        },
+        {
+          "url": "https://www.aberdeeninvestments.com/en-us/institutional",
+          "final_score": 0.72,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.6667,
+          "gate_penalty": 0.15,
+          "active": false
+        }
+      ],
+      "rejected_pages": [
+        {
+          "url": "https://www.aberdeeninvestments.com/en-us/institutional/about-us",
+          "final_score": 0.37,
+          "domain_score": 1.0,
+          "path_score": 0.0,
+          "structure_score": 0.0,
+          "gate_penalty": 0.15,
+          "label": "bad"
+        },
+        {
+          "url": "https://www.aberdeeninvestments.com/en-us/institutional/contact-and-support",
+          "final_score": 0.37,
+          "domain_score": 1.0,
+          "path_score": 0.0,
+          "structure_score": 0.0,
+          "gate_penalty": 0.15,
+          "label": "bad"
+        },
+        {
+          "url": "https://www.aberdeeninvestments.com/en-us/institutional/cookie-policy",
+          "final_score": 0.46,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.0,
+          "gate_penalty": 0.45,
+          "label": "bad"
+        }
+      ]
     }
   }
 }
