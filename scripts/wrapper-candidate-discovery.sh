@@ -225,12 +225,16 @@ for c in sorted_candidates:
     style = f' style="background:{bg}"' if bg else ""
     q_color = {"HIGH": "#22863a", "MEDIUM": "#e36209", "LOW": "#cb2431"}.get(quality, "#959da5")
     status_pill = STATUS_PILL.get(c["status"], f'<span style="color:#959da5">{c["status"]}</span>')
+    tags_html = " ".join(
+        f'<span style="background:#ddf4ff;color:#0969da;border-radius:3px;padding:1px 5px;font-size:10px;margin-right:2px">{t}</span>'
+        for t in c.get("strategy_tags", [])
+    )
     rows += (f'<tr{style}><td style="padding:4px 6px;border-bottom:1px solid #eee">{c["name"]}</td>'
              f'<td style="padding:4px 6px;border-bottom:1px solid #eee;white-space:nowrap">{status_pill}</td>'
              f'<td style="padding:4px 6px;border-bottom:1px solid #eee;white-space:nowrap">{score_str}</td>'
              f'<td style="padding:4px 6px;border-bottom:1px solid #eee;color:{q_color};font-weight:bold;white-space:nowrap">{quality}</td>'
              f'<td style="padding:4px 6px;border-bottom:1px solid #eee;font-size:11px;color:#586069">{topics}</td>'
-             f'<td style="padding:4px 6px;border-bottom:1px solid #eee">{" ".join(f"<span style=\\"background:#ddf4ff;color:#0969da;border-radius:3px;padding:1px 5px;font-size:10px;margin-right:2px\\">{t}</span>" for t in c.get("strategy_tags", []))}</td>'
+             f'<td style="padding:4px 6px;border-bottom:1px solid #eee">{tags_html}</td>'
              f'<td style="padding:4px 6px;border-bottom:1px solid #eee;font-size:12px">{notes}</td></tr>\n')
 
 validated = sum(1 for c in candidates if c["status"] == "validated")

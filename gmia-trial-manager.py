@@ -490,7 +490,7 @@ def send_trial_email(trial: dict, passed: bool, total_articles: int) -> None:
   Quality: <strong>{trial.get('quality','?')}</strong> &nbsp;|&nbsp; Topics: {trial.get('topics','?')}
 </div>"""
 
-    html = f"""<html><body style="font-family:-apple-system,sans-serif;padding:20px;max-width:600px">
+    html_body = f"""<html><body style="font-family:-apple-system,sans-serif;padding:20px;max-width:600px">
 <h2 style="margin:0">{result_icon} GMIA Trial: {trial['name']}</h2>
 <p style="color:#586069;margin:4px 0">{now_bjt}</p>
 
@@ -523,7 +523,7 @@ def send_trial_email(trial: dict, passed: bool, total_articles: int) -> None:
     msg["From"] = smtp_user
     msg["To"] = mail_to
     msg["MIME-Version"] = "1.0"
-    msg.attach(MIMEText(html, "html"))
+    msg.attach(MIMEText(html_body, "html"))
 
     try:
         with smtplib.SMTP_SSL("smtp.163.com", 465, timeout=30) as s:
