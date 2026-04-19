@@ -441,6 +441,77 @@ def test_trial_passes_with_both_quantity_and_quality(trial_env, monkeypatch):
     assert state["history"][0]["avg_quality_score"] > 0
 
 
+# ── Queue priority: quality_score vs label fallback ─────────────────────────
+
+def _make_candidate(id_, quality, fit_score, quality_score=None):
+    c = {
+        "id": id_, "name": id_, "status": "validated",
+        "quality": quality, "fit_score": fit_score,
+        "research_url": f"https://{id_}.com/research",
+        "homepage_url": f"https://{id_}.com",
+    }
+    if quality_score is not None:
+        c["quality_score"] = quality_score
+    return c
+
+
+def test_queue_uses_quality_score_over_label(tmp_path, monkeypatch):
+    """When both candidates have quality_score, numeric value decides rank regardless of label."""
+    candidates = [
+        _make_candidate("alpha", "HIGH",   fit_score=0.80, quality_score=0.72),  # HIGH label but lower score
+        _make_candidate("beta",  "MEDIUM", fit_score=0.80, quality_score=0.92),  # MEDIUM label but higher score
+    ]
+    cands_file = tmp_path / "fund_candidates.json"
+    cands_file.write_text(json.dumps(candidates))
+    (tmp_path / "sources.json").write_text(json.dumps({"sources": []}))
+    monkeypatch.setattr(tm, "CANDIDATES_FILE", cands_file)
+    monkeypatch.setattr(tm, "SOURCES_FILE", tmp_path / "sources.json")
+
+    state = {"active_trials": [], "history": []}
+    queue = tm.get_trial_queue(state)
+
+    assert queue[0]["id"] == "beta", (
+        "beta (MEDIUM label, quality_score=0.92) should beat alpha (HIGH label, quality_score=0.72)"
+    )
+
+
+def test_queue_falls_back_to_label_when_no_quality_score(tmp_path, monkeypatch):
+    """Without quality_score, HIGH beats MEDIUM at equal fit."""
+    candidates = [
+        _make_candidate("alpha", "MEDIUM", fit_score=0.80),
+        _make_candidate("beta",  "HIGH",   fit_score=0.80),
+    ]
+    cands_file = tmp_path / "fund_candidates.json"
+    cands_file.write_text(json.dumps(candidates))
+    (tmp_path / "sources.json").write_text(json.dumps({"sources": []}))
+    monkeypatch.setattr(tm, "CANDIDATES_FILE", cands_file)
+    monkeypatch.setattr(tm, "SOURCES_FILE", tmp_path / "sources.json")
+
+    state = {"active_trials": [], "history": []}
+    queue = tm.get_trial_queue(state)
+
+    assert queue[0]["id"] == "beta", "HIGH label should rank above MEDIUM when no quality_score"
+
+
+def test_queue_composite_formula(tmp_path, monkeypatch):
+    """Priority = 0.6×quality + 0.4×fit, verified numerically."""
+    candidates = [
+        _make_candidate("low-fit-high-q",  "HIGH",   fit_score=0.50, quality_score=0.90),  # 0.6*0.9+0.4*0.5=0.74
+        _make_candidate("high-fit-med-q",  "MEDIUM", fit_score=0.95, quality_score=0.60),  # 0.6*0.6+0.4*0.95=0.74 tie → stable
+        _make_candidate("mid-both",        "HIGH",   fit_score=0.70, quality_score=0.70),  # 0.6*0.7+0.4*0.7=0.70
+    ]
+    cands_file = tmp_path / "fund_candidates.json"
+    cands_file.write_text(json.dumps(candidates))
+    (tmp_path / "sources.json").write_text(json.dumps({"sources": []}))
+    monkeypatch.setattr(tm, "CANDIDATES_FILE", cands_file)
+    monkeypatch.setattr(tm, "SOURCES_FILE", tmp_path / "sources.json")
+
+    state = {"active_trials": [], "history": []}
+    queue = tm.get_trial_queue(state)
+
+    assert queue[-1]["id"] == "mid-both", "mid-both (priority 0.70) should be last"
+
+
 # ── Task 3: quality sampling from fetcher results ───────────────────────────
 
 def test_sample_quality_uses_fetcher_links_when_trial_provided(monkeypatch):
