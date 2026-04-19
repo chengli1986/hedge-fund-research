@@ -853,7 +853,7 @@
   {
     "id": "research-affiliates",
     "name": "Research Affiliates",
-    "status": "inaccessible",
+    "status": "validated",
     "homepage_url": "https://www.researchaffiliates.com",
     "research_url": "https://www.researchaffiliates.com/insights/publications",
     "rss_url": null,
@@ -948,7 +948,7 @@
       }
     ],
     "last_discovered_at": "2026-04-19T09:00:12.906197+08:00",
-    "is_publicly_accessible": false,
+    "is_publicly_accessible": true,
     "has_article_index": false,
     "last_screened_at": "2026-04-19T09:00:30.970853+08:00",
     "screening_signals": {

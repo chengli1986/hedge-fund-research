@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fetch_articles import (
     article_id, parse_date, _validate_hostname, load_existing_ids, fetch_oaktree, fetch_wellington,
-    fetch_troweprice, _is_date_eyebrow, DATA_FILE,
+    fetch_troweprice, fetch_researchaffiliates, _is_date_eyebrow, DATA_FILE,
     load_entrypoints, get_source_url, record_quality_metrics, check_anomalies,
 )
 
@@ -497,3 +497,73 @@ class TestFetchTroweprice:
 
         assert len(articles) == 3
         assert articles[0]["title"] == "Article 1"
+
+
+# ---------------------------------------------------------------------------
+# fetch_researchaffiliates
+# ---------------------------------------------------------------------------
+
+class TestFetchResearchAffiliates:
+    SOURCE = {
+        "id": "research-affiliates",
+        "url": "https://www.researchaffiliates.com/insights/publications",
+        "max_articles": 10,
+        "expected_hostname": "researchaffiliates.com",
+    }
+
+    def test_parses_articles(self):
+        html = """
+        <html><body>
+        <a class="listing__item" href="/publications/articles/1111-when-will-ai-be-profitable">
+          <div class="item__date">APR 2026</div>
+          <div class="item__title">When Will AI Be Both Powerful and Profitable?</div>
+        </a>
+        <a class="listing__item" href="/publications/articles/1112-winning-long-game">
+          <div class="item__date">MAR 2026</div>
+          <div class="item__title">Winning the Long Game with RAFI</div>
+        </a>
+        </body></html>
+        """
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_researchaffiliates(self.SOURCE)
+
+        assert len(articles) == 2
+        assert articles[0]["title"] == "When Will AI Be Both Powerful and Profitable?"
+        assert articles[0]["url"] == "https://www.researchaffiliates.com/publications/articles/1111-when-will-ai-be-profitable"
+        assert articles[0]["date"] == "2026-04-01"
+        assert articles[0]["date_raw"] == "APR 2026"
+        assert articles[1]["title"] == "Winning the Long Game with RAFI"
+        assert articles[1]["date"] == "2026-03-01"
+
+    def test_skips_items_without_title(self):
+        html = """
+        <html><body>
+        <a class="listing__item" href="/publications/articles/1111-article">
+          <div class="item__date">APR 2026</div>
+          <div class="item__title">Valid Article</div>
+        </a>
+        <a class="listing__item" href="/publications/articles/1112-no-title">
+          <div class="item__date">MAR 2026</div>
+        </a>
+        </body></html>
+        """
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_researchaffiliates(self.SOURCE)
+
+        assert len(articles) == 1
+        assert articles[0]["title"] == "Valid Article"
+
+    def test_respects_max_articles(self):
+        items = "".join(
+            f'<a class="listing__item" href="/publications/articles/{i}-article">'
+            f'<div class="item__date">APR 2026</div>'
+            f'<div class="item__title">Article {i}</div>'
+            f'</a>'
+            for i in range(1, 8)
+        )
+        html = f"<html><body>{items}</body></html>"
+        source = {**self.SOURCE, "max_articles": 4}
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_researchaffiliates(source)
+
+        assert len(articles) == 4

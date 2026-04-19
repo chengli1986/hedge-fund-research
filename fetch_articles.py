@@ -156,6 +156,7 @@ def parse_date(date_str: str) -> Optional[str]:
         "%Y-%m-%d",        # 2026-03-18
         "%m/%d/%Y",        # 03/18/2026
         "%B %Y",           # March 2026
+        "%b %Y",           # Mar 2026 / Apr 2026
         "%d/%m/%Y",        # 18/03/2026
     ]:
         try:
@@ -637,6 +638,46 @@ def fetch_troweprice(source: dict) -> list[dict]:
         articles.append({
             "title": title,
             "category": category,
+            "url": url,
+            "date": parsed_date,
+            "date_raw": date_raw,
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
+def fetch_researchaffiliates(source: dict) -> list[dict]:
+    """Fetch articles from Research Affiliates (Playwright — CSR).
+
+    Structure: a.listing__item cards containing:
+      div.item__date  ("APR 2026" format, title-cased before parse),
+      div.item__title (article title; href on the <a> is the article URL)
+    """
+    html = _get_playwright_page(source["url"], wait_selector="a.listing__item")
+    soup = BeautifulSoup(html, "html.parser")
+    expected_host = source.get("expected_hostname", "researchaffiliates.com")
+
+    articles = []
+    for item in soup.select("a.listing__item"):
+        href = item.get("href", "")
+        if not href:
+            continue
+        url = urljoin("https://www.researchaffiliates.com", href)
+        if not _validate_hostname(url, expected_host):
+            continue
+
+        title_el = item.select_one(".item__title")
+        title = title_el.get_text(strip=True) if title_el else ""
+        if not title:
+            continue
+
+        date_el = item.select_one(".item__date")
+        date_raw = date_el.get_text(strip=True) if date_el else ""
+        # "APR 2026" → "Apr 2026" so parse_date's "%b %Y" format matches
+        parsed_date = parse_date(date_raw.title()) if date_raw else None
+
+        articles.append({
+            "title": title,
             "url": url,
             "date": parsed_date,
             "date_raw": date_raw,
