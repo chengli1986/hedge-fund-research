@@ -505,7 +505,14 @@ def get_trial_queue(state: dict) -> list[dict]:
             continue
         queue.append(c)
 
-    return sorted(queue, key=lambda c: -(c.get("fit_score") or 0))
+    quality_score = {"HIGH": 1.0, "MEDIUM": 0.5}
+
+    def priority(c: dict) -> float:
+        q = quality_score.get(c.get("quality", ""), 0.0)
+        f = c.get("fit_score") or 0.0
+        return 0.6 * q + 0.4 * f
+
+    return sorted(queue, key=lambda c: -priority(c))
 
 
 def existing_source_ids() -> set[str]:
