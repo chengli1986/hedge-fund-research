@@ -30,7 +30,6 @@ from bs4 import BeautifulSoup
 
 BJT = timezone(timedelta(hours=8))
 BASE_DIR = Path(__file__).resolve().parent
-SEED_FILE = BASE_DIR / "config" / "fund_seeds.json"
 CANDIDATES_FILE = BASE_DIR / "config" / "fund_candidates.json"
 LOG_FILE = BASE_DIR / "logs" / "discover_fund_sites.log"
 
@@ -158,24 +157,18 @@ def detect_rss(html: str, base_url: str) -> list[str]:
 # Data I/O
 # ---------------------------------------------------------------------------
 
-def load_seeds(fund_id: Optional[str] = None) -> list[dict]:
-    """Load seed funds from fund_seeds.json.
-
-    Args:
-        fund_id: If provided, return only the seed with this ID.
-
-    Returns:
-        List of seed dicts.
-    """
-    seeds = json.loads(SEED_FILE.read_text(encoding="utf-8"))
-    if fund_id:
-        seeds = [s for s in seeds if s["id"] == fund_id]
-    return seeds
-
-
 def load_candidates() -> list[dict]:
     """Load candidate state from fund_candidates.json."""
     return json.loads(CANDIDATES_FILE.read_text(encoding="utf-8"))
+
+
+def load_seed_candidates(fund_id: Optional[str] = None) -> list[dict]:
+    """Load candidates with status='seed' (not yet discovered)."""
+    candidates = load_candidates()
+    seeds = [c for c in candidates if c.get("status") == "seed"]
+    if fund_id:
+        seeds = [s for s in seeds if s["id"] == fund_id]
+    return seeds
 
 
 def save_candidates(candidates: list[dict]) -> None:
@@ -258,7 +251,7 @@ def discover_one(seed: dict) -> dict:
         Dict with discovery results: id, homepage_url, research_links, rss_feeds, error.
     """
     fund_id = seed["id"]
-    homepage = seed["homepage"]
+    homepage = seed.get("homepage_url") or seed.get("homepage", "")
     parsed = urlparse(homepage)
     domain = parsed.hostname or ""
     allowed_domains = [domain]
@@ -313,9 +306,10 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    seeds = load_seeds(fund_id=args.fund)
+    seeds = load_seed_candidates(fund_id=args.fund)
     if not seeds:
-        log.error("No seeds found%s", f" for fund '{args.fund}'" if args.fund else "")
+        log.info("No seed candidates found%s — all seeds already discovered",
+                 f" for fund '{args.fund}'" if args.fund else "")
         return
 
     candidates = load_candidates()
