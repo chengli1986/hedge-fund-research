@@ -1288,13 +1288,13 @@
     "source": "manual"
   },
   {
-    "id": "neuberger-berman",
-    "name": "Neuberger Berman",
+    "id": "morganstanley-im",
+    "name": "Morgan Stanley Investment Management",
     "status": "seed",
-    "homepage_url": "https://www.nb.com",
+    "homepage_url": "https://www.morganstanley.com/im/en-us/institutional-investor/insights",
     "research_url": null,
     "rss_url": null,
-    "official_domain": "www.nb.com",
+    "official_domain": "www.morganstanley.com",
     "discovery_method": "manual",
     "last_discovered_at": null,
     "last_screened_at": null,
@@ -1303,7 +1303,7 @@
     "is_publicly_accessible": null,
     "has_article_index": null,
     "fit_score": null,
-    "notes": "Multi-asset manager, public insights page covers macro, fixed income, alternatives, hedge fund perspectives",
+    "notes": "MSIM institutional insights: hedge fund outlooks, equity, multi-asset",
     "research_links": [],
     "screening_signals": {},
     "screening_reason": null,
@@ -1311,9 +1311,61 @@
     "quality": null,
     "topics": null,
     "strategy_tags": [
+      "macro",
+      "equity",
+      "multi_asset",
+      "private_equity"
+    ],
+    "source": "manual"
+  },
+  {
+    "id": "neuberger-berman",
+    "name": "Neuberger Berman",
+    "status": "inaccessible",
+    "homepage_url": "https://www.nb.com",
+    "research_url": "https://www.nb.com/en/global/insights",
+    "rss_url": null,
+    "official_domain": "www.nb.com",
+    "discovery_method": "manual",
+    "last_discovered_at": null,
+    "last_screened_at": null,
+    "last_validated_at": null,
+    "recent_update_at": null,
+    "is_publicly_accessible": true,
+    "has_article_index": true,
+    "fit_score": 0.88,
+    "notes": "RECOMMEND: CIO weekly perspectives, fills multi-asset gap",
+    "research_links": [
+      {
+        "url": "https://www.nb.com/en/global/insights",
+        "label": "Insights",
+        "path": "en/global/insights"
+      },
+      {
+        "url": "https://www.nb.com/en/global/aac/asset-allocation-committee-outlook-1q-2026",
+        "label": "Asset Allocation Committee Outlook 1Q 2026",
+        "path": "en/global/aac/asset-allocation-committee-outlook-1q-2026"
+      }
+    ],
+    "screening_signals": {
+      "status_code": 429,
+      "has_password_input": false,
+      "login_marker_count": 0,
+      "article_tags": 0,
+      "time_tags": 0,
+      "date_patterns": 0,
+      "h2_tags": 0,
+      "article_signals": 0
+    },
+    "screening_reason": "429 rate-limited; content confirmed via search (CIO Weekly, quarterly AAC outlook)",
+    "last_deep_analyzed_at": "2026-04-19T08:50:00.000000+00:00",
+    "quality": "HIGH",
+    "topics": "macro, multi-asset, fixed income, real assets, private equity",
+    "strategy_tags": [
       "multi_asset",
       "fixed_income",
-      "private_credit"
+      "private_credit",
+      "real_assets"
     ],
     "source": "manual"
   }
