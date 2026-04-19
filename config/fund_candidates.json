@@ -460,7 +460,7 @@
   {
     "id": "gsam",
     "name": "Goldman Sachs Asset Management",
-    "status": "inaccessible",
+    "status": "validated",
     "homepage_url": "https://am.gs.com",
     "research_url": "https://am.gs.com/en-us/advisors/insights/list",
     "rss_url": null,

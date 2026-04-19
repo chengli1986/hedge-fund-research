@@ -724,6 +724,301 @@ def fetch_pimco(source: dict) -> list[dict]:
     return articles[:source.get("max_articles", 10)]
 
 
+def fetch_blackstone(source: dict) -> list[dict]:
+    """Fetch articles from Blackstone (Playwright — CSR).
+
+    Structure: article.bx-article-card containing:
+      h4.bx-article-title > a (title + href),
+      time[datetime] or p.bx-article-post_date (date "April 16, 2026")
+    """
+    base_url = "https://www.blackstone.com"
+    html = _get_playwright_page(source["url"], wait_selector="article.bx-article-card")
+    soup = BeautifulSoup(html, "html.parser")
+    expected_host = source.get("expected_hostname", "blackstone.com")
+
+    articles = []
+    for card in soup.select("article.bx-article-card"):
+        link_el = card.select_one("h4.bx-article-title a") or card.select_one("a")
+        if not link_el:
+            continue
+        href = link_el.get("href", "")
+        if not href:
+            continue
+        url = urljoin(base_url, href)
+        if not _validate_hostname(url, expected_host):
+            continue
+
+        title = link_el.get_text(strip=True)
+        if not title:
+            continue
+
+        time_el = card.select_one("time[datetime]")
+        date_raw = ""
+        parsed_date = None
+        if time_el:
+            dt_attr = time_el.get("datetime", "")
+            date_raw = time_el.get_text(strip=True) or dt_attr
+            parsed_date = parse_date(dt_attr) or parse_date(date_raw)
+        else:
+            date_el = card.select_one("p.bx-article-post_date")
+            if date_el:
+                date_raw = date_el.get_text(strip=True)
+                parsed_date = parse_date(date_raw)
+
+        articles.append({
+            "title": title,
+            "url": url,
+            "date": parsed_date,
+            "date_raw": date_raw,
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
+def _fetch_article_date_jsonld(url: str) -> Optional[str]:
+    """Fetch a single article page and extract datePublished from JSON-LD script."""
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=15)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, "html.parser")
+        for script in soup.select('script[type="application/ld+json"]'):
+            try:
+                data = json.loads(script.string or "")
+                if isinstance(data, list):
+                    for item in data:
+                        if isinstance(item, dict) and item.get("datePublished"):
+                            return parse_date(item["datePublished"][:10])
+                elif isinstance(data, dict) and data.get("datePublished"):
+                    return parse_date(data["datePublished"][:10])
+            except (json.JSONDecodeError, ValueError):
+                continue
+    except Exception:
+        pass
+    return None
+
+
+def fetch_gsam(source: dict) -> list[dict]:
+    """Fetch articles from Goldman Sachs Asset Management (Playwright — React/Next.js).
+
+    List page: [data-testid="insight-card"] cards inside <a> tags.
+    Dates not on list page — fetched from individual article pages via JSON-LD.
+    """
+    base_url = "https://am.gs.com"
+    html = _get_playwright_page(source["url"], wait_selector='[data-testid="insight-card"]')
+    soup = BeautifulSoup(html, "html.parser")
+    expected_host = source.get("expected_hostname", "am.gs.com")
+
+    articles = []
+    for card in soup.select('[data-testid="insight-card"]'):
+        # Card is wrapped in or contains an <a>
+        link_el = card.find_parent("a") or card.select_one("a")
+        if not link_el:
+            continue
+        href = link_el.get("href", "")
+        if not href:
+            continue
+        url = urljoin(base_url, href) if href.startswith("/") else href
+        if not _validate_hostname(url, expected_host):
+            continue
+
+        title_el = card.select_one('[data-gs-uitk-component="card-title"]')
+        title = title_el.get_text(strip=True) if title_el else ""
+        if not title:
+            continue
+
+        # Dates are only available on individual article pages via JSON-LD
+        parsed_date = _fetch_article_date_jsonld(url)
+
+        articles.append({
+            "title": title,
+            "url": url,
+            "date": parsed_date,
+            "date_raw": "",
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
+def fetch_amundi(source: dict) -> list[dict]:
+    """Fetch articles from Amundi Research Center (Playwright — SSR/CSR hybrid).
+
+    Structure: article.article--teaser containing:
+      h2 (title), a.card.card-taxo-teaser[href] (link, relative),
+      .card-date time[datetime] (date "DD/MM/YYYY" or ISO in datetime attr)
+    """
+    base_url = "https://research-center.amundi.com"
+    html = _get_playwright_page(source["url"], wait_selector="article.article--teaser")
+    soup = BeautifulSoup(html, "html.parser")
+    expected_host = source.get("expected_hostname", "amundi.com")
+
+    articles = []
+    for item in soup.select("article.article--teaser"):
+        link_el = item.select_one("a.card.card-taxo-teaser") or item.select_one("a[href]")
+        if not link_el:
+            continue
+        href = link_el.get("href", "")
+        if not href:
+            continue
+        url = urljoin(base_url, href)
+        if not _validate_hostname(url, expected_host):
+            continue
+
+        title_el = item.select_one("h2")
+        title = title_el.get_text(strip=True) if title_el else ""
+        if not title:
+            continue
+
+        time_el = item.select_one(".card-date time[datetime]") or item.select_one("time[datetime]")
+        date_raw = ""
+        parsed_date = None
+        if time_el:
+            dt_attr = time_el.get("datetime", "")
+            date_raw = time_el.get_text(strip=True) or dt_attr
+            # datetime attr may be ISO "2026-04-17", text may be "17/04/2026"
+            parsed_date = parse_date(dt_attr) or parse_date(date_raw)
+
+        articles.append({
+            "title": title,
+            "url": url,
+            "date": parsed_date,
+            "date_raw": date_raw,
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
+def fetch_jpmam(source: dict) -> list[dict]:
+    """Fetch articles from J.P. Morgan Asset Management via AEM JSON API.
+
+    API: /_jcr_content/root/responsivegrid/jpm_am_editorial_lan.model.json
+    Returns pages[].{title, url (relative), displayDate ("MM/DD/YYYY")}
+    """
+    api_url = (
+        "https://am.jpmorgan.com/content/jpm-am-aem/americas/us/en/adv/insights"
+        "/market-insights/market-updates/on-the-minds-of-investors"
+        "/_jcr_content/root/responsivegrid/jpm_am_editorial_lan.model.json"
+    )
+    base_url = "https://am.jpmorgan.com"
+    expected_host = source.get("expected_hostname", "am.jpmorgan.com")
+
+    resp = requests.get(api_url, headers=HEADERS, timeout=30)
+    resp.raise_for_status()
+    data = resp.json()
+
+    articles = []
+    for page in data.get("pages", []):
+        title = page.get("title", "").strip()
+        if not title:
+            continue
+        rel_url = page.get("url", "")
+        if not rel_url:
+            continue
+        url = urljoin(base_url, rel_url) if rel_url.startswith("/") else rel_url
+        if not _validate_hostname(url, expected_host):
+            continue
+
+        date_raw = page.get("displayDate", "")
+        parsed_date = parse_date(date_raw) if date_raw else None
+
+        articles.append({
+            "title": title,
+            "url": url,
+            "date": parsed_date,
+            "date_raw": date_raw,
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
+def fetch_pgim(source: dict) -> list[dict]:
+    """Fetch articles from PGIM via Newsroom (Playwright — CSR).
+
+    Insights page has attestation gate (div[inert]); newsroom is open.
+    Structure: .cmp-list__item containing:
+      a.cmp-list__item-link (title + href),
+      .cmp-list__item-date ("Month DD, YYYY")
+    """
+    newsroom_url = "https://www.pgim.com/us/en/institutional/about/newsroom"
+    base_url = "https://www.pgim.com"
+    html = _get_playwright_page(newsroom_url, wait_selector=".cmp-list__item")
+    soup = BeautifulSoup(html, "html.parser")
+    expected_host = source.get("expected_hostname", "pgim.com")
+
+    articles = []
+    for item in soup.select(".cmp-list__item"):
+        link_el = item.select_one("a.cmp-list__item-link")
+        if not link_el:
+            continue
+        href = link_el.get("href", "")
+        if not href:
+            continue
+        url = urljoin(base_url, href)
+        if not _validate_hostname(url, expected_host):
+            continue
+
+        title = link_el.get_text(strip=True)
+        if not title:
+            continue
+
+        date_el = item.select_one(".cmp-list__item-date")
+        date_raw = date_el.get_text(strip=True) if date_el else ""
+        parsed_date = parse_date(date_raw) if date_raw else None
+
+        articles.append({
+            "title": title,
+            "url": url,
+            "date": parsed_date,
+            "date_raw": date_raw,
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
+def fetch_aberdeen(source: dict) -> list[dict]:
+    """Fetch articles from Aberdeen Investments (Playwright — Next.js CSR).
+
+    Structure: <a> card containing:
+      h5[class*='ArticleCard_article-card__title'] (title),
+      time.ms-auto ("Apr 15, 2026" → %b %d, %Y)
+    Locate card by finding parent <a> of each time.ms-auto element.
+    """
+    base_url = "https://www.aberdeeninvestments.com"
+    html = _get_playwright_page(source["url"], wait_selector="time.ms-auto")
+    soup = BeautifulSoup(html, "html.parser")
+    expected_host = source.get("expected_hostname", "aberdeeninvestments.com")
+
+    articles = []
+    seen_urls: set[str] = set()
+    for time_el in soup.select("time.ms-auto"):
+        card_link = time_el.find_parent("a")
+        if not card_link:
+            continue
+        href = card_link.get("href", "")
+        if not href:
+            continue
+        url = urljoin(base_url, href)
+        if not _validate_hostname(url, expected_host) or url in seen_urls:
+            continue
+        seen_urls.add(url)
+
+        title_el = card_link.select_one("h5")
+        title = title_el.get_text(strip=True) if title_el else ""
+        if not title:
+            continue
+
+        date_raw = time_el.get_text(strip=True)
+        parsed_date = parse_date(date_raw) if date_raw else None
+
+        articles.append({
+            "title": title,
+            "url": url,
+            "date": parsed_date,
+            "date_raw": date_raw,
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
 # ---------------------------------------------------------------------------
 # RSS Fetchers
 # ---------------------------------------------------------------------------
@@ -806,6 +1101,12 @@ FETCHERS = {
     "gmo": fetch_gmo,
     "oaktree": fetch_oaktree,
     "ark-invest": fetch_ark_invest,
+    "blackstone": fetch_blackstone,
+    "gsam": fetch_gsam,
+    "amundi": fetch_amundi,
+    "jpmam": fetch_jpmam,
+    "pgim": fetch_pgim,
+    "aberdeen": fetch_aberdeen,
 }
 
 

@@ -7,6 +7,8 @@ from fetch_articles import (
     article_id, parse_date, _validate_hostname, load_existing_ids, fetch_oaktree, fetch_wellington,
     fetch_troweprice, fetch_researchaffiliates, fetch_pimco, _is_date_eyebrow, DATA_FILE,
     load_entrypoints, get_source_url, record_quality_metrics, check_anomalies,
+    fetch_blackstone, fetch_gsam, _fetch_article_date_jsonld,
+    fetch_amundi, fetch_jpmam, fetch_pgim, fetch_aberdeen,
 )
 
 
@@ -635,3 +637,467 @@ class TestFetchPimco:
 
         assert len(articles) == 5
         assert articles[0]["title"] == "Article 1"
+
+
+# ---------------------------------------------------------------------------
+# fetch_blackstone
+# ---------------------------------------------------------------------------
+
+class TestFetchBlackstone:
+    SOURCE = {
+        "url": "https://www.blackstone.com/insights/",
+        "max_articles": 10,
+        "expected_hostname": "blackstone.com",
+    }
+
+    def _card(self, title: str, href: str, date: str) -> str:
+        return (
+            f'<article class="bx-article-card">'
+            f'<h4 class="bx-article-title"><a href="{href}">{title}</a></h4>'
+            f'<time datetime="{date}">{date}</time>'
+            f'</article>'
+        )
+
+    def test_parses_articles(self):
+        html = "<html><body>" + \
+            self._card("Private Credit: Myth vs. Fact",
+                       "/insights/article/private-credit-myth-vs-fact/",
+                       "April 16, 2026") + \
+            self._card("Real Estate Enters the Next Phase",
+                       "/insights/article/real-estate-next-phase/",
+                       "March 31, 2026") + \
+            "</body></html>"
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_blackstone(self.SOURCE)
+
+        assert len(articles) == 2
+        assert articles[0]["title"] == "Private Credit: Myth vs. Fact"
+        assert articles[0]["url"] == "https://www.blackstone.com/insights/article/private-credit-myth-vs-fact/"
+        assert articles[0]["date"] == "2026-04-16"
+        assert articles[1]["date"] == "2026-03-31"
+
+    def test_skips_cards_without_link(self):
+        html = (
+            "<html><body>"
+            '<article class="bx-article-card"><h4 class="bx-article-title"></h4></article>'
+            + self._card("Valid Article", "/insights/valid/", "April 1, 2026")
+            + "</body></html>"
+        )
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_blackstone(self.SOURCE)
+
+        assert len(articles) == 1
+        assert articles[0]["title"] == "Valid Article"
+
+    def test_respects_max_articles(self):
+        cards = "".join(
+            self._card(f"Article {i}", f"/insights/article-{i}/", f"April {i}, 2026")
+            for i in range(1, 8)
+        )
+        html = f"<html><body>{cards}</body></html>"
+        source = {**self.SOURCE, "max_articles": 4}
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_blackstone(source)
+
+        assert len(articles) == 4
+
+
+# ---------------------------------------------------------------------------
+# _fetch_article_date_jsonld
+# ---------------------------------------------------------------------------
+
+class TestFetchArticleDateJsonld:
+    def _mock_response(self, body: str, status: int = 200):
+        resp = MagicMock()
+        resp.status_code = status
+        resp.text = body
+        resp.raise_for_status.return_value = None
+        return resp
+
+    def test_extracts_date_from_jsonld_object(self):
+        html = (
+            '<html><head>'
+            '<script type="application/ld+json">'
+            '{"@type": "Article", "datePublished": "2026-04-15T00:00:00Z"}'
+            '</script>'
+            '</head></html>'
+        )
+        with patch("fetch_articles.requests.get", return_value=self._mock_response(html)):
+            result = _fetch_article_date_jsonld("https://am.gs.com/en-us/insights/test")
+        assert result == "2026-04-15"
+
+    def test_extracts_date_from_jsonld_list(self):
+        html = (
+            '<html><head>'
+            '<script type="application/ld+json">'
+            '[{"@type": "BreadcrumbList"}, {"@type": "Article", "datePublished": "2026-03-20"}]'
+            '</script>'
+            '</head></html>'
+        )
+        with patch("fetch_articles.requests.get", return_value=self._mock_response(html)):
+            result = _fetch_article_date_jsonld("https://am.gs.com/en-us/insights/test")
+        assert result == "2026-03-20"
+
+    def test_returns_none_when_no_jsonld(self):
+        html = "<html><head></head><body>No JSON-LD here</body></html>"
+        with patch("fetch_articles.requests.get", return_value=self._mock_response(html)):
+            result = _fetch_article_date_jsonld("https://am.gs.com/en-us/insights/test")
+        assert result is None
+
+    def test_returns_none_on_request_failure(self):
+        with patch("fetch_articles.requests.get", side_effect=Exception("network error")):
+            result = _fetch_article_date_jsonld("https://am.gs.com/en-us/insights/test")
+        assert result is None
+
+
+# ---------------------------------------------------------------------------
+# fetch_gsam
+# ---------------------------------------------------------------------------
+
+class TestFetchGsam:
+    SOURCE = {
+        "url": "https://am.gs.com/en-us/advisors/insights/list",
+        "max_articles": 10,
+        "expected_hostname": "am.gs.com",
+    }
+
+    def _card_html(self, title: str, href: str) -> str:
+        return (
+            f'<a href="{href}">'
+            f'<div data-testid="insight-card">'
+            f'<span data-gs-uitk-component="card-title">{title}</span>'
+            f'</div>'
+            f'</a>'
+        )
+
+    def test_parses_articles(self):
+        html = "<html><body>" + \
+            self._card_html("Market Brief: Middle East Conflict",
+                            "/en-us/advisors/insights/article/2026/market-brief") + \
+            self._card_html("Investment Outlook 2026",
+                            "/en-us/advisors/insights/article/investment-outlook") + \
+            "</body></html>"
+
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            with patch("fetch_articles._fetch_article_date_jsonld", return_value="2026-04-15"):
+                articles = fetch_gsam(self.SOURCE)
+
+        assert len(articles) == 2
+        assert articles[0]["title"] == "Market Brief: Middle East Conflict"
+        assert articles[0]["url"] == "https://am.gs.com/en-us/advisors/insights/article/2026/market-brief"
+        assert articles[0]["date"] == "2026-04-15"
+
+    def test_skips_cards_without_link(self):
+        html = (
+            "<html><body>"
+            '<div data-testid="insight-card"><span data-gs-uitk-component="card-title">Orphaned</span></div>'
+            + self._card_html("Valid Article", "/en-us/advisors/insights/article/valid")
+            + "</body></html>"
+        )
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            with patch("fetch_articles._fetch_article_date_jsonld", return_value=None):
+                articles = fetch_gsam(self.SOURCE)
+
+        assert len(articles) == 1
+        assert articles[0]["title"] == "Valid Article"
+
+    def test_respects_max_articles(self):
+        cards = "".join(
+            self._card_html(f"Article {i}", f"/en-us/advisors/insights/article/test-{i}")
+            for i in range(1, 8)
+        )
+        html = f"<html><body>{cards}</body></html>"
+        source = {**self.SOURCE, "max_articles": 5}
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            with patch("fetch_articles._fetch_article_date_jsonld", return_value=None):
+                articles = fetch_gsam(source)
+
+        assert len(articles) == 5
+
+
+# ---------------------------------------------------------------------------
+# fetch_amundi
+# ---------------------------------------------------------------------------
+
+class TestFetchAmundi:
+    SOURCE = {
+        "url": "https://research-center.amundi.com",
+        "max_articles": 10,
+        "expected_hostname": "amundi.com",
+    }
+
+    def _card(self, title: str, href: str, date: str) -> str:
+        return (
+            f'<article class="article--teaser">'
+            f'<a class="card card-taxo-teaser" href="{href}">'
+            f'<h2>{title}</h2>'
+            f'<div class="card-date"><time datetime="{date}">{date}</time></div>'
+            f'</a>'
+            f'</article>'
+        )
+
+    def test_parses_articles(self):
+        html = "<html><body>" + \
+            self._card("Global Investment Views — April 2026",
+                       "/en/research-center/investment-views/global-investment-views-april-2026",
+                       "17/04/2026") + \
+            self._card("ESG Thematic Review Q1 2026",
+                       "/en/research-center/esg/esg-thematic-review-q1-2026",
+                       "10/04/2026") + \
+            "</body></html>"
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_amundi(self.SOURCE)
+
+        assert len(articles) == 2
+        assert articles[0]["title"] == "Global Investment Views — April 2026"
+        assert articles[0]["url"] == "https://research-center.amundi.com/en/research-center/investment-views/global-investment-views-april-2026"
+        assert articles[0]["date"] == "2026-04-17"
+        assert articles[0]["date_raw"] == "17/04/2026"
+
+    def test_skips_items_without_link(self):
+        html = (
+            "<html><body>"
+            '<article class="article--teaser"><h2>No Link</h2></article>'
+            + self._card("Valid Article", "/en/research-center/valid", "01/04/2026")
+            + "</body></html>"
+        )
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_amundi(self.SOURCE)
+
+        assert len(articles) == 1
+        assert articles[0]["title"] == "Valid Article"
+
+    def test_respects_max_articles(self):
+        cards = "".join(
+            self._card(f"Article {i}", f"/en/research-center/article-{i}", f"{i:02d}/04/2026")
+            for i in range(1, 8)
+        )
+        html = f"<html><body>{cards}</body></html>"
+        source = {**self.SOURCE, "max_articles": 5}
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_amundi(source)
+
+        assert len(articles) == 5
+
+
+# ---------------------------------------------------------------------------
+# fetch_jpmam
+# ---------------------------------------------------------------------------
+
+class TestFetchJpmam:
+    SOURCE = {
+        "url": "https://am.jpmorgan.com/us/en/asset-management/adv/insights/market-insights/market-updates/",
+        "max_articles": 10,
+        "expected_hostname": "am.jpmorgan.com",
+    }
+
+    def _api_response(self, pages: list) -> dict:
+        return {"pages": pages}
+
+    def test_parses_articles(self):
+        api_data = self._api_response([
+            {
+                "title": "On the Minds of Investors: Tariff update",
+                "url": "/us/en/asset-management/adv/insights/market-insights/market-updates/on-the-minds-of-investors/tariff-update.html",
+                "displayDate": "04/17/2026",
+            },
+            {
+                "title": "Eye on the Market Outlook 2026",
+                "url": "/us/en/asset-management/adv/insights/market-insights/market-updates/outlook-2026.html",
+                "displayDate": "01/06/2026",
+            },
+        ])
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = api_data
+        mock_resp.raise_for_status.return_value = None
+
+        with patch("fetch_articles.requests.get", return_value=mock_resp):
+            articles = fetch_jpmam(self.SOURCE)
+
+        assert len(articles) == 2
+        assert articles[0]["title"] == "On the Minds of Investors: Tariff update"
+        assert articles[0]["url"] == "https://am.jpmorgan.com/us/en/asset-management/adv/insights/market-insights/market-updates/on-the-minds-of-investors/tariff-update.html"
+        assert articles[0]["date"] == "2026-04-17"
+        assert articles[0]["date_raw"] == "04/17/2026"
+        assert articles[1]["date"] == "2026-01-06"
+
+    def test_skips_pages_without_title(self):
+        api_data = self._api_response([
+            {"title": "", "url": "/some/path.html", "displayDate": "04/01/2026"},
+            {"title": "Valid Article", "url": "/valid/path.html", "displayDate": "04/15/2026"},
+        ])
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = api_data
+        mock_resp.raise_for_status.return_value = None
+
+        with patch("fetch_articles.requests.get", return_value=mock_resp):
+            articles = fetch_jpmam(self.SOURCE)
+
+        assert len(articles) == 1
+        assert articles[0]["title"] == "Valid Article"
+
+    def test_respects_max_articles(self):
+        api_data = self._api_response([
+            {"title": f"Article {i}", "url": f"/path/article-{i}.html", "displayDate": f"04/{i:02d}/2026"}
+            for i in range(1, 8)
+        ])
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = api_data
+        mock_resp.raise_for_status.return_value = None
+
+        source = {**self.SOURCE, "max_articles": 5}
+        with patch("fetch_articles.requests.get", return_value=mock_resp):
+            articles = fetch_jpmam(source)
+
+        assert len(articles) == 5
+
+
+# ---------------------------------------------------------------------------
+# fetch_pgim
+# ---------------------------------------------------------------------------
+
+class TestFetchPgim:
+    SOURCE = {
+        "url": "https://www.pgim.com/us/en/institutional/insights",
+        "max_articles": 10,
+        "expected_hostname": "pgim.com",
+    }
+
+    def _item(self, title: str, href: str, date: str) -> str:
+        return (
+            f'<li class="cmp-list__item">'
+            f'<a class="cmp-list__item-link" href="{href}">{title}</a>'
+            f'<span class="cmp-list__item-date">{date}</span>'
+            f'</li>'
+        )
+
+    def test_parses_articles(self):
+        html = "<html><body><ul>" + \
+            self._item("PGIM Real Estate Buys €400M Logistics Portfolio",
+                       "/us/en/institutional/about/newsroom/2026/pgim-real-estate-logistics",
+                       "April 16, 2026") + \
+            self._item("PGIM Fixed Income: Credit Outlook Q2 2026",
+                       "/us/en/institutional/about/newsroom/2026/fixed-income-credit-outlook",
+                       "March 25, 2026") + \
+            "</ul></body></html>"
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_pgim(self.SOURCE)
+
+        assert len(articles) == 2
+        assert articles[0]["title"] == "PGIM Real Estate Buys €400M Logistics Portfolio"
+        assert articles[0]["url"] == "https://www.pgim.com/us/en/institutional/about/newsroom/2026/pgim-real-estate-logistics"
+        assert articles[0]["date"] == "2026-04-16"
+        assert articles[0]["date_raw"] == "April 16, 2026"
+
+    def test_skips_items_without_link(self):
+        html = (
+            "<html><body><ul>"
+            '<li class="cmp-list__item"><span class="cmp-list__item-date">April 1, 2026</span></li>'
+            + self._item("Valid Article",
+                         "/us/en/institutional/about/newsroom/2026/valid",
+                         "April 1, 2026")
+            + "</ul></body></html>"
+        )
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_pgim(self.SOURCE)
+
+        assert len(articles) == 1
+        assert articles[0]["title"] == "Valid Article"
+
+    def test_respects_max_articles(self):
+        items = "".join(
+            self._item(f"Article {i}",
+                       f"/us/en/institutional/about/newsroom/2026/article-{i}",
+                       f"April {i}, 2026")
+            for i in range(1, 8)
+        )
+        html = f"<html><body><ul>{items}</ul></body></html>"
+        source = {**self.SOURCE, "max_articles": 5}
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_pgim(source)
+
+        assert len(articles) == 5
+
+
+# ---------------------------------------------------------------------------
+# fetch_aberdeen
+# ---------------------------------------------------------------------------
+
+class TestFetchAberdeen:
+    SOURCE = {
+        "url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/insights",
+        "max_articles": 10,
+        "expected_hostname": "aberdeeninvestments.com",
+    }
+
+    def _card(self, title: str, href: str, date: str) -> str:
+        return (
+            f'<a href="{href}">'
+            f'<h5 class="ArticleCard_article-card__title__pOQTa">{title}</h5>'
+            f'<time class="ms-auto">{date}</time>'
+            f'</a>'
+        )
+
+    def test_parses_articles(self):
+        html = "<html><body>" + \
+            self._card("Navigating Tariff Uncertainty",
+                       "/en-us/institutional/insights-and-research/insights/navigating-tariff-uncertainty",
+                       "Apr 15, 2026") + \
+            self._card("Credit Market Perspectives Q1 2026",
+                       "/en-us/institutional/insights-and-research/insights/credit-market-perspectives",
+                       "Mar 28, 2026") + \
+            "</body></html>"
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_aberdeen(self.SOURCE)
+
+        assert len(articles) == 2
+        assert articles[0]["title"] == "Navigating Tariff Uncertainty"
+        assert articles[0]["url"] == "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/insights/navigating-tariff-uncertainty"
+        assert articles[0]["date"] == "2026-04-15"
+        assert articles[0]["date_raw"] == "Apr 15, 2026"
+        assert articles[1]["date"] == "2026-03-28"
+
+    def test_skips_time_without_parent_link(self):
+        html = (
+            "<html><body>"
+            '<div><time class="ms-auto">Apr 1, 2026</time></div>'
+            + self._card("Valid Article",
+                         "/en-us/institutional/insights-and-research/insights/valid",
+                         "Apr 1, 2026")
+            + "</body></html>"
+        )
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_aberdeen(self.SOURCE)
+
+        assert len(articles) == 1
+        assert articles[0]["title"] == "Valid Article"
+
+    def test_deduplicates_same_url(self):
+        # Two time elements inside same card → should appear only once
+        html = (
+            "<html><body>"
+            '<a href="/en-us/institutional/insights-and-research/insights/article-a">'
+            '<h5 class="ArticleCard_article-card__title__pOQTa">Article A</h5>'
+            '<time class="ms-auto">Apr 10, 2026</time>'
+            '<time class="ms-auto">Apr 10, 2026</time>'
+            '</a>'
+            "</body></html>"
+        )
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_aberdeen(self.SOURCE)
+
+        assert len(articles) == 1
+
+    def test_respects_max_articles(self):
+        cards = "".join(
+            self._card(f"Article {i}",
+                       f"/en-us/institutional/insights-and-research/insights/article-{i}",
+                       f"Apr {i}, 2026")
+            for i in range(1, 8)
+        )
+        html = f"<html><body>{cards}</body></html>"
+        source = {**self.SOURCE, "max_articles": 5}
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_aberdeen(source)
+
+        assert len(articles) == 5
