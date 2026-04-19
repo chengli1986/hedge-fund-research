@@ -68,9 +68,11 @@ Use WebSearch to find additional hedge funds with public research:
 "asset manager" "quarterly letter" OR "market commentary" site:.com 2026
 ```
 
-For any promising new fund NOT already in fund_seeds.json:
+For any promising new fund NOT already in fund_candidates.json:
 1. Verify it has an official website with a research/insights section
-2. Add it to `config/fund_seeds.json` with appropriate metadata
+2. Add it to `config/fund_candidates.json` with `"source": "manual"` and `"status": "seed"`
+   - Required fields: `id`, `name`, `homepage_url`, `source`, `status`, `strategy_tags`
+   - Example: `{ "id": "new-fund-123", "name": "New Fund", "homepage_url": "https://...", "source": "manual", "status": "seed", "strategy_tags": ["macro", "equity"] }`
 3. Run `python3 discover_fund_sites.py --fund <new-id>` to discover it
 4. **Maximum 1 new seed per session** (slow deliberate growth)
 
@@ -79,7 +81,7 @@ For any promising new fund NOT already in fund_seeds.json:
 ```bash
 cd /home/ubuntu/hedge-fund-research
 DISCOVERY_DATE=$(TZ='Asia/Shanghai' date '+%Y-%m-%d')
-git add config/fund_seeds.json config/fund_candidates.json config/candidate_entrypoints.json
+git add config/fund_candidates.json config/candidate_entrypoints.json
 git diff --cached --quiet || git commit -m "data(candidate): daily discovery run ${DISCOVERY_DATE}"
 git push
 ```
@@ -87,7 +89,7 @@ git push
 Output a brief summary:
 - How many funds checked vs skipped (already analyzed)
 - Any status changes
-- Any new seeds added
+- Any new seeds added (to fund_candidates.json with source=manual, status=seed)
 - Any recommendations
 
 ## Rules
