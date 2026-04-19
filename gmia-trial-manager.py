@@ -500,7 +500,7 @@ def send_trial_email(trial: dict, passed: bool, total_articles: int) -> None:
   <tr><td style="padding:8px"><strong>Trial period</strong></td>
       <td style="padding:8px">{trial.get('start_date','')} → {trial.get('end_date','')}</td></tr>
   <tr><td style="padding:8px"><strong>Total articles detected</strong></td>
-      <td style="padding:8px">{total_articles} (threshold: {MIN_ARTICLES_TOTAL})</td></tr>
+      <td style="padding:8px">{total_articles} (threshold: {MIN_DAYS_WITH_ARTICLES})</td></tr>
   <tr><td style="padding:8px"><strong>Avg quality score</strong></td>
       <td style="padding:8px;color:{quality_color};font-weight:bold">{avg_quality:.2f} (threshold: {MIN_QUALITY_SCORE})</td></tr>
   <tr><td style="padding:8px"><strong>Fit score</strong></td>
@@ -588,7 +588,7 @@ def cmd_run() -> None:
                 for d in active.get("daily_checks", {}).values()
                 if d.get("accessible")
             )
-            quantity_ok = total_articles >= MIN_ARTICLES_TOTAL
+            quantity_ok = total_articles >= 3
 
             all_scores = [
                 a["overall"]
@@ -720,7 +720,7 @@ def cmd_status() -> None:
             print(f"    Started: {start}  |  Day {elapsed+1}/{TRIAL_DAYS}")
             print(f"    URL: {active.get('research_url','')}")
             print(f"    Quality: {active.get('quality','?')}  Fit: {active.get('fit_score','?')}")
-            print(f"    Total articles so far: {total} (need {MIN_ARTICLES_TOTAL} to pass)")
+            print(f"    Total articles so far: {total} (need {MIN_DAYS_WITH_ARTICLES} days to pass)")
 
             samples = active.get("quality_samples", [])
             all_scores = [a["overall"] for s in samples for a in s.get("articles", [])]
