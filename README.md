@@ -94,11 +94,11 @@ Scorer weight optimization program using automated experiment loop:
 
 ## Trial Manager
 
-`gmia-trial-manager.py` — 7-day live trial window for candidate funds. Runs daily, requires ≥3 articles to pass, and performs Haiku quality sampling on day 1/4 (3 articles each, relevance/depth/extractable scores). Outcomes: APPROVE (add to sources), REJECT (remove from candidates).
+`gmia-trial-manager.py` — 7-day live trial window for candidate funds. Supports up to 3 concurrent trials (`MAX_CONCURRENT_TRIALS=3`). Runs daily, requires ≥3 articles to pass, performs Haiku quality sampling on day 1/4 (3 articles each, relevance/depth/extractable scores). Outcomes: APPROVE (add to sources), REJECT (remove from candidates).
 
 ## Tests
 
-196 tests passing, 2 failing (wellington `screen_failed` status not in VALID_STATUSES — test code bug; neuberger-berman seed without candidate entry — data gap) — unit, functional, and integration tests (15 nightly/live tests deselected by default via pytest.ini).
+209 passing, 1 failing (neuberger-berman seed without candidate entry — data gap that resolves after next discovery run), 15 deselected — unit, functional, and integration tests (live/nightly tests excluded by default via pytest.ini).
 
 ```bash
 python3 -m pytest tests/ -q
