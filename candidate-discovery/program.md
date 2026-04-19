@@ -33,6 +33,8 @@ For each candidate that NEEDS analysis:
    - When was the most recent article published?
    - Is content freely accessible or gated?
    - Quality rating: HIGH (deep original analysis) / MEDIUM (market commentary) / LOW (marketing/PR)
+   - Quality score: a numeric value 0.0–1.0 reflecting content quality with finer granularity than the three-tier label.
+     Use this rubric: original proprietary research with data/models → 0.85–1.0; substantive analysis but derivative → 0.65–0.84; general market commentary → 0.45–0.64; thin/marketing content → 0.20–0.44; clearly unsuitable → 0.0–0.19
 
 3. **Assess GMIA fit** — our current 6 funds cover:
    - Man Group: macro, quant, credit, volatility
@@ -47,6 +49,7 @@ For each candidate that NEEDS analysis:
 4. **Update fund_candidates.json** with your analysis:
    - Set `last_deep_analyzed_at` to current UTC ISO timestamp
    - Set `quality` field to "HIGH", "MEDIUM", or "LOW"
+   - Set `quality_score` field to the numeric value (0.0–1.0) from the rubric above
    - Set `topics` field to a short comma-separated list (e.g., "fixed income, macro, credit")
    - Set `strategy_tags` to a JSON array using ONLY tags from this fixed set:
      `fixed_income`, `private_credit`, `event_driven`, `macro`, `quant`,

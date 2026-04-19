@@ -742,8 +742,6 @@ def cmd_run() -> None:
             candidates = load_candidates()
             for c in candidates:
                 if c["id"] == active["id"]:
-                    if all_scores:
-                        c["quality_score"] = round(avg_quality, 3)
                     if not passed:
                         if not quantity_ok:
                             c["status"] = "watchlist"
