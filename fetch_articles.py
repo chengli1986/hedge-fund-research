@@ -877,46 +877,46 @@ def fetch_gsam(source: dict) -> list[dict]:
 
 
 def fetch_amundi(source: dict) -> list[dict]:
-    """Fetch articles from Amundi Research Center (Playwright — SSR/CSR hybrid).
+    """Fetch articles from Amundi Research Center via RSS feed (no Playwright needed).
 
-    Structure: article.article--teaser containing:
-      h2 (title), a.card.card-taxo-teaser[href] (link, relative),
-      .card-date time[datetime] (date "DD/MM/YYYY" or ISO in datetime attr)
+    RSS at /rss.xml — 10 items, RFC 2822 pubDate, full article URLs.
+    Lazy-loading on the HTML page means RSS is simpler and more reliable.
     """
-    base_url = "https://research-center.amundi.com"
-    html = _get_playwright_page(source["url"], wait_selector="article.article--teaser", wait_ms=3000)
-    soup = BeautifulSoup(html, "html.parser")
+    rss_url = source.get("rss_url", "https://research-center.amundi.com/rss.xml")
     expected_host = source.get("expected_hostname", "amundi.com")
 
+    resp = requests.get(rss_url, headers=HEADERS, timeout=30)
+    resp.raise_for_status()
+
+    root = ET.fromstring(resp.text.lstrip("\ufeff"))
     articles = []
-    for item in soup.select("article.article--teaser"):
-        link_el = item.select_one("a.card.card-taxo-teaser") or item.select_one("a[href]")
-        if not link_el:
+    for item in root.findall(".//item"):
+        title_el = item.find("title")
+        link_el = item.find("link")
+        pub_el = item.find("pubDate")
+
+        title = (title_el.text or "").strip() if title_el is not None else ""
+        link = (link_el.text or "").strip() if link_el is not None else ""
+        if not title or not link:
             continue
-        href = link_el.get("href", "")
-        if not href:
-            continue
-        url = urljoin(base_url, href)
-        if not _validate_hostname(url, expected_host):
+        if not _validate_hostname(link, expected_host):
             continue
 
-        title_el = item.select_one("h3.card-title, h2.card-title, h3, h2")
-        title = title_el.get_text(strip=True) if title_el else ""
-        if not title:
-            continue
-
-        time_el = item.select_one("time[datetime]")
-        date_raw = ""
+        date_raw = (pub_el.text or "").strip() if pub_el is not None else ""
         parsed_date = None
-        if time_el:
-            dt_attr = time_el.get("datetime", "")
-            date_raw = time_el.get_text(strip=True) or dt_attr
-            # datetime attr may be ISO "2026-04-17", text may be "17/04/2026"
-            parsed_date = parse_date(dt_attr) or parse_date(date_raw)
+        if date_raw:
+            # Try ISO format first (Amundi uses "2026-04-17T10:07:00+02:00")
+            try:
+                parsed_date = datetime.fromisoformat(date_raw).strftime("%Y-%m-%d")
+            except (ValueError, TypeError):
+                try:
+                    parsed_date = parsedate_to_datetime(date_raw).strftime("%Y-%m-%d")
+                except (ValueError, TypeError):
+                    parsed_date = parse_date(date_raw)
 
         articles.append({
             "title": title,
-            "url": url,
+            "url": link,
             "date": parsed_date,
             "date_raw": date_raw,
         })

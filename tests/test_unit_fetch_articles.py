@@ -823,59 +823,61 @@ class TestFetchGsam:
 class TestFetchAmundi:
     SOURCE = {
         "url": "https://research-center.amundi.com",
+        "rss_url": "https://research-center.amundi.com/rss.xml",
         "max_articles": 10,
         "expected_hostname": "amundi.com",
     }
 
-    def _card(self, title: str, href: str, date: str) -> str:
-        return (
-            f'<article class="article--teaser">'
-            f'<a class="card card-taxo-teaser" href="{href}">'
-            f'<h2>{title}</h2>'
-            f'<div class="card-date"><time datetime="{date}">{date}</time></div>'
-            f'</a>'
-            f'</article>'
+    def _rss(self, items: list[tuple[str, str, str]]) -> str:
+        items_xml = "".join(
+            f"<item><title>{t}</title><link>{u}</link><pubDate>{d}</pubDate></item>"
+            for t, u, d in items
         )
+        return f'<?xml version="1.0"?><rss><channel>{items_xml}</channel></rss>'
+
+    def _mock_resp(self, xml: str):
+        resp = MagicMock()
+        resp.text = xml
+        resp.raise_for_status.return_value = None
+        return resp
 
     def test_parses_articles(self):
-        html = "<html><body>" + \
-            self._card("Global Investment Views — April 2026",
-                       "/en/research-center/investment-views/global-investment-views-april-2026",
-                       "17/04/2026") + \
-            self._card("ESG Thematic Review Q1 2026",
-                       "/en/research-center/esg/esg-thematic-review-q1-2026",
-                       "10/04/2026") + \
-            "</body></html>"
-        with patch("fetch_articles._get_playwright_page", return_value=html):
+        xml = self._rss([
+            ("AI Boom or Bubble?",
+             "https://research-center.amundi.com/article/ai-boom-or-bubble",
+             "Thu, 17 Apr 2026 10:07:00 +0200"),
+            ("Cross Asset Investment Strategy",
+             "https://research-center.amundi.com/article/cross-asset-april-2026",
+             "Wed, 16 Apr 2026 09:08:00 +0200"),
+        ])
+        with patch("fetch_articles.requests.get", return_value=self._mock_resp(xml)):
             articles = fetch_amundi(self.SOURCE)
 
         assert len(articles) == 2
-        assert articles[0]["title"] == "Global Investment Views — April 2026"
-        assert articles[0]["url"] == "https://research-center.amundi.com/en/research-center/investment-views/global-investment-views-april-2026"
+        assert articles[0]["title"] == "AI Boom or Bubble?"
+        assert articles[0]["url"] == "https://research-center.amundi.com/article/ai-boom-or-bubble"
         assert articles[0]["date"] == "2026-04-17"
-        assert articles[0]["date_raw"] == "17/04/2026"
+        assert articles[1]["date"] == "2026-04-16"
 
-    def test_skips_items_without_link(self):
-        html = (
-            "<html><body>"
-            '<article class="article--teaser"><h2>No Link</h2></article>'
-            + self._card("Valid Article", "/en/research-center/valid", "01/04/2026")
-            + "</body></html>"
-        )
-        with patch("fetch_articles._get_playwright_page", return_value=html):
+    def test_skips_items_without_title_or_link(self):
+        xml = self._rss([
+            ("", "https://research-center.amundi.com/article/no-title", "Thu, 17 Apr 2026 10:00:00 +0000"),
+            ("Valid Article", "https://research-center.amundi.com/article/valid", "Thu, 17 Apr 2026 09:00:00 +0000"),
+        ])
+        with patch("fetch_articles.requests.get", return_value=self._mock_resp(xml)):
             articles = fetch_amundi(self.SOURCE)
 
         assert len(articles) == 1
         assert articles[0]["title"] == "Valid Article"
 
     def test_respects_max_articles(self):
-        cards = "".join(
-            self._card(f"Article {i}", f"/en/research-center/article-{i}", f"{i:02d}/04/2026")
+        xml = self._rss([
+            (f"Article {i}", f"https://research-center.amundi.com/article/article-{i}",
+             f"Thu, {i:02d} Apr 2026 10:00:00 +0000")
             for i in range(1, 8)
-        )
-        html = f"<html><body>{cards}</body></html>"
+        ])
         source = {**self.SOURCE, "max_articles": 5}
-        with patch("fetch_articles._get_playwright_page", return_value=html):
+        with patch("fetch_articles.requests.get", return_value=self._mock_resp(xml)):
             articles = fetch_amundi(source)
 
         assert len(articles) == 5

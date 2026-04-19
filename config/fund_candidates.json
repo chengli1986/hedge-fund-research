@@ -631,7 +631,7 @@
     "status": "validated",
     "homepage_url": "https://research-center.amundi.com",
     "research_url": "https://research-center.amundi.com",
-    "rss_url": null,
+    "rss_url": "https://research-center.amundi.com/rss.xml",
     "official_domain": "research-center.amundi.com",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-04-19T09:00:10.872659+08:00",
