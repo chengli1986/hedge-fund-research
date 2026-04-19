@@ -66,7 +66,8 @@
       "fixed_income",
       "macro",
       "multi_asset"
-    ]
+    ],
+    "source": "manual"
   },
   {
     "id": "de-shaw",
@@ -110,7 +111,8 @@
     "rejected_at": "2026-04-12T19:21:09.876510+08:00",
     "strategy_tags": [
       "quant"
-    ]
+    ],
+    "source": "auto_discovered"
   },
   {
     "id": "blackstone",
@@ -190,7 +192,8 @@
       "real_assets",
       "private_credit",
       "multi_asset"
-    ]
+    ],
+    "source": "manual"
   },
   {
     "id": "two-sigma",
@@ -239,7 +242,8 @@
     "rejected_at": "2026-04-12T19:21:09.876510+08:00",
     "strategy_tags": [
       "quant"
-    ]
+    ],
+    "source": "auto_discovered"
   },
   {
     "id": "kkr",
@@ -314,7 +318,8 @@
       "real_assets",
       "private_credit",
       "macro"
-    ]
+    ],
+    "source": "manual"
   },
   {
     "id": "cambridge-associates",
@@ -449,7 +454,8 @@
       "venture_capital",
       "private_credit",
       "multi_asset"
-    ]
+    ],
+    "source": "manual"
   },
   {
     "id": "gsam",
@@ -509,7 +515,8 @@
       "fixed_income",
       "equity",
       "multi_asset"
-    ]
+    ],
+    "source": "manual"
   },
   {
     "id": "wellington",
@@ -615,7 +622,8 @@
       "fixed_income",
       "multi_asset",
       "esg_climate"
-    ]
+    ],
+    "source": "manual"
   },
   {
     "id": "amundi",
@@ -655,7 +663,8 @@
       "emerging_markets",
       "multi_asset",
       "esg_climate"
-    ]
+    ],
+    "source": "manual"
   },
   {
     "id": "jpmam",
@@ -694,7 +703,8 @@
       "equity",
       "fixed_income",
       "multi_asset"
-    ]
+    ],
+    "source": "manual"
   },
   {
     "id": "troweprice",
@@ -758,7 +768,8 @@
       "equity",
       "macro",
       "fixed_income"
-    ]
+    ],
+    "source": "manual"
   },
   {
     "id": "fidelity",
@@ -794,7 +805,8 @@
     "strategy_tags": [
       "equity",
       "multi_asset"
-    ]
+    ],
+    "source": "manual"
   },
   {
     "id": "msci-research",
@@ -815,7 +827,8 @@
       "quant",
       "esg_climate",
       "multi_asset"
-    ]
+    ],
+    "source": "manual"
   },
   {
     "id": "carlyle",
@@ -834,7 +847,8 @@
       "private_equity",
       "real_assets",
       "fixed_income"
-    ]
+    ],
+    "source": "manual"
   },
   {
     "id": "research-affiliates",
@@ -957,7 +971,8 @@
       "quant",
       "equity",
       "multi_asset"
-    ]
+    ],
+    "source": "manual"
   },
   {
     "id": "blackrock-institute",
@@ -1062,7 +1077,8 @@
       "fixed_income",
       "multi_asset",
       "esg_climate"
-    ]
+    ],
+    "source": "manual"
   },
   {
     "id": "schroders",
@@ -1084,7 +1100,8 @@
       "emerging_markets",
       "multi_asset",
       "fixed_income"
-    ]
+    ],
+    "source": "manual"
   },
   {
     "id": "pgim",
@@ -1222,7 +1239,8 @@
       "fixed_income",
       "private_credit",
       "multi_asset"
-    ]
+    ],
+    "source": "manual"
   },
   {
     "id": "aberdeen",
@@ -1266,6 +1284,37 @@
       "fixed_income",
       "multi_asset"
     ],
-    "last_validated_at": "2026-04-19T09:02:22.948295+08:00"
+    "last_validated_at": "2026-04-19T09:02:22.948295+08:00",
+    "source": "manual"
+  },
+  {
+    "id": "neuberger-berman",
+    "name": "Neuberger Berman",
+    "status": "pending",
+    "homepage_url": "https://www.nb.com",
+    "research_url": null,
+    "rss_url": null,
+    "official_domain": "www.nb.com",
+    "discovery_method": "manual",
+    "last_discovered_at": null,
+    "last_screened_at": null,
+    "last_validated_at": null,
+    "recent_update_at": null,
+    "is_publicly_accessible": null,
+    "has_article_index": null,
+    "fit_score": null,
+    "notes": "Multi-asset manager, public insights page covers macro, fixed income, alternatives, hedge fund perspectives",
+    "research_links": [],
+    "screening_signals": {},
+    "screening_reason": null,
+    "last_deep_analyzed_at": null,
+    "quality": null,
+    "topics": null,
+    "strategy_tags": [
+      "multi_asset",
+      "fixed_income",
+      "private_credit"
+    ],
+    "source": "manual"
   }
 ]
