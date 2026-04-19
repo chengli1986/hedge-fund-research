@@ -123,175 +123,180 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 BJT = timezone(timedelta(hours=8))
-now = datetime.now(BJT).strftime("%Y-%m-%d %H:%M BJT")
+now_dt = datetime.now(BJT)
+now_str = now_dt.strftime("%Y-%m-%d %H:%M BJT")
+date_str = now_dt.strftime("%Y-%m-%d")
 repo = Path(os.environ.get("REPO_DIR", "."))
 exit_code = int(os.environ.get("EXIT_CODE", "1"))
 
-# Load candidates
+# Load data
 candidates = json.loads((repo / "config/fund_candidates.json").read_text())
 sources_data = json.loads((repo / "config/sources.json").read_text())
-active_sources = sources_data.get("sources", [])
+production_sources = sources_data.get("sources", [])
+production_ids = {s["id"] for s in production_sources}
 
-# Build summary
-status_icon = "✅" if exit_code == 0 else ("⏰" if exit_code == 124 else "❌")
-status_text = "Success" if exit_code == 0 else ("Timeout" if exit_code == 124 else f"Failed (exit {exit_code})")
+trial_state_path = repo / "config/trial-state.json"
+trial_data = json.loads(trial_state_path.read_text()) if trial_state_path.exists() else {}
+active_trial_ids = {t["id"] for t in trial_data.get("active_trials", [])}
+active_trial_info = {t["id"]: t for t in trial_data.get("active_trials", [])}
 
-STATUS_ORDER = ["validated", "watchlist", "inaccessible", "screen_failed", "screened", "discovered", "seed", "rejected"]
-sorted_candidates = sorted(candidates, key=lambda c: (STATUS_ORDER.index(c["status"]) if c["status"] in STATUS_ORDER else 99))
-
-STATUS_PILL = {
-    "validated":     '<span style="color:#22863a;font-weight:bold">validated</span>',
-    "inaccessible":  '<span style="color:#cb2431">inaccessible</span>',
-    "screen_failed": '<span style="color:#e36209">screen_failed</span>',
-    "screened":      '<span style="color:#0366d6">screened</span>',
-    "discovered":    '<span style="color:#6f42c1">discovered</span>',
-    "seed":          '<span style="color:#959da5">seed</span>',
-    "watchlist":     '<span style="color:#e36209">watchlist</span>',
-    "rejected":      '<span style="color:#959da5;text-decoration:line-through">rejected</span>',
-}
+# Classify candidates into groups
+cand_map = {c["id"]: c for c in candidates}
+queue = [c for c in candidates if c["status"] == "validated"
+         and c["id"] not in production_ids and c["id"] not in active_trial_ids]
+inaccessible = [c for c in candidates if c["status"] == "inaccessible"]
+seed_statuses = {"seed", "discovered", "screened", "screen_failed"}
+seeds = [c for c in candidates if c["status"] in seed_statuses]
+rejected = [c for c in candidates if c["status"] == "rejected"]
 
 # 策略覆盖地图
-ALL_TAGS = [
-    "fixed_income", "private_credit", "event_driven", "macro",
-    "quant", "private_equity", "real_assets", "equity",
-    "multi_asset", "esg_climate", "emerging_markets", "venture_capital"
+def q_badge(quality: str) -> str:
+    color = {"HIGH": "#22863a", "MEDIUM": "#e36209", "LOW": "#cb2431"}.get(quality, "#959da5")
+    return f'<span style="color:{color};font-weight:bold;font-size:11px">{quality}</span>'
+
+def fit_pct(score) -> str:
+    if score is None:
+        return '<span style="color:#959da5">—</span>'
+    pct = int(score * 100)
+    color = "#22863a" if pct >= 70 else ("#e36209" if pct >= 50 else "#cb2431")
+    return f'<span style="color:{color};font-weight:bold">{pct}%</span>'
+
+def tags_html(tags: list) -> str:
+    return " ".join(
+        f'<span style="background:#ddf4ff;color:#0969da;border-radius:3px;padding:1px 5px;font-size:10px">{t}</span>'
+        for t in tags
+    )
+
+def notes_short(notes_full: str) -> str:
+    n = (notes_full or "")
+    return n[:90] + ("…" if len(n) > 90 else "")
+
+def group_table(items: list, show_fit: bool = True, show_trial: bool = False) -> str:
+    if not items:
+        return '<p style="color:#959da5;font-size:12px;padding:6px 0;margin:0">（空）</p>'
+    rows = ""
+    for c in items:
+        trial_day = ""
+        if show_trial and c["id"] in active_trial_info:
+            t = active_trial_info[c["id"]]
+            start = datetime.fromisoformat(t["start_date"]).replace(tzinfo=timezone.utc)
+            day = (now_dt.replace(tzinfo=None) - start.replace(tzinfo=None)).days + 1
+            trial_day = f' <span style="color:#0969da;font-size:10px">Day {day}/3</span>'
+        fit_cell = fit_pct(c.get("fit_score")) if show_fit else "—"
+        notes_full = c.get("notes") or ""
+        is_rec = notes_full.startswith("RECOMMEND")
+        bg = " style=\"background:#f0fff4\"" if is_rec else ""
+        rows += (
+            f'<tr{bg}>'
+            f'<td style="padding:5px 8px;border-bottom:1px solid #eee;font-weight:500">{c["name"]}{trial_day}</td>'
+            f'<td style="padding:5px 8px;border-bottom:1px solid #eee">{fit_cell}</td>'
+            f'<td style="padding:5px 8px;border-bottom:1px solid #eee">{q_badge(c.get("quality","—"))}</td>'
+            f'<td style="padding:5px 8px;border-bottom:1px solid #eee;font-size:11px;color:#586069">{c.get("topics","—")}</td>'
+            f'<td style="padding:5px 8px;border-bottom:1px solid #eee">{tags_html(c.get("strategy_tags",[]))}</td>'
+            f'<td style="padding:5px 8px;border-bottom:1px solid #eee;font-size:11px;color:#586069">{notes_short(notes_full)}</td>'
+            f'</tr>\n'
+        )
+    header = (
+        '<tr style="background:#f6f8fa">'
+        '<th style="text-align:left;padding:5px 8px;border-bottom:2px solid #e1e4e8;font-size:12px">Fund</th>'
+        '<th style="text-align:left;padding:5px 8px;border-bottom:2px solid #e1e4e8;font-size:12px">Fit</th>'
+        '<th style="text-align:left;padding:5px 8px;border-bottom:2px solid #e1e4e8;font-size:12px">Quality</th>'
+        '<th style="text-align:left;padding:5px 8px;border-bottom:2px solid #e1e4e8;font-size:12px">Topics</th>'
+        '<th style="text-align:left;padding:5px 8px;border-bottom:2px solid #e1e4e8;font-size:12px">Tags</th>'
+        '<th style="text-align:left;padding:5px 8px;border-bottom:2px solid #e1e4e8;font-size:12px">Notes</th>'
+        '</tr>'
+    )
+    return f'<table style="width:100%;border-collapse:collapse;font-size:13px">{header}{rows}</table>'
+
+def section(emoji: str, title: str, subtitle: str, items: list, color: str,
+            show_fit: bool = True, show_trial: bool = False) -> str:
+    count = len(items)
+    return f"""
+<div style="margin:0 0 20px">
+  <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px">
+    <span style="font-size:15px;font-weight:700;color:{color}">{emoji} {title}</span>
+    <span style="background:{color};color:#fff;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:600">{count}</span>
+    <span style="color:#959da5;font-size:12px">{subtitle}</span>
+  </div>
+  {group_table(items, show_fit=show_fit, show_trial=show_trial)}
+</div>"""
+
+# Build active trial candidates list (validated with active trial)
+active_trial_candidates = [
+    cand_map[tid] for tid in active_trial_info if tid in cand_map
 ]
-TAG_LABELS = {
-    "fixed_income": "Fixed Income", "private_credit": "Private Credit",
-    "event_driven": "Event Driven", "macro": "Macro",
-    "quant": "Quant", "private_equity": "Private Equity",
-    "real_assets": "Real Assets", "equity": "Equity",
-    "multi_asset": "Multi Asset", "esg_climate": "ESG/Climate",
-    "emerging_markets": "Emerging Mkts", "venture_capital": "Venture Capital"
+
+# Production section uses sources.json entries (not fund_candidates)
+prod_items = [
+    {"id": s["id"], "name": s.get("name", s["id"]),
+     "fit_score": None, "quality": "HIGH",
+     "topics": s.get("topics", "—"),
+     "strategy_tags": s.get("strategy_tags", []),
+     "notes": "Active production source"}
+    for s in production_sources
+]
+
+stats = {
+    "production": len(prod_items),
+    "trials": len(active_trial_candidates),
+    "queue": len(queue),
+    "inaccessible": len(inaccessible),
+    "seed": len(seeds),
+    "rejected": len(rejected),
 }
 
-tag_counts = {t: 0 for t in ALL_TAGS}
-for s in active_sources:
-    for t in s.get("strategy_tags", []):
-        if t in tag_counts:
-            tag_counts[t] += 1
-for c in candidates:
-    if c.get("status") == "validated":
-        for t in c.get("strategy_tags", []):
-            if t in tag_counts:
-                tag_counts[t] += 1
+stats_bar = " &nbsp;·&nbsp; ".join([
+    f'<span style="color:#1a7f37;font-weight:600">🟢 Production {stats["production"]}</span>',
+    f'<span style="color:#0969da;font-weight:600">🔵 Trials {stats["trials"]}</span>',
+    f'<span style="color:#9a6700;font-weight:600">🟡 Queue {stats["queue"]}</span>',
+    f'<span style="color:#cf222e;font-weight:600">🟠 Inaccessible {stats["inaccessible"]}</span>',
+    f'<span style="color:#57606a;font-weight:600">🌱 Seed {stats["seed"]}</span>',
+    f'<span style="color:#57606a;font-weight:600">🔴 Rejected {stats["rejected"]}</span>',
+])
 
-def coverage_bar(count):
-    filled = min(count, 5)
-    return "█" * filled + "░" * (5 - filled)
-
-map_cells = ""
-for i, tag in enumerate(ALL_TAGS):
-    count = tag_counts[tag]
-    color = "#22863a" if count > 0 else "#cb2431"
-    bar = coverage_bar(count)
-    label = TAG_LABELS[tag]
-    map_cells += (
-        f'<td style="padding:4px 8px;width:25%">'
-        f'<span style="color:{color};font-family:monospace;font-size:11px">{bar}</span> '
-        f'<span style="font-size:12px">{label}</span> '
-        f'<span style="color:#586069;font-size:11px">({count})</span>'
-        f'</td>'
-    )
-    if (i + 1) % 4 == 0:
-        map_cells += "</tr><tr>"
-
-coverage_map_html = f"""
-<div style="margin:0 0 4px">
-<div style="font-weight:600;font-size:13px;margin-bottom:6px">策略覆盖地图 — 活跃来源 + 已验证候选</div>
-<table style="width:100%;border-collapse:collapse;background:#f6f8fa;border:1px solid #e1e4e8;border-radius:4px 4px 0 0">
-<tr>{map_cells}</tr>
-</table>
-<div style="background:#f6f8fa;border:1px solid #e1e4e8;border-top:none;border-radius:0 0 4px 4px;padding:5px 10px;font-size:11px;color:#586069">
-  <strong>如何阅读：</strong>
-  进度条 █ 每格 = 1 个覆盖来源（上限 5 格）；括号内数字 = 活跃来源 + 已验证候选的实际总数；
-  <span style="color:#22863a">绿色</span> = 已有覆盖，<span style="color:#cb2431">红色</span> = 暂无来源覆盖此策略类别，可作为未来扩充方向参考。
-</div>
-</div>
-<div style="margin:0 0 16px"></div>
-"""
-
-rows = ""
-for c in sorted_candidates:
-    score = c.get("fit_score")
-    score_str = f'{score:.3f}' if score is not None else "—"
-    quality = c.get("quality", "—")
-    topics = c.get("topics", "—")
-    notes_full = (c.get("notes") or "")
-    is_recommend = notes_full.startswith("RECOMMEND")
-    notes = notes_full[:100] + ("…" if len(notes_full) > 100 else "")
-    bg = "#e6ffe6" if is_recommend else ("#fff8f8" if c["status"] == "rejected" else "")
-    style = f' style="background:{bg}"' if bg else ""
-    q_color = {"HIGH": "#22863a", "MEDIUM": "#e36209", "LOW": "#cb2431"}.get(quality, "#959da5")
-    status_pill = STATUS_PILL.get(c["status"], f'<span style="color:#959da5">{c["status"]}</span>')
-    tags_html = " ".join(
-        f'<span style="background:#ddf4ff;color:#0969da;border-radius:3px;padding:1px 5px;font-size:10px;margin-right:2px">{t}</span>'
-        for t in c.get("strategy_tags", [])
-    )
-    rows += (f'<tr{style}><td style="padding:4px 6px;border-bottom:1px solid #eee">{c["name"]}</td>'
-             f'<td style="padding:4px 6px;border-bottom:1px solid #eee;white-space:nowrap">{status_pill}</td>'
-             f'<td style="padding:4px 6px;border-bottom:1px solid #eee;white-space:nowrap">{score_str}</td>'
-             f'<td style="padding:4px 6px;border-bottom:1px solid #eee;color:{q_color};font-weight:bold;white-space:nowrap">{quality}</td>'
-             f'<td style="padding:4px 6px;border-bottom:1px solid #eee;font-size:11px;color:#586069">{topics}</td>'
-             f'<td style="padding:4px 6px;border-bottom:1px solid #eee">{tags_html}</td>'
-             f'<td style="padding:4px 6px;border-bottom:1px solid #eee;font-size:12px">{notes}</td></tr>\n')
-
-validated = sum(1 for c in candidates if c["status"] == "validated")
-inaccessible = sum(1 for c in candidates if c["status"] == "inaccessible")
-recommend = sum(1 for c in candidates if c["status"] == "validated" and (c.get("notes") or "").startswith("RECOMMEND"))
-seeds_count = sum(1 for c in candidates if c.get("source") == "manual")
-
-stats_bar = (
-    f'<span style="margin-right:16px"><strong>Seeds</strong>&nbsp;{seeds_count}</span>'
-    f'<span style="margin-right:16px;color:#22863a"><strong>Validated</strong>&nbsp;{validated}</span>'
-    f'<span style="margin-right:16px;color:#cb2431"><strong>Inaccessible</strong>&nbsp;{inaccessible}</span>'
-    f'<span style="color:#22863a;font-weight:bold"><strong>Recommend</strong>&nbsp;{recommend}</span>'
+body_sections = (
+    section("🟢", "Production", "每日 pipeline 正在抓取", prod_items, "#1a7f37", show_fit=False)
+    + section("🔵", "Active Trials", "3天窗口·每日质量采样", active_trial_candidates, "#0969da", show_trial=True)
+    + section("🟡", "Queue", "已验证·等待进入 Trial", queue, "#9a6700")
+    + section("🟠", "Inaccessible", "JS渲染/403阻断·Fetcher Synthesis 目标", inaccessible, "#cf222e")
+    + section("🌱", "Seed / Discovery", "待评估候选池", seeds, "#57606a")
+    + section("🔴", "Rejected", "不适合纳入 pipeline", rejected, "#57606a")
 )
 
-html = f"""<html><body style="font-family:system-ui,-apple-system,sans-serif;max-width:760px;margin:0 auto;padding:20px">
-<h2 style="margin:0">🔍 GMIA Candidate Fund Discovery</h2>
-<p style="color:#586069;margin:4px 0 12px">{now} &nbsp; {status_icon} {status_text}</p>
+html = f"""<html><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;max-width:780px;margin:0 auto;padding:24px;color:#24292f">
 
-<p style="background:#f6f8fa;border:1px solid #e1e4e8;border-radius:4px;padding:10px 14px;margin:0 0 16px;font-size:13px">
+<h1 style="margin:0 0 2px;font-size:20px;font-weight:700;color:#1f2328">GMIA &mdash; Candidate Fund Discovery Report</h1>
+<p style="margin:0 0 16px;font-size:13px;color:#57606a">{date_str} &nbsp;·&nbsp; Global Market Insight Aggregator</p>
+
+<div style="background:#f6f8fa;border:1px solid #d0d7de;border-radius:6px;padding:10px 16px;margin:0 0 20px;font-size:13px;line-height:1.8">
 {stats_bar}
-</p>
-
-{coverage_map_html}
-<table style="width:100%;border-collapse:collapse;font-size:13px;margin:0 0 16px">
-<tr style="background:#f6f8fa">
-<th style="text-align:left;padding:6px 8px;border-bottom:2px solid #e1e4e8">Fund</th>
-<th style="text-align:left;padding:6px 8px;border-bottom:2px solid #e1e4e8">Status</th>
-<th style="text-align:left;padding:6px 8px;border-bottom:2px solid #e1e4e8">Fit</th>
-<th style="text-align:left;padding:6px 8px;border-bottom:2px solid #e1e4e8">Quality</th>
-<th style="text-align:left;padding:6px 8px;border-bottom:2px solid #e1e4e8">Topics</th>
-<th style="text-align:left;padding:6px 8px;border-bottom:2px solid #e1e4e8">Tags</th>
-<th style="text-align:left;padding:6px 8px;border-bottom:2px solid #e1e4e8">Notes</th>
-</tr>
-{rows}
-</table>
-
-<div style="background:#f6f8fa;border:1px solid #e1e4e8;border-radius:4px;padding:8px 12px;margin:0 0 16px;font-size:11px;color:#586069;line-height:1.7">
-  <strong style="color:#24292e">如何阅读表格：</strong><br>
-  <strong>Status</strong>：<span style="color:#22863a;font-weight:bold">validated</span> 可直接抓取研究报告（已纳入每日 pipeline）／
-  <span style="color:#cb2431">inaccessible</span> JS 渲染无法直接抓取／
-  <span style="color:#e36209">watchlist</span> 值得持续关注但暂不纳入／
-  <span style="color:#959da5;text-decoration:line-through">rejected</span> 不适合（无研究内容或付费墙）<br>
-  <strong>Fit</strong>：0–1 综合适配分（域名可信度 + 内容结构 + 研究深度），≥0.6 代表较高适配性<br>
-  <strong>Quality</strong>：LLM 评估研究深度 — <span style="color:#22863a;font-weight:bold">HIGH</span> 有原创观点／<span style="color:#e36209;font-weight:bold">MEDIUM</span> 一般资讯／<span style="color:#cb2431;font-weight:bold">LOW</span> 营销内容为主<br>
-  <em style="color:#555">💡 简单记忆：Fit 是「门好不好开」，Quality 是「门里有没有宝」。两者都高才是理想的 Production 候选。</em><br>
-  <strong>Tags</strong>：策略分类标签，12 类固定标签集（与覆盖地图对应），用于追踪策略多样性<br>
-  <strong>Notes</strong>：<span style="background:#e6ffe6">绿色高亮行</span> = RECOMMEND，建议优先跟进并考虑加入正式 pipeline
 </div>
 
-<p style="color:#586069;font-size:12px;margin-top:8px">
-Auto-generated by GMIA candidate discovery pipeline<br>
-Repo: <a href="https://github.com/chengli1986/hedge-fund-research">chengli1986/hedge-fund-research</a>
+{body_sections}
+
+<div style="background:#f6f8fa;border:1px solid #d0d7de;border-radius:6px;padding:10px 14px;margin:20px 0 0;font-size:11px;color:#57606a;line-height:1.8">
+  <strong style="color:#1f2328">如何解读本报告</strong><br>
+  <strong>状态含义：</strong>
+  🟢 Production — 已接入每日抓取 pipeline；
+  🔵 Active Trials — 3天试运行，验证可访问性和内容质量；
+  🟡 Queue — 已通过人工或 AI 验证，等待进入 Trial；
+  🟠 Inaccessible — 技术阻断（JS渲染/403），Fetcher Synthesis 自动尝试生成新爬虫；
+  🌱 Seed — 待评分候选；
+  🔴 Rejected — 不适合（付费墙/零研究内容）<br>
+  <strong>Fit（适配分）</strong>：规则引擎评分（域名可信度+路径结构+页面可访问性），反映「门好不好开」。≥70% 较高，50–70% 一般，&lt;50% 存在阻断。<br>
+  <strong>Quality（内容质量）</strong>：LLM 深度分析评估研究价值，反映「门里有没有宝」。HIGH = 原创机构观点；MEDIUM = 一般资讯；LOW = 营销内容为主。<br>
+  <em>💡 简单记忆：Fit 是「门好不好开」，Quality 是「门里有没有宝」。两者都高才是理想的 Production 候选。</em>
+</div>
+
+<p style="color:#57606a;font-size:11px;margin-top:12px">
+Auto-generated by GMIA candidate discovery pipeline &nbsp;·&nbsp;
+<a href="https://github.com/chengli1986/hedge-fund-research" style="color:#0969da">chengli1986/hedge-fund-research</a>
 </p>
 </body></html>"""
 
 msg_id = make_msgid(domain="ec2.sinostor.com.cn")
 msg = MIMEMultipart("alternative")
-msg["Subject"] = f"GMIA Fund Discovery: {seeds_count} seeds, {validated} validated, {recommend} recommend — {now}"
+msg["Subject"] = f"GMIA — Candidate Fund Discovery Report · {date_str}"
 msg["From"] = os.environ.get("SMTP_USER", "")
 msg["To"] = "ch_w10@outlook.com"
 msg["Message-ID"] = msg_id
