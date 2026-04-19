@@ -178,6 +178,43 @@ def _validate_hostname(url: str, expected_hostname: str) -> bool:
 # SSR Fetchers (requests + BeautifulSoup)
 # ---------------------------------------------------------------------------
 
+def fetch_cambridge_associates(source: dict) -> list[dict]:
+    """Fetch articles from Cambridge Associates (SSR).
+
+    Structure: article.c-list-article containing:
+      h2/h3 > a.c-link (title + full href),
+      p.c-type--body-sm ("March 2026" format → %B %Y)
+    """
+    resp = requests.get(source["url"], headers=HEADERS, timeout=30)
+    resp.raise_for_status()
+    soup = BeautifulSoup(resp.text, "html.parser")
+    expected_host = source.get("expected_hostname", "cambridgeassociates.com")
+
+    articles = []
+    for card in soup.select("article.c-list-article"):
+        link_el = card.select_one("h2 a, h3 a")
+        if not link_el:
+            continue
+        href = link_el.get("href", "")
+        if not href or not _validate_hostname(href, expected_host):
+            continue
+        title = link_el.get_text(strip=True)
+        if not title:
+            continue
+
+        date_el = card.select_one("p.c-type--body-sm")
+        date_raw = date_el.get_text(strip=True) if date_el else ""
+        parsed_date = parse_date(date_raw) if date_raw else None
+
+        articles.append({
+            "title": title,
+            "url": href,
+            "date": parsed_date,
+            "date_raw": date_raw,
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
 def fetch_man_group(source: dict) -> list[dict]:
     """Fetch articles from Man Group (SSR).
 
@@ -847,7 +884,7 @@ def fetch_amundi(source: dict) -> list[dict]:
       .card-date time[datetime] (date "DD/MM/YYYY" or ISO in datetime attr)
     """
     base_url = "https://research-center.amundi.com"
-    html = _get_playwright_page(source["url"], wait_selector="article.article--teaser")
+    html = _get_playwright_page(source["url"], wait_selector="article.article--teaser", wait_ms=3000)
     soup = BeautifulSoup(html, "html.parser")
     expected_host = source.get("expected_hostname", "amundi.com")
 
@@ -863,12 +900,12 @@ def fetch_amundi(source: dict) -> list[dict]:
         if not _validate_hostname(url, expected_host):
             continue
 
-        title_el = item.select_one("h2")
+        title_el = item.select_one("h3.card-title, h2.card-title, h3, h2")
         title = title_el.get_text(strip=True) if title_el else ""
         if not title:
             continue
 
-        time_el = item.select_one(".card-date time[datetime]") or item.select_one("time[datetime]")
+        time_el = item.select_one("time[datetime]")
         date_raw = ""
         parsed_date = None
         if time_el:
@@ -931,37 +968,44 @@ def fetch_jpmam(source: dict) -> list[dict]:
 
 
 def fetch_pgim(source: dict) -> list[dict]:
-    """Fetch articles from PGIM via Newsroom (Playwright — CSR).
+    """Fetch articles from PGIM via Newsroom (SSR — plain requests).
 
-    Insights page has attestation gate (div[inert]); newsroom is open.
-    Structure: .cmp-list__item containing:
-      a.cmp-list__item-link (title + href),
-      .cmp-list__item-date ("Month DD, YYYY")
+    Insights page has attestation gate; newsroom is SSR-accessible.
+    Data stored in data-cmp-data-layer JSON attribute on each .cmp-list__item.
+    Fields: itemTitle, publishDate ("Month DD, YYYY"), xdm:linkURL (relative).
     """
     newsroom_url = "https://www.pgim.com/us/en/institutional/about/newsroom"
     base_url = "https://www.pgim.com"
-    html = _get_playwright_page(newsroom_url, wait_selector=".cmp-list__item")
-    soup = BeautifulSoup(html, "html.parser")
+    resp = requests.get(newsroom_url, headers=HEADERS, timeout=30)
+    resp.raise_for_status()
+    soup = BeautifulSoup(resp.text, "html.parser")
     expected_host = source.get("expected_hostname", "pgim.com")
 
     articles = []
     for item in soup.select(".cmp-list__item"):
-        link_el = item.select_one("a.cmp-list__item-link")
-        if not link_el:
+        raw_data = item.get("data-cmp-data-layer", "")
+        if not raw_data:
             continue
-        href = link_el.get("href", "")
-        if not href:
+        try:
+            data_layer = json.loads(raw_data)
+        except json.JSONDecodeError:
             continue
-        url = urljoin(base_url, href)
+        key = next(iter(data_layer), None)
+        if not key:
+            continue
+        meta = data_layer[key]
+
+        title = meta.get("itemTitle", "").strip()
+        if not title:
+            continue
+        rel_url = meta.get("xdm:linkURL", "")
+        if not rel_url:
+            continue
+        url = urljoin(base_url, rel_url)
         if not _validate_hostname(url, expected_host):
             continue
 
-        title = link_el.get_text(strip=True)
-        if not title:
-            continue
-
-        date_el = item.select_one(".cmp-list__item-date")
-        date_raw = date_el.get_text(strip=True) if date_el else ""
+        date_raw = meta.get("publishDate", "")
         parsed_date = parse_date(date_raw) if date_raw else None
 
         articles.append({
@@ -1095,6 +1139,7 @@ def fetch_ark_invest(source: dict) -> list[dict]:
 # ---------------------------------------------------------------------------
 
 FETCHERS = {
+    "cambridge-associates": fetch_cambridge_associates,
     "man-group": fetch_man_group,
     "bridgewater": fetch_bridgewater,
     "aqr": fetch_aqr,

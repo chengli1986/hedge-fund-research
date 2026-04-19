@@ -9,6 +9,7 @@ from fetch_articles import (
     load_entrypoints, get_source_url, record_quality_metrics, check_anomalies,
     fetch_blackstone, fetch_gsam, _fetch_article_date_jsonld,
     fetch_amundi, fetch_jpmam, fetch_pgim, fetch_aberdeen,
+    fetch_cambridge_associates,
 )
 
 
@@ -963,57 +964,56 @@ class TestFetchPgim:
         "expected_hostname": "pgim.com",
     }
 
-    def _item(self, title: str, href: str, date: str) -> str:
-        return (
-            f'<li class="cmp-list__item">'
-            f'<a class="cmp-list__item-link" href="{href}">{title}</a>'
-            f'<span class="cmp-list__item-date">{date}</span>'
-            f'</li>'
-        )
+    def _item(self, title: str, href: str, date: str, item_id: str = "x-up-001") -> str:
+        import json as _json
+        data = {item_id: {"itemTitle": title, "publishDate": date, "xdm:linkURL": href}}
+        layer = _json.dumps(data).replace('"', "&quot;")
+        return f'<li class="cmp-list__item" data-cmp-data-layer=\'{_json.dumps(data)}\'></li>'
+
+    def _mock_resp(self, html: str):
+        resp = MagicMock()
+        resp.text = html
+        resp.raise_for_status.return_value = None
+        return resp
 
     def test_parses_articles(self):
-        html = "<html><body><ul>" + \
-            self._item("PGIM Real Estate Buys €400M Logistics Portfolio",
-                       "/us/en/institutional/about/newsroom/2026/pgim-real-estate-logistics",
-                       "April 16, 2026") + \
-            self._item("PGIM Fixed Income: Credit Outlook Q2 2026",
-                       "/us/en/institutional/about/newsroom/2026/fixed-income-credit-outlook",
-                       "March 25, 2026") + \
-            "</ul></body></html>"
-        with patch("fetch_articles._get_playwright_page", return_value=html):
+        import json as _json
+        items = (
+            f'<li class="cmp-list__item" data-cmp-data-layer=\'{_json.dumps({"a": {"itemTitle": "PGIM Real Estate Buys Logistics Portfolio", "publishDate": "April 16, 2026", "xdm:linkURL": "/us/en/institutional/about/newsroom/2026/pgim-real-estate"}})}\'></li>'
+            f'<li class="cmp-list__item" data-cmp-data-layer=\'{_json.dumps({"b": {"itemTitle": "Fixed Income Credit Outlook Q2 2026", "publishDate": "March 25, 2026", "xdm:linkURL": "/us/en/institutional/about/newsroom/2026/fixed-income"}})}\'></li>'
+        )
+        html = f"<html><body><ul>{items}</ul></body></html>"
+        with patch("fetch_articles.requests.get", return_value=self._mock_resp(html)):
             articles = fetch_pgim(self.SOURCE)
 
         assert len(articles) == 2
-        assert articles[0]["title"] == "PGIM Real Estate Buys €400M Logistics Portfolio"
-        assert articles[0]["url"] == "https://www.pgim.com/us/en/institutional/about/newsroom/2026/pgim-real-estate-logistics"
+        assert articles[0]["title"] == "PGIM Real Estate Buys Logistics Portfolio"
+        assert articles[0]["url"] == "https://www.pgim.com/us/en/institutional/about/newsroom/2026/pgim-real-estate"
         assert articles[0]["date"] == "2026-04-16"
         assert articles[0]["date_raw"] == "April 16, 2026"
 
-    def test_skips_items_without_link(self):
-        html = (
-            "<html><body><ul>"
-            '<li class="cmp-list__item"><span class="cmp-list__item-date">April 1, 2026</span></li>'
-            + self._item("Valid Article",
-                         "/us/en/institutional/about/newsroom/2026/valid",
-                         "April 1, 2026")
-            + "</ul></body></html>"
+    def test_skips_items_without_data_layer(self):
+        import json as _json
+        items = (
+            '<li class="cmp-list__item"></li>'
+            f'<li class="cmp-list__item" data-cmp-data-layer=\'{_json.dumps({"c": {"itemTitle": "Valid Article", "publishDate": "April 1, 2026", "xdm:linkURL": "/us/en/institutional/about/newsroom/2026/valid"}})}\'></li>'
         )
-        with patch("fetch_articles._get_playwright_page", return_value=html):
+        html = f"<html><body><ul>{items}</ul></body></html>"
+        with patch("fetch_articles.requests.get", return_value=self._mock_resp(html)):
             articles = fetch_pgim(self.SOURCE)
 
         assert len(articles) == 1
         assert articles[0]["title"] == "Valid Article"
 
     def test_respects_max_articles(self):
+        import json as _json
         items = "".join(
-            self._item(f"Article {i}",
-                       f"/us/en/institutional/about/newsroom/2026/article-{i}",
-                       f"April {i}, 2026")
+            f'<li class="cmp-list__item" data-cmp-data-layer=\'{_json.dumps({f"id{i}": {"itemTitle": f"Article {i}", "publishDate": f"April {i}, 2026", "xdm:linkURL": f"/us/en/institutional/about/newsroom/article-{i}"}})}\'></li>'
             for i in range(1, 8)
         )
         html = f"<html><body><ul>{items}</ul></body></html>"
         source = {**self.SOURCE, "max_articles": 5}
-        with patch("fetch_articles._get_playwright_page", return_value=html):
+        with patch("fetch_articles.requests.get", return_value=self._mock_resp(html)):
             articles = fetch_pgim(source)
 
         assert len(articles) == 5
@@ -1099,5 +1099,83 @@ class TestFetchAberdeen:
         source = {**self.SOURCE, "max_articles": 5}
         with patch("fetch_articles._get_playwright_page", return_value=html):
             articles = fetch_aberdeen(source)
+
+        assert len(articles) == 5
+
+
+# ---------------------------------------------------------------------------
+# fetch_cambridge_associates
+# ---------------------------------------------------------------------------
+
+class TestFetchCambridgeAssociates:
+    SOURCE = {
+        "url": "https://www.cambridgeassociates.com/insights/private-investments/",
+        "max_articles": 10,
+        "expected_hostname": "cambridgeassociates.com",
+    }
+
+    def _card(self, title: str, href: str, date: str) -> str:
+        return (
+            f'<article class="c-list-article u-mb40">'
+            f'<div class="o-grid">'
+            f'<div class="o-grid__col">'
+            f'<h2><a class="c-link" href="{href}">{title}</a></h2>'
+            f'<p class="c-type c-type--body-sm u-mv12 u-color-grey-dk-80">{date}</p>'
+            f'</div>'
+            f'</div>'
+            f'</article>'
+        )
+
+    def _mock_resp(self, html: str):
+        resp = MagicMock()
+        resp.text = html
+        resp.raise_for_status.return_value = None
+        return resp
+
+    def test_parses_articles(self):
+        html = "<html><body>" + \
+            self._card("Has Private Equity Hit Peak Software?",
+                       "https://www.cambridgeassociates.com/insight/has-private-equity-hit-peak-software",
+                       "February 2026") + \
+            self._card("2026 Outlook: Private Equity & Venture Capital",
+                       "https://www.cambridgeassociates.com/insight/2026-outlook-private-equity",
+                       "December 2025") + \
+            "</body></html>"
+        with patch("fetch_articles.requests.get", return_value=self._mock_resp(html)):
+            articles = fetch_cambridge_associates(self.SOURCE)
+
+        assert len(articles) == 2
+        assert articles[0]["title"] == "Has Private Equity Hit Peak Software?"
+        assert articles[0]["url"] == "https://www.cambridgeassociates.com/insight/has-private-equity-hit-peak-software"
+        assert articles[0]["date"] == "2026-02-01"
+        assert articles[0]["date_raw"] == "February 2026"
+        assert articles[1]["date"] == "2025-12-01"
+
+    def test_skips_cards_without_link(self):
+        html = (
+            "<html><body>"
+            '<article class="c-list-article"><div class="o-grid"></div></article>'
+            + self._card("Valid Article",
+                         "https://www.cambridgeassociates.com/insight/valid-article",
+                         "March 2026")
+            + "</body></html>"
+        )
+        with patch("fetch_articles.requests.get", return_value=self._mock_resp(html)):
+            articles = fetch_cambridge_associates(self.SOURCE)
+
+        assert len(articles) == 1
+        assert articles[0]["title"] == "Valid Article"
+
+    def test_respects_max_articles(self):
+        cards = "".join(
+            self._card(f"Article {i}",
+                       f"https://www.cambridgeassociates.com/insight/article-{i}",
+                       f"March 2026")
+            for i in range(1, 8)
+        )
+        html = f"<html><body>{cards}</body></html>"
+        source = {**self.SOURCE, "max_articles": 5}
+        with patch("fetch_articles.requests.get", return_value=self._mock_resp(html)):
+            articles = fetch_cambridge_associates(source)
 
         assert len(articles) == 5

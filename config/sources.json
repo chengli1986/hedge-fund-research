@@ -71,6 +71,19 @@
       "expected_hostname": "ark-invest.com",
       "description": "Disruptive innovation investing. AI, genomics, fintech, space, energy.",
       "notable_authors": ["Cathie Wood", "Brett Winton", "Sam Korus"]
+    },
+    {
+      "id": "cambridge-associates",
+      "strategy_tags": ["private_equity", "venture_capital", "private_credit", "multi_asset"],
+      "name": "Cambridge Associates",
+      "short_name": "Cambridge",
+      "url": "https://www.cambridgeassociates.com/insights/private-investments/",
+      "method": "ssr",
+      "frequency": "weekly",
+      "description": "Institutional investment advisor. Private equity, venture capital, endowment strategies.",
+      "notable_authors": [],
+      "expected_hostname": "cambridgeassociates.com",
+      "max_articles": 10
     }
   ],
   "settings": {
