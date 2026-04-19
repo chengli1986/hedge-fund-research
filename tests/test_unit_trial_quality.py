@@ -68,6 +68,14 @@ def trial_env(tmp_path, monkeypatch):
     return tmp_path
 
 
+# ── Constants validation ─────────────────────────────────────────────────────
+
+def test_constants_match_3day_window():
+    assert tm.TRIAL_DAYS == 3, "TRIAL_DAYS must be 3"
+    assert tm.SAMPLE_DAYS == {1, 3}, "SAMPLE_DAYS must sample day 1 and day 3"
+    assert tm.MIN_DAYS_WITH_ARTICLES == 2, "MIN_DAYS_WITH_ARTICLES must be 2"
+
+
 # ── Bug 1: Day 1 quality sampling on new trial ──────────────────────────────
 
 def test_new_trial_triggers_day1_quality_sampling(trial_env, monkeypatch):
@@ -75,11 +83,12 @@ def test_new_trial_triggers_day1_quality_sampling(trial_env, monkeypatch):
     count_calls = []
     sample_calls = []
 
-    def mock_count_articles(url, timeout=20):
-        count_calls.append(url)
-        return {"accessible": True, "article_count": 10, "date_count": 5, "error": None}
+    def mock_count_articles_with_fetcher(trial):
+        count_calls.append(trial.get("research_url", ""))
+        return {"accessible": True, "article_count": 10, "date_count": 5,
+                "error": None, "fetcher_used": True}
 
-    def mock_sample_quality(url):
+    def mock_sample_quality(url, trial=None):
         sample_calls.append(url)
         return {
             "sampled": 2,
@@ -91,15 +100,12 @@ def test_new_trial_triggers_day1_quality_sampling(trial_env, monkeypatch):
             "error": None,
         }
 
-    monkeypatch.setattr(tm, "count_articles", mock_count_articles)
+    monkeypatch.setattr(tm, "count_articles_with_fetcher", mock_count_articles_with_fetcher)
     monkeypatch.setattr(tm, "sample_article_quality", mock_sample_quality)
 
     tm.cmd_run()
 
-    # Verify sample was called
     assert len(sample_calls) == 1, "Day 1 quality sampling was not triggered"
-
-    # Verify it's stored in state
     state = tm.load_state()
     assert len(state["active_trials"]) > 0
     active = state["active_trials"][0]
@@ -113,9 +119,8 @@ def test_new_trial_triggers_day1_quality_sampling(trial_env, monkeypatch):
 def test_trial_fails_without_quality_scores(trial_env, monkeypatch):
     """A trial with enough articles but zero quality scores must NOT pass."""
     today = datetime.now(BJT)
-    start = today - timedelta(days=8)
+    start = today - timedelta(days=4)
 
-    # Create a trial state that's past the 7-day window with no quality samples
     trial_state = {
         "active_trials": [{
             "id": "test-fund",
@@ -132,9 +137,9 @@ def test_trial_fails_without_quality_scores(trial_env, monkeypatch):
                     "accessible": True, "article_count": 10,
                     "date_count": 5, "error": None,
                 }
-                for i in range(8)
+                for i in range(4)
             },
-            "quality_samples": [],  # No quality data!
+            "quality_samples": [],
             "auto_decided": False,
             "outcome": None,
         }],
@@ -143,31 +148,29 @@ def test_trial_fails_without_quality_scores(trial_env, monkeypatch):
 
     tm.TRIAL_STATE_FILE.write_text(json.dumps(trial_state))
 
-    # Mock to prevent actual network calls
-    monkeypatch.setattr(tm, "count_articles", lambda *a, **k: {
-        "accessible": True, "article_count": 10, "date_count": 5, "error": None})
-    monkeypatch.setattr(tm, "sample_article_quality", lambda url: {
+    monkeypatch.setattr(tm, "count_articles_with_fetcher", lambda trial: {
+        "accessible": True, "article_count": 10, "date_count": 5,
+        "error": None, "fetcher_used": True})
+    monkeypatch.setattr(tm, "sample_article_quality", lambda url, trial=None: {
         "sampled": 0, "articles": [], "avg_score": 0.0, "error": "API key missing"})
     monkeypatch.setattr(tm, "send_trial_email", lambda *a, **k: None)
 
     tm.cmd_run()
 
     state = tm.load_state()
-    # Trial should be decided and failed
     assert len(state["active_trials"]) == 0
     assert len(state["history"]) == 1
     assert state["history"][0]["outcome"] == "fail_quality"
 
-    # Also verify candidate status was set to watchlist
     candidates = json.loads(tm.CANDIDATES_FILE.read_text())
     test_candidate = next(c for c in candidates if c["id"] == "test-fund")
-    assert test_candidate["status"] == "watchlist", "Inconclusive trial must set status to watchlist"
+    assert test_candidate["status"] == "watchlist"
 
 
 def test_trial_fails_with_low_quality_scores(trial_env, monkeypatch):
     """A trial with enough articles but low quality scores must fail."""
     today = datetime.now(BJT)
-    start = today - timedelta(days=8)
+    start = today - timedelta(days=4)
 
     trial_state = {
         "active_trials": [{
@@ -185,7 +188,7 @@ def test_trial_fails_with_low_quality_scores(trial_env, monkeypatch):
                     "accessible": True, "article_count": 10,
                     "date_count": 5, "error": None,
                 }
-                for i in range(8)
+                for i in range(4)
             },
             "quality_samples": [{
                 "day": 1,
@@ -207,9 +210,10 @@ def test_trial_fails_with_low_quality_scores(trial_env, monkeypatch):
     }
 
     tm.TRIAL_STATE_FILE.write_text(json.dumps(trial_state))
-    monkeypatch.setattr(tm, "count_articles", lambda *a, **k: {
-        "accessible": True, "article_count": 10, "date_count": 5, "error": None})
-    monkeypatch.setattr(tm, "sample_article_quality", lambda url: {
+    monkeypatch.setattr(tm, "count_articles_with_fetcher", lambda trial: {
+        "accessible": True, "article_count": 10, "date_count": 5,
+        "error": None, "fetcher_used": True})
+    monkeypatch.setattr(tm, "sample_article_quality", lambda url, trial=None: {
         "sampled": 0, "articles": [], "avg_score": 0.0, "error": "already sampled"})
     monkeypatch.setattr(tm, "send_trial_email", lambda *a, **k: None)
 
@@ -314,7 +318,7 @@ def test_overall_score_computed_locally(monkeypatch):
 def test_trial_passes_with_both_quantity_and_quality(trial_env, monkeypatch):
     """A trial with enough articles AND good quality scores should pass."""
     today = datetime.now(BJT)
-    start = today - timedelta(days=8)
+    start = today - timedelta(days=4)
 
     trial_state = {
         "active_trials": [{
@@ -332,7 +336,7 @@ def test_trial_passes_with_both_quantity_and_quality(trial_env, monkeypatch):
                     "accessible": True, "article_count": 10,
                     "date_count": 5, "error": None,
                 }
-                for i in range(8)
+                for i in range(4)
             },
             "quality_samples": [{
                 "day": 1,
@@ -354,9 +358,10 @@ def test_trial_passes_with_both_quantity_and_quality(trial_env, monkeypatch):
     }
 
     tm.TRIAL_STATE_FILE.write_text(json.dumps(trial_state))
-    monkeypatch.setattr(tm, "count_articles", lambda *a, **k: {
-        "accessible": True, "article_count": 10, "date_count": 5, "error": None})
-    monkeypatch.setattr(tm, "sample_article_quality", lambda url: {
+    monkeypatch.setattr(tm, "count_articles_with_fetcher", lambda trial: {
+        "accessible": True, "article_count": 10, "date_count": 5,
+        "error": None, "fetcher_used": True})
+    monkeypatch.setattr(tm, "sample_article_quality", lambda url, trial=None: {
         "sampled": 0, "articles": [], "avg_score": 0.0, "error": "already sampled"})
     monkeypatch.setattr(tm, "send_trial_email", lambda *a, **k: None)
 

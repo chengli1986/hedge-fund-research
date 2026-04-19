@@ -45,12 +45,12 @@ SOURCES_FILE = BASE_DIR / "config" / "sources.json"
 TRIAL_STATE_FILE = BASE_DIR / "config" / "trial-state.json"
 ENV_FILE = Path.home() / ".stock-monitor.env"
 
-TRIAL_DAYS = 7
+TRIAL_DAYS = 3
 MAX_CONCURRENT_TRIALS = 3
-MIN_ARTICLES_TOTAL = 3      # articles needed over trial to pass
+MIN_DAYS_WITH_ARTICLES = 2  # fetcher must return >0 articles on ≥2 of 3 days
 MIN_QUALITY = {"HIGH", "MEDIUM"}
 MIN_QUALITY_SCORE = 0.5     # avg Haiku quality score to pass (0-1)
-SAMPLE_DAYS = {1, 4}        # trial days on which to run quality sampling
+SAMPLE_DAYS = {1, 3}        # trial days on which to run quality sampling
 SAMPLE_SIZE = 3             # articles to sample per quality check
 HAIKU_MODEL = "claude-haiku-4-5-20251001"
 
