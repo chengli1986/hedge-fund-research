@@ -515,7 +515,8 @@ def existing_source_ids() -> set[str]:
 
 # ── email ─────────────────────────────────────────────────────────────────────
 
-def send_trial_email(trial: dict, passed: bool, total_articles: int) -> None:
+def send_trial_email(trial: dict, passed: bool, total_articles: int,
+                     days_with_articles: int | None = None) -> None:
     env = load_env()
     smtp_user = env.get("SMTP_USER", "")
     smtp_pass = env.get("SMTP_PASS", "")
@@ -611,7 +612,9 @@ def send_trial_email(trial: dict, passed: bool, total_articles: int) -> None:
       <td style="padding:8px;color:{result_color};font-weight:bold">{result_text}</td></tr>
   <tr><td style="padding:8px"><strong>Trial period</strong></td>
       <td style="padding:8px">{trial.get('start_date','')} → {trial.get('end_date','')}</td></tr>
-  <tr><td style="padding:8px"><strong>Total articles detected</strong></td>
+  <tr><td style="padding:8px"><strong>Days with articles</strong></td>
+      <td style="padding:8px">{days_with_articles if days_with_articles is not None else '?'}/{TRIAL_DAYS} (need ≥{MIN_DAYS_WITH_ARTICLES})</td></tr>
+  <tr><td style="padding:8px"><strong>Total articles collected</strong></td>
       <td style="padding:8px">{total_articles}</td></tr>
   <tr><td style="padding:8px"><strong>Avg quality score</strong></td>
       <td style="padding:8px;color:{quality_color};font-weight:bold">{avg_quality:.2f} (threshold: {MIN_QUALITY_SCORE})</td></tr>
@@ -630,8 +633,10 @@ def send_trial_email(trial: dict, passed: bool, total_articles: int) -> None:
 <p style="color:#8b949e;font-size:11px;margin-top:20px">GMIA Candidate Trial Manager — auto-generated</p>
 </body></html>"""
 
+    dwa = days_with_articles if days_with_articles is not None else trial.get("days_with_articles", "?")
+    avg_q = trial.get("avg_quality_score", 0.0)
     msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"GMIA Trial {'PASS' if passed else 'FAIL'}: {trial['name']} ({total_articles} articles, Q={avg_quality:.2f})"
+    msg["Subject"] = f"GMIA Trial {'PASS' if passed else 'FAIL'}: {trial['name']} ({dwa}/{TRIAL_DAYS} days, Q={avg_q:.2f})"
     msg["From"] = smtp_user
     msg["To"] = mail_to
     msg["MIME-Version"] = "1.0"
@@ -661,7 +666,7 @@ def cmd_run() -> None:
         else:
             url = active.get("research_url") or active.get("homepage_url", "")
             print(f"[trial] Checking {active['name']} — {url}")
-            result = count_articles(url)
+            result = count_articles_with_fetcher(active)
             active.setdefault("daily_checks", {})[today] = result
             if result["accessible"]:
                 print(f"[trial]   → {result['article_count']} articles detected")
@@ -680,7 +685,7 @@ def cmd_run() -> None:
             if not already_sampled_today:
                 url = active.get("research_url") or active.get("homepage_url", "")
                 print(f"[trial] Quality sampling day {trial_day} for {active['name']}...")
-                qr = sample_article_quality(url)
+                qr = sample_article_quality(url, trial=active)
                 qr["day"] = trial_day
                 qr["date"] = today
                 active.setdefault("quality_samples", []).append(qr)
@@ -700,7 +705,11 @@ def cmd_run() -> None:
                 for d in active.get("daily_checks", {}).values()
                 if d.get("accessible")
             )
-            quantity_ok = total_articles >= MIN_DAYS_WITH_ARTICLES
+            days_with_articles = sum(
+                1 for d in active.get("daily_checks", {}).values()
+                if d.get("accessible") and d.get("article_count", 0) > 0
+            )
+            quantity_ok = days_with_articles >= MIN_DAYS_WITH_ARTICLES
 
             all_scores = [
                 a["overall"]
@@ -714,6 +723,7 @@ def cmd_run() -> None:
             active["auto_decided"] = True
             active["end_date"] = today
             active["total_articles"] = total_articles
+            active["days_with_articles"] = days_with_articles
             active["avg_quality_score"] = round(avg_quality, 3)
             if not quantity_ok:
                 active["outcome"] = "fail_quantity"
@@ -728,7 +738,7 @@ def cmd_run() -> None:
                     if not passed:
                         if not quantity_ok:
                             c["status"] = "watchlist"
-                            c["notes"] = f"Trial failed: only {total_articles} articles"
+                            c["notes"] = f"Trial failed: articles on only {days_with_articles}/{TRIAL_DAYS} days"
                         elif not all_scores:
                             c["status"] = "watchlist"
                             c["notes"] = "Trial inconclusive: no quality samples obtained"
@@ -737,17 +747,17 @@ def cmd_run() -> None:
                             c["notes"] = f"Trial failed: low quality ({avg_quality:.2f})"
                     else:
                         c["notes"] = (f"RECOMMEND: trial passed "
-                                      f"({total_articles} articles/7d, quality={avg_quality:.2f})")
+                                      f"({days_with_articles}/{TRIAL_DAYS} days with articles, quality={avg_quality:.2f})")
                     break
             save_candidates(candidates)
 
             state.setdefault("history", []).append(active)
             state["active_trials"] = [t for t in state["active_trials"] if t["id"] != active["id"]]
             save_state(state)
-            send_trial_email(active, passed, total_articles)
+            send_trial_email(active, passed, total_articles, days_with_articles=days_with_articles)
             print(f"[trial] Trial complete for {active['name']}: "
                   f"{'PASS' if passed else 'FAIL'} "
-                  f"({total_articles} articles, quality={avg_quality:.2f})")
+                  f"({days_with_articles}/{TRIAL_DAYS} days, quality={avg_quality:.2f})")
 
     # ── Step 2: fill open slots up to MAX_CONCURRENT_TRIALS ───────────────────
     if len(state["active_trials"]) < MAX_CONCURRENT_TRIALS:
@@ -786,7 +796,7 @@ def cmd_run() -> None:
             save_state(state)
 
             url = new_trial["research_url"]
-            result = count_articles(url)
+            result = count_articles_with_fetcher(new_trial)
             new_trial["daily_checks"][today] = result
             save_state(state)
             if result["accessible"]:
@@ -797,7 +807,7 @@ def cmd_run() -> None:
             # Day 1 quality sampling
             if 1 in SAMPLE_DAYS:
                 print(f"[trial] Quality sampling day 1 for {next_candidate['name']}...")
-                qr = sample_article_quality(url)
+                qr = sample_article_quality(url, trial=new_trial)
                 qr["day"] = 1
                 qr["date"] = today
                 new_trial.setdefault("quality_samples", []).append(qr)
