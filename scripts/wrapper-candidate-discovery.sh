@@ -129,7 +129,6 @@ exit_code = int(os.environ.get("EXIT_CODE", "1"))
 
 # Load candidates
 candidates = json.loads((repo / "config/fund_candidates.json").read_text())
-seeds = json.loads((repo / "config/fund_seeds.json").read_text())
 sources_data = json.loads((repo / "config/sources.json").read_text())
 active_sources = sources_data.get("sources", [])
 
@@ -240,9 +239,10 @@ for c in sorted_candidates:
 validated = sum(1 for c in candidates if c["status"] == "validated")
 inaccessible = sum(1 for c in candidates if c["status"] == "inaccessible")
 recommend = sum(1 for c in candidates if c["status"] == "validated" and (c.get("notes") or "").startswith("RECOMMEND"))
+seeds_count = sum(1 for c in candidates if c.get("source") == "manual")
 
 stats_bar = (
-    f'<span style="margin-right:16px"><strong>Seeds</strong>&nbsp;{len(seeds)}</span>'
+    f'<span style="margin-right:16px"><strong>Seeds</strong>&nbsp;{seeds_count}</span>'
     f'<span style="margin-right:16px;color:#22863a"><strong>Validated</strong>&nbsp;{validated}</span>'
     f'<span style="margin-right:16px;color:#cb2431"><strong>Inaccessible</strong>&nbsp;{inaccessible}</span>'
     f'<span style="color:#22863a;font-weight:bold"><strong>Recommend</strong>&nbsp;{recommend}</span>'
@@ -290,7 +290,7 @@ Repo: <a href="https://github.com/chengli1986/hedge-fund-research">chengli1986/h
 
 msg_id = make_msgid(domain="ec2.sinostor.com.cn")
 msg = MIMEMultipart("alternative")
-msg["Subject"] = f"GMIA Fund Discovery: {len(seeds)} seeds, {validated} validated, {recommend} recommend — {now}"
+msg["Subject"] = f"GMIA Fund Discovery: {seeds_count} seeds, {validated} validated, {recommend} recommend — {now}"
 msg["From"] = os.environ.get("SMTP_USER", "")
 msg["To"] = "ch_w10@outlook.com"
 msg["Message-ID"] = msg_id
