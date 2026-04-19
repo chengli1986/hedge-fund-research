@@ -14,7 +14,7 @@ Tracks and aggregates research insights, market commentary, and papers from top 
 | **ARK Invest** | RSS feed | Weekly | Analyst Research, Market Commentary |
 | **Cambridge Associates** | SSR (requests) | Weekly | Private equity, venture capital, private credit |
 
-## Candidate Trials (3 active, day 1/7)
+## Candidate Trials (3 active, day 1/3)
 
 | Fund | Method | Day 1 Signal |
 |------|--------|-------------|
@@ -103,11 +103,11 @@ Scorer weight optimization program using automated experiment loop:
 
 ## Trial Manager
 
-`gmia-trial-manager.py` — 7-day live trial window for candidate funds. Supports up to 3 concurrent trials (`MAX_CONCURRENT_TRIALS=3`). Runs daily, requires ≥3 articles to pass, performs Haiku quality sampling on day 1/4 (3 articles each, relevance/depth/extractable scores). Outcomes: APPROVE (add to sources), REJECT (remove from candidates).
+`gmia-trial-manager.py` — 3-day live trial window for candidate funds. Supports up to 3 concurrent trials (`MAX_CONCURRENT_TRIALS=3`). Runs daily via registered FETCHERS (Playwright/RSS/API — same fetchers as the main pipeline); falls back to httpx for sources without a registered fetcher. Requires articles on ≥2 of 3 days to pass quantity gate. Performs Haiku quality sampling on days 1 and 3 (3 articles each, relevance/depth/extractable scores). Outcomes: APPROVE (add to sources), REJECT (remove from candidates).
 
 ## Tests
 
-239 passing, 15 deselected — unit, functional, and integration tests (live/nightly tests excluded by default via pytest.ini).
+243 passing, 15 deselected — unit, functional, and integration tests (live/nightly tests excluded by default via pytest.ini).
 
 ```bash
 python3 -m pytest tests/ -q
