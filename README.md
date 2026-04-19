@@ -2,7 +2,7 @@
 
 Tracks and aggregates research insights, market commentary, and papers from top hedge funds. Summarizes via LLM and publishes a bilingual (CN/EN) dashboard.
 
-## Sources (6)
+## Sources (7)
 
 | Fund | Method | Frequency | Notable |
 |------|--------|-----------|---------|
@@ -12,6 +12,15 @@ Tracks and aggregates research insights, market commentary, and papers from top 
 | **GMO LLC** | JSON API | Quarterly | Value contrarian, 7-Year forecasts |
 | **Oaktree Capital** | Playwright (CSR) | Monthly | Howard Marks memos, credit/distressed |
 | **ARK Invest** | RSS feed | Weekly | Analyst Research, Market Commentary |
+| **Cambridge Associates** | SSR (requests) | Weekly | Private equity, venture capital, private credit |
+
+## Candidate Trials (3 active, day 1/7)
+
+| Fund | Method | Day 1 Signal |
+|------|--------|-------------|
+| T. Rowe Price | Playwright (AEM) | 15 articles |
+| Amundi Research Center | RSS | 18 articles |
+| Wellington Management | Playwright (CSR) | Accessible |
 
 ## Pipeline
 
@@ -98,7 +107,7 @@ Scorer weight optimization program using automated experiment loop:
 
 ## Tests
 
-209 passing, 1 failing (neuberger-berman seed without candidate entry — data gap that resolves after next discovery run), 15 deselected — unit, functional, and integration tests (live/nightly tests excluded by default via pytest.ini).
+239 passing, 15 deselected — unit, functional, and integration tests (live/nightly tests excluded by default via pytest.ini).
 
 ```bash
 python3 -m pytest tests/ -q
