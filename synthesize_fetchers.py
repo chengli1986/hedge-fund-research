@@ -12,7 +12,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).parent
 CANDIDATES_FILE = BASE_DIR / "config" / "fund_candidates.json"
 FETCH_ARTICLES = BASE_DIR / "fetch_articles.py"
-SKIP_WINDOW_DAYS = 7
+SKIP_WINDOW_DAYS = 1
 
 
 def load_candidates() -> list[dict]:

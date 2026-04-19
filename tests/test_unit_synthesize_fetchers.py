@@ -73,7 +73,7 @@ def test_list_targets_excludes_already_has_fetcher():
 
 
 def test_list_targets_excludes_recently_attempted():
-    recent = (datetime.now(timezone.utc) - timedelta(days=3)).isoformat()
+    recent = (datetime.now(timezone.utc) - timedelta(hours=6)).isoformat()
     candidates = [_make_candidate("alpha", "inaccessible", "HIGH", attempted_at=recent)]
     with patch("synthesize_fetchers.load_candidates", return_value=candidates), \
          patch("synthesize_fetchers.load_fetcher_ids", return_value=set()):
@@ -82,7 +82,7 @@ def test_list_targets_excludes_recently_attempted():
 
 
 def test_list_targets_includes_stale_attempt():
-    stale = (datetime.now(timezone.utc) - timedelta(days=10)).isoformat()
+    stale = (datetime.now(timezone.utc) - timedelta(days=2)).isoformat()
     candidates = [_make_candidate("alpha", "inaccessible", "HIGH", attempted_at=stale)]
     with patch("synthesize_fetchers.load_candidates", return_value=candidates), \
          patch("synthesize_fetchers.load_fetcher_ids", return_value=set()):
