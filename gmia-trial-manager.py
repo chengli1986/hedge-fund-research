@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """
-GMIA Trial Manager — validates candidate sources with 7-day live article checks
+GMIA Trial Manager — validates candidate sources with 3-day live article checks
 and Haiku-powered quality sampling.
 
 After the nightly discovery agent marks a candidate as validated (HIGH/MEDIUM quality),
-this manager picks one at a time, fetches its research URL daily for 7 days, counts
+this manager picks one at a time, fetches its research URL daily for 3 days, counts
 detectable articles, and auto-decides whether to send a graduation recommendation.
 
-On days 1 and 4, the manager samples up to 3 article links, extracts their text,
+On days 1 and 3, the manager samples up to 3 article links, extracts their text,
 and sends them to Claude Haiku for quality assessment (relevance, depth,
 extractability).  The quality score is factored into the pass/fail decision.
 
-Trial SUCCESS = quantity (≥ MIN_ARTICLES_TOTAL) AND quality (avg score ≥ 0.5)
+Trial SUCCESS = quantity (≥ MIN_DAYS_WITH_ARTICLES) AND quality (avg score ≥ 0.5)
 Trial FAIL    = either condition not met → candidate downgraded to watchlist
 
 The manager does NOT automatically modify sources.json — graduation requires a human
@@ -500,7 +500,7 @@ def send_trial_email(trial: dict, passed: bool, total_articles: int) -> None:
   <tr><td style="padding:8px"><strong>Trial period</strong></td>
       <td style="padding:8px">{trial.get('start_date','')} → {trial.get('end_date','')}</td></tr>
   <tr><td style="padding:8px"><strong>Total articles detected</strong></td>
-      <td style="padding:8px">{total_articles} (threshold: {MIN_DAYS_WITH_ARTICLES})</td></tr>
+      <td style="padding:8px">{total_articles}</td></tr>
   <tr><td style="padding:8px"><strong>Avg quality score</strong></td>
       <td style="padding:8px;color:{quality_color};font-weight:bold">{avg_quality:.2f} (threshold: {MIN_QUALITY_SCORE})</td></tr>
   <tr><td style="padding:8px"><strong>Fit score</strong></td>
@@ -588,7 +588,7 @@ def cmd_run() -> None:
                 for d in active.get("daily_checks", {}).values()
                 if d.get("accessible")
             )
-            quantity_ok = total_articles >= 3
+            quantity_ok = total_articles >= MIN_DAYS_WITH_ARTICLES
 
             all_scores = [
                 a["overall"]
