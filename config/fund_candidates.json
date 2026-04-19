@@ -59,7 +59,7 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-04-11T18:32:49.244440+00:00",
+    "last_deep_analyzed_at": "2026-04-19T18:45:00.000000+00:00",
     "quality": "HIGH",
     "topics": "fixed income, macro, credit",
     "strategy_tags": [
@@ -310,9 +310,10 @@
       "article_signals": 1
     },
     "screening_reason": "Insufficient article index signals",
-    "last_deep_analyzed_at": "2026-04-11T18:32:49.244440+00:00",
+    "last_deep_analyzed_at": "2026-04-19T18:45:00.000000+00:00",
     "quality": "HIGH",
     "topics": "private equity, macro, infrastructure, credit",
+    "notes": "RECOMMEND: private mkts + macro; JS-rendered (Adobe Helix), Playwright",
     "strategy_tags": [
       "private_equity",
       "real_assets",
@@ -1307,9 +1308,11 @@
     "research_links": [],
     "screening_signals": {},
     "screening_reason": null,
-    "last_deep_analyzed_at": null,
-    "quality": null,
-    "topics": null,
+    "last_deep_analyzed_at": "2026-04-19T18:45:00.000000+00:00",
+    "quality": "MEDIUM",
+    "topics": "macro, equity, multi-asset, private equity",
+    "notes": "Inaccessible: 403 blocks all access; JS-rendered, needs Playwright",
+    "status": "inaccessible",
     "strategy_tags": [
       "macro",
       "equity",
