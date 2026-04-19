@@ -245,7 +245,7 @@ def discover_one(seed: dict) -> dict:
     """Run discovery for a single seed fund.
 
     Args:
-        seed: A seed dict from fund_seeds.json.
+        seed: A seed candidate dict from fund_candidates.json with status='seed'.
 
     Returns:
         Dict with discovery results: id, homepage_url, research_links, rss_feeds, error.
