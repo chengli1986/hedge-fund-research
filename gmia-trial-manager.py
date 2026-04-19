@@ -323,30 +323,73 @@ def _call_haiku(prompt: str) -> dict | None:
         return None
 
 
-def sample_article_quality(research_url: str) -> dict:
+def _get_article_links_for_sampling(trial: dict) -> list[str]:
+    """Return article URLs for quality sampling.
+
+    Calls the registered FETCHER when available so sampling uses the same
+    articles the pipeline will actually collect. Falls back to httpx crawl
+    for sources without a registered fetcher.
+    """
+    source_id = trial["id"]
+    fetchers = _load_fetchers()
+
+    if source_id in fetchers:
+        candidates = load_candidates()
+        candidate = next((c for c in candidates if c["id"] == source_id), None)
+        if not candidate:
+            return []
+        source_dict = _candidate_to_source_dict(candidate)
+        try:
+            articles = fetchers[source_id](source_dict)
+            return [a["url"] for a in articles[:SAMPLE_SIZE * 3] if a.get("url")]
+        except Exception:
+            return []
+
+    # Fallback: httpx crawl of the index page
+    url = trial.get("research_url", "")
+    try:
+        resp = httpx.get(url, headers=HEADERS, timeout=20, follow_redirects=True)
+        if resp.status_code != 200:
+            return []
+        soup = BeautifulSoup(resp.text, "html.parser")
+        for tag in soup.select("nav, footer, header, script, style"):
+            tag.decompose()
+        return _extract_article_links(url, soup)
+    except Exception:
+        return []
+
+
+def sample_article_quality(research_url: str, trial: dict | None = None) -> dict:
     """Sample articles from a source and assess quality via Haiku.
 
     Returns dict with keys: sampled, articles, avg_score, error
     Each article entry: {url, title_hint, score, relevance, depth, extractable, notes}
     """
-    # Step 1: fetch the index page and extract article links
-    try:
-        resp = httpx.get(research_url, headers=HEADERS, timeout=20,
-                         follow_redirects=True)
-        if resp.status_code != 200:
+    # Step 1: get article links
+    if trial is not None:
+        links = _get_article_links_for_sampling(trial)
+        if not links:
             return {"sampled": 0, "articles": [], "avg_score": 0.0,
-                    "error": f"Index page HTTP {resp.status_code}"}
-        soup = BeautifulSoup(resp.text, "html.parser")
-        for tag in soup.select("nav, footer, header, script, style"):
-            tag.decompose()
-    except Exception as exc:
-        return {"sampled": 0, "articles": [], "avg_score": 0.0,
-                "error": str(exc)[:120]}
+                    "error": "No article links found on index page"}
+    else:
+        # Original httpx path (backward compat + fallback)
+        try:
+            resp = httpx.get(research_url, headers=HEADERS, timeout=20,
+                             follow_redirects=True)
+            if resp.status_code != 200:
+                return {"sampled": 0, "articles": [], "avg_score": 0.0,
+                        "error": f"Index page HTTP {resp.status_code}"}
+            soup = BeautifulSoup(resp.text, "html.parser")
+            for tag in soup.select("nav, footer, header, script, style"):
+                tag.decompose()
+        except Exception as exc:
+            return {"sampled": 0, "articles": [], "avg_score": 0.0,
+                    "error": str(exc)[:120]}
 
-    links = _extract_article_links(research_url, soup)
-    if not links:
-        return {"sampled": 0, "articles": [], "avg_score": 0.0,
-                "error": "No article links found on index page"}
+        links = _extract_article_links(research_url, soup)
+        if not links:
+            return {"sampled": 0, "articles": [], "avg_score": 0.0,
+                    "error": "No article links found on index page"}
 
     # Step 2: extract text from each article, using fallback links if needed
     article_texts: list[tuple[str, str]] = []  # (url, text)

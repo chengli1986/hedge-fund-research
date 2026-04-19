@@ -439,3 +439,58 @@ def test_trial_passes_with_both_quantity_and_quality(trial_env, monkeypatch):
     assert len(state["history"]) == 1
     assert state["history"][0]["outcome"] == "pass"
     assert state["history"][0]["avg_quality_score"] > 0
+
+
+# ── Task 3: quality sampling from fetcher results ───────────────────────────
+
+def test_sample_quality_uses_fetcher_links_when_trial_provided(monkeypatch):
+    """When trial dict is passed, sample_article_quality uses fetcher URLs, not httpx crawl."""
+    fetcher_calls = []
+    extract_calls = []
+
+    def fake_fetcher(source):
+        fetcher_calls.append(source["id"])
+        return [
+            {"title": "Deep Research", "url": "https://example.com/research/deep-1", "date": "2026-04-01"},
+            {"title": "Factor Study",  "url": "https://example.com/research/factor-2", "date": "2026-04-02"},
+            {"title": "Macro View",    "url": "https://example.com/research/macro-3", "date": "2026-04-03"},
+        ]
+
+    monkeypatch.setattr(tm, "_load_fetchers", lambda: {"test-fund": fake_fetcher})
+
+    import json
+    from pathlib import Path
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        cands_path = Path(tmp) / "fund_candidates.json"
+        cands_path.write_text(json.dumps([{
+            "id": "test-fund", "name": "Test Fund", "status": "validated",
+            "research_url": "https://example.com/research",
+            "homepage_url": "https://example.com",
+        }]))
+        monkeypatch.setattr(tm, "CANDIDATES_FILE", cands_path)
+
+        def fake_extract(url, timeout=20):
+            extract_calls.append(url)
+            return "Long article text " * 100
+
+        monkeypatch.setattr(tm, "_extract_article_text", fake_extract)
+        monkeypatch.setattr(tm, "_call_haiku", lambda prompt: {
+            "articles": [
+                {"article_num": i+1, "relevance": 0.8, "depth": 0.7,
+                 "extractable": 0.9, "notes": f"article {i+1}"}
+                for i in range(3)
+            ]
+        })
+
+        trial = {
+            "id": "test-fund",
+            "research_url": "https://example.com/research",
+        }
+        result = tm.sample_article_quality("https://example.com/research", trial=trial)
+
+    assert len(fetcher_calls) == 1, "Fetcher should have been called for link extraction"
+    assert result["sampled"] == 3
+    assert result["error"] is None
+    # Verify URLs came from fetcher, not httpx crawl
+    assert all("research" in url for url in extract_calls)
