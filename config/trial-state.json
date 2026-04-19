@@ -182,10 +182,52 @@
       "topics": "equity, AI, macro, fixed income, active management",
       "start_date": "2026-04-20",
       "end_date": null,
-      "daily_checks": {},
+      "daily_checks": {
+        "2026-04-20": {
+          "accessible": true,
+          "article_count": 6,
+          "date_count": 6,
+          "error": null,
+          "fetcher_used": true
+        }
+      },
       "auto_decided": false,
       "outcome": null,
-      "quality_samples": []
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.troweprice.com/en/us/insights/global-markets-weekly-update",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.7,
+              "overall": 0.78,
+              "notes": "Weekly market update covering equity performance, geopolitical developments, and economic data (inflation, employment, manufacturing); substantive but truncated at end."
+            },
+            {
+              "url": "https://www.troweprice.com/en/us/insights/is-it-smart-to-keep-money-invested-in-equities-during-market-volatility",
+              "relevance": 0.6,
+              "depth": 0.5,
+              "extractable": 0.7,
+              "overall": 0.58,
+              "notes": "Behavioral finance advice on staying invested during volatility; generic guidance with limited original analysis, truncated mid-sentence."
+            },
+            {
+              "url": "https://www.troweprice.com/en/us/insights/how-to-help-protect-your-investment-portfolio-during-stock-market-volatility",
+              "relevance": 0.5,
+              "depth": 0.4,
+              "extractable": 0.6,
+              "overall": 0.48,
+              "notes": "Retail investor guidance on portfolio management during volatility; prescriptive advice rather than research, truncated at end."
+            }
+          ],
+          "avg_score": 0.613,
+          "error": null,
+          "day": 1,
+          "date": "2026-04-20"
+        }
+      ]
     },
     {
       "id": "amundi",
@@ -197,10 +239,52 @@
       "topics": "macro, ESG, geopolitics, portfolio strategy, fixed income, emerging markets, private assets",
       "start_date": "2026-04-20",
       "end_date": null,
-      "daily_checks": {},
+      "daily_checks": {
+        "2026-04-20": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
+        }
+      },
       "auto_decided": false,
       "outcome": null,
-      "quality_samples": []
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://research-center.amundi.com/article/ai-boom-or-bubble-lessons-dot-com-period",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.9,
+              "overall": 0.9,
+              "notes": "Rigorous comparative analysis of AI bubble risk vs. dot-com period using portfolio construction and valuation metrics; identifies concentration risk as primary concern rather than explosive valuations."
+            },
+            {
+              "url": "https://research-center.amundi.com/article/cross-asset-investment-strategy-april-2026",
+              "relevance": 0.9,
+              "depth": 0.6,
+              "extractable": 0.75,
+              "overall": 0.75,
+              "notes": "Monthly cross-asset strategy covering Asia energy exposure, European earnings resilience, and gold positioning; summary-style with multiple sub-articles referenced but not fully detailed."
+            },
+            {
+              "url": "https://research-center.amundi.com/article/gold-correction-driven-positioning-not-fundamentals",
+              "relevance": 0.85,
+              "depth": 0.75,
+              "extractable": 0.7,
+              "overall": 0.78,
+              "notes": "Macro analysis of gold correction driven by positioning/ETF unwinding rather than fundamentals; constructive 12-month outlook with structural support thesis; text appears truncated at end."
+            }
+          ],
+          "avg_score": 0.81,
+          "error": null,
+          "day": 1,
+          "date": "2026-04-20"
+        }
+      ]
     },
     {
       "id": "wellington",
@@ -212,10 +296,27 @@
       "topics": "equity, macro, fixed income, alternatives, ESG, geopolitics",
       "start_date": "2026-04-20",
       "end_date": null,
-      "daily_checks": {},
+      "daily_checks": {
+        "2026-04-20": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
+        }
+      },
       "auto_decided": false,
       "outcome": null,
-      "quality_samples": []
+      "quality_samples": [
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "Could not extract text from any article",
+          "day": 1,
+          "date": "2026-04-20"
+        }
+      ]
     }
   ]
 }
