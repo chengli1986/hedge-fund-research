@@ -1145,6 +1145,9 @@ def fetch_ark_invest(source: dict) -> list[dict]:
     return articles[:source.get("max_articles", 10)]
 
 
+# FETCHER_SYNTHESIS_INSERTION_POINT — auto-generated fetchers inserted above this line
+
+
 # ---------------------------------------------------------------------------
 # Dispatcher
 # ---------------------------------------------------------------------------
