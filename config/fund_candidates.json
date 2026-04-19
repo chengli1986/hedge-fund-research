@@ -476,7 +476,7 @@
     "last_deep_analyzed_at": "2026-04-14T01:02:52.000000+00:00",
     "quality": "MEDIUM",
     "topics": "macro, credit, alternatives, fixed income",
-    "notes": "JS-rendered, advisor login; limited public access",
+    "notes": "Working fetcher (search API /services/search-engine/en-us/advisors/search/insights); trial skipped — httpx cannot detect articles (JS-rendered). Promote directly to sources.json.",
     "research_links": [
       {
         "url": "https://am.gs.com/en-us/advisors/insights/list",
@@ -859,7 +859,7 @@
     "rss_url": null,
     "official_domain": "www.researchaffiliates.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "RECOMMEND: Monthly quant/factor research, overlaps AQR",
+    "notes": "RECOMMEND: Monthly quant/factor research, overlaps AQR. Trial skipped — page requires reCAPTCHA/JS rendering (httpx returns 0 articles). Playwright fetcher implemented.",
     "research_links": [
       {
         "url": "https://www.researchaffiliates.com/insights/publications",
