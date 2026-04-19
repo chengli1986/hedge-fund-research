@@ -99,6 +99,75 @@ def load_env() -> dict[str, str]:
     return env
 
 
+# ── fetcher integration ───────────────────────────────────────────────────────
+
+def _load_fetchers() -> dict:
+    """Lazy-import FETCHERS from fetch_articles.py to avoid circular imports."""
+    try:
+        import sys as _sys
+        if str(BASE_DIR) not in _sys.path:
+            _sys.path.insert(0, str(BASE_DIR))
+        import fetch_articles
+        return fetch_articles.FETCHERS
+    except Exception as exc:
+        print(f"WARNING: could not import FETCHERS from fetch_articles: {exc}")
+        return {}
+
+
+def _candidate_to_source_dict(candidate: dict) -> dict:
+    """Build a minimal source dict from a fund_candidates entry for use with FETCHERS."""
+    return {
+        "id": candidate["id"],
+        "name": candidate.get("name", candidate["id"]),
+        "url": candidate.get("research_url") or candidate.get("homepage_url", ""),
+        "method": "playwright",
+        "max_articles": 10,
+    }
+
+
+def count_articles_with_fetcher(trial: dict) -> dict:
+    """Count articles via the registered FETCHER, with httpx fallback for unknown sources.
+
+    Returns dict with keys: accessible, article_count, date_count, error, fetcher_used
+    """
+    source_id = trial["id"]
+    fetchers = _load_fetchers()
+
+    if source_id not in fetchers:
+        url = trial.get("research_url") or trial.get("homepage_url", "")
+        result = count_articles(url)
+        result["fetcher_used"] = False
+        return result
+
+    candidates = load_candidates()
+    candidate = next((c for c in candidates if c["id"] == source_id), None)
+    if not candidate:
+        url = trial.get("research_url") or trial.get("homepage_url", "")
+        result = count_articles(url)
+        result["fetcher_used"] = False
+        return result
+
+    source_dict = _candidate_to_source_dict(candidate)
+    try:
+        articles = fetchers[source_id](source_dict)
+        count = len(articles)
+        return {
+            "accessible": True,
+            "article_count": count,
+            "date_count": sum(1 for a in articles if a.get("date")),
+            "error": None,
+            "fetcher_used": True,
+        }
+    except Exception as exc:
+        return {
+            "accessible": False,
+            "article_count": 0,
+            "date_count": 0,
+            "error": str(exc)[:120],
+            "fetcher_used": True,
+        }
+
+
 # ── article detection ─────────────────────────────────────────────────────────
 
 _DATE_PATTERNS = [

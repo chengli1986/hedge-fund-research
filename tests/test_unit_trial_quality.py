@@ -274,6 +274,73 @@ def test_fallback_links_used_on_extraction_failure(monkeypatch):
     assert result["error"] is None
 
 
+# ── Task 2: fetcher-based article counting ──────────────────────────────────
+
+def test_count_articles_with_fetcher_uses_fetcher_when_registered(monkeypatch):
+    """When FETCHERS has the source_id, count_articles_with_fetcher calls it."""
+    fetcher_calls = []
+
+    def fake_fetcher(source):
+        fetcher_calls.append(source["id"])
+        return [
+            {"title": "Article 1", "url": "https://example.com/a1", "date": "2026-04-01"},
+            {"title": "Article 2", "url": "https://example.com/a2", "date": "2026-04-02"},
+        ]
+
+    fake_fetchers = {"test-source": fake_fetcher}
+    monkeypatch.setattr(tm, "_load_fetchers", lambda: fake_fetchers)
+
+    import json
+    from pathlib import Path
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        cands_path = Path(tmp) / "fund_candidates.json"
+        cands_path.write_text(json.dumps([{
+            "id": "test-source",
+            "name": "Test Source",
+            "status": "validated",
+            "research_url": "https://example.com/research",
+            "homepage_url": "https://example.com",
+        }]))
+        monkeypatch.setattr(tm, "CANDIDATES_FILE", cands_path)
+
+        trial = {
+            "id": "test-source",
+            "research_url": "https://example.com/research",
+            "homepage_url": "https://example.com",
+        }
+        result = tm.count_articles_with_fetcher(trial)
+
+    assert len(fetcher_calls) == 1, "Fetcher should have been called once"
+    assert result["article_count"] == 2
+    assert result["accessible"] is True
+    assert result["fetcher_used"] is True
+    assert result["error"] is None
+
+
+def test_count_articles_with_fetcher_falls_back_to_httpx_when_not_registered(monkeypatch):
+    """When source_id is not in FETCHERS, falls back to httpx count_articles."""
+    monkeypatch.setattr(tm, "_load_fetchers", lambda: {})  # empty — no fetchers
+
+    httpx_calls = []
+    def fake_count_articles(url, timeout=20):
+        httpx_calls.append(url)
+        return {"accessible": True, "article_count": 5, "date_count": 2, "error": None}
+
+    monkeypatch.setattr(tm, "count_articles", fake_count_articles)
+
+    trial = {
+        "id": "unknown-source",
+        "research_url": "https://unknown.com/research",
+        "homepage_url": "https://unknown.com",
+    }
+    result = tm.count_articles_with_fetcher(trial)
+
+    assert len(httpx_calls) == 1
+    assert result["article_count"] == 5
+    assert result["fetcher_used"] is False
+
+
 # ── Bug 4: Overall score computed locally ────────────────────────────────────
 
 def test_overall_score_computed_locally(monkeypatch):
