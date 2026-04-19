@@ -505,10 +505,10 @@ def get_trial_queue(state: dict) -> list[dict]:
             continue
         queue.append(c)
 
-    quality_score = {"HIGH": 1.0, "MEDIUM": 0.5}
+    label_score = {"HIGH": 1.0, "MEDIUM": 0.5}
 
     def priority(c: dict) -> float:
-        q = quality_score.get(c.get("quality", ""), 0.0)
+        q = c.get("quality_score") or label_score.get(c.get("quality", ""), 0.0)
         f = c.get("fit_score") or 0.0
         return 0.6 * q + 0.4 * f
 
@@ -742,6 +742,8 @@ def cmd_run() -> None:
             candidates = load_candidates()
             for c in candidates:
                 if c["id"] == active["id"]:
+                    if all_scores:
+                        c["quality_score"] = round(avg_quality, 3)
                     if not passed:
                         if not quantity_ok:
                             c["status"] = "watchlist"
