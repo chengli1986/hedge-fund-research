@@ -686,6 +686,44 @@ def fetch_researchaffiliates(source: dict) -> list[dict]:
     return articles[:source.get("max_articles", 10)]
 
 
+def fetch_pimco(source: dict) -> list[dict]:
+    """Fetch articles from PIMCO (Playwright — Coveo search engine).
+
+    Structure: div.coveo-list-layout.CoveoResult cards containing:
+      a.CoveoResultLink (title + href),
+      div.result-date   ("4/16/2026" format, parsed as %m/%d/%Y)
+    """
+    html = _get_playwright_page(source["url"], wait_selector="div.coveo-list-layout.CoveoResult")
+    soup = BeautifulSoup(html, "html.parser")
+    expected_host = source.get("expected_hostname", "pimco.com")
+
+    articles = []
+    for card in soup.select("div.coveo-list-layout.CoveoResult"):
+        link_el = card.select_one("a.CoveoResultLink")
+        if not link_el:
+            continue
+        href = link_el.get("href", "")
+        if not href or not _validate_hostname(href, expected_host):
+            continue
+
+        title = link_el.get_text(strip=True)
+        if not title:
+            continue
+
+        date_el = card.select_one(".result-date")
+        date_raw = date_el.get_text(strip=True) if date_el else ""
+        parsed_date = parse_date(date_raw) if date_raw else None
+
+        articles.append({
+            "title": title,
+            "url": href,
+            "date": parsed_date,
+            "date_raw": date_raw,
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
 # ---------------------------------------------------------------------------
 # RSS Fetchers
 # ---------------------------------------------------------------------------

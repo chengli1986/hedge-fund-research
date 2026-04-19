@@ -2,7 +2,7 @@
   {
     "id": "pimco",
     "name": "PIMCO",
-    "status": "inaccessible",
+    "status": "validated",
     "homepage_url": "https://www.pimco.com",
     "research_url": "https://www.pimco.com/us/en/insights#sort=%40publishz32xdate%20descending&f:category=[70341f6de3a142ee89144df0ec44e3b8,8d35ad276c6c4c5caf4d9fed37c5f51d,1a3217a178b04eb18c1e4532665b184c,56ebfd2935044d1eb39b7e661d2d03fb,22ea0773e8f147e38e15655207e73e21,bdd17ed0ae9d4ddd96e9e60e51c47782,78449f5b2f5e4b6ebd2d6e90b7a9f889,9cfdb8bfe49a451a851cf9957c57cd32,eef114e6a525445a81d179b8adb018c7]",
     "rss_url": null,
@@ -12,7 +12,7 @@
     "last_screened_at": "2026-04-19T09:00:26.134612+08:00",
     "last_validated_at": "2026-04-19T09:01:01.176798+08:00",
     "recent_update_at": null,
-    "is_publicly_accessible": false,
+    "is_publicly_accessible": true,
     "has_article_index": false,
     "fit_score": 0.82,
     "notes": "RECOMMEND: top fixed income research; JS-rendered (no SSR), needs Playwright",

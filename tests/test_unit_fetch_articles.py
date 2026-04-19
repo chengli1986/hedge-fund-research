@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fetch_articles import (
     article_id, parse_date, _validate_hostname, load_existing_ids, fetch_oaktree, fetch_wellington,
-    fetch_troweprice, fetch_researchaffiliates, _is_date_eyebrow, DATA_FILE,
+    fetch_troweprice, fetch_researchaffiliates, fetch_pimco, _is_date_eyebrow, DATA_FILE,
     load_entrypoints, get_source_url, record_quality_metrics, check_anomalies,
 )
 
@@ -567,3 +567,71 @@ class TestFetchResearchAffiliates:
             articles = fetch_researchaffiliates(source)
 
         assert len(articles) == 4
+
+
+# ---------------------------------------------------------------------------
+# fetch_pimco
+# ---------------------------------------------------------------------------
+
+class TestFetchPimco:
+    SOURCE = {
+        "id": "pimco",
+        "url": "https://www.pimco.com/us/en/insights",
+        "max_articles": 10,
+        "expected_hostname": "pimco.com",
+    }
+
+    def _card(self, title: str, href: str, date: str) -> str:
+        return (
+            f'<div class="coveo-list-layout CoveoResult">'
+            f'<a class="CoveoResultLink" href="{href}">{title}</a>'
+            f'<div class="coveo-result-row result-date">{date}</div>'
+            f'</div>'
+        )
+
+    def test_parses_articles(self):
+        html = "<html><body>" + \
+            self._card("Why the Fed Could Shrink Its Balance Sheet",
+                       "https://www.pimco.com/us/en/insights/why-the-fed",
+                       "4/16/2026") + \
+            self._card("Layered Uncertainty: Conflict, Credit Stress, and AI",
+                       "https://www.pimco.com/us/en/insights/layered-uncertainty",
+                       "3/25/2026") + \
+            "</body></html>"
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_pimco(self.SOURCE)
+
+        assert len(articles) == 2
+        assert articles[0]["title"] == "Why the Fed Could Shrink Its Balance Sheet"
+        assert articles[0]["url"] == "https://www.pimco.com/us/en/insights/why-the-fed"
+        assert articles[0]["date"] == "2026-04-16"
+        assert articles[0]["date_raw"] == "4/16/2026"
+        assert articles[1]["date"] == "2026-03-25"
+
+    def test_skips_cards_without_link(self):
+        html = "<html><body>" + \
+            '<div class="coveo-list-layout CoveoResult"><div class="result-date">4/1/2026</div></div>' + \
+            self._card("Valid Article",
+                       "https://www.pimco.com/us/en/insights/valid-article",
+                       "4/1/2026") + \
+            "</body></html>"
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_pimco(self.SOURCE)
+
+        assert len(articles) == 1
+        assert articles[0]["title"] == "Valid Article"
+
+    def test_respects_max_articles(self):
+        cards = "".join(
+            self._card(f"Article {i}",
+                       f"https://www.pimco.com/us/en/insights/article-{i}",
+                       f"4/{i}/2026")
+            for i in range(1, 8)
+        )
+        html = f"<html><body>{cards}</body></html>"
+        source = {**self.SOURCE, "max_articles": 5}
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_pimco(source)
+
+        assert len(articles) == 5
+        assert articles[0]["title"] == "Article 1"
