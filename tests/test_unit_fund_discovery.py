@@ -5,7 +5,6 @@ import pytest
 from pathlib import Path
 
 CONFIG_DIR = Path(__file__).parent.parent / "config"
-SEED_FILE = CONFIG_DIR / "fund_seeds.json"
 CANDIDATES_FILE = CONFIG_DIR / "fund_candidates.json"
 SOURCES_FILE = CONFIG_DIR / "sources.json"
 
@@ -13,41 +12,6 @@ VALID_STATUSES = {
     "seed", "discovered", "screened", "screen_failed", "validated", "inaccessible",
     "watchlist", "rejected", "promoted",
 }
-
-
-# ---------------------------------------------------------------------------
-# Seed file tests
-# ---------------------------------------------------------------------------
-
-class TestSeedFile:
-    def test_seed_file_is_valid_json(self):
-        """fund_seeds.json must be valid JSON."""
-        text = SEED_FILE.read_text()
-        seeds = json.loads(text)
-        assert isinstance(seeds, list)
-
-    def test_seeds_have_required_fields(self):
-        """Every seed must have id, name, category, homepage."""
-        seeds = json.loads(SEED_FILE.read_text())
-        required = {"id", "name", "category", "homepage"}
-        for seed in seeds:
-            missing = required - set(seed.keys())
-            assert not missing, f"Seed {seed.get('id', '?')} missing: {missing}"
-
-    def test_seed_ids_are_unique(self):
-        """Seed IDs must be unique."""
-        seeds = json.loads(SEED_FILE.read_text())
-        ids = [s["id"] for s in seeds]
-        assert len(ids) == len(set(ids)), f"Duplicate IDs: {ids}"
-
-    def test_no_overlap_with_production_sources(self):
-        """Seed IDs must not overlap with production source IDs."""
-        seeds = json.loads(SEED_FILE.read_text())
-        sources = json.loads(SOURCES_FILE.read_text())
-        seed_ids = {s["id"] for s in seeds}
-        source_ids = {s["id"] for s in sources["sources"]}
-        overlap = seed_ids & source_ids
-        assert not overlap, f"Overlap with production: {overlap}"
 
 
 # ---------------------------------------------------------------------------
@@ -77,14 +41,21 @@ class TestCandidatesFile:
                 f"Candidate {c['id']} has invalid status: {c['status']}"
             )
 
-    def test_all_seeds_have_candidate_entry(self):
-        """Every seed must have a corresponding candidate entry."""
-        seeds = json.loads(SEED_FILE.read_text())
+    def test_candidates_have_source_field(self):
+        """Every candidate must have a source field."""
         candidates = json.loads(CANDIDATES_FILE.read_text())
-        seed_ids = {s["id"] for s in seeds}
-        candidate_ids = {c["id"] for c in candidates}
-        missing = seed_ids - candidate_ids
-        assert not missing, f"Seeds without candidate entry: {missing}"
+        valid_sources = {"manual", "auto_discovered"}
+        for c in candidates:
+            assert "source" in c, f"Candidate {c['id']} missing source field"
+            assert c["source"] in valid_sources, (
+                f"Candidate {c['id']} has invalid source: {c['source']}"
+            )
+
+    def test_manual_source_count(self):
+        """There must be at least 10 manual (seed) candidates."""
+        candidates = json.loads(CANDIDATES_FILE.read_text())
+        manual_count = sum(1 for c in candidates if c["source"] == "manual")
+        assert manual_count >= 10, f"Expected ≥10 manual candidates, got {manual_count}"
 
 
 # ---------------------------------------------------------------------------
