@@ -762,56 +762,56 @@ class TestFetchGsam:
         "expected_hostname": "am.gs.com",
     }
 
-    def _card_html(self, title: str, href: str) -> str:
-        return (
-            f'<a href="{href}">'
-            f'<div data-testid="insight-card">'
-            f'<span data-gs-uitk-component="card-title">{title}</span>'
-            f'</div>'
-            f'</a>'
-        )
+    def _api_response(self, hits: list) -> dict:
+        return {"nbHits": len(hits), "insights": {"hits": hits, "nbHits": len(hits)}}
+
+    def _hit(self, title: str, page_path: str, publish_date: str) -> dict:
+        return {"title": title, "pagePath": page_path, "publishDate": publish_date}
+
+    def _mock_resp(self, data: dict):
+        resp = MagicMock()
+        resp.json.return_value = data
+        resp.raise_for_status.return_value = None
+        return resp
 
     def test_parses_articles(self):
-        html = "<html><body>" + \
-            self._card_html("Market Brief: Middle East Conflict",
-                            "/en-us/advisors/insights/article/2026/market-brief") + \
-            self._card_html("Investment Outlook 2026",
-                            "/en-us/advisors/insights/article/investment-outlook") + \
-            "</body></html>"
-
-        with patch("fetch_articles._get_playwright_page", return_value=html):
-            with patch("fetch_articles._fetch_article_date_jsonld", return_value="2026-04-15"):
-                articles = fetch_gsam(self.SOURCE)
+        api_data = self._api_response([
+            self._hit("Fixed Income Outlook 2Q 2026",
+                      "/en-us/advisors/insights/article/fixed-income-outlook",
+                      "2026-04-17T04:00:00.000Z"),
+            self._hit("Investment Outlook 2026",
+                      "/en-us/advisors/insights/article/investment-outlook",
+                      "2026-01-10T00:00:00.000Z"),
+        ])
+        with patch("fetch_articles.requests.get", return_value=self._mock_resp(api_data)):
+            articles = fetch_gsam(self.SOURCE)
 
         assert len(articles) == 2
-        assert articles[0]["title"] == "Market Brief: Middle East Conflict"
-        assert articles[0]["url"] == "https://am.gs.com/en-us/advisors/insights/article/2026/market-brief"
-        assert articles[0]["date"] == "2026-04-15"
+        assert articles[0]["title"] == "Fixed Income Outlook 2Q 2026"
+        assert articles[0]["url"] == "https://am.gs.com/en-us/advisors/insights/article/fixed-income-outlook"
+        assert articles[0]["date"] == "2026-04-17"
+        assert articles[1]["date"] == "2026-01-10"
 
-    def test_skips_cards_without_link(self):
-        html = (
-            "<html><body>"
-            '<div data-testid="insight-card"><span data-gs-uitk-component="card-title">Orphaned</span></div>'
-            + self._card_html("Valid Article", "/en-us/advisors/insights/article/valid")
-            + "</body></html>"
-        )
-        with patch("fetch_articles._get_playwright_page", return_value=html):
-            with patch("fetch_articles._fetch_article_date_jsonld", return_value=None):
-                articles = fetch_gsam(self.SOURCE)
+    def test_skips_hits_without_title(self):
+        api_data = self._api_response([
+            {"title": "", "pagePath": "/en-us/advisors/insights/article/no-title", "publishDate": "2026-04-01T00:00:00.000Z"},
+            self._hit("Valid Article", "/en-us/advisors/insights/article/valid", "2026-04-15T00:00:00.000Z"),
+        ])
+        with patch("fetch_articles.requests.get", return_value=self._mock_resp(api_data)):
+            articles = fetch_gsam(self.SOURCE)
 
         assert len(articles) == 1
         assert articles[0]["title"] == "Valid Article"
 
     def test_respects_max_articles(self):
-        cards = "".join(
-            self._card_html(f"Article {i}", f"/en-us/advisors/insights/article/test-{i}")
+        api_data = self._api_response([
+            self._hit(f"Article {i}", f"/en-us/advisors/insights/article/article-{i}",
+                      f"2026-04-{i:02d}T00:00:00.000Z")
             for i in range(1, 8)
-        )
-        html = f"<html><body>{cards}</body></html>"
+        ])
         source = {**self.SOURCE, "max_articles": 5}
-        with patch("fetch_articles._get_playwright_page", return_value=html):
-            with patch("fetch_articles._fetch_article_date_jsonld", return_value=None):
-                articles = fetch_gsam(source)
+        with patch("fetch_articles.requests.get", return_value=self._mock_resp(api_data)):
+            articles = fetch_gsam(source)
 
         assert len(articles) == 5
 

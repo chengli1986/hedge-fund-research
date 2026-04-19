@@ -835,42 +835,53 @@ def _fetch_article_date_jsonld(url: str) -> Optional[str]:
 
 
 def fetch_gsam(source: dict) -> list[dict]:
-    """Fetch articles from Goldman Sachs Asset Management (Playwright — React/Next.js).
+    """Fetch articles from Goldman Sachs Asset Management via internal search API.
 
-    List page: [data-testid="insight-card"] cards inside <a> tags.
-    Dates not on list page — fetched from individual article pages via JSON-LD.
+    API: /services/search-engine/en-us/advisors/search/insights
+    Returns insights[].hits[].{title, pagePath, publishDate (ISO), authors}
+    No auth required. Avoids Playwright timeout caused by background analytics
+    scripts preventing networkidle.
     """
+    api_url = (
+        "https://am.gs.com/services/search-engine/en-us/advisors/search/insights"
+        "?q=&hitsPerPage={n}&sortBy=created&sort=desc"
+    ).format(n=source.get("max_articles", 10))
     base_url = "https://am.gs.com"
-    html = _get_playwright_page(source["url"], wait_selector='[data-testid="insight-card"]')
-    soup = BeautifulSoup(html, "html.parser")
     expected_host = source.get("expected_hostname", "am.gs.com")
 
+    api_headers = {**HEADERS, "Accept": "application/json",
+                   "Referer": "https://am.gs.com/en-us/advisors/insights/list"}
+    resp = requests.get(api_url, headers=api_headers, timeout=30)
+    resp.raise_for_status()
+    data = resp.json()
+
     articles = []
-    for card in soup.select('[data-testid="insight-card"]'):
-        # Card is wrapped in or contains an <a>
-        link_el = card.find_parent("a") or card.select_one("a")
-        if not link_el:
+    for hit in data.get("insights", {}).get("hits", []):
+        title = (hit.get("title") or hit.get("summaryTitle") or "").strip()
+        if not title:
             continue
-        href = link_el.get("href", "")
-        if not href:
+        page_path = hit.get("pagePath") or hit.get("slug") or ""
+        if not page_path:
             continue
-        url = urljoin(base_url, href) if href.startswith("/") else href
+        url = urljoin(base_url, page_path)
         if not _validate_hostname(url, expected_host):
             continue
 
-        title_el = card.select_one('[data-gs-uitk-component="card-title"]')
-        title = title_el.get_text(strip=True) if title_el else ""
-        if not title:
-            continue
-
-        # Dates are only available on individual article pages via JSON-LD
-        parsed_date = _fetch_article_date_jsonld(url)
+        date_raw = hit.get("publishDate", "")
+        parsed_date = None
+        if date_raw:
+            try:
+                parsed_date = datetime.fromisoformat(
+                    date_raw.replace("Z", "+00:00")
+                ).strftime("%Y-%m-%d")
+            except (ValueError, TypeError):
+                parsed_date = parse_date(date_raw[:10])
 
         articles.append({
             "title": title,
             "url": url,
             "date": parsed_date,
-            "date_raw": "",
+            "date_raw": date_raw,
         })
 
     return articles[:source.get("max_articles", 10)]
