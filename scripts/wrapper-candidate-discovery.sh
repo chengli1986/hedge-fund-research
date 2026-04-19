@@ -278,6 +278,7 @@ html = f"""<html><body style="font-family:system-ui,-apple-system,sans-serif;max
   <span style="color:#959da5;text-decoration:line-through">rejected</span> 不适合（无研究内容或付费墙）<br>
   <strong>Fit</strong>：0–1 综合适配分（域名可信度 + 内容结构 + 研究深度），≥0.6 代表较高适配性<br>
   <strong>Quality</strong>：LLM 评估研究深度 — <span style="color:#22863a;font-weight:bold">HIGH</span> 有原创观点／<span style="color:#e36209;font-weight:bold">MEDIUM</span> 一般资讯／<span style="color:#cb2431;font-weight:bold">LOW</span> 营销内容为主<br>
+  <em style="color:#555">💡 简单记忆：Fit 是「门好不好开」，Quality 是「门里有没有宝」。两者都高才是理想的 Production 候选。</em><br>
   <strong>Tags</strong>：策略分类标签，12 类固定标签集（与覆盖地图对应），用于追踪策略多样性<br>
   <strong>Notes</strong>：<span style="background:#e6ffe6">绿色高亮行</span> = RECOMMEND，建议优先跟进并考虑加入正式 pipeline
 </div>
