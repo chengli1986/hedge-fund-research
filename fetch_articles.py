@@ -1160,6 +1160,8 @@ FETCHERS = {
     "blackstone": fetch_blackstone,
     "gsam": fetch_gsam,
     "amundi": fetch_amundi,
+    "wellington": fetch_wellington,
+    "troweprice": fetch_troweprice,
     "jpmam": fetch_jpmam,
     "pgim": fetch_pgim,
     "aberdeen": fetch_aberdeen,
