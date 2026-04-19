@@ -15,7 +15,7 @@
     "is_publicly_accessible": true,
     "has_article_index": false,
     "fit_score": 0.82,
-    "notes": "RECOMMEND: top fixed income research; JS-rendered (no SSR), needs Playwright",
+    "notes": "Validated; 403 on recheck (bot protection), keep watching",
     "research_links": [
       {
         "url": "https://www.pimco.com/us/en/insights#sort=%40publishz32xdate%20descending&f:category=[70341f6de3a142ee89144df0ec44e3b8,8d35ad276c6c4c5caf4d9fed37c5f51d,1a3217a178b04eb18c1e4532665b184c,56ebfd2935044d1eb39b7e661d2d03fb,22ea0773e8f147e38e15655207e73e21,bdd17ed0ae9d4ddd96e9e60e51c47782,78449f5b2f5e4b6ebd2d6e90b7a9f889,9cfdb8bfe49a451a851cf9957c57cd32,eef114e6a525445a81d179b8adb018c7]",
@@ -59,7 +59,7 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-04-19T18:45:00.000000+00:00",
+    "last_deep_analyzed_at": "2026-04-19T18:41:55Z",
     "quality": "HIGH",
     "topics": "fixed income, macro, credit",
     "strategy_tags": [
@@ -164,7 +164,7 @@
       },
       {
         "url": "https://www.blackstone.com/insights/article/market-views-dealmaking-disruption-and-real-estates-recovery/",
-        "label": "Market Views: Dealmaking, Disruption, and Real Estate’s Recovery",
+        "label": "Market Views: Dealmaking, Disruption, and Real Estate\u2019s Recovery",
         "path": "insights/article/market-views-dealmaking-disruption-and-real-estates-recovery"
       },
       {
@@ -261,7 +261,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.94,
-    "notes": "Watchlist: HIGH quality; JS-rendered (Adobe Helix CMS), needs Playwright",
+    "notes": "Still 403 inaccessible, bot protection",
     "research_links": [
       {
         "url": "https://www.kkr.com/insights",
@@ -290,7 +290,7 @@
       },
       {
         "url": "https://www.kkr.com/insights/naic-spring-update-2026",
-        "label": "Investment Insights Highlights from the NAIC’s 2026 Spring National Meeting: CLOs, Collateral Loans,",
+        "label": "Investment Insights Highlights from the NAIC\u2019s 2026 Spring National Meeting: CLOs, Collateral Loans,",
         "path": "insights/naic-spring-update-2026"
       },
       {
@@ -310,10 +310,9 @@
       "article_signals": 1
     },
     "screening_reason": "Insufficient article index signals",
-    "last_deep_analyzed_at": "2026-04-19T18:45:00.000000+00:00",
-    "quality": "HIGH",
+    "last_deep_analyzed_at": "2026-04-19T18:41:55Z",
+    "quality": "UNKNOWN",
     "topics": "private equity, macro, infrastructure, credit",
-    "notes": "RECOMMEND: private mkts + macro; JS-rendered (Adobe Helix), Playwright",
     "strategy_tags": [
       "private_equity",
       "real_assets",
@@ -392,7 +391,7 @@
       },
       {
         "url": "https://www.cambridgeassociates.com/insight/germanys-fiscal-boost/",
-        "label": "Germany’s Fiscal Boost Remains a Tailwind Despite Near-Term Risks",
+        "label": "Germany\u2019s Fiscal Boost Remains a Tailwind Despite Near-Term Risks",
         "path": "insight/germanys-fiscal-boost"
       },
       {
@@ -477,7 +476,7 @@
     "last_deep_analyzed_at": "2026-04-14T01:02:52.000000+00:00",
     "quality": "MEDIUM",
     "topics": "macro, credit, alternatives, fixed income",
-    "notes": "Working fetcher (search API /services/search-engine/en-us/advisors/search/insights); trial skipped — httpx cannot detect articles (JS-rendered). Promote directly to sources.json.",
+    "notes": "Working fetcher (search API /services/search-engine/en-us/advisors/search/insights); trial skipped \u2014 httpx cannot detect articles (JS-rendered). Promote directly to sources.json.",
     "research_links": [
       {
         "url": "https://am.gs.com/en-us/advisors/insights/list",
@@ -818,7 +817,7 @@
     "rss_url": null,
     "official_domain": "www.msci.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "JS-rendered (Next.js), needs Playwright; 10 articles visible — private markets, geo-risk, AI, ESG, fixed income",
+    "notes": "JS-rendered (Next.js), needs Playwright; 10 articles visible \u2014 private markets, geo-risk, AI, ESG, fixed income",
     "research_links": [],
     "last_discovered_at": "2026-04-19T09:00:14.697222+08:00",
     "quality": "MEDIUM",
@@ -860,7 +859,7 @@
     "rss_url": null,
     "official_domain": "www.researchaffiliates.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "RECOMMEND: Monthly quant/factor research, overlaps AQR. Trial skipped — page requires reCAPTCHA/JS rendering (httpx returns 0 articles). Playwright fetcher implemented.",
+    "notes": "RECOMMEND: Monthly quant/factor research, overlaps AQR. Trial skipped \u2014 page requires reCAPTCHA/JS rendering (httpx returns 0 articles). Playwright fetcher implemented.",
     "research_links": [
       {
         "url": "https://www.researchaffiliates.com/insights/publications",
@@ -929,7 +928,7 @@
       },
       {
         "url": "https://www.researchaffiliates.com/publications/articles/1103-2025-implications-for-the-future-some-like-it-hot",
-        "label": "2025’s Implications for the Future: “Some Like it Hot\"? By Jim Masturzo January 2026 A review of maj",
+        "label": "2025\u2019s Implications for the Future: \u201cSome Like it Hot\"? By Jim Masturzo January 2026 A review of maj",
         "path": "publications/articles/1103-2025-implications-for-the-future-some-like-it-hot"
       },
       {
@@ -1291,7 +1290,7 @@
   {
     "id": "morganstanley-im",
     "name": "Morgan Stanley Investment Management",
-    "status": "seed",
+    "status": "inaccessible",
     "homepage_url": "https://www.morganstanley.com/im/en-us/institutional-investor/insights",
     "research_url": null,
     "rss_url": null,
@@ -1304,15 +1303,13 @@
     "is_publicly_accessible": null,
     "has_article_index": null,
     "fit_score": null,
-    "notes": "MSIM institutional insights: hedge fund outlooks, equity, multi-asset",
+    "notes": "403 bot protection, cannot access",
     "research_links": [],
     "screening_signals": {},
     "screening_reason": null,
-    "last_deep_analyzed_at": "2026-04-19T18:45:00.000000+00:00",
-    "quality": "MEDIUM",
+    "last_deep_analyzed_at": "2026-04-19T18:41:55Z",
+    "quality": "UNKNOWN",
     "topics": "macro, equity, multi-asset, private equity",
-    "notes": "Inaccessible: 403 blocks all access; JS-rendered, needs Playwright",
-    "status": "inaccessible",
     "strategy_tags": [
       "macro",
       "equity",
@@ -1371,5 +1368,102 @@
       "real_assets"
     ],
     "source": "manual"
+  },
+  {
+    "id": "apollo-global-management",
+    "name": "Apollo Global Management",
+    "homepage_url": "https://www.apollo.com/insights-news/insights",
+    "source": "manual",
+    "status": "validated",
+    "strategy_tags": [
+      "private_equity",
+      "private_credit",
+      "macro",
+      "multi_asset"
+    ],
+    "quality": "MEDIUM",
+    "topics": "private equity, private credit, macro, alternatives",
+    "notes": "RECOMMEND: Active PE/credit research, fills private_equity gap",
+    "last_deep_analyzed_at": "2026-04-19T18:43:00Z",
+    "research_url": "https://www.apollo.com/insights-news/insights",
+    "official_domain": "www.apollo.com",
+    "research_links": [
+      {
+        "url": "https://www.apollo.com/insights-news/insights/2025/09/what-if-the-assumptions-we-ve-always-relied-on-in-finance-no-longer-hold-true",
+        "label": "Insights & News",
+        "path": "insights-news/insights/2025/09/what-if-the-assumptions-we-ve-always-relied-on-in-finance-no-longer-hold-true"
+      },
+      {
+        "url": "https://www.apollo.com/insights-news/insights",
+        "label": "Insights",
+        "path": "insights-news/insights"
+      },
+      {
+        "url": "https://www.apollo.com/insights-news/insights/regional-qa/2024/03/greetings-from-apollo-asia-pacific-",
+        "label": "Careers",
+        "path": "insights-news/insights/regional-qa/2024/03/greetings-from-apollo-asia-pacific-"
+      },
+      {
+        "url": "https://www.apollo.com/insights-news/insights/2026/04/japan-s-reset-is-rational-not-cultural",
+        "label": "",
+        "path": "insights-news/insights/2026/04/japan-s-reset-is-rational-not-cultural"
+      },
+      {
+        "url": "https://www.apollo.com/insights-news/insights/the-view-from-apollo/2026/04/private-equity-portfolios-three-key-dimensions-of-diversification",
+        "label": "",
+        "path": "insights-news/insights/the-view-from-apollo/2026/04/private-equity-portfolios-three-key-dimensions-of-diversification"
+      },
+      {
+        "url": "https://www.apollo.com/insights-news/insights/2026/04/reset-in-software-and-why-discipline-always-matters",
+        "label": "",
+        "path": "insights-news/insights/2026/04/reset-in-software-and-why-discipline-always-matters"
+      },
+      {
+        "url": "https://www.apollo.com/insights-news/insights/2026/04/john-zito-on-software--ai-disruption--and-putting-capital-to-wor",
+        "label": "",
+        "path": "insights-news/insights/2026/04/john-zito-on-software--ai-disruption--and-putting-capital-to-wor"
+      },
+      {
+        "url": "https://www.apollo.com/insights-news/insights/2026/03/balance-sheet-behind-the-ai-revolution",
+        "label": "",
+        "path": "insights-news/insights/2026/03/balance-sheet-behind-the-ai-revolution"
+      },
+      {
+        "url": "https://www.apollo.com/insights-news/insights/the-view-from-apollo/2026/03/resilience-under-pressure",
+        "label": "",
+        "path": "insights-news/insights/the-view-from-apollo/2026/03/resilience-under-pressure"
+      },
+      {
+        "url": "https://www.apollo.com/insights-news/insights/2026/03/the-evolution-of-sustainable-credit-platforms-at-apollo-volume-iv",
+        "label": "",
+        "path": "insights-news/insights/2026/03/the-evolution-of-sustainable-credit-platforms-at-apollo-volume-iv"
+      },
+      {
+        "url": "https://www.apollo.com/insights-news/insights/2026/02/japans-new-investment-horizon-bloomberg-wall-street-week",
+        "label": "",
+        "path": "insights-news/insights/2026/02/japans-new-investment-horizon-bloomberg-wall-street-week"
+      },
+      {
+        "url": "https://www.apollo.com/insights-news/insights/9-9/2026/02/9-9-with-paul-sipio",
+        "label": "",
+        "path": "insights-news/insights/9-9/2026/02/9-9-with-paul-sipio"
+      }
+    ],
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-04-20T02:43:03.015822+08:00",
+    "is_publicly_accessible": true,
+    "has_article_index": true,
+    "last_screened_at": "2026-04-20T02:43:07.237476+08:00",
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 0,
+      "article_tags": 0,
+      "time_tags": 0,
+      "date_patterns": 2,
+      "h2_tags": 1,
+      "article_signals": 1
+    },
+    "screening_reason": "Manually validated: 12 research links, 1-2 articles/week, Apr 2026"
   }
 ]
