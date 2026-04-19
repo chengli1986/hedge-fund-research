@@ -180,28 +180,12 @@
       "fit_score": 0.97,
       "quality": "HIGH",
       "topics": "equity, AI, macro, fixed income, active management",
-      "start_date": "2026-04-19",
+      "start_date": "2026-04-20",
       "end_date": null,
-      "daily_checks": {
-        "2026-04-19": {
-          "accessible": true,
-          "article_count": 15,
-          "date_count": 0,
-          "error": null
-        }
-      },
+      "daily_checks": {},
       "auto_decided": false,
       "outcome": null,
-      "quality_samples": [
-        {
-          "sampled": 3,
-          "articles": [],
-          "avg_score": 0.0,
-          "error": "Haiku returned invalid response",
-          "day": 1,
-          "date": "2026-04-19"
-        }
-      ]
+      "quality_samples": []
     },
     {
       "id": "amundi",
@@ -211,28 +195,12 @@
       "fit_score": 0.95,
       "quality": "HIGH",
       "topics": "macro, ESG, geopolitics, portfolio strategy, fixed income, emerging markets, private assets",
-      "start_date": "2026-04-19",
+      "start_date": "2026-04-20",
       "end_date": null,
-      "daily_checks": {
-        "2026-04-19": {
-          "accessible": true,
-          "article_count": 18,
-          "date_count": 0,
-          "error": null
-        }
-      },
+      "daily_checks": {},
       "auto_decided": false,
       "outcome": null,
-      "quality_samples": [
-        {
-          "sampled": 3,
-          "articles": [],
-          "avg_score": 0.0,
-          "error": "Haiku returned invalid response",
-          "day": 1,
-          "date": "2026-04-19"
-        }
-      ]
+      "quality_samples": []
     },
     {
       "id": "wellington",
@@ -242,28 +210,12 @@
       "fit_score": 0.8843,
       "quality": "HIGH",
       "topics": "equity, macro, fixed income, alternatives, ESG, geopolitics",
-      "start_date": "2026-04-19",
+      "start_date": "2026-04-20",
       "end_date": null,
-      "daily_checks": {
-        "2026-04-19": {
-          "accessible": true,
-          "article_count": 598,
-          "date_count": 598,
-          "error": null
-        }
-      },
+      "daily_checks": {},
       "auto_decided": false,
       "outcome": null,
-      "quality_samples": [
-        {
-          "sampled": 3,
-          "articles": [],
-          "avg_score": 0.0,
-          "error": "Haiku returned invalid response",
-          "day": 1,
-          "date": "2026-04-19"
-        }
-      ]
+      "quality_samples": []
     }
   ]
 }
