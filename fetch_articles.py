@@ -1163,6 +1163,8 @@ FETCHERS = {
     "jpmam": fetch_jpmam,
     "pgim": fetch_pgim,
     "aberdeen": fetch_aberdeen,
+    "research-affiliates": fetch_researchaffiliates,
+    "pimco": fetch_pimco,
 }
 
 
