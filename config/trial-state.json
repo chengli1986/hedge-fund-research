@@ -1,6 +1,5 @@
 {
-  "history": [],
-  "active_trials": [
+  "history": [
     {
       "id": "cambridge-associates",
       "name": "Cambridge Associates",
@@ -10,7 +9,7 @@
       "quality": "HIGH",
       "topics": "private equity, venture capital, co-investment, private credit",
       "start_date": "2026-04-12",
-      "end_date": null,
+      "end_date": "2026-04-19",
       "daily_checks": {
         "2026-04-12": {
           "accessible": true,
@@ -53,10 +52,16 @@
           "article_count": 15,
           "date_count": 0,
           "error": null
+        },
+        "2026-04-19": {
+          "accessible": true,
+          "article_count": 15,
+          "date_count": 0,
+          "error": null
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -99,7 +104,10 @@
           "day": 4,
           "date": "2026-04-15"
         }
-      ]
+      ],
+      "total_articles": 120,
+      "avg_quality_score": 0.84
     }
-  ]
+  ],
+  "active_trials": []
 }
