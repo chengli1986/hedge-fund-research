@@ -1465,5 +1465,47 @@
       "article_signals": 1
     },
     "screening_reason": "Manually validated: 12 research links, 1-2 articles/week, Apr 2026"
+  },
+  {
+    "id": "brookfield",
+    "name": "Brookfield Asset Management",
+    "homepage_url": "https://www.brookfield.com",
+    "research_url": "https://www.brookfield.com/views-news/insights",
+    "source": "manual",
+    "status": "validated",
+    "strategy_tags": [
+      "real_assets",
+      "private_credit",
+      "private_equity",
+      "multi_asset"
+    ],
+    "official_domain": "www.brookfield.com",
+    "research_links": [
+      {
+        "url": "https://www.brookfield.com/views-news/insights",
+        "label": "Insights",
+        "path": "views-news/insights"
+      },
+      {
+        "url": "https://www.brookfield.com/views-news/insights/building-backbone-ai",
+        "label": "Learn More",
+        "path": "views-news/insights/building-backbone-ai"
+      },
+      {
+        "url": "https://www.brookfield.com/views-news/insights/next-industrials-ai-transformation",
+        "label": "Up next for industrials: An AI transformation",
+        "path": "views-news/insights/next-industrials-ai-transformation"
+      }
+    ],
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-04-20T09:01:24.288350+08:00",
+    "last_deep_analyzed_at": "2026-04-20T01:01:30.857971+00:00",
+    "quality": "HIGH",
+    "quality_score": 0.82,
+    "topics": "real assets, infrastructure, private credit, private equity, energy",
+    "notes": "RECOMMEND: Monthly real assets research, fills infra gap",
+    "is_publicly_accessible": true,
+    "has_article_index": true,
+    "fit_score": 0.88
   }
 ]
