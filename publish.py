@@ -30,6 +30,7 @@ BADGE_COLORS: dict[str, str] = {
     "gmo": "#9b6be0",
     "oaktree": "#f85149",
     "ark-invest": "#c45000",  # ARK orange (WCAG AA)
+    "cambridge-associates": "#2ba397",  # teal
 }
 
 INITIAL_VISIBLE = 20
@@ -265,7 +266,7 @@ def generate_html(articles: list[dict]) -> str:
     timeline_html = "\n".join(timeline_rows)
 
     # ── Funds view ──
-    source_order = ["man-group", "bridgewater", "aqr", "gmo", "oaktree", "ark-invest"]
+    source_order = list(sources.keys())
     fund_all: dict[str, list[dict]] = defaultdict(list)
     for a in sorted_articles:
         fund_all[a.get("source_id", "")].append(a)
@@ -343,13 +344,18 @@ def generate_html(articles: list[dict]) -> str:
         )
     themes_html = "\n".join(theme_sections) if theme_sections else '<p class="muted">No themes available yet.</p>'
 
+    fund_names_for_meta = ", ".join(
+        sources[sid].get("name", sid) for sid in source_order if sid in sources
+    )
+    meta_description = _esc(f"Research aggregator: {fund_names_for_meta}.")
+
     page = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hedge Fund Research Insights</title>
-<meta name="description" content="Research aggregator: Man Group, Bridgewater, AQR, GMO, Oaktree, ARK Invest.">
+<meta name="description" content="{meta_description}">
 <link rel="icon" href="/favicon.ico">
 <style>
 :root {{
