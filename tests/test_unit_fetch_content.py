@@ -207,11 +207,47 @@ class TestContentFetchers:
     def test_bridgewater_included(self):
         assert "bridgewater" in CONTENT_FETCHERS
 
-    def test_expected_sources_present(self):
-        assert "gmo" in CONTENT_FETCHERS
-        assert "oaktree" in CONTENT_FETCHERS
-        assert "aqr" in CONTENT_FETCHERS
-        assert "man-group" in CONTENT_FETCHERS
+    def _load_source_ids(self):
+        config_path = Path(__file__).resolve().parent.parent / "config" / "sources.json"
+        config = json.loads(config_path.read_text())
+        return {s["id"] for s in config["sources"]}
+
+    def test_all_production_sources_have_content_fetcher(self):
+        """Every source in config/sources.json must have a CONTENT_FETCHERS handler.
+
+        Catches the class of bug where a new production source is added to
+        sources.json but fetch_content.py's dispatcher is not updated,
+        silently dropping all articles from that source at the content stage.
+        """
+        missing = sorted(self._load_source_ids() - set(CONTENT_FETCHERS))
+        assert not missing, (
+            f"Sources in sources.json without CONTENT_FETCHERS handler: {missing}. "
+            f"Add a _fetch_content_<id> function and register it in CONTENT_FETCHERS."
+        )
+
+    def test_no_orphan_content_fetchers(self):
+        """Every CONTENT_FETCHERS key must correspond to a source in sources.json.
+
+        Catches stale handlers left after a source is removed from production.
+        """
+        orphans = sorted(set(CONTENT_FETCHERS) - self._load_source_ids())
+        assert not orphans, (
+            f"CONTENT_FETCHERS keys not in sources.json: {orphans}. "
+            f"Remove stale handlers or re-add source to config."
+        )
+
+    def test_all_production_sources_have_fetch_articles_handler(self):
+        """Every source in config/sources.json must have a FETCHERS handler.
+
+        Parallel contract to CONTENT_FETCHERS — catches the same class of bug
+        one pipeline stage earlier (fetch_articles vs fetch_content).
+        """
+        from fetch_articles import FETCHERS
+        missing = sorted(self._load_source_ids() - set(FETCHERS))
+        assert not missing, (
+            f"Sources in sources.json without FETCHERS handler: {missing}. "
+            f"Add a fetch_<id> function and register it in FETCHERS."
+        )
 
 
 # ---------------------------------------------------------------------------

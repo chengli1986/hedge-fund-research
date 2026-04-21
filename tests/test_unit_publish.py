@@ -79,9 +79,24 @@ class TestTimelineSorted:
 
 
 class TestBadgeColors:
-    def test_badge_colors(self) -> None:
-        expected = {"man-group", "bridgewater", "aqr", "gmo", "oaktree", "ark-invest"}
-        assert set(BADGE_COLORS.keys()) == expected
+    def test_badge_colors_cover_all_production_sources(self) -> None:
+        """Every source in sources.json should have an explicit badge color.
+
+        Missing entries fall back to gray (#8b949e), which is not a failure
+        but a visual regression signal. This test is kept non-fatal by
+        asserting on the contract rather than an exact set.
+        """
+        import json as _json
+        from pathlib import Path as _Path
+        config = _json.loads(
+            (_Path(__file__).resolve().parent.parent / "config" / "sources.json").read_text()
+        )
+        source_ids = {s["id"] for s in config["sources"]}
+        missing = sorted(source_ids - set(BADGE_COLORS))
+        assert not missing, (
+            f"Sources without an explicit BADGE_COLORS entry: {missing}. "
+            f"Add a color (fallback is gray #8b949e, not a hard failure)."
+        )
 
 
 class TestIndexOnly:
