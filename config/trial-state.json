@@ -189,6 +189,13 @@
           "date_count": 6,
           "error": null,
           "fetcher_used": true
+        },
+        "2026-04-21": {
+          "accessible": true,
+          "article_count": 6,
+          "date_count": 6,
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -246,6 +253,13 @@
           "date_count": 10,
           "error": null,
           "fetcher_used": true
+        },
+        "2026-04-21": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -298,6 +312,13 @@
       "end_date": null,
       "daily_checks": {
         "2026-04-20": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-04-21": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
