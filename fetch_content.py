@@ -513,6 +513,30 @@ def _fetch_content_bridgewater(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+def _fetch_content_cambridge(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Cambridge Associates article content: requests (SSR) -> <main> paragraphs."""
+    url = article["url"]
+    log.info("  Cambridge: fetching article page %s", url)
+
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Cambridge: failed to fetch article page: %s", e)
+        return None
+
+    text = _normalize_html(resp.text, "main p, article p")
+
+    if not _check_min_content_length(text):
+        log.warning("  Cambridge: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Cambridge: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -520,6 +544,7 @@ CONTENT_FETCHERS = {
     "man-group": _fetch_content_man,
     "ark-invest": _fetch_content_ark,
     "bridgewater": _fetch_content_bridgewater,
+    "cambridge-associates": _fetch_content_cambridge,
 }
 
 
