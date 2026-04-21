@@ -514,18 +514,29 @@ def _fetch_content_bridgewater(article: dict) -> Optional[tuple[Path, str]]:
 
 
 def _fetch_content_cambridge(article: dict) -> Optional[tuple[Path, str]]:
-    """Fetch Cambridge Associates article content: requests (SSR) -> <main> paragraphs."""
+    """Fetch Cambridge Associates article content: Playwright -> <main> paragraphs."""
+    from playwright.sync_api import sync_playwright
+
     url = article["url"]
     log.info("  Cambridge: fetching article page %s", url)
 
     try:
-        resp = requests.get(url, headers=HEADERS, timeout=30)
-        resp.raise_for_status()
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            context = browser.new_context(
+                user_agent=HEADERS["User-Agent"],
+                viewport={"width": 1440, "height": 900},
+            )
+            page = context.new_page()
+            page.goto(url, wait_until="networkidle", timeout=30000)
+            page.wait_for_timeout(3000)
+            html = page.content()
+            browser.close()
     except Exception as e:
-        log.error("  Cambridge: failed to fetch article page: %s", e)
+        log.error("  Cambridge: Playwright fetch failed: %s", e)
         return None
 
-    text = _normalize_html(resp.text, "main p, article p")
+    text = _normalize_html(html, "main p, article p")
 
     if not _check_min_content_length(text):
         log.warning("  Cambridge: extracted text too short (%d chars)", len(text))
