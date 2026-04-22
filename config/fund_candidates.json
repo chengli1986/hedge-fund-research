@@ -164,7 +164,7 @@
       },
       {
         "url": "https://www.blackstone.com/insights/article/market-views-dealmaking-disruption-and-real-estates-recovery/",
-        "label": "Market Views: Dealmaking, Disruption, and Real Estate\u2019s Recovery",
+        "label": "Market Views: Dealmaking, Disruption, and Real Estate’s Recovery",
         "path": "insights/article/market-views-dealmaking-disruption-and-real-estates-recovery"
       },
       {
@@ -290,7 +290,7 @@
       },
       {
         "url": "https://www.kkr.com/insights/naic-spring-update-2026",
-        "label": "Investment Insights Highlights from the NAIC\u2019s 2026 Spring National Meeting: CLOs, Collateral Loans,",
+        "label": "Investment Insights Highlights from the NAIC’s 2026 Spring National Meeting: CLOs, Collateral Loans,",
         "path": "insights/naic-spring-update-2026"
       },
       {
@@ -391,7 +391,7 @@
       },
       {
         "url": "https://www.cambridgeassociates.com/insight/germanys-fiscal-boost/",
-        "label": "Germany\u2019s Fiscal Boost Remains a Tailwind Despite Near-Term Risks",
+        "label": "Germany’s Fiscal Boost Remains a Tailwind Despite Near-Term Risks",
         "path": "insight/germanys-fiscal-boost"
       },
       {
@@ -473,10 +473,10 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.9,
-    "last_deep_analyzed_at": "2026-04-14T01:02:52.000000+00:00",
+    "last_deep_analyzed_at": "2026-04-22T01:00:00Z",
     "quality": "MEDIUM",
     "topics": "macro, credit, alternatives, fixed income",
-    "notes": "Working fetcher (search API /services/search-engine/en-us/advisors/search/insights); trial skipped \u2014 httpx cannot detect articles (JS-rendered). Promote directly to sources.json.",
+    "notes": "Working fetcher (search API); JS-rendered, httpx no articles. Promote to sources.json.",
     "research_links": [
       {
         "url": "https://am.gs.com/en-us/advisors/insights/list",
@@ -516,7 +516,8 @@
       "equity",
       "multi_asset"
     ],
-    "source": "manual"
+    "source": "manual",
+    "quality_score": 0.62
   },
   {
     "id": "wellington",
@@ -534,7 +535,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.8843,
-    "notes": "RECOMMEND: multi-asset weekly research, fills equity gap; JS-rendered (Adobe Helix CMS), needs Playwright",
+    "notes": "RECOMMEND: multi-asset weekly research, fills equity gap",
     "research_links": [
       {
         "url": "https://www.wellington.com/en/insights",
@@ -613,7 +614,7 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-04-14T01:02:52.000000+00:00",
+    "last_deep_analyzed_at": "2026-04-22T01:00:00Z",
     "quality": "HIGH",
     "topics": "equity, macro, fixed income, alternatives, ESG, geopolitics",
     "strategy_tags": [
@@ -623,7 +624,8 @@
       "multi_asset",
       "esg_climate"
     ],
-    "source": "manual"
+    "source": "manual",
+    "quality_score": 0.75
   },
   {
     "id": "amundi",
@@ -817,7 +819,7 @@
     "rss_url": null,
     "official_domain": "www.msci.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "JS-rendered (Next.js), needs Playwright; 10 articles visible \u2014 private markets, geo-risk, AI, ESG, fixed income",
+    "notes": "JS-rendered (Next.js), needs Playwright; 10 articles visible — private markets, geo-risk, AI, ESG, fixed income",
     "research_links": [],
     "last_discovered_at": "2026-04-19T09:00:14.697222+08:00",
     "quality": "MEDIUM",
@@ -859,7 +861,7 @@
     "rss_url": null,
     "official_domain": "www.researchaffiliates.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "RECOMMEND: Monthly quant/factor research, overlaps AQR. Trial skipped \u2014 page requires reCAPTCHA/JS rendering (httpx returns 0 articles). Playwright fetcher implemented.",
+    "notes": "RECOMMEND: Monthly quant/factor research, overlaps AQR. Trial skipped — page requires reCAPTCHA/JS rendering (httpx returns 0 articles). Playwright fetcher implemented.",
     "research_links": [
       {
         "url": "https://www.researchaffiliates.com/insights/publications",
@@ -928,7 +930,7 @@
       },
       {
         "url": "https://www.researchaffiliates.com/publications/articles/1103-2025-implications-for-the-future-some-like-it-hot",
-        "label": "2025\u2019s Implications for the Future: \u201cSome Like it Hot\"? By Jim Masturzo January 2026 A review of maj",
+        "label": "2025’s Implications for the Future: “Some Like it Hot\"? By Jim Masturzo January 2026 A review of maj",
         "path": "publications/articles/1103-2025-implications-for-the-future-some-like-it-hot"
       },
       {
@@ -1507,5 +1509,24 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.88
+  },
+  {
+    "id": "capital-group",
+    "name": "Capital Group (Capital Ideas)",
+    "homepage_url": "https://www.capitalgroup.com",
+    "research_url": "https://www.capitalgroup.com/individual/investments/insights.html",
+    "source": "manual",
+    "status": "seed",
+    "strategy_tags": [
+      "equity",
+      "fixed_income",
+      "macro",
+      "multi_asset"
+    ],
+    "discovery_method": "discover_fund_sites",
+    "notes": "Capital Ideas: free equity/fixed income/macro research",
+    "official_domain": "www.capitalgroup.com",
+    "research_links": [],
+    "last_discovered_at": "2026-04-22T09:03:19.934710+08:00"
   }
 ]
