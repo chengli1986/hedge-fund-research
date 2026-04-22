@@ -196,6 +196,13 @@
           "date_count": 6,
           "error": null,
           "fetcher_used": true
+        },
+        "2026-04-22": {
+          "accessible": true,
+          "article_count": 6,
+          "date_count": 6,
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -233,6 +240,39 @@
           "error": null,
           "day": 1,
           "date": "2026-04-20"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.troweprice.com/en/us/insights/global-markets-weekly-update",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.7,
+              "overall": 0.78,
+              "notes": "Weekly market update covering equity performance, geopolitical developments, and economic data (inflation, employment, manufacturing); substantive but truncated at end."
+            },
+            {
+              "url": "https://www.troweprice.com/en/us/insights/is-it-smart-to-keep-money-invested-in-equities-during-market-volatility",
+              "relevance": 0.6,
+              "depth": 0.5,
+              "extractable": 0.7,
+              "overall": 0.58,
+              "notes": "Behavioral finance advice on staying invested during volatility; generic guidance with limited original analysis, more aligned with retail investor education than institutional research."
+            },
+            {
+              "url": "https://www.troweprice.com/en/us/insights/how-to-help-protect-your-investment-portfolio-during-stock-market-volatility",
+              "relevance": 0.5,
+              "depth": 0.4,
+              "extractable": 0.6,
+              "overall": 0.48,
+              "notes": "Five-step portfolio protection framework during volatility; high-level prescriptive guidance with minimal data or novel insight; truncated text; closer to financial planning content than investment research."
+            }
+          ],
+          "avg_score": 0.613,
+          "error": null,
+          "day": 3,
+          "date": "2026-04-22"
         }
       ]
     },
@@ -255,6 +295,13 @@
           "fetcher_used": true
         },
         "2026-04-21": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-04-22": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -297,6 +344,39 @@
           "error": null,
           "day": 1,
           "date": "2026-04-20"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://research-center.amundi.com/article/imf-outlook-points-resilience-and-fragilities",
+              "relevance": 0.85,
+              "depth": 0.65,
+              "extractable": 0.75,
+              "overall": 0.75,
+              "notes": "Macro analysis of IMF outlook linking geopolitical shocks, energy prices, and inflation to asset allocation; includes weekly market summary with data tables."
+            },
+            {
+              "url": "https://research-center.amundi.com/article/capital-market-assumptions-2026",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.7,
+              "overall": 0.84,
+              "notes": "Capital market assumptions framework covering macro regime shift, fiscal dominance, expected returns across asset classes, and portfolio strategy recommendations; substantive but truncated."
+            },
+            {
+              "url": "https://research-center.amundi.com/article/ai-boom-or-bubble-lessons-dot-com-period",
+              "relevance": 0.9,
+              "depth": 0.85,
+              "extractable": 0.8,
+              "overall": 0.86,
+              "notes": "Research paper comparing AI bubble dynamics to dot-com period using proprietary methodology; identifies concentration risk and valuation concerns with original analysis and author credentials."
+            }
+          ],
+          "avg_score": 0.817,
+          "error": null,
+          "day": 3,
+          "date": "2026-04-22"
         }
       ]
     },
@@ -324,6 +404,13 @@
           "date_count": 10,
           "error": null,
           "fetcher_used": true
+        },
+        "2026-04-22": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -336,6 +423,14 @@
           "error": "Could not extract text from any article",
           "day": 1,
           "date": "2026-04-20"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "Could not extract text from any article",
+          "day": 3,
+          "date": "2026-04-22"
         }
       ]
     }
