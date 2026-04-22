@@ -292,7 +292,15 @@ def _extract_article_text(url: str, timeout: int = 20) -> str | None:
             if len(text) > 200:
                 return text[:3000]
 
-        for selector in (".cmp-text", ".rich-text", ".article-body", ".article-content"):
+        for selector in (
+            ".cmp-text",                 # Adobe Experience Manager Core Components
+            "[itemprop='articleBody']",  # schema.org microdata (Reuters, NYT, WSJ, ...)
+            ".rich-text",                # generic WYSIWYG output (Contentful, Prismic, Strapi)
+            ".article-body",             # common news-site convention
+            ".article-content",          # common news-site convention
+            ".entry-content",            # WordPress default themes (~43% of the web)
+            ".post-content",             # Ghost, Hugo, Jekyll, most SSGs
+        ):
             parts = soup.select(selector)
             if parts:
                 joined = "\n\n".join(

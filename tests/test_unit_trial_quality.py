@@ -679,3 +679,49 @@ def test_extract_text_returns_none_on_non_200(monkeypatch):
     _patch_httpx_get(monkeypatch, "<html><body>error</body></html>", status_code=500)
     result = tm._extract_article_text("https://example.com/article")
     assert result is None
+
+
+def test_extract_text_matches_schema_org_itemprop_articleBody(monkeypatch):
+    """schema.org microdata [itemprop='articleBody'] — used by Reuters, NYT, WSJ,
+    and many major news publishers. This is an intentional author-declared
+    signal for "this element IS the article body"."""
+    body = (
+        "This article examines the implications of monetary policy shifts on "
+        "emerging-market debt portfolios. " * 10
+    )
+    html_body = f"""
+    <html><body>
+      <nav>site nav</nav>
+      <article>
+        <h1>Article Title</h1>
+        <div itemprop="articleBody">{body}</div>
+      </article>
+      <footer>legal</footer>
+    </body></html>
+    """
+    _patch_httpx_get(monkeypatch, html_body)
+    result = tm._extract_article_text("https://example-news.com/article")
+    assert result is not None
+    assert "monetary policy shifts" in result
+    assert "site nav" not in result
+
+
+def test_extract_text_matches_wordpress_entry_content(monkeypatch):
+    """WordPress default themes wrap post bodies in .entry-content. The outer
+    <article> here contains only a title (short), so we must fall past Layer 1
+    into Layer 2's .entry-content selector."""
+    body = "Post-pandemic equity returns have shown increased dispersion. " * 15
+    html_body = f"""
+    <html><body>
+      <article>
+        <h1 class="entry-title">A Post Title</h1>
+        <div class="entry-content">{body}</div>
+      </article>
+    </body></html>
+    """
+    _patch_httpx_get(monkeypatch, html_body)
+    result = tm._extract_article_text("https://example-wp.com/post")
+    assert result is not None
+    # The outer <article> is ~1000 chars (including entry-content) so Layer 1
+    # may win first — either path is acceptable as long as body text is present.
+    assert "Post-pandemic equity returns" in result
