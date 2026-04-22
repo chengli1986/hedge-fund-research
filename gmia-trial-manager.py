@@ -265,7 +265,17 @@ def _extract_article_links(base_url: str, soup: BeautifulSoup) -> list[str]:
 
 
 def _extract_article_text(url: str, timeout: int = 20) -> str | None:
-    """Fetch a single article page and extract clean body text."""
+    """Fetch a single article page and extract clean body text.
+
+    Strategy (handles both standard <article> pages and component-based CMS):
+    1. Longest <article> tag (not first — AEM pages have many tiny teaser
+       <article> tags sprinkled around the page; the real body, if present,
+       is the longest one).
+    2. Component-framework selectors (.cmp-text for AEM/Wellington, .rich-text,
+       .article-body, .article-content) — concatenate elements with >100 chars
+       to skip subscribe/legal boilerplate.
+    3. <main>, then <body> as last resort.
+    """
     try:
         resp = httpx.get(url, headers=HEADERS, timeout=timeout, follow_redirects=True)
         if resp.status_code != 200:
@@ -275,12 +285,28 @@ def _extract_article_text(url: str, timeout: int = 20) -> str | None:
                                "script, style, aside, .sidebar"):
             tag.decompose()
 
-        # Try <article> first, fall back to <main>, then full body
-        content = soup.find("article") or soup.find("main") or soup.find("body")
+        articles = soup.find_all("article")
+        if articles:
+            longest = max(articles, key=lambda a: len(a.get_text(" ", strip=True)))
+            text = longest.get_text(" ", strip=True)
+            if len(text) > 200:
+                return text[:3000]
+
+        for selector in (".cmp-text", ".rich-text", ".article-body", ".article-content"):
+            parts = soup.select(selector)
+            if parts:
+                joined = "\n\n".join(
+                    p.get_text(" ", strip=True)
+                    for p in parts
+                    if len(p.get_text(" ", strip=True)) > 100
+                )
+                if len(joined) > 200:
+                    return joined[:3000]
+
+        content = soup.find("main") or soup.find("body")
         if not content:
             return None
         text = content.get_text(" ", strip=True)
-        # Return first 3000 chars (enough for Haiku to judge quality)
         return text[:3000] if len(text) > 200 else None
     except Exception:
         return None

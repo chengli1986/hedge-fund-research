@@ -565,3 +565,117 @@ def test_sample_quality_uses_fetcher_links_when_trial_provided(monkeypatch):
     assert result["error"] is None
     # Verify URLs came from fetcher, not httpx crawl
     assert all("research" in url for url in extract_calls)
+
+
+# ── _extract_article_text DOM extraction strategy ───────────────────────────
+
+class _StubResponse:
+    """Minimal httpx.Response stand-in for _extract_article_text tests."""
+    def __init__(self, text: str, status_code: int = 200):
+        self.text = text
+        self.status_code = status_code
+
+
+def _patch_httpx_get(monkeypatch, html_body: str, status_code: int = 200):
+    def fake_get(url, headers=None, timeout=20, follow_redirects=True):
+        return _StubResponse(html_body, status_code)
+    monkeypatch.setattr(tm.httpx, "get", fake_get)
+
+
+def test_extract_text_handles_aem_multi_teaser_articles(monkeypatch):
+    """Wellington-style AEM pages have many tiny <article> teasers + .cmp-text body.
+
+    The old logic picked the first <article> (a 65-char author teaser), failed
+    the >200 char gate, and returned None even though real body text was
+    present in .cmp-text components. Fix: longest <article> first, then
+    AEM-style component selectors as fallback.
+    """
+    html_body = """
+    <html><body>
+      <nav>top nav</nav>
+      <main>
+        <article class="teaser">Author A <span>Head of Equity</span></article>
+        <article class="teaser">Author B <span>Portfolio Manager</span></article>
+        <div class="cmp-text">Subscribe to our insights Close dialog Related menu</div>
+        <div class="cmp-text">Market leadership has shifted in 2026, challenging some of
+          the most reliable winners of the post-pandemic period. We see sector rotation,
+          shifting energy dynamics, and an evolving AI narrative as the three key drivers
+          for the next six months. This paragraph has well over one hundred characters so
+          it survives the boilerplate filter.</div>
+        <div class="cmp-text">Investment implications include regional rebalancing toward
+          Europe and reassessment of US exceptionalism. Our quantitative framework suggests
+          that valuation compression in US large-cap technology could create meaningful
+          dispersion in sector returns through year-end.</div>
+        <div class="cmp-text">Short note under 100 chars.</div>
+      </main>
+      <footer>legal disclaimers</footer>
+    </body></html>
+    """
+    _patch_httpx_get(monkeypatch, html_body)
+    result = tm._extract_article_text("https://www.wellington.com/en/insights/x")
+    assert result is not None, "Should extract .cmp-text body content"
+    assert "Market leadership has shifted" in result, "Main body missing"
+    assert "Investment implications" in result, "Second body paragraph missing"
+    assert "Short note under" not in result, "Sub-100-char boilerplate should be filtered"
+    assert len(result) > 200
+
+
+def test_extract_text_picks_longest_article_not_first(monkeypatch):
+    """Multiple <article> tags → pick the longest (real body), not the first (teaser)."""
+    body_text = "Real article body. " * 50  # ~950 chars
+    html_body = f"""
+    <html><body>
+      <article>Teaser 1: tiny author card</article>
+      <article>Teaser 2: also tiny</article>
+      <article>{body_text}</article>
+      <article>Another teaser</article>
+    </body></html>
+    """
+    _patch_httpx_get(monkeypatch, html_body)
+    result = tm._extract_article_text("https://example.com/article")
+    assert result is not None
+    assert "Real article body" in result
+    assert "Teaser" not in result, "Should have picked the longest <article>, not a teaser"
+
+
+def test_extract_text_standard_article_unchanged(monkeypatch):
+    """Regression guard: standard <article> pages (Amundi/T.Rowe/Cambridge style)
+    with a single substantial <article> tag still work as before."""
+    body_text = "This is a full article on capital market assumptions. " * 40
+    html_body = f"""
+    <html><body>
+      <nav>nav</nav>
+      <article>{body_text}</article>
+      <footer>footer</footer>
+    </body></html>
+    """
+    _patch_httpx_get(monkeypatch, html_body)
+    result = tm._extract_article_text("https://example.com/article")
+    assert result is not None
+    assert "capital market assumptions" in result
+    assert len(result) > 200
+
+
+def test_extract_text_falls_back_to_body_when_no_article_or_cmp(monkeypatch):
+    """No <article>, no component-framework markers → fall back to <body>."""
+    body_text = "Plain HTML page with long content. " * 30
+    html_body = f"<html><body><div class='content'>{body_text}</div></body></html>"
+    _patch_httpx_get(monkeypatch, html_body)
+    result = tm._extract_article_text("https://example.com/article")
+    assert result is not None
+    assert "Plain HTML page" in result
+
+
+def test_extract_text_returns_none_when_body_too_short(monkeypatch):
+    """Pages with <200 chars of usable content return None (preserved behaviour)."""
+    html_body = "<html><body><main>tiny</main></body></html>"
+    _patch_httpx_get(monkeypatch, html_body)
+    result = tm._extract_article_text("https://example.com/article")
+    assert result is None
+
+
+def test_extract_text_returns_none_on_non_200(monkeypatch):
+    """HTTP errors return None (preserved behaviour)."""
+    _patch_httpx_get(monkeypatch, "<html><body>error</body></html>", status_code=500)
+    result = tm._extract_article_text("https://example.com/article")
+    assert result is None

@@ -425,10 +425,35 @@
           "date": "2026-04-20"
         },
         {
-          "sampled": 0,
-          "articles": [],
-          "avg_score": 0.0,
-          "error": "Could not extract text from any article",
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.wellington.com/en/insights/investment-angles-approach-ai-with-an-open-mind",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.6,
+              "overall": 0.76,
+              "notes": "Investment perspective on AI's market impact using chess analogy; discusses sector displacement risk and identifies software/IT/services as vulnerable areas."
+            },
+            {
+              "url": "https://www.wellington.com/en/insights/quarterly-asset-allocation-q2-2026",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.5,
+              "overall": 0.8,
+              "notes": "Quarterly asset allocation framework addressing Middle East conflict, stagflation risks, and positioning across equities, bonds, credit, and commodities with specific regional/thematic preferences."
+            },
+            {
+              "url": "https://www.wellington.com/en/insights/market-impact-of-us-iran-ceasefire",
+              "relevance": 0.85,
+              "depth": 0.75,
+              "extractable": 0.5,
+              "overall": 0.74,
+              "notes": "Geopolitical analysis of US-Iran ceasefire with focus on Strait of Hormuz control, shipping normalization risks, and implications for oil markets and asset dispersion."
+            }
+          ],
+          "avg_score": 0.767,
+          "error": null,
           "day": 3,
           "date": "2026-04-22"
         }
