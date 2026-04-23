@@ -978,44 +978,52 @@ class TestFetchPgim:
         resp.raise_for_status.return_value = None
         return resp
 
-    def test_parses_articles(self):
+    def _insights_item(self, title: str, href: str, date: str, item_id: str = "x-001") -> str:
         import json as _json
+        data = {item_id: {"itemTitle": title, "publishDate": date, "xdm:linkURL": href}}
+        return f'<li class="cmp-list__item" data-cmp-data-layer=\'{_json.dumps(data)}\'></li>'
+
+    def test_parses_articles(self):
+        # Fetcher scrapes 4 asset-class pages; mock returns articles on first page only.
         items = (
-            f'<li class="cmp-list__item" data-cmp-data-layer=\'{_json.dumps({"a": {"itemTitle": "PGIM Real Estate Buys Logistics Portfolio", "publishDate": "April 16, 2026", "xdm:linkURL": "/us/en/institutional/about/newsroom/2026/pgim-real-estate"}})}\'></li>'
-            f'<li class="cmp-list__item" data-cmp-data-layer=\'{_json.dumps({"b": {"itemTitle": "Fixed Income Credit Outlook Q2 2026", "publishDate": "March 25, 2026", "xdm:linkURL": "/us/en/institutional/about/newsroom/2026/fixed-income"}})}\'></li>'
+            self._insights_item("The Macro-Market Dissonance", "/us/en/institutional/insights/asset-class/fixed-income/weekly-view/macro", "April 20, 2026", "a")
+            + self._insights_item("Investors at the Private Credit Gate", "/us/en/institutional/insights/asset-class/fixed-income/private-credit", "April 7, 2026", "b")
         )
-        html = f"<html><body><ul>{items}</ul></body></html>"
-        with patch("fetch_articles.requests.get", return_value=self._mock_resp(html)):
+        full_html = f"<html><body><ul>{items}</ul></body></html>"
+        side = [self._mock_resp(full_html)] + [self._mock_resp("<html></html>")] * 3
+        with patch("fetch_articles.requests.get", side_effect=side):
             articles = fetch_pgim(self.SOURCE)
 
         assert len(articles) == 2
-        assert articles[0]["title"] == "PGIM Real Estate Buys Logistics Portfolio"
-        assert articles[0]["url"] == "https://www.pgim.com/us/en/institutional/about/newsroom/2026/pgim-real-estate"
-        assert articles[0]["date"] == "2026-04-16"
-        assert articles[0]["date_raw"] == "April 16, 2026"
+        assert articles[0]["title"] == "The Macro-Market Dissonance"
+        assert "/insights/" in articles[0]["url"]
+        assert articles[0]["date"] == "2026-04-20"
+        assert articles[0]["date_raw"] == "April 20, 2026"
 
-    def test_skips_items_without_data_layer(self):
+    def test_skips_items_without_date_or_non_insights_url(self):
         import json as _json
-        items = (
-            '<li class="cmp-list__item"></li>'
-            f'<li class="cmp-list__item" data-cmp-data-layer=\'{_json.dumps({"c": {"itemTitle": "Valid Article", "publishDate": "April 1, 2026", "xdm:linkURL": "/us/en/institutional/about/newsroom/2026/valid"}})}\'></li>'
-        )
-        html = f"<html><body><ul>{items}</ul></body></html>"
-        with patch("fetch_articles.requests.get", return_value=self._mock_resp(html)):
+        # No publishDate → nav/category link, must be skipped
+        no_date = f'<li class="cmp-list__item" data-cmp-data-layer=\'{_json.dumps({"n": {"itemTitle": "Fixed Income", "xdm:linkURL": "/us/en/institutional/insights/asset-class/fixed-income"}})}\'></li>'
+        # Has date but URL is newsroom, not /insights/ → must be skipped
+        non_insights = self._insights_item("Press Release", "/us/en/institutional/about/newsroom/press-release", "April 1, 2026", "m")
+        valid = self._insights_item("Valid Research", "/us/en/institutional/insights/asset-class/equity/article", "April 1, 2026", "v")
+        html = f"<html><body><ul>{no_date}{non_insights}{valid}</ul></body></html>"
+        side = [self._mock_resp(html)] + [self._mock_resp("<html></html>")] * 3
+        with patch("fetch_articles.requests.get", side_effect=side):
             articles = fetch_pgim(self.SOURCE)
 
         assert len(articles) == 1
-        assert articles[0]["title"] == "Valid Article"
+        assert articles[0]["title"] == "Valid Research"
 
     def test_respects_max_articles(self):
-        import json as _json
         items = "".join(
-            f'<li class="cmp-list__item" data-cmp-data-layer=\'{_json.dumps({f"id{i}": {"itemTitle": f"Article {i}", "publishDate": f"April {i}, 2026", "xdm:linkURL": f"/us/en/institutional/about/newsroom/article-{i}"}})}\'></li>'
+            self._insights_item(f"Article {i}", f"/us/en/institutional/insights/asset-class/fixed-income/article-{i}", f"April {i}, 2026", f"id{i}")
             for i in range(1, 8)
         )
         html = f"<html><body><ul>{items}</ul></body></html>"
         source = {**self.SOURCE, "max_articles": 5}
-        with patch("fetch_articles.requests.get", return_value=self._mock_resp(html)):
+        side = [self._mock_resp(html)] + [self._mock_resp("<html></html>")] * 3
+        with patch("fetch_articles.requests.get", side_effect=side):
             articles = fetch_pgim(source)
 
         assert len(articles) == 5

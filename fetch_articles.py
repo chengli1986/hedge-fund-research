@@ -979,53 +979,67 @@ def fetch_jpmam(source: dict) -> list[dict]:
 
 
 def fetch_pgim(source: dict) -> list[dict]:
-    """Fetch articles from PGIM via Newsroom (SSR — plain requests).
+    """Fetch articles from PGIM Insights asset-class pages (SSR — plain requests).
 
-    Insights page has attestation gate; newsroom is SSR-accessible.
-    Data stored in data-cmp-data-layer JSON attribute on each .cmp-list__item.
-    Fields: itemTitle, publishDate ("Month DD, YYYY"), xdm:linkURL (relative).
+    The main insights index is JS-rendered; asset-class sub-pages are SSR and
+    publicly accessible without attestation. Each page uses AEM .cmp-list__item
+    with data-cmp-data-layer JSON (same structure as newsroom but actual research).
+    We scrape 4 asset-class pages and merge/deduplicate by URL.
     """
-    newsroom_url = "https://www.pgim.com/us/en/institutional/about/newsroom"
     base_url = "https://www.pgim.com"
-    resp = requests.get(newsroom_url, headers=HEADERS, timeout=30)
-    resp.raise_for_status()
-    soup = BeautifulSoup(resp.text, "html.parser")
+    asset_class_paths = [
+        "/us/en/institutional/insights/asset-class/fixed-income",
+        "/us/en/institutional/insights/asset-class/alternatives",
+        "/us/en/institutional/insights/asset-class/equity",
+        "/us/en/institutional/insights/asset-class/multi-asset",
+    ]
     expected_host = source.get("expected_hostname", "pgim.com")
-
+    seen_urls: set[str] = set()
     articles = []
-    for item in soup.select(".cmp-list__item"):
-        raw_data = item.get("data-cmp-data-layer", "")
-        if not raw_data:
-            continue
+
+    for path in asset_class_paths:
         try:
-            data_layer = json.loads(raw_data)
-        except json.JSONDecodeError:
+            resp = requests.get(base_url + path, headers=HEADERS, timeout=30)
+            resp.raise_for_status()
+        except Exception:
             continue
-        key = next(iter(data_layer), None)
-        if not key:
-            continue
-        meta = data_layer[key]
+        soup = BeautifulSoup(resp.text, "html.parser")
+        for item in soup.select(".cmp-list__item[data-cmp-data-layer]"):
+            raw_data = item.get("data-cmp-data-layer", "")
+            try:
+                data_layer = json.loads(raw_data)
+            except json.JSONDecodeError:
+                continue
+            key = next(iter(data_layer), None)
+            if not key:
+                continue
+            meta = data_layer[key]
 
-        title = meta.get("itemTitle", "").strip()
-        if not title:
-            continue
-        rel_url = meta.get("xdm:linkURL", "")
-        if not rel_url:
-            continue
-        url = urljoin(base_url, rel_url)
-        if not _validate_hostname(url, expected_host):
-            continue
+            date_raw = meta.get("publishDate", "")
+            if not date_raw:
+                continue  # skip nav/category items without dates
 
-        date_raw = meta.get("publishDate", "")
-        parsed_date = parse_date(date_raw) if date_raw else None
+            title = meta.get("itemTitle", "").strip()
+            if not title:
+                continue
+            rel_url = meta.get("xdm:linkURL", "")
+            if not rel_url or "/insights/" not in rel_url:
+                continue
+            url = urljoin(base_url, rel_url)
+            if not _validate_hostname(url, expected_host):
+                continue
+            if url in seen_urls:
+                continue
+            seen_urls.add(url)
 
-        articles.append({
-            "title": title,
-            "url": url,
-            "date": parsed_date,
-            "date_raw": date_raw,
-        })
+            articles.append({
+                "title": title,
+                "url": url,
+                "date": parse_date(date_raw),
+                "date_raw": date_raw,
+            })
 
+    articles.sort(key=lambda a: a["date"] or "", reverse=True)
     return articles[:source.get("max_articles", 10)]
 
 
