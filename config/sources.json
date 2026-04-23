@@ -84,6 +84,46 @@
       "notable_authors": [],
       "expected_hostname": "cambridgeassociates.com",
       "max_articles": 10
+    },
+    {
+      "id": "wellington",
+      "strategy_tags": ["equity", "macro", "fixed_income", "multi_asset", "esg_climate"],
+      "name": "Wellington Management",
+      "short_name": "Wellington",
+      "url": "https://www.wellington.com/en/insights",
+      "method": "playwright",
+      "frequency": "weekly",
+      "description": "One of the world's largest private investment firms. Equity, fixed income, multi-asset, alternatives.",
+      "notable_authors": [],
+      "expected_hostname": "wellington.com",
+      "max_articles": 10
+    },
+    {
+      "id": "amundi",
+      "strategy_tags": ["macro", "fixed_income", "emerging_markets", "multi_asset", "esg_climate"],
+      "name": "Amundi Research Center",
+      "short_name": "Amundi",
+      "url": "https://research-center.amundi.com",
+      "rss_url": "https://research-center.amundi.com/rss.xml",
+      "method": "rss",
+      "frequency": "weekly",
+      "description": "Europe's largest asset manager. Macro, capital markets, ESG, fixed income, emerging markets.",
+      "notable_authors": [],
+      "expected_hostname": "research-center.amundi.com",
+      "max_articles": 10
+    },
+    {
+      "id": "troweprice",
+      "strategy_tags": ["equity", "macro", "fixed_income"],
+      "name": "T. Rowe Price",
+      "short_name": "T. Rowe Price",
+      "url": "https://www.troweprice.com/en/us/insights",
+      "method": "playwright",
+      "frequency": "weekly",
+      "description": "Active management specialist. Equity, fixed income, multi-asset. Strong fundamental research culture.",
+      "notable_authors": [],
+      "expected_hostname": "troweprice.com",
+      "max_articles": 10
     }
   ],
   "settings": {

@@ -522,7 +522,7 @@
   {
     "id": "wellington",
     "name": "Wellington Management",
-    "status": "validated",
+    "status": "promoted",
     "homepage_url": "https://www.wellington.com",
     "research_url": "https://www.wellington.com/en/insights",
     "rss_url": null,
@@ -630,7 +630,7 @@
   {
     "id": "amundi",
     "name": "Amundi Research Center",
-    "status": "validated",
+    "status": "promoted",
     "homepage_url": "https://research-center.amundi.com",
     "research_url": "https://research-center.amundi.com",
     "rss_url": "https://research-center.amundi.com/rss.xml",
@@ -712,7 +712,7 @@
   {
     "id": "troweprice",
     "name": "T. Rowe Price",
-    "status": "validated",
+    "status": "promoted",
     "homepage_url": "https://www.troweprice.com",
     "research_url": "https://www.troweprice.com/en/us/insights",
     "rss_url": null,

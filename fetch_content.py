@@ -548,6 +548,107 @@ def _fetch_content_cambridge(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+def _fetch_content_wellington(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Wellington Management article content via Playwright (AEM site)."""
+    from playwright.sync_api import sync_playwright
+
+    url = article["url"]
+    log.info("  Wellington: fetching article page %s", url)
+
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            context = browser.new_context(
+                user_agent=HEADERS["User-Agent"],
+                viewport={"width": 1440, "height": 900},
+            )
+            page = context.new_page()
+            page.goto(url, wait_until="networkidle", timeout=30000)
+            page.wait_for_timeout(2000)
+            html = page.content()
+            browser.close()
+    except Exception as e:
+        log.error("  Wellington: Playwright fetch failed: %s", e)
+        return None
+
+    # AEM .cmp-text components hold the real article body
+    text = _normalize_html(html, ".cmp-text p, [itemprop='articleBody'] p, .rich-text p")
+
+    if not _check_min_content_length(text):
+        log.warning("  Wellington: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Wellington: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
+def _fetch_content_amundi(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Amundi Research Center article content via requests (public SSR site)."""
+    url = article["url"]
+    log.info("  Amundi: fetching article page %s", url)
+
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Amundi: fetch failed: %s", e)
+        return None
+
+    text = _normalize_html(
+        resp.text,
+        ".article__body p, .article-body p, .content-body p, main p, article p",
+    )
+
+    if not _check_min_content_length(text):
+        log.warning("  Amundi: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Amundi: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
+def _fetch_content_troweprice(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch T. Rowe Price article content via Playwright (CSR site)."""
+    from playwright.sync_api import sync_playwright
+
+    url = article["url"]
+    log.info("  T.Rowe Price: fetching article page %s", url)
+
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            context = browser.new_context(
+                user_agent=HEADERS["User-Agent"],
+                viewport={"width": 1440, "height": 900},
+            )
+            page = context.new_page()
+            page.goto(url, wait_until="networkidle", timeout=30000)
+            page.wait_for_timeout(2000)
+            html = page.content()
+            browser.close()
+    except Exception as e:
+        log.error("  T.Rowe Price: Playwright fetch failed: %s", e)
+        return None
+
+    text = _normalize_html(
+        html,
+        ".beacon-article-body p, .article-content p, [itemprop='articleBody'] p, main p",
+    )
+
+    if not _check_min_content_length(text):
+        log.warning("  T.Rowe Price: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  T.Rowe Price: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -556,6 +657,9 @@ CONTENT_FETCHERS = {
     "ark-invest": _fetch_content_ark,
     "bridgewater": _fetch_content_bridgewater,
     "cambridge-associates": _fetch_content_cambridge,
+    "wellington": _fetch_content_wellington,
+    "amundi": _fetch_content_amundi,
+    "troweprice": _fetch_content_troweprice,
 }
 
 

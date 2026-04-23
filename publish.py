@@ -31,6 +31,9 @@ BADGE_COLORS: dict[str, str] = {
     "oaktree": "#f85149",
     "ark-invest": "#c45000",  # ARK orange (WCAG AA)
     "cambridge-associates": "#2ba397",  # teal
+    "wellington": "#0066cc",            # Wellington blue
+    "amundi": "#e8601c",                # Amundi orange
+    "troweprice": "#00607a",            # T. Rowe Price teal-navy
 }
 
 INITIAL_VISIBLE = 20
