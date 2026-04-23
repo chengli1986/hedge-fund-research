@@ -38,6 +38,141 @@ BADGE_COLORS: dict[str, str] = {
 
 INITIAL_VISIBLE = 20
 
+# ── Static fund profile data (displayed in Sources tab) ──
+_FUND_PROFILES: dict[str, dict] = {
+    "man-group": {
+        "founded": "1783", "aum": "~$175B", "hq": "London, UK",
+        "type_en": "Listed HF (LSE)", "type_zh": "上市对冲基金 (伦交所)",
+        "desc_zh": "全球最大上市对冲基金。AHL 系统化量化与 GLG 主观宏观及信贷多策略并举，伦交所上市。最初为大宗商品经纪商，1980 年代转型资产管理。",
+        "notable_en": "AHL Diversified ~15% annualized since 1990s; significant positive returns during 2008 financial crisis, providing genuine equity hedge.",
+        "notable_zh": "AHL Diversified 自 1990 年代年化约 15%；2008 年金融危机期间实现显著正回报，提供真实的股票去相关性。",
+    },
+    "bridgewater": {
+        "founded": "1975", "aum": "~$124B", "hq": "Westport, CT",
+        "type_en": "Largest Hedge Fund", "type_zh": "全球最大对冲基金",
+        "desc_zh": "全球最大对冲基金，Ray Dalio 创立。以「极度透明」文化和系统化宏观方法著称。Pure Alpha 追求全球宏观 Alpha；All Weather 是最早的风险平价策略，旨在穿越任何经济周期。",
+        "notable_en": "Pure Alpha +45% in 2010; All Weather -3.9% in 2008 (vs. S&P -38%); Dalio's debt cycle framework widely cited in global macro research.",
+        "notable_zh": "Pure Alpha 2010 年 +45%；All Weather 2008 年 -3.9%（标普 -38%）；Dalio 债务周期框架是全球宏观研究的重要参考。",
+    },
+    "aqr": {
+        "founded": "1998", "aum": "~$105B", "hq": "Greenwich, CT",
+        "type_en": "Quant Hedge Fund", "type_zh": "量化对冲基金",
+        "desc_zh": "Cliff Asness（前高盛量化研究部）创立。系统化因子投资先驱：在股票、固收、货币及大宗商品上部署价值、动量、carry 及防御性因子。大量发表于顶级学术期刊。",
+        "notable_en": "Multiple papers in Journal of Finance; positive performance in 2022 when global stocks and bonds both fell 15%+; 'Betting Against Beta' paper reshaped factor investing theory.",
+        "notable_zh": "多篇论文发表于《Journal of Finance》；2022 年全球股债双杀中录得正回报；'Betting Against Beta' 论文重塑了因子投资理论。",
+    },
+    "gmo": {
+        "founded": "1977", "aum": "~$60B", "hq": "Boston, MA",
+        "type_en": "Value Hedge Fund", "type_zh": "价值对冲基金",
+        "desc_zh": "Jeremy Grantham、Richard Mayo 和 Nicholas Otis 创立。深度价值、逆向风格。以季度《7 年资产类别预测》著称——跨全球股票和固定收益市场的机构级预期回报估算。",
+        "notable_en": "Accurately called the 1989 Japan bubble, 2000 dot-com crash, and 2007 housing bubble; GMO Benchmark-Free Allocation +18% in 2022 (vs. 60/40 -16%).",
+        "notable_zh": "准确预警 1989 年日本泡沫、2000 年科技泡沫、2007 年美国房产泡沫；2022 年 GMO Benchmark-Free Allocation +18%（同期 60/40 组合 -16%）。",
+    },
+    "oaktree": {
+        "founded": "1995", "aum": "~$192B", "hq": "Los Angeles, CA",
+        "type_en": "Alt. Credit Leader", "type_zh": "另类信贷领军",
+        "desc_zh": "全球最大另类信贷管理人，由 Howard Marks、Bruce Karsh 等前 TCW 固收团队创立。Marks 自 1990 年起撰写的投资备忘录是机构信贷圈的必读材料。2019 年 Brookfield 收购多数股权。",
+        "notable_en": "30 consecutive years without a loss in distressed debt; Opportunities Fund VIII returned 30%+ during the 2008-09 crisis; Warren Buffett calls Marks' memos 'must-reads.'",
+        "notable_zh": "困境债连续 30 年无亏损年度；Opportunities Fund VIII 2008-09 危机期间回报超 30%；Warren Buffett 称 Marks 备忘录「每次必读」。",
+    },
+    "ark-invest": {
+        "founded": "2014", "aum": "~$15B", "hq": "St. Petersburg, FL",
+        "type_en": "Thematic ETF", "type_zh": "主题 ETF",
+        "desc_zh": "Cathie Wood 创立，专注颠覆性创新——AI、基因组学、机器人、储能、金融科技和太空。在 ETF 行业首创每日持仓公开透明，打破传统主动管理的不透明模式。",
+        "notable_en": "ARKK +152% in 2020 (best-performing active ETF); early Tesla conviction at ~$17 split-adjusted — held through 10x gain; pioneered daily holdings disclosure in the industry.",
+        "notable_zh": "ARKK 2020 年 +152%（年度最佳主动 ETF）；特斯拉复权价约 $17 时重仓持有至 10 倍回报；首创每日持仓披露制度。",
+    },
+    "cambridge-associates": {
+        "founded": "1973", "aum": "$500B+ advisory", "hq": "Boston, MA",
+        "type_en": "Investment Advisor", "type_zh": "机构投资顾问",
+        "desc_zh": "非传统基金管理人，而是全球领先的捐赠基金和基金会投资顾问。服务 500+ 所大学，包括哈佛、耶鲁、斯坦福。其 PE/VC 基准指数是全球私募市场业绩衡量的行业标准。",
+        "notable_en": "Its 1990s reports catalyzed the modern VC boom; PE/VC benchmark indices used by $3T+ in private market capital globally; advises Harvard, Yale, Stanford endowments.",
+        "notable_zh": "其 1990 年代报告催生了现代风险投资浪潮；PE/VC 基准指数被全球超 3 万亿美元私募资本采用；服务哈佛、耶鲁、斯坦福捐赠基金。",
+    },
+    "wellington": {
+        "founded": "1928", "aum": "~$1.2T", "hq": "Boston, MA",
+        "type_en": "Private Partnership", "type_zh": "私营合伙制",
+        "desc_zh": "全球历史最悠久、规模最大的私营投资管理公司之一。为 70+ 国 2,100+ 个机构客户管理资产。非上市合伙制架构，无外部股东压力。以深度基本面研究文化著称，分析师平均任期超 10 年。",
+        "notable_en": "Advisor to Vanguard Wellington Fund (1929, oldest US balanced fund); analysts average 10+ year tenure; serves Harvard endowment and major sovereign wealth funds.",
+        "notable_zh": "美国最古老平衡基金 Vanguard Wellington Fund（1929 年）的投资顾问；分析师平均任期逾 10 年；服务哈佛捐赠基金及多家主权财富基金。",
+    },
+    "amundi": {
+        "founded": "2010", "aum": "~€2.2T", "hq": "Paris, France",
+        "type_en": "Listed (Euronext)", "type_zh": "上市 (欧交所)",
+        "desc_zh": "欧洲最大资产管理公司，2010 年由农业信贷 AM 与兴业 AM 合并成立。Research Center 每周发布宏观及资本市场报告，欧元区政策分析独具优势。欧洲最大 ETF 提供商之一。",
+        "notable_en": "Europe's largest asset manager; ESG integration pioneer — among first UN PRI signatories; acquired Lyxor (2022) to dominate European ETF market.",
+        "notable_zh": "欧洲最大资产管理公司；ESG 整合先驱，联合国 PRI 首批签署方；2022 年收购 Lyxor 巩固欧洲 ETF 市场地位。",
+    },
+    "troweprice": {
+        "founded": "1937", "aum": "~$1.6T", "hq": "Baltimore, MD",
+        "type_en": "Listed (NASDAQ)", "type_zh": "上市 (NASDAQ)",
+        "desc_zh": "由 Thomas Rowe Price Jr. 创立，被誉为「成长股投资之父」，1950 年代首创成长股投资理念。以基本面研究文化著称，分析师须长期深度覆盖其研究领域。",
+        "notable_en": "Founder credited as 'father of growth investing'; 30+ consecutive years without a net annual loss (through 2020); target-date fund series globally top-3 by AUM.",
+        "notable_zh": "创始人被誉为「成长股投资之父」；连续 30+ 年无年度净亏损（截至 2020 年）；目标日期基金系列规模全球前三。",
+    },
+}
+
+_STRATEGY_LABELS: dict[str, str] = {
+    "macro": "Macro", "quant": "Quant/CTA", "fixed_income": "Fixed Income",
+    "multi_asset": "Multi-Asset", "equity": "Equity",
+    "emerging_markets": "Emerging Markets", "esg_climate": "ESG/Climate",
+    "private_equity": "Private Equity", "venture_capital": "VC",
+    "private_credit": "Private Credit", "event_driven": "Event Driven",
+}
+
+
+def _build_sources_view(sources: dict[str, dict]) -> str:
+    """Generate fund profile cards for the Sources tab."""
+    cards = []
+    for sid, src in sources.items():
+        profile = _FUND_PROFILES.get(sid, {})
+        color = BADGE_COLORS.get(sid, "#8b949e")
+        name = html.escape(src.get("name", sid))
+        short = html.escape(src.get("short_name", sid))
+        url = html.escape(src.get("url", "#"))
+        hostname = html.escape(src.get("expected_hostname", url))
+        desc_en = html.escape(src.get("description", ""))
+        desc_zh = html.escape(profile.get("desc_zh", ""))
+
+        founded = profile.get("founded", "—")
+        aum = profile.get("aum", "—")
+        hq = profile.get("hq", "—")
+        type_en = html.escape(profile.get("type_en", ""))
+        type_zh = html.escape(profile.get("type_zh", ""))
+        notable_en = html.escape(profile.get("notable_en", ""))
+        notable_zh = html.escape(profile.get("notable_zh", ""))
+
+        tags = "".join(
+            f'<span class="sc-tag">{html.escape(_STRATEGY_LABELS.get(t, t))}</span>'
+            for t in src.get("strategy_tags", [])
+        )
+        badge_text = "#0b1220" if color in ("#7dd3fc", "#86efac") else "#fff"
+
+        desc_block = f'<p class="sc-desc lang-en">{desc_en}</p>'
+        if desc_zh:
+            desc_block += f'<p class="sc-desc lang-zh" style="display:none">{desc_zh}</p>'
+
+        cards.append(f"""      <div class="source-card" style="--sc-accent:{color}">
+        <div class="sc-head">
+          <div class="sc-title">
+            <span class="badge" style="background:{color};color:{badge_text}">{short}</span>
+            <span class="sc-name">{name}</span>
+          </div>
+          <span class="sc-founded"><span class="lang-en">Est. {founded}</span><span class="lang-zh" style="display:none">创立 {founded}</span></span>
+        </div>
+        <div class="sc-stats">
+          <span class="sc-stat"><strong>{aum}</strong> AUM</span>
+          <span class="sc-stat">{hq}</span>
+          <span class="sc-stat lang-en">{type_en}</span><span class="sc-stat lang-zh" style="display:none">{type_zh}</span>
+        </div>
+        <div class="sc-tags">{tags}</div>
+        {desc_block}
+        <div class="sc-notable lang-en">{notable_en}</div>
+        <div class="sc-notable lang-zh" style="display:none">{notable_zh}</div>
+        <div class="sc-footer"><a class="sc-link" href="{url}" target="_blank" rel="noopener">{hostname} →</a></div>
+      </div>""")
+    return "\n".join(cards)
+
 
 def load_articles() -> list[dict]:
     """Load articles from JSONL file."""
@@ -347,6 +482,9 @@ def generate_html(articles: list[dict]) -> str:
         )
     themes_html = "\n".join(theme_sections) if theme_sections else '<p class="muted">No themes available yet.</p>'
 
+    # ── Sources view ──
+    sources_view_html = _build_sources_view(sources)
+
     fund_names_for_meta = ", ".join(
         sources[sid].get("name", sid) for sid in source_order if sid in sources
     )
@@ -603,7 +741,44 @@ a:hover {{ text-decoration: underline; }}
   .inline-takeaway {{ margin-left: 0; }}
   .fund-links li {{ grid-template-columns: 1fr; }}
   .view-bar {{ overflow-x: auto; }}
+  .sources-grid {{ grid-template-columns: 1fr; }}
 }}
+/* ── Sources (fund profile) view ── */
+.sources-intro {{ color: var(--text-muted); font-size: 0.84rem; margin-bottom: 16px; line-height: 1.5; }}
+.sources-grid {{
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(430px, 1fr)); gap: 16px;
+}}
+.source-card {{
+  background: rgba(17,24,39,0.84); border: 1px solid var(--border);
+  border-left: 3px solid var(--sc-accent, var(--accent)); border-radius: 18px;
+  padding: 15px 17px 13px; backdrop-filter: blur(10px);
+  display: flex; flex-direction: column;
+}}
+.sc-head {{ display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }}
+.sc-title {{ display: flex; align-items: center; gap: 8px; }}
+.sc-name {{ font-size: 1rem; font-weight: 700; }}
+.sc-founded {{ color: var(--text-muted); font-size: 0.74rem; white-space: nowrap; flex-shrink: 0; }}
+.sc-stats {{ display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 9px; }}
+.sc-stat {{
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 999px; padding: 3px 9px; font-size: 0.74rem; color: var(--text-muted);
+}}
+.sc-stat strong {{ color: var(--text); }}
+.sc-tags {{ display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }}
+.sc-tag {{ background: var(--pill); border: 1px solid var(--border); border-radius: 999px; padding: 2px 8px; font-size: 0.69rem; color: var(--text-muted); }}
+.sc-desc {{ font-size: 0.84rem; color: var(--text-muted); line-height: 1.5; margin: 0 0 9px; }}
+.sc-notable {{
+  font-size: 0.78rem; color: var(--accent2); line-height: 1.45;
+  padding-top: 9px; border-top: 1px solid rgba(38,50,71,0.6); margin-top: auto;
+}}
+.sc-notable::before {{ content: '★  '; opacity: 0.7; }}
+.sc-footer {{ display: flex; justify-content: flex-end; margin-top: 8px; }}
+.sc-link {{
+  font-size: 0.73rem; color: var(--accent); opacity: 0.8;
+  padding: 3px 9px; border: 1px solid var(--border); border-radius: 999px;
+}}
+.sc-link:hover {{ opacity: 1; text-decoration: none; background: var(--surface2); }}
+.sources-aum-note {{ font-size: 0.73rem; color: var(--text-muted); margin-top: 14px; text-align: right; opacity: 0.7; }}
 </style>
 </head>
 <body>
@@ -632,6 +807,7 @@ a:hover {{ text-decoration: underline; }}
     <button class="view-btn active" data-view="themes" onclick="switchView('themes')"><span class="lang-en">Themes</span><span class="lang-zh" style="display:none">主题</span></button>
     <button class="view-btn" data-view="timeline" onclick="switchView('timeline')"><span class="lang-en">Timeline</span><span class="lang-zh" style="display:none">时间线</span></button>
     <button class="view-btn" data-view="funds" onclick="switchView('funds')"><span class="lang-en">Funds</span><span class="lang-zh" style="display:none">基金</span></button>
+    <button class="view-btn" data-view="sources" onclick="switchView('sources')"><span class="lang-en">Sources</span><span class="lang-zh" style="display:none">来源介绍</span></button>
   </div>
 
   <!-- ═══ THEMES VIEW (default) ═══ -->
@@ -678,6 +854,17 @@ a:hover {{ text-decoration: underline; }}
     <div class="cluster-grid">
       {funds_view_html}
     </div>
+  </div>
+
+  <!-- ═══ SOURCES VIEW ═══ -->
+  <div class="view-panel" id="view-sources">
+    <p class="sources-intro lang-en">{fund_count} production sources — curated for research quality, content accessibility, and institutional relevance.</p>
+    <p class="sources-intro lang-zh" style="display:none">{fund_count} 个生产来源，按研究质量、内容可访问性和机构相关性精选。</p>
+    <div class="sources-grid">
+{sources_view_html}
+    </div>
+    <p class="sources-aum-note lang-en">AUM figures as of 2024 estimates. Cambridge Associates figure reflects advisory assets, not directly managed AUM.</p>
+    <p class="sources-aum-note lang-zh" style="display:none">AUM 数据为 2024 年估算值。Cambridge Associates 数字反映受托咨询资产，非直接管理规模。</p>
   </div>
 </div>
 
@@ -824,6 +1011,36 @@ def main() -> None:
     gzip_path = publish_html(output_file, html_content)
     print(f"Written {len(html_content)} bytes to {output_file}")
     print(f"Gzipped: {gzip_path}")
+
+    # Sync generated page back to docs-site repo so docs-sync stays consistent
+    docs_page = Path.home() / "docs-site" / "pages" / "hedge-fund-research.html"
+    if docs_page.parent.exists():
+        try:
+            docs_page.write_text(html_content, encoding="utf-8")
+            import subprocess
+            result = subprocess.run(
+                ["git", "-C", str(docs_page.parent.parent), "diff", "--quiet", str(docs_page)],
+                capture_output=True,
+            )
+            if result.returncode != 0:  # file changed
+                subprocess.run(
+                    ["git", "-C", str(docs_page.parent.parent), "add", str(docs_page)],
+                    check=True, capture_output=True,
+                )
+                subprocess.run(
+                    ["git", "-C", str(docs_page.parent.parent), "commit", "-m",
+                     f"sync: hedge-fund-research.html from pipeline ({datetime.now(BJT).strftime('%Y-%m-%d %H:%M BJT')})"],
+                    check=True, capture_output=True,
+                )
+                subprocess.run(
+                    ["git", "-C", str(docs_page.parent.parent), "push"],
+                    check=True, capture_output=True,
+                )
+                print(f"Synced docs-site: {docs_page}")
+            else:
+                print("docs-site: no change, skipping commit")
+        except Exception as e:
+            print(f"docs-site sync skipped: {e}")
 
 
 if __name__ == "__main__":
