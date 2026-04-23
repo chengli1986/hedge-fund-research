@@ -125,3 +125,58 @@ class TestScreenPage:
         html = '<html><body><article><h1>Our 2026 Outlook</h1><p>Long article content here...</p></article></body></html>'
         result = sfc.screen_page("https://example.com/insights/outlook-2026", status_code=200, html=html)
         assert result["passed"] is False
+
+
+# ---------------------------------------------------------------------------
+# pass_pending classification (mirrors wrapper-candidate-discovery.sh logic)
+# ---------------------------------------------------------------------------
+
+class TestPassPendingClassification:
+    """Verify that funds with outcome=pass and not in production are shown
+    in the 'Trial Passed — Promote?' section, not in Queue."""
+
+    def _classify(self, candidates, production_ids, history, active_trial_ids=None):
+        active_trial_ids = active_trial_ids or set()
+        cand_map = {c["id"]: c for c in candidates}
+        pass_pending_ids = {
+            h["id"] for h in history
+            if h.get("outcome") == "pass" and h["id"] not in production_ids
+        }
+        queue = [
+            c for c in candidates
+            if c["status"] == "validated"
+            and c["id"] not in production_ids
+            and c["id"] not in active_trial_ids
+            and c["id"] not in pass_pending_ids
+        ]
+        pass_pending = [
+            cand_map[cid] for cid in pass_pending_ids if cid in cand_map
+        ]
+        return queue, pass_pending
+
+    def test_pass_outcome_not_in_production_goes_to_pass_pending(self):
+        candidates = [{"id": "alpha", "status": "validated", "name": "Alpha"}]
+        history = [{"id": "alpha", "outcome": "pass"}]
+        queue, pass_pending = self._classify(candidates, set(), history)
+        assert any(c["id"] == "alpha" for c in pass_pending)
+        assert not any(c["id"] == "alpha" for c in queue)
+
+    def test_pass_outcome_already_in_production_excluded_from_pass_pending(self):
+        candidates = [{"id": "alpha", "status": "validated", "name": "Alpha"}]
+        history = [{"id": "alpha", "outcome": "pass"}]
+        queue, pass_pending = self._classify(candidates, {"alpha"}, history)
+        assert not any(c["id"] == "alpha" for c in pass_pending)
+        assert not any(c["id"] == "alpha" for c in queue)
+
+    def test_fail_outcome_stays_out_of_pass_pending(self):
+        candidates = [{"id": "beta", "status": "validated", "name": "Beta"}]
+        history = [{"id": "beta", "outcome": "fail"}]
+        queue, pass_pending = self._classify(candidates, set(), history)
+        assert not any(c["id"] == "beta" for c in pass_pending)
+        assert any(c["id"] == "beta" for c in queue)
+
+    def test_validated_no_trial_goes_to_queue(self):
+        candidates = [{"id": "gamma", "status": "validated", "name": "Gamma"}]
+        queue, pass_pending = self._classify(candidates, set(), history=[])
+        assert any(c["id"] == "gamma" for c in queue)
+        assert not any(c["id"] == "gamma" for c in pass_pending)

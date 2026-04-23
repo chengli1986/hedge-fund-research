@@ -142,8 +142,29 @@ active_trial_info = {t["id"]: t for t in trial_data.get("active_trials", [])}
 
 # Classify candidates into groups
 cand_map = {c["id"]: c for c in candidates}
+
+# Trial PASS but human hasn't promoted to sources.json yet
+pass_pending_ids = {
+    h["id"] for h in trial_data.get("history", [])
+    if h.get("outcome") == "pass" and h["id"] not in production_ids
+}
+_pass_history = {h["id"]: h for h in trial_data.get("history", []) if h.get("outcome") == "pass"}
+pass_pending = []
+for cid in pass_pending_ids:
+    if cid not in cand_map:
+        continue
+    c = dict(cand_map[cid])
+    h = _pass_history[cid]
+    c["_trial_days"] = h.get("days_with_articles", 0)
+    c["_trial_quality"] = h.get("avg_quality_score", 0.0)
+    c["_trial_articles"] = h.get("total_articles", 0)
+    pass_pending.append(c)
+pass_pending.sort(key=lambda c: -(c.get("fit_score") or 0))
+
 queue = [c for c in candidates if c["status"] == "validated"
-         and c["id"] not in production_ids and c["id"] not in active_trial_ids]
+         and c["id"] not in production_ids
+         and c["id"] not in active_trial_ids
+         and c["id"] not in pass_pending_ids]
 inaccessible = [c for c in candidates if c["status"] == "inaccessible"]
 seed_statuses = {"seed", "discovered", "screened", "screen_failed"}
 seeds = [c for c in candidates if c["status"] in seed_statuses]
@@ -221,6 +242,50 @@ def section(emoji: str, title: str, subtitle: str, items: list, color: str,
   {group_table(items, show_fit=show_fit, show_trial=show_trial)}
 </div>"""
 
+def pass_pending_table(items: list) -> str:
+    if not items:
+        return '<p style="color:#959da5;font-size:12px;padding:6px 0;margin:0">（空）</p>'
+    rows = ""
+    for c in items:
+        q_score = c.get("_trial_quality", 0.0)
+        q_color = "#22863a" if q_score >= 0.7 else ("#e36209" if q_score >= 0.5 else "#cb2431")
+        rows += (
+            f'<tr style="background:#faf0ff">'
+            f'<td style="padding:5px 8px;border-bottom:1px solid #eee;font-weight:500">{c["name"]}</td>'
+            f'<td style="padding:5px 8px;border-bottom:1px solid #eee">{fit_pct(c.get("fit_score"))}</td>'
+            f'<td style="padding:5px 8px;border-bottom:1px solid #eee">{q_badge(c.get("quality","—"))}</td>'
+            f'<td style="padding:5px 8px;border-bottom:1px solid #eee;font-weight:600;color:{q_color}">'
+            f'{q_score:.2f}</td>'
+            f'<td style="padding:5px 8px;border-bottom:1px solid #eee;color:#586069;font-size:11px">'
+            f'{c.get("_trial_days",0)}天 / {c.get("_trial_articles",0)}篇</td>'
+            f'<td style="padding:5px 8px;border-bottom:1px solid #eee">{tags_html(c.get("strategy_tags",[]))}</td>'
+            f'</tr>\n'
+        )
+    header = (
+        '<tr style="background:#f6f8fa">'
+        '<th style="text-align:left;padding:5px 8px;border-bottom:2px solid #e1e4e8;font-size:12px">Fund</th>'
+        '<th style="text-align:left;padding:5px 8px;border-bottom:2px solid #e1e4e8;font-size:12px">Fit</th>'
+        '<th style="text-align:left;padding:5px 8px;border-bottom:2px solid #e1e4e8;font-size:12px">Quality</th>'
+        '<th style="text-align:left;padding:5px 8px;border-bottom:2px solid #e1e4e8;font-size:12px">Trial Score</th>'
+        '<th style="text-align:left;padding:5px 8px;border-bottom:2px solid #e1e4e8;font-size:12px">Trial Stats</th>'
+        '<th style="text-align:left;padding:5px 8px;border-bottom:2px solid #e1e4e8;font-size:12px">Tags</th>'
+        '</tr>'
+    )
+    return f'<table style="width:100%;border-collapse:collapse;font-size:13px">{header}{rows}</table>'
+
+def pass_pending_section(items: list) -> str:
+    count = len(items)
+    color = "#8250df"
+    return f"""
+<div style="margin:0 0 20px;border-left:3px solid {color};padding-left:10px">
+  <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px">
+    <span style="font-size:15px;font-weight:700;color:{color}">✅ Trial Passed — Promote?</span>
+    <span style="background:{color};color:#fff;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:600">{count}</span>
+    <span style="color:#959da5;font-size:12px">Trial 已通过·等待人工晋升到 sources.json</span>
+  </div>
+  {pass_pending_table(items)}
+</div>"""
+
 # Build active trial candidates list (validated with active trial)
 active_trial_candidates = [
     cand_map[tid] for tid in active_trial_info if tid in cand_map
@@ -239,6 +304,7 @@ prod_items = [
 stats = {
     "production": len(prod_items),
     "trials": len(active_trial_candidates),
+    "pass_pending": len(pass_pending),
     "queue": len(queue),
     "inaccessible": len(inaccessible),
     "seed": len(seeds),
@@ -248,6 +314,7 @@ stats = {
 stats_bar = " &nbsp;·&nbsp; ".join([
     f'<span style="color:#1a7f37;font-weight:600">🟢 Production {stats["production"]}</span>',
     f'<span style="color:#0969da;font-weight:600">🔵 Trials {stats["trials"]}</span>',
+    f'<span style="color:#8250df;font-weight:600">✅ Promote? {stats["pass_pending"]}</span>',
     f'<span style="color:#9a6700;font-weight:600">🟡 Queue {stats["queue"]}</span>',
     f'<span style="color:#cf222e;font-weight:600">🟠 Inaccessible {stats["inaccessible"]}</span>',
     f'<span style="color:#57606a;font-weight:600">🌱 Seed {stats["seed"]}</span>',
@@ -257,6 +324,7 @@ stats_bar = " &nbsp;·&nbsp; ".join([
 body_sections = (
     section("🟢", "Production", "每日 pipeline 正在抓取", prod_items, "#1a7f37", show_fit=False)
     + section("🔵", "Active Trials", "3天窗口·每日质量采样", active_trial_candidates, "#0969da", show_trial=True)
+    + pass_pending_section(pass_pending)
     + section("🟡", "Queue", "已验证·等待进入 Trial", queue, "#9a6700")
     + section("🟠", "Inaccessible", "JS渲染/403阻断·Fetcher Synthesis 目标", inaccessible, "#cf222e")
     + section("🌱", "Seed / Discovery", "待评估候选池", seeds, "#57606a")
@@ -279,6 +347,7 @@ html = f"""<html><body style="font-family:-apple-system,BlinkMacSystemFont,'Sego
   <strong>状态含义：</strong>
   🟢 Production — 已接入每日抓取 pipeline；
   🔵 Active Trials — 3天试运行，验证可访问性和内容质量；
+  ✅ Trial Passed — Trial 已通过，等待人工晋升至 sources.json（需操作）；
   🟡 Queue — 已通过人工或 AI 验证，等待进入 Trial；
   🟠 Inaccessible — 技术阻断（JS渲染/403），Fetcher Synthesis 自动尝试生成新爬虫；
   🌱 Seed — 待评分候选；
