@@ -213,6 +213,11 @@ def _parse_llm_output(raw: str) -> Optional[dict]:
         # Fuzzy match themes: "Macro" → "Macro/Rates", "Oil" → "Oil/Energy", etc.
         matched_themes = []
         for t in data["themes"]:
+            # Gemini sometimes returns {"name": "AI/Tech", "rationale": "..."} instead of strings
+            if isinstance(t, dict):
+                t = t.get("name") or t.get("theme") or t.get("label") or ""
+            if not isinstance(t, str) or not t:
+                continue
             if t in VALID_THEMES:
                 matched_themes.append(t)
             else:

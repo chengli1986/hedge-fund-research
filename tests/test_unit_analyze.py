@@ -109,6 +109,28 @@ class TestParseLlmOutput:
     def test_return_none_for_non_dict(self):
         assert _parse_llm_output(json.dumps([1, 2, 3])) is None
 
+    def test_themes_as_dict_list_extracts_name(self):
+        # Gemini 2.5 Pro occasionally returns themes as objects instead of strings,
+        # causing unhashable type: 'dict' in the set membership check.
+        data = {
+            "summary_en": "x", "summary_zh": "x",
+            "themes": [{"name": "AI/Tech", "rationale": "…"}, {"name": "Macro/Rates"}],
+            "key_takeaway_en": "x", "key_takeaway_zh": "x",
+        }
+        result = _parse_llm_output(json.dumps(data))
+        assert result is not None
+        assert result["themes"] == ["AI/Tech", "Macro/Rates"]
+
+    def test_themes_as_dict_list_without_name_field_skipped(self):
+        data = {
+            "summary_en": "x", "summary_zh": "x",
+            "themes": [{"rationale": "no name key here"}, "AI/Tech"],
+            "key_takeaway_en": "x", "key_takeaway_zh": "x",
+        }
+        result = _parse_llm_output(json.dumps(data))
+        assert result is not None
+        assert result["themes"] == ["AI/Tech"]
+
 
 # ---------------------------------------------------------------------------
 # _analyze_with_fallback

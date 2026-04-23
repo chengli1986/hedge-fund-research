@@ -331,3 +331,17 @@ class TestBridgewaterExtraction:
             result = _fetch_content_bridgewater(article)
 
         assert result is None
+
+
+class TestWellingtonFetcher:
+    def test_uses_load_not_networkidle(self):
+        # Wellington AEM pages have long-running analytics that never reach networkidle;
+        # the fetcher must use wait_until="load" to avoid 30s timeouts.
+        import inspect
+        import fetch_content
+        src = inspect.getsource(fetch_content._fetch_content_wellington)
+        assert 'wait_until="load"' in src, (
+            "_fetch_content_wellington must use wait_until='load', not 'networkidle'; "
+            "Wellington pages have persistent analytics that never idle out."
+        )
+        assert 'wait_until="networkidle"' not in src

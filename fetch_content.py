@@ -563,7 +563,9 @@ def _fetch_content_wellington(article: dict) -> Optional[tuple[Path, str]]:
                 viewport={"width": 1440, "height": 900},
             )
             page = context.new_page()
-            page.goto(url, wait_until="networkidle", timeout=30000)
+            # AEM pages often have long-running analytics requests that never reach
+            # networkidle; SSR content is fully present at load event
+            page.goto(url, wait_until="load", timeout=30000)
             page.wait_for_timeout(2000)
             html = page.content()
             browser.close()
