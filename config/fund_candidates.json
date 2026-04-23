@@ -656,9 +656,10 @@
       "article_signals": 3
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-04-15T01:02:26.000000+00:00",
+    "last_deep_analyzed_at": "2026-04-23T01:05:00Z",
     "quality": "HIGH",
-    "topics": "macro, ESG, geopolitics, portfolio strategy, fixed income, emerging markets, private assets",
+    "quality_score": 0.82,
+    "topics": "macro, capital markets, geopolitics, ESG, fixed income, emerging markets, private assets",
     "strategy_tags": [
       "macro",
       "fixed_income",
@@ -1516,7 +1517,7 @@
     "homepage_url": "https://www.capitalgroup.com",
     "research_url": "https://www.capitalgroup.com/individual/investments/insights.html",
     "source": "manual",
-    "status": "seed",
+    "status": "inaccessible",
     "strategy_tags": [
       "equity",
       "fixed_income",
@@ -1524,9 +1525,13 @@
       "multi_asset"
     ],
     "discovery_method": "discover_fund_sites",
-    "notes": "Capital Ideas: free equity/fixed income/macro research",
+    "notes": "Research URL 404; all paths blocked, needs manual URL update",
     "official_domain": "www.capitalgroup.com",
     "research_links": [],
-    "last_discovered_at": "2026-04-22T09:03:19.934710+08:00"
+    "last_discovered_at": "2026-04-23T09:00:12.674329+08:00",
+    "last_deep_analyzed_at": "2026-04-23T01:05:00Z",
+    "quality": "UNKNOWN",
+    "quality_score": 0.0,
+    "topics": ""
   }
 ]
