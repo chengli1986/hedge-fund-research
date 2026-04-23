@@ -2,7 +2,7 @@
 
 Tracks and aggregates research insights, market commentary, and papers from top hedge funds. Summarizes via LLM and publishes a bilingual (CN/EN) dashboard.
 
-## Sources (7)
+## Sources (10)
 
 | Fund | Method | Frequency | Notable |
 |------|--------|-----------|---------|
@@ -13,14 +13,9 @@ Tracks and aggregates research insights, market commentary, and papers from top 
 | **Oaktree Capital** | Playwright (CSR) | Monthly | Howard Marks memos, credit/distressed |
 | **ARK Invest** | RSS feed | Weekly | Analyst Research, Market Commentary |
 | **Cambridge Associates** | SSR (requests) | Weekly | Private equity, venture capital, private credit |
-
-## Candidate Trials (3 active, day 1/3)
-
-| Fund | Method | Day 1 Signal |
-|------|--------|-------------|
-| T. Rowe Price | Playwright (AEM) | 15 articles |
-| Amundi Research Center | RSS | 18 articles |
-| Wellington Management | Playwright (CSR) | Accessible |
+| **Wellington Management** | Playwright (AEM) | Weekly | Equity, macro, fixed income, multi-asset, ESG |
+| **Amundi Research Center** | RSS | Weekly | Macro, ESG, emerging markets, fixed income |
+| **T. Rowe Price** | Playwright (AEM) | Weekly | Equity, fixed income, active management |
 
 ## Pipeline
 
@@ -81,7 +76,7 @@ Automated pipeline for finding and evaluating new hedge fund research sources:
 2. **Rule-based screening** — detects login walls, paywalls, index-only pages
 3. **Entrypoint scoring** — reuses scorer engine with isolated candidate state
 4. **LLM deep analysis** — Claude Code agent judges quality (HIGH/MEDIUM/LOW) and GMIA fit
-5. **Email report** — HTML summary with color-coded quality/status after each run
+5. **Email report** — HTML summary with color-coded quality/status; includes a dedicated '✅ Trial Passed — Promote?' section for funds awaiting human promotion (separated from the Queue of candidates waiting to start trials)
 
 ```bash
 # Manual run
@@ -107,7 +102,7 @@ Scorer weight optimization program using automated experiment loop:
 
 ## Tests
 
-263 passing, 15 deselected — unit, functional, and integration tests (live/nightly tests excluded by default via pytest.ini). Contract tests enforce `sources.json` stays in sync with the `FETCHERS` / `CONTENT_FETCHERS` dispatcher dicts and `BADGE_COLORS` palette, so adding a new production source without wiring the full pipeline fails fast at pytest time.
+267 passing, 15 deselected — unit, functional, and integration tests (live/nightly tests excluded by default via pytest.ini). Contract tests enforce `sources.json` stays in sync with the `FETCHERS` / `CONTENT_FETCHERS` dispatcher dicts and `BADGE_COLORS` palette, so adding a new production source without wiring the full pipeline fails fast at pytest time.
 
 ```bash
 python3 -m pytest tests/ -q
