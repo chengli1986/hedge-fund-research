@@ -169,9 +169,7 @@
           "date": "2026-04-19"
         }
       ]
-    }
-  ],
-  "active_trials": [
+    },
     {
       "id": "troweprice",
       "name": "T. Rowe Price",
@@ -181,7 +179,7 @@
       "quality": "HIGH",
       "topics": "equity, AI, macro, fixed income, active management",
       "start_date": "2026-04-20",
-      "end_date": null,
+      "end_date": "2026-04-23",
       "daily_checks": {
         "2026-04-20": {
           "accessible": true,
@@ -203,10 +201,17 @@
           "date_count": 6,
           "error": null,
           "fetcher_used": true
+        },
+        "2026-04-23": {
+          "accessible": true,
+          "article_count": 6,
+          "date_count": 6,
+          "error": null,
+          "fetcher_used": true
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -274,7 +279,10 @@
           "day": 3,
           "date": "2026-04-22"
         }
-      ]
+      ],
+      "total_articles": 24,
+      "days_with_articles": 4,
+      "avg_quality_score": 0.613
     },
     {
       "id": "amundi",
@@ -285,7 +293,7 @@
       "quality": "HIGH",
       "topics": "macro, ESG, geopolitics, portfolio strategy, fixed income, emerging markets, private assets",
       "start_date": "2026-04-20",
-      "end_date": null,
+      "end_date": "2026-04-23",
       "daily_checks": {
         "2026-04-20": {
           "accessible": true,
@@ -307,10 +315,17 @@
           "date_count": 10,
           "error": null,
           "fetcher_used": true
+        },
+        "2026-04-23": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -378,7 +393,10 @@
           "day": 3,
           "date": "2026-04-22"
         }
-      ]
+      ],
+      "total_articles": 40,
+      "days_with_articles": 4,
+      "avg_quality_score": 0.813
     },
     {
       "id": "wellington",
@@ -389,7 +407,7 @@
       "quality": "HIGH",
       "topics": "equity, macro, fixed income, alternatives, ESG, geopolitics",
       "start_date": "2026-04-20",
-      "end_date": null,
+      "end_date": "2026-04-23",
       "daily_checks": {
         "2026-04-20": {
           "accessible": true,
@@ -411,10 +429,17 @@
           "date_count": 10,
           "error": null,
           "fetcher_used": true
+        },
+        "2026-04-23": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 0,
@@ -456,6 +481,182 @@
           "error": null,
           "day": 3,
           "date": "2026-04-22"
+        }
+      ],
+      "total_articles": 40,
+      "days_with_articles": 4,
+      "avg_quality_score": 0.767
+    }
+  ],
+  "active_trials": [
+    {
+      "id": "pimco",
+      "name": "PIMCO",
+      "research_url": "https://www.pimco.com/us/en/insights#sort=%40publishz32xdate%20descending&f:category=[70341f6de3a142ee89144df0ec44e3b8,8d35ad276c6c4c5caf4d9fed37c5f51d,1a3217a178b04eb18c1e4532665b184c,56ebfd2935044d1eb39b7e661d2d03fb,22ea0773e8f147e38e15655207e73e21,bdd17ed0ae9d4ddd96e9e60e51c47782,78449f5b2f5e4b6ebd2d6e90b7a9f889,9cfdb8bfe49a451a851cf9957c57cd32,eef114e6a525445a81d179b8adb018c7]",
+      "homepage_url": "https://www.pimco.com",
+      "fit_score": 0.82,
+      "quality": "HIGH",
+      "topics": "fixed income, macro, credit",
+      "start_date": "2026-04-23",
+      "end_date": null,
+      "daily_checks": {
+        "2026-04-23": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.pimco.com/us/en/insights/higher-energy-costs-weaker-tax-relief-squeeze-us-households",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.6,
+              "overall": 0.76,
+              "notes": "Macro analysis of energy supply disruption impact on U.S. households and inflation; article truncated mid-sentence"
+            },
+            {
+              "url": "https://www.pimco.com/us/en/insights/when-geopolitics-becomes-an-economic-input",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.7,
+              "overall": 0.84,
+              "notes": "Portfolio strategy framework for geopolitical fragmentation; argues for active/multi-sector approaches over passive; article truncated mid-sentence"
+            },
+            {
+              "url": "https://www.pimco.com/us/en/insights/why-the-fed-could-shrink-its-balance-sheet-again-and-markets-might-not-notice",
+              "relevance": 0.9,
+              "depth": 0.75,
+              "extractable": 0.65,
+              "overall": 0.79,
+              "notes": "Monetary policy analysis on Fed balance sheet normalization and quantitative tightening; article truncated mid-sentence"
+            }
+          ],
+          "avg_score": 0.797,
+          "error": null,
+          "day": 1,
+          "date": "2026-04-23"
+        }
+      ]
+    },
+    {
+      "id": "aberdeen",
+      "name": "Aberdeen Investments",
+      "research_url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/insights",
+      "homepage_url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research",
+      "fit_score": 0.82,
+      "quality": "HIGH",
+      "topics": "hedge fund strategies, event-driven, credit, macro, fixed income",
+      "start_date": "2026-04-23",
+      "end_date": null,
+      "daily_checks": {
+        "2026-04-23": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/quarterly-perspectives-emd-frontiers-fundamentals-fractures",
+              "relevance": 0.9,
+              "depth": 0.5,
+              "extractable": 0.7,
+              "overall": 0.7,
+              "notes": "Podcast summary on emerging market debt fundamentals vs. geopolitical risk; lacks detailed analysis or data."
+            },
+            {
+              "url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/quarterly-perspectives-eme-volatility-valuations-the-value-case",
+              "relevance": 0.9,
+              "depth": 0.5,
+              "extractable": 0.7,
+              "overall": 0.7,
+              "notes": "Podcast summary on emerging market equity valuations and opportunities; high-level discussion without substantive data."
+            },
+            {
+              "url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/emerging-market-income-insights-in-a-shifting-macro-landscape",
+              "relevance": 0.9,
+              "depth": 0.6,
+              "extractable": 0.6,
+              "overall": 0.72,
+              "notes": "Q&A on EM income strategies with some data (S&P 500/Nasdaq/EM declines); truncated at end, discusses three investment pillars."
+            }
+          ],
+          "avg_score": 0.707,
+          "error": null,
+          "day": 1,
+          "date": "2026-04-23"
+        }
+      ]
+    },
+    {
+      "id": "pgim",
+      "name": "PGIM",
+      "research_url": "https://www.pgim.com/au/en/institutional/insights",
+      "homepage_url": "https://www.pgim.com/us/en/institutional/insights",
+      "fit_score": 0.67,
+      "quality": "HIGH",
+      "topics": "fixed income, private credit, alternatives, ESG, multi-asset",
+      "start_date": "2026-04-23",
+      "end_date": null,
+      "daily_checks": {
+        "2026-04-23": {
+          "accessible": true,
+          "article_count": 7,
+          "date_count": 7,
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.pgim.com/content/pgim/us/en/institutional/about/newsroom/press-releases/pgim-launches-new-brand-campaign-keep-asking.html",
+              "relevance": 0.1,
+              "depth": 0.0,
+              "extractable": 0.9,
+              "overall": 0.22,
+              "notes": "Brand marketing campaign announcement with no investment research, analysis, or portfolio strategy content."
+            },
+            {
+              "url": "https://www.pgim.com/content/pgim/us/en/institutional/about/newsroom/press-releases/five-pgim-funds-recognized-by-2026-LSEG-Lipper-Fund-Awards.html",
+              "relevance": 0.3,
+              "depth": 0.2,
+              "extractable": 0.8,
+              "overall": 0.36,
+              "notes": "Fund awards announcement listing performance recognition; minimal analysis or investment insight beyond award names and categories."
+            },
+            {
+              "url": "https://www.pgim.com/content/pgim/us/en/institutional/about/newsroom/press-releases/pgim-announces-strategic-expansion-into-private-credit-secondaries.html",
+              "relevance": 0.7,
+              "depth": 0.5,
+              "extractable": 0.9,
+              "overall": 0.66,
+              "notes": "Strategic business expansion into private credit secondaries with market sizing ($50B opportunity) and deployment plans ($1B over 2 years); moderate investment relevance but limited analytical depth."
+            }
+          ],
+          "avg_score": 0.413,
+          "error": null,
+          "day": 1,
+          "date": "2026-04-23"
         }
       ]
     }

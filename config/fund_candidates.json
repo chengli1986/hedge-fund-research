@@ -535,7 +535,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.8843,
-    "notes": "RECOMMEND: multi-asset weekly research, fills equity gap",
+    "notes": "RECOMMEND: trial passed (4/3 days with articles, quality=0.77)",
     "research_links": [
       {
         "url": "https://www.wellington.com/en/insights",
@@ -643,7 +643,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.95,
-    "notes": "RECOMMEND: weekly EU macro/ESG/multi-asset, fills EU gap",
+    "notes": "RECOMMEND: trial passed (4/3 days with articles, quality=0.81)",
     "research_links": [],
     "screening_signals": {
       "status_code": 200,
@@ -725,7 +725,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.97,
-    "notes": "RECOMMEND: free equity research, fills active mgmt gap",
+    "notes": "RECOMMEND: trial passed (4/3 days with articles, quality=0.61)",
     "research_links": [
       {
         "url": "https://www.troweprice.com/en/us/insights",
