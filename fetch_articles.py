@@ -328,8 +328,18 @@ def fetch_bridgewater(source: dict) -> list[dict]:
 # Playwright Fetchers (for CSR / JS-rendered sites)
 # ---------------------------------------------------------------------------
 
-def _get_playwright_page(url: str, wait_selector: Optional[str] = None, wait_ms: int = 5000):
-    """Launch Playwright, navigate, wait for content, return page HTML."""
+def _get_playwright_page(
+    url: str,
+    wait_selector: Optional[str] = None,
+    wait_ms: int = 5000,
+    wait_until: str = "networkidle",
+    timeout: int = 30000,
+):
+    """Launch Playwright, navigate, wait for content, return page HTML.
+
+    Sites with always-on analytics beacons (BlackRock, Capital Group) never
+    reach `networkidle` — pass `wait_until="domcontentloaded"` for those.
+    """
     from playwright.sync_api import sync_playwright
 
     with sync_playwright() as p:
@@ -339,7 +349,7 @@ def _get_playwright_page(url: str, wait_selector: Optional[str] = None, wait_ms:
             viewport={"width": 1440, "height": 900},
         )
         page = context.new_page()
-        page.goto(url, wait_until="networkidle", timeout=30000)
+        page.goto(url, wait_until=wait_until, timeout=timeout)
         if wait_selector:
             try:
                 page.wait_for_selector(wait_selector, timeout=10000)
@@ -1159,6 +1169,390 @@ def fetch_ark_invest(source: dict) -> list[dict]:
     return articles[:source.get("max_articles", 10)]
 
 
+def fetch_kkr(source: dict) -> list[dict]:
+    """Fetch articles from KKR (Playwright — CSR/AEM).
+
+    Link lives inside each card's `data-cmp-data-layer` JSON under
+    `xdm:linkURL`; AEM internal paths `/content/kkr/sites/global/en/...`
+    are normalized to the public `/...` URL. The page duplicates the first
+    4 cards in a 'related insights' rail, so URLs are deduped.
+    """
+    import json as _json
+    base_url = "https://www.kkr.com"
+    html = _get_playwright_page(source["url"], wait_selector=".article-teaser")
+    soup = BeautifulSoup(html, "html.parser")
+    expected_host = source.get("expected_hostname", "kkr.com")
+
+    seen: set[str] = set()
+    articles: list[dict] = []
+    for item in soup.select(".article-teaser"):
+        title_el = item.select_one(".article-teaser__title")
+        title = title_el.get_text(strip=True) if title_el else ""
+        if not title:
+            continue
+
+        href = ""
+        dl_raw = item.get("data-cmp-data-layer", "")
+        if dl_raw:
+            try:
+                data = _json.loads(dl_raw)
+                for _, v in data.items():
+                    if isinstance(v, dict):
+                        link = v.get("xdm:linkURL") or v.get("linkURL")
+                        if link:
+                            href = link
+                            break
+            except (ValueError, TypeError):
+                pass
+        if not href:
+            a = item.select_one("a[href]")
+            if a:
+                href = a.get("href", "")
+        if not href:
+            continue
+
+        if href.startswith("/content/kkr/sites/global/en/"):
+            href = "/" + href[len("/content/kkr/sites/global/en/"):]
+
+        url = urljoin(base_url, href)
+        if not _validate_hostname(url, expected_host) or url in seen:
+            continue
+        seen.add(url)
+
+        date_raw = ""
+        date_el = item.select_one(".article-teaser__date")
+        if date_el:
+            time_el = date_el.find("time")
+            if time_el:
+                date_raw = (time_el.get("datetime") or time_el.get_text(strip=True)).strip()
+            else:
+                date_raw = date_el.get_text(strip=True)
+
+        cat_el = item.select_one(".article-teaser__category")
+        category = cat_el.get_text(strip=True) if cat_el else ""
+
+        articles.append({
+            "title": title,
+            "category": category,
+            "url": url,
+            "date": parse_date(date_raw) if date_raw else None,
+            "date_raw": date_raw,
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
+def fetch_msci_research(source: dict) -> list[dict]:
+    """Fetch articles from MSCI Research & Insights (Playwright — Next.js CSR).
+
+    Card: div[data-test="search-result-item"]:
+      <p> "Category | Month DD, YYYY", <a><h3>Title</h3></a>, trailing text = summary.
+    """
+    base_url = "https://www.msci.com"
+    html = _get_playwright_page(
+        source["url"],
+        wait_selector='div[data-test="search-result-item"]',
+        wait_ms=5000,
+    )
+    soup = BeautifulSoup(html, "html.parser")
+    expected_host = source.get("expected_hostname", "msci.com")
+    articles = []
+
+    for item in soup.select('div[data-test="search-result-item"]'):
+        link = item.select_one('a[href*="/research-and-insights/"]')
+        h3 = item.select_one("h3")
+        if not link or not h3:
+            continue
+        title = h3.get_text(strip=True)
+        href = link.get("href", "")
+        if not title or not href:
+            continue
+        url = urljoin(base_url, href)
+        if not _validate_hostname(url, expected_host):
+            continue
+
+        meta_el = item.select_one("p")
+        meta_str = meta_el.get_text(strip=True) if meta_el else ""
+        category, date_str = "", ""
+        if "|" in meta_str:
+            parts = [p.strip() for p in meta_str.split("|", 1)]
+            category, date_str = parts[0], parts[1]
+        else:
+            date_str = meta_str
+
+        summary = ""
+        for child in item.find_all(string=True, recursive=True):
+            parent = child.parent
+            if parent and parent.name in ("p", "a", "h3"):
+                continue
+            txt = child.strip()
+            if txt:
+                summary = txt
+                break
+
+        articles.append({
+            "title": title,
+            "category": category,
+            "summary": summary,
+            "url": url,
+            "date": parse_date(date_str) if date_str else None,
+            "date_raw": date_str,
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
+def fetch_schroders(source: dict) -> list[dict]:
+    """Fetch articles from Schroders (Playwright — CSR/styled-components).
+
+    Akamai Bot Manager blocks plain httpx. A OneTrust cookie banner renders
+    as non-blocking overlay. Dates are `MM-DD-YYYY` (not covered by parse_date).
+    """
+    base_url = "https://www.schroders.com"
+    html = _get_playwright_page(
+        source["url"],
+        wait_selector="a[data-tracker-tag='insight-container']",
+        wait_ms=3000,
+    )
+    soup = BeautifulSoup(html, "html.parser")
+    expected_host = source.get("expected_hostname", "schroders.com")
+
+    articles: list[dict] = []
+    seen_urls: set[str] = set()
+
+    for card in soup.select("a[data-tracker-tag='insight-container']"):
+        href = card.get("href", "")
+        if not href:
+            continue
+        url = urljoin(base_url, href)
+        if not _validate_hostname(url, expected_host) or url in seen_urls:
+            continue
+        seen_urls.add(url)
+
+        title_el = card.select_one("span[data-tracker-tag='card-heading']")
+        title = title_el.get_text(strip=True) if title_el else ""
+        if not title or len(title) < 5:
+            continue
+
+        category_el = card.select_one("span[class*='ArtemisTagLabel']")
+        category = category_el.get_text(strip=True) if category_el else ""
+
+        date_el = card.select_one("span[class*='CardFooter__FooterLabel']")
+        date_raw = date_el.get_text(strip=True) if date_el else ""
+        parsed_date: Optional[str] = None
+        if date_raw:
+            try:
+                parsed_date = datetime.strptime(date_raw, "%m-%d-%Y").strftime("%Y-%m-%d")
+            except ValueError:
+                parsed_date = parse_date(date_raw)
+
+        articles.append({
+            "title": title,
+            "category": category,
+            "url": url,
+            "date": parsed_date,
+            "date_raw": date_raw,
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
+def fetch_blackrock_institute(source: dict) -> list[dict]:
+    """Fetch articles from BlackRock Investment Institute (Playwright — CSR).
+
+    Source URL must be .../archives (the /weekly-commentary permalink is a
+    single-article page). Page never reaches networkidle due to persistent
+    tracking beacons, so wait_until='domcontentloaded' is required. Article
+    URLs are PDFs; filter to weekly commentary via filename pattern.
+    """
+    base_url = "https://www.blackrock.com"
+    html = _get_playwright_page(
+        source["url"],
+        wait_selector="div.gls-related-literature div.item",
+        wait_until="domcontentloaded",
+        timeout=40000,
+        wait_ms=3000,
+    )
+    soup = BeautifulSoup(html, "html.parser")
+    expected_host = source.get("expected_hostname", "blackrock.com")
+
+    articles = []
+    seen_urls: set[str] = set()
+
+    for item in soup.select("div.gls-related-literature div.item"):
+        link = item.select_one("h2.title a")
+        if not link:
+            continue
+        href = link.get("href", "")
+        if not href:
+            continue
+        url = urljoin(base_url, href)
+        if not _validate_hostname(url, expected_host):
+            continue
+
+        url_lower = url.lower()
+        if "weekly-investment-commentary" not in url_lower and \
+           "market-commentary-weekly" not in url_lower:
+            continue
+
+        title = (link.get("title") or "").strip() or link.get_text(strip=True)
+        if not title or len(title) < 5 or url in seen_urls:
+            continue
+        seen_urls.add(url)
+
+        date_el = item.select_one("div.attribution")
+        date_raw = date_el.get_text(strip=True) if date_el else ""
+        parsed_date = parse_date(date_raw) if date_raw else None
+
+        summary_el = item.select_one("div.description")
+        summary = summary_el.get_text(strip=True) if summary_el else ""
+
+        articles.append({
+            "title": title,
+            "summary": summary,
+            "url": url,
+            "date": parsed_date,
+            "date_raw": date_raw,
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
+def fetch_morganstanley_im(source: dict) -> list[dict]:
+    """Fetch articles from Morgan Stanley Investment Management (SSR).
+
+    Akamai gates most /im/ pages, but the full index at
+    /im/en-us/institutional-investor/insights/all-insights.html renders
+    server-side when a Referer pointing at the insights landing is sent.
+    Playwright is actually blocked here (Akamai flags headless Chromium) —
+    plain requests with proper headers is the correct path.
+    """
+    base_url = "https://www.morganstanley.com"
+    headers = {
+        **HEADERS,
+        "Referer": "https://www.morganstanley.com/im/en-us/institutional-investor/insights",
+        "Upgrade-Insecure-Requests": "1",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "same-origin",
+    }
+    resp = requests.get(source["url"], headers=headers, timeout=30)
+    resp.raise_for_status()
+    soup = BeautifulSoup(resp.text, "html.parser")
+    expected_host = source.get("expected_hostname", "morganstanley.com")
+
+    articles = []
+    for tile in soup.select("div.insights-index-main-tile"):
+        a = tile.select_one("a.featured_insights_anchor")
+        if not a:
+            continue
+        href = a.get("href", "")
+        if not href:
+            continue
+        url = urljoin(base_url, href)
+        if not _validate_hostname(url, expected_host):
+            continue
+
+        title_el = tile.select_one(".featured_insights_title")
+        title = title_el.get_text(strip=True) if title_el else ""
+        if not title:
+            continue
+
+        cat_el = tile.select_one(".featured_insights_insightHintText")
+        category = cat_el.get_text(strip=True) if cat_el else ""
+
+        date_el = tile.select_one(".featured_insights_createdDate")
+        date_raw = date_el.get_text(" ", strip=True) if date_el else ""
+        parsed_date = parse_date(date_raw) if date_raw else None
+
+        articles.append({
+            "title": title,
+            "category": category,
+            "url": url,
+            "date": parsed_date,
+            "date_raw": date_raw,
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
+def fetch_capital_group(source: dict) -> list[dict]:
+    """Fetch articles from Capital Group's 'Capital Ideas' advisor insights hub.
+
+    Source URL must be /advisor/insights.html (old /individual/... 404s).
+    Same networkidle issue as BlackRock (DataDog / mPulse / Evidon beacons).
+    Hub does not expose publish dates — date=None is intentional.
+    """
+    base_url = "https://www.capitalgroup.com"
+    expected_host = source.get("expected_hostname", "capitalgroup.com")
+
+    html = _get_playwright_page(
+        source["url"],
+        wait_selector=(
+            'a[href*="/advisor/insights/articles/"], '
+            'a[href*="/advisor/practicelab/articles/"]'
+        ),
+        wait_until="domcontentloaded",
+        wait_ms=3000,
+    )
+    soup = BeautifulSoup(html, "html.parser")
+
+    NOISE = re.compile(
+        r"\b(arrow_forward|mail_outline|expand_more|GET\s+INSIGHTS|LEARN\s+MORE|READ\s+MORE|PRO)\b",
+        re.IGNORECASE,
+    )
+
+    def _clean(txt: str) -> str:
+        txt = NOISE.sub("", txt or "").strip()
+        return re.sub(r"\s+", " ", txt)
+
+    articles: list[dict] = []
+    seen: set[str] = set()
+
+    for a in soup.select(
+        'a[href*="/advisor/insights/articles/"], '
+        'a[href*="/advisor/practicelab/articles/"]'
+    ):
+        href_raw = (a.get("href") or "").strip()
+        if not href_raw or not href_raw.endswith(".html"):
+            continue
+
+        url = urljoin(base_url, href_raw)
+        if not _validate_hostname(url, expected_host) or url in seen:
+            continue
+        seen.add(url)
+
+        title = _clean(a.get_text(" ", strip=True))
+
+        if len(title) < 10:
+            parent = a
+            for _ in range(10):
+                parent = parent.parent
+                if parent is None:
+                    break
+                candidate = (
+                    parent.find(["h1", "h2", "h3", "h4"])
+                    or parent.find("p", class_=lambda c: c and "gds-base__headline" in c)
+                )
+                if candidate:
+                    h_txt = _clean(candidate.get_text(" ", strip=True))
+                    if h_txt and len(h_txt) >= 10:
+                        title = h_txt
+                        break
+
+        if len(title) < 5:
+            continue
+
+        articles.append({
+            "title": title,
+            "url": url,
+            "date": None,
+            "date_raw": "",
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
 # FETCHER_SYNTHESIS_INSERTION_POINT — auto-generated fetchers inserted above this line
 
 
@@ -1184,6 +1578,12 @@ FETCHERS = {
     "aberdeen": fetch_aberdeen,
     "research-affiliates": fetch_researchaffiliates,
     "pimco": fetch_pimco,
+    "kkr": fetch_kkr,
+    "msci-research": fetch_msci_research,
+    "schroders": fetch_schroders,
+    "blackrock-institute": fetch_blackrock_institute,
+    "morganstanley-im": fetch_morganstanley_im,
+    "capital-group": fetch_capital_group,
 }
 
 

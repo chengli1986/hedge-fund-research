@@ -248,7 +248,7 @@
   {
     "id": "kkr",
     "name": "KKR",
-    "status": "inaccessible",
+    "status": "validated",
     "homepage_url": "https://www.kkr.com",
     "research_url": "https://www.kkr.com/insights",
     "rss_url": null,
@@ -319,7 +319,9 @@
       "private_credit",
       "macro"
     ],
-    "source": "manual"
+    "source": "manual",
+    "inaccessible_reason": null,
+    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager"
   },
   {
     "id": "cambridge-associates",
@@ -816,7 +818,7 @@
   {
     "id": "msci-research",
     "name": "MSCI Research",
-    "status": "inaccessible",
+    "status": "validated",
     "homepage_url": "https://www.msci.com/research-and-insights",
     "research_url": "https://www.msci.com/research-and-insights",
     "rss_url": null,
@@ -833,7 +835,9 @@
       "esg_climate",
       "multi_asset"
     ],
-    "source": "manual"
+    "source": "manual",
+    "inaccessible_reason": null,
+    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager"
   },
   {
     "id": "carlyle",
@@ -853,7 +857,9 @@
       "real_assets",
       "fixed_income"
     ],
-    "source": "manual"
+    "source": "manual",
+    "inaccessible_reason": "Policy block (not fingerprint): robots.txt allow-lists only Googlebot/Bingbot (User-agent:* Disallow:/); /insights returns 403 + redirect to /global-insights-0 Access-denied page even in headless Playwright with stealth UA. Would need residential-IP proxy — out of scope.",
+    "last_probed": "2026-04-24"
   },
   {
     "id": "research-affiliates",
@@ -982,9 +988,9 @@
   {
     "id": "blackrock-institute",
     "name": "BlackRock Investment Institute",
-    "status": "inaccessible",
+    "status": "validated",
     "homepage_url": "https://www.blackrock.com/us/individual/insights/blackrock-investment-institute",
-    "research_url": "https://www.blackrock.com/us/individual/insights/blackrock-investment-institute/weekly-commentary",
+    "research_url": "https://www.blackrock.com/corporate/insights/blackrock-investment-institute/archives",
     "rss_url": null,
     "official_domain": "www.blackrock.com",
     "discovery_method": "discover_fund_sites",
@@ -1083,14 +1089,16 @@
       "multi_asset",
       "esg_climate"
     ],
-    "source": "manual"
+    "source": "manual",
+    "inaccessible_reason": null,
+    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager"
   },
   {
     "id": "schroders",
     "name": "Schroders",
-    "status": "inaccessible",
+    "status": "validated",
     "homepage_url": "https://www.schroders.com/en/insights",
-    "research_url": null,
+    "research_url": "https://www.schroders.com/en/insights",
     "rss_url": null,
     "official_domain": "www.schroders.com",
     "discovery_method": "discover_fund_sites",
@@ -1106,7 +1114,9 @@
       "multi_asset",
       "fixed_income"
     ],
-    "source": "manual"
+    "source": "manual",
+    "inaccessible_reason": null,
+    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager"
   },
   {
     "id": "pgim",
@@ -1295,9 +1305,9 @@
   {
     "id": "morganstanley-im",
     "name": "Morgan Stanley Investment Management",
-    "status": "inaccessible",
+    "status": "validated",
     "homepage_url": "https://www.morganstanley.com/im/en-us/institutional-investor/insights",
-    "research_url": null,
+    "research_url": "https://www.morganstanley.com/im/en-us/institutional-investor/insights/all-insights.html",
     "rss_url": null,
     "official_domain": "www.morganstanley.com",
     "discovery_method": "manual",
@@ -1321,7 +1331,9 @@
       "multi_asset",
       "private_equity"
     ],
-    "source": "manual"
+    "source": "manual",
+    "inaccessible_reason": null,
+    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager"
   },
   {
     "id": "neuberger-berman",
@@ -1372,7 +1384,9 @@
       "private_credit",
       "real_assets"
     ],
-    "source": "manual"
+    "source": "manual",
+    "inaccessible_reason": "Vercel Security Checkpoint (HTTP 429 JS challenge, not true rate-limit): EC2 IP + headless Chromium fingerprint rejected. Retry-After absent. Unblocking would need playwright-stealth/patchright/curl_cffi (new dependency).",
+    "last_probed": "2026-04-24"
   },
   {
     "id": "apollo-global-management",
@@ -1517,9 +1531,9 @@
     "id": "capital-group",
     "name": "Capital Group (Capital Ideas)",
     "homepage_url": "https://www.capitalgroup.com",
-    "research_url": "https://www.capitalgroup.com/individual/investments/insights.html",
+    "research_url": "https://www.capitalgroup.com/advisor/insights.html",
     "source": "manual",
-    "status": "inaccessible",
+    "status": "validated",
     "strategy_tags": [
       "equity",
       "fixed_income",
@@ -1534,7 +1548,9 @@
     "last_deep_analyzed_at": "2026-04-23T01:05:00Z",
     "quality": "UNKNOWN",
     "quality_score": 0.0,
-    "topics": ""
+    "topics": "",
+    "inaccessible_reason": null,
+    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager"
   },
   {
     "id": "pinebridge",
