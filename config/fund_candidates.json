@@ -685,7 +685,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.88,
-    "notes": "Weekly market recap series, broad multi-asset coverage",
+    "notes": "Weekly multi-asset commentary series; broad but derivative",
     "research_links": [],
     "screening_signals": {
       "status_code": 200,
@@ -698,9 +698,10 @@
       "article_signals": 0
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-04-16T01:12:00.000000+00:00",
+    "last_deep_analyzed_at": "2026-04-24T01:00:00Z",
     "quality": "MEDIUM",
-    "topics": "macro, equity, fixed income, alternatives, capital markets",
+    "quality_score": 0.5,
+    "topics": "macro, equity, fixed income, alternatives, multi-asset",
     "strategy_tags": [
       "macro",
       "equity",
@@ -725,7 +726,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.97,
-    "notes": "RECOMMEND: trial passed (4/3 days with articles, quality=0.61)",
+    "notes": "Promoted; equity/active mgmt focus, MEDIUM quality (0.55)",
     "research_links": [
       {
         "url": "https://www.troweprice.com/en/us/insights",
@@ -764,8 +765,9 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-04-16T01:12:00.000000+00:00",
-    "quality": "HIGH",
+    "last_deep_analyzed_at": "2026-04-24T01:00:00Z",
+    "quality": "MEDIUM",
+    "quality_score": 0.55,
     "topics": "equity, AI, macro, fixed income, active management",
     "strategy_tags": [
       "equity",
@@ -1533,5 +1535,61 @@
     "quality": "UNKNOWN",
     "quality_score": 0.0,
     "topics": ""
+  },
+  {
+    "id": "pinebridge",
+    "name": "PineBridge Investments",
+    "homepage_url": "https://www.pinebridge.com",
+    "source": "manual",
+    "status": "validated",
+    "strategy_tags": [
+      "fixed_income",
+      "emerging_markets",
+      "macro",
+      "multi_asset"
+    ],
+    "quality": "HIGH",
+    "quality_score": 0.72,
+    "topics": "fixed income, emerging markets, macro, multi-asset, equities",
+    "notes": "RECOMMEND: Weekly EM debt/fixed income, fills EM gap",
+    "last_deep_analyzed_at": "2026-04-24T01:03:00Z",
+    "is_publicly_accessible": true,
+    "has_article_index": true,
+    "research_url": "https://www.pinebridge.com/en/insights/capital-market-line-a-passing-energy-shock-meets-a-lasting-productivity-surge",
+    "official_domain": "www.pinebridge.com",
+    "research_links": [
+      {
+        "url": "https://www.pinebridge.com/en/insights/capital-market-line-a-passing-energy-shock-meets-a-lasting-productivity-surge",
+        "label": "21 April 2026 | 17 - minute read Multi-Asset Capital Market Line: A Passing Energy Shock Meets a Las",
+        "path": "en/insights/capital-market-line-a-passing-energy-shock-meets-a-lasting-productivity-surge"
+      },
+      {
+        "url": "https://www.pinebridge.com/en/insights/investment-strategy-insights-strait-tension-portends-a-short-and-sharp",
+        "label": "7 April 2026 Multi-Asset Investment Strategy Insights: Strait Tension Portends a Short and Sharp Sta",
+        "path": "en/insights/investment-strategy-insights-strait-tension-portends-a-short-and-sharp"
+      },
+      {
+        "url": "https://www.pinebridge.com/en/insights/japan-equities-a-reinflation-powered-rebound-thats-set-to-last",
+        "label": "1 April 2026 | 6 - minute read Equities Japan Equities: A Reinflation-Powered Rebound That’s Set to ",
+        "path": "en/insights/japan-equities-a-reinflation-powered-rebound-thats-set-to-last"
+      },
+      {
+        "url": "https://www.pinebridge.com/en/insights/fixed-income-asset-allocation-insights-geopolitical-uncertainty-and",
+        "label": "31 March 2026 Fixed Income Fixed Income Asset Allocation Insights: Geopolitical Uncertainty and Sele",
+        "path": "en/insights/fixed-income-asset-allocation-insights-geopolitical-uncertainty-and"
+      },
+      {
+        "url": "https://www.pinebridge.com/en/insights/japans-reflation-experiment-boj-hikes-weak-technicals-and-yen-upside",
+        "label": "11 March 2026 | 2 - minute read Fixed Income Multi-Asset Japan’s Reflation Experiment: BoJ Hikes, We",
+        "path": "en/insights/japans-reflation-experiment-boj-hikes-weak-technicals-and-yen-upside"
+      },
+      {
+        "url": "https://www.pinebridge.com/en/insights/leveraged-finance-asset-allocation-insights-markets-hit-an-ai-inflection-point",
+        "label": "5 March 2026 | 13 - minute read Fixed Income Leveraged Finance Asset Allocation Insights: Markets Hi",
+        "path": "en/insights/leveraged-finance-asset-allocation-insights-markets-hit-an-ai-inflection-point"
+      }
+    ],
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-04-24T09:03:34.493346+08:00"
   }
 ]
