@@ -313,6 +313,25 @@ def generate_html(articles: list[dict]) -> str:
     if "General" in primary_clusters:
         cluster_order.append(("General", primary_clusters["General"]))
 
+    # ── Build the unified article pool (single source of truth) ──
+    # Every article gets rendered EXACTLY ONCE here, carrying data-* attributes
+    # so the view-switching JS can move the card into whichever view is active.
+    pool_parts: list[str] = []
+    for a in sorted_articles:
+        sid = a.get("source_id", "unknown")
+        aid = a.get("id", "")
+        theme_slugs = " ".join(
+            _slugify_theme(t) for t in a.get("themes", [])
+        ) if a.get("themes") else "unthemed"
+        pool_parts.append(
+            f'<article id="a-{_esc(aid)}" class="pool-article" '
+            f'data-source-id="{_esc(sid)}" '
+            f'data-date="{_esc(a.get("date", ""))}" '
+            f'data-themes="{theme_slugs}">'
+            f'{_article_card(a, show_takeaway=True)}</article>'
+        )
+    article_pool_html = "\n".join(pool_parts)
+
     # ── Build cluster HTML (Themes view) ──
     cluster_parts = []
     for theme_name, cluster_arts in cluster_order:
@@ -351,13 +370,8 @@ def generate_html(articles: list[dict]) -> str:
 </section>"""
             )
         else:
-            # Full cluster card with articles
-            article_items = []
-            for a in cluster_arts:
-                article_items.append(
-                    f'<article class="cluster-item">{_article_card(a, show_takeaway=True)}</article>'
-                )
-            articles_html = "\n".join(article_items)
+            # Full cluster card — articles injected by JS via data-article-ids
+            article_ids = " ".join(_esc(a.get("id", "")) for a in cluster_arts)
             cluster_parts.append(
                 f"""<section class="cluster" data-cluster="{slug}">
   <div class="cluster-head">
@@ -366,7 +380,7 @@ def generate_html(articles: list[dict]) -> str:
       <div class="cluster-meta">{fund_names}</div>
     </div>
   </div>
-  <div class="cluster-articles">{articles_html}</div>
+  <div class="cluster-articles" data-article-ids="{article_ids}"></div>
 </section>"""
             )
     clusters_html = "\n".join(cluster_parts)
@@ -386,22 +400,18 @@ def generate_html(articles: list[dict]) -> str:
         )
     theme_filters_html = "".join(theme_filters) if theme_filters else '<span class="muted">Themes appear after analysis.</span>'
 
-    timeline_rows = []
-    for i, a in enumerate(sorted_articles):
-        sid = a.get("source_id", "unknown")
-        extra_class = " timeline-extra" if i >= INITIAL_VISIBLE else ""
-        hidden_style = ' style="display:none"' if i >= INITIAL_VISIBLE else ""
-        theme_slugs = " ".join(_slugify_theme(t) for t in a.get("themes", [])) if a.get("themes") else "unthemed"
-        row_classes = f'timeline-row source-{sid} {"summarized" if a.get("summarized") else "index-only-row"}'
-        timeline_rows.append(
-            f'<article class="{row_classes}{extra_class}" data-themes="{theme_slugs}"{hidden_style}>'
-            f'{_article_card(a)}</article>'
-        )
-
+    # ── Timeline view: empty wrapper; articles injected by JS on view activation ──
     load_more_btn = ""
     if total > INITIAL_VISIBLE:
-        load_more_btn = f'<button class="btn-load-more" onclick="showAll()">Load more ({total - INITIAL_VISIBLE} remaining)</button>'
-    timeline_html = "\n".join(timeline_rows)
+        load_more_btn = (
+            f'<button class="btn-load-more" onclick="showAll()">'
+            f'Load more ({total - INITIAL_VISIBLE} remaining)</button>'
+        )
+    timeline_html = (
+        f'<div class="timeline-wrap" '
+        f'data-total="{total}" '
+        f'data-initial-visible="{INITIAL_VISIBLE}"></div>'
+    )
 
     # ── Funds view ──
     source_order = list(sources.keys())
@@ -417,20 +427,16 @@ def generate_html(articles: list[dict]) -> str:
         arts = fund_all.get(sid, [])
         analyzed = sum(1 for a in arts if a.get("summarized"))
         latest = arts[0].get("date", "n/a") if arts else "n/a"
-        art_items = []
-        for a in arts:
-            art_items.append(
-                f'<article class="cluster-item">{_article_card(a, show_takeaway=True)}</article>'
-            )
+        article_ids = " ".join(_esc(a.get("id", "")) for a in arts)
         fund_view_parts.append(
-            f"""<section class="cluster fund-section" style="--fund-accent:{color}">
+            f"""<section class="cluster fund-section" data-source-id="{_esc(sid)}" style="--fund-accent:{color}">
   <div class="cluster-head">
     <div>
       <h2><span class="badge" style="background:{color}">{name}</span> <span class="cluster-count">{len(arts)} articles · {analyzed} analyzed</span></h2>
       <div class="cluster-meta"><span class="lang-en">Latest: {latest}</span><span class="lang-zh" style="display:none">最新: {latest}</span></div>
     </div>
   </div>
-  <div class="cluster-articles">{"".join(art_items)}</div>
+  <div class="cluster-articles" data-article-ids="{article_ids}"></div>
 </section>"""
         )
     funds_view_html = "\n".join(fund_view_parts)
@@ -588,7 +594,7 @@ a:hover {{ text-decoration: underline; }}
 .filter-pill.active, .theme-tag:hover, .filter-pill:hover {{
   color: var(--text); border-color: var(--accent); background: rgba(125,211,252,0.1);
 }}
-.timeline-row {{ border-bottom: 1px solid rgba(38,50,71,0.72); padding: 8px 0; }}
+.timeline-row, .timeline-wrap > .pool-article {{ border-bottom: 1px solid rgba(38,50,71,0.72); padding: 8px 0; }}
 .row-main {{ display: flex; align-items: center; gap: 9px; min-width: 0; }}
 .badge {{
   display: inline-block; padding: 2px 8px; border-radius: 999px;
@@ -655,15 +661,20 @@ a:hover {{ text-decoration: underline; }}
   background: #f85149; margin-left: 6px; vertical-align: middle;
 }}
 .cluster-articles {{ padding: 6px 14px 14px; }}
-.cluster-item {{
+.cluster-item, .cluster-articles > .pool-article {{
   border-bottom: 1px solid rgba(38,50,71,0.5); padding: 8px 0;
 }}
-.cluster-item:last-child {{ border-bottom: none; }}
+.cluster-item:last-child, .cluster-articles > .pool-article:last-child {{ border-bottom: none; }}
 .inline-takeaway {{
   margin: 4px 0 2px 60px; font-size: 0.82rem; line-height: 1.4;
   color: var(--accent2); font-style: italic;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   overflow: hidden;
+}}
+/* Hide inline takeaway when article lives inside the Timeline wrapper.
+   The same <article> card is shared across views; keeps Timeline dense. */
+.timeline-wrap .inline-takeaway {{
+  display: none !important;
 }}
 
 /* ── Compact table (General cluster) ── */
@@ -802,6 +813,12 @@ a:hover {{ text-decoration: underline; }}
   </div>
 </div>
 
+<!-- Hidden article pool: single-copy source of truth. JS moves cards from
+     here into whichever view is active, then returns them on view switch. -->
+<div id="article-pool" style="display:none">
+{article_pool_html}
+</div>
+
 <div class="container">
   <div class="view-bar">
     <button class="view-btn active" data-view="themes" onclick="switchView('themes')"><span class="lang-en">Themes</span><span class="lang-zh" style="display:none">主题</span></button>
@@ -830,10 +847,8 @@ a:hover {{ text-decoration: underline; }}
         <div class="filter-bar">
           {theme_filters_html}
         </div>
-        <div class="timeline-wrap">
-          {timeline_html}
-          {load_more_btn}
-        </div>
+        {timeline_html}
+        {load_more_btn}
       </section>
 
       <aside class="sidebar">
@@ -876,15 +891,60 @@ a:hover {{ text-decoration: underline; }}
 let langZh = false;
 const activeThemes = new Set();
 
-/* ── View switching ── */
+/* ── View switching ──
+ * Each article card lives in #article-pool and is moved into the active view's
+ * containers on every switchView call. Moving (not cloning) keeps one DOM node
+ * per article; the pool is the resting place between switches.
+ */
+function returnArticlesToPool() {{
+  const pool = document.getElementById('article-pool');
+  if (!pool) return;
+  document.querySelectorAll('article.pool-article').forEach(a => {{
+    if (a.parentElement !== pool) pool.appendChild(a);
+  }});
+}}
+
+function populateViewFromPool(viewName) {{
+  const pool = document.getElementById('article-pool');
+  if (!pool) return;
+  const panel = document.getElementById('view-' + viewName);
+  if (!panel) return;
+
+  if (viewName === 'timeline') {{
+    const target = panel.querySelector('.timeline-wrap');
+    if (!target) return;
+    const initialVisible = parseInt(target.dataset.initialVisible || '20', 10);
+    Array.from(pool.querySelectorAll('article.pool-article')).forEach((a, i) => {{
+      a.classList.toggle('timeline-extra', i >= initialVisible);
+      a.style.display = i >= initialVisible ? 'none' : '';
+      target.appendChild(a);
+    }});
+    updateLoadMoreCount();
+  }} else if (viewName === 'themes' || viewName === 'funds') {{
+    panel.querySelectorAll('.cluster-articles[data-article-ids]').forEach(target => {{
+      const ids = (target.dataset.articleIds || '').split(' ').filter(Boolean);
+      ids.forEach(id => {{
+        const article = pool.querySelector('#a-' + CSS.escape(id));
+        if (article) {{
+          article.classList.remove('timeline-extra');
+          article.style.display = '';
+          target.appendChild(article);
+        }}
+      }});
+    }});
+  }}
+  /* sources view has no pool articles — it's static fund-profile cards */
+}}
+
 function switchView(name) {{
+  returnArticlesToPool();
+  populateViewFromPool(name);
   document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
   const panel = document.getElementById('view-' + name);
   if (panel) panel.classList.add('active');
   const btn = document.querySelector('.view-btn[data-view="' + name + '"]');
   if (btn) btn.classList.add('active');
-  /* Re-bind toggles for newly-visible panel */
   bindRowToggles();
 }}
 
@@ -894,12 +954,18 @@ function toggleLang() {{
   document.querySelectorAll('.lang-zh').forEach(el => el.style.display = langZh ? '' : 'none');
 }}
 
-/* ── Row toggle (Open/Close) ── */
+/* ── Row toggle (Open/Close) ──
+ * After the unified-pool refactor each article is a .pool-article; legacy
+ * .timeline-row / .cluster-item selectors remain as fallback in case future
+ * views reintroduce those wrappers.
+ */
 function bindRowToggles() {{
   document.querySelectorAll('.row-toggle').forEach(btn => {{
     if (btn._bound) return;
     btn._bound = true;
-    const parent = btn.closest('.timeline-row') || btn.closest('.cluster-item');
+    const parent = btn.closest('.pool-article')
+                || btn.closest('.timeline-row')
+                || btn.closest('.cluster-item');
     if (!parent) return;
     const details = parent.querySelector('.summary-panel');
     if (!details) return;
@@ -916,7 +982,7 @@ bindRowToggles();
 
 /* ── Timeline filters ── */
 function applyThemeFilters() {{
-  document.querySelectorAll('.timeline-row').forEach(row => {{
+  document.querySelectorAll('.timeline-wrap article.pool-article').forEach(row => {{
     const rowThemes = (row.dataset.themes || '').split(' ').filter(Boolean);
     const matches = activeThemes.size === 0 || rowThemes.some(theme => activeThemes.has(theme));
     row.classList.toggle('hidden-by-filter', !matches);
@@ -970,11 +1036,17 @@ function filterSingleTheme(theme) {{
 }}
 
 function showAll() {{
-  document.querySelectorAll('.timeline-extra').forEach(el => el.style.display = '');
+  document.querySelectorAll('.timeline-wrap article.pool-article').forEach(el => {{
+    el.style.display = '';
+    el.classList.remove('timeline-extra');
+  }});
   const btn = document.querySelector('.btn-load-more');
   if (btn) btn.style.display = 'none';
   bindRowToggles();
 }}
+
+/* Populate the default (themes) view on initial page load. */
+populateViewFromPool('themes');
 </script>
 
 </body>
