@@ -447,6 +447,37 @@ def generate_html(articles: list[dict]) -> str:
         )
     funds_view_html = "\n".join(fund_view_parts)
 
+    # ── Fund distribution bar chart (Funds view header) ──
+    dist_entries = [(sid, len(fund_all.get(sid, []))) for sid in source_order]
+    dist_entries = [(sid, n) for sid, n in dist_entries if n > 0]
+    dist_entries.sort(key=lambda x: x[1], reverse=True)
+    max_count = dist_entries[0][1] if dist_entries else 0
+    total_count = sum(n for _, n in dist_entries)
+    dist_rows = []
+    for sid, count in dist_entries:
+        src = sources.get(sid, {})
+        color = BADGE_COLORS.get(sid, "#8b949e")
+        name = _esc(src.get("name", sid))
+        width_pct = (count / max_count) * 100 if max_count else 0
+        dist_rows.append(
+            f'<div class="fund-dist-row" data-source-id="{_esc(sid)}">'
+            f'<span class="fund-dist-name" style="color:{color}">{name}</span>'
+            f'<div class="fund-dist-track">'
+            f'<div class="fund-dist-bar" style="width:{width_pct:.1f}%; background:{color}"></div>'
+            f'</div>'
+            f'<span class="fund-dist-count">{count}</span>'
+            f'</div>'
+        )
+    fund_distribution_html = (
+        f'<div class="fund-distribution">'
+        f'<h2 class="fund-dist-title">'
+        f'<span class="lang-en">Article distribution — {total_count} total across {len(dist_entries)} funds</span>'
+        f'<span class="lang-zh" style="display:none">文章分布 — {len(dist_entries)} 个基金共 {total_count} 篇</span>'
+        f'</h2>'
+        f'<div class="fund-dist-rows">{"".join(dist_rows)}</div>'
+        f'</div>'
+    ) if dist_entries else ""
+
     # ── Sidebar fund cards (compact, for Themes/Timeline views) ──
     fund_cards = []
     for sid in source_order:
@@ -736,6 +767,39 @@ a:hover {{ text-decoration: underline; }}
 .muted {{ color: var(--text-muted); }}
 .hidden-by-filter {{ display: none !important; }}
 
+/* ── Fund distribution chart (Funds view header) ── */
+.fund-distribution {{
+  margin-bottom: 20px; padding: 14px 16px;
+  background: rgba(17,24,39,0.5); border: 1px solid var(--border); border-radius: 12px;
+}}
+.fund-dist-title {{
+  font-size: 0.88rem; margin: 0 0 12px; color: var(--text-muted);
+  font-weight: 600; letter-spacing: 0.01em;
+}}
+.fund-dist-rows {{ display: grid; gap: 7px; }}
+.fund-dist-row {{
+  display: grid; grid-template-columns: 170px 1fr 44px; gap: 12px;
+  align-items: center; font-size: 0.82rem;
+}}
+.fund-dist-name {{
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-weight: 600;
+}}
+.fund-dist-track {{
+  background: rgba(255,255,255,0.06); border-radius: 4px; height: 10px; overflow: hidden;
+}}
+.fund-dist-bar {{
+  height: 100%; border-radius: 4px; min-width: 2px;
+  transition: width 0.3s ease;
+}}
+.fund-dist-count {{
+  text-align: right; color: var(--text-muted);
+  font-variant-numeric: tabular-nums; font-weight: 600;
+}}
+@media (max-width: 720px) {{
+  .fund-dist-row {{ grid-template-columns: 110px 1fr 36px; gap: 8px; font-size: 0.76rem; }}
+}}
+
 /* ── Fund section (Funds view) ── */
 .fund-section {{ border-left: 3px solid var(--fund-accent, var(--accent)); }}
 .fund-section .cluster-head h2 {{ display: flex; align-items: center; gap: 10px; }}
@@ -882,6 +946,7 @@ a:hover {{ text-decoration: underline; }}
 
   <!-- ═══ FUNDS VIEW ═══ -->
   <div class="view-panel" id="view-funds">
+    {fund_distribution_html}
     <div class="cluster-grid">
       {funds_view_html}
     </div>

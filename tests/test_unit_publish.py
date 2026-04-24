@@ -237,3 +237,74 @@ class TestArticlePool:
             "Timeline wrap should start empty — articles are moved in by JS on "
             f"view switch. Found article tag inside: {inner[:200]}"
         )
+
+
+class TestFundDistributionChart:
+    """The Funds view opens with a compact horizontal bar chart showing how many
+    articles each fund has — pure CSS, no JS dependency."""
+
+    SKEWED_ARTICLES = [
+        {"id": "m1", "source_id": "man-group", "source_name": "Man", "title": "A", "url": "u", "date": "2026-03-01", "summarized": False},
+        {"id": "m2", "source_id": "man-group", "source_name": "Man", "title": "B", "url": "u", "date": "2026-03-02", "summarized": False},
+        {"id": "m3", "source_id": "man-group", "source_name": "Man", "title": "C", "url": "u", "date": "2026-03-03", "summarized": False},
+        {"id": "m4", "source_id": "man-group", "source_name": "Man", "title": "D", "url": "u", "date": "2026-03-04", "summarized": False},
+        {"id": "b1", "source_id": "bridgewater", "source_name": "Bridgewater", "title": "E", "url": "u", "date": "2026-03-01", "summarized": False},
+        {"id": "b2", "source_id": "bridgewater", "source_name": "Bridgewater", "title": "F", "url": "u", "date": "2026-03-02", "summarized": False},
+        {"id": "g1", "source_id": "gmo", "source_name": "GMO", "title": "G", "url": "u", "date": "2026-03-01", "summarized": False},
+    ]
+
+    def test_distribution_container_present(self) -> None:
+        result = generate_html(self.SKEWED_ARTICLES)
+        assert 'class="fund-distribution"' in result, (
+            "Funds view should include a .fund-distribution chart container"
+        )
+
+    def test_row_per_fund_with_articles(self) -> None:
+        """Each fund with >=1 article gets a .fund-dist-row."""
+        result = generate_html(self.SKEWED_ARTICLES)
+        import re
+        rows = re.findall(
+            r'<div class="fund-dist-row"[^>]*data-source-id="([^"]+)"',
+            result,
+        )
+        assert set(rows) == {"man-group", "bridgewater", "gmo"}, (
+            f"Expected rows for man-group/bridgewater/gmo, got {rows}"
+        )
+
+    def test_counts_displayed_in_rows(self) -> None:
+        """Each row displays the article count in a .fund-dist-count span."""
+        result = generate_html(self.SKEWED_ARTICLES)
+        import re
+        for sid, expected_count in [("man-group", 4), ("bridgewater", 2), ("gmo", 1)]:
+            m = re.search(
+                rf'<div class="fund-dist-row"[^>]*data-source-id="{sid}"[\s\S]*?'
+                rf'<span class="fund-dist-count"[^>]*>(\d+)</span>',
+                result,
+            )
+            assert m is not None, f"No count span found for {sid}"
+            assert int(m.group(1)) == expected_count, (
+                f"{sid}: expected count {expected_count}, got {m.group(1)}"
+            )
+
+    def test_bar_width_proportional_to_max(self) -> None:
+        """The top fund's bar is 100%; others are (count/max)*100%."""
+        result = generate_html(self.SKEWED_ARTICLES)
+        import re
+        m_top = re.search(
+            r'<div class="fund-dist-row"[^>]*data-source-id="man-group"[\s\S]*?'
+            r'<div class="fund-dist-bar"[^>]*style="[^"]*width:\s*([\d.]+)%',
+            result,
+        )
+        assert m_top is not None, "man-group bar not found"
+        assert float(m_top.group(1)) == 100.0, (
+            f"Top fund bar should be 100%, got {m_top.group(1)}%"
+        )
+        m_mid = re.search(
+            r'<div class="fund-dist-row"[^>]*data-source-id="bridgewater"[\s\S]*?'
+            r'<div class="fund-dist-bar"[^>]*style="[^"]*width:\s*([\d.]+)%',
+            result,
+        )
+        assert m_mid is not None, "bridgewater bar not found"
+        assert 49.0 <= float(m_mid.group(1)) <= 51.0, (
+            f"bridgewater bar should be ~50%, got {m_mid.group(1)}%"
+        )
