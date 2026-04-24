@@ -316,6 +316,12 @@ def generate_html(articles: list[dict]) -> str:
     # ── Build the unified article pool (single source of truth) ──
     # Every article gets rendered EXACTLY ONCE here, carrying data-* attributes
     # so the view-switching JS can move the card into whichever view is active.
+    # Note: if sorted_articles contains duplicate article ids (an upstream
+    # pipeline dedup issue, not this function's concern), each dup renders as
+    # its own <article> in the pool. At runtime document.querySelector('#a-...')
+    # returns the first match; the second pool entry is orphaned (no view
+    # container ever references it, so it stays hidden in the pool). This is
+    # intentional graceful degradation, not a behavior this refactor introduces.
     pool_parts: list[str] = []
     for a in sorted_articles:
         sid = a.get("source_id", "unknown")
@@ -791,6 +797,16 @@ a:hover {{ text-decoration: underline; }}
 .sc-link:hover {{ opacity: 1; text-decoration: none; background: var(--surface2); }}
 .sources-aum-note {{ font-size: 0.73rem; color: var(--text-muted); margin-top: 14px; text-align: right; opacity: 0.7; }}
 </style>
+<noscript>
+<style>
+/* No-JS fallback: if JS does not run, the view-switching logic never moves
+   articles out of #article-pool into the per-view containers. Expose the pool
+   as a flat list so visitors still see every article. */
+#article-pool {{ display: block !important; }}
+#article-pool .pool-article {{ border-bottom: 1px solid var(--border); padding: 12px 0; }}
+.view-bar, .view-panel {{ display: none !important; }}
+</style>
+</noscript>
 </head>
 <body>
 
@@ -982,6 +998,9 @@ bindRowToggles();
 
 /* ── Timeline filters ── */
 function applyThemeFilters() {{
+  /* Filter pills live inside the Timeline rail, so the selector below is
+     intentionally scoped to .timeline-wrap. Themes/Funds views are already
+     grouped by cluster; they do not need runtime filtering. */
   document.querySelectorAll('.timeline-wrap article.pool-article').forEach(row => {{
     const rowThemes = (row.dataset.themes || '').split(' ').filter(Boolean);
     const matches = activeThemes.size === 0 || rowThemes.some(theme => activeThemes.has(theme));
