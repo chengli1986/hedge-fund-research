@@ -1131,6 +1131,7 @@ function showAll() {{
 
 /* Populate the default (themes) view on initial page load. */
 populateViewFromPool('themes');
+bindRowToggles();
 </script>
 
 </body>
