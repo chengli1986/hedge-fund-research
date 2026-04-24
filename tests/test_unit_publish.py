@@ -142,3 +142,98 @@ class TestPublishHtml:
         assert output.read_text(encoding="utf-8") == "<html>ok</html>"
         assert gzip_path == Path(str(output) + ".gz")
         assert gzip_path.exists()
+
+
+class TestArticlePool:
+    """After the size-reduction refactor, each article card is rendered exactly once
+    in a hidden #article-pool; view containers reference articles by id so JS can
+    move/return article DOM nodes on view switch."""
+
+    def test_each_article_rendered_exactly_once(self) -> None:
+        """Each article's id appears exactly once as an <article> element."""
+        result = generate_html(SAMPLE_ARTICLES)
+        for a in SAMPLE_ARTICLES:
+            occurrences = result.count(f'id="a-{a["id"]}"')
+            assert occurrences == 1, (
+                f"Article {a['id']} rendered {occurrences} times, expected 1"
+            )
+
+    def test_pool_is_hidden_by_default(self) -> None:
+        """The article pool itself is display:none (articles move out via JS)."""
+        result = generate_html(SAMPLE_ARTICLES)
+        assert 'id="article-pool"' in result
+        import re
+        pool_tag = re.search(r'<div[^>]*id="article-pool"[^>]*>', result)
+        assert pool_tag is not None, "article-pool container missing"
+        assert 'display:none' in pool_tag.group(0).replace(' ', ''), (
+            f"article-pool tag missing display:none — got: {pool_tag.group(0)}"
+        )
+
+    def test_pool_articles_carry_filter_data_attributes(self) -> None:
+        """Each pool article carries data-source-id, data-date, data-themes
+        so view-switching JS can move the right articles into the right views."""
+        result = generate_html(SAMPLE_ARTICLES)
+        import re
+        tag = re.search(r'<article[^>]*id="a-aaa111"[^>]*>', result)
+        assert tag is not None, "Pool article aaa111 missing"
+        tag_str = tag.group(0)
+        assert 'data-source-id="man-group"' in tag_str
+        assert 'data-date="2026-03-28"' in tag_str
+        assert 'data-themes="ai-tech equities-value"' in tag_str or \
+               'data-themes="equities-value ai-tech"' in tag_str
+
+    def test_theme_clusters_reference_article_ids(self) -> None:
+        """Themes view clusters carry data-article-ids referencing pool items
+        instead of inlining the full article HTML."""
+        result = generate_html(SAMPLE_ARTICLES)
+        import re
+        containers = re.findall(
+            r'<div class="cluster-articles"[^>]*data-article-ids="([^"]*)"',
+            result,
+        )
+        assert len(containers) > 0, (
+            "Themes view should emit cluster-articles containers with "
+            "data-article-ids attributes"
+        )
+        all_ids = set()
+        for c in containers:
+            all_ids.update(c.split())
+        for a in SAMPLE_ARTICLES:
+            if a.get("summarized") and a.get("themes"):
+                assert a["id"] in all_ids, (
+                    f"Article {a['id']} not referenced by any cluster container"
+                )
+
+    def test_funds_view_references_article_ids(self) -> None:
+        """Funds view containers also reference pool articles by id."""
+        result = generate_html(SAMPLE_ARTICLES)
+        import re
+        fund_containers = re.findall(
+            r'<section class="cluster fund-section"[^>]*data-source-id="([^"]+)"[\s\S]*?'
+            r'<div class="cluster-articles"[^>]*data-article-ids="([^"]*)"',
+            result,
+        )
+        assert len(fund_containers) > 0, (
+            "Funds view should emit fund-section containers with "
+            "data-source-id and data-article-ids"
+        )
+        seen_sources = {src for src, _ in fund_containers}
+        for a in SAMPLE_ARTICLES:
+            assert a["source_id"] in seen_sources, (
+                f"Fund {a['source_id']} has no fund-section container"
+            )
+
+    def test_timeline_wrap_is_empty_container(self) -> None:
+        """Timeline view contains an empty .timeline-wrap (articles injected by JS)."""
+        result = generate_html(SAMPLE_ARTICLES)
+        import re
+        m = re.search(
+            r'<div class="timeline-wrap"[^>]*>([\s\S]*?)</div>',
+            result,
+        )
+        assert m is not None, "timeline-wrap missing"
+        inner = m.group(1)
+        assert '<article' not in inner, (
+            "Timeline wrap should start empty — articles are moved in by JS on "
+            f"view switch. Found article tag inside: {inner[:200]}"
+        )
