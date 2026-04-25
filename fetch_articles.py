@@ -707,7 +707,10 @@ def fetch_researchaffiliates(source: dict) -> list[dict]:
     rails, etc.), so we dedup by URL and trim to ``max_articles`` afterwards.
     """
     html = _get_playwright_page(
-        source["url"], wait_until="domcontentloaded", timeout=30000
+        source["url"],
+        wait_until="domcontentloaded",
+        wait_selector='a[href*="/insights/publications/articles/"]',
+        timeout=30000,
     )
     soup = BeautifulSoup(html, "html.parser")
     expected_host = source.get("expected_hostname", "researchaffiliates.com")
