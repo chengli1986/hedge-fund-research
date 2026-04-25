@@ -513,6 +513,13 @@
           "date_count": 10,
           "error": null,
           "fetcher_used": true
+        },
+        "2026-04-25": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -550,6 +557,39 @@
           "error": null,
           "day": 1,
           "date": "2026-04-23"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.pimco.com/us/en/insights/when-geopolitics-becomes-an-economic-input",
+              "relevance": 0.95,
+              "depth": 0.75,
+              "extractable": 0.85,
+              "overall": 0.85,
+              "notes": "Macro analysis on geopolitical risk as economic input; argues for active/flexible strategies over passive indexing in fragmented world"
+            },
+            {
+              "url": "https://www.pimco.com/us/en/insights/higher-energy-costs-weaker-tax-relief-squeeze-us-households",
+              "relevance": 0.9,
+              "depth": 0.8,
+              "extractable": 0.8,
+              "overall": 0.84,
+              "notes": "Analysis of energy supply disruption impacts on US households, inflation, and divergent economic outcomes; discusses oil price persistence mechanisms"
+            },
+            {
+              "url": "https://www.pimco.com/us/en/insights/why-the-fed-could-shrink-its-balance-sheet-again-and-markets-might-not-notice",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.8,
+              "overall": 0.86,
+              "notes": "Fed policy analysis on quantitative tightening restart; examines balance sheet normalization drivers and market implications"
+            }
+          ],
+          "avg_score": 0.85,
+          "error": null,
+          "day": 3,
+          "date": "2026-04-25"
         }
       ]
     },
@@ -572,6 +612,13 @@
           "fetcher_used": true
         },
         "2026-04-24": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-04-25": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -614,6 +661,39 @@
           "error": null,
           "day": 1,
           "date": "2026-04-23"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/quarterly-perspectives-emd-frontiers-fundamentals-fractures",
+              "relevance": 0.9,
+              "depth": 0.5,
+              "extractable": 0.7,
+              "overall": 0.7,
+              "notes": "Podcast summary on emerging market debt fundamentals vs. geopolitical risk; expert commentary but limited substantive data or analysis provided in transcript excerpt."
+            },
+            {
+              "url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/quarterly-perspectives-eme-volatility-valuations-the-value-case",
+              "relevance": 0.9,
+              "depth": 0.5,
+              "extractable": 0.7,
+              "overall": 0.7,
+              "notes": "Podcast summary on emerging market equity valuations and opportunities amid volatility; expert perspective but lacks detailed data, metrics, or original research."
+            },
+            {
+              "url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/emerging-market-income-insights-in-a-shifting-macro-landscape",
+              "relevance": 0.9,
+              "depth": 0.6,
+              "extractable": 0.8,
+              "overall": 0.76,
+              "notes": "Q&A on EM income strategies with specific data points (S&P 500/Nasdaq declines, EM 8.7% March decline, 15% Jan-Feb rally); discusses three investment pillars (CapEx, carry, valuation) but truncated at end."
+            }
+          ],
+          "avg_score": 0.72,
+          "error": null,
+          "day": 3,
+          "date": "2026-04-25"
         }
       ]
     },
@@ -636,6 +716,13 @@
           "fetcher_used": true
         },
         "2026-04-24": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-04-25": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -678,6 +765,39 @@
           "error": null,
           "day": 1,
           "date": "2026-04-23"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.pgim.com/content/pgim/us/en/institutional/insights/asset-class/real-estate/navigating-japans-distinct-real-estate-investment-landscape.html",
+              "relevance": 0.9,
+              "depth": 0.6,
+              "extractable": 0.8,
+              "overall": 0.76,
+              "notes": "Analysis of Japan's real estate investment landscape amid rising rates and capital inflows, focusing on income-driven returns."
+            },
+            {
+              "url": "https://www.pgim.com/content/pgim/us/en/institutional/insights/more-insights/podcasts/speaking-alternatives.html",
+              "relevance": 0.3,
+              "depth": 0.2,
+              "extractable": 0.7,
+              "overall": 0.34,
+              "notes": "Podcast series description/marketing material about alternative investments; lacks substantive analysis or data."
+            },
+            {
+              "url": "https://www.pgim.com/content/pgim/us/en/institutional/insights/asset-class/real-estate/cathy-marcus-office-to-housing-conversion-bloomberg-interview.html",
+              "relevance": 0.85,
+              "depth": 0.5,
+              "extractable": 0.8,
+              "overall": 0.7,
+              "notes": "Executive commentary on real estate investment strategy emphasizing income-producing assets and sector selection; brief summary format."
+            }
+          ],
+          "avg_score": 0.6,
+          "error": null,
+          "day": 3,
+          "date": "2026-04-25"
         }
       ]
     }
