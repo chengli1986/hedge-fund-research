@@ -72,7 +72,8 @@ def trial_env(tmp_path, monkeypatch):
 
 def test_constants_match_3day_window():
     assert tm.TRIAL_DAYS == 3, "TRIAL_DAYS must be 3"
-    assert tm.SAMPLE_DAYS == {1, 3}, "SAMPLE_DAYS must sample day 1 and day 3"
+    assert tm.SAMPLE_DAYS == {1, 2, 3}, \
+        "SAMPLE_DAYS must sample every day so cross-day dedup yields 9 unique scores"
     assert tm.MIN_DAYS_WITH_ARTICLES == 2, "MIN_DAYS_WITH_ARTICLES must be 2"
 
 
@@ -725,3 +726,165 @@ def test_extract_text_matches_wordpress_entry_content(monkeypatch):
     # The outer <article> is ~1000 chars (including entry-content) so Layer 1
     # may win first — either path is acceptable as long as body text is present.
     assert "Post-pandemic equity returns" in result
+
+
+# ── Cross-day sampling dedup (exclude_urls) ─────────────────────────────────
+
+def test_sample_excludes_previously_sampled_urls(monkeypatch):
+    """Day 2/3 sampling must skip articles already scored on earlier days.
+
+    Without this, a source whose listing changes slowly would have Day 1/2/3
+    all score the same top-of-list articles, so the avg over 9 samples would
+    just be the avg over 3 articles repeated thrice.
+    """
+    fake_links = [
+        "https://example.com/research/a",
+        "https://example.com/research/b",
+        "https://example.com/research/c",
+        "https://example.com/research/d",
+        "https://example.com/research/e",
+    ]
+    monkeypatch.setattr(tm, "_get_article_links_for_sampling", lambda trial: fake_links)
+    extracted = []
+
+    def fake_extract(url, timeout=20):
+        extracted.append(url)
+        return "Long article body " * 50
+
+    monkeypatch.setattr(tm, "_extract_article_text", fake_extract)
+    monkeypatch.setattr(tm, "_call_haiku", lambda prompt, **kw: {
+        "articles": [
+            {"article_num": i + 1, "relevance": 0.7, "depth": 0.7,
+             "extractable": 0.9, "notes": f"a{i+1}"}
+            for i in range(3)
+        ]
+    })
+
+    # Day 1 sampled first 3 URLs already
+    exclude = {fake_links[0], fake_links[1], fake_links[2]}
+    result = tm.sample_article_quality(
+        "https://example.com/research", trial={"id": "test-fund"},
+        exclude_urls=exclude,
+    )
+
+    assert result["error"] is None
+    assert result["sampled"] == 2, \
+        "Should have sampled the 2 remaining un-sampled URLs (d, e)"
+    sampled_urls = {a["url"] for a in result["articles"]}
+    assert sampled_urls.isdisjoint(exclude), \
+        "exclude_urls must NOT appear in current sample"
+    assert sampled_urls == {fake_links[3], fake_links[4]}
+
+
+def test_sample_returns_error_when_all_links_excluded(monkeypatch):
+    """If every available link was already sampled, return a clear error
+    rather than re-scoring or returning empty silently."""
+    fake_links = [
+        "https://example.com/research/a",
+        "https://example.com/research/b",
+    ]
+    monkeypatch.setattr(tm, "_get_article_links_for_sampling", lambda trial: fake_links)
+
+    result = tm.sample_article_quality(
+        "https://example.com/research", trial={"id": "test-fund"},
+        exclude_urls=set(fake_links),
+    )
+
+    assert result["sampled"] == 0
+    assert result["articles"] == []
+    assert result["error"] == "No new (un-sampled) article links available"
+
+
+def test_sample_default_no_exclude_unchanged(monkeypatch):
+    """Backwards compat: omitting exclude_urls preserves existing behaviour."""
+    fake_links = ["https://example.com/research/a", "https://example.com/research/b"]
+    monkeypatch.setattr(tm, "_get_article_links_for_sampling", lambda trial: fake_links)
+    monkeypatch.setattr(tm, "_extract_article_text", lambda u, **k: "x" * 500)
+    monkeypatch.setattr(tm, "_call_haiku", lambda prompt, **kw: {
+        "articles": [{"article_num": 1, "relevance": 0.7, "depth": 0.7,
+                      "extractable": 0.9, "notes": "ok"},
+                     {"article_num": 2, "relevance": 0.6, "depth": 0.6,
+                      "extractable": 0.8, "notes": "ok"}]
+    })
+
+    result = tm.sample_article_quality(
+        "https://example.com/research", trial={"id": "test-fund"},
+    )
+    assert result["sampled"] == 2
+    assert result["error"] is None
+
+
+# ── Haiku retry on transient failures ───────────────────────────────────────
+
+def test_call_haiku_retries_on_invalid_json(monkeypatch):
+    """When Haiku returns text that has no parseable JSON, retry once before
+    giving up. Without retry, one bad response auto-rejects an otherwise-good
+    source (regression: research-affiliates 2026-04-19)."""
+    monkeypatch.setattr(tm, "load_env", lambda: {"ANTHROPIC_API_KEY": "test-key"})
+
+    call_count = {"n": 0}
+
+    def fake_post(*args, **kwargs):
+        call_count["n"] += 1
+        resp = MagicMock()
+        resp.raise_for_status = lambda: None
+        if call_count["n"] == 1:
+            # First call: no JSON braces at all — would fail .search
+            resp.json = lambda: {"content": [{"text": "Sorry, I can't help with that."}]}
+        else:
+            resp.json = lambda: {"content": [{"text":
+                '{"articles":[{"article_num":1,"relevance":0.8,"depth":0.7,'
+                '"extractable":0.9,"notes":"ok"}]}'}]}
+        return resp
+
+    monkeypatch.setattr(tm.httpx, "post", fake_post)
+
+    result = tm._call_haiku("dummy prompt")
+    assert result is not None, "Should have retried and succeeded on attempt 2"
+    assert call_count["n"] == 2
+    assert result["articles"][0]["relevance"] == 0.8
+
+
+def test_call_haiku_retries_on_request_exception(monkeypatch):
+    """Transient network/HTTP errors trigger one retry."""
+    monkeypatch.setattr(tm, "load_env", lambda: {"ANTHROPIC_API_KEY": "test-key"})
+
+    call_count = {"n": 0}
+
+    def fake_post(*args, **kwargs):
+        call_count["n"] += 1
+        if call_count["n"] == 1:
+            raise tm.httpx.ConnectError("transient")
+        resp = MagicMock()
+        resp.raise_for_status = lambda: None
+        resp.json = lambda: {"content": [{"text":
+            '{"articles":[{"article_num":1,"relevance":0.5,"depth":0.5,'
+            '"extractable":0.5,"notes":"x"}]}'}]}
+        return resp
+
+    monkeypatch.setattr(tm.httpx, "post", fake_post)
+
+    result = tm._call_haiku("dummy prompt")
+    assert result is not None
+    assert call_count["n"] == 2
+
+
+def test_call_haiku_returns_none_after_all_retries_fail(monkeypatch):
+    """After max_retries+1 attempts, give up and return None (existing
+    failure semantics preserved for callers)."""
+    monkeypatch.setattr(tm, "load_env", lambda: {"ANTHROPIC_API_KEY": "test-key"})
+
+    call_count = {"n": 0}
+
+    def fake_post(*args, **kwargs):
+        call_count["n"] += 1
+        resp = MagicMock()
+        resp.raise_for_status = lambda: None
+        resp.json = lambda: {"content": [{"text": "no json here at all"}]}
+        return resp
+
+    monkeypatch.setattr(tm.httpx, "post", fake_post)
+
+    result = tm._call_haiku("dummy prompt", max_retries=1)
+    assert result is None
+    assert call_count["n"] == 2  # 1 initial + 1 retry

@@ -50,7 +50,9 @@ MAX_CONCURRENT_TRIALS = 3
 MIN_DAYS_WITH_ARTICLES = 2  # fetcher must return >0 articles on ≥2 of 3 days
 MIN_QUALITY = {"HIGH", "MEDIUM"}
 MIN_QUALITY_SCORE = 0.5     # avg Haiku quality score to pass (0-1)
-SAMPLE_DAYS = {1, 3}        # trial days on which to run quality sampling
+SAMPLE_DAYS = {1, 2, 3}     # trial days on which to run quality sampling
+                            # (Day 1/2/3 each sample SAMPLE_SIZE articles, dedup
+                            # across days so 9 unique articles are scored total)
 SAMPLE_SIZE = 3             # articles to sample per quality check
 HAIKU_MODEL = "claude-haiku-4-5-20251001"
 
@@ -320,41 +322,58 @@ def _extract_article_text(url: str, timeout: int = 20) -> str | None:
         return None
 
 
-def _call_haiku(prompt: str) -> dict | None:
-    """Call Claude Haiku for quality assessment. Returns parsed JSON or None."""
+def _call_haiku(prompt: str, max_retries: int = 1) -> dict | None:
+    """Call Claude Haiku for quality assessment. Returns parsed JSON or None.
+
+    On transient failures (HTTP errors, malformed/missing JSON in the response)
+    retries up to ``max_retries`` additional times before giving up. The
+    upstream protection this adds is small but real — without it, a single
+    Haiku JSON glitch sends ``avg_score`` to ``0.0`` and can auto-reject an
+    otherwise-good source (regression seen with research-affiliates 2026-04-19).
+    """
     env = load_env()
     api_key = env.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_API_KEY", "")
     if not api_key:
         print("WARNING: ANTHROPIC_API_KEY not set, skipping quality sampling")
         return None
 
-    try:
-        resp = httpx.post(
-            "https://api.anthropic.com/v1/messages",
-            headers={
-                "Content-Type": "application/json",
-                "x-api-key": api_key,
-                "anthropic-version": "2023-06-01",
-            },
-            json={
-                "model": HAIKU_MODEL,
-                "max_tokens": 1024,
-                "temperature": 0,
-                "messages": [{"role": "user", "content": prompt}],
-            },
-            timeout=30,
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        text = data["content"][0]["text"]
-        # Extract JSON from response
-        json_match = re.search(r"\{[\s\S]*\}", text)
-        if json_match:
-            return json.loads(json_match.group())
-        return None
-    except Exception as exc:
-        print(f"WARNING: Haiku call failed: {exc}")
-        return None
+    last_error = "unknown"
+    for attempt in range(max_retries + 1):
+        try:
+            resp = httpx.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "Content-Type": "application/json",
+                    "x-api-key": api_key,
+                    "anthropic-version": "2023-06-01",
+                },
+                json={
+                    "model": HAIKU_MODEL,
+                    "max_tokens": 1024,
+                    "temperature": 0,
+                    "messages": [{"role": "user", "content": prompt}],
+                },
+                timeout=30,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            text = data["content"][0]["text"]
+            json_match = re.search(r"\{[\s\S]*\}", text)
+            if json_match:
+                try:
+                    return json.loads(json_match.group())
+                except json.JSONDecodeError as exc:
+                    last_error = f"JSON parse failed: {exc}"
+            else:
+                last_error = "no JSON object in response"
+        except Exception as exc:
+            last_error = f"request failed: {exc}"
+
+        if attempt < max_retries:
+            print(f"WARNING: Haiku attempt {attempt + 1} — {last_error}; retrying...")
+
+    print(f"WARNING: Haiku call failed after {max_retries + 1} attempts: {last_error}")
+    return None
 
 
 def _get_article_links_for_sampling(trial: dict) -> list[str]:
@@ -375,7 +394,10 @@ def _get_article_links_for_sampling(trial: dict) -> list[str]:
         source_dict = _candidate_to_source_dict(candidate)
         try:
             articles = fetchers[source_id](source_dict)
-            return [a["url"] for a in articles[:SAMPLE_SIZE * 3] if a.get("url")]
+            # SAMPLE_SIZE * 5 = 15 candidates leaves headroom for cross-day
+            # dedup (Day 1/2/3 each consume ≤ SAMPLE_SIZE links + extraction
+            # failures need fallbacks).
+            return [a["url"] for a in articles[:SAMPLE_SIZE * 5] if a.get("url")]
         except Exception:
             return []
 
@@ -393,8 +415,15 @@ def _get_article_links_for_sampling(trial: dict) -> list[str]:
         return []
 
 
-def sample_article_quality(research_url: str, trial: dict | None = None) -> dict:
+def sample_article_quality(research_url: str, trial: dict | None = None,
+                            exclude_urls: set[str] | None = None) -> dict:
     """Sample articles from a source and assess quality via Haiku.
+
+    ``exclude_urls`` is the set of URLs sampled on previous trial days; passing
+    it makes Day 2 / Day 3 score *new* articles instead of re-scoring whatever
+    sat at the top of the listing. Each unique article is scored once across
+    the 3-day trial, so the final average reflects up to ``SAMPLE_SIZE`` ×
+    ``len(SAMPLE_DAYS)`` distinct articles.
 
     Returns dict with keys: sampled, articles, avg_score, error
     Each article entry: {url, title_hint, score, relevance, depth, extractable, notes}
@@ -424,6 +453,12 @@ def sample_article_quality(research_url: str, trial: dict | None = None) -> dict
         if not links:
             return {"sampled": 0, "articles": [], "avg_score": 0.0,
                     "error": "No article links found on index page"}
+
+    if exclude_urls:
+        links = [u for u in links if u not in exclude_urls]
+        if not links:
+            return {"sampled": 0, "articles": [], "avg_score": 0.0,
+                    "error": "No new (un-sampled) article links available"}
 
     # Step 2: extract text from each article, using fallback links if needed
     article_texts: list[tuple[str, str]] = []  # (url, text)
@@ -724,9 +759,17 @@ def cmd_run() -> None:
             existing_samples = active.get("quality_samples", [])
             already_sampled_today = any(s.get("day") == trial_day for s in existing_samples)
             if not already_sampled_today:
+                already_sampled_urls = {
+                    a["url"]
+                    for s in existing_samples
+                    for a in s.get("articles", [])
+                    if a.get("url")
+                }
                 url = active.get("research_url") or active.get("homepage_url", "")
-                print(f"[trial] Quality sampling day {trial_day} for {active['name']}...")
-                qr = sample_article_quality(url, trial=active)
+                print(f"[trial] Quality sampling day {trial_day} for {active['name']}"
+                      f" (excluding {len(already_sampled_urls)} previously-sampled urls)...")
+                qr = sample_article_quality(url, trial=active,
+                                            exclude_urls=already_sampled_urls)
                 qr["day"] = trial_day
                 qr["date"] = today
                 active.setdefault("quality_samples", []).append(qr)
