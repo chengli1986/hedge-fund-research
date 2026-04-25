@@ -497,23 +497,9 @@
       "fit_score": 0.82,
       "quality": "HIGH",
       "topics": "fixed income, macro, credit",
-      "start_date": "2026-04-23",
+      "start_date": "2026-04-25",
       "end_date": null,
       "daily_checks": {
-        "2026-04-23": {
-          "accessible": true,
-          "article_count": 10,
-          "date_count": 10,
-          "error": null,
-          "fetcher_used": true
-        },
-        "2026-04-24": {
-          "accessible": true,
-          "article_count": 10,
-          "date_count": 10,
-          "error": null,
-          "fetcher_used": true
-        },
         "2026-04-25": {
           "accessible": true,
           "article_count": 10,
@@ -525,39 +511,6 @@
       "auto_decided": false,
       "outcome": null,
       "quality_samples": [
-        {
-          "sampled": 3,
-          "articles": [
-            {
-              "url": "https://www.pimco.com/us/en/insights/higher-energy-costs-weaker-tax-relief-squeeze-us-households",
-              "relevance": 0.9,
-              "depth": 0.7,
-              "extractable": 0.6,
-              "overall": 0.76,
-              "notes": "Macro analysis of energy supply disruption impact on U.S. households and inflation; article truncated mid-sentence"
-            },
-            {
-              "url": "https://www.pimco.com/us/en/insights/when-geopolitics-becomes-an-economic-input",
-              "relevance": 0.95,
-              "depth": 0.8,
-              "extractable": 0.7,
-              "overall": 0.84,
-              "notes": "Portfolio strategy framework for geopolitical fragmentation; argues for active/multi-sector approaches over passive; article truncated mid-sentence"
-            },
-            {
-              "url": "https://www.pimco.com/us/en/insights/why-the-fed-could-shrink-its-balance-sheet-again-and-markets-might-not-notice",
-              "relevance": 0.9,
-              "depth": 0.75,
-              "extractable": 0.65,
-              "overall": 0.79,
-              "notes": "Monetary policy analysis on Fed balance sheet normalization and quantitative tightening; article truncated mid-sentence"
-            }
-          ],
-          "avg_score": 0.797,
-          "error": null,
-          "day": 1,
-          "date": "2026-04-23"
-        },
         {
           "sampled": 3,
           "articles": [
@@ -579,16 +532,16 @@
             },
             {
               "url": "https://www.pimco.com/us/en/insights/why-the-fed-could-shrink-its-balance-sheet-again-and-markets-might-not-notice",
-              "relevance": 0.95,
-              "depth": 0.8,
-              "extractable": 0.8,
-              "overall": 0.86,
-              "notes": "Fed policy analysis on quantitative tightening restart; examines balance sheet normalization drivers and market implications"
+              "relevance": 0.92,
+              "depth": 0.78,
+              "extractable": 0.82,
+              "overall": 0.844,
+              "notes": "Fed policy analysis on quantitative tightening restart; examines balance sheet dynamics and reserve demand post-crisis regulations"
             }
           ],
-          "avg_score": 0.85,
+          "avg_score": 0.845,
           "error": null,
-          "day": 3,
+          "day": 1,
           "date": "2026-04-25"
         }
       ]
@@ -601,23 +554,9 @@
       "fit_score": 0.82,
       "quality": "HIGH",
       "topics": "hedge fund strategies, event-driven, credit, macro, fixed income",
-      "start_date": "2026-04-23",
+      "start_date": "2026-04-25",
       "end_date": null,
       "daily_checks": {
-        "2026-04-23": {
-          "accessible": true,
-          "article_count": 10,
-          "date_count": 10,
-          "error": null,
-          "fetcher_used": true
-        },
-        "2026-04-24": {
-          "accessible": true,
-          "article_count": 10,
-          "date_count": 10,
-          "error": null,
-          "fetcher_used": true
-        },
         "2026-04-25": {
           "accessible": true,
           "article_count": 10,
@@ -654,45 +593,12 @@
               "depth": 0.6,
               "extractable": 0.6,
               "overall": 0.72,
-              "notes": "Q&A on EM income strategies with some data (S&P 500/Nasdaq/EM declines); truncated at end, discusses three investment pillars."
+              "notes": "Q&A on EM income strategies with some data (S&P/Nasdaq declines, EM 8.7% March decline); truncated at end, discusses three investment pillars."
             }
           ],
           "avg_score": 0.707,
           "error": null,
           "day": 1,
-          "date": "2026-04-23"
-        },
-        {
-          "sampled": 3,
-          "articles": [
-            {
-              "url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/quarterly-perspectives-emd-frontiers-fundamentals-fractures",
-              "relevance": 0.9,
-              "depth": 0.5,
-              "extractable": 0.7,
-              "overall": 0.7,
-              "notes": "Podcast summary on emerging market debt fundamentals vs. geopolitical risk; expert commentary but limited substantive data or analysis provided in transcript excerpt."
-            },
-            {
-              "url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/quarterly-perspectives-eme-volatility-valuations-the-value-case",
-              "relevance": 0.9,
-              "depth": 0.5,
-              "extractable": 0.7,
-              "overall": 0.7,
-              "notes": "Podcast summary on emerging market equity valuations and opportunities amid volatility; expert perspective but lacks detailed data, metrics, or original research."
-            },
-            {
-              "url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/emerging-market-income-insights-in-a-shifting-macro-landscape",
-              "relevance": 0.9,
-              "depth": 0.6,
-              "extractable": 0.8,
-              "overall": 0.76,
-              "notes": "Q&A on EM income strategies with specific data points (S&P 500/Nasdaq declines, EM 8.7% March decline, 15% Jan-Feb rally); discusses three investment pillars (CapEx, carry, valuation) but truncated at end."
-            }
-          ],
-          "avg_score": 0.72,
-          "error": null,
-          "day": 3,
           "date": "2026-04-25"
         }
       ]
@@ -705,23 +611,9 @@
       "fit_score": 0.67,
       "quality": "HIGH",
       "topics": "fixed income, private credit, alternatives, ESG, multi-asset",
-      "start_date": "2026-04-23",
+      "start_date": "2026-04-25",
       "end_date": null,
       "daily_checks": {
-        "2026-04-23": {
-          "accessible": true,
-          "article_count": 7,
-          "date_count": 7,
-          "error": null,
-          "fetcher_used": true
-        },
-        "2026-04-24": {
-          "accessible": true,
-          "article_count": 10,
-          "date_count": 10,
-          "error": null,
-          "fetcher_used": true
-        },
         "2026-04-25": {
           "accessible": true,
           "article_count": 10,
@@ -733,39 +625,6 @@
       "auto_decided": false,
       "outcome": null,
       "quality_samples": [
-        {
-          "sampled": 3,
-          "articles": [
-            {
-              "url": "https://www.pgim.com/content/pgim/us/en/institutional/about/newsroom/press-releases/pgim-launches-new-brand-campaign-keep-asking.html",
-              "relevance": 0.1,
-              "depth": 0.0,
-              "extractable": 0.9,
-              "overall": 0.22,
-              "notes": "Brand marketing campaign announcement with no investment research, analysis, or portfolio strategy content."
-            },
-            {
-              "url": "https://www.pgim.com/content/pgim/us/en/institutional/about/newsroom/press-releases/five-pgim-funds-recognized-by-2026-LSEG-Lipper-Fund-Awards.html",
-              "relevance": 0.3,
-              "depth": 0.2,
-              "extractable": 0.8,
-              "overall": 0.36,
-              "notes": "Fund awards announcement listing performance recognition; minimal analysis or investment insight beyond award names and categories."
-            },
-            {
-              "url": "https://www.pgim.com/content/pgim/us/en/institutional/about/newsroom/press-releases/pgim-announces-strategic-expansion-into-private-credit-secondaries.html",
-              "relevance": 0.7,
-              "depth": 0.5,
-              "extractable": 0.9,
-              "overall": 0.66,
-              "notes": "Strategic business expansion into private credit secondaries with market sizing ($50B opportunity) and deployment plans ($1B over 2 years); moderate investment relevance but limited analytical depth."
-            }
-          ],
-          "avg_score": 0.413,
-          "error": null,
-          "day": 1,
-          "date": "2026-04-23"
-        },
         {
           "sampled": 3,
           "articles": [
@@ -791,12 +650,12 @@
               "depth": 0.5,
               "extractable": 0.8,
               "overall": 0.7,
-              "notes": "Executive commentary on real estate investment strategy emphasizing income-producing assets and sector selection; brief summary format."
+              "notes": "Executive summary of interview on real estate sector rotation and income-producing assets; brief commentary without detailed analysis."
             }
           ],
           "avg_score": 0.6,
           "error": null,
-          "day": 3,
+          "day": 1,
           "date": "2026-04-25"
         }
       ]
