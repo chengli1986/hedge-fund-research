@@ -517,13 +517,23 @@ class TestFetchResearchAffiliates:
     def test_parses_articles(self):
         html = """
         <html><body>
-        <a class="listing__item" href="/publications/articles/1111-when-will-ai-be-profitable">
-          <div class="item__date">APR 2026</div>
-          <div class="item__title">When Will AI Be Both Powerful and Profitable?</div>
+        <a href="/insights/publications/articles/1111-when-will-ai-be-profitable">
+          <div class="flex gap-4 cursor-pointer">
+            <div><img alt="When Will AI Be Both Powerful and Profitable?" /></div>
+            <div class="flex flex-col flex-1">
+              <div>APR 2026</div>
+              <div>When Will AI Be Both Powerful and Profitable?</div>
+            </div>
+          </div>
         </a>
-        <a class="listing__item" href="/publications/articles/1112-winning-long-game">
-          <div class="item__date">MAR 2026</div>
-          <div class="item__title">Winning the Long Game with RAFI</div>
+        <a href="/insights/publications/articles/1112-winning-long-game">
+          <div class="flex gap-4 cursor-pointer">
+            <div><img alt="Winning the Long Game with RAFI" /></div>
+            <div class="flex flex-col flex-1">
+              <div>MAR 2026</div>
+              <div>Winning the Long Game with RAFI</div>
+            </div>
+          </div>
         </a>
         </body></html>
         """
@@ -532,21 +542,43 @@ class TestFetchResearchAffiliates:
 
         assert len(articles) == 2
         assert articles[0]["title"] == "When Will AI Be Both Powerful and Profitable?"
-        assert articles[0]["url"] == "https://www.researchaffiliates.com/publications/articles/1111-when-will-ai-be-profitable"
+        assert articles[0]["url"] == "https://www.researchaffiliates.com/insights/publications/articles/1111-when-will-ai-be-profitable"
         assert articles[0]["date"] == "2026-04-01"
         assert articles[0]["date_raw"] == "APR 2026"
         assert articles[1]["title"] == "Winning the Long Game with RAFI"
         assert articles[1]["date"] == "2026-03-01"
 
-    def test_skips_items_without_title(self):
+    def test_dedups_repeated_anchors(self):
+        """Site renders the same article in multiple rails — dedup by URL."""
         html = """
         <html><body>
-        <a class="listing__item" href="/publications/articles/1111-article">
-          <div class="item__date">APR 2026</div>
-          <div class="item__title">Valid Article</div>
+        <a href="/insights/publications/articles/1111-article">
+          <div class="flex flex-col flex-1"><div>APR 2026</div><div>Article 1</div></div>
         </a>
-        <a class="listing__item" href="/publications/articles/1112-no-title">
-          <div class="item__date">MAR 2026</div>
+        <a href="/insights/publications/articles/1111-article">
+          <div class="flex flex-col flex-1"><div>APR 2026</div><div>Article 1</div></div>
+        </a>
+        <a href="/insights/publications/articles/1112-other">
+          <div class="flex flex-col flex-1"><div>MAR 2026</div><div>Article 2</div></div>
+        </a>
+        </body></html>
+        """
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_researchaffiliates(self.SOURCE)
+
+        assert len(articles) == 2
+        assert articles[0]["title"] == "Article 1"
+        assert articles[1]["title"] == "Article 2"
+
+    def test_falls_back_to_text_block_when_img_missing(self):
+        """Without <img alt>, title comes from second div in flex-col block."""
+        html = """
+        <html><body>
+        <a href="/insights/publications/articles/1113-no-image">
+          <div class="flex flex-col flex-1">
+            <div>FEB 2026</div>
+            <div>Article Without Image</div>
+          </div>
         </a>
         </body></html>
         """
@@ -554,14 +586,14 @@ class TestFetchResearchAffiliates:
             articles = fetch_researchaffiliates(self.SOURCE)
 
         assert len(articles) == 1
-        assert articles[0]["title"] == "Valid Article"
+        assert articles[0]["title"] == "Article Without Image"
+        assert articles[0]["date"] == "2026-02-01"
 
     def test_respects_max_articles(self):
         items = "".join(
-            f'<a class="listing__item" href="/publications/articles/{i}-article">'
-            f'<div class="item__date">APR 2026</div>'
-            f'<div class="item__title">Article {i}</div>'
-            f'</a>'
+            f'<a href="/insights/publications/articles/{i}-article">'
+            f'<div class="flex flex-col flex-1"><div>APR 2026</div>'
+            f'<div>Article {i}</div></div></a>'
             for i in range(1, 8)
         )
         html = f"<html><body>{items}</body></html>"

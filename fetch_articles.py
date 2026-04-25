@@ -694,32 +694,51 @@ def fetch_troweprice(source: dict) -> list[dict]:
 
 
 def fetch_researchaffiliates(source: dict) -> list[dict]:
-    """Fetch articles from Research Affiliates (Playwright — CSR).
+    """Fetch articles from Research Affiliates (Playwright — Next.js CSR).
 
-    Structure: a.listing__item cards containing:
-      div.item__date  ("APR 2026" format, title-cased before parse),
-      div.item__title (article title; href on the <a> is the article URL)
+    Site was rewritten to Next.js + Tailwind utility classes (~Apr 2026), so the
+    legacy ``a.listing__item`` / ``.item__date`` / ``.item__title`` selectors no
+    longer match. Articles are now bare ``<a href="/insights/publications/articles/...">``
+    with:
+      - ``<img alt="...">`` carrying the title (next/image standard alt)
+      - anchor inner text containing the date as ``MMM YYYY`` (e.g. ``APR 2026``)
+
+    The same anchor appears multiple times on the listing page (related-articles
+    rails, etc.), so we dedup by URL and trim to ``max_articles`` afterwards.
     """
-    html = _get_playwright_page(source["url"], wait_selector="a.listing__item")
+    html = _get_playwright_page(
+        source["url"], wait_until="domcontentloaded", timeout=30000
+    )
     soup = BeautifulSoup(html, "html.parser")
     expected_host = source.get("expected_hostname", "researchaffiliates.com")
 
+    seen_urls: set[str] = set()
     articles = []
-    for item in soup.select("a.listing__item"):
+    for item in soup.select('a[href*="/insights/publications/articles/"]'):
         href = item.get("href", "")
         if not href:
             continue
         url = urljoin("https://www.researchaffiliates.com", href)
         if not _validate_hostname(url, expected_host):
             continue
+        if url in seen_urls:
+            continue
+        seen_urls.add(url)
 
-        title_el = item.select_one(".item__title")
-        title = title_el.get_text(strip=True) if title_el else ""
+        img = item.find("img", alt=True)
+        title = (img.get("alt") or "").strip() if img else ""
+        if not title:
+            text_block = item.select_one("div.flex.flex-col")
+            if text_block:
+                inner_divs = text_block.find_all("div", recursive=False)
+                if len(inner_divs) >= 2:
+                    title = inner_divs[1].get_text(strip=True)
         if not title:
             continue
 
-        date_el = item.select_one(".item__date")
-        date_raw = date_el.get_text(strip=True) if date_el else ""
+        anchor_text = item.get_text(" ", strip=True)
+        match = re.search(r"\b([A-Z]{3})\s+(\d{4})\b", anchor_text)
+        date_raw = f"{match.group(1)} {match.group(2)}" if match else ""
         # "APR 2026" → "Apr 2026" so parse_date's "%b %Y" format matches
         parsed_date = parse_date(date_raw.title()) if date_raw else None
 
