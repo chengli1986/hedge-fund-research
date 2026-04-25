@@ -1127,7 +1127,7 @@
     "rss_url": null,
     "official_domain": "www.pgim.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "RECOMMEND: free institutional research, fills credit/PE gap; JS-rendered, needs Playwright fetcher before trial",
+    "notes": "RECOMMEND: free inst. research, fills credit/PE gap",
     "research_links": [
       {
         "url": "https://www.pgim.com/au/en/institutional/insights",
@@ -1245,15 +1245,17 @@
       "article_signals": 0
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-04-17T01:05:58.401480+00:00",
+    "last_deep_analyzed_at": "2026-04-25T00:00:00Z",
     "quality": "HIGH",
-    "topics": "fixed income, private credit, alternatives, ESG, multi-asset",
+    "quality_score": 0.78,
+    "topics": "fixed income, private credit, alternatives, ESG, multi-asset, equity",
     "fit_score": 0.67,
     "last_validated_at": "2026-04-19T09:02:19.020103+08:00",
     "strategy_tags": [
       "fixed_income",
       "private_credit",
-      "multi_asset"
+      "multi_asset",
+      "esg_climate"
     ],
     "source": "manual"
   },
@@ -1266,7 +1268,7 @@
     "rss_url": null,
     "official_domain": "www.aberdeeninvestments.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "RECOMMEND: free HF strategy research, fills event-driven gap",
+    "notes": "RECOMMEND: HF/event-driven research; needs Playwright",
     "research_links": [
       {
         "url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/insights",
@@ -1290,8 +1292,9 @@
     },
     "screening_reason": "Insufficient article index signals",
     "quality": "HIGH",
+    "quality_score": 0.7,
     "topics": "hedge fund strategies, event-driven, credit, macro, fixed income",
-    "last_deep_analyzed_at": "2026-04-18T01:04:14.693868+00:00",
+    "last_deep_analyzed_at": "2026-04-25T00:00:00Z",
     "fit_score": 0.82,
     "strategy_tags": [
       "event_driven",
@@ -1607,5 +1610,29 @@
     ],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-04-24T09:03:34.493346+08:00"
+  },
+  {
+    "id": "alliancebernstein",
+    "name": "AllianceBernstein",
+    "homepage_url": "https://www.alliancebernstein.com",
+    "source": "manual",
+    "status": "seed",
+    "strategy_tags": [
+      "equity",
+      "fixed_income",
+      "macro",
+      "multi_asset"
+    ],
+    "official_domain": "www.alliancebernstein.com",
+    "research_url": "https://www.alliancebernstein.com/us/en-us/investments/insights.html",
+    "research_links": [
+      {
+        "url": "https://www.alliancebernstein.com/us/en-us/investments/insights.html",
+        "label": "Insights",
+        "path": "us/en-us/investments/insights.html"
+      }
+    ],
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-04-25T09:03:16.591110+08:00"
   }
 ]
