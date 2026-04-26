@@ -1018,7 +1018,7 @@ class TestFetchPgim:
     def test_parses_articles(self):
         # Fetcher scrapes 4 asset-class pages; mock returns articles on first page only.
         items = (
-            self._insights_item("The Macro-Market Dissonance", "/us/en/institutional/insights/asset-class/fixed-income/weekly-view/macro", "April 20, 2026", "a")
+            self._insights_item("Steeper Yield Curve Risks", "/us/en/institutional/insights/asset-class/fixed-income/long-story-short-blog/steeper-curve", "April 20, 2026", "a")
             + self._insights_item("Investors at the Private Credit Gate", "/us/en/institutional/insights/asset-class/fixed-income/private-credit", "April 7, 2026", "b")
         )
         full_html = f"<html><body><ul>{items}</ul></body></html>"
@@ -1027,7 +1027,7 @@ class TestFetchPgim:
             articles = fetch_pgim(self.SOURCE)
 
         assert len(articles) == 2
-        assert articles[0]["title"] == "The Macro-Market Dissonance"
+        assert articles[0]["title"] == "Steeper Yield Curve Risks"
         assert "/insights/" in articles[0]["url"]
         assert articles[0]["date"] == "2026-04-20"
         assert articles[0]["date_raw"] == "April 20, 2026"
@@ -1059,6 +1059,31 @@ class TestFetchPgim:
             articles = fetch_pgim(source)
 
         assert len(articles) == 5
+
+    def test_skips_weekly_view_paywall_paths(self):
+        # /weekly-view/ pages render only a 250-char teaser; full text is gated.
+        # These URLs poison quality sampling (depth=0.1, extractable=0.0) and
+        # also waste content-fetcher cycles in production. Drop at fetcher layer.
+        weekly_view = self._insights_item(
+            "Macro Market Dissonance",
+            "/us/en/institutional/insights/asset-class/fixed-income/weekly-view/macro-dissonance",
+            "April 20, 2026", "wv1")
+        weekly_view2 = self._insights_item(
+            "Blockades Economic Ripples",
+            "/us/en/institutional/insights/asset-class/fixed-income/weekly-view/blockades",
+            "April 18, 2026", "wv2")
+        substantive = self._insights_item(
+            "Yield Curve Drivers",
+            "/us/en/institutional/insights/more-insights/long-story-short-blog/yield-curve",
+            "April 15, 2026", "lss1")
+        html = f"<html><body><ul>{weekly_view}{weekly_view2}{substantive}</ul></body></html>"
+        side = [self._mock_resp(html)] + [self._mock_resp("<html></html>")] * 3
+        with patch("fetch_articles.requests.get", side_effect=side):
+            articles = fetch_pgim(self.SOURCE)
+
+        assert len(articles) == 1
+        assert articles[0]["title"] == "Yield Curve Drivers"
+        assert "/weekly-view/" not in articles[0]["url"]
 
 
 # ---------------------------------------------------------------------------

@@ -1057,6 +1057,10 @@ def fetch_pgim(source: dict) -> list[dict]:
             rel_url = meta.get("xdm:linkURL", "")
             if not rel_url or "/insights/" not in rel_url:
                 continue
+            # /weekly-view/ pages render only a ~250-char teaser; full text is
+            # paywalled, so skip at fetcher layer (poisons sampling + content).
+            if "/weekly-view/" in rel_url:
+                continue
             url = urljoin(base_url, rel_url)
             if not _validate_hostname(url, expected_host):
                 continue
