@@ -448,8 +448,9 @@
       "article_signals": 1
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-04-19T01:03:32.000000+00:00",
+    "last_deep_analyzed_at": "2026-04-26T01:00:00Z",
     "quality": "HIGH",
+    "quality_score": 0.84,
     "topics": "private equity, venture capital, private credit, macro, geopolitics, ESG",
     "strategy_tags": [
       "private_equity",
@@ -870,7 +871,7 @@
     "rss_url": null,
     "official_domain": "www.researchaffiliates.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "RECOMMEND: Monthly quant/factor research, overlaps AQR. Trial skipped — page requires reCAPTCHA/JS rendering (httpx returns 0 articles). Playwright fetcher implemented.",
+    "notes": "RECOMMEND: 329+ quant/factor articles, freely accessible",
     "research_links": [
       {
         "url": "https://www.researchaffiliates.com/insights/publications",
@@ -976,8 +977,9 @@
     "fit_score": 0.94,
     "last_validated_at": "2026-04-19T09:01:48.873166+08:00",
     "quality": "HIGH",
+    "quality_score": 0.88,
     "topics": "factor investing, smart beta, fundamental indexing, AI, valuation",
-    "last_deep_analyzed_at": "2026-04-19T01:03:32.000000+00:00",
+    "last_deep_analyzed_at": "2026-04-26T01:00:00Z",
     "strategy_tags": [
       "quant",
       "equity",
@@ -1404,9 +1406,10 @@
       "multi_asset"
     ],
     "quality": "MEDIUM",
+    "quality_score": 0.58,
     "topics": "private equity, private credit, macro, alternatives",
     "notes": "RECOMMEND: Active PE/credit research, fills private_equity gap",
-    "last_deep_analyzed_at": "2026-04-19T18:43:00Z",
+    "last_deep_analyzed_at": "2026-04-26T01:00:00Z",
     "research_url": "https://www.apollo.com/insights-news/insights",
     "official_domain": "www.apollo.com",
     "research_links": [
@@ -1616,7 +1619,7 @@
     "name": "AllianceBernstein",
     "homepage_url": "https://www.alliancebernstein.com",
     "source": "manual",
-    "status": "seed",
+    "status": "validated",
     "strategy_tags": [
       "equity",
       "fixed_income",
@@ -1625,14 +1628,13 @@
     ],
     "official_domain": "www.alliancebernstein.com",
     "research_url": "https://www.alliancebernstein.com/us/en-us/investments/insights.html",
-    "research_links": [
-      {
-        "url": "https://www.alliancebernstein.com/us/en-us/investments/insights.html",
-        "label": "Insights",
-        "path": "us/en-us/investments/insights.html"
-      }
-    ],
+    "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-25T09:03:16.591110+08:00"
+    "last_discovered_at": "2026-04-26T09:00:19.191409+08:00",
+    "quality": "MEDIUM",
+    "quality_score": 0.50,
+    "topics": "equity, fixed income, macro",
+    "notes": "Series-based commentary; JS-rendered, limited dates visible",
+    "last_deep_analyzed_at": "2026-04-26T01:00:00Z"
   }
 ]
