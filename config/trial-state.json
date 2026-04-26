@@ -506,6 +506,13 @@
           "date_count": 10,
           "error": null,
           "fetcher_used": true
+        },
+        "2026-04-26": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -543,6 +550,39 @@
           "error": null,
           "day": 1,
           "date": "2026-04-25"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.pimco.com/us/en/resources/video-library/media/inside-todays-mortgage-credit-opportunity",
+              "relevance": 0.9,
+              "depth": 0.6,
+              "extractable": 0.5,
+              "overall": 0.7,
+              "notes": "PIMCO video transcript on mortgage credit opportunities; discusses home equity lending and consumer debt refinancing dynamics post-rate hikes, but transcript is truncated mid-sentence."
+            },
+            {
+              "url": "https://www.pimco.com/us/en/insights/municipal-bond-reset-volatility-selectivity-and-the-active-advantage",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.8,
+              "overall": 0.88,
+              "notes": "Municipal bond market analysis with yield reset, relative value metrics, and tactical positioning recommendations; substantive research with data points and forward-looking strategy."
+            },
+            {
+              "url": "https://www.pimco.com/us/en/insights/us-employment-volatility-masks-structural-shift",
+              "relevance": 0.9,
+              "depth": 0.8,
+              "extractable": 0.6,
+              "overall": 0.8,
+              "notes": "Macro analysis of structural U.S. labor market shifts driven by immigration policy and demographics; discusses implications for productivity, AI investment, and monetary policy, but text is truncated."
+            }
+          ],
+          "avg_score": 0.793,
+          "error": null,
+          "day": 2,
+          "date": "2026-04-26"
         }
       ]
     },
@@ -558,6 +598,13 @@
       "end_date": null,
       "daily_checks": {
         "2026-04-25": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-04-26": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -600,6 +647,39 @@
           "error": null,
           "day": 1,
           "date": "2026-04-25"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/iran-conflict-reinforces-asias-structural-corporate-resilience",
+              "relevance": 0.95,
+              "depth": 0.75,
+              "extractable": 0.7,
+              "overall": 0.82,
+              "notes": "Investment research on Asian equity resilience amid Iran conflict; analyzes sector/country positioning, energy shocks, and margin protection strategies."
+            },
+            {
+              "url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/five-things-to-know-about-bonds",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.65,
+              "overall": 0.77,
+              "notes": "Fixed income analysis explaining why bonds aren't acting as safe havens during geopolitical volatility; covers inflation premiums and yield dynamics."
+            },
+            {
+              "url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/twelve-years-investing-in-frontier-bonds",
+              "relevance": 0.85,
+              "depth": 0.8,
+              "extractable": 0.65,
+              "overall": 0.79,
+              "notes": "12-year retrospective on frontier bond strategy; discusses diversification benefits, low correlation to Treasuries, and improving credit quality in emerging markets."
+            }
+          ],
+          "avg_score": 0.793,
+          "error": null,
+          "day": 2,
+          "date": "2026-04-26"
         }
       ]
     },
@@ -615,6 +695,13 @@
       "end_date": null,
       "daily_checks": {
         "2026-04-25": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-04-26": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -657,6 +744,39 @@
           "error": null,
           "day": 1,
           "date": "2026-04-25"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.pgim.com/content/pgim/us/en/institutional/insights/asset-class/fixed-income/weekly-view/macro-market-dissonance.html",
+              "relevance": 0.9,
+              "depth": 0.1,
+              "extractable": 0.0,
+              "overall": 0.4,
+              "notes": "Login wall / paywall-protected macro analysis on macro-market dissonance; title suggests relevant content but no substantive text accessible"
+            },
+            {
+              "url": "https://www.pgim.com/content/pgim/us/en/institutional/insights/asset-class/fixed-income/weekly-view/blockades-economic-ripples.html",
+              "relevance": 0.9,
+              "depth": 0.1,
+              "extractable": 0.0,
+              "overall": 0.4,
+              "notes": "Login wall / paywall-protected macro analysis on blockade economic impacts; title suggests relevant content but no substantive text accessible"
+            },
+            {
+              "url": "https://www.pgim.com/content/pgim/us/en/institutional/insights/more-insights/long-story-short-blog/macro-factors-driving-steeper-yield-curve-risks.html",
+              "relevance": 1.0,
+              "depth": 0.8,
+              "extractable": 0.7,
+              "overall": 0.86,
+              "notes": "Substantive fixed income research on yield curve drivers (inflation, central bank independence, QT, supply/demand); well-structured analysis with exhibits but text appears truncated at end"
+            }
+          ],
+          "avg_score": 0.553,
+          "error": null,
+          "day": 2,
+          "date": "2026-04-26"
         }
       ]
     }
