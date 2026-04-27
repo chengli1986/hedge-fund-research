@@ -130,7 +130,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.88,
-    "notes": "Biweekly PE/RE/credit commentary; promotional tone, MEDIUM depth",
+    "notes": "Weekly PE/credit thought leadership; promotional, accessible",
     "research_links": [
       {
         "url": "https://www.blackstone.com/insights/",
@@ -184,16 +184,17 @@
       "article_signals": 3
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-04-19T01:03:32.000000+00:00",
+    "last_deep_analyzed_at": "2026-04-27T01:00:00Z",
     "quality": "MEDIUM",
-    "topics": "private equity, real estate, private credit, infrastructure",
+    "topics": "private credit, private equity, real estate",
     "strategy_tags": [
       "private_equity",
       "real_assets",
       "private_credit",
       "multi_asset"
     ],
-    "source": "manual"
+    "source": "manual",
+    "quality_score": 0.42
   },
   {
     "id": "two-sigma",
@@ -261,7 +262,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.94,
-    "notes": "Still 403 inaccessible, bot protection",
+    "notes": "403 bot-blocked; article URLs also blocked, no access",
     "research_links": [
       {
         "url": "https://www.kkr.com/insights",
@@ -310,7 +311,7 @@
       "article_signals": 1
     },
     "screening_reason": "Insufficient article index signals",
-    "last_deep_analyzed_at": "2026-04-19T18:41:55Z",
+    "last_deep_analyzed_at": "2026-04-27T01:00:00Z",
     "quality": "UNKNOWN",
     "topics": "private equity, macro, infrastructure, credit",
     "strategy_tags": [
@@ -825,20 +826,22 @@
     "rss_url": null,
     "official_domain": "www.msci.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "JS-rendered (Next.js), needs Playwright; 10 articles visible — private markets, geo-risk, AI, ESG, fixed income",
+    "notes": "Weekly research newsletter; institutional, partially gated",
     "research_links": [],
     "last_discovered_at": "2026-04-19T09:00:14.697222+08:00",
     "quality": "MEDIUM",
-    "topics": "factor investing, ESG, climate, multi-asset, risk",
-    "last_deep_analyzed_at": "2026-04-19T18:35:34.926265+00:00",
+    "topics": "factor investing, ESG, climate, multi-asset, risk, fixed income",
+    "last_deep_analyzed_at": "2026-04-27T01:00:00Z",
     "strategy_tags": [
       "quant",
       "esg_climate",
-      "multi_asset"
+      "multi_asset",
+      "fixed_income"
     ],
     "source": "manual",
     "inaccessible_reason": null,
-    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager"
+    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager",
+    "quality_score": 0.55
   },
   {
     "id": "carlyle",
@@ -1323,11 +1326,11 @@
     "is_publicly_accessible": null,
     "has_article_index": null,
     "fit_score": null,
-    "notes": "403 bot protection, cannot access",
+    "notes": "Persistent 403 bot protection on all paths",
     "research_links": [],
     "screening_signals": {},
     "screening_reason": null,
-    "last_deep_analyzed_at": "2026-04-19T18:41:55Z",
+    "last_deep_analyzed_at": "2026-04-27T01:00:00Z",
     "quality": "UNKNOWN",
     "topics": "macro, equity, multi-asset, private equity",
     "strategy_tags": [
@@ -1632,7 +1635,7 @@
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-04-26T09:00:19.191409+08:00",
     "quality": "MEDIUM",
-    "quality_score": 0.50,
+    "quality_score": 0.5,
     "topics": "equity, fixed income, macro",
     "notes": "Series-based commentary; JS-rendered, limited dates visible",
     "last_deep_analyzed_at": "2026-04-26T01:00:00Z"
