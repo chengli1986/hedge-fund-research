@@ -513,6 +513,13 @@
           "date_count": 10,
           "error": null,
           "fetcher_used": true
+        },
+        "2026-04-27": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -583,6 +590,39 @@
           "error": null,
           "day": 2,
           "date": "2026-04-26"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.pimco.com/us/en/insights/how-policymakers-can-lower-mortgage-costs-and-increase-housing-affordability",
+              "relevance": 0.9,
+              "depth": 0.8,
+              "extractable": 0.7,
+              "overall": 0.82,
+              "notes": "Policy analysis on housing affordability and mortgage rates; discusses GSE MBS purchases, Fed policy, and regulatory approaches with specific rate impact estimates (25 bps)"
+            },
+            {
+              "url": "https://www.pimco.com/us/en/insights/temporary-disruption-or-the-start-of-a-global-supply-shock",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.6,
+              "overall": 0.84,
+              "notes": "Macro analysis of Iran conflict supply shock (20% of global oil); compares to historical disruptions (COVID, 1970s embargoes, Gulf War) with GDP/recession risk implications"
+            },
+            {
+              "url": "https://www.pimco.com/us/en/insights/podcasts/accrued-interest/practice-makes-perfect-unlocking-tax-alpha-in-2026",
+              "relevance": 0.4,
+              "depth": 0.3,
+              "extractable": 0.8,
+              "overall": 0.44,
+              "notes": "Podcast transcript on tax planning for financial advisors; primarily practice management and client service content, not investment research or portfolio strategy"
+            }
+          ],
+          "avg_score": 0.7,
+          "error": null,
+          "day": 3,
+          "date": "2026-04-27"
         }
       ]
     },
@@ -605,6 +645,13 @@
           "fetcher_used": true
         },
         "2026-04-26": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-04-27": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -680,6 +727,39 @@
           "error": null,
           "day": 2,
           "date": "2026-04-26"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/emerging-market-debt-myth-vs-market-reality",
+              "relevance": 0.95,
+              "depth": 0.75,
+              "extractable": 0.85,
+              "overall": 0.85,
+              "notes": "Investment research on emerging market debt opportunity set, comparing EM vs DM yields and fundamentals with performance data and forward outlook."
+            },
+            {
+              "url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/how-ems-may-help-investors-escape-domestic-ai-mania",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.8,
+              "overall": 0.86,
+              "notes": "Equity portfolio strategy research arguing for EM diversification away from concentrated US mega-cap AI exposure, with earnings growth and valuation analysis."
+            },
+            {
+              "url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/finding-income-in-the-crossover-credit-sweet-spot",
+              "relevance": 0.95,
+              "depth": 0.75,
+              "extractable": 0.75,
+              "overall": 0.83,
+              "notes": "Fixed income research on BBB-BB crossover credit as risk-adjusted income opportunity, analyzing default behavior and yield-to-risk tradeoffs across rating tiers."
+            }
+          ],
+          "avg_score": 0.847,
+          "error": null,
+          "day": 3,
+          "date": "2026-04-27"
         }
       ]
     },
@@ -702,6 +782,13 @@
           "fetcher_used": true
         },
         "2026-04-26": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-04-27": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -777,6 +864,39 @@
           "error": null,
           "day": 2,
           "date": "2026-04-26"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.pgim.com/content/pgim/us/en/institutional/insights/more-insights/long-story-short-blog/investors-private-credit-gate.html",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.95,
+              "overall": 0.91,
+              "notes": "Deep analysis of private credit market dynamics, redemption pressures, and sector health with specific data on leverage ratios and portfolio concentration risks in BDCs."
+            },
+            {
+              "url": "https://www.pgim.com/content/pgim/us/en/institutional/insights/asset-class/multi-asset/multi-asset-solutions/insurance-solutions-through-the-continuum-of-real-estate-credit.html",
+              "relevance": 0.9,
+              "depth": 0.55,
+              "extractable": 0.85,
+              "overall": 0.75,
+              "notes": "Insurance-focused real estate credit strategy overview; positions RE credit as diversification opportunity but lacks substantive data, analysis, or specific recommendations."
+            },
+            {
+              "url": "https://www.pgim.com/content/pgim/us/en/institutional/insights/annual-best-ideas/2026/emerging-markets-pillars-opportunity-potential.html",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.7,
+              "overall": 0.84,
+              "notes": "Emerging markets equity thesis with macro analysis of dollar weakness, valuation discounts, and growth differentials; article appears truncated mid-sentence limiting completeness."
+            }
+          ],
+          "avg_score": 0.833,
+          "error": null,
+          "day": 3,
+          "date": "2026-04-27"
         }
       ]
     }
