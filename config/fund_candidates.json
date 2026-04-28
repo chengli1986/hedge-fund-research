@@ -15,7 +15,7 @@
     "is_publicly_accessible": true,
     "has_article_index": false,
     "fit_score": 0.82,
-    "notes": "Validated; 403 on recheck (bot protection), keep watching",
+    "notes": "RECOMMEND: trial passed (4/3 days with articles, quality=0.78)",
     "research_links": [
       {
         "url": "https://www.pimco.com/us/en/insights#sort=%40publishz32xdate%20descending&f:category=[70341f6de3a142ee89144df0ec44e3b8,8d35ad276c6c4c5caf4d9fed37c5f51d,1a3217a178b04eb18c1e4532665b184c,56ebfd2935044d1eb39b7e661d2d03fb,22ea0773e8f147e38e15655207e73e21,bdd17ed0ae9d4ddd96e9e60e51c47782,78449f5b2f5e4b6ebd2d6e90b7a9f889,9cfdb8bfe49a451a851cf9957c57cd32,eef114e6a525445a81d179b8adb018c7]",
@@ -67,7 +67,6 @@
       "macro",
       "multi_asset"
     ],
-    "notes": "Persistent 403 bot-blocked; HIGH quality confirmed prior",
     "source": "manual"
   },
   {
@@ -1133,7 +1132,7 @@
     "rss_url": null,
     "official_domain": "www.pgim.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "RECOMMEND: free inst. research, fills credit/PE gap",
+    "notes": "RECOMMEND: trial passed (4/3 days with articles, quality=0.66)",
     "research_links": [
       {
         "url": "https://www.pgim.com/au/en/institutional/insights",
@@ -1274,7 +1273,7 @@
     "rss_url": null,
     "official_domain": "www.aberdeeninvestments.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "RECOMMEND: HF/event-driven research; needs Playwright",
+    "notes": "RECOMMEND: trial passed (4/3 days with articles, quality=0.78)",
     "research_links": [
       {
         "url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/insights",
@@ -1625,7 +1624,12 @@
     "research_url": "https://verdadcap.com/weekly-research",
     "source": "manual",
     "status": "seed",
-    "strategy_tags": ["quant", "equity", "private_equity", "multi_asset"],
+    "strategy_tags": [
+      "quant",
+      "equity",
+      "private_equity",
+      "multi_asset"
+    ],
     "notes": "280+ free systematic/value articles; last confirmed Oct 2025, verify 2026 activity"
   },
   {

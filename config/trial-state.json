@@ -486,9 +486,7 @@
       "total_articles": 40,
       "days_with_articles": 4,
       "avg_quality_score": 0.767
-    }
-  ],
-  "active_trials": [
+    },
     {
       "id": "pimco",
       "name": "PIMCO",
@@ -498,7 +496,7 @@
       "quality": "HIGH",
       "topics": "fixed income, macro, credit",
       "start_date": "2026-04-25",
-      "end_date": null,
+      "end_date": "2026-04-28",
       "daily_checks": {
         "2026-04-25": {
           "accessible": true,
@@ -520,10 +518,17 @@
           "date_count": 10,
           "error": null,
           "fetcher_used": true
+        },
+        "2026-04-28": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -624,7 +629,10 @@
           "day": 3,
           "date": "2026-04-27"
         }
-      ]
+      ],
+      "total_articles": 40,
+      "days_with_articles": 4,
+      "avg_quality_score": 0.779
     },
     {
       "id": "aberdeen",
@@ -635,7 +643,7 @@
       "quality": "HIGH",
       "topics": "hedge fund strategies, event-driven, credit, macro, fixed income",
       "start_date": "2026-04-25",
-      "end_date": null,
+      "end_date": "2026-04-28",
       "daily_checks": {
         "2026-04-25": {
           "accessible": true,
@@ -657,10 +665,17 @@
           "date_count": 10,
           "error": null,
           "fetcher_used": true
+        },
+        "2026-04-28": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -761,7 +776,10 @@
           "day": 3,
           "date": "2026-04-27"
         }
-      ]
+      ],
+      "total_articles": 40,
+      "days_with_articles": 4,
+      "avg_quality_score": 0.782
     },
     {
       "id": "pgim",
@@ -772,7 +790,7 @@
       "quality": "HIGH",
       "topics": "fixed income, private credit, alternatives, ESG, multi-asset",
       "start_date": "2026-04-25",
-      "end_date": null,
+      "end_date": "2026-04-28",
       "daily_checks": {
         "2026-04-25": {
           "accessible": true,
@@ -794,10 +812,17 @@
           "date_count": 10,
           "error": null,
           "fetcher_used": true
+        },
+        "2026-04-28": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -897,6 +922,182 @@
           "error": null,
           "day": 3,
           "date": "2026-04-27"
+        }
+      ],
+      "total_articles": 40,
+      "days_with_articles": 4,
+      "avg_quality_score": 0.662
+    }
+  ],
+  "active_trials": [
+    {
+      "id": "brookfield",
+      "name": "Brookfield Asset Management",
+      "research_url": "https://www.brookfield.com/views-news/insights",
+      "homepage_url": "https://www.brookfield.com",
+      "fit_score": 0.88,
+      "quality": "HIGH",
+      "topics": "real assets, infrastructure, private credit, private equity, energy",
+      "start_date": "2026-04-28",
+      "end_date": null,
+      "daily_checks": {
+        "2026-04-28": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 3,
+          "error": null,
+          "fetcher_used": false
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.brookfield.com/views-news/insights/next-industrials-ai-transformation",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.85,
+              "overall": 0.81,
+              "notes": "Portfolio strategy on AI transformation in industrial companies; discusses value creation thesis for PE-backed industrials with operational AI integration, supported by Clarios and Chemelex case studies."
+            },
+            {
+              "url": "https://www.brookfield.com/views-news/insights/qa-why-scale-matters-private-investors",
+              "relevance": 0.85,
+              "depth": 0.65,
+              "extractable": 0.8,
+              "overall": 0.76,
+              "notes": "Infrastructure investment strategy Q&A on scale advantages in capital deployment, sourcing, and value creation; discusses discipline in competitive markets and operational improvement as return driver."
+            },
+            {
+              "url": "https://www.brookfield.com/views-news/insights/building-backbone-ai",
+              "relevance": 0.95,
+              "depth": 0.75,
+              "extractable": 0.9,
+              "overall": 0.86,
+              "notes": "White paper on AI infrastructure investment opportunity; estimates $1T+ spending this decade and $7T next decade; positions physical infrastructure buildout as foundational investment thesis with historical parallels."
+            }
+          ],
+          "avg_score": 0.81,
+          "error": null,
+          "day": 1,
+          "date": "2026-04-28"
+        }
+      ]
+    },
+    {
+      "id": "blackrock-institute",
+      "name": "BlackRock Investment Institute",
+      "research_url": "https://www.blackrock.com/corporate/insights/blackrock-investment-institute/archives",
+      "homepage_url": "https://www.blackrock.com/us/individual/insights/blackrock-investment-institute",
+      "fit_score": 0.91,
+      "quality": "MEDIUM",
+      "topics": "macro, equity, multi-asset, fixed income",
+      "start_date": "2026-04-28",
+      "end_date": null,
+      "daily_checks": {
+        "2026-04-28": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.blackrock.com/corporate/literature/market-commentary/weekly-investment-commentary-en-us-20260427-persistent-inflation-constrains-policy.pdf",
+              "relevance": 0.9,
+              "depth": 0.0,
+              "extractable": 0.0,
+              "overall": 0.36,
+              "notes": "BlackRock weekly commentary on persistent inflation and policy constraints—relevant topic but content completely blocked by login wall/terms acceptance."
+            },
+            {
+              "url": "https://www.blackrock.com/corporate/literature/market-commentary/weekly-investment-commentary-en-us-20260420-a-supercharged-ai-mega-force.pdf",
+              "relevance": 0.9,
+              "depth": 0.0,
+              "extractable": 0.0,
+              "overall": 0.36,
+              "notes": "BlackRock weekly commentary on AI as investment mega-force—relevant topic but content completely blocked by login wall/terms acceptance."
+            },
+            {
+              "url": "https://www.blackrock.com/corporate/literature/market-commentary/weekly-investment-commentary-en-us-20260413-back-to-overweight-us-stocks.pdf",
+              "relevance": 0.9,
+              "depth": 0.0,
+              "extractable": 0.0,
+              "overall": 0.36,
+              "notes": "BlackRock weekly commentary on US stock positioning—relevant topic but content completely blocked by login wall/terms acceptance."
+            }
+          ],
+          "avg_score": 0.36,
+          "error": null,
+          "day": 1,
+          "date": "2026-04-28"
+        }
+      ]
+    },
+    {
+      "id": "jpmam",
+      "name": "J.P. Morgan Asset Management",
+      "research_url": "https://am.jpmorgan.com/us/en/asset-management/adv/insights/market-insights/market-updates/",
+      "homepage_url": "https://am.jpmorgan.com",
+      "fit_score": 0.88,
+      "quality": "MEDIUM",
+      "topics": "macro, equity, fixed income, alternatives, multi-asset",
+      "start_date": "2026-04-28",
+      "end_date": null,
+      "daily_checks": {
+        "2026-04-28": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://am.jpmorgan.com/us/en/asset-management/adv/insights/market-insights/market-updates/on-the-minds-of-investors/what-does-market-volatility-mean-for-portfolio-tax-bills/",
+              "relevance": 0.85,
+              "depth": 0.65,
+              "extractable": 0.4,
+              "overall": 0.68,
+              "notes": "Portfolio strategy on tax-loss harvesting and rebalancing in context of concentrated tech gains and global diversification opportunities; text truncated mid-sentence."
+            },
+            {
+              "url": "https://am.jpmorgan.com/us/en/asset-management/adv/insights/market-insights/market-updates/on-the-minds-of-investors/is-ai-running-out-of-compute/",
+              "relevance": 0.9,
+              "depth": 0.8,
+              "extractable": 0.45,
+              "overall": 0.77,
+              "notes": "Investment thesis on AI compute supply constraints and pricing power for semiconductor/infrastructure providers; substantive data on GPU orders, power timelines, and data center capacity; text truncated."
+            },
+            {
+              "url": "https://am.jpmorgan.com/us/en/asset-management/adv/insights/market-insights/market-updates/on-the-minds-of-investors/whats-the-earnings-outlook-for-the-first-quarter-of-2026/",
+              "relevance": 0.95,
+              "depth": 0.75,
+              "extractable": 0.4,
+              "overall": 0.76,
+              "notes": "Q1 2026 earnings outlook with sector-level analysis, guidance trends, and tech/semiconductor growth projections; text truncated mid-sentence."
+            }
+          ],
+          "avg_score": 0.737,
+          "error": null,
+          "day": 1,
+          "date": "2026-04-28"
         }
       ]
     }
