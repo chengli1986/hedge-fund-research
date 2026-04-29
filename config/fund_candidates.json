@@ -477,7 +477,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.9,
-    "last_deep_analyzed_at": "2026-04-22T01:00:00Z",
+    "last_deep_analyzed_at": "2026-04-29T01:01:48Z",
     "quality": "MEDIUM",
     "topics": "macro, credit, alternatives, fixed income",
     "notes": "Working fetcher (search API); JS-rendered, httpx no articles. Promote to sources.json.",
@@ -853,7 +853,7 @@
     "official_domain": null,
     "discovery_method": "seed",
     "notes": "403 blocks server access; JS-rendered, needs Playwright; PE/credit/macro, manual only",
-    "last_deep_analyzed_at": "2026-04-21T00:00:00Z",
+    "last_deep_analyzed_at": "2026-04-29T01:01:48Z",
     "quality": "MEDIUM",
     "topics": "private equity, credit, real assets, macro",
     "strategy_tags": [
@@ -1110,7 +1110,7 @@
     "notes": "JS-rendered only; needs Playwright; ESG/EM/multi-asset",
     "research_links": [],
     "last_discovered_at": "2026-04-19T09:00:14.174535+08:00",
-    "last_deep_analyzed_at": "2026-04-21T00:00:00Z",
+    "last_deep_analyzed_at": "2026-04-29T01:01:48Z",
     "quality": "MEDIUM",
     "topics": "ESG, emerging markets, multi-asset, fixed income",
     "strategy_tags": [
@@ -1623,14 +1623,22 @@
     "homepage_url": "https://verdadcap.com",
     "research_url": "https://verdadcap.com/weekly-research",
     "source": "manual",
-    "status": "seed",
+    "status": "validated",
     "strategy_tags": [
       "quant",
       "equity",
-      "private_equity",
+      "macro",
       "multi_asset"
     ],
-    "notes": "280+ free systematic/value articles; last confirmed Oct 2025, verify 2026 activity"
+    "notes": "Free weekly systematic research; last confirmed Oct 2025",
+    "official_domain": "verdadcap.com",
+    "research_links": [],
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-04-29T09:00:09.051367+08:00",
+    "last_deep_analyzed_at": "2026-04-29T01:01:48Z",
+    "quality": "HIGH",
+    "quality_score": 0.85,
+    "topics": "quant, equity, value, alternatives, macro, credit"
   },
   {
     "id": "alliancebernstein",
@@ -1654,5 +1662,24 @@
     "topics": "equity, fixed income, macro",
     "notes": "Series-based commentary; JS-rendered, limited dates visible",
     "last_deep_analyzed_at": "2026-04-26T01:00:00Z"
+  },
+  {
+    "id": "franklin-templeton",
+    "name": "Franklin Templeton",
+    "homepage_url": "https://www.franklintempleton.com",
+    "research_url": "https://www.franklintempletonglobal.com/articles",
+    "source": "manual",
+    "status": "seed",
+    "strategy_tags": [
+      "macro",
+      "multi_asset",
+      "fixed_income",
+      "equity"
+    ],
+    "notes": "Q2 2026 alternatives research confirmed; JS-rendered site",
+    "official_domain": "www.franklintempleton.com",
+    "research_links": [],
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-04-29T09:03:22.480197+08:00"
   }
 ]
