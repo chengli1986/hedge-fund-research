@@ -2,7 +2,7 @@
 
 Tracks and aggregates research insights, market commentary, and papers from top hedge funds. Summarizes via LLM and publishes a bilingual (CN/EN) dashboard.
 
-## Sources (10)
+## Sources (13)
 
 | Fund | Method | Frequency | Notable |
 |------|--------|-----------|---------|
@@ -16,6 +16,9 @@ Tracks and aggregates research insights, market commentary, and papers from top 
 | **Wellington Management** | Playwright (AEM) | Weekly | Equity, macro, fixed income, multi-asset, ESG |
 | **Amundi Research Center** | RSS | Weekly | Macro, ESG, emerging markets, fixed income |
 | **T. Rowe Price** | Playwright (AEM) | Weekly | Equity, fixed income, active management |
+| **PIMCO** | Playwright (Coveo) | Weekly | World's largest fixed-income manager; macro, credit, secular outlook |
+| **Aberdeen Investments** | Playwright (Next.js) | Weekly | EM debt, multi-asset, sustainable investing |
+| **PGIM** | SSR (AEM) | Weekly | Prudential's IM arm; fixed income, private credit, real estate, alternatives |
 
 ## Pipeline
 
