@@ -1093,10 +1093,10 @@
           "fetcher_used": true
         },
         "2026-04-30": {
-          "accessible": true,
-          "article_count": 10,
-          "date_count": 10,
-          "error": null,
+          "accessible": false,
+          "article_count": 0,
+          "date_count": 0,
+          "error": "All articles blocked by login wall/terms acceptance; no content extractable",
           "fetcher_used": true
         }
       },
