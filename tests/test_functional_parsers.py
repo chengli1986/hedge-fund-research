@@ -126,3 +126,34 @@ class TestGmoApiFixture:
     def test_each_item_has_url(self):
         for item in self.data["listing"]:
             assert item.get("URL"), f"Item missing URL: {item.get('Title')}"
+
+
+class TestGmoFetcherHeaders:
+    """fetch_gmo must send Referer on the API call. Without it, the EPiServer
+    backend returns a 500 'Something Went Wrong' page (regression seen 2026-04-16
+    through 2026-04-30 — 14 days of silent fetcher failure)."""
+
+    def test_api_call_includes_referer(self):
+        from fetch_articles import fetch_gmo
+
+        page_html = (
+            '<html><body><section class="article-grid" '
+            'data-endpoint="/api/articles/getArticlesResearchLibrary?uid=x&isGmo=y">'
+            '</section></body></html>'
+        )
+        page_resp = MagicMock(status_code=200, text=page_html)
+        page_resp.raise_for_status = MagicMock()
+        api_resp = MagicMock(status_code=200)
+        api_resp.raise_for_status = MagicMock()
+        api_resp.json.return_value = {"listing": []}
+
+        source_url = "https://www.gmo.com/americas/research-library/"
+        with patch("fetch_articles.requests.get", side_effect=[page_resp, api_resp]) as mock_get:
+            fetch_gmo({"url": source_url, "max_articles": 10})
+            assert mock_get.call_count == 2
+            api_call_kwargs = mock_get.call_args_list[1].kwargs
+            assert "headers" in api_call_kwargs
+            assert api_call_kwargs["headers"].get("Referer") == source_url, (
+                "API call must include Referer matching source URL — "
+                "GMO backend returns 500 without it"
+            )

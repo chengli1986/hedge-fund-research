@@ -444,8 +444,9 @@ def fetch_gmo(source: dict) -> list[dict]:
         return []
     api_url = "https://www.gmo.com" + grid["data-endpoint"] + "&currentPage=1"
 
-    # Fetch the JSON API
-    api_resp = requests.get(api_url, headers=HEADERS,
+    # Fetch the JSON API. Referer is required — without it the EPiServer
+    # backend returns a 500 "Something Went Wrong" page (started 2026-04-16).
+    api_resp = requests.get(api_url, headers={**HEADERS, "Referer": source["url"]},
                             cookies={"GMO_region": "NorthAmerica"}, timeout=30)
     api_resp.raise_for_status()
     data = api_resp.json()
