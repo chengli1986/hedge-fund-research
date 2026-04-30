@@ -539,7 +539,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.8843,
-    "notes": "RECOMMEND: trial passed (4/3 days with articles, quality=0.77)",
+    "notes": "RECOMMEND: Equity/macro/ESG; free access, high-freq",
     "research_links": [
       {
         "url": "https://www.wellington.com/en/insights",
@@ -618,9 +618,9 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-04-22T01:00:00Z",
+    "last_deep_analyzed_at": "2026-04-30T01:00:00Z",
     "quality": "HIGH",
-    "topics": "equity, macro, fixed income, alternatives, ESG, geopolitics",
+    "topics": "equity, macro, fixed income, multi-asset, ESG, geopolitics, alternatives",
     "strategy_tags": [
       "equity",
       "macro",
@@ -629,7 +629,7 @@
       "esg_climate"
     ],
     "source": "manual",
-    "quality_score": 0.75
+    "quality_score": 0.77
   },
   {
     "id": "amundi",
@@ -1676,10 +1676,14 @@
       "fixed_income",
       "equity"
     ],
-    "notes": "Q2 2026 alternatives research confirmed; JS-rendered site",
+    "notes": "JS-rendered, no accessible content; needs Playwright",
     "official_domain": "www.franklintempleton.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-29T09:03:22.480197+08:00"
+    "last_discovered_at": "2026-04-30T09:00:13.266686+08:00",
+    "last_deep_analyzed_at": "2026-04-30T01:00:00Z",
+    "quality": "UNKNOWN",
+    "quality_score": 0.0,
+    "topics": ""
   }
 ]
