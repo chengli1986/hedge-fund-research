@@ -954,6 +954,13 @@
           "date_count": 3,
           "error": null,
           "fetcher_used": false
+        },
+        "2026-04-30": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 3,
+          "error": null,
+          "fetcher_used": false
         }
       },
       "auto_decided": false,
@@ -1024,6 +1031,39 @@
           "error": null,
           "day": 2,
           "date": "2026-04-29"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.brookfield.com/views-news/insights/transforming-corporate-orphan-carveout-champ",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.8,
+              "overall": 0.8,
+              "notes": "Private equity carveout case study of Chemelex acquisition; demonstrates deal sourcing, valuation, and operational strategy in industrial sector"
+            },
+            {
+              "url": "https://www.brookfield.com/views-news/insights/residential-mortgage-opportunity",
+              "relevance": 0.8,
+              "depth": 0.4,
+              "extractable": 0.3,
+              "overall": 0.54,
+              "notes": "Brief commentary on residential mortgage lending opportunity; mostly video/multimedia with minimal substantive text; truncated content"
+            },
+            {
+              "url": "https://www.brookfield.com/views-news/insights/meeting-growing-power-demand-us",
+              "relevance": 0.85,
+              "depth": 0.4,
+              "extractable": 0.3,
+              "overall": 0.56,
+              "notes": "Investment thesis on U.S. power demand and renewables opportunity; mostly video format with minimal written analysis; truncated content"
+            }
+          ],
+          "avg_score": 0.633,
+          "error": null,
+          "day": 3,
+          "date": "2026-04-30"
         }
       ]
     },
@@ -1046,6 +1086,13 @@
           "fetcher_used": true
         },
         "2026-04-29": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-04-30": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -1121,6 +1168,39 @@
           "error": null,
           "day": 2,
           "date": "2026-04-29"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.blackrock.com/corporate/literature/market-commentary/weekly-investment-commentary-en-us-20260316-pressures-to-shape-mideast-conflict.pdf",
+              "relevance": 0.8,
+              "depth": 0.0,
+              "extractable": 0.0,
+              "overall": 0.32,
+              "notes": "BlackRock weekly commentary on Middle East conflict pressures; content blocked by login wall/terms acceptance"
+            },
+            {
+              "url": "https://www.blackrock.com/corporate/literature/market-commentary/weekly-investment-commentary-en-us-20260309-gauging-the-mideast-supply-shock.pdf",
+              "relevance": 0.8,
+              "depth": 0.0,
+              "extractable": 0.0,
+              "overall": 0.32,
+              "notes": "BlackRock weekly commentary on Middle East supply shock analysis; content blocked by login wall/terms acceptance"
+            },
+            {
+              "url": "https://www.blackrock.com/corporate/literature/market-commentary/weekly-investment-commentary-en-us-20260302-rethinking-long-term-investing.pdf",
+              "relevance": 0.9,
+              "depth": 0.0,
+              "extractable": 0.0,
+              "overall": 0.36,
+              "notes": "BlackRock weekly commentary on long-term investing strategy; content blocked by login wall/terms acceptance"
+            }
+          ],
+          "avg_score": 0.333,
+          "error": null,
+          "day": 3,
+          "date": "2026-04-30"
         }
       ]
     },
@@ -1143,6 +1223,13 @@
           "fetcher_used": true
         },
         "2026-04-29": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-04-30": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -1218,6 +1305,39 @@
           "error": null,
           "day": 2,
           "date": "2026-04-29"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://am.jpmorgan.com/us/en/asset-management/adv/insights/market-insights/market-updates/on-the-minds-of-investors/are-stocks-repeating-last-years-rally/",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.6,
+              "overall": 0.76,
+              "notes": "Market analysis comparing 2026 rally to 2025 pattern; examines sector rotation and growth vs. value dynamics post-geopolitical shock; text truncated mid-sentence"
+            },
+            {
+              "url": "https://am.jpmorgan.com/us/en/asset-management/adv/insights/market-insights/market-updates/on-the-minds-of-investors/can-the-iran-war-disrupt-ai-chip-production/",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.5,
+              "overall": 0.82,
+              "notes": "Deep supply-chain analysis of Iran war impact on AI chip production; details helium shortage, energy costs, and semiconductor constraints; text truncated"
+            },
+            {
+              "url": "https://am.jpmorgan.com/us/en/asset-management/adv/insights/market-insights/market-updates/on-the-minds-of-investors/whats-happening-to-stocks-beneath-the-index/",
+              "relevance": 0.9,
+              "depth": 0.8,
+              "extractable": 0.5,
+              "overall": 0.78,
+              "notes": "Dispersion analysis showing divergence between index performance and underlying stock/sector volatility; examines VIX vs. VIX EQ dynamics; text truncated"
+            }
+          ],
+          "avg_score": 0.787,
+          "error": null,
+          "day": 3,
+          "date": "2026-04-30"
         }
       ]
     }
