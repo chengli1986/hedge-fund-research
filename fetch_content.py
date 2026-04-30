@@ -651,6 +651,106 @@ def _fetch_content_troweprice(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+def _fetch_content_pimco(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch PIMCO article content via Playwright (CSR — Coveo-backed site)."""
+    from playwright.sync_api import sync_playwright
+
+    url = article["url"]
+    log.info("  PIMCO: fetching article page %s", url)
+
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            context = browser.new_context(
+                user_agent=HEADERS["User-Agent"],
+                viewport={"width": 1440, "height": 900},
+            )
+            page = context.new_page()
+            page.goto(url, wait_until="networkidle", timeout=30000)
+            page.wait_for_timeout(2000)
+            html = page.content()
+            browser.close()
+    except Exception as e:
+        log.error("  PIMCO: Playwright fetch failed: %s", e)
+        return None
+
+    text = _normalize_html(html, "article p")
+
+    if not _check_min_content_length(text):
+        log.warning("  PIMCO: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  PIMCO: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
+def _fetch_content_aberdeen(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Aberdeen Investments article content via Playwright (Next.js CSR)."""
+    from playwright.sync_api import sync_playwright
+
+    url = article["url"]
+    log.info("  Aberdeen: fetching article page %s", url)
+
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            context = browser.new_context(
+                user_agent=HEADERS["User-Agent"],
+                viewport={"width": 1440, "height": 900},
+            )
+            page = context.new_page()
+            page.goto(url, wait_until="networkidle", timeout=30000)
+            page.wait_for_timeout(2000)
+            html = page.content()
+            browser.close()
+    except Exception as e:
+        log.error("  Aberdeen: Playwright fetch failed: %s", e)
+        return None
+
+    # RichText component holds article body. Exclude RichText_spacing-tight
+    # variant which renders the legal disclosure footer, not article content.
+    text = _normalize_html(
+        html,
+        "div[class*='RichText_sc-rich-text']:not([class*='spacing-tight']) p, "
+        "div[class*='RichText_sc-rich-text']:not([class*='spacing-tight']) li",
+    )
+
+    if not _check_min_content_length(text):
+        log.warning("  Aberdeen: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Aberdeen: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
+def _fetch_content_pgim(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch PGIM article content via requests (SSR — AEM .cmp-text components)."""
+    url = article["url"]
+    log.info("  PGIM: fetching article page %s", url)
+
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  PGIM: fetch failed: %s", e)
+        return None
+
+    text = _normalize_html(resp.text, ".cmp-text p")
+
+    if not _check_min_content_length(text):
+        log.warning("  PGIM: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  PGIM: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -662,6 +762,9 @@ CONTENT_FETCHERS = {
     "wellington": _fetch_content_wellington,
     "amundi": _fetch_content_amundi,
     "troweprice": _fetch_content_troweprice,
+    "pimco": _fetch_content_pimco,
+    "aberdeen": _fetch_content_aberdeen,
+    "pgim": _fetch_content_pgim,
 }
 
 

@@ -34,6 +34,9 @@ BADGE_COLORS: dict[str, str] = {
     "wellington": "#0066cc",            # Wellington blue
     "amundi": "#e8601c",                # Amundi orange
     "troweprice": "#00607a",            # T. Rowe Price teal-navy
+    "pimco": "#003a70",                 # PIMCO navy
+    "aberdeen": "#9d2235",              # Aberdeen burgundy
+    "pgim": "#231f20",                  # PGIM near-black
 }
 
 INITIAL_VISIBLE = 20
