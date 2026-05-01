@@ -2,7 +2,7 @@
 
 Tracks and aggregates research insights, market commentary, and papers from top hedge funds. Summarizes via LLM and publishes a bilingual (CN/EN) dashboard.
 
-## Sources (13)
+## Sources (15)
 
 | Fund | Method | Frequency | Notable |
 |------|--------|-----------|---------|
@@ -19,6 +19,8 @@ Tracks and aggregates research insights, market commentary, and papers from top 
 | **PIMCO** | Playwright (Coveo) | Weekly | World's largest fixed-income manager; macro, credit, secular outlook |
 | **Aberdeen Investments** | Playwright (Next.js) | Weekly | EM debt, multi-asset, sustainable investing |
 | **PGIM** | SSR (AEM) | Weekly | Prudential's IM arm; fixed income, private credit, real estate, alternatives |
+| **Brookfield Asset Management** | SSR (Drupal) | Weekly | Real assets, infrastructure, renewable power, private equity |
+| **J.P. Morgan Asset Management** | AEM JSON API | Weekly | Multi-asset, fixed income, market insights, Long-Term Capital Market Assumptions |
 
 ## Pipeline
 
