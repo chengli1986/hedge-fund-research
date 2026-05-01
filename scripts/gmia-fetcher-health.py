@@ -233,12 +233,18 @@ def probe_source(source: dict) -> dict:
 def classify_alerts(per_source: dict[str, dict], prev_state: dict) -> dict:
     """Decide which sources need alert emails.
 
+    A source is "alerting" in a given run when status is FAIL, OR status is
+    WARN with consecutive_warns >= WARN_ALERT_THRESHOLD. "Recovered" fires
+    on the transition from alerting to non-alerting (incl. FAIL → WARN-below-
+    threshold, so the user gets confirmation when a fix moves a source from
+    daily-alerting to silent).
+
     Returns:
       {
-        "failing":   [(sid, result, prev_status)] — FAIL this run (alert always)
-        "warning":   [(sid, result, consecutive_warns)] — WARN with ≥3-run streak
-        "recovered": [(sid, result, prev_status)] — was FAIL/WARN, now OK
-        "healthy":   [(sid, result)] — OK this run, was OK previously
+        "failing":   [(sid, result, prev_status)] — FAIL this run
+        "warning":   [(sid, result, consecutive_warns)] — WARN-streak this run
+        "recovered": [(sid, result, prev_status)] — was alerting, now silent
+        "healthy":   [(sid, result)] — silent this run AND silent before
       }
     """
     failing: list[tuple] = []
@@ -247,6 +253,16 @@ def classify_alerts(per_source: dict[str, dict], prev_state: dict) -> dict:
     healthy: list[tuple] = []
 
     prev = prev_state.get("sources", {}) if isinstance(prev_state, dict) else {}
+
+    def _was_alerting(prev_record: dict) -> bool:
+        if not prev_record:
+            return False
+        s = prev_record.get("status")
+        if s == "FAIL":
+            return True
+        if s == "WARN" and prev_record.get("consecutive_warns", 0) >= WARN_ALERT_THRESHOLD:
+            return True
+        return False
 
     for sid, result in per_source.items():
         prev_record = prev.get(sid, {})
@@ -259,8 +275,12 @@ def classify_alerts(per_source: dict[str, dict], prev_state: dict) -> dict:
             consecutive_warns = prev_record.get("consecutive_warns", 0) + 1
             if consecutive_warns >= WARN_ALERT_THRESHOLD:
                 warning.append((sid, result, consecutive_warns))
+            elif _was_alerting(prev_record):
+                # WARN-below-threshold doesn't alert, but transitioning here
+                # from a previously-alerting state is a real recovery signal.
+                recovered.append((sid, result, prev_status))
         else:  # OK
-            if prev_status in ("FAIL", "WARN"):
+            if _was_alerting(prev_record):
                 recovered.append((sid, result, prev_status))
             else:
                 healthy.append((sid, result))
