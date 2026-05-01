@@ -660,7 +660,7 @@
       "article_signals": 3
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-04-23T01:05:00Z",
+    "last_deep_analyzed_at": "2026-05-01T01:00:00Z",
     "quality": "HIGH",
     "quality_score": 0.82,
     "topics": "macro, capital markets, geopolitics, ESG, fixed income, emerging markets, private assets",
@@ -702,10 +702,11 @@
       "article_signals": 0
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-04-24T01:00:00Z",
+    "last_deep_analyzed_at": "2026-05-01T01:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.5,
     "topics": "macro, equity, fixed income, alternatives, multi-asset",
+    "notes": "Weekly market commentary hub; 4 regular series, free access",
     "strategy_tags": [
       "macro",
       "equity",
@@ -769,7 +770,7 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-04-24T01:00:00Z",
+    "last_deep_analyzed_at": "2026-05-01T01:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.55,
     "topics": "equity, AI, macro, fixed income, active management",
@@ -1554,10 +1555,11 @@
     "official_domain": "www.capitalgroup.com",
     "research_links": [],
     "last_discovered_at": "2026-04-23T09:00:12.674329+08:00",
-    "last_deep_analyzed_at": "2026-04-23T01:05:00Z",
+    "last_deep_analyzed_at": "2026-05-01T01:00:00Z",
     "quality": "UNKNOWN",
     "quality_score": 0.0,
     "topics": "",
+    "notes": "All paths blocked; JS-rendered, no accessible research content",
     "inaccessible_reason": null,
     "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager"
   },
@@ -1680,10 +1682,31 @@
     "official_domain": "www.franklintempleton.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-30T09:00:13.266686+08:00",
+    "last_discovered_at": "2026-05-01T09:00:09.322227+08:00",
     "last_deep_analyzed_at": "2026-04-30T01:00:00Z",
     "quality": "UNKNOWN",
     "quality_score": 0.0,
     "topics": ""
+  },
+  {
+    "id": "ares-management",
+    "name": "Ares Management",
+    "homepage_url": "https://www.ares.com",
+    "research_url": "https://www.ares.com/news-views/perspectives",
+    "source": "manual",
+    "status": "inaccessible",
+    "strategy_tags": [
+      "private_credit",
+      "private_equity",
+      "real_assets",
+      "multi_asset"
+    ],
+    "official_domain": "www.ares.com",
+    "notes": "403 blocks scraper (redirects aresmgmt.com); Playwright needed",
+    "topics": "private credit, private equity, alternatives, insurance",
+    "research_links": [],
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-05-01T01:03:53Z",
+    "inaccessible_reason": "Main domain (ares.com) redirects to aresmgmt.com which returns 403. Search results confirm Global Credit Monitor and Perspectives series exist. Needs Playwright + residential IP like Carlyle."
   }
 ]
