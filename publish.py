@@ -321,6 +321,7 @@ def generate_html(articles: list[dict]) -> str:
     week_ago = (datetime.now(BJT) - timedelta(days=7)).strftime("%Y-%m-%d")
     new_this_week = sum(1 for a in sorted_articles if (a.get("date") or "") >= week_ago)
     fund_count = len(set(a.get("source_id", "") for a in sorted_articles)) or len(sources) or 5
+    production_source_count = len(sources)
 
     # ── Theme grouping (all articles, for sidebar) ──
     themes: dict[str, list[dict]] = defaultdict(list)
@@ -994,8 +995,8 @@ a:hover {{ text-decoration: underline; }}
 
   <!-- ═══ SOURCES VIEW ═══ -->
   <div class="view-panel" id="view-sources">
-    <p class="sources-intro lang-en">{fund_count} production sources — curated for research quality, content accessibility, and institutional relevance.</p>
-    <p class="sources-intro lang-zh" style="display:none">{fund_count} 个生产来源，按研究质量、内容可访问性和机构相关性精选。</p>
+    <p class="sources-intro lang-en">{production_source_count} production sources — curated for research quality, content accessibility, and institutional relevance.</p>
+    <p class="sources-intro lang-zh" style="display:none">{production_source_count} 个生产来源，按研究质量、内容可访问性和机构相关性精选。</p>
     <div class="sources-grid">
 {sources_view_html}
     </div>
