@@ -149,10 +149,29 @@ def _extract_bridgewater_text(html: str) -> Optional[str]:
     """Extract Bridgewater article text from article-like containers only."""
     soup = BeautifulSoup(html, "html.parser")
 
-    for tag in soup.select("nav, footer, header, script, style, .cookie, .modal, .pagination, .disclaimer, .subscribe, form"):
+    for tag in soup.select(
+        "nav, footer, header, script, style, .cookie, .modal, .pagination, "
+        ".disclaimer, .subscribe, form, "
+        # Post-2026-04 redesign emits non-article content as sibling
+        # RichTextBody divs (legal disclaimer / cookie banner / browser
+        # compatibility notice). Strip them so the .RichTextBody selector
+        # below cleanly captures only the article body, and so the
+        # gate-detection heuristic does not false-trigger on footer text.
+        ".Disclaimer-text, .CookieBanner-text, .BrowserCompatibility-text"
+    ):
         tag.decompose()
 
     selectors = [
+        # Current Bridgewater site (post-2026-04 redesign): article body lives
+        # in <div class="RichTextBody"> with sibling RichTextExpandable-* wrappers.
+        # The plain ".RichTextBody" selector matches both p-nested and
+        # raw-text variants observed across 6 sampled articles (3.9-24.5K chars);
+        # the "p" variant misses articles where paragraphs aren't <p>-wrapped.
+        ".RichTextBody",
+        ".RichTextBody p",
+        ".RichTextExpandable-shortDescription",
+        ".RichTextExpandable",
+        # Legacy selectors retained as fallback in case site rolls back.
         "article",
         "article p",
         "main article",
