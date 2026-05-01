@@ -40,6 +40,18 @@ BASE_DIR = Path(__file__).resolve().parent
 CONFIG_FILE = BASE_DIR / "config" / "sources.json"
 ENTRYPOINTS_FILE = BASE_DIR / "config" / "entrypoints.json"
 LOG_FILE = BASE_DIR / "logs" / "discover.log"
+ENV_FILE = Path("/home/ubuntu/.openclaw/.env")
+
+
+def _load_env_file(path: Path) -> None:
+    if not path.exists():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, _, v = line.partition("=")
+        os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
 
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 logging.basicConfig(
@@ -388,6 +400,8 @@ def discover_source(source: dict, write: bool = False) -> dict:
 # ---------------------------------------------------------------------------
 
 def main() -> None:
+    _load_env_file(ENV_FILE)
+
     parser = argparse.ArgumentParser(description="Hedge Fund Research — Entrypoint Discovery")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--source", help="Discover for one source ID")
