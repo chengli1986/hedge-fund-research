@@ -17,6 +17,7 @@ Usage:
 """
 
 import argparse
+import html
 import json
 import hashlib
 import logging
@@ -968,6 +969,61 @@ def fetch_amundi(source: dict) -> list[dict]:
     return articles[:source.get("max_articles", 10)]
 
 
+def fetch_brookfield(source: dict) -> list[dict]:
+    """Fetch articles from Brookfield Insights (SSR — Drupal).
+
+    The /views-news/insights index renders ~7 cards server-side. Each card
+    is an <a class="secondary-card"> with aria-label as the clean title;
+    a sibling div with class 'uppercase' holds the 'MMM YYYY' date marker.
+    """
+    resp = requests.get(source["url"], headers=HEADERS, timeout=30)
+    resp.raise_for_status()
+    soup = BeautifulSoup(resp.text, "html.parser")
+    expected_host = source.get("expected_hostname", "brookfield.com")
+    base_url = "https://www.brookfield.com"
+
+    articles: list[dict] = []
+    seen_urls: set[str] = set()
+    leaf_path_re = re.compile(
+        r"^(?:https://www\.brookfield\.com)?(/views-news/insights/[^?#/]+)/?$"
+    )
+    date_re = re.compile(
+        r"\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+20\d{2}\b"
+    )
+
+    for a in soup.select("a.secondary-card[href]"):
+        m = leaf_path_re.match(a["href"])
+        if not m:
+            continue
+        url = base_url + m.group(1)
+        if url in seen_urls:
+            continue
+        seen_urls.add(url)
+        if not _validate_hostname(url, expected_host):
+            continue
+
+        title = html.unescape((a.get("aria-label") or "").strip())
+        if not title:
+            h2 = a.find(["h2", "h3"])
+            title = h2.get_text(strip=True) if h2 else ""
+        if not title:
+            continue
+
+        date_match = date_re.search(a.get_text(" ", strip=True))
+        if not date_match:
+            continue
+        date_raw = date_match.group(0)
+
+        articles.append({
+            "title": title,
+            "url": url,
+            "date": parse_date(date_raw),
+            "date_raw": date_raw,
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
 def fetch_jpmam(source: dict) -> list[dict]:
     """Fetch articles from J.P. Morgan Asset Management via AEM JSON API.
 
@@ -1596,6 +1652,7 @@ FETCHERS = {
     "oaktree": fetch_oaktree,
     "ark-invest": fetch_ark_invest,
     "blackstone": fetch_blackstone,
+    "brookfield": fetch_brookfield,
     "gsam": fetch_gsam,
     "amundi": fetch_amundi,
     "wellington": fetch_wellington,

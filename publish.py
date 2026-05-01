@@ -37,6 +37,8 @@ BADGE_COLORS: dict[str, str] = {
     "pimco": "#003a70",                 # PIMCO navy
     "aberdeen": "#9d2235",              # Aberdeen burgundy
     "pgim": "#231f20",                  # PGIM near-black
+    "brookfield": "#1e7f3e",            # Brookfield green
+    "jpmam": "#7a4cb1",                 # JPMorgan purple
 }
 
 INITIAL_VISIBLE = 20
@@ -112,6 +114,41 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "由 Thomas Rowe Price Jr. 创立，被誉为「成长股投资之父」，1950 年代首创成长股投资理念。以基本面研究文化著称，分析师须长期深度覆盖其研究领域。",
         "notable_en": "Founder credited as 'father of growth investing'; 30+ consecutive years without a net annual loss (through 2020); target-date fund series globally top-3 by AUM.",
         "notable_zh": "创始人被誉为「成长股投资之父」；连续 30+ 年无年度净亏损（截至 2020 年）；目标日期基金系列规模全球前三。",
+    },
+    "pimco": {
+        "founded": "1971", "aum": "~$2T", "hq": "Newport Beach, CA",
+        "type_en": "Fixed-Income Manager", "type_zh": "固收管理人 (Allianz 子公司)",
+        "desc_zh": "全球最大固定收益管理人，1971 年由 Bill Gross 等人于太平洋人寿子公司创立。Total Return Fund 曾长期为全球最大共同基金。Mohamed El-Erian 提出的「新常态」框架影响深远。2000 年被 Allianz 收购后保持独立投资团队，年度「Secular Outlook」是机构固收圈必读。",
+        "notable_en": "Total Return Fund was world's largest mutual fund 2008–14; Bill Gross dubbed 'the bond king'; 'new normal' framework reshaped post-2008 macro thinking.",
+        "notable_zh": "Total Return Fund 2008–14 年间为全球最大共同基金；Bill Gross 被誉为「债券之王」；「新常态」框架重塑了后金融危机宏观思维。",
+    },
+    "aberdeen": {
+        "founded": "1983", "aum": "~£500B", "hq": "Edinburgh, UK",
+        "type_en": "Listed (LSE)", "type_zh": "上市 (伦交所)",
+        "desc_zh": "1983 年于苏格兰阿伯丁创立，2017 年与 Standard Life 合并。新兴市场债务和亚洲股票团队最为知名，本地分析师覆盖深度行业领先。2021 年改名「abrdn」后于 2024 年回归「Aberdeen Investments」品牌。",
+        "notable_en": "Largest UK independent asset manager; world-leading EM debt franchise; pioneer in Asian equity research with on-the-ground analyst coverage.",
+        "notable_zh": "英国最大独立资产管理公司；全球领先新兴市场债务投资人；亚洲股票研究先驱，本地分析师团队深度覆盖。",
+    },
+    "pgim": {
+        "founded": "1875", "aum": "~$1.4T", "hq": "Newark, NJ",
+        "type_en": "Insurance-Affiliated AM", "type_zh": "保险系资产管理",
+        "desc_zh": "Prudential Financial 旗下全球资产管理子公司，可溯源至 1875 年。固定收益、私募信贷、房地产为核心强项；PGIM Real Estate 全球房地产投资规模前 10。机构客户为主，尤擅长保险公司资产负债匹配方案与年金产品。",
+        "notable_en": "One of world's largest fixed income managers; PGIM Real Estate top-10 globally; serves 60+ of world's largest pension funds and insurers.",
+        "notable_zh": "全球最大固定收益管理人之一；PGIM Real Estate 全球房地产投资规模前 10；服务 60+ 全球大型养老金及保险机构。",
+    },
+    "brookfield": {
+        "founded": "1899", "aum": "~$1T", "hq": "New York, NY",
+        "type_en": "Listed Alt Manager (NYSE)", "type_zh": "上市另类资管 (纽交所)",
+        "desc_zh": "全球最大基础设施和实物资产投资人之一，1899 年创立于加拿大（前身 Brascan）。可再生能源基础设施先驱。2019 年收购 Oaktree 多数股权后业务扩展至另类信贷。2022 年从母公司 Brookfield Corporation 拆分独立 IPO。",
+        "notable_en": "World's largest infrastructure investor; pioneered renewable infrastructure as institutional asset class; majority owner of Oaktree since 2019.",
+        "notable_zh": "全球最大基础设施投资人；首创可再生能源基础设施作为机构投资类别；2019 年起为 Oaktree 多数股东。",
+    },
+    "jpmam": {
+        "founded": "1984", "aum": "~$3.6T", "hq": "New York, NY",
+        "type_en": "Bank-Affiliated AM", "type_zh": "银行系资产管理",
+        "desc_zh": "JPMorgan Chase 资产管理子公司，全球前 5 大资管。季度发布的《Guide to the Markets》是机构投资者最广泛参考的市场研究刊物之一。「On the Minds of Investors」系列覆盖宏观、股权、固收、另类全赛道。Target-date 基金规模全球前 5。",
+        "notable_en": "World's top-5 asset manager; Guide to the Markets quarterly publication is industry benchmark; David Kelly's market strategy team globally cited.",
+        "notable_zh": "全球前 5 大资产管理公司；《Guide to the Markets》季度报告是机构投资行业基准；David Kelly 市场策略团队全球被广泛引用。",
     },
 }
 
