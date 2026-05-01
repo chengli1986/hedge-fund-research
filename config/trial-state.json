@@ -927,9 +927,7 @@
       "total_articles": 40,
       "days_with_articles": 4,
       "avg_quality_score": 0.662
-    }
-  ],
-  "active_trials": [
+    },
     {
       "id": "brookfield",
       "name": "Brookfield Asset Management",
@@ -939,7 +937,7 @@
       "quality": "HIGH",
       "topics": "real assets, infrastructure, private credit, private equity, energy",
       "start_date": "2026-04-28",
-      "end_date": null,
+      "end_date": "2026-05-01",
       "daily_checks": {
         "2026-04-28": {
           "accessible": true,
@@ -961,10 +959,17 @@
           "date_count": 3,
           "error": null,
           "fetcher_used": false
+        },
+        "2026-05-01": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 2,
+          "error": null,
+          "fetcher_used": false
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -1065,7 +1070,10 @@
           "day": 3,
           "date": "2026-04-30"
         }
-      ]
+      ],
+      "total_articles": 80,
+      "days_with_articles": 4,
+      "avg_quality_score": 0.746
     },
     {
       "id": "blackrock-institute",
@@ -1076,7 +1084,7 @@
       "quality": "MEDIUM",
       "topics": "macro, equity, multi-asset, fixed income",
       "start_date": "2026-04-28",
-      "end_date": null,
+      "end_date": "2026-05-01",
       "daily_checks": {
         "2026-04-28": {
           "accessible": true,
@@ -1098,10 +1106,17 @@
           "date_count": 0,
           "error": "All articles blocked by login wall/terms acceptance; no content extractable",
           "fetcher_used": true
+        },
+        "2026-05-01": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "fail_quality",
       "quality_samples": [
         {
           "sampled": 3,
@@ -1202,7 +1217,10 @@
           "day": 3,
           "date": "2026-04-30"
         }
-      ]
+      ],
+      "total_articles": 30,
+      "days_with_articles": 3,
+      "avg_quality_score": 0.338
     },
     {
       "id": "jpmam",
@@ -1213,7 +1231,7 @@
       "quality": "MEDIUM",
       "topics": "macro, equity, fixed income, alternatives, multi-asset",
       "start_date": "2026-04-28",
-      "end_date": null,
+      "end_date": "2026-05-01",
       "daily_checks": {
         "2026-04-28": {
           "accessible": true,
@@ -1235,10 +1253,17 @@
           "date_count": 10,
           "error": null,
           "fetcher_used": true
+        },
+        "2026-05-01": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -1338,6 +1363,182 @@
           "error": null,
           "day": 3,
           "date": "2026-04-30"
+        }
+      ],
+      "total_articles": 40,
+      "days_with_articles": 4,
+      "avg_quality_score": 0.773
+    }
+  ],
+  "active_trials": [
+    {
+      "id": "blackstone",
+      "name": "Blackstone",
+      "research_url": "https://www.blackstone.com/insights/",
+      "homepage_url": "https://www.blackstone.com",
+      "fit_score": 0.88,
+      "quality": "MEDIUM",
+      "topics": "private credit, private equity, real estate",
+      "start_date": "2026-05-01",
+      "end_date": null,
+      "daily_checks": {
+        "2026-05-01": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.blackstone.com/insights/article/market-views-the-year-of-the-ipo/",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.8,
+              "overall": 0.8,
+              "notes": "Market commentary on IPO outlook, private credit fundamentals, software differentiation, and AI infrastructure investment thesis with data points"
+            },
+            {
+              "url": "https://www.blackstone.com/insights/article/portfolio-spotlight-amutus/",
+              "relevance": 0.6,
+              "depth": 0.2,
+              "extractable": 0.1,
+              "overall": 0.34,
+              "notes": "Portfolio company spotlight on Amutus (digital comics); mostly behind email signup wall with minimal substantive content"
+            },
+            {
+              "url": "https://www.blackstone.com/insights/article/private-credit-explained-market-risks-returns-what-the-headlines-miss/",
+              "relevance": 0.8,
+              "depth": 0.2,
+              "extractable": 0.05,
+              "overall": 0.41,
+              "notes": "Webinar announcement on private credit risks/returns; behind email signup wall with no actual content provided"
+            }
+          ],
+          "avg_score": 0.517,
+          "error": null,
+          "day": 1,
+          "date": "2026-05-01"
+        }
+      ]
+    },
+    {
+      "id": "verdad-capital",
+      "name": "Verdad Capital",
+      "research_url": "https://verdadcap.com/weekly-research",
+      "homepage_url": "https://verdadcap.com",
+      "fit_score": null,
+      "quality": "HIGH",
+      "topics": "quant, equity, value, alternatives, macro, credit",
+      "start_date": "2026-05-01",
+      "end_date": null,
+      "daily_checks": {
+        "2026-05-01": {
+          "accessible": true,
+          "article_count": 786,
+          "date_count": 786,
+          "error": null,
+          "fetcher_used": false
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://verdadcap.com/archive/the-challenge-of-diversification",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.95,
+              "overall": 0.91,
+              "notes": "Portfolio diversification analysis examining why optimal diversifiers change frequently and whether 100% equity beats diversified 60/40 approaches over 50 years."
+            },
+            {
+              "url": "https://verdadcap.com/archive/total-concentration",
+              "relevance": 0.9,
+              "depth": 0.75,
+              "extractable": 0.85,
+              "overall": 0.83,
+              "notes": "Investment strategy research comparing hyper-concentration vs. diversification arguments, evaluating Buffett-style concentration against academic portfolio theory with empirical data."
+            },
+            {
+              "url": "https://verdadcap.com/archive/the-illiquidity-premium",
+              "relevance": 0.92,
+              "depth": 0.8,
+              "extractable": 0.9,
+              "overall": 0.868,
+              "notes": "Private equity performance analysis showing how illiquidity discounts (10-30%) materially impact PE returns vs. public equities across multiple time horizons."
+            }
+          ],
+          "avg_score": 0.869,
+          "error": null,
+          "day": 1,
+          "date": "2026-05-01"
+        }
+      ]
+    },
+    {
+      "id": "pinebridge",
+      "name": "PineBridge Investments",
+      "research_url": "https://www.pinebridge.com/en/insights/capital-market-line-a-passing-energy-shock-meets-a-lasting-productivity-surge",
+      "homepage_url": "https://www.pinebridge.com",
+      "fit_score": null,
+      "quality": "HIGH",
+      "topics": "fixed income, emerging markets, macro, multi-asset, equities",
+      "start_date": "2026-05-01",
+      "end_date": null,
+      "daily_checks": {
+        "2026-05-01": {
+          "accessible": true,
+          "article_count": 18,
+          "date_count": 8,
+          "error": null,
+          "fetcher_used": false
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.pinebridge.com/en/bio/kelly-michael",
+              "relevance": 0.2,
+              "depth": 0.0,
+              "extractable": 0.3,
+              "overall": 0.14,
+              "notes": "Bio page for Michael Kelly listing credentials and recent insights; not substantive investment research"
+            },
+            {
+              "url": "https://www.pinebridge.com/en/bio/redha-hani",
+              "relevance": 0.2,
+              "depth": 0.0,
+              "extractable": 0.3,
+              "overall": 0.14,
+              "notes": "Bio page for Hani Redha listing credentials and recent insights; not substantive investment research"
+            },
+            {
+              "url": "https://www.pinebridge.com/en/bio/lin-steven",
+              "relevance": 0.2,
+              "depth": 0.0,
+              "extractable": 0.3,
+              "overall": 0.14,
+              "notes": "Bio page for Steven Lin listing credentials and recent insights; not substantive investment research"
+            }
+          ],
+          "avg_score": 0.14,
+          "error": null,
+          "day": 1,
+          "date": "2026-05-01"
         }
       ]
     }

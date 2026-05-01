@@ -689,7 +689,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.88,
-    "notes": "Weekly multi-asset commentary series; broad but derivative",
+    "notes": "RECOMMEND: trial passed (4/3 days with articles, quality=0.77)",
     "research_links": [],
     "screening_signals": {
       "status_code": 200,
@@ -706,7 +706,6 @@
     "quality": "MEDIUM",
     "quality_score": 0.5,
     "topics": "macro, equity, fixed income, alternatives, multi-asset",
-    "notes": "Weekly market commentary hub; 4 regular series, free access",
     "strategy_tags": [
       "macro",
       "equity",
@@ -994,13 +993,13 @@
   {
     "id": "blackrock-institute",
     "name": "BlackRock Investment Institute",
-    "status": "validated",
+    "status": "watchlist",
     "homepage_url": "https://www.blackrock.com/us/individual/insights/blackrock-investment-institute",
     "research_url": "https://www.blackrock.com/corporate/insights/blackrock-investment-institute/archives",
     "rss_url": null,
     "official_domain": "www.blackrock.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "Weekly macro; 403 blocked, needs Playwright to access",
+    "notes": "Trial failed: low quality (0.34)",
     "research_links": [
       {
         "url": "https://www.blackrock.com/us/individual/insights/blackrock-investment-institute/weekly-commentary",
@@ -1532,7 +1531,7 @@
     "quality": "HIGH",
     "quality_score": 0.82,
     "topics": "real assets, infrastructure, private credit, private equity, energy",
-    "notes": "RECOMMEND: Monthly real assets/infra research, fills infra gap",
+    "notes": "RECOMMEND: trial passed (4/3 days with articles, quality=0.75)",
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.88
@@ -1551,7 +1550,7 @@
       "multi_asset"
     ],
     "discovery_method": "discover_fund_sites",
-    "notes": "Research URL 404; all paths blocked, needs manual URL update",
+    "notes": "All paths blocked; JS-rendered, no accessible research content",
     "official_domain": "www.capitalgroup.com",
     "research_links": [],
     "last_discovered_at": "2026-04-23T09:00:12.674329+08:00",
@@ -1559,7 +1558,6 @@
     "quality": "UNKNOWN",
     "quality_score": 0.0,
     "topics": "",
-    "notes": "All paths blocked; JS-rendered, no accessible research content",
     "inaccessible_reason": null,
     "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager"
   },
