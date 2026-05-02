@@ -1576,10 +1576,10 @@
       "multi_asset"
     ],
     "quality": "HIGH",
-    "quality_score": 0.72,
+    "quality_score": 0.8,
     "topics": "fixed income, emerging markets, macro, multi-asset, equities",
-    "notes": "RECOMMEND: Weekly EM debt/fixed income, fills EM gap",
-    "last_deep_analyzed_at": "2026-04-24T01:03:00Z",
+    "notes": "RECOMMEND: Multi-asset/EM research, 100+ metrics, fills EM gap",
+    "last_deep_analyzed_at": "2026-05-02T01:00:00Z",
     "is_publicly_accessible": true,
     "has_article_index": true,
     "research_url": "https://www.pinebridge.com/en/insights/capital-market-line-a-passing-energy-shock-meets-a-lasting-productivity-surge",
@@ -1682,7 +1682,7 @@
     "official_domain": "www.franklintempleton.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-05-01T09:00:09.322227+08:00",
+    "last_discovered_at": "2026-05-02T09:00:19.170393+08:00",
     "last_deep_analyzed_at": "2026-04-30T01:00:00Z",
     "quality": "UNKNOWN",
     "quality_score": 0.0,
@@ -1707,6 +1707,119 @@
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-05-01T01:03:53Z",
+    "last_deep_analyzed_at": "2026-05-02T01:00:00Z",
+    "quality": "UNKNOWN",
+    "quality_score": 0.0,
     "inaccessible_reason": "Main domain (ares.com) redirects to aresmgmt.com which returns 403. Search results confirm Global Credit Monitor and Perspectives series exist. Needs Playwright + residential IP like Carlyle."
+  },
+  {
+    "id": "natixis-im",
+    "name": "Natixis Investment Managers",
+    "homepage_url": "https://www.im.natixis.com",
+    "research_url": "https://www.im.natixis.com/en-us/insights/the-tactical-take",
+    "source": "manual",
+    "status": "discovered",
+    "strategy_tags": [
+      "macro",
+      "multi_asset",
+      "fixed_income",
+      "equity"
+    ],
+    "official_domain": "www.im.natixis.com",
+    "research_links": [
+      {
+        "url": "https://www.im.natixis.com/en-us/insights/the-tactical-take",
+        "label": "Tactical Take podcast",
+        "path": "en-us/insights/the-tactical-take"
+      },
+      {
+        "url": "https://www.im.natixis.com/en-us/insights/charts-and-smarts",
+        "label": "Charts and Smarts",
+        "path": "en-us/insights/charts-and-smarts"
+      },
+      {
+        "url": "https://www.im.natixis.com/en-us/insights/tax-management/2026/tax-trends-and-tactics-tax-season",
+        "label": "Tax trends and tactics",
+        "path": "en-us/insights/tax-management/2026/tax-trends-and-tactics-tax-season"
+      },
+      {
+        "url": "https://www.im.natixis.com/en-us/insights",
+        "label": "Insights",
+        "path": "en-us/insights"
+      },
+      {
+        "url": "https://www.im.natixis.com/en-us/insights/equities",
+        "label": "Equities",
+        "path": "en-us/insights/equities"
+      },
+      {
+        "url": "https://www.im.natixis.com/en-us/insights/fixed-income",
+        "label": "Fixed income",
+        "path": "en-us/insights/fixed-income"
+      },
+      {
+        "url": "https://www.im.natixis.com/en-us/insights/investor-sentiment",
+        "label": "Investor sentiment",
+        "path": "en-us/insights/investor-sentiment"
+      },
+      {
+        "url": "https://www.im.natixis.com/en-us/insights/macro-views",
+        "label": "Macro views",
+        "path": "en-us/insights/macro-views"
+      },
+      {
+        "url": "https://www.im.natixis.com/en-us/insights/portfolio-construction",
+        "label": "Portfolio construction",
+        "path": "en-us/insights/portfolio-construction"
+      },
+      {
+        "url": "https://www.im.natixis.com/en-us/insights/tax-management",
+        "label": "Tax management",
+        "path": "en-us/insights/tax-management"
+      },
+      {
+        "url": "https://www.im.natixis.com/en-us/insights/prepare-portfolios-for-four-macro-outlooks",
+        "label": "Evaluate portfolios for 4 macro outlooks",
+        "path": "en-us/insights/prepare-portfolios-for-four-macro-outlooks"
+      },
+      {
+        "url": "https://www.im.natixis.com/en-us/insights/macro-investing-insights",
+        "label": "Macro investing insights",
+        "path": "en-us/insights/macro-investing-insights"
+      },
+      {
+        "url": "https://www.im.natixis.com/en-us/insights/market-outlook",
+        "label": "Market outlook",
+        "path": "en-us/insights/market-outlook"
+      },
+      {
+        "url": "https://www.im.natixis.com/en-us/insights/volatility",
+        "label": "Market volatility",
+        "path": "en-us/insights/volatility"
+      },
+      {
+        "url": "https://www.im.natixis.com/en-us/insights/center-for-investor-insight",
+        "label": "Center for Investor Insight",
+        "path": "en-us/insights/center-for-investor-insight"
+      },
+      {
+        "url": "https://www.im.natixis.com/en-us/insights/tax-management/2026/1031-exchange-exit-strategy-appreciated-real-estate",
+        "label": "1031 exchange as an exit strategy for appreciated real estate Explores a tax deferral path for inves",
+        "path": "en-us/insights/tax-management/2026/1031-exchange-exit-strategy-appreciated-real-estate"
+      },
+      {
+        "url": "https://www.im.natixis.com/en-us/insights/macro-views/2026/energy-investing-without-macro-calls",
+        "label": "Energy investing without macro calls Learn why longterm value in energy comes from business fundamen",
+        "path": "en-us/insights/macro-views/2026/energy-investing-without-macro-calls"
+      },
+      {
+        "url": "https://www.im.natixis.com/en-us/insights/portfolio-construction/2026/model-portfolio-pulse-march-2026",
+        "label": "Model Portfolio Pulse: 3 reasons for balance amid volatility Geopolitical shocks raised volatility, ",
+        "path": "en-us/insights/portfolio-construction/2026/model-portfolio-pulse-march-2026"
+      }
+    ],
+    "discovery_method": "discover_fund_sites",
+    "notes": "Major European AM (~€1T AUM); macro/equity/fixed income insights",
+    "last_discovered_at": "2026-05-02T09:03:53.598499+08:00"
   }
 ]
