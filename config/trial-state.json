@@ -1388,6 +1388,13 @@
           "date_count": 10,
           "error": null,
           "fetcher_used": true
+        },
+        "2026-05-02": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -1425,6 +1432,39 @@
           "error": null,
           "day": 1,
           "date": "2026-05-01"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.blackstone.com/insights/article/whats-really-happening-in-private-credit/",
+              "relevance": 0.3,
+              "depth": 0.0,
+              "extractable": 0.1,
+              "overall": 0.14,
+              "notes": "Landing page for gated content with email signup form; no substantive article text provided"
+            },
+            {
+              "url": "https://www.blackstone.com/insights/article/private-credit-myth-vs-fact/",
+              "relevance": 0.95,
+              "depth": 0.75,
+              "extractable": 0.85,
+              "overall": 0.85,
+              "notes": "Substantive analysis debunking private credit myths with data comparisons (leverage ratios, LTV, market structure); addresses GFC concerns and regulatory oversight"
+            },
+            {
+              "url": "https://www.blackstone.com/tommy-fleetwood/",
+              "relevance": 0.0,
+              "depth": 0.0,
+              "extractable": 0.2,
+              "overall": 0.04,
+              "notes": "Marketing/brand announcement about golf sponsorship; not investment research"
+            }
+          ],
+          "avg_score": 0.343,
+          "error": null,
+          "day": 2,
+          "date": "2026-05-02"
         }
       ]
     },
@@ -1440,6 +1480,13 @@
       "end_date": null,
       "daily_checks": {
         "2026-05-01": {
+          "accessible": true,
+          "article_count": 786,
+          "date_count": 786,
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-05-02": {
           "accessible": true,
           "article_count": 786,
           "date_count": 786,
@@ -1482,6 +1529,39 @@
           "error": null,
           "day": 1,
           "date": "2026-05-01"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://verdadcap.com/archive/when-private-funds-are-publicly-traded",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.75,
+              "overall": 0.87,
+              "notes": "Empirical analysis of private equity volatility using London-listed PE funds to resolve debate over true risk levels vs. reported NAV volatility."
+            },
+            {
+              "url": "https://verdadcap.com/archive/the-institutional-cost-mirage",
+              "relevance": 0.95,
+              "depth": 0.9,
+              "extractable": 0.8,
+              "overall": 0.9,
+              "notes": "Systematic critique of alternative investments' underperformance, citing Ennis research showing 5-8% annual cost drag and institutional portfolio underperformance linked to alts allocation."
+            },
+            {
+              "url": "https://verdadcap.com/archive/2024-private-equity-fundamentals",
+              "relevance": 0.95,
+              "depth": 0.88,
+              "extractable": 0.75,
+              "overall": 0.882,
+              "notes": "Comparative analysis of PE-backed portfolio company fundamentals vs. S&P 500, showing smaller scale, higher leverage, lower margins, and slower growth in PE holdings."
+            }
+          ],
+          "avg_score": 0.884,
+          "error": null,
+          "day": 2,
+          "date": "2026-05-02"
         }
       ]
     },
@@ -1497,6 +1577,13 @@
       "end_date": null,
       "daily_checks": {
         "2026-05-01": {
+          "accessible": true,
+          "article_count": 18,
+          "date_count": 8,
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-05-02": {
           "accessible": true,
           "article_count": 18,
           "date_count": 8,
@@ -1539,6 +1626,39 @@
           "error": null,
           "day": 1,
           "date": "2026-05-01"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.pinebridge.com/en/bio/hu-peter",
+              "relevance": 0.2,
+              "depth": 0.0,
+              "extractable": 0.3,
+              "overall": 0.14,
+              "notes": "Bio page for portfolio manager Peter Hu; lists credentials and team affiliations but contains no investment analysis or research content"
+            },
+            {
+              "url": "https://www.pinebridge.com/en/bio/ng-sunny",
+              "relevance": 0.2,
+              "depth": 0.0,
+              "extractable": 0.3,
+              "overall": 0.14,
+              "notes": "Bio page for portfolio manager Sunny Ng; includes career history and published research references but no substantive analysis or data"
+            },
+            {
+              "url": "https://www.pinebridge.com/en/bio/johaadien-mikhail",
+              "relevance": 0.2,
+              "depth": 0.0,
+              "extractable": 0.3,
+              "overall": 0.14,
+              "notes": "Bio page for research analyst Mikhail Johaadien; lists background and team role but contains no investment research or analysis"
+            }
+          ],
+          "avg_score": 0.14,
+          "error": null,
+          "day": 2,
+          "date": "2026-05-02"
         }
       ]
     }
