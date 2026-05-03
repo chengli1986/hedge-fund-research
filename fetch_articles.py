@@ -305,7 +305,11 @@ def fetch_bridgewater(source: dict) -> list[dict]:
         if title.lower().strip() in skip:
             continue
 
-        # Date is in a sibling or nearby div.PromoC-date
+        # Date is in a sibling div.PromoC-date within the PromoC card.
+        # SectionLead hero links have no date (evergreen featured piece) — skip them.
+        if link.find_parent(class_="SectionLead"):
+            continue
+
         date_str = ""
         parent = link.parent
         if parent:
