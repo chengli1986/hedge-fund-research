@@ -1395,6 +1395,13 @@
           "date_count": 10,
           "error": null,
           "fetcher_used": true
+        },
+        "2026-05-03": {
+          "accessible": false,
+          "article_count": 0,
+          "date_count": 0,
+          "error": "Page.goto: Timeout 30000ms exceeded.\nCall log:\n  - navigating to \"https://www.blackstone.com/insights/\", waiting until \"",
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -1465,6 +1472,14 @@
           "error": null,
           "day": 2,
           "date": "2026-05-02"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No article links found on index page",
+          "day": 3,
+          "date": "2026-05-03"
         }
       ]
     },
@@ -1487,6 +1502,13 @@
           "fetcher_used": false
         },
         "2026-05-02": {
+          "accessible": true,
+          "article_count": 786,
+          "date_count": 786,
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-05-03": {
           "accessible": true,
           "article_count": 786,
           "date_count": 786,
@@ -1562,6 +1584,39 @@
           "error": null,
           "day": 2,
           "date": "2026-05-02"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://verdadcap.com/archive/ba8ghbjfrk2a66k94ydfty5lk9grdy",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 1.0,
+              "overall": 0.92,
+              "notes": "Deep case study on Japanese capital efficiency: Nishikawa Rubber's PBR improvement through balance sheet optimization, with comparative analysis of Japanese vs US corporate balance sheets."
+            },
+            {
+              "url": "https://verdadcap.com/archive/unlocking-shareholder-value-in-japanese-balance-sheets",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.95,
+              "overall": 0.89,
+              "notes": "English version of Article 1 covering same Nishikawa Rubber case study with slightly less detail but complete substantive analysis of capital strategy and shareholder value creation."
+            },
+            {
+              "url": "https://verdadcap.com/archive/skewness-and-kurtosis",
+              "relevance": 0.9,
+              "depth": 0.75,
+              "extractable": 0.7,
+              "overall": 0.8,
+              "notes": "Risk analysis framework examining skewness and kurtosis across asset classes (1997-2025); article appears truncated mid-sentence but provides solid quantitative investment research on tail risk measurement."
+            }
+          ],
+          "avg_score": 0.87,
+          "error": null,
+          "day": 3,
+          "date": "2026-05-03"
         }
       ]
     },
@@ -1584,6 +1639,13 @@
           "fetcher_used": false
         },
         "2026-05-02": {
+          "accessible": true,
+          "article_count": 18,
+          "date_count": 8,
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-05-03": {
           "accessible": true,
           "article_count": 18,
           "date_count": 8,
@@ -1659,6 +1721,31 @@
           "error": null,
           "day": 2,
           "date": "2026-05-02"
+        },
+        {
+          "sampled": 2,
+          "articles": [
+            {
+              "url": "https://www.pinebridge.com/en/bio/wang-teresa",
+              "relevance": 0.2,
+              "depth": 0.0,
+              "extractable": 0.8,
+              "overall": 0.24,
+              "notes": "Bio page for research analyst Teresa Wang; lists credentials and recent research publications but contains no substantive investment analysis or portfolio strategy content."
+            },
+            {
+              "url": "https://www.pinebridge.com/en/insights/investment-strategy-insights-strait-tension-portends-a-short-and-sharp",
+              "relevance": 0.95,
+              "depth": 0.75,
+              "extractable": 0.7,
+              "overall": 0.82,
+              "notes": "Geopolitical macro analysis of Strait of Hormuz tensions with implications for oil, gas, inflation, and risk assets; substantive reasoning on supply dynamics and regional impacts, but text appears truncated at end."
+            }
+          ],
+          "avg_score": 0.53,
+          "error": null,
+          "day": 3,
+          "date": "2026-05-03"
         }
       ]
     }
