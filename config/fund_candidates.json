@@ -1133,7 +1133,7 @@
     "rss_url": null,
     "official_domain": "www.pgim.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "RECOMMEND: trial passed (4/3 days with articles, quality=0.66)",
+    "notes": "RECOMMEND: Broad alternatives/fixed income, fills PE gap",
     "research_links": [
       {
         "url": "https://www.pgim.com/au/en/institutional/insights",
@@ -1251,7 +1251,7 @@
       "article_signals": 0
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-04-25T00:00:00Z",
+    "last_deep_analyzed_at": "2026-05-03T01:02:34Z",
     "quality": "HIGH",
     "quality_score": 0.78,
     "topics": "fixed income, private credit, alternatives, ESG, multi-asset, equity",
@@ -1274,7 +1274,7 @@
     "rss_url": null,
     "official_domain": "www.aberdeeninvestments.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "RECOMMEND: trial passed (4/3 days with articles, quality=0.78)",
+    "notes": "RECOMMEND: Global macro research, JS-rendered, pro-only",
     "research_links": [
       {
         "url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/insights",
@@ -1299,14 +1299,14 @@
     "screening_reason": "Insufficient article index signals",
     "quality": "HIGH",
     "quality_score": 0.7,
-    "topics": "hedge fund strategies, event-driven, credit, macro, fixed income",
-    "last_deep_analyzed_at": "2026-04-25T00:00:00Z",
+    "topics": "macro, global macro research, credit, fixed income, multi-asset",
+    "last_deep_analyzed_at": "2026-05-03T01:02:34Z",
     "fit_score": 0.82,
     "strategy_tags": [
-      "event_driven",
       "macro",
       "fixed_income",
-      "multi_asset"
+      "multi_asset",
+      "event_driven"
     ],
     "last_validated_at": "2026-04-19T09:02:22.948295+08:00",
     "source": "manual"
@@ -1682,7 +1682,7 @@
     "official_domain": "www.franklintempleton.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-05-02T09:00:19.170393+08:00",
+    "last_discovered_at": "2026-05-03T09:00:07.861320+08:00",
     "last_deep_analyzed_at": "2026-04-30T01:00:00Z",
     "quality": "UNKNOWN",
     "quality_score": 0.0,
@@ -1718,7 +1718,7 @@
     "homepage_url": "https://www.im.natixis.com",
     "research_url": "https://www.im.natixis.com/en-us/insights/the-tactical-take",
     "source": "manual",
-    "status": "discovered",
+    "status": "validated",
     "strategy_tags": [
       "macro",
       "multi_asset",
@@ -1819,7 +1819,111 @@
       }
     ],
     "discovery_method": "discover_fund_sites",
-    "notes": "Major European AM (~€1T AUM); macro/equity/fixed income insights",
-    "last_discovered_at": "2026-05-02T09:03:53.598499+08:00"
+    "notes": "Multi-boutique thought leadership, equity/macro gap fill",
+    "last_discovered_at": "2026-05-02T09:03:53.598499+08:00",
+    "is_publicly_accessible": true,
+    "has_article_index": true,
+    "last_screened_at": "2026-05-03T09:00:29.298516+08:00",
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 1,
+      "article_tags": 0,
+      "time_tags": 0,
+      "date_patterns": 1,
+      "h2_tags": 12,
+      "article_signals": 0
+    },
+    "screening_reason": "Research index detected",
+    "fit_score": 0.85,
+    "last_validated_at": "2026-05-03T09:00:33.191261+08:00",
+    "last_deep_analyzed_at": "2026-05-03T01:02:34Z",
+    "quality": "MEDIUM",
+    "quality_score": 0.6,
+    "topics": "macro views, equity, fixed income, portfolio construction"
+  },
+  {
+    "id": "lazard-am",
+    "name": "Lazard Asset Management",
+    "homepage_url": "https://www.lazardassetmanagement.com/us/en_us/research-insights",
+    "source": "manual",
+    "status": "discovered",
+    "strategy_tags": [
+      "emerging_markets",
+      "equity",
+      "multi_asset"
+    ],
+    "notes": "EM equity specialist, monthly EM Monitor, freely accessible",
+    "research_url": "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/viewpoints",
+    "official_domain": "www.lazardassetmanagement.com",
+    "research_links": [
+      {
+        "url": "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/viewpoints",
+        "label": "Fixed Income Viewpoints",
+        "path": "us/en_us/research-insights/investment-insights/viewpoints"
+      },
+      {
+        "url": "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/viewpoints/january-2024",
+        "label": " Outlook for Bonds: Riding the Crest",
+        "path": "us/en_us/research-insights/investment-insights/viewpoints/january-2024"
+      },
+      {
+        "url": "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/viewpoints/february-2024",
+        "label": " Can the Bond Market Keep Its Cool?",
+        "path": "us/en_us/research-insights/investment-insights/viewpoints/february-2024"
+      },
+      {
+        "url": "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/viewpoints/march-2024",
+        "label": "Déjà Vu",
+        "path": "us/en_us/research-insights/investment-insights/viewpoints/march-2024"
+      },
+      {
+        "url": "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/viewpoints/april-2024",
+        "label": "The Elusive Landing",
+        "path": "us/en_us/research-insights/investment-insights/viewpoints/april-2024"
+      },
+      {
+        "url": "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/viewpoints/may-2024",
+        "label": "Back on Track?",
+        "path": "us/en_us/research-insights/investment-insights/viewpoints/may-2024"
+      },
+      {
+        "url": "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/viewpoints/june-2024",
+        "label": "The Plot Thickens",
+        "path": "us/en_us/research-insights/investment-insights/viewpoints/june-2024"
+      },
+      {
+        "url": "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/viewpoints/july-2024",
+        "label": "The Turning Point at Last?",
+        "path": "us/en_us/research-insights/investment-insights/viewpoints/july-2024"
+      },
+      {
+        "url": "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/viewpoints/august-2024",
+        "label": "Back to Business as Usual?",
+        "path": "us/en_us/research-insights/investment-insights/viewpoints/august-2024"
+      },
+      {
+        "url": "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/viewpoints/september-2024",
+        "label": "Soft Landing or Hard Truth?",
+        "path": "us/en_us/research-insights/investment-insights/viewpoints/september-2024"
+      },
+      {
+        "url": "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/viewpoints/october-2024",
+        "label": "The World Turns: Seeing through the Volatility",
+        "path": "us/en_us/research-insights/investment-insights/viewpoints/october-2024"
+      },
+      {
+        "url": "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/viewpoints/november-2024",
+        "label": "Bracing for Change",
+        "path": "us/en_us/research-insights/investment-insights/viewpoints/november-2024"
+      },
+      {
+        "url": "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/viewpoints/january-2025",
+        "label": "Will Risk Be Rewarded Again?",
+        "path": "us/en_us/research-insights/investment-insights/viewpoints/january-2025"
+      }
+    ],
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-05-03T09:03:50.410599+08:00"
   }
 ]
