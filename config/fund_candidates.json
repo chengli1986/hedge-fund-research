@@ -340,7 +340,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.97,
-    "notes": "RECOMMEND: trial passed (120 articles/7d, quality=0.84)",
+    "notes": "RECOMMEND: PE/VC/private credit, soft gate, Apr 2026",
     "research_links": [
       {
         "url": "https://www.cambridgeassociates.com/insights/private-investments/",
@@ -449,7 +449,7 @@
       "article_signals": 1
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-04-26T01:00:00Z",
+    "last_deep_analyzed_at": "2026-05-04T01:02:43Z",
     "quality": "HIGH",
     "quality_score": 0.84,
     "topics": "private equity, venture capital, private credit, macro, geopolitics, ESG",
@@ -875,7 +875,7 @@
     "rss_url": null,
     "official_domain": "www.researchaffiliates.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "RECOMMEND: 329+ quant/factor articles, freely accessible",
+    "notes": "RECOMMEND: 330+ RAFI/CAPE articles, freely accessible",
     "research_links": [
       {
         "url": "https://www.researchaffiliates.com/insights/publications",
@@ -981,9 +981,9 @@
     "fit_score": 0.94,
     "last_validated_at": "2026-04-19T09:01:48.873166+08:00",
     "quality": "HIGH",
-    "quality_score": 0.88,
+    "quality_score": 0.9,
     "topics": "factor investing, smart beta, fundamental indexing, AI, valuation",
-    "last_deep_analyzed_at": "2026-04-26T01:00:00Z",
+    "last_deep_analyzed_at": "2026-05-04T01:02:43Z",
     "strategy_tags": [
       "quant",
       "equity",
@@ -1410,10 +1410,10 @@
       "multi_asset"
     ],
     "quality": "MEDIUM",
-    "quality_score": 0.58,
-    "topics": "private equity, private credit, macro, alternatives",
-    "notes": "RECOMMEND: Active PE/credit research, fills private_equity gap",
-    "last_deep_analyzed_at": "2026-04-26T01:00:00Z",
+    "quality_score": 0.68,
+    "topics": "private credit, private equity, secondaries, macro",
+    "notes": "Credit/PE/secondaries mix, weekly, May 2026 active",
+    "last_deep_analyzed_at": "2026-05-04T01:02:43Z",
     "research_url": "https://www.apollo.com/insights-news/insights",
     "official_domain": "www.apollo.com",
     "research_links": [
@@ -1682,7 +1682,7 @@
     "official_domain": "www.franklintempleton.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-05-03T09:00:07.861320+08:00",
+    "last_discovered_at": "2026-05-04T09:00:09.197328+08:00",
     "last_deep_analyzed_at": "2026-04-30T01:00:00Z",
     "quality": "UNKNOWN",
     "quality_score": 0.0,
@@ -1847,13 +1847,13 @@
     "name": "Lazard Asset Management",
     "homepage_url": "https://www.lazardassetmanagement.com/us/en_us/research-insights",
     "source": "manual",
-    "status": "discovered",
+    "status": "watchlist",
     "strategy_tags": [
-      "emerging_markets",
-      "equity",
-      "multi_asset"
+      "fixed_income",
+      "macro",
+      "emerging_markets"
     ],
-    "notes": "EM equity specialist, monthly EM Monitor, freely accessible",
+    "notes": "Fixed income viewpoints stale (last: Jan 2025)",
     "research_url": "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/viewpoints",
     "official_domain": "www.lazardassetmanagement.com",
     "research_links": [
@@ -1924,6 +1924,26 @@
       }
     ],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-05-03T09:03:50.410599+08:00"
+    "last_discovered_at": "2026-05-03T09:03:50.410599+08:00",
+    "is_publicly_accessible": true,
+    "has_article_index": true,
+    "last_screened_at": "2026-05-04T09:00:15.466591+08:00",
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 1,
+      "article_tags": 0,
+      "time_tags": 0,
+      "date_patterns": 12,
+      "h2_tags": 23,
+      "article_signals": 1
+    },
+    "screening_reason": "Research index detected",
+    "fit_score": 0.94,
+    "last_validated_at": "2026-05-04T09:00:19.804656+08:00",
+    "last_deep_analyzed_at": "2026-05-04T01:02:43Z",
+    "quality": "MEDIUM",
+    "quality_score": 0.5,
+    "topics": "fixed income, macro, bonds, interest rates"
   }
 ]
