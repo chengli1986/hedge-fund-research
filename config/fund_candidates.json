@@ -117,7 +117,7 @@
   {
     "id": "blackstone",
     "name": "Blackstone",
-    "status": "validated",
+    "status": "watchlist",
     "homepage_url": "https://www.blackstone.com",
     "research_url": "https://www.blackstone.com/insights/",
     "rss_url": "https://www.blackstone.com/feed/",
@@ -130,7 +130,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.88,
-    "notes": "Weekly PE/credit thought leadership; promotional, accessible",
+    "notes": "Trial failed: low quality (0.43)",
     "research_links": [
       {
         "url": "https://www.blackstone.com/insights/",
@@ -1568,7 +1568,7 @@
     "name": "PineBridge Investments",
     "homepage_url": "https://www.pinebridge.com",
     "source": "manual",
-    "status": "validated",
+    "status": "watchlist",
     "strategy_tags": [
       "fixed_income",
       "emerging_markets",
@@ -1578,7 +1578,7 @@
     "quality": "HIGH",
     "quality_score": 0.8,
     "topics": "fixed income, emerging markets, macro, multi-asset, equities",
-    "notes": "RECOMMEND: Multi-asset/EM research, 100+ metrics, fills EM gap",
+    "notes": "Trial failed: low quality (0.24)",
     "last_deep_analyzed_at": "2026-05-02T01:00:00Z",
     "is_publicly_accessible": true,
     "has_article_index": true,
@@ -1632,7 +1632,7 @@
       "macro",
       "multi_asset"
     ],
-    "notes": "Free weekly systematic research; last confirmed Oct 2025",
+    "notes": "RECOMMEND: trial passed (4/3 days with articles, quality=0.87)",
     "official_domain": "verdadcap.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
