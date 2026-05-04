@@ -1028,6 +1028,57 @@ def fetch_brookfield(source: dict) -> list[dict]:
     return articles[:source.get("max_articles", 10)]
 
 
+def fetch_verdad(source: dict) -> list[dict]:
+    """Fetch articles from Verdad Capital weekly research (SSR — Squarespace archive).
+
+    Index renders <li class="archive-item"> with sibling
+    <span class="archive-item-date-before"> holding 'MMM D, YYYY'.
+    """
+    resp = requests.get(source["url"], headers=HEADERS, timeout=30)
+    resp.raise_for_status()
+    soup = BeautifulSoup(resp.text, "html.parser")
+    expected_host = source.get("expected_hostname", "verdadcap.com")
+    base_url = "https://verdadcap.com"
+
+    articles: list[dict] = []
+    seen_urls: set[str] = set()
+
+    for li in soup.select("li.archive-item"):
+        link = li.select_one("a.archive-item-link[href]")
+        if not link:
+            continue
+        href = link["href"]
+        if not href.startswith("/archive/"):
+            continue
+
+        url = base_url + href
+        if url in seen_urls:
+            continue
+        seen_urls.add(url)
+        if not _validate_hostname(url, expected_host):
+            continue
+
+        title = html.unescape(link.get_text(strip=True))
+        if not title:
+            continue
+
+        date_span = li.select_one("span.archive-item-date-before")
+        if not date_span:
+            continue
+        date_raw = date_span.get_text(strip=True)
+        if not date_raw:
+            continue
+
+        articles.append({
+            "title": title,
+            "url": url,
+            "date": parse_date(date_raw),
+            "date_raw": date_raw,
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
 def fetch_jpmam(source: dict) -> list[dict]:
     """Fetch articles from J.P. Morgan Asset Management via AEM JSON API.
 
@@ -1657,6 +1708,7 @@ FETCHERS = {
     "ark-invest": fetch_ark_invest,
     "blackstone": fetch_blackstone,
     "brookfield": fetch_brookfield,
+    "verdad-capital": fetch_verdad,
     "gsam": fetch_gsam,
     "amundi": fetch_amundi,
     "wellington": fetch_wellington,

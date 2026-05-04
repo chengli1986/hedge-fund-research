@@ -794,6 +794,30 @@ def _fetch_content_brookfield(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+def _fetch_content_verdad(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Verdad Capital article content via requests (SSR — Squarespace)."""
+    url = article["url"]
+    log.info("  Verdad: fetching article page %s", url)
+
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Verdad: fetch failed: %s", e)
+        return None
+
+    text = _normalize_html(resp.text, "article p")
+
+    if not _check_min_content_length(text):
+        log.warning("  Verdad: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Verdad: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 def _fetch_content_jpmam(article: dict) -> Optional[tuple[Path, str]]:
     """Fetch J.P. Morgan AM article content via requests (SSR — AEM editorial-rich-text)."""
     url = article["url"]
@@ -834,6 +858,7 @@ CONTENT_FETCHERS = {
     "pgim": _fetch_content_pgim,
     "brookfield": _fetch_content_brookfield,
     "jpmam": _fetch_content_jpmam,
+    "verdad-capital": _fetch_content_verdad,
 }
 
 

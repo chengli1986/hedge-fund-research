@@ -39,6 +39,7 @@ BADGE_COLORS: dict[str, str] = {
     "pgim": "#231f20",                  # PGIM near-black
     "brookfield": "#1e7f3e",            # Brookfield green
     "jpmam": "#7a4cb1",                 # JPMorgan purple
+    "verdad-capital": "#7c2d12",        # Verdad terracotta (rust)
 }
 
 INITIAL_VISIBLE = 20
@@ -149,6 +150,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "JPMorgan Chase 资产管理子公司，全球前 5 大资管。季度发布的《Guide to the Markets》是机构投资者最广泛参考的市场研究刊物之一。「On the Minds of Investors」系列覆盖宏观、股权、固收、另类全赛道。Target-date 基金规模全球前 5。",
         "notable_en": "World's top-5 asset manager; Guide to the Markets quarterly publication is industry benchmark; David Kelly's market strategy team globally cited.",
         "notable_zh": "全球前 5 大资产管理公司；《Guide to the Markets》季度报告是机构投资行业基准；David Kelly 市场策略团队全球被广泛引用。",
+    },
+    "verdad-capital": {
+        "founded": "2014", "aum": "~$500M", "hq": "Boston, MA",
+        "type_en": "Quantitative Boutique", "type_zh": "量化精品店",
+        "desc_zh": "Boston 量化价值投资机构，2014 年由 Dan Rasmussen 创立（前 Bain Capital）。Weekly Research 系列以学术风格的实证研究闻名，主题涵盖私募股权真实回报、杠杆微盘股因子、日本资本效率等小众但深入的领域。研究内容自由开放，不设付费墙。",
+        "notable_en": "Founded by Dan Rasmussen (ex-Bain Capital); empirical research dismantling private equity return claims; pioneered leveraged microcap factor research.",
+        "notable_zh": "Dan Rasmussen（前 Bain Capital）创立；以拆解私募股权回报神话的实证研究著称；杠杆微盘因子研究先驱。",
     },
 }
 
