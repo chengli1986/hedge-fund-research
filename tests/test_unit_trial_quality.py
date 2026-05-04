@@ -888,3 +888,120 @@ def test_call_haiku_returns_none_after_all_retries_fail(monkeypatch):
     result = tm._call_haiku("dummy prompt", max_retries=1)
     assert result is None
     assert call_count["n"] == 2  # 1 initial + 1 retry
+
+
+# ── _extract_article_links: bio/team filtering + research-path preference ───
+# Lesson from 2026-05-04: PineBridge trial scored 0.24 because /en/bio/* links
+# polluted the sample pool. _extract_article_links must skip non-research path
+# segments and prefer research-path links when available.
+
+class TestExtractArticleLinksFiltering:
+
+    @staticmethod
+    def _soup(html_str: str):
+        from bs4 import BeautifulSoup
+        return BeautifulSoup(html_str, "html.parser")
+
+    def test_skips_bio_team_people_paths(self):
+        """PineBridge-style: /en/bio/* and /en/team/* links must be filtered."""
+        html_str = """
+        <a href="/en/insights/capital-market-line">Capital Market Line</a>
+        <a href="/en/bio/kelly-michael">Michael Kelly</a>
+        <a href="/en/bio/redha-hani">Hani Redha</a>
+        <a href="/en/team/portfolio-managers">Team</a>
+        <a href="/en/insights/macro-outlook-q2-2026">Macro Outlook Q2</a>
+        """
+        links = tm._extract_article_links(
+            "https://www.pinebridge.com/en/insights/", self._soup(html_str)
+        )
+        assert all("/bio/" not in u for u in links)
+        assert all("/team/" not in u for u in links)
+        assert any("capital-market-line" in u for u in links)
+        assert any("macro-outlook-q2-2026" in u for u in links)
+        assert len(links) == 2
+
+    def test_prefers_research_segments_when_available(self):
+        """When ≥SAMPLE_SIZE research-path links exist, return only those."""
+        html_str = """
+        <a href="/insights/article-1">Article 1</a>
+        <a href="/insights/article-2">Article 2</a>
+        <a href="/insights/article-3">Article 3</a>
+        <a href="/random-page-1">Random 1</a>
+        <a href="/random-page-2">Random 2</a>
+        """
+        links = tm._extract_article_links(
+            "https://example.com/insights/", self._soup(html_str)
+        )
+        assert len(links) == 3
+        assert all("/insights/" in u for u in links)
+        assert all("random-page" not in u for u in links)
+
+    def test_falls_back_to_neutral_links_when_no_research_paths(self):
+        """If no research-segment links found, neutral links are still returned."""
+        html_str = """
+        <a href="/articles-overview/q1-review">Q1 Review</a>
+        <a href="/quarterly-letter/2026-q1">2026 Q1 Letter</a>
+        """
+        # Note: /articles-overview/ doesn't match /article/ or /articles/ exactly;
+        # /quarterly-letter/ doesn't match /letter/ exactly. Both treated neutral.
+        # With <SAMPLE_SIZE research links, neutral are kept.
+        links = tm._extract_article_links(
+            "https://example.com/insights/", self._soup(html_str)
+        )
+        assert len(links) >= 1, "neutral links should be kept as fallback"
+
+    def test_blackstone_marketing_paths_filtered(self):
+        """Blackstone-style: /tommy-fleetwood/ (golf sponsorship) is hard to
+        catch (no segment match), but /careers/, /events/, /contact/ are."""
+        html_str = """
+        <a href="/insights/article/private-credit-myth">Private Credit Myth</a>
+        <a href="/insights/article/ipo-outlook">IPO Outlook</a>
+        <a href="/careers/analyst-program">Careers</a>
+        <a href="/events/private-credit-webinar">Webinar</a>
+        <a href="/contact/investor-relations">Contact</a>
+        """
+        links = tm._extract_article_links(
+            "https://www.blackstone.com/insights/", self._soup(html_str)
+        )
+        assert all("/careers/" not in u for u in links)
+        assert all("/events/" not in u for u in links)
+        assert all("/contact/" not in u for u in links)
+        assert len(links) == 2
+
+    def test_existing_filters_still_active(self):
+        """Original filters (/tag/, /category/, /author/, /login, /search) still skip."""
+        html_str = """
+        <a href="/insights/real-article">Real</a>
+        <a href="/tag/macro">Tag</a>
+        <a href="/category/equity">Category</a>
+        <a href="/author/john-smith">Author</a>
+        <a href="/login">Login</a>
+        <a href="/search?q=foo">Search</a>
+        """
+        links = tm._extract_article_links(
+            "https://example.com/insights/", self._soup(html_str)
+        )
+        assert len(links) == 1
+        assert "real-article" in links[0]
+
+    def test_dedupes_canonical_paths(self):
+        """Same canonical URL with different anchors/queries collapses to one."""
+        html_str = """
+        <a href="/insights/article-x?utm=email">Read</a>
+        <a href="/insights/article-x#section-2">Section</a>
+        <a href="/insights/article-x">Direct</a>
+        """
+        links = tm._extract_article_links(
+            "https://example.com/", self._soup(html_str)
+        )
+        assert len(links) == 1
+
+    def test_caps_at_sample_size_times_3(self):
+        """Returns at most SAMPLE_SIZE * 3 links (headroom for cross-day dedup)."""
+        items = "".join(
+            f'<a href="/insights/article-{i}">A{i}</a>' for i in range(20)
+        )
+        links = tm._extract_article_links(
+            "https://example.com/insights/", self._soup(items)
+        )
+        assert len(links) == tm.SAMPLE_SIZE * 3

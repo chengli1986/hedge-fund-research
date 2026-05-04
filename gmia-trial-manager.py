@@ -56,6 +56,28 @@ SAMPLE_DAYS = {1, 2, 3}     # trial days on which to run quality sampling
 SAMPLE_SIZE = 3             # articles to sample per quality check
 HAIKU_MODEL = "claude-haiku-4-5-20251001"
 
+# Path segments that indicate a NON-research page (bios, marketing, careers).
+# Sampling these pollutes quality scores even when the index page looks legit.
+# Lesson learned 2026-05-04: PineBridge trial scored 0.24 because /en/bio/* links
+# dominated; deep_analyze rated landing page 0.80 (口径不一致).
+NON_RESEARCH_SEGMENTS = (
+    "/tag/", "/category/", "/page/", "/author/", "/login", "/search",
+    "/bio/", "/biography/", "/team/", "/people/", "/our-people/",
+    "/leadership/", "/staff/", "/about/", "/about-us/", "/contact/",
+    "/event/", "/events/", "/webinar/", "/webinars/",
+    "/career/", "/careers/", "/job/", "/jobs/",
+)
+
+# Path segments that strongly indicate a research article. When at least
+# SAMPLE_SIZE such links are found, we prefer them over neutral links.
+RESEARCH_SEGMENTS = (
+    "/insights/", "/insight/", "/research/", "/perspectives/", "/perspective/",
+    "/article/", "/articles/", "/analysis/", "/commentary/", "/commentaries/",
+    "/blog/", "/blog-post/", "/post/", "/posts/",
+    "/publication/", "/publications/", "/paper/", "/papers/",
+    "/note/", "/notes/", "/letter/", "/letters/", "/market-update/",
+)
+
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
                   "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
@@ -228,11 +250,18 @@ def count_articles(url: str, timeout: int = 20) -> dict:
 # ── quality sampling (Haiku) ─────────────────────────────────────────────────
 
 def _extract_article_links(base_url: str, soup: BeautifulSoup) -> list[str]:
-    """Extract up to SAMPLE_SIZE article-like links from a research index page."""
+    """Extract up to SAMPLE_SIZE * 3 article-like links from a research index.
+
+    Two-pass: collects all eligible links, then prefers research-pattern paths
+    (/insights/, /research/, etc.) over neutral ones. NON_RESEARCH_SEGMENTS
+    (/bio/, /team/, /careers/, etc.) are filtered out entirely to prevent
+    bio-page pollution that caused the PineBridge trial 0.24 score.
+    """
     from urllib.parse import urljoin
 
     seen: set[str] = set()
-    links: list[str] = []
+    research_links: list[str] = []
+    neutral_links: list[str] = []
     parsed_base = urlparse(base_url)
 
     for a in soup.find_all("a", href=True):
@@ -240,16 +269,15 @@ def _extract_article_links(base_url: str, soup: BeautifulSoup) -> list[str]:
         full = urljoin(base_url, href)
         parsed = urlparse(full)
 
-        # Same domain only
         if parsed.netloc != parsed_base.netloc:
             continue
-        # Skip anchors, category/tag pages, non-article patterns
         if parsed.path in ("", "/") or parsed.path == parsed_base.path:
             continue
-        if any(seg in parsed.path.lower() for seg in
-               ("/tag/", "/category/", "/page/", "/author/", "/login", "/search")):
+
+        path_lower = parsed.path.lower()
+        if any(seg in path_lower for seg in NON_RESEARCH_SEGMENTS):
             continue
-        # Prefer paths with date-like segments or /insights/ /research/ depth
+
         path_parts = [p for p in parsed.path.split("/") if p]
         if len(path_parts) < 2:
             continue
@@ -258,12 +286,16 @@ def _extract_article_links(base_url: str, soup: BeautifulSoup) -> list[str]:
         if canon in seen:
             continue
         seen.add(canon)
-        links.append(canon)
 
-        if len(links) >= SAMPLE_SIZE * 3:  # collect extras for fallback
-            break
+        if any(seg in path_lower for seg in RESEARCH_SEGMENTS):
+            research_links.append(canon)
+        else:
+            neutral_links.append(canon)
 
-    return links
+    cap = SAMPLE_SIZE * 3
+    if len(research_links) >= SAMPLE_SIZE:
+        return research_links[:cap]
+    return (research_links + neutral_links)[:cap]
 
 
 def _extract_article_text(url: str, timeout: int = 20) -> str | None:

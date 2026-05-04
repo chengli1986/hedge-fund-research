@@ -26,7 +26,15 @@ Read the output. Note which funds changed status.
 For each candidate that NEEDS analysis:
 
 1. **Fetch the research URL** using WebFetch
-2. **Analyze the page content** — answer these questions:
+2. **Sanity-check by sampling 1-2 article links** — pick 1-2 dated article links
+   from the landing page (skip `/bio/`, `/team/`, `/careers/`, `/events/`,
+   `/contact/`, `/about/` — these are not research). WebFetch them and confirm
+   they contain real analysis (not bios, gated landing pages, or marketing).
+   This prevents the landing-page-looks-great-but-articles-are-bios trap that
+   caused PineBridge to score 0.80 in deep_analyze but 0.24 in trial sampling
+   (2026-05-04 lesson). If sampled articles are mostly bios/gated/marketing,
+   downgrade quality_score to ≤0.55 (MEDIUM) regardless of landing-page impression.
+3. **Analyze the page content** — answer these questions:
    - Is this a genuine research article index (multiple articles with dates)?
    - What topics do they cover? (macro, credit, quant, equity, fixed income, alternatives, ESG?)
    - How frequently do they publish? (weekly / monthly / quarterly)
@@ -36,7 +44,7 @@ For each candidate that NEEDS analysis:
    - Quality score: a numeric value 0.0–1.0 reflecting content quality with finer granularity than the three-tier label.
      Use this rubric: original proprietary research with data/models → 0.85–1.0; substantive analysis but derivative → 0.65–0.84; general market commentary → 0.45–0.64; thin/marketing content → 0.20–0.44; clearly unsuitable → 0.0–0.19
 
-3. **Assess GMIA fit** — our current 6 funds cover:
+4. **Assess GMIA fit** — our current 6 funds cover:
    - Man Group: macro, quant, credit, volatility
    - Bridgewater: macro, global economy
    - AQR: factor investing, quant, alternatives
@@ -46,7 +54,7 @@ For each candidate that NEEDS analysis:
 
    Does this candidate fill a gap? Or overlap heavily with existing coverage?
 
-4. **Update fund_candidates.json** with your analysis:
+5. **Update fund_candidates.json** with your analysis:
    - Set `last_deep_analyzed_at` to current UTC ISO timestamp
    - Set `quality` field to "HIGH", "MEDIUM", or "LOW"
    - Set `quality_score` field to the numeric value (0.0–1.0) from the rubric above
