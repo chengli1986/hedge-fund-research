@@ -932,7 +932,7 @@ a:hover {{ text-decoration: underline; }}
       <div class="stats">
         <span>{total} articles</span>
         <span>{new_this_week} new this week</span>
-        <span>{fund_count} funds tracked</span>
+        <span>{production_source_count} funds tracked</span>
         <span>Updated {now}</span>
       </div>
     </div>
