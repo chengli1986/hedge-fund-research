@@ -1803,6 +1803,13 @@
           "date_count": 1,
           "error": null,
           "fetcher_used": false
+        },
+        "2026-05-06": {
+          "accessible": true,
+          "article_count": 8,
+          "date_count": 1,
+          "error": null,
+          "fetcher_used": false
         }
       },
       "auto_decided": false,
@@ -1873,6 +1880,31 @@
           "error": null,
           "day": 2,
           "date": "2026-05-05"
+        },
+        {
+          "sampled": 2,
+          "articles": [
+            {
+              "url": "https://www.im.natixis.com/en-us/insights/macro-views/2025/tactical-take-stock-rally-ai-fed-rate-cuts-drive-optimism",
+              "relevance": 0.9,
+              "depth": 0.6,
+              "extractable": 0.5,
+              "overall": 0.7,
+              "notes": "Macro/portfolio strategy discussion on stock rally, AI boom, Fed rate cuts, and concerns about circular financing in AI investments; truncated mid-sentence"
+            },
+            {
+              "url": "https://www.im.natixis.com/en-us/insights/macro-views/2025/stock-market-stronger-labor-market-weaker-whats-next",
+              "relevance": 0.9,
+              "depth": 0.6,
+              "extractable": 0.4,
+              "overall": 0.68,
+              "notes": "Portfolio strategy commentary on risk asset strength, labor market dynamics, and positioning decisions; significantly truncated at end"
+            }
+          ],
+          "avg_score": 0.69,
+          "error": null,
+          "day": 3,
+          "date": "2026-05-06"
         }
       ]
     },
@@ -1895,6 +1927,13 @@
           "fetcher_used": false
         },
         "2026-05-05": {
+          "accessible": true,
+          "article_count": 9,
+          "date_count": 9,
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-05-06": {
           "accessible": true,
           "article_count": 9,
           "date_count": 9,
@@ -1970,6 +2009,39 @@
           "error": null,
           "day": 2,
           "date": "2026-05-05"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.apollo.com/insights-news/insights/2026/05/in-conversation-with-jim-zelter---eric-needleman",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.95,
+              "overall": 0.83,
+              "notes": "Executive conversation on private credit market structure, size ($40T), and Apollo's secondary trading infrastructure strategy"
+            },
+            {
+              "url": "https://www.apollo.com/insights-news/insights/the-view-from-apollo/2026/04/investing-across-the-credit-cycle",
+              "relevance": 0.85,
+              "depth": 0.5,
+              "extractable": 0.8,
+              "overall": 0.7,
+              "notes": "Brief overview of podcast episode on credit cycle investing and Apollo's platform approach; lacks substantive detail"
+            },
+            {
+              "url": "https://www.apollo.com/insights-news/insights/2026/04/private-market-secondaries-a-core-allocation-for-modern-private-market-portfolios",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.85,
+              "overall": 0.87,
+              "notes": "Detailed analysis of private market secondaries as portfolio allocation, covering market mechanics, LP/GP transaction types, and $200B+ market opportunity"
+            }
+          ],
+          "avg_score": 0.8,
+          "error": null,
+          "day": 3,
+          "date": "2026-05-06"
         }
       ]
     },
@@ -1992,6 +2064,13 @@
           "fetcher_used": true
         },
         "2026-05-05": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-05-06": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -2067,6 +2146,39 @@
           "error": null,
           "day": 2,
           "date": "2026-05-05"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.msci.com/research-and-insights/blog-post/iran-war-drags-on-emerging-markets-structural-tailwinds",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.6,
+              "overall": 0.76,
+              "notes": "Analysis of emerging markets performance amid Iran conflict, examining geopolitical shocks, sector concentration, and selectivity framework for EM allocation."
+            },
+            {
+              "url": "https://www.msci.com/research-and-insights/paper/physical-risk-guide-for-asset-owners-and-asset-managers",
+              "relevance": 0.85,
+              "depth": 0.8,
+              "extractable": 0.4,
+              "overall": 0.74,
+              "notes": "Research guide on integrating physical climate risk into portfolio decisions across investment, risk, and sustainability teams; mostly preview/landing page content."
+            },
+            {
+              "url": "https://www.msci.com/research-and-insights/blog-post/managing-benchmark-concentration-a-framework-for-asset-allocators",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.7,
+              "overall": 0.84,
+              "notes": "Framework for managing equity benchmark concentration risk, analyzing top-10 stock dominance and tradeoffs between absolute and active risk for asset allocators."
+            }
+          ],
+          "avg_score": 0.78,
+          "error": null,
+          "day": 3,
+          "date": "2026-05-06"
         }
       ]
     }
