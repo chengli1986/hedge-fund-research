@@ -15,7 +15,7 @@
     "is_publicly_accessible": true,
     "has_article_index": false,
     "fit_score": 0.82,
-    "notes": "RECOMMEND: trial passed (4/3 days with articles, quality=0.78)",
+    "notes": "RECOMMEND: Deep fixed income research, insights page JS-gated/EC2-403",
     "research_links": [
       {
         "url": "https://www.pimco.com/us/en/insights#sort=%40publishz32xdate%20descending&f:category=[70341f6de3a142ee89144df0ec44e3b8,8d35ad276c6c4c5caf4d9fed37c5f51d,1a3217a178b04eb18c1e4532665b184c,56ebfd2935044d1eb39b7e661d2d03fb,22ea0773e8f147e38e15655207e73e21,bdd17ed0ae9d4ddd96e9e60e51c47782,78449f5b2f5e4b6ebd2d6e90b7a9f889,9cfdb8bfe49a451a851cf9957c57cd32,eef114e6a525445a81d179b8adb018c7]",
@@ -59,15 +59,16 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-04-28T01:05:00Z",
+    "last_deep_analyzed_at": "2026-05-06T01:01:57Z",
     "quality": "HIGH",
-    "topics": "fixed income, macro, credit",
+    "topics": "fixed income, macro, credit, global economy",
     "strategy_tags": [
       "fixed_income",
       "macro",
       "multi_asset"
     ],
-    "source": "manual"
+    "source": "manual",
+    "quality_score": 0.78
   },
   {
     "id": "de-shaw",
@@ -1109,10 +1110,10 @@
     "rss_url": null,
     "official_domain": "www.schroders.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "JS-rendered only; needs Playwright; ESG/EM/multi-asset",
+    "notes": "ESG/EM/multi-asset; JS-rendered, needs Playwright to access",
     "research_links": [],
     "last_discovered_at": "2026-04-19T09:00:14.174535+08:00",
-    "last_deep_analyzed_at": "2026-04-29T01:01:48Z",
+    "last_deep_analyzed_at": "2026-05-06T01:03:12Z",
     "quality": "MEDIUM",
     "topics": "ESG, emerging markets, multi-asset, fixed income",
     "strategy_tags": [
@@ -1123,7 +1124,8 @@
     ],
     "source": "manual",
     "inaccessible_reason": null,
-    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager"
+    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager",
+    "quality_score": 0.6
   },
   {
     "id": "pgim",
@@ -1362,7 +1364,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.88,
-    "notes": "RECOMMEND: CIO weekly perspectives, fills multi-asset gap",
+    "notes": "CIO weekly + AAC quarterly; Vercel security blocks EC2 (429)",
     "research_links": [
       {
         "url": "https://www.nb.com/en/global/insights",
@@ -1386,7 +1388,7 @@
       "article_signals": 0
     },
     "screening_reason": "429 rate-limited; content confirmed via search (CIO Weekly, quarterly AAC outlook)",
-    "last_deep_analyzed_at": "2026-04-28T01:05:00Z",
+    "last_deep_analyzed_at": "2026-05-06T01:01:57Z",
     "quality": "HIGH",
     "topics": "macro, multi-asset, fixed income, real assets, private equity",
     "strategy_tags": [
@@ -1396,8 +1398,9 @@
       "real_assets"
     ],
     "source": "manual",
-    "inaccessible_reason": "Vercel Security Checkpoint (HTTP 429 JS challenge, not true rate-limit): EC2 IP + headless Chromium fingerprint rejected. Retry-After absent. Unblocking would need playwright-stealth/patchright/curl_cffi (new dependency).",
-    "last_probed": "2026-04-24"
+    "inaccessible_reason": "Vercel Security Checkpoint blocks EC2 IP. Would need playwright-stealth/curl_cffi.",
+    "last_probed": "2026-05-06",
+    "quality_score": 0.82
   },
   {
     "id": "apollo-global-management",
@@ -1530,11 +1533,11 @@
     ],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-04-20T09:01:24.288350+08:00",
-    "last_deep_analyzed_at": "2026-04-28T01:05:00Z",
+    "last_deep_analyzed_at": "2026-05-06T01:01:57Z",
     "quality": "HIGH",
-    "quality_score": 0.82,
+    "quality_score": 0.73,
     "topics": "real assets, infrastructure, private credit, private equity, energy",
-    "notes": "RECOMMEND: trial passed (4/3 days with articles, quality=0.75)",
+    "notes": "RECOMMEND: Monthly white papers + case studies; sampled article is MEDIUM",
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.88,
@@ -1684,7 +1687,7 @@
     "official_domain": "www.franklintempleton.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-05-05T09:00:07.553278+08:00",
+    "last_discovered_at": "2026-05-06T09:00:15.668018+08:00",
     "last_deep_analyzed_at": "2026-04-30T01:00:00Z",
     "quality": "UNKNOWN",
     "quality_score": 0.0,
