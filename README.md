@@ -2,7 +2,7 @@
 
 Tracks and aggregates research insights, market commentary, and papers from top hedge funds. Summarizes via LLM and publishes a bilingual (CN/EN) dashboard.
 
-## Sources (15)
+## Sources (16)
 
 | Fund | Method | Frequency | Notable |
 |------|--------|-----------|---------|
@@ -21,6 +21,7 @@ Tracks and aggregates research insights, market commentary, and papers from top 
 | **PGIM** | SSR (AEM) | Weekly | Prudential's IM arm; fixed income, private credit, real estate, alternatives |
 | **Brookfield Asset Management** | SSR (Drupal) | Weekly | Real assets, infrastructure, renewable power, private equity |
 | **J.P. Morgan Asset Management** | AEM JSON API | Weekly | Multi-asset, fixed income, market insights, Long-Term Capital Market Assumptions |
+| **Verdad Capital** | SSR (requests) | Monthly | Quant value/factor, emerging markets, private equity replication; Boston, ~$500M |
 
 ## Pipeline
 
@@ -107,7 +108,7 @@ Scorer weight optimization program using automated experiment loop:
 
 ## Tests
 
-289 passing, 15 deselected — unit, functional, and integration tests (live/nightly tests excluded by default via pytest.ini). Contract tests enforce `sources.json` stays in sync with the `FETCHERS` / `CONTENT_FETCHERS` dispatcher dicts and `BADGE_COLORS` palette, so adding a new production source without wiring the full pipeline fails fast at pytest time.
+301 passing, 15 deselected — unit, functional, and integration tests (live/nightly tests excluded by default via pytest.ini). Contract tests enforce `sources.json` stays in sync with the `FETCHERS` / `CONTENT_FETCHERS` dispatcher dicts and `BADGE_COLORS` palette, so adding a new production source without wiring the full pipeline fails fast at pytest time.
 
 ```bash
 python3 -m pytest tests/ -q
