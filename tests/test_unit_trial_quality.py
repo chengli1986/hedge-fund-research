@@ -441,6 +441,15 @@ def test_trial_passes_with_both_quantity_and_quality(trial_env, monkeypatch):
     assert state["history"][0]["outcome"] == "pass"
     assert state["history"][0]["avg_quality_score"] > 0
 
+    candidates = json.loads(tm.CANDIDATES_FILE.read_text())
+    test_candidate = next(c for c in candidates if c["id"] == "test-fund")
+    assert test_candidate["status"] == "promoted", (
+        "Trial PASS must update candidate.status to 'promoted'. "
+        "Without this, downstream promotion-gap audit cannot distinguish "
+        "trial-passed candidates from validated-but-not-yet-trialed ones."
+    )
+    assert "RECOMMEND" in test_candidate.get("notes", "")
+
 
 # ── Queue priority: quality_score vs label fallback ─────────────────────────
 

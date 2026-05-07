@@ -862,6 +862,7 @@ def cmd_run() -> None:
                             c["status"] = "watchlist"
                             c["notes"] = f"Trial failed: low quality ({avg_quality:.2f})"
                     else:
+                        c["status"] = "promoted"
                         c["notes"] = (f"RECOMMEND: trial passed "
                                       f"({days_with_articles}/{TRIAL_DAYS} days with articles, quality={avg_quality:.2f})")
                     break
