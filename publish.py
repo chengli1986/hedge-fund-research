@@ -42,6 +42,7 @@ BADGE_COLORS: dict[str, str] = {
     "verdad-capital": "#7c2d12",        # Verdad terracotta (rust)
     "msci-research": "#1f49e0",         # MSCI cobalt blue
     "natixis-im": "#80276c",            # Natixis purple
+    "apollo-global-management": "#5e3a82",  # Apollo plum (avoids existing navy/gold/purple clusters)
 }
 
 INITIAL_VISIBLE = 20
@@ -173,6 +174,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "法国 Groupe BPCE 旗下多附属机构资管平台，2007 年合并成立。汇集 15+ 家投资附属公司（Loomis Sayles、Harris Associates、Mirova 等）覆盖固收、价值股、ESG/气候、量化与对冲策略。Tactical Take 月度宏观播客由首席投资策略师 Jack Janasiewicz 与 Brian Hess 主持，覆盖 Fed 政策、通胀就业与多资产配置。",
         "notable_en": "Multi-affiliate model preserves boutique autonomy across Loomis Sayles, Harris Associates, Mirova, etc.; Tactical Take podcast is one of the most accessible macro/portfolio strategy series among large managers.",
         "notable_zh": "多附属机构模式在 Loomis Sayles、Harris Associates、Mirova 等品牌下保留精品店自主性；Tactical Take 播客是大型资管中最易获取的宏观与组合策略系列之一。",
+    },
+    "apollo-global-management": {
+        "founded": "1990", "aum": "~$700B", "hq": "New York, NY",
+        "type_en": "Listed Alt Manager (NYSE)", "type_zh": "上市另类资管 (纽交所)",
+        "desc_zh": "全球最大另类信贷管理人之一，1990 年由 Leon Black、Marc Rowan、Joshua Harris 创立。私募信贷领域开创直接贷款、ABF（资产支持金融）、保险负债驱动投资模式。2022 年与 Athene 合并后成为美国最大年金/保险关联资管。私募股权与房地产业务规模行业前 5。Insights 频道含 Apollo Academy（教育内容）+ View from Apollo（高管观点）+ Investment Insight。",
+        "notable_en": "Pioneered private credit ABF (asset-backed finance); Athene merger created largest US insurance-linked asset manager; Marc Rowan and Torsten Slok widely cited on macro/private credit.",
+        "notable_zh": "私募信贷 ABF（资产支持金融）开创者；与 Athene 合并后成为美国最大保险关联资管；Marc Rowan 与首席经济学家 Torsten Slok 是宏观与私募信贷领域的关键意见领袖。",
     },
 }
 

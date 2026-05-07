@@ -1698,6 +1698,65 @@ def fetch_capital_group(source: dict) -> list[dict]:
 # Dispatcher
 # ---------------------------------------------------------------------------
 
+def fetch_apollo_global_management(source: dict) -> list[dict]:
+    """Fetch articles from Apollo Global Management Insights (SSR — AEM card list).
+
+    Card: div.cmp-insight-cardlist-with-images__details containing
+            a.text-link-blck-bold (title + url),
+            a.cmp-insight-cardlist-with-images__tag (category),
+            span.cmp-insight-cardlist-with-images__author-date (date),
+            div.cmp-insight-cardlist-with-images__description (summary).
+
+    Plain requests works (no Akamai/Cloudflare gate observed).
+    """
+    base_url = "https://www.apollo.com"
+    url = source["url"]
+    expected_host = source.get("expected_hostname", "apollo.com")
+
+    resp = requests.get(url, headers=HEADERS, timeout=30)
+    resp.raise_for_status()
+    soup = BeautifulSoup(resp.text, "html.parser")
+
+    articles: list[dict] = []
+    seen_urls: set[str] = set()
+
+    for card in soup.select("div.cmp-insight-cardlist-with-images__details"):
+        title_link = card.select_one("a.text-link-blck-bold")
+        if not title_link:
+            continue
+        href = title_link.get("href", "")
+        if not href:
+            continue
+        article_url = urljoin(base_url, href)
+        if not _validate_hostname(article_url, expected_host) or article_url in seen_urls:
+            continue
+        seen_urls.add(article_url)
+
+        title = title_link.get_text(strip=True)
+        if not title or len(title) < 5:
+            continue
+
+        tag_el = card.select_one("a.cmp-insight-cardlist-with-images__tag")
+        category = tag_el.get_text(strip=True) if tag_el else ""
+
+        date_el = card.select_one(".cmp-insight-cardlist-with-images__author-date")
+        date_raw = date_el.get_text(strip=True) if date_el else ""
+
+        desc_el = card.select_one(".cmp-insight-cardlist-with-images__description")
+        summary = desc_el.get_text(strip=True) if desc_el else ""
+
+        articles.append({
+            "title": title,
+            "url": article_url,
+            "category": category,
+            "summary": summary,
+            "date": parse_date(date_raw) if date_raw else None,
+            "date_raw": date_raw,
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
 def fetch_natixis_im(source: dict) -> list[dict]:
     """Fetch articles from Natixis Investment Managers Tactical Take (SSR).
 
@@ -1781,6 +1840,7 @@ FETCHERS = {
     "morganstanley-im": fetch_morganstanley_im,
     "capital-group": fetch_capital_group,
     "natixis-im": fetch_natixis_im,
+    "apollo-global-management": fetch_apollo_global_management,
 }
 
 
