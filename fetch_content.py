@@ -203,9 +203,16 @@ def _extract_bridgewater_text(html: str) -> Optional[str]:
     return None
 
 
-def _check_min_content_length(text: str) -> bool:
+def _check_min_content_length(text: str, min_length: int = MIN_CONTENT_LENGTH) -> bool:
     """Check that extracted text meets minimum length threshold."""
-    return len(text) > MIN_CONTENT_LENGTH
+    return len(text) > min_length
+
+
+# Per-source minimum content thresholds. Overrides the global MIN_CONTENT_LENGTH
+# for funds whose typical article body is meaningfully longer than 100 chars
+# and where short pieces are non-research (video/podcast preview blurbs).
+APOLLO_MIN_CONTENT = 1500  # Filter "In this episode..." video/podcast preview cards
+
 
 
 def _atomic_write(path: Path, data: bytes) -> None:
@@ -856,8 +863,9 @@ def _fetch_content_apollo(article: dict) -> Optional[tuple[Path, str]]:
 
     text = _normalize_html(resp.text, ".cmp-text p")
 
-    if not _check_min_content_length(text):
-        log.warning("  Apollo: extracted text too short (%d chars)", len(text))
+    if not _check_min_content_length(text, APOLLO_MIN_CONTENT):
+        log.warning("  Apollo: extracted text too short (%d chars, min %d filters video/podcast previews)",
+                    len(text), APOLLO_MIN_CONTENT)
         return None
 
     content_path = CONTENT_DIR / f"{article['id']}.txt"
