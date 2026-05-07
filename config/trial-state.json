@@ -1776,9 +1776,7 @@
       "total_articles": 72,
       "days_with_articles": 4,
       "avg_quality_score": 0.237
-    }
-  ],
-  "active_trials": [
+    },
     {
       "id": "natixis-im",
       "name": "Natixis Investment Managers",
@@ -1788,7 +1786,7 @@
       "quality": "MEDIUM",
       "topics": "macro views, equity, fixed income, portfolio construction",
       "start_date": "2026-05-04",
-      "end_date": null,
+      "end_date": "2026-05-07",
       "daily_checks": {
         "2026-05-04": {
           "accessible": true,
@@ -1810,10 +1808,17 @@
           "date_count": 1,
           "error": null,
           "fetcher_used": false
+        },
+        "2026-05-07": {
+          "accessible": true,
+          "article_count": 8,
+          "date_count": 1,
+          "error": null,
+          "fetcher_used": false
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -1906,7 +1911,10 @@
           "day": 3,
           "date": "2026-05-06"
         }
-      ]
+      ],
+      "total_articles": 32,
+      "days_with_articles": 4,
+      "avg_quality_score": 0.585
     },
     {
       "id": "apollo-global-management",
@@ -1917,7 +1925,7 @@
       "quality": "MEDIUM",
       "topics": "private credit, private equity, secondaries, macro",
       "start_date": "2026-05-04",
-      "end_date": null,
+      "end_date": "2026-05-07",
       "daily_checks": {
         "2026-05-04": {
           "accessible": true,
@@ -1939,10 +1947,17 @@
           "date_count": 9,
           "error": null,
           "fetcher_used": false
+        },
+        "2026-05-07": {
+          "accessible": true,
+          "article_count": 9,
+          "date_count": 9,
+          "error": null,
+          "fetcher_used": false
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -2043,7 +2058,10 @@
           "day": 3,
           "date": "2026-05-06"
         }
-      ]
+      ],
+      "total_articles": 36,
+      "days_with_articles": 4,
+      "avg_quality_score": 0.566
     },
     {
       "id": "msci-research",
@@ -2054,7 +2072,7 @@
       "quality": "MEDIUM",
       "topics": "factor investing, ESG, climate, multi-asset, risk, fixed income",
       "start_date": "2026-05-04",
-      "end_date": null,
+      "end_date": "2026-05-07",
       "daily_checks": {
         "2026-05-04": {
           "accessible": true,
@@ -2076,10 +2094,17 @@
           "date_count": 10,
           "error": null,
           "fetcher_used": true
+        },
+        "2026-05-07": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -2179,6 +2204,132 @@
           "error": null,
           "day": 3,
           "date": "2026-05-06"
+        }
+      ],
+      "total_articles": 40,
+      "days_with_articles": 4,
+      "avg_quality_score": 0.794
+    }
+  ],
+  "active_trials": [
+    {
+      "id": "kkr",
+      "name": "KKR",
+      "research_url": "https://www.kkr.com/insights",
+      "homepage_url": "https://www.kkr.com",
+      "fit_score": 0.94,
+      "quality": "MEDIUM",
+      "topics": "private equity, macro, infrastructure, credit",
+      "start_date": "2026-05-07",
+      "end_date": null,
+      "daily_checks": {
+        "2026-05-07": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.kkr.com/insights/flash-macro-market-update-may-2026",
+              "relevance": 0.9,
+              "depth": 0.6,
+              "extractable": 0.4,
+              "overall": 0.68,
+              "notes": "Macro market commentary on geopolitical shifts, inflation, and capex cycles; text truncated mid-sentence with signup wall interference"
+            },
+            {
+              "url": "https://www.kkr.com/insights/private-infrastructure-2026",
+              "relevance": 0.95,
+              "depth": 0.75,
+              "extractable": 0.4,
+              "overall": 0.76,
+              "notes": "Investment thesis on private infrastructure positioning in volatile environment; substantive analysis of HALO framework and structural demand drivers; text truncated with signup wall"
+            },
+            {
+              "url": "https://www.kkr.com/insights/2026-end-investor-survey",
+              "relevance": 0.7,
+              "depth": 0.65,
+              "extractable": 0.35,
+              "overall": 0.61,
+              "notes": "Survey-based research on individual investor attitudes toward private markets; data-driven but marketing-oriented; heavily truncated with incomplete exhibits"
+            }
+          ],
+          "avg_score": 0.683,
+          "error": null,
+          "day": 1,
+          "date": "2026-05-07"
+        }
+      ]
+    },
+    {
+      "id": "schroders",
+      "name": "Schroders",
+      "research_url": "https://www.schroders.com/en/insights",
+      "homepage_url": "https://www.schroders.com/en/insights",
+      "fit_score": null,
+      "quality": "MEDIUM",
+      "topics": "ESG, emerging markets, multi-asset, fixed income",
+      "start_date": "2026-05-07",
+      "end_date": null,
+      "daily_checks": {
+        "2026-05-07": {
+          "accessible": true,
+          "article_count": 0,
+          "date_count": 0,
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "Could not extract text from any article",
+          "day": 1,
+          "date": "2026-05-07"
+        }
+      ]
+    },
+    {
+      "id": "alliancebernstein",
+      "name": "AllianceBernstein",
+      "research_url": "https://www.alliancebernstein.com/us/en-us/investments/insights.html",
+      "homepage_url": "https://www.alliancebernstein.com",
+      "fit_score": null,
+      "quality": "MEDIUM",
+      "topics": "equity, fixed income, macro, municipal bonds",
+      "start_date": "2026-05-07",
+      "end_date": null,
+      "daily_checks": {
+        "2026-05-07": {
+          "accessible": true,
+          "article_count": 0,
+          "date_count": 0,
+          "error": null,
+          "fetcher_used": false
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No article links found on index page",
+          "day": 1,
+          "date": "2026-05-07"
         }
       ]
     }
