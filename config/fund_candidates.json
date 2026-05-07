@@ -165,7 +165,7 @@
       },
       {
         "url": "https://www.blackstone.com/insights/article/market-views-dealmaking-disruption-and-real-estates-recovery/",
-        "label": "Market Views: Dealmaking, Disruption, and Real Estate’s Recovery",
+        "label": "Market Views: Dealmaking, Disruption, and Real Estate\u2019s Recovery",
         "path": "insights/article/market-views-dealmaking-disruption-and-real-estates-recovery"
       },
       {
@@ -292,7 +292,7 @@
       },
       {
         "url": "https://www.kkr.com/insights/naic-spring-update-2026",
-        "label": "Investment Insights Highlights from the NAIC’s 2026 Spring National Meeting: CLOs, Collateral Loans,",
+        "label": "Investment Insights Highlights from the NAIC\u2019s 2026 Spring National Meeting: CLOs, Collateral Loans,",
         "path": "insights/naic-spring-update-2026"
       },
       {
@@ -323,7 +323,7 @@
     ],
     "source": "manual",
     "inaccessible_reason": null,
-    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager",
+    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 \u2014 ready for trial manager",
     "quality_score": 0.68
   },
   {
@@ -396,7 +396,7 @@
       },
       {
         "url": "https://www.cambridgeassociates.com/insight/germanys-fiscal-boost/",
-        "label": "Germany’s Fiscal Boost Remains a Tailwind Despite Near-Term Risks",
+        "label": "Germany\u2019s Fiscal Boost Remains a Tailwind Despite Near-Term Risks",
         "path": "insight/germanys-fiscal-boost"
       },
       {
@@ -479,10 +479,10 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.9,
-    "last_deep_analyzed_at": "2026-04-29T01:01:48Z",
+    "last_deep_analyzed_at": "2026-05-07T01:02:25Z",
     "quality": "MEDIUM",
-    "topics": "macro, credit, alternatives, fixed income",
-    "notes": "Working fetcher (search API); JS-rendered, httpx no articles. Promote to sources.json.",
+    "topics": "macro, equity, fixed income, investment strategy",
+    "notes": "Landing page is subscription form; API fetcher works per prior test",
     "research_links": [
       {
         "url": "https://am.gs.com/en-us/advisors/insights/list",
@@ -518,12 +518,12 @@
     "screening_reason": "Insufficient article index signals",
     "strategy_tags": [
       "macro",
-      "fixed_income",
       "equity",
+      "fixed_income",
       "multi_asset"
     ],
     "source": "manual",
-    "quality_score": 0.62
+    "quality_score": 0.6
   },
   {
     "id": "wellington",
@@ -541,7 +541,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.8843,
-    "notes": "RECOMMEND: Equity/macro/ESG; free access, high-freq",
+    "notes": "RECOMMEND: Multi-asset research, free access, weekly cadence",
     "research_links": [
       {
         "url": "https://www.wellington.com/en/insights",
@@ -620,18 +620,18 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-04-30T01:00:00Z",
+    "last_deep_analyzed_at": "2026-05-07T01:02:25Z",
     "quality": "HIGH",
-    "topics": "equity, macro, fixed income, multi-asset, ESG, geopolitics, alternatives",
+    "topics": "macro, fixed income, equity, private investing, ESG, alternatives",
     "strategy_tags": [
-      "equity",
       "macro",
+      "equity",
       "fixed_income",
-      "multi_asset",
-      "esg_climate"
+      "esg_climate",
+      "private_equity"
     ],
     "source": "manual",
-    "quality_score": 0.77
+    "quality_score": 0.8
   },
   {
     "id": "amundi",
@@ -843,7 +843,7 @@
     ],
     "source": "manual",
     "inaccessible_reason": null,
-    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager",
+    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 \u2014 ready for trial manager",
     "quality_score": 0.6
   },
   {
@@ -865,7 +865,7 @@
       "fixed_income"
     ],
     "source": "manual",
-    "inaccessible_reason": "Policy block (not fingerprint): robots.txt allow-lists only Googlebot/Bingbot (User-agent:* Disallow:/); /insights returns 403 + redirect to /global-insights-0 Access-denied page even in headless Playwright with stealth UA. Would need residential-IP proxy — out of scope.",
+    "inaccessible_reason": "Policy block (not fingerprint): robots.txt allow-lists only Googlebot/Bingbot (User-agent:* Disallow:/); /insights returns 403 + redirect to /global-insights-0 Access-denied page even in headless Playwright with stealth UA. Would need residential-IP proxy \u2014 out of scope.",
     "last_probed": "2026-04-24"
   },
   {
@@ -946,7 +946,7 @@
       },
       {
         "url": "https://www.researchaffiliates.com/publications/articles/1103-2025-implications-for-the-future-some-like-it-hot",
-        "label": "2025’s Implications for the Future: “Some Like it Hot\"? By Jim Masturzo January 2026 A review of maj",
+        "label": "2025\u2019s Implications for the Future: \u201cSome Like it Hot\"? By Jim Masturzo January 2026 A review of maj",
         "path": "publications/articles/1103-2025-implications-for-the-future-some-like-it-hot"
       },
       {
@@ -1099,7 +1099,7 @@
     ],
     "source": "manual",
     "inaccessible_reason": null,
-    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager"
+    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 \u2014 ready for trial manager"
   },
   {
     "id": "schroders",
@@ -1124,7 +1124,7 @@
     ],
     "source": "manual",
     "inaccessible_reason": null,
-    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager",
+    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 \u2014 ready for trial manager",
     "quality_score": 0.6
   },
   {
@@ -1345,7 +1345,7 @@
     ],
     "source": "manual",
     "inaccessible_reason": "403 bot protection on all paths",
-    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager",
+    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 \u2014 ready for trial manager",
     "quality_score": 0.62
   },
   {
@@ -1566,7 +1566,7 @@
     "quality_score": 0.0,
     "topics": "",
     "inaccessible_reason": null,
-    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager"
+    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 \u2014 ready for trial manager"
   },
   {
     "id": "pinebridge",
@@ -1602,7 +1602,7 @@
       },
       {
         "url": "https://www.pinebridge.com/en/insights/japan-equities-a-reinflation-powered-rebound-thats-set-to-last",
-        "label": "1 April 2026 | 6 - minute read Equities Japan Equities: A Reinflation-Powered Rebound That’s Set to ",
+        "label": "1 April 2026 | 6 - minute read Equities Japan Equities: A Reinflation-Powered Rebound That\u2019s Set to ",
         "path": "en/insights/japan-equities-a-reinflation-powered-rebound-thats-set-to-last"
       },
       {
@@ -1612,7 +1612,7 @@
       },
       {
         "url": "https://www.pinebridge.com/en/insights/japans-reflation-experiment-boj-hikes-weak-technicals-and-yen-upside",
-        "label": "11 March 2026 | 2 - minute read Fixed Income Multi-Asset Japan’s Reflation Experiment: BoJ Hikes, We",
+        "label": "11 March 2026 | 2 - minute read Fixed Income Multi-Asset Japan\u2019s Reflation Experiment: BoJ Hikes, We",
         "path": "en/insights/japans-reflation-experiment-boj-hikes-weak-technicals-and-yen-upside"
       },
       {
@@ -1634,18 +1634,18 @@
     "strategy_tags": [
       "quant",
       "equity",
-      "macro",
-      "multi_asset"
+      "fixed_income",
+      "emerging_markets"
     ],
-    "notes": "RECOMMEND: trial passed (4/3 days with articles, quality=0.87)",
+    "notes": "RECOMMEND: Weekly quant research; trial passed 4/3 days",
     "official_domain": "verdadcap.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-04-29T09:00:09.051367+08:00",
-    "last_deep_analyzed_at": "2026-04-29T01:01:48Z",
+    "last_deep_analyzed_at": "2026-05-07T01:02:25Z",
     "quality": "HIGH",
-    "quality_score": 0.85,
-    "topics": "quant, equity, value, alternatives, macro, credit"
+    "quality_score": 0.87,
+    "topics": "quant, value, factor investing, global equity, credit"
   },
   {
     "id": "alliancebernstein",
@@ -1676,22 +1676,19 @@
     "homepage_url": "https://www.franklintempleton.com",
     "research_url": "https://www.franklintempletonglobal.com/articles",
     "source": "manual",
-    "status": "seed",
+    "status": "watchlist",
     "strategy_tags": [
-      "macro",
-      "multi_asset",
-      "fixed_income",
-      "equity"
+      "multi_asset"
     ],
-    "notes": "JS-rendered, no accessible content; needs Playwright",
+    "notes": "JS-rendered; WebFetch returns empty; inaccessible without browser",
     "official_domain": "www.franklintempleton.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-05-06T09:00:15.668018+08:00",
-    "last_deep_analyzed_at": "2026-04-30T01:00:00Z",
-    "quality": "UNKNOWN",
-    "quality_score": 0.0,
-    "topics": ""
+    "last_discovered_at": "2026-05-07T09:00:18.005906+08:00",
+    "last_deep_analyzed_at": "2026-05-07T01:02:25Z",
+    "quality": "LOW",
+    "quality_score": 0.2,
+    "topics": "unknown"
   },
   {
     "id": "ares-management",
@@ -1879,7 +1876,7 @@
       },
       {
         "url": "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/viewpoints/march-2024",
-        "label": "Déjà Vu",
+        "label": "D\u00e9j\u00e0 Vu",
         "path": "us/en_us/research-insights/investment-insights/viewpoints/march-2024"
       },
       {
