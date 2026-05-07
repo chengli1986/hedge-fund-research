@@ -853,8 +853,27 @@ def cmd_run() -> None:
                 if c["id"] == active["id"]:
                     if not passed:
                         if not quantity_ok:
-                            c["status"] = "watchlist"
-                            c["notes"] = f"Trial failed: articles on only {days_with_articles}/{TRIAL_DAYS} days"
+                            if total_articles == 0:
+                                # Zero articles across the entire trial window —
+                                # listing-page selector is broken or page is JS-only.
+                                # Route to fetcher-synthesis (which only picks up
+                                # status="inaccessible") so a Playwright fetcher
+                                # can be auto-synthesized next Sunday.
+                                c["status"] = "inaccessible"
+                                c["notes"] = (
+                                    f"Trial failed: 0 articles detected across "
+                                    f"{TRIAL_DAYS} days — site likely requires JS "
+                                    f"rendering or selector is broken. Routed to "
+                                    f"fetcher-synthesis queue."
+                                )
+                            else:
+                                # Some articles present but not on enough days —
+                                # genuine slow-publication pattern, not access issue.
+                                c["status"] = "watchlist"
+                                c["notes"] = (
+                                    f"Trial failed: articles on only "
+                                    f"{days_with_articles}/{TRIAL_DAYS} days"
+                                )
                         elif not all_scores:
                             c["status"] = "watchlist"
                             c["notes"] = "Trial inconclusive: no quality samples obtained"

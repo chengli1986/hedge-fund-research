@@ -225,6 +225,140 @@ def test_trial_fails_with_low_quality_scores(trial_env, monkeypatch):
     assert state["history"][0]["outcome"] == "fail_quality"
 
 
+def test_trial_fail_quantity_zero_articles_routes_to_inaccessible(trial_env, monkeypatch):
+    """A trial that detected 0 articles across all days must route to
+    status='inaccessible' (not 'watchlist') so fetcher-synthesis picks it up.
+
+    This is the fix for the "watchlist orphan" chain break: previously, all
+    fail_quantity outcomes flipped status to watchlist, where they sat
+    indefinitely because fetcher-synthesis only looks at status='inaccessible'.
+    """
+    today = datetime.now(BJT)
+    start = today - timedelta(days=4)
+
+    trial_state = {
+        "active_trials": [{
+            "id": "test-fund",
+            "name": "Test Fund",
+            "research_url": "https://example.com/research",
+            "homepage_url": "https://example.com",
+            "fit_score": 0.95,
+            "quality": "MEDIUM",
+            "topics": "equities",
+            "start_date": start.strftime("%Y-%m-%d"),
+            "end_date": None,
+            "daily_checks": {
+                # accessible=True (got 200) but article_count=0 — selector broken
+                # or page is fully JS-rendered and httpx returns empty index.
+                (start + timedelta(days=i)).strftime("%Y-%m-%d"): {
+                    "accessible": True, "article_count": 0,
+                    "date_count": 0, "error": None,
+                }
+                for i in range(4)
+            },
+            "quality_samples": [],
+            "auto_decided": False,
+            "outcome": None,
+        }],
+        "history": [],
+    }
+
+    tm.TRIAL_STATE_FILE.write_text(json.dumps(trial_state))
+    monkeypatch.setattr(tm, "count_articles_with_fetcher", lambda trial: {
+        "accessible": True, "article_count": 0, "date_count": 0,
+        "error": None, "fetcher_used": False})
+    monkeypatch.setattr(tm, "sample_article_quality", lambda url, trial=None: {
+        "sampled": 0, "articles": [], "avg_score": 0.0,
+        "error": "No article links found on index page"})
+    monkeypatch.setattr(tm, "send_trial_email", lambda *a, **k: None)
+
+    tm.cmd_run()
+
+    state = tm.load_state()
+    assert state["history"][0]["outcome"] == "fail_quantity"
+    assert state["history"][0]["total_articles"] == 0
+
+    candidates = json.loads(tm.CANDIDATES_FILE.read_text())
+    test_candidate = next(c for c in candidates if c["id"] == "test-fund")
+    assert test_candidate["status"] == "inaccessible", (
+        f"Zero-article fail_quantity must route to 'inaccessible' "
+        f"(got '{test_candidate['status']}'). Otherwise fetcher-synthesis "
+        f"will not pick it up and the candidate is orphaned in watchlist."
+    )
+    assert "fetcher-synthesis" in test_candidate["notes"]
+
+
+def test_trial_fail_quantity_some_articles_stays_watchlist(trial_env, monkeypatch):
+    """A trial that detected some articles but not on enough days stays in
+    watchlist (genuine slow-publisher pattern, not an access issue).
+    """
+    today = datetime.now(BJT)
+    start = today - timedelta(days=4)
+
+    # Articles on day 1 only — a publisher with one piece all month;
+    # MIN_DAYS_WITH_ARTICLES=2 requires articles on ≥2 days.
+    daily = {}
+    for i in range(4):
+        daily[(start + timedelta(days=i)).strftime("%Y-%m-%d")] = {
+            "accessible": True,
+            "article_count": 5 if i == 0 else 0,
+            "date_count": 5 if i == 0 else 0,
+            "error": None,
+        }
+
+    trial_state = {
+        "active_trials": [{
+            "id": "slow-fund",
+            "name": "Slow Fund",
+            "research_url": "https://example.com/quarterly-only",
+            "homepage_url": "https://example.com",
+            "fit_score": 0.90,
+            "quality": "HIGH",
+            "topics": "macro",
+            "start_date": start.strftime("%Y-%m-%d"),
+            "end_date": None,
+            "daily_checks": daily,
+            "quality_samples": [],
+            "auto_decided": False,
+            "outcome": None,
+        }],
+        "history": [],
+    }
+
+    # Seed candidates file with this fund
+    candidates = json.loads(tm.CANDIDATES_FILE.read_text())
+    candidates.append({
+        "id": "slow-fund", "name": "Slow Fund", "status": "validated",
+        "quality": "HIGH", "fit_score": 0.90,
+        "research_url": "https://example.com/quarterly-only",
+        "homepage_url": "https://example.com", "topics": "macro",
+    })
+    tm.CANDIDATES_FILE.write_text(json.dumps(candidates))
+    tm.TRIAL_STATE_FILE.write_text(json.dumps(trial_state))
+
+    monkeypatch.setattr(tm, "count_articles_with_fetcher", lambda trial: {
+        "accessible": True, "article_count": 0, "date_count": 0,
+        "error": None, "fetcher_used": False})
+    monkeypatch.setattr(tm, "sample_article_quality", lambda url, trial=None: {
+        "sampled": 0, "articles": [], "avg_score": 0.0, "error": "no new links"})
+    monkeypatch.setattr(tm, "send_trial_email", lambda *a, **k: None)
+
+    tm.cmd_run()
+
+    state = tm.load_state()
+    history_entry = next(h for h in state["history"] if h["id"] == "slow-fund")
+    assert history_entry["outcome"] == "fail_quantity"
+    assert history_entry["total_articles"] == 5  # got some, just not enough days
+
+    candidates = json.loads(tm.CANDIDATES_FILE.read_text())
+    test_candidate = next(c for c in candidates if c["id"] == "slow-fund")
+    assert test_candidate["status"] == "watchlist", (
+        f"Some-articles fail_quantity must stay 'watchlist' "
+        f"(got '{test_candidate['status']}'). This is a slow-publisher pattern, "
+        f"not an access issue, so fetcher-synthesis should NOT touch it."
+    )
+
+
 # ── Bug 3: Fallback links when extraction fails ─────────────────────────────
 
 def test_fallback_links_used_on_extraction_failure(monkeypatch):
