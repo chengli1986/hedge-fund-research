@@ -2,7 +2,7 @@
 
 Tracks and aggregates research insights, market commentary, and papers from top hedge funds. Summarizes via LLM and publishes a bilingual (CN/EN) dashboard.
 
-## Sources (16)
+## Sources (19)
 
 | Fund | Method | Frequency | Notable |
 |------|--------|-----------|---------|
@@ -22,6 +22,9 @@ Tracks and aggregates research insights, market commentary, and papers from top 
 | **Brookfield Asset Management** | SSR (Drupal) | Weekly | Real assets, infrastructure, renewable power, private equity |
 | **J.P. Morgan Asset Management** | AEM JSON API | Weekly | Multi-asset, fixed income, market insights, Long-Term Capital Market Assumptions |
 | **Verdad Capital** | SSR (requests) | Monthly | Quant value/factor, emerging markets, private equity replication; Boston, ~$500M |
+| **MSCI Research** | Playwright (Next.js) | Weekly | Index/factor research, ESG & climate frameworks, multi-asset risk; $15T+ benchmarked |
+| **Natixis Investment Managers** | SSR (requests) | Monthly | Tactical Take podcast — macro/portfolio strategy with Janasiewicz & Hess |
+| **Apollo Global Management** | SSR (AEM) | Weekly | Private credit ABF, secondaries, View from Apollo, Apollo Academy |
 
 ## Pipeline
 
