@@ -656,6 +656,48 @@ def test_queue_composite_formula(tmp_path, monkeypatch):
     assert queue[-1]["id"] == "mid-both", "mid-both (priority 0.70) should be last"
 
 
+def test_queue_skipped_history_does_not_lock_out_candidate(tmp_path, monkeypatch):
+    """A skip is "free the slot, not a verdict" — candidate must remain trial-eligible.
+
+    Regression for 2026-04-19 incident where goldman-sam + research-affiliates were
+    skipped via cmd_skip, which appended outcome="skipped" history entries. The
+    queue logic was excluding ALL history ids, permanently locking these candidates
+    out of trial. After the fix, only non-skipped history entries (pass / fail_*)
+    should disqualify a candidate from re-trial.
+    """
+    candidates = [
+        _make_candidate("was-skipped", "HIGH", fit_score=0.90, quality_score=0.80),
+        _make_candidate("really-failed", "HIGH", fit_score=0.85, quality_score=0.75),
+        _make_candidate("really-passed", "HIGH", fit_score=0.80, quality_score=0.70),
+    ]
+    cands_file = tmp_path / "fund_candidates.json"
+    cands_file.write_text(json.dumps(candidates))
+    (tmp_path / "sources.json").write_text(json.dumps({"sources": []}))
+    monkeypatch.setattr(tm, "CANDIDATES_FILE", cands_file)
+    monkeypatch.setattr(tm, "SOURCES_FILE", tmp_path / "sources.json")
+
+    state = {
+        "active_trials": [],
+        "history": [
+            {"id": "was-skipped", "outcome": "skipped", "end_date": "2026-04-19"},
+            {"id": "really-failed", "outcome": "fail_quality", "end_date": "2026-05-01"},
+            {"id": "really-passed", "outcome": "pass", "end_date": "2026-05-04"},
+        ],
+    }
+    queue = tm.get_trial_queue(state)
+    queue_ids = [c["id"] for c in queue]
+
+    assert "was-skipped" in queue_ids, (
+        "candidate with outcome=skipped should re-enter queue (skips don't disqualify)"
+    )
+    assert "really-failed" not in queue_ids, (
+        "candidate with outcome=fail_* must stay out (real verdict)"
+    )
+    assert "really-passed" not in queue_ids, (
+        "candidate with outcome=pass must stay out (already promoted)"
+    )
+
+
 # ── Task 3: quality sampling from fetcher results ───────────────────────────
 
 def test_sample_quality_uses_fetcher_links_when_trial_provided(monkeypatch):

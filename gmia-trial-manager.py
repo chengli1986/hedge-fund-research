@@ -589,9 +589,19 @@ The "overall" score should be: 0.4*relevance + 0.4*depth + 0.2*extractable.
 # ── queue logic ───────────────────────────────────────────────────────────────
 
 def get_trial_queue(state: dict) -> list[dict]:
-    """Return validated HIGH/MEDIUM candidates not yet trialed, sorted by fit_score desc."""
+    """Return validated HIGH/MEDIUM candidates not yet trialed, sorted by fit_score desc.
+
+    History entries with outcome="skipped" do NOT count as having been trialed —
+    a skip is "abandon this trial run, free the slot for something else", not a
+    verdict on the candidate. Without this exclusion a skipped candidate is
+    permanently locked out of the queue (regression that stranded goldman-sam
+    and research-affiliates after their 2026-04-19 skips).
+    """
     candidates = load_candidates()
-    trialed_ids = {h["id"] for h in state.get("history", [])}
+    trialed_ids = {
+        h["id"] for h in state.get("history", [])
+        if h.get("outcome") != "skipped"
+    }
     active_ids = {t["id"] for t in state.get("active_trials", [])}
 
     queue = []
