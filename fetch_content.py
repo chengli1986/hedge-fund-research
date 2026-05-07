@@ -842,6 +842,36 @@ def _fetch_content_jpmam(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+def _fetch_content_msci(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch MSCI Research & Insights article content via requests.
+
+    MSCI's article pages are SSR-rendered (despite the listing page being
+    Next.js CSR — listing requires Playwright but article body is in initial
+    HTML). Article body lives in <main><article><p> with Tailwind layout
+    div.ms-flex.ms-flex-col.ms-gap-4 wrapping content paragraphs.
+    """
+    url = article["url"]
+    log.info("  MSCI: fetching article page %s", url)
+
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  MSCI: fetch failed: %s", e)
+        return None
+
+    text = _normalize_html(resp.text, "main article p")
+
+    if not _check_min_content_length(text):
+        log.warning("  MSCI: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  MSCI: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -859,6 +889,7 @@ CONTENT_FETCHERS = {
     "brookfield": _fetch_content_brookfield,
     "jpmam": _fetch_content_jpmam,
     "verdad-capital": _fetch_content_verdad,
+    "msci-research": _fetch_content_msci,
 }
 
 

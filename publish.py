@@ -40,6 +40,7 @@ BADGE_COLORS: dict[str, str] = {
     "brookfield": "#1e7f3e",            # Brookfield green
     "jpmam": "#7a4cb1",                 # JPMorgan purple
     "verdad-capital": "#7c2d12",        # Verdad terracotta (rust)
+    "msci-research": "#1f49e0",         # MSCI cobalt blue
 }
 
 INITIAL_VISIBLE = 20
@@ -157,6 +158,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "Boston 量化价值投资机构，2014 年由 Dan Rasmussen 创立（前 Bain Capital）。Weekly Research 系列以学术风格的实证研究闻名，主题涵盖私募股权真实回报、杠杆微盘股因子、日本资本效率等小众但深入的领域。研究内容自由开放，不设付费墙。",
         "notable_en": "Founded by Dan Rasmussen (ex-Bain Capital); empirical research dismantling private equity return claims; pioneered leveraged microcap factor research.",
         "notable_zh": "Dan Rasmussen（前 Bain Capital）创立；以拆解私募股权回报神话的实证研究著称；杠杆微盘因子研究先驱。",
+    },
+    "msci-research": {
+        "founded": "1969", "aum": "$15T+ benchmarked", "hq": "New York, NY",
+        "type_en": "Listed Index/Analytics Provider (NYSE)", "type_zh": "上市指数与分析提供商 (纽交所)",
+        "desc_zh": "全球领先的指数、ESG/气候分析与因子模型提供商。1969 年由 Capital International 创立，2007 年从 Morgan Stanley 分拆独立上市。ACWI、EAFE、新兴市场指数被全球约 $15 万亿资金跟踪。Research & Insights 板块覆盖因子投资、ESG 整合、气候风险、多资产风险与指数构建方法论。",
+        "notable_en": "MSCI ACWI/EAFE/EM indexes benchmarked by $15T+ globally; pioneered factor index construction (Quality, Value, Momentum); ESG ratings used by 1,700+ institutional investors.",
+        "notable_zh": "MSCI ACWI/EAFE/新兴市场指数全球跟踪规模超 $15 万亿；首创因子指数构建方法论（质量、价值、动量）；ESG 评级被 1,700+ 机构投资者采用。",
     },
 }
 

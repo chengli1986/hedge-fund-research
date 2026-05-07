@@ -202,6 +202,19 @@
       "notable_authors": [],
       "expected_hostname": "verdadcap.com",
       "max_articles": 10
+    },
+    {
+      "id": "msci-research",
+      "strategy_tags": ["quant", "esg_climate", "multi_asset", "fixed_income"],
+      "name": "MSCI Research",
+      "short_name": "MSCI",
+      "url": "https://www.msci.com/research-and-insights",
+      "method": "playwright",
+      "frequency": "weekly",
+      "description": "MSCI Research & Insights — index/factor research, ESG & climate frameworks, portfolio construction, multi-asset risk and benchmark analysis.",
+      "notable_authors": [],
+      "expected_hostname": "msci.com",
+      "max_articles": 10
     }
   ],
   "settings": {
