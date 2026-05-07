@@ -107,7 +107,7 @@ Scorer weight optimization program using automated experiment loop:
 
 ## Trial Manager
 
-`gmia-trial-manager.py` — 3-day live trial window for candidate funds. Supports up to 3 concurrent trials (`MAX_CONCURRENT_TRIALS=3`). Runs daily via registered FETCHERS (Playwright/RSS/API — same fetchers as the main pipeline); falls back to httpx for sources without a registered fetcher. Requires articles on ≥2 of 3 days to pass quantity gate. Performs Haiku quality sampling on days 1 and 3 (3 articles each, relevance/depth/extractable scores). Outcomes: APPROVE (add to sources), REJECT (remove from candidates).
+`gmia-trial-manager.py` — 3-day live trial window for candidate funds. Supports up to 3 concurrent trials (`MAX_CONCURRENT_TRIALS=3`). Runs daily via registered FETCHERS (Playwright/RSS/API — same fetchers as the main pipeline); falls back to httpx for sources without a registered fetcher. Requires articles on ≥2 of 3 days to pass quantity gate. Performs Haiku quality sampling on Day 1, Day 2, and Day 3 (3 articles each, relevance/depth/extractable scores) with cross-day URL dedup so up to 9 distinct articles are scored per trial; slow-updating sources naturally produce smaller samples on later days. Outcomes: APPROVE (add to sources), REJECT (remove from candidates).
 
 ## Tests
 
