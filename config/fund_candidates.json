@@ -1573,7 +1573,7 @@
     "name": "PineBridge Investments",
     "homepage_url": "https://www.pinebridge.com",
     "source": "manual",
-    "status": "watchlist",
+    "status": "inaccessible",
     "strategy_tags": [
       "fixed_income",
       "emerging_markets",
@@ -1583,11 +1583,11 @@
     "quality": "HIGH",
     "quality_score": 0.8,
     "topics": "fixed income, emerging markets, macro, multi-asset, equities",
-    "notes": "Trial failed: low quality (0.24)",
+    "notes": "Re-diagnosed 2026-05-07: trial 0.24 was bio-page contamination (research_url pointed to a single article, sampler picked up author bio links). Index page /en/our-insights is JS-rendered (httpx returns 0 article-like links). research_url corrected to index URL. Routed to fetcher-synthesis queue.",
     "last_deep_analyzed_at": "2026-05-02T01:00:00Z",
     "is_publicly_accessible": true,
     "has_article_index": true,
-    "research_url": "https://www.pinebridge.com/en/insights/capital-market-line-a-passing-energy-shock-meets-a-lasting-productivity-surge",
+    "research_url": "https://www.pinebridge.com/en/our-insights",
     "official_domain": "www.pinebridge.com",
     "research_links": [
       {
@@ -1676,19 +1676,19 @@
     "homepage_url": "https://www.franklintempleton.com",
     "research_url": "https://www.franklintempletonglobal.com/articles",
     "source": "manual",
-    "status": "watchlist",
+    "status": "inaccessible",
     "strategy_tags": [
       "multi_asset"
     ],
-    "notes": "JS-rendered; WebFetch returns empty; inaccessible without browser",
+    "notes": "Re-diagnosed 2026-05-07: original LOW score was a side-effect of JS-only rendering (httpx returns 2367-char shell, deep_analyze couldn't read content). Playwright probe returns 672K HTML with 23 article links — content quality is unknown until rendered, not low. Quality bumped LOW → MEDIUM and routed to fetcher-synthesis queue.",
     "official_domain": "www.franklintempleton.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-05-07T09:00:18.005906+08:00",
     "last_deep_analyzed_at": "2026-05-07T01:02:25Z",
-    "quality": "LOW",
-    "quality_score": 0.2,
-    "topics": "unknown"
+    "quality": "MEDIUM",
+    "quality_score": 0.5,
+    "topics": "multi-asset, market insights"
   },
   {
     "id": "ares-management",
