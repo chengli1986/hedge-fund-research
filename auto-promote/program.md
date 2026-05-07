@@ -128,14 +128,14 @@ def _fetch_content_FUNDID(article: dict, content_dir: Path) -> dict:
     return {"ok": True, "path": str(out_path), "chars": len(text), "skipped": False}
 ```
 
-**测试**：
+**测试（必须强证据，写到 commit message）**：
+
 ```bash
 python3 - << 'EOF'
 import sys; sys.path.insert(0, ".")
 from pathlib import Path
 import tempfile
 from fetch_content import _fetch_content_FUNDID  # 替换 FUNDID
-# 找一篇该基金的真实文章 URL（从 fetch_articles 跑一下取）
 import fetch_articles
 src = {"url": "RESEARCH_URL", "id": "FUNDID"}  # 替换
 articles = fetch_articles.FETCHERS["FUNDID"](src)
@@ -144,14 +144,58 @@ if articles:
     art = articles[0]
     with tempfile.TemporaryDirectory() as td:
         result = _fetch_content_FUNDID(art, Path(td))
-        print(result)
+        print(f"Result: ok={result.get('ok')} chars={result.get('chars', 0)}")
+        # 必须把正文前 200 字 preview 打出来，agent 把这段粘到 commit message
+        if result.get("ok"):
+            text = Path(result["path"]).read_text()
+            print(f"--- PREVIEW (first 200 chars) ---\n{text[:200]}\n--- END ---")
 EOF
 ```
 
-通过标准：返回 `ok: True` 且 `chars >= 100`。
+**通过标准（4 项硬门，任一失败 → 跳过此基金，不进 Phase 4）**：
 
-若 `article p` / `main p` 都拿不到 ≥100 字 → 用 Playwright 看一下页面结构找正确 selector，
-再修。**最多重试 2 次** — 还失败就跳过这个基金（不要花时间研究偏门站）。
+1. **抓到 ≥3 文章索引** — `fetch_articles.FETCHERS[id](source)` 返回 ≥3 articles
+2. **正文 ≥500 chars**（不是 100）— `_fetch_content_FUNDID` 返回 `ok: True` 且 `chars ≥ 500`
+3. **Haiku 质量抽检 relevance ≥ 0.6** — 复用 trial-manager 的质量评估：
+   ```bash
+   python3 - << 'EOF'
+   import sys; sys.path.insert(0, ".")
+   import importlib.util
+   spec = importlib.util.spec_from_file_location("tm", "gmia-trial-manager.py")
+   tm = importlib.util.module_from_spec(spec)
+   spec.loader.exec_module(tm)
+   url = "RESEARCH_URL"  # 替换
+   result = tm.sample_article_quality(url)
+   print(f"sampled={result['sampled']} avg={result.get('avg_score',0):.2f}")
+   for art in result.get("articles", []):
+       print(f"  rel={art['relevance']:.1f} dep={art['depth']:.1f} ext={art['extractable']:.1f} → {art['notes'][:60]}")
+   # 通过条件: avg_score >= 0.5 且至少 1 篇 relevance >= 0.6
+   EOF
+   ```
+   Haiku 抽 3 篇，**至少 1 篇 relevance ≥ 0.6** + **avg_score ≥ 0.5**。否则说明抓的不是研究内容（可能是 nav/footer）。
+4. **Method 字段 cross-check** — grep 你刚写的 `fetch_<id>` 函数实现，验证与 sources.json 的 `method` 一致：
+   ```bash
+   if grep -q "_get_playwright_page\|sync_playwright" fetch_articles.py | grep -A 30 "def fetch_FUNDID"; then
+       # method 必须是 "playwright"
+   elif grep -q "feedparser" ...; then
+       # method 必须是 "rss"
+   else
+       # 默认 method 是 "ssr" (requests/httpx)
+   fi
+   ```
+   实际：读 `fetch_<id>` 函数的源码，确认调用模式与 sources.json `method` 字段一致。**不一致 → 跳过**。
+
+**强证据要求**：commit message 必须包含上述 4 项的实际输出，例如：
+```
+Live test: 10 articles, content 4823 chars
+Haiku quality: avg=0.72 (rel=0.8 dep=0.7 ext=0.7 / rel=0.7 ...)
+Method: ssr (requests.get + BeautifulSoup, verified)
+Preview: "BlackRock Investment Institute weekly outlook — Markets digest..."
+```
+
+若任一硬门未过 → `git checkout fetch_articles.py fetch_content.py config/sources.json publish.py`
+回滚，记到 `logs/auto-promote-history.jsonl` outcome=`"failed_phase3"` + reason，继续下一个目标。
+不要花时间反复重试调 selector — 偏门站留给 fetcher-synthesis。
 
 加进 `CONTENT_FETCHERS` dict 末尾：
 ```python
@@ -188,6 +232,21 @@ mkdir -p pending_profiles
 
 数字（AUM、创立年）若不确定就**写不确定的范围**（"~$1-2T"）+ 在 `_confidence_notes`
 里说明。**不要瞎编精确数字。**
+
+**写完后必须跑 sanity check**：
+```bash
+python3 scripts/validate_pending_profile.py pending_profiles/FUNDID.json --write-validation
+```
+
+退出码：
+- `0` → profile 通过所有 regex 检查（aum 含货币符号+数字 / founded 4 位数 1700-2026 / hq 含逗号 / desc_zh 50-300 字 / 无 unknown/TBD/未知 等高风险标记）
+- `1` → 有 issues（验证文件 `<id>.validation.json` 已写出，列出问题）
+- `2` → 文件读不了
+
+**判定**：
+- 退出码 `0` → 继续 Phase 5 后续
+- 退出码 `1` 但**只是 high_risk markers**（unknown/未知）→ 继续，但 history.jsonl 加 `profile_high_risk: true`
+- 退出码 `1` 且**有 missing fields 或硬约束违规**（aum 没货币符号、founded 不是 4 位数等）→ **重写 profile**（最多 1 次重试），仍失败就跳过整个 Phase 5（不写 profile）但继续 Phase 6（仍 commit 代码 wiring，只是没 profile 草稿）
 
 ### Phase 5 — 跑 contract test
 
@@ -229,23 +288,48 @@ from pathlib import Path
 BJT = timezone(timedelta(hours=8))
 log = Path("logs/auto-promote-history.jsonl")
 log.parent.mkdir(exist_ok=True)
+
+# Read profile validation if exists
+profile_val_ok = None
+profile_high_risk = None
+val_path = Path(f"pending_profiles/FUNDID.validation.json")
+if val_path.exists():
+    val = json.loads(val_path.read_text())
+    profile_val_ok = val.get("ok")
+    profile_high_risk = val.get("high_risk")
+
 entry = {
     "date": datetime.now(BJT).strftime("%Y-%m-%d"),
     "timestamp": datetime.now(BJT).isoformat(),
     "id": "FUNDID",
     "name": "FUND_NAME",
-    "outcome": "promoted",  # or "failed" or "deferred"
+    "outcome": "promoted",  # or other (see below)
     "notes": "Wired sources.json + BADGE + CONTENT_FETCHERS. _FUND_PROFILES draft pending review.",
-    "commit": "<git rev-parse HEAD output>"
+    "commit": "<git rev-parse HEAD output>",
+    "live_test": {"articles": 10, "content_chars": 4823, "avg_quality": 0.72},
+    "profile_validation_ok": profile_val_ok,
+    "profile_high_risk": profile_high_risk,
 }
 with log.open("a") as f:
     f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 ```
 
 `outcome` 取值：
-- `"promoted"` — 全套接入成功 + commit + push
-- `"failed"` — test 失败回滚（记下哪步失败）
+- `"promoted"` — 全套接入成功 + commit + push（Phase 3 4 项硬门通过）
+- `"failed_phase3"` — live test / Haiku 质量 / method cross-check 任一失败，回滚
+- `"failed_pytest"` — Phase 5 contract test 失败，回滚
 - `"deferred"` — `has_fetcher: false` 跳过（等 fetcher-synthesis）
+- `"auto_reverted"` — wrapper 的 post-commit health probe 检测异常自动 revert（见 Phase 7）
+
+## Phase 7 — Wrapper post-commit health probe（自动）
+
+这一步**不是 agent 做**，是 `scripts/wrapper-auto-promote.sh` 在 agent 退出后自动执行：
+
+1. 扫今天 `logs/auto-promote-history.jsonl` 里 outcome=`"promoted"` 的 entries
+2. 对每家跑 `python3 scripts/gmia-fetcher-health.py --source <id> --dry-run`
+3. 退出码非 0（FAIL/issues）→ `git revert <commit_sha> --no-edit` + push + 邮件告警 + history 写一条 `outcome="auto_reverted"`
+
+这把 health-check 的 3 天延迟压到 30 分钟内（agent 跑完立即验证）。Agent **不需要**自己管这一步。
 
 ## 规则
 
