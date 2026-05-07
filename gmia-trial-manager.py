@@ -759,6 +759,204 @@ def send_trial_email(trial: dict, passed: bool, total_articles: int,
         print(f"WARNING: trial email failed: {exc}")
 
 
+# ── daily summary email ──────────────────────────────────────────────────────
+
+AUTO_PROMOTE_LOG = BASE_DIR / "logs" / "auto-promote-history.jsonl"
+
+
+def _read_auto_promote_today(today: str) -> list[dict]:
+    """Read auto-promote agent's history file, return today's entries."""
+    if not AUTO_PROMOTE_LOG.exists():
+        return []
+    entries = []
+    for line in AUTO_PROMOTE_LOG.read_text().splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            e = json.loads(line)
+            if e.get("date") == today:
+                entries.append(e)
+        except json.JSONDecodeError:
+            continue
+    return entries
+
+
+def send_daily_summary_email(state: dict, today: str) -> None:
+    """Send one email per day summarizing trial outcomes + auto-promote results.
+
+    Buckets:
+      - decided_today: trials whose end_date == today (PASS / fail_quality / fail_quantity→watchlist or inaccessible)
+      - active_progress: still-running trials with a daily_check today
+      - auto_promoted: from logs/auto-promote-history.jsonl, entries with date==today
+    """
+    if state.get("last_summary_sent_date") == today:
+        return  # already sent today
+
+    history = state.get("history", [])
+    decided_today = [h for h in history if h.get("end_date") == today]
+
+    actives = state.get("active_trials", [])
+    active_progress = [a for a in actives if today in a.get("daily_checks", {})]
+
+    auto_promoted = _read_auto_promote_today(today)
+
+    # Skip if absolutely nothing happened today
+    if not decided_today and not active_progress and not auto_promoted:
+        return
+
+    env = load_env()
+    smtp_user = env.get("SMTP_USER", "")
+    smtp_pass = env.get("SMTP_PASS", "")
+    mail_to = env.get("MAIL_TO", "")
+    if not smtp_user or not smtp_pass or not mail_to:
+        print("WARNING: SMTP not configured, skipping daily summary email")
+        return
+
+    pass_rows = ""
+    fail_quality_rows = ""
+    fail_quantity_inaccessible_rows = ""
+    fail_quantity_watchlist_rows = ""
+    for t in decided_today:
+        name = html.escape(t.get("name", t.get("id", "?")))
+        dwa = t.get("days_with_articles", "?")
+        avg_q = t.get("avg_quality_score", 0)
+        outcome = t.get("outcome", "")
+        url = t.get("research_url", "")
+        row = (
+            f"<tr><td style='padding:6px 10px'>{name}</td>"
+            f"<td style='padding:6px 10px'>{dwa}/{TRIAL_DAYS}</td>"
+            f"<td style='padding:6px 10px'>{avg_q:.2f}</td>"
+            f"<td style='padding:6px 10px;font-size:11px'>"
+            f"<a href='{html.escape(url)}'>{html.escape(url[:60])}</a></td></tr>\n"
+        )
+        if outcome == "pass":
+            pass_rows += row
+        elif outcome == "fail_quality":
+            fail_quality_rows += row
+        elif outcome == "fail_quantity":
+            # Distinguish inaccessible (0 articles) vs watchlist (some but not enough days)
+            total = t.get("total_articles", 0)
+            if total == 0:
+                fail_quantity_inaccessible_rows += row
+            else:
+                fail_quantity_watchlist_rows += row
+
+    active_rows = ""
+    for a in active_progress:
+        name = html.escape(a.get("name", a.get("id", "?")))
+        start = a.get("start_date", "")
+        try:
+            elapsed = (datetime.strptime(today, "%Y-%m-%d")
+                       - datetime.strptime(start, "%Y-%m-%d")).days
+            day_label = f"Day {elapsed + 1}/{TRIAL_DAYS}"
+        except (ValueError, TypeError):
+            day_label = "?"
+        today_check = a.get("daily_checks", {}).get(today, {})
+        articles_today = today_check.get("article_count", 0)
+        accessible = today_check.get("accessible", False)
+        progress = (f"<span style='color:#1a7f37'>{articles_today} articles</span>"
+                    if accessible else
+                    f"<span style='color:#cf222e'>unreachable</span>")
+        all_scores = [art["overall"] for s in a.get("quality_samples", [])
+                      for art in s.get("articles", [])]
+        avg_q = sum(all_scores) / len(all_scores) if all_scores else 0.0
+        active_rows += (
+            f"<tr><td style='padding:6px 10px'>{name}</td>"
+            f"<td style='padding:6px 10px'>{day_label}</td>"
+            f"<td style='padding:6px 10px'>{progress}</td>"
+            f"<td style='padding:6px 10px'>{avg_q:.2f} ({len(all_scores)} samples)</td></tr>\n"
+        )
+
+    auto_promoted_rows = ""
+    for e in auto_promoted:
+        fund_id = html.escape(e.get("id", "?"))
+        name = html.escape(e.get("name", fund_id))
+        outcome = e.get("outcome", "?")
+        notes = html.escape(e.get("notes", "")[:120])
+        color = "#1a7f37" if outcome == "promoted" else "#e3b341" if outcome == "deferred" else "#cf222e"
+        auto_promoted_rows += (
+            f"<tr><td style='padding:6px 10px'>{name}</td>"
+            f"<td style='padding:6px 10px;color:{color};font-weight:bold'>{outcome}</td>"
+            f"<td style='padding:6px 10px;font-size:12px'>{notes}</td></tr>\n"
+        )
+
+    def section(title: str, rows: str, header_html: str, color: str) -> str:
+        if not rows:
+            return ""
+        return f"""
+<h3 style="margin:18px 0 6px;color:{color}">{title}</h3>
+<table style="width:100%;border-collapse:collapse;font-size:13px;border:1px solid #e1e4e8;border-radius:6px;">
+  <tr style="background:#f6f8fa">{header_html}</tr>
+{rows}
+</table>"""
+
+    trial_header = ("<th style='padding:6px 10px;text-align:left'>Fund</th>"
+                    "<th style='padding:6px 10px;text-align:left'>Days w/ articles</th>"
+                    "<th style='padding:6px 10px;text-align:left'>Avg quality</th>"
+                    "<th style='padding:6px 10px;text-align:left'>URL</th>")
+    active_header = ("<th style='padding:6px 10px;text-align:left'>Fund</th>"
+                     "<th style='padding:6px 10px;text-align:left'>Day</th>"
+                     "<th style='padding:6px 10px;text-align:left'>Today's articles</th>"
+                     "<th style='padding:6px 10px;text-align:left'>Quality so far</th>")
+    promote_header = ("<th style='padding:6px 10px;text-align:left'>Fund</th>"
+                      "<th style='padding:6px 10px;text-align:left'>Outcome</th>"
+                      "<th style='padding:6px 10px;text-align:left'>Notes</th>")
+
+    n_pass = pass_rows.count("<tr>")
+    n_fail_quality = fail_quality_rows.count("<tr>")
+    n_inaccessible = fail_quantity_inaccessible_rows.count("<tr>")
+    n_fail_qty_watch = fail_quantity_watchlist_rows.count("<tr>")
+    n_active = len(active_progress)
+    n_auto = len(auto_promoted)
+
+    summary_chips = (
+        f"<span style='display:inline-block;padding:4px 10px;margin:2px;background:#dafbe1;color:#1a7f37;border-radius:12px;font-size:12px'>{n_pass} promoted</span>"
+        f"<span style='display:inline-block;padding:4px 10px;margin:2px;background:#fff8c5;color:#9a6700;border-radius:12px;font-size:12px'>{n_fail_quality} watchlist (low quality)</span>"
+        f"<span style='display:inline-block;padding:4px 10px;margin:2px;background:#fff8c5;color:#9a6700;border-radius:12px;font-size:12px'>{n_fail_qty_watch} watchlist (low cadence)</span>"
+        f"<span style='display:inline-block;padding:4px 10px;margin:2px;background:#ffebe9;color:#cf222e;border-radius:12px;font-size:12px'>{n_inaccessible} inaccessible</span>"
+        f"<span style='display:inline-block;padding:4px 10px;margin:2px;background:#ddf4ff;color:#0969da;border-radius:12px;font-size:12px'>{n_active} active</span>"
+        f"<span style='display:inline-block;padding:4px 10px;margin:2px;background:#f0e7ff;color:#6639ba;border-radius:12px;font-size:12px'>{n_auto} auto-promote actions</span>"
+    )
+
+    html_body = f"""<html><body style="font-family:-apple-system,sans-serif;padding:20px;max-width:720px">
+<h2 style="margin:0">📊 GMIA Trial Daily Summary — {today}</h2>
+<p style="color:#586069;margin:8px 0 16px">{summary_chips}</p>
+
+{section("✅ Promoted today (trial PASS)", pass_rows, trial_header, "#1a7f37")}
+{section("⚙️ Auto-promote agent results", auto_promoted_rows, promote_header, "#6639ba")}
+{section("⚠️ Watchlist — low quality", fail_quality_rows, trial_header, "#9a6700")}
+{section("⚠️ Watchlist — low cadence (some articles, not enough days)", fail_quantity_watchlist_rows, trial_header, "#9a6700")}
+{section("🚫 Inaccessible — 0 articles (routed to fetcher-synthesis)", fail_quantity_inaccessible_rows, trial_header, "#cf222e")}
+{section("🔄 Active trials (in progress)", active_rows, active_header, "#0969da")}
+
+<p style="color:#8b949e;font-size:11px;margin-top:24px">
+  GMIA Trial Manager — daily summary, sent once per day after trial run.<br>
+  Promoted funds need wiring (sources.json + content fetcher + badge + profile draft).
+  Auto-promote agent runs daily 02:30 BJT and handles most of this automatically.
+</p>
+</body></html>"""
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = (f"GMIA Daily Summary {today}: {n_pass}P / "
+                      f"{n_fail_quality + n_fail_qty_watch}W / "
+                      f"{n_inaccessible}I / {n_active}A / {n_auto}AP")
+    msg["From"] = smtp_user
+    msg["To"] = mail_to
+    msg["MIME-Version"] = "1.0"
+    msg.attach(MIMEText(html_body, "html"))
+
+    try:
+        with smtplib.SMTP_SSL("smtp.163.com", 465, timeout=30) as s:
+            s.login(smtp_user, smtp_pass)
+            s.send_message(msg)
+        print(f"Daily summary email sent to {mail_to}")
+        state["last_summary_sent_date"] = today
+        save_state(state)
+    except Exception as exc:
+        print(f"WARNING: daily summary email failed: {exc}")
+
+
 # ── main commands ─────────────────────────────────────────────────────────────
 
 def cmd_run() -> None:
@@ -955,6 +1153,9 @@ def cmd_run() -> None:
                           f"avg quality score: {qr['avg_score']:.2f}")
                     for art in qr.get("articles", []):
                         print(f"[trial]     {art['overall']:.2f} — {art['notes'][:60]}")
+
+    # ── Step 3: send one daily summary email per day ─────────────────────────
+    send_daily_summary_email(state, today)
 
 
 def cmd_status() -> None:
