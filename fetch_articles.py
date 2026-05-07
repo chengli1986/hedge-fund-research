@@ -1698,6 +1698,62 @@ def fetch_capital_group(source: dict) -> list[dict]:
 # Dispatcher
 # ---------------------------------------------------------------------------
 
+def fetch_natixis_im(source: dict) -> list[dict]:
+    """Fetch articles from Natixis Investment Managers Tactical Take (SSR).
+
+    Card: <a href="/en-us/insights/macro-views/...">
+            <div class="ntx-insight-card__title">title</div>
+            <div class="ntx-insight-card__description">summary</div>
+            <ntx-card-info date="MMMM DD, YYYY" format="..." consumeTime="..."></ntx-card-info>
+          </a>
+
+    The site is fully SSR (no Akamai/Cloudflare gate), plain requests works.
+    """
+    base_url = "https://www.im.natixis.com"
+    url = source["url"]
+    expected_host = source.get("expected_hostname", "im.natixis.com")
+
+    resp = requests.get(url, headers=HEADERS, timeout=30)
+    resp.raise_for_status()
+    soup = BeautifulSoup(resp.text, "html.parser")
+
+    articles: list[dict] = []
+    seen_urls: set[str] = set()
+
+    for a in soup.find_all("a", href=re.compile(r"/insights/macro-views/")):
+        href = a.get("href", "")
+        if not href:
+            continue
+        # Require a deep path (year + slug), not the section landing page
+        if href.count("/") < 5:
+            continue
+        article_url = urljoin(base_url, href)
+        if not _validate_hostname(article_url, expected_host) or article_url in seen_urls:
+            continue
+        seen_urls.add(article_url)
+
+        title_el = a.find("div", class_=re.compile(r"title|heading", re.I))
+        title = title_el.get_text(strip=True) if title_el else ""
+        if not title or len(title) < 5:
+            continue
+
+        desc_el = a.find("div", class_=re.compile(r"description", re.I))
+        summary = desc_el.get_text(strip=True) if desc_el else ""
+
+        info_el = a.find("ntx-card-info")
+        date_raw = info_el.get("date", "") if info_el else ""
+
+        articles.append({
+            "title": title,
+            "url": article_url,
+            "summary": summary,
+            "date": parse_date(date_raw) if date_raw else None,
+            "date_raw": date_raw,
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
 FETCHERS = {
     "cambridge-associates": fetch_cambridge_associates,
     "man-group": fetch_man_group,
@@ -1724,6 +1780,7 @@ FETCHERS = {
     "blackrock-institute": fetch_blackrock_institute,
     "morganstanley-im": fetch_morganstanley_im,
     "capital-group": fetch_capital_group,
+    "natixis-im": fetch_natixis_im,
 }
 
 

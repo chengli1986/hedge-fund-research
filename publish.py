@@ -41,6 +41,7 @@ BADGE_COLORS: dict[str, str] = {
     "jpmam": "#7a4cb1",                 # JPMorgan purple
     "verdad-capital": "#7c2d12",        # Verdad terracotta (rust)
     "msci-research": "#1f49e0",         # MSCI cobalt blue
+    "natixis-im": "#80276c",            # Natixis purple
 }
 
 INITIAL_VISIBLE = 20
@@ -165,6 +166,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "全球领先的指数、ESG/气候分析与因子模型提供商。1969 年由 Capital International 创立，2007 年从 Morgan Stanley 分拆独立上市。ACWI、EAFE、新兴市场指数被全球约 $15 万亿资金跟踪。Research & Insights 板块覆盖因子投资、ESG 整合、气候风险、多资产风险与指数构建方法论。",
         "notable_en": "MSCI ACWI/EAFE/EM indexes benchmarked by $15T+ globally; pioneered factor index construction (Quality, Value, Momentum); ESG ratings used by 1,700+ institutional investors.",
         "notable_zh": "MSCI ACWI/EAFE/新兴市场指数全球跟踪规模超 $15 万亿；首创因子指数构建方法论（质量、价值、动量）；ESG 评级被 1,700+ 机构投资者采用。",
+    },
+    "natixis-im": {
+        "founded": "2007", "aum": "~$1.4T", "hq": "Paris, France / Boston, MA",
+        "type_en": "Multi-Affiliate Asset Manager", "type_zh": "多附属机构资管平台",
+        "desc_zh": "法国 Groupe BPCE 旗下多附属机构资管平台，2007 年合并成立。汇集 15+ 家投资附属公司（Loomis Sayles、Harris Associates、Mirova 等）覆盖固收、价值股、ESG/气候、量化与对冲策略。Tactical Take 月度宏观播客由首席投资策略师 Jack Janasiewicz 与 Brian Hess 主持，覆盖 Fed 政策、通胀就业与多资产配置。",
+        "notable_en": "Multi-affiliate model preserves boutique autonomy across Loomis Sayles, Harris Associates, Mirova, etc.; Tactical Take podcast is one of the most accessible macro/portfolio strategy series among large managers.",
+        "notable_zh": "多附属机构模式在 Loomis Sayles、Harris Associates、Mirova 等品牌下保留精品店自主性；Tactical Take 播客是大型资管中最易获取的宏观与组合策略系列之一。",
     },
 }
 

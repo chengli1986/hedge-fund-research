@@ -215,6 +215,19 @@
       "notable_authors": [],
       "expected_hostname": "msci.com",
       "max_articles": 10
+    },
+    {
+      "id": "natixis-im",
+      "strategy_tags": ["macro", "multi_asset", "fixed_income", "equity"],
+      "name": "Natixis Investment Managers",
+      "short_name": "Natixis IM",
+      "url": "https://www.im.natixis.com/en-us/insights/the-tactical-take",
+      "method": "requests",
+      "frequency": "monthly",
+      "description": "Tactical Take podcast — monthly macro/portfolio strategy series with Jack Janasiewicz and Brian Hess covering Fed policy, inflation, employment, AI, and multi-asset positioning.",
+      "notable_authors": ["Jack Janasiewicz", "Brian Hess"],
+      "expected_hostname": "im.natixis.com",
+      "max_articles": 10
     }
   ],
   "settings": {

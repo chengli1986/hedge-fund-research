@@ -842,6 +842,30 @@ def _fetch_content_jpmam(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+def _fetch_content_natixis(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Natixis Investment Managers article content via requests (SSR)."""
+    url = article["url"]
+    log.info("  Natixis IM: fetching article page %s", url)
+
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Natixis IM: fetch failed: %s", e)
+        return None
+
+    text = _normalize_html(resp.text, "main p")
+
+    if not _check_min_content_length(text):
+        log.warning("  Natixis IM: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Natixis IM: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 def _fetch_content_msci(article: dict) -> Optional[tuple[Path, str]]:
     """Fetch MSCI Research & Insights article content via requests.
 
@@ -890,6 +914,7 @@ CONTENT_FETCHERS = {
     "jpmam": _fetch_content_jpmam,
     "verdad-capital": _fetch_content_verdad,
     "msci-research": _fetch_content_msci,
+    "natixis-im": _fetch_content_natixis,
 }
 
 
