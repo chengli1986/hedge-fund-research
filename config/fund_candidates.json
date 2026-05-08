@@ -855,8 +855,8 @@
     "rss_url": null,
     "official_domain": null,
     "discovery_method": "seed",
-    "notes": "403 blocks server access; JS-rendered, needs Playwright; PE/credit/macro, manual only",
-    "last_deep_analyzed_at": "2026-04-29T01:01:48Z",
+    "notes": "403 policy block confirmed; requires residential proxy — out of scope",
+    "last_deep_analyzed_at": "2026-05-08T01:02:53Z",
     "quality": "MEDIUM",
     "topics": "private equity, credit, real assets, macro",
     "strategy_tags": [
@@ -1947,5 +1947,129 @@
     "quality": "MEDIUM",
     "quality_score": 0.5,
     "topics": "fixed income, macro, bonds, interest rates"
+  },
+  {
+    "id": "robeco",
+    "name": "Robeco",
+    "homepage_url": "https://www.robeco.com/en-int/insights",
+    "research_url": "https://www.robeco.com/en-int/insights",
+    "source": "manual",
+    "status": "discovered",
+    "strategy_tags": [
+      "quant",
+      "esg_climate",
+      "emerging_markets",
+      "multi_asset"
+    ],
+    "quality": "MEDIUM",
+    "quality_score": 0.7,
+    "topics": "quant, ESG, emerging markets, fixed income, credit",
+    "notes": "Weekly quant+ESG research, fills climate gap, 979 free",
+    "last_deep_analyzed_at": "2026-05-08T01:02:53Z",
+    "official_domain": "www.robeco.com",
+    "discovery_method": "discover_fund_sites",
+    "research_links": [
+      {
+        "url": "https://www.robeco.com/en-int/insights",
+        "label": "Insights",
+        "path": "en-int/insights"
+      },
+      {
+        "url": "https://www.robeco.com/en-int/insights/latest-insights",
+        "label": "Latest",
+        "path": "en-int/insights/latest-insights"
+      },
+      {
+        "url": "https://www.robeco.com/en-int/insights/top-stories",
+        "label": "Top stories",
+        "path": "en-int/insights/top-stories"
+      },
+      {
+        "url": "https://www.robeco.com/en-int/insights/market-view-outlook",
+        "label": "Market view & outlook",
+        "path": "en-int/insights/market-view-outlook"
+      },
+      {
+        "url": "https://www.robeco.com/en-int/insights/education",
+        "label": "Education",
+        "path": "en-int/insights/education"
+      },
+      {
+        "url": "https://www.robeco.com/en-int/insights/webinars-events",
+        "label": "Webinars",
+        "path": "en-int/insights/webinars-events"
+      },
+      {
+        "url": "https://www.robeco.com/en-int/insights/2026/05/innovation-where-it-matters-generating-alpha-while-maintaining-disciplined-control",
+        "label": "Innovation where it matters: generating alpha while maintaining disciplined control",
+        "path": "en-int/insights/2026/05/innovation-where-it-matters-generating-alpha-while-maintaining-disciplined-control"
+      },
+      {
+        "url": "https://www.robeco.com/en-int/insights/2026/05/emerging-markets-are-in-pole-position-in-the-resources-race",
+        "label": "Emerging markets are in pole position in the resources race",
+        "path": "en-int/insights/2026/05/emerging-markets-are-in-pole-position-in-the-resources-race"
+      },
+      {
+        "url": "https://www.robeco.com/en-int/insights/2026/05/em-to-the-core-episode-3-the-emerging-markets-consumer",
+        "label": "EM to the core, Episode 3 – The emerging markets consumer",
+        "path": "en-int/insights/2026/05/em-to-the-core-episode-3-the-emerging-markets-consumer"
+      },
+      {
+        "url": "https://www.robeco.com/en-int/insights/2026/05/a-value-investing-approach-that-doesn-t-need-typical-value-markets",
+        "label": "A value investing approach that doesn’t need typical value markets",
+        "path": "en-int/insights/2026/05/a-value-investing-approach-that-doesn-t-need-typical-value-markets"
+      },
+      {
+        "url": "https://www.robeco.com/en-int/insights/2026/04/stewardship-report-2025-unwavering-commitment-to-drive-change",
+        "label": "Stewardship Report 2025: Unwavering commitment to drive change",
+        "path": "en-int/insights/2026/04/stewardship-report-2025-unwavering-commitment-to-drive-change"
+      },
+      {
+        "url": "https://www.robeco.com/en-int/insights/2026/04/making-the-most-of-small-caps",
+        "label": "Making the most of small caps",
+        "path": "en-int/insights/2026/04/making-the-most-of-small-caps"
+      },
+      {
+        "url": "https://www.robeco.com/en-int/insights/2026/04/si-debate-resilience-as-an-investment-imperative",
+        "label": "SI Debate: Resilience as an investment imperative",
+        "path": "en-int/insights/2026/04/si-debate-resilience-as-an-investment-imperative"
+      },
+      {
+        "url": "https://www.robeco.com/en-int/insights/2026/04/em-to-the-core-episode-2-emerging-markets-competitive-edge",
+        "label": "EM to the core, Episode 2 – Emerging markets’ competitive edge",
+        "path": "en-int/insights/2026/04/em-to-the-core-episode-2-emerging-markets-competitive-edge"
+      },
+      {
+        "url": "https://www.robeco.com/en-int/insights/2026/04/podcast-in-tune-with-the-markets-to-the-moon",
+        "label": "Podcast: In tune with the markets – To the moon",
+        "path": "en-int/insights/2026/04/podcast-in-tune-with-the-markets-to-the-moon"
+      },
+      {
+        "url": "https://www.robeco.com/en-int/insights/2026/04/em-to-the-core-episode-1-six-tailwinds-for-emerging-markets",
+        "label": "EM to the core, Episode 1 – Six tailwinds for emerging markets",
+        "path": "en-int/insights/2026/04/em-to-the-core-episode-1-six-tailwinds-for-emerging-markets"
+      },
+      {
+        "url": "https://www.robeco.com/en-int/insights/2026/03/the-curious-case-of-fama-french-where-does-alpha-come-from",
+        "label": "The curious case of Fama-French: where does alpha come from?",
+        "path": "en-int/insights/2026/03/the-curious-case-of-fama-french-where-does-alpha-come-from"
+      },
+      {
+        "url": "https://www.robeco.com/en-int/insights/2026/03/podcast-in-tune-with-the-markets-how-soon-is-now",
+        "label": "Podcast: In tune with the markets – How soon is now?",
+        "path": "en-int/insights/2026/03/podcast-in-tune-with-the-markets-how-soon-is-now"
+      },
+      {
+        "url": "https://www.robeco.com/en-int/insights/2026/02/podcast-in-tune-with-the-markets-the-beat-goes-on",
+        "label": "Podcast: In tune with the markets – The beat goes on",
+        "path": "en-int/insights/2026/02/podcast-in-tune-with-the-markets-the-beat-goes-on"
+      },
+      {
+        "url": "https://www.robeco.com/en-int/insights/2026/02/podcast-geopolitics-and-ai-boost-emerging-markets-prospects",
+        "label": "Podcast: Geopolitics and AI boost emerging markets prospects",
+        "path": "en-int/insights/2026/02/podcast-geopolitics-and-ai-boost-emerging-markets-prospects"
+      }
+    ],
+    "last_discovered_at": "2026-05-08T09:02:57.419661+08:00"
   }
 ]
