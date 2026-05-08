@@ -211,7 +211,7 @@
       "url": "https://www.msci.com/research-and-insights",
       "method": "playwright",
       "frequency": "weekly",
-      "description": "MSCI Research & Insights — index/factor research, ESG & climate frameworks, portfolio construction, multi-asset risk and benchmark analysis.",
+      "description": "Index, factor and ESG analytics provider; ACWI/EAFE/EM benchmarks tracked by $15T+. Factor models (Quality/Value/Momentum), climate risk, multi-asset risk modelling.",
       "notable_authors": [],
       "expected_hostname": "msci.com",
       "max_articles": 10
@@ -224,7 +224,7 @@
       "url": "https://www.im.natixis.com/en-us/insights/the-tactical-take",
       "method": "requests",
       "frequency": "monthly",
-      "description": "Tactical Take podcast — monthly macro/portfolio strategy series with Jack Janasiewicz and Brian Hess covering Fed policy, inflation, employment, AI, and multi-asset positioning.",
+      "description": "European multi-affiliate platform — 15+ boutiques (Loomis Sayles, Harris Associates, Mirova). Fixed income, value equity, ESG/climate, multi-asset. Tactical Take macro podcast.",
       "notable_authors": ["Jack Janasiewicz", "Brian Hess"],
       "expected_hostname": "im.natixis.com",
       "max_articles": 10
@@ -237,7 +237,7 @@
       "url": "https://www.apollo.com/insights-news/insights",
       "method": "requests",
       "frequency": "weekly",
-      "description": "Apollo Insights — investment commentary across private credit, private equity, secondaries, and macro from one of the largest alternative asset managers globally.",
+      "description": "Largest US private credit / alts platform (~$700B). Pioneered ABF (asset-backed finance); private equity, real estate, insurance-solutions via Athene merger. Macro commentary from Marc Rowan and Torsten Slok.",
       "notable_authors": ["Jim Zelter", "Torsten Slok", "John Zito"],
       "expected_hostname": "apollo.com",
       "max_articles": 10
