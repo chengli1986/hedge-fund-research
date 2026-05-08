@@ -2229,6 +2229,13 @@
           "date_count": 10,
           "error": null,
           "fetcher_used": true
+        },
+        "2026-05-08": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -2266,6 +2273,39 @@
           "error": null,
           "day": 1,
           "date": "2026-05-07"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.kkr.com/insights/2026-china-thoughts-from-the-road",
+              "relevance": 0.85,
+              "depth": 0.65,
+              "extractable": 0.55,
+              "overall": 0.71,
+              "notes": "Macro analysis of Asia investment strategy with focus on China market dynamics, commodity pressures, and capital flows; partially truncated text limits extractability."
+            },
+            {
+              "url": "https://www.kkr.com/insights/private-market-opportunities-2026",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.5,
+              "overall": 0.74,
+              "notes": "Investment strategy commentary on private markets opportunities across credit and PE, with discussion of AI disruption and portfolio diversification; text appears truncated mid-sentence."
+            },
+            {
+              "url": "https://www.kkr.com/insights/naic-spring-update-2026",
+              "relevance": 0.8,
+              "depth": 0.75,
+              "extractable": 0.45,
+              "overall": 0.71,
+              "notes": "Regulatory analysis of NAIC insurance investment rules, CLO risk-based capital proposals, and tranche pricing; significantly truncated with incomplete exhibits and missing conclusion."
+            }
+          ],
+          "avg_score": 0.72,
+          "error": null,
+          "day": 2,
+          "date": "2026-05-08"
         }
       ]
     },
@@ -2286,6 +2326,13 @@
           "date_count": 0,
           "error": null,
           "fetcher_used": true
+        },
+        "2026-05-08": {
+          "accessible": true,
+          "article_count": 0,
+          "date_count": 0,
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -2298,6 +2345,14 @@
           "error": "Could not extract text from any article",
           "day": 1,
           "date": "2026-05-07"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No article links found on index page",
+          "day": 2,
+          "date": "2026-05-08"
         }
       ]
     },
@@ -2318,6 +2373,13 @@
           "date_count": 0,
           "error": null,
           "fetcher_used": false
+        },
+        "2026-05-08": {
+          "accessible": true,
+          "article_count": 0,
+          "date_count": 0,
+          "error": null,
+          "fetcher_used": false
         }
       },
       "auto_decided": false,
@@ -2330,8 +2392,17 @@
           "error": "No article links found on index page",
           "day": 1,
           "date": "2026-05-07"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No article links found on index page",
+          "day": 2,
+          "date": "2026-05-08"
         }
       ]
     }
-  ]
+  ],
+  "last_summary_sent_date": "2026-05-08"
 }
