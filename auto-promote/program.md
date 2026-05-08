@@ -69,7 +69,17 @@ EOF
   - RSS feedparser → `"rss"`
   - JSON API → `"api"`
 - `frequency`：从 candidate.topics / strategy_tags 推断；没把握就 `"weekly"`
-- `description`：1-2 句概述（中英都可以；现有都是英文，保持一致）
+- `description`：1-2 句**基金本身**的概述（专注市场 / 习惯策略 / 区别于其他基金的特色）。
+  ⚠️ **不要描述研究频道/播客本身的内容** —— 那是 notable 字段的事。常见错误：抄了
+  "Tactical Take podcast — monthly macro/portfolio strategy series..." 这类
+  research-page 的自我介绍，把频道写成了基金。正确风格参考：
+  - aqr: "Quantitative investing pioneer. Factor investing, alternatives, tax-aware."
+  - oaktree: "Credit/distressed debt specialist. Howard Marks memos are legendary."
+  - apollo: "Largest US private credit / alts platform (~$700B). Pioneered ABF
+    (asset-backed finance); private equity, real estate, insurance-solutions
+    via Athene merger."
+  - 错误示例（已被 5-08 commit `1143b99` 修正）：MSCI/Natixis/Apollo 三家初版描述
+    全部是研究频道的简介，不是基金本身。
 - `notable_authors`：candidate 的 `notable_authors`，没有就 `[]`
 - `expected_hostname`：从 url 提取主域名（去掉 www. 与子域）
 
@@ -232,6 +242,7 @@ mkdir -p pending_profiles
   "desc_zh": "中文一两句简介，重点说投资风格、起源、特色（如何区别于其他基金）。",
   "notable_en": "1-2 sentence English: notable fact / track record / signature strategy",
   "notable_zh": "中文 1-2 句：代表事迹 / 业绩记录 / 招牌策略",
+  "//desc_zh-rule": "desc_zh 必须描述基金本身（市场覆盖/策略/特色），不能描述研究频道。错误示例：'Tactical Take 月度宏观播客由...主持' — 这是把频道介绍当基金简介。正确示例：'美国最大私募信贷/另类资管之一，1990 年由 Leon Black 等创立。核心业务：私募信贷（ABF 开创者）、私募股权、保险负债驱动投资。' 标志性研究输出（Howard Marks memos / Tactical Take podcast）放 notable_zh，不放 desc_zh。",
   "_generated_at": "ISO timestamp",
   "_confidence_notes": "Areas where you're less sure (e.g., 'AUM may be outdated as of Q3 2024')"
 }
