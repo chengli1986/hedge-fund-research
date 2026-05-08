@@ -65,7 +65,19 @@ def list_targets() -> list[dict]:
             "homepage_url": c.get("homepage_url", ""),
             "research_url": c.get("research_url") or c.get("homepage_url", ""),
             "notes": c.get("notes", ""),
+            # Set by discover_candidate_entrypoints when httpx returned a shell
+            # page or no nav links — agent should skip httpx attempts and go
+            # straight to Playwright.
+            "needs_playwright": bool(c.get("needs_playwright")),
+            "quality": c.get("quality", "?"),
         })
+    # Sort: needs_playwright candidates first (we already know httpx can't see them),
+    # then by quality (HIGH > MEDIUM > unknown).
+    quality_order = {"HIGH": 0, "MEDIUM": 1, "?": 2, "LOW": 3}
+    targets.sort(key=lambda t: (
+        not t["needs_playwright"],  # False sorts before True → playwright targets first
+        quality_order.get(t["quality"], 2),
+    ))
     return targets
 
 

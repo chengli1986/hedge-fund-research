@@ -772,6 +772,55 @@ def send_trial_email(trial: dict, passed: bool, total_articles: int,
 # ── daily summary email ──────────────────────────────────────────────────────
 
 AUTO_PROMOTE_LOG = BASE_DIR / "logs" / "auto-promote-history.jsonl"
+PENDING_PROFILES_DIR = BASE_DIR / "pending_profiles"
+
+# Stale-pending thresholds: <3d = recent (silent), 3-7d = needs review, >=7d = urgent
+PENDING_RECENT_DAYS = 3
+PENDING_URGENT_DAYS = 7
+
+
+def _scan_pending_profiles(today: str) -> list[dict]:
+    """Scan pending_profiles/*.json and return list of {id, age_days, validation_ok,
+    high_risk} for unreviewed profiles. Skips *.validation.json companion files."""
+    if not PENDING_PROFILES_DIR.is_dir():
+        return []
+
+    try:
+        today_dt = datetime.strptime(today, "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        return []
+
+    out = []
+    for path in sorted(PENDING_PROFILES_DIR.glob("*.json")):
+        if path.name.endswith(".validation.json"):
+            continue
+
+        try:
+            mtime = datetime.fromtimestamp(path.stat().st_mtime).date()
+            age_days = (today_dt - mtime).days
+        except OSError:
+            continue
+
+        # Read companion validation file if present
+        validation_ok = None
+        high_risk = None
+        val_path = path.with_suffix(".validation.json")
+        if val_path.exists():
+            try:
+                v = json.loads(val_path.read_text())
+                validation_ok = v.get("ok")
+                high_risk = v.get("high_risk")
+            except (json.JSONDecodeError, OSError):
+                pass
+
+        out.append({
+            "id": path.stem,
+            "path": str(path),
+            "age_days": max(age_days, 0),
+            "validation_ok": validation_ok,
+            "high_risk": high_risk,
+        })
+    return out
 
 
 def _read_auto_promote_today(today: str) -> list[dict]:
@@ -810,9 +859,12 @@ def send_daily_summary_email(state: dict, today: str) -> None:
     active_progress = [a for a in actives if today in a.get("daily_checks", {})]
 
     auto_promoted = _read_auto_promote_today(today)
+    pending_profiles = _scan_pending_profiles(today)
+    pending_urgent = [p for p in pending_profiles if p["age_days"] >= PENDING_URGENT_DAYS]
 
-    # Skip if absolutely nothing happened today
-    if not decided_today and not active_progress and not auto_promoted:
+    # Skip if absolutely nothing happened today AND no urgent pending profiles
+    if (not decided_today and not active_progress and not auto_promoted
+            and not pending_urgent):
         return
 
     env = load_env()
@@ -878,6 +930,31 @@ def send_daily_summary_email(state: dict, today: str) -> None:
             f"<td style='padding:6px 10px'>{avg_q:.2f} ({len(all_scores)} samples)</td></tr>\n"
         )
 
+    pending_rows = ""
+    for p in sorted(pending_profiles, key=lambda x: -x["age_days"]):
+        if p["age_days"] < PENDING_RECENT_DAYS:
+            continue  # don't surface fresh ones
+        age = p["age_days"]
+        if age >= PENDING_URGENT_DAYS:
+            color = "#cf222e"
+            label = f"⚠️ {age}d (URGENT)"
+        else:
+            color = "#9a6700"
+            label = f"{age}d"
+        flags = []
+        if p["high_risk"]:
+            flags.append("high-risk markers")
+        if p["validation_ok"] is False:
+            flags.append("validation FAIL")
+        elif p["validation_ok"] is None:
+            flags.append("no validation file")
+        flags_str = ", ".join(flags) if flags else "passed validation"
+        pending_rows += (
+            f"<tr><td style='padding:6px 10px'>{html.escape(p['id'])}</td>"
+            f"<td style='padding:6px 10px;color:{color};font-weight:bold'>{label}</td>"
+            f"<td style='padding:6px 10px;font-size:12px'>{html.escape(flags_str)}</td></tr>\n"
+        )
+
     auto_promoted_rows = ""
     for e in auto_promoted:
         fund_id = html.escape(e.get("id", "?"))
@@ -912,6 +989,9 @@ def send_daily_summary_email(state: dict, today: str) -> None:
     promote_header = ("<th style='padding:6px 10px;text-align:left'>Fund</th>"
                       "<th style='padding:6px 10px;text-align:left'>Outcome</th>"
                       "<th style='padding:6px 10px;text-align:left'>Notes</th>")
+    pending_header = ("<th style='padding:6px 10px;text-align:left'>Profile ID</th>"
+                      "<th style='padding:6px 10px;text-align:left'>Age</th>"
+                      "<th style='padding:6px 10px;text-align:left'>Flags</th>")
 
     n_pass = pass_rows.count("<tr>")
     n_fail_quality = fail_quality_rows.count("<tr>")
@@ -919,6 +999,22 @@ def send_daily_summary_email(state: dict, today: str) -> None:
     n_fail_qty_watch = fail_quantity_watchlist_rows.count("<tr>")
     n_active = len(active_progress)
     n_auto = len(auto_promoted)
+    n_pending_urgent = len(pending_urgent)
+    n_pending_total = pending_rows.count("<tr>")  # only counts rows we surfaced (>=3d)
+
+    pending_chip = ""
+    if n_pending_urgent:
+        pending_chip = (
+            f"<span style='display:inline-block;padding:4px 10px;margin:2px;background:#ffebe9;"
+            f"color:#cf222e;border-radius:12px;font-size:12px;font-weight:bold'>"
+            f"⚠️ {n_pending_urgent} pending profile(s) ≥{PENDING_URGENT_DAYS}d</span>"
+        )
+    elif n_pending_total:
+        pending_chip = (
+            f"<span style='display:inline-block;padding:4px 10px;margin:2px;background:#fff8c5;"
+            f"color:#9a6700;border-radius:12px;font-size:12px'>"
+            f"{n_pending_total} pending profile(s)</span>"
+        )
 
     summary_chips = (
         f"<span style='display:inline-block;padding:4px 10px;margin:2px;background:#dafbe1;color:#1a7f37;border-radius:12px;font-size:12px'>{n_pass} promoted</span>"
@@ -927,6 +1023,7 @@ def send_daily_summary_email(state: dict, today: str) -> None:
         f"<span style='display:inline-block;padding:4px 10px;margin:2px;background:#ffebe9;color:#cf222e;border-radius:12px;font-size:12px'>{n_inaccessible} inaccessible</span>"
         f"<span style='display:inline-block;padding:4px 10px;margin:2px;background:#ddf4ff;color:#0969da;border-radius:12px;font-size:12px'>{n_active} active</span>"
         f"<span style='display:inline-block;padding:4px 10px;margin:2px;background:#f0e7ff;color:#6639ba;border-radius:12px;font-size:12px'>{n_auto} auto-promote actions</span>"
+        f"{pending_chip}"
     )
 
     html_body = f"""<html><body style="font-family:-apple-system,sans-serif;padding:20px;max-width:720px">
@@ -935,6 +1032,7 @@ def send_daily_summary_email(state: dict, today: str) -> None:
 
 {section("✅ Promoted today (trial PASS)", pass_rows, trial_header, "#1a7f37")}
 {section("⚙️ Auto-promote agent results", auto_promoted_rows, promote_header, "#6639ba")}
+{section("📝 Pending profiles awaiting human review", pending_rows, pending_header, "#cf222e" if pending_urgent else "#9a6700")}
 {section("⚠️ Watchlist — low quality", fail_quality_rows, trial_header, "#9a6700")}
 {section("⚠️ Watchlist — low cadence (some articles, not enough days)", fail_quantity_watchlist_rows, trial_header, "#9a6700")}
 {section("🚫 Inaccessible — 0 articles (routed to fetcher-synthesis)", fail_quantity_inaccessible_rows, trial_header, "#cf222e")}
@@ -948,9 +1046,11 @@ def send_daily_summary_email(state: dict, today: str) -> None:
 </body></html>"""
 
     msg = MIMEMultipart("alternative")
+    pending_tag = f" / ⚠️{n_pending_urgent}PP" if n_pending_urgent else ""
     msg["Subject"] = (f"GMIA Daily Summary {today}: {n_pass}P / "
                       f"{n_fail_quality + n_fail_qty_watch}W / "
-                      f"{n_inaccessible}I / {n_active}A / {n_auto}AP")
+                      f"{n_inaccessible}I / {n_active}A / {n_auto}AP"
+                      f"{pending_tag}")
     msg["From"] = smtp_user
     msg["To"] = mail_to
     msg["MIME-Version"] = "1.0"

@@ -60,6 +60,21 @@ TERMINAL_OK_STATUSES = {"ok", "metadata_only"}
 TRANSIENT_EXC_NAMES = {"TimeoutError", "ReadTimeout", "ConnectionError", "ConnectTimeout"}
 RETRY_SLEEP_S = 5
 
+# Staleness thresholds: how old can the most-recent article be before we WARN?
+# Set generous so known silent periods (Bridgewater monthly, AQR ~quarterly) don't
+# trip on normal cadence. Beyond these, the site is publishing materially less than
+# its own stated frequency — worth a heads-up.
+FREQ_TO_STALE_DAYS = {
+    "daily": 14,
+    "weekly": 30,
+    "biweekly": 45,
+    "monthly": 90,
+    "quarterly": 240,
+    "annual": 540,
+    "yearly": 540,
+}
+DEFAULT_STALE_DAYS = 120  # source missing or unknown frequency
+
 
 # ── shared helpers ───────────────────────────────────────────────────────────
 
@@ -97,6 +112,29 @@ def now_iso() -> str:
 
 def now_human() -> str:
     return datetime.now(BJT).strftime("%Y-%m-%d %H:%M BJT")
+
+
+def _parse_article_date(raw: str | None) -> datetime | None:
+    """Parse YYYY-MM-DD-style date strings produced by fetch_articles. Returns None
+    on unparseable input — caller treats that as 'no parsed date' (already a WARN)."""
+    if not raw or not isinstance(raw, str):
+        return None
+    raw = raw.strip()
+    for fmt in ("%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%Y/%m/%d", "%Y%m%d"):
+        try:
+            return datetime.strptime(raw[:len(fmt) + 4], fmt).replace(tzinfo=BJT)
+        except ValueError:
+            continue
+    # Last resort: ISO 8601 with timezone
+    try:
+        return datetime.fromisoformat(raw.replace("Z", "+00:00")).astimezone(BJT)
+    except (ValueError, TypeError):
+        return None
+
+
+def _stale_threshold_days(source: dict) -> int:
+    freq = (source.get("frequency") or "").strip().lower()
+    return FREQ_TO_STALE_DAYS.get(freq, DEFAULT_STALE_DAYS)
 
 
 # ── per-source probe ─────────────────────────────────────────────────────────
@@ -205,6 +243,24 @@ def _probe_once(source: dict) -> dict:
     if result["most_recent_date"] is None:
         result["status"] = "WARN"
         result["reason"] = "most recent article has no parsed date"
+        return result
+
+    # Step 4: staleness vs declared frequency. Catches the "site stopped publishing
+    # but old article index still serves" failure mode — fetcher returns articles
+    # so step 1+2 pass, but the newest is months past the cadence threshold.
+    parsed = _parse_article_date(result["most_recent_date"])
+    if parsed is not None:
+        threshold = _stale_threshold_days(source)
+        age_days = (datetime.now(BJT).date() - parsed.date()).days
+        result["most_recent_age_days"] = age_days
+        result["stale_threshold_days"] = threshold
+        if age_days > threshold:
+            freq_label = source.get("frequency") or "unknown frequency"
+            result["status"] = "WARN"
+            result["reason"] = (
+                f"stale: most recent article {age_days}d old "
+                f"(frequency={freq_label}, threshold {threshold}d)"
+            )
 
     return result
 

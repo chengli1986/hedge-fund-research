@@ -98,6 +98,122 @@ echo "$PROMPT" | claude --print \
 EXIT_CODE=$?
 echo "$LOG_PREFIX Agent exited with code $EXIT_CODE"
 
+# ─── Phase 6.5: commit-msg evidence validation ───────────────────────────────
+# program.md Phase 3 requires the agent's commit message to embed 4 hard-gate
+# evidence fields (Live test articles+chars, Haiku quality avg+rel, Method,
+# Preview). Without this check, the agent could fabricate evidence in prose
+# without anyone noticing. We validate every today's "promoted" commit; failures
+# get reverted before health probe runs.
+echo "$LOG_PREFIX Running commit-msg evidence validation..."
+
+cd "$REPO_DIR"
+python3 - << 'PYEOF'
+import json
+import subprocess
+import sys
+from datetime import datetime, timezone, timedelta
+from pathlib import Path
+
+BJT = timezone(timedelta(hours=8))
+today = datetime.now(BJT).strftime("%Y-%m-%d")
+log = Path("logs/auto-promote-history.jsonl")
+validator = "scripts/validate_promote_commit_msg.py"
+
+if not log.exists():
+    print("[validate-msg] no history file, nothing to verify")
+    sys.exit(0)
+
+# Find today's promoted entries (newest last in jsonl)
+promoted_today = []
+for line in log.read_text().splitlines():
+    line = line.strip()
+    if not line:
+        continue
+    try:
+        e = json.loads(line)
+    except json.JSONDecodeError:
+        continue
+    if e.get("date") == today and e.get("outcome") == "promoted":
+        promoted_today.append(e)
+
+if not promoted_today:
+    print("[validate-msg] no promoted entries today, nothing to verify")
+    sys.exit(0)
+
+print(f"[validate-msg] checking {len(promoted_today)} commit(s) for evidence...")
+
+# Validate in REVERSE order (newest commit first — for revert sequencing)
+reverted = []
+for e in reversed(promoted_today):
+    sid = e["id"]
+    commit = e.get("commit", "")
+    if not commit:
+        print(f"[validate-msg] {sid}: no commit sha in history, skipping")
+        continue
+
+    print(f"[validate-msg] {sid} (commit {commit[:8]})...")
+    proc = subprocess.run(
+        ["python3", validator, "--commit", commit, "--quiet"],
+        capture_output=True, text=True, timeout=30,
+    )
+    if proc.returncode == 0:
+        print(f"[validate-msg]   OK ✓ {proc.stdout.strip()}")
+        continue
+
+    if proc.returncode == 2:
+        print(f"[validate-msg]   ERROR: validator failed to read commit: {proc.stderr.strip()}")
+        continue
+
+    # returncode == 1 → evidence missing/below threshold → revert
+    print(f"[validate-msg]   FAIL ✗ {proc.stdout.strip()}")
+    print(f"[validate-msg]   reverting {commit[:8]}")
+
+    revert = subprocess.run(
+        ["git", "revert", commit, "--no-edit"],
+        capture_output=True, text=True,
+    )
+    if revert.returncode != 0:
+        print(f"[validate-msg]   git revert FAILED: {revert.stderr[:300]}")
+        continue
+
+    push = subprocess.run(
+        ["git", "push", "origin", "main"],
+        capture_output=True, text=True,
+    )
+    if push.returncode != 0:
+        print(f"[validate-msg]   git push FAILED, leaving local revert: {push.stderr[:200]}")
+        continue
+
+    revert_sha = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        capture_output=True, text=True,
+    ).stdout.strip()
+
+    revert_entry = {
+        "date": today,
+        "timestamp": datetime.now(BJT).isoformat(),
+        "id": sid,
+        "name": e.get("name", sid),
+        "outcome": "failed_validation",
+        "notes": (f"Commit-msg evidence validation FAIL — reverted {commit[:8]}. "
+                  f"Validator output: {proc.stdout.strip()[:200]}"),
+        "commit": revert_sha,
+        "reverted_commit": commit,
+    }
+    with log.open("a") as f:
+        f.write(json.dumps(revert_entry, ensure_ascii=False) + "\n")
+    print(f"[validate-msg]   ✓ reverted to {revert_sha[:8]}, history updated")
+    reverted.append(sid)
+
+if reverted:
+    print(f"[validate-msg] ⚠️ reverted {len(reverted)} source(s) for missing evidence: {reverted}")
+else:
+    print(f"[validate-msg] all {len(promoted_today)} commit(s) carry valid evidence")
+PYEOF
+
+VALIDATE_EXIT=$?
+echo "$LOG_PREFIX Commit-msg validation done (exit $VALIDATE_EXIT)"
+
 # ─── Phase 7: post-commit health probe + auto-revert ─────────────────────────
 # Read today's promoted entries from history; probe each via gmia-fetcher-health
 # --source <id> --dry-run; if FAIL → git revert + push + mark auto_reverted.

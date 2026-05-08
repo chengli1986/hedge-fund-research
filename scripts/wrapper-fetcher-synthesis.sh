@@ -70,4 +70,36 @@ echo "$PROMPT" | claude --print \
 
 EXIT_CODE=$?
 echo "$LOG_PREFIX Agent exited with code $EXIT_CODE"
+
+# Reconcile any synthesis outcomes the agent recorded in fund_candidates.json
+# into the time-series history log. Idempotent — safe to run repeatedly.
+# Capture appended count so heartbeat can detect "agent ran but recorded nothing".
+echo "$LOG_PREFIX Syncing synthesis history..."
+RECONCILE_OUTPUT=$(python3 "$REPO_DIR/scripts/sync_synthesis_history.py" --lookback-days 1 2>&1) || \
+    echo "$LOG_PREFIX WARN: sync_synthesis_history exited non-zero"
+echo "$RECONCILE_OUTPUT"
+
+# Parse "appended N entries" from reconcile output; default 0 if not found
+APPENDED=$(echo "$RECONCILE_OUTPUT" | grep -oP 'appended \K\d+' | head -1)
+APPENDED=${APPENDED:-0}
+
+# ── Heartbeat: always write one line per session, even when agent did nothing ──
+# Without this, an agent that crashed silently or stopped writing
+# fund_candidates.json fields would yield zero history entries and stats would
+# lie ("0 attempts"). Heartbeat exit 1 → wrapper alerts via cron-wrapper.
+python3 "$REPO_DIR/scripts/write_session_heartbeat.py" \
+    --targets-count "$TARGET_COUNT" \
+    --reconcile-appended "$APPENDED" \
+    --agent-exit "$EXIT_CODE"
+HEARTBEAT_EXIT=$?
+
+# Quick stats line for the log (does not affect exit code)
+python3 "$REPO_DIR/scripts/fetcher_synthesis_stats.py" --window 30 2>&1 | head -10 || true
+
+# Propagate inconsistency: if heartbeat detected agent ran without recording
+# anything, exit non-zero so cron-wrapper alerts (even if agent itself returned 0).
+if [ "$HEARTBEAT_EXIT" -ne 0 ] && [ "$EXIT_CODE" -eq 0 ]; then
+    EXIT_CODE=2
+fi
+
 exit $EXIT_CODE

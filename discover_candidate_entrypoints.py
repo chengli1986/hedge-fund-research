@@ -48,6 +48,19 @@ SCORE_THRESHOLD = 0.5
 TIMEOUT = 30
 MAX_NAV_LINKS = 10
 
+# When httpx returns a shell page (mostly chrome / no real content), the path-
+# and structure-based score will assign a low fit_score, which in turn becomes
+# a misleading "LOW quality" signal — the page isn't low-quality, we just can't
+# see it. Detect this case and short-circuit to needs_playwright so
+# fetcher-synthesis (Playwright-based) prioritises the candidate without the
+# discovery-pass penalty propagating downstream.
+#
+# Threshold tuned from real-world incidents on 2026-05-07:
+#   franklin-templeton: httpx 2367 chars shell, Playwright 672K w/ 23 articles
+#   pinebridge:        httpx returns body but no article links (JS-only index)
+SHELL_HTML_THRESHOLD = 5000  # chars
+MIN_NAV_LINKS_FOR_REAL_INDEX = 1  # 0 nav links == nothing to crawl == JS-rendered
+
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
                   "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
@@ -247,6 +260,16 @@ def validate_candidate(candidate: dict, weights: dict, dry_run: bool = False) ->
     scored_pages: list[dict] = []
     main_html = fetch_page(research_url)
 
+    # Shell-HTML detection: httpx returned 200 OK but body is too small or has no
+    # navigable links → page renders client-side. Skip scoring (which would emit
+    # a LOW quality signal) and route directly to needs_playwright.
+    if main_html and len(main_html) < SHELL_HTML_THRESHOLD:
+        log.warning("  %s: httpx body %d chars (< %d threshold) — shell HTML, "
+                    "needs_playwright", fund_id, len(main_html), SHELL_HTML_THRESHOLD)
+        return {"id": fund_id, "entrypoints": [], "fit_score": 0.0,
+                "needs_playwright": True, "error": "shell_html",
+                "shell_size": len(main_html), "all_scored": []}
+
     if main_html:
         main_scored = score_candidate_page(research_url, main_html, allowed_domains, weights)
         scored_pages.append(main_scored)
@@ -255,6 +278,15 @@ def validate_candidate(candidate: dict, weights: dict, dry_run: bool = False) ->
         # Step 2: Extract and score nav links
         nav_links = extract_nav_links(main_html, research_url, allowed_domains)
         log.info("  Found %d nav links, checking up to %d", len(nav_links), MAX_NAV_LINKS)
+
+        # If httpx pulls a non-shell body but there are no article links to crawl,
+        # it's likely a JS-rendered index. Same routing as shell HTML.
+        if len(nav_links) < MIN_NAV_LINKS_FOR_REAL_INDEX:
+            log.warning("  %s: httpx body %d chars but 0 nav links — JS-rendered "
+                        "index, needs_playwright", fund_id, len(main_html))
+            return {"id": fund_id, "entrypoints": [], "fit_score": 0.0,
+                    "needs_playwright": True, "error": "no_nav_links",
+                    "shell_size": len(main_html), "all_scored": scored_pages}
 
         for link in nav_links[:MAX_NAV_LINKS]:
             link_url = link["url"]
@@ -351,6 +383,23 @@ def main() -> None:
         now = datetime.now(BJT).isoformat()
 
         if not args.dry_run:
+            # Shell-HTML / JS-only page detected during scoring: route to fetcher-
+            # synthesis without writing a misleading LOW-quality fit_score. The
+            # candidate hasn't been "evaluated" — it just couldn't be evaluated by
+            # httpx. Don't pollute its quality signal with that fact.
+            if result.get("needs_playwright"):
+                if c["status"] != "validated":
+                    c["status"] = "inaccessible"
+                c["needs_playwright"] = True
+                c["last_validated_at"] = now
+                # Note in candidate.notes for the human reading the queue
+                c["notes"] = (c.get("notes") or "") + (
+                    f"\n[{now[:10]}] httpx shell ({result.get('shell_size', '?')} chars / "
+                    f"{result.get('error', '?')}); routed to fetcher-synthesis."
+                )[-500:]  # cap notes growth
+                updated_count += 1
+                continue
+
             # Only mark validated when at least one entrypoint was found.
             # If scored_pages came back empty (main page fetch failed), keep
             # status as "screened" so the fund is retried on the next run.
@@ -366,6 +415,8 @@ def main() -> None:
                 c["status"] = "validated" if c.get("is_publicly_accessible") else "inaccessible"
             c["fit_score"] = result["fit_score"]
             c["last_validated_at"] = now
+            # Clear stale needs_playwright flag if a previous run set it
+            c.pop("needs_playwright", None)
 
             # Write to candidate_entrypoints.json (NEVER production)
             if result["entrypoints"]:

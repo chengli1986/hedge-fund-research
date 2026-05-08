@@ -193,6 +193,13 @@ Method: ssr (requests.get + BeautifulSoup, verified)
 Preview: "BlackRock Investment Institute weekly outlook — Markets digest..."
 ```
 
+⚠️ **自动校验**：agent 退出后 wrapper 会跑 `scripts/validate_promote_commit_msg.py --commit <sha>`
+对每条 promoted commit 校验上述 4 项（regex 匹配 + 阈值检查：articles ≥ 3 / chars ≥ 500
+/ avg ≥ 0.5 / 至少一篇 rel ≥ 0.6 / preview ≥ 50 chars / method ∈ {playwright, ssr, rss, api}）。
+任一项缺失或不达标 → **自动 revert + push + history 写 outcome="failed_validation"**。
+不要尝试编造数字应付校验——validator 跟 program 同源，能识别套话；正确做法是真跑测试，
+把真实输出粘上来。
+
 若任一硬门未过 → `git checkout fetch_articles.py fetch_content.py config/sources.json publish.py`
 回滚，记到 `logs/auto-promote-history.jsonl` outcome=`"failed_phase3"` + reason，继续下一个目标。
 不要花时间反复重试调 selector — 偏门站留给 fetcher-synthesis。
@@ -318,6 +325,7 @@ with log.open("a") as f:
 - `"promoted"` — 全套接入成功 + commit + push（Phase 3 4 项硬门通过）
 - `"failed_phase3"` — live test / Haiku 质量 / method cross-check 任一失败，回滚
 - `"failed_pytest"` — Phase 5 contract test 失败，回滚
+- `"failed_validation"` — wrapper 的 commit-msg 校验失败（Phase 6.5）自动 revert
 - `"deferred"` — `has_fetcher: false` 跳过（等 fetcher-synthesis）
 - `"auto_reverted"` — wrapper 的 post-commit health probe 检测异常自动 revert（见 Phase 7）
 
