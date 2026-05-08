@@ -1441,23 +1441,31 @@ def fetch_msci_research(source: dict) -> list[dict]:
 
 
 def fetch_schroders(source: dict) -> list[dict]:
-    """Fetch articles from Schroders (Playwright — CSR/styled-components).
+    """Fetch articles from Schroders (Playwright with sitemap.xml fallback).
 
-    Akamai Bot Manager blocks plain httpx. A OneTrust cookie banner renders
-    as non-blocking overlay. Dates are `MM-DD-YYYY` (not covered by parse_date).
+    Akamai Bot Manager increasingly blocks the EC2 IP from rendering the
+    insights index — the JS challenge leaves an empty body, so the Playwright
+    selector returns 0 cards. The sitemap is unprotected and exposes
+    `<lastmod>`, so when the listing path yields nothing we fall back to it
+    and synthesize titles from the URL slug.
     """
     base_url = "https://www.schroders.com"
-    html = _get_playwright_page(
-        source["url"],
-        wait_selector="a[data-tracker-tag='insight-container']",
-        wait_ms=3000,
-    )
-    soup = BeautifulSoup(html, "html.parser")
     expected_host = source.get("expected_hostname", "schroders.com")
-
     articles: list[dict] = []
     seen_urls: set[str] = set()
 
+    try:
+        page_html = _get_playwright_page(
+            source["url"],
+            wait_selector="a[data-tracker-tag='insight-container']",
+            wait_ms=3000,
+            wait_until="domcontentloaded",
+        )
+    except Exception as e:
+        log.debug("Schroders Playwright failed, using sitemap fallback: %s", e)
+        page_html = ""
+
+    soup = BeautifulSoup(page_html, "html.parser")
     for card in soup.select("a[data-tracker-tag='insight-container']"):
         href = card.get("href", "")
         if not href:
@@ -1491,6 +1499,37 @@ def fetch_schroders(source: dict) -> list[dict]:
             "date": parsed_date,
             "date_raw": date_raw,
         })
+
+    if not articles:
+        sitemap_url = "https://www.schroders.com/en/global/individual/sitemap.xml"
+        try:
+            resp = requests.get(sitemap_url, headers=HEADERS, timeout=20)
+            resp.raise_for_status()
+        except Exception as e:
+            log.warning("Schroders sitemap fallback failed: %s", e)
+            return []
+
+        rx = re.compile(
+            r"<url>\s*<loc>(https://www\.schroders\.com/en/global/individual/insights/[^<]+)</loc>"
+            r"\s*<lastmod>([^<]+)</lastmod>"
+        )
+        rows = sorted(rx.findall(resp.text), key=lambda x: x[1], reverse=True)
+        for url, lastmod in rows:
+            if not _validate_hostname(url, expected_host) or url in seen_urls:
+                continue
+            seen_urls.add(url)
+            slug = url.rstrip("/").rsplit("/", 1)[-1]
+            title = " ".join(w.capitalize() for w in slug.split("-") if w)
+            if not title or len(title) < 5:
+                continue
+            date_raw = lastmod[:10]
+            articles.append({
+                "title": title,
+                "category": "",
+                "url": url,
+                "date": parse_date(date_raw),
+                "date_raw": date_raw,
+            })
 
     return articles[:source.get("max_articles", 10)]
 
@@ -1691,6 +1730,69 @@ def fetch_capital_group(source: dict) -> list[dict]:
     return articles[:source.get("max_articles", 10)]
 
 
+def fetch_alliancebernstein(source: dict) -> list[dict]:
+    """Fetch articles from AllianceBernstein (Playwright — CSR).
+
+    The public `/insights.html` landing only surfaces 2 featured cards; the
+    actual archive lives behind the search-results endpoint, so we navigate
+    there directly. Cards are `div.abde-insights-card-generic`; dates appear
+    inline as `Mon DD YYYY` (e.g. "May 07 2026") — not parseable by
+    `parse_date`, so they're matched with a regex and parsed via strptime.
+    """
+    base_url = "https://www.alliancebernstein.com"
+    listing_url = (
+        "https://www.alliancebernstein.com/us/en-us/investments/insights-landing/"
+        "search-results.html?category=investment-insights"
+    )
+    page_html = _get_playwright_page(
+        listing_url,
+        wait_selector="div.abde-insights-card-generic",
+        wait_ms=5000,
+    )
+    soup = BeautifulSoup(page_html, "html.parser")
+    expected_host = source.get("expected_hostname", "alliancebernstein.com")
+
+    articles: list[dict] = []
+    seen_urls: set[str] = set()
+    date_re = re.compile(r"\b([A-Z][a-z]+ +\d{1,2} +\d{4})\b")
+
+    for card in soup.select("div.abde-insights-card-generic"):
+        link = card.select_one("a[href*='/investments/insights/'][href$='.html']")
+        if not link:
+            continue
+        url = urljoin(base_url, link.get("href", ""))
+        if not _validate_hostname(url, expected_host) or url in seen_urls:
+            continue
+        seen_urls.add(url)
+
+        title_el = card.select_one("div.abde-h4, .abde-h3, h3, h4")
+        title = title_el.get_text(strip=True) if title_el else (link.get("aria-label") or "")
+        if not title or len(title) < 5:
+            continue
+
+        m = date_re.search(card.get_text(separator=" ", strip=True))
+        date_raw = m.group(1) if m else ""
+        parsed_date: Optional[str] = None
+        if date_raw:
+            for fmt in ("%b %d %Y", "%B %d %Y"):
+                try:
+                    parsed_date = datetime.strptime(date_raw, fmt).strftime("%Y-%m-%d")
+                    break
+                except ValueError:
+                    continue
+            if not parsed_date:
+                parsed_date = parse_date(date_raw)
+
+        articles.append({
+            "title": title,
+            "url": url,
+            "date": parsed_date,
+            "date_raw": date_raw,
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
 # FETCHER_SYNTHESIS_INSERTION_POINT — auto-generated fetchers inserted above this line
 
 
@@ -1841,6 +1943,7 @@ FETCHERS = {
     "capital-group": fetch_capital_group,
     "natixis-im": fetch_natixis_im,
     "apollo-global-management": fetch_apollo_global_management,
+    "alliancebernstein": fetch_alliancebernstein,
 }
 
 
