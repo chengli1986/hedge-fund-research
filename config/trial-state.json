@@ -2236,6 +2236,13 @@
           "date_count": 10,
           "error": null,
           "fetcher_used": true
+        },
+        "2026-05-09": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -2306,6 +2313,39 @@
           "error": null,
           "day": 2,
           "date": "2026-05-08"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.kkr.com/insights/flash-macro-markets-update-april-2026",
+              "relevance": 0.9,
+              "depth": 0.6,
+              "extractable": 0.4,
+              "overall": 0.68,
+              "notes": "Macro market update on geopolitics, inflation, AI, and private credit with scenario analysis; text is truncated mid-sentence"
+            },
+            {
+              "url": "https://www.kkr.com/insights/2026-infrastructure-outlook",
+              "relevance": 0.85,
+              "depth": 0.65,
+              "extractable": 0.4,
+              "overall": 0.68,
+              "notes": "Infrastructure investment thesis linking geopolitics, technology, and capital requirements; text truncated, lacks specific data/forecasts"
+            },
+            {
+              "url": "https://www.kkr.com/insights/2026-japan-thoughts-from-the-road",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.4,
+              "overall": 0.72,
+              "notes": "Japan corporate reform and macro regime change analysis with DuPont analysis and funding dynamics; text truncated mid-paragraph"
+            }
+          ],
+          "avg_score": 0.693,
+          "error": null,
+          "day": 3,
+          "date": "2026-05-09"
         }
       ]
     },
@@ -2333,6 +2373,13 @@
           "date_count": 0,
           "error": null,
           "fetcher_used": true
+        },
+        "2026-05-09": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -2353,6 +2400,14 @@
           "error": "No article links found on index page",
           "day": 2,
           "date": "2026-05-08"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "Could not extract text from any article",
+          "day": 3,
+          "date": "2026-05-09"
         }
       ]
     },
@@ -2380,6 +2435,13 @@
           "date_count": 0,
           "error": null,
           "fetcher_used": false
+        },
+        "2026-05-09": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -2400,9 +2462,42 @@
           "error": "No article links found on index page",
           "day": 2,
           "date": "2026-05-08"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.alliancebernstein.com/us/en-us/investments/insights/investment-insights/iran-war-fallout-the-real-market-risks-arent-just-oil.html",
+              "relevance": 0.0,
+              "depth": 0.0,
+              "extractable": 0.0,
+              "overall": 0.0,
+              "notes": "Only MSCI disclaimer visible; full article content not provided/accessible"
+            },
+            {
+              "url": "https://www.alliancebernstein.com/us/en-us/investments/insights/investment-insights/medical-technology-stocks-innovation-endures-as-valuations-reset.html",
+              "relevance": 0.0,
+              "depth": 0.0,
+              "extractable": 0.0,
+              "overall": 0.0,
+              "notes": "Only legal disclaimer visible; full article content not provided/accessible"
+            },
+            {
+              "url": "https://www.alliancebernstein.com/us/en-us/investments/insights/investment-insights/charting-a-distinct-course-to-asias-awakening-equity-markets.html",
+              "relevance": 0.0,
+              "depth": 0.0,
+              "extractable": 0.0,
+              "overall": 0.0,
+              "notes": "Only MSCI disclaimer visible; full article content not provided/accessible"
+            }
+          ],
+          "avg_score": 0.0,
+          "error": null,
+          "day": 3,
+          "date": "2026-05-09"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-05-08"
+  "last_summary_sent_date": "2026-05-09"
 }
