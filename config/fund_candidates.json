@@ -649,7 +649,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.95,
-    "notes": "RECOMMEND: trial passed (4/3 days with articles, quality=0.81)",
+    "notes": "RECOMMEND: Weekly macro/fixed income/ESG research",
     "research_links": [],
     "screening_signals": {
       "status_code": 200,
@@ -662,10 +662,10 @@
       "article_signals": 3
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-05-01T01:00:00Z",
+    "last_deep_analyzed_at": "2026-05-09T01:01:39Z",
     "quality": "HIGH",
-    "quality_score": 0.82,
-    "topics": "macro, capital markets, geopolitics, ESG, fixed income, emerging markets, private assets",
+    "quality_score": 0.85,
+    "topics": "macro, fixed income, ESG, emerging markets, private assets, behavioural finance",
     "strategy_tags": [
       "macro",
       "fixed_income",
@@ -691,7 +691,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.88,
-    "notes": "RECOMMEND: trial passed (4/3 days with articles, quality=0.77)",
+    "notes": "Weekly market commentary series, broad macro coverage",
     "research_links": [],
     "screening_signals": {
       "status_code": 200,
@@ -704,10 +704,10 @@
       "article_signals": 0
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-05-01T01:00:00Z",
+    "last_deep_analyzed_at": "2026-05-09T01:01:39Z",
     "quality": "MEDIUM",
-    "quality_score": 0.5,
-    "topics": "macro, equity, fixed income, alternatives, multi-asset",
+    "quality_score": 0.52,
+    "topics": "macro, equity, fixed income, multi-asset",
     "strategy_tags": [
       "macro",
       "equity",
@@ -733,7 +733,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.97,
-    "notes": "Promoted; equity/active mgmt focus, MEDIUM quality (0.55)",
+    "notes": "Active equity/AI research, freely accessible articles",
     "research_links": [
       {
         "url": "https://www.troweprice.com/en/us/insights",
@@ -772,10 +772,10 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-05-01T01:00:00Z",
+    "last_deep_analyzed_at": "2026-05-09T01:01:39Z",
     "quality": "MEDIUM",
-    "quality_score": 0.55,
-    "topics": "equity, AI, macro, fixed income, active management",
+    "quality_score": 0.62,
+    "topics": "equity, AI/tech, macro, fixed income, active management",
     "strategy_tags": [
       "equity",
       "macro",
@@ -1557,11 +1557,11 @@
       "multi_asset"
     ],
     "discovery_method": "discover_fund_sites",
-    "notes": "All paths blocked; JS-rendered, no accessible research content",
+    "notes": "JS-rendered, all paths blocked, content inaccessible",
     "official_domain": "www.capitalgroup.com",
     "research_links": [],
     "last_discovered_at": "2026-04-23T09:00:12.674329+08:00",
-    "last_deep_analyzed_at": "2026-05-01T01:00:00Z",
+    "last_deep_analyzed_at": "2026-05-09T01:01:39Z",
     "quality": "UNKNOWN",
     "quality_score": 0.0,
     "topics": "",
@@ -1954,7 +1954,7 @@
     "homepage_url": "https://www.robeco.com/en-int/insights",
     "research_url": "https://www.robeco.com/en-int/insights",
     "source": "manual",
-    "status": "discovered",
+    "status": "validated",
     "strategy_tags": [
       "quant",
       "esg_climate",
@@ -2070,6 +2070,22 @@
         "path": "en-int/insights/2026/02/podcast-geopolitics-and-ai-boost-emerging-markets-prospects"
       }
     ],
-    "last_discovered_at": "2026-05-08T09:02:57.419661+08:00"
+    "last_discovered_at": "2026-05-08T09:02:57.419661+08:00",
+    "is_publicly_accessible": true,
+    "has_article_index": true,
+    "last_screened_at": "2026-05-09T09:00:10.096858+08:00",
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 0,
+      "article_tags": 0,
+      "time_tags": 23,
+      "date_patterns": 0,
+      "h2_tags": 3,
+      "article_signals": 1
+    },
+    "screening_reason": "Research index detected",
+    "fit_score": 0.895,
+    "last_validated_at": "2026-05-09T09:00:21.194397+08:00"
   }
 ]

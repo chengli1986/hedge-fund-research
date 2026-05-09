@@ -710,6 +710,40 @@
         }
       ],
       "rejected_pages": []
+    },
+    "robeco": {
+      "last_discovered_at": "2026-05-09T09:00:21.194397+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://www.robeco.com/en-int/insights",
+          "final_score": 0.895,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.75,
+          "gate_penalty": 0.15,
+          "active": true
+        },
+        {
+          "url": "https://www.robeco.com/en-int/insights/latest-insights",
+          "final_score": 0.895,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.75,
+          "gate_penalty": 0.15,
+          "active": false
+        },
+        {
+          "url": "https://www.robeco.com/en-int/insights/top-stories",
+          "final_score": 0.895,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.75,
+          "gate_penalty": 0.15,
+          "active": false
+        }
+      ],
+      "rejected_pages": []
     }
   }
 }
