@@ -849,13 +849,13 @@
   {
     "id": "carlyle",
     "name": "The Carlyle Group",
-    "status": "inaccessible",
+    "status": "rejected",
     "homepage_url": "https://www.carlyle.com/insights",
     "research_url": null,
     "rss_url": null,
     "official_domain": null,
     "discovery_method": "seed",
-    "notes": "403 policy block confirmed; requires residential proxy — out of scope",
+    "notes": "Reclassified inaccessible→rejected 2026-05-10: anti-scraping is policy-level (robots.txt allow-lists only Googlebot/Bingbot; /insights returns 403 even with stealth Playwright). Requires residential-IP proxy = out of scope. fetcher-synthesis cannot solve.",
     "last_deep_analyzed_at": "2026-05-08T01:02:53Z",
     "quality": "MEDIUM",
     "topics": "private equity, credit, real assets, macro",
@@ -1317,7 +1317,7 @@
   {
     "id": "morganstanley-im",
     "name": "Morgan Stanley Investment Management",
-    "status": "inaccessible",
+    "status": "rejected",
     "homepage_url": "https://www.morganstanley.com/im/en-us/institutional-investor/insights",
     "research_url": "https://www.morganstanley.com/im/en-us/institutional-investor/insights/all-insights.html",
     "rss_url": null,
@@ -1330,7 +1330,7 @@
     "is_publicly_accessible": null,
     "has_article_index": null,
     "fit_score": null,
-    "notes": "Persistent 403 bot protection; content quality unverifiable",
+    "notes": "Reclassified inaccessible→rejected 2026-05-10: 403 bot protection on all paths from EC2; content quality unverifiable. fetcher-synthesis cannot solve (block is at IP/WAF layer, not browser-rendering).",
     "research_links": [],
     "screening_signals": {},
     "screening_reason": null,
@@ -1351,7 +1351,7 @@
   {
     "id": "neuberger-berman",
     "name": "Neuberger Berman",
-    "status": "inaccessible",
+    "status": "rejected",
     "homepage_url": "https://www.nb.com",
     "research_url": "https://www.nb.com/en/global/insights",
     "rss_url": null,
@@ -1364,7 +1364,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.88,
-    "notes": "CIO weekly + AAC quarterly; Vercel security blocks EC2 (429)",
+    "notes": "Reclassified inaccessible→rejected 2026-05-10: Vercel WAF returns 429 rate-limit to EC2 IP (HIGH quality content but unreachable). fetcher-synthesis cannot solve (rate-limit is at IP layer, not browser-rendering). Reconsider if EC2 IP changes or fund moves off Vercel.",
     "research_links": [
       {
         "url": "https://www.nb.com/en/global/insights",
