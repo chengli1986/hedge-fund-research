@@ -250,7 +250,7 @@
   {
     "id": "kkr",
     "name": "KKR",
-    "status": "validated",
+    "status": "promoted",
     "homepage_url": "https://www.kkr.com",
     "research_url": "https://www.kkr.com/insights",
     "rss_url": null,
@@ -263,7 +263,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.94,
-    "notes": "Bot-blocked 403; titles show macro+PE research, Playwright needed",
+    "notes": "RECOMMEND: trial passed (4/3 days with articles, quality=0.70)",
     "research_links": [
       {
         "url": "https://www.kkr.com/insights",
@@ -1104,13 +1104,13 @@
   {
     "id": "schroders",
     "name": "Schroders",
-    "status": "validated",
+    "status": "watchlist",
     "homepage_url": "https://www.schroders.com/en/insights",
     "research_url": "https://www.schroders.com/en/insights",
     "rss_url": null,
     "official_domain": "www.schroders.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "ESG/EM/multi-asset; JS-rendered, needs Playwright to access",
+    "notes": "Trial inconclusive: no quality samples obtained",
     "research_links": [],
     "last_discovered_at": "2026-04-19T09:00:14.174535+08:00",
     "last_deep_analyzed_at": "2026-05-06T01:03:12Z",
@@ -1652,7 +1652,7 @@
     "name": "AllianceBernstein",
     "homepage_url": "https://www.alliancebernstein.com",
     "source": "manual",
-    "status": "validated",
+    "status": "watchlist",
     "strategy_tags": [
       "equity",
       "fixed_income",
@@ -1667,7 +1667,7 @@
     "quality": "MEDIUM",
     "quality_score": 0.55,
     "topics": "equity, fixed income, macro, municipal bonds",
-    "notes": "JS-rendered; categories suggest broad coverage, no article dates",
+    "notes": "Trial failed: low quality (0.00)",
     "last_deep_analyzed_at": "2026-05-05T01:00:00Z"
   },
   {

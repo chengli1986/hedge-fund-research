@@ -2209,9 +2209,7 @@
       "total_articles": 40,
       "days_with_articles": 4,
       "avg_quality_score": 0.794
-    }
-  ],
-  "active_trials": [
+    },
     {
       "id": "kkr",
       "name": "KKR",
@@ -2221,7 +2219,7 @@
       "quality": "MEDIUM",
       "topics": "private equity, macro, infrastructure, credit",
       "start_date": "2026-05-07",
-      "end_date": null,
+      "end_date": "2026-05-10",
       "daily_checks": {
         "2026-05-07": {
           "accessible": true,
@@ -2243,10 +2241,17 @@
           "date_count": 10,
           "error": null,
           "fetcher_used": true
+        },
+        "2026-05-10": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -2347,7 +2352,10 @@
           "day": 3,
           "date": "2026-05-09"
         }
-      ]
+      ],
+      "total_articles": 40,
+      "days_with_articles": 4,
+      "avg_quality_score": 0.699
     },
     {
       "id": "schroders",
@@ -2358,7 +2366,7 @@
       "quality": "MEDIUM",
       "topics": "ESG, emerging markets, multi-asset, fixed income",
       "start_date": "2026-05-07",
-      "end_date": null,
+      "end_date": "2026-05-10",
       "daily_checks": {
         "2026-05-07": {
           "accessible": true,
@@ -2380,10 +2388,17 @@
           "date_count": 10,
           "error": null,
           "fetcher_used": true
+        },
+        "2026-05-10": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "fail_quality",
       "quality_samples": [
         {
           "sampled": 0,
@@ -2409,7 +2424,10 @@
           "day": 3,
           "date": "2026-05-09"
         }
-      ]
+      ],
+      "total_articles": 20,
+      "days_with_articles": 2,
+      "avg_quality_score": 0.0
     },
     {
       "id": "alliancebernstein",
@@ -2420,7 +2438,7 @@
       "quality": "MEDIUM",
       "topics": "equity, fixed income, macro, municipal bonds",
       "start_date": "2026-05-07",
-      "end_date": null,
+      "end_date": "2026-05-10",
       "daily_checks": {
         "2026-05-07": {
           "accessible": true,
@@ -2442,10 +2460,17 @@
           "date_count": 10,
           "error": null,
           "fetcher_used": true
+        },
+        "2026-05-10": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "fail_quality",
       "quality_samples": [
         {
           "sampled": 0,
@@ -2496,8 +2521,159 @@
           "day": 3,
           "date": "2026-05-09"
         }
+      ],
+      "total_articles": 20,
+      "days_with_articles": 2,
+      "avg_quality_score": 0.0
+    }
+  ],
+  "active_trials": [
+    {
+      "id": "research-affiliates",
+      "name": "Research Affiliates",
+      "research_url": "https://www.researchaffiliates.com/insights/publications",
+      "homepage_url": "https://www.researchaffiliates.com",
+      "fit_score": 0.94,
+      "quality": "HIGH",
+      "topics": "factor investing, smart beta, fundamental indexing, AI, valuation",
+      "start_date": "2026-05-10",
+      "end_date": null,
+      "daily_checks": {
+        "2026-05-10": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.researchaffiliates.com/insights/publications/articles/1114-outgrowing-glamour-a-fundamental-approach-to-growth-investing",
+              "relevance": 0.95,
+              "depth": 0.75,
+              "extractable": 0.55,
+              "overall": 0.79,
+              "notes": "Fundamental growth investing strategy: critiques market-cap weighted growth indices, proposes RAFI Fundamental Growth Index using income statement metrics; text truncated mid-sentence"
+            },
+            {
+              "url": "https://www.researchaffiliates.com/insights/publications/articles/1113-cio-insights-the-impact-of-ai-on-saas-s-risk-framework-for-investors",
+              "relevance": 0.9,
+              "depth": 0.8,
+              "extractable": 0.5,
+              "overall": 0.78,
+              "notes": "SaaS sector risk framework under AI disruption across three time horizons (cyclical, secular, super-secular); identifies key investment factors; text truncated"
+            },
+            {
+              "url": "https://www.researchaffiliates.com/insights/publications/articles/1111-when-will-ai-be-both-powerful-and-profitable",
+              "relevance": 0.85,
+              "depth": 0.8,
+              "extractable": 0.6,
+              "overall": 0.78,
+              "notes": "AI capex analysis: distinguishes gross spending from net capital formation, argues rapid hardware depreciation (5yr) limits value creation despite $650B 2026 hyperscaler spending; text truncated"
+            }
+          ],
+          "avg_score": 0.783,
+          "error": null,
+          "day": 1,
+          "date": "2026-05-10"
+        }
+      ]
+    },
+    {
+      "id": "robeco",
+      "name": "Robeco",
+      "research_url": "https://www.robeco.com/en-int/insights",
+      "homepage_url": "https://www.robeco.com/en-int/insights",
+      "fit_score": 0.895,
+      "quality": "MEDIUM",
+      "topics": "quant, ESG, emerging markets, fixed income, credit",
+      "start_date": "2026-05-10",
+      "end_date": null,
+      "daily_checks": {
+        "2026-05-10": {
+          "accessible": true,
+          "article_count": 23,
+          "date_count": 0,
+          "error": null,
+          "fetcher_used": false
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.robeco.com/en-int/insights/2026/05/emerging-markets-are-in-pole-position-in-the-resources-race",
+              "relevance": 0.95,
+              "depth": 0.75,
+              "extractable": 0.7,
+              "overall": 0.82,
+              "notes": "Investment thesis on emerging markets' strategic position in AI and renewable energy supply chains, with data on mineral concentration and capex trends."
+            },
+            {
+              "url": "https://www.robeco.com/en-int/insights/2026/05/innovation-where-it-matters-generating-alpha-while-maintaining-disciplined-control",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.65,
+              "overall": 0.77,
+              "notes": "Portfolio strategy piece on quantitative investing approaches to navigate concentrated, volatile equity markets; discusses risk management and alpha generation."
+            },
+            {
+              "url": "https://www.robeco.com/en-int/insights/2026/05/em-to-the-core-episode-3-the-emerging-markets-consumer",
+              "relevance": 0.75,
+              "depth": 0.35,
+              "extractable": 0.2,
+              "overall": 0.48,
+              "notes": "Podcast episode on emerging markets consumer trends; mostly metadata and video placeholder with minimal extractable text content."
+            }
+          ],
+          "avg_score": 0.69,
+          "error": null,
+          "day": 1,
+          "date": "2026-05-10"
+        }
+      ]
+    },
+    {
+      "id": "ares-management",
+      "name": "Ares Management",
+      "research_url": "https://www.ares.com/news-views/perspectives",
+      "homepage_url": "https://www.ares.com",
+      "fit_score": 0.88,
+      "quality": "HIGH",
+      "topics": "private credit, private equity, alternatives, insurance",
+      "start_date": "2026-05-10",
+      "end_date": null,
+      "daily_checks": {
+        "2026-05-10": {
+          "accessible": false,
+          "article_count": 0,
+          "date_count": 0,
+          "error": "HTTP 404",
+          "fetcher_used": false
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No article links found on index page",
+          "day": 1,
+          "date": "2026-05-10"
+        }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-05-09"
+  "last_summary_sent_date": "2026-05-10"
 }
