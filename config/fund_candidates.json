@@ -1581,10 +1581,10 @@
       "multi_asset"
     ],
     "quality": "HIGH",
-    "quality_score": 0.8,
-    "topics": "fixed income, emerging markets, macro, multi-asset, equities",
-    "notes": "Re-diagnosed 2026-05-07: trial 0.24 was bio-page contamination (research_url pointed to a single article, sampler picked up author bio links). Index page /en/our-insights is JS-rendered (httpx returns 0 article-like links). research_url corrected to index URL. Routed to fetcher-synthesis queue.",
-    "last_deep_analyzed_at": "2026-05-02T01:00:00Z",
+    "quality_score": 0.85,
+    "topics": "fixed income, multi-asset, macro, emerging markets, equities",
+    "notes": "RECOMMEND: Multi-asset+EM research, free, fills FI/EM gap",
+    "last_deep_analyzed_at": "2026-05-10T01:01:12Z",
     "is_publicly_accessible": true,
     "has_article_index": true,
     "research_url": "https://www.pinebridge.com/en/our-insights",
@@ -2087,5 +2087,23 @@
     "screening_reason": "Research index detected",
     "fit_score": 0.895,
     "last_validated_at": "2026-05-09T09:00:21.194397+08:00"
+  },
+  {
+    "id": "janus-henderson",
+    "name": "Janus Henderson Investors",
+    "homepage_url": "https://www.janushenderson.com",
+    "source": "manual",
+    "status": "seed",
+    "strategy_tags": [
+      "equity",
+      "fixed_income",
+      "multi_asset",
+      "macro"
+    ],
+    "rss_url": "https://www.janushenderson.com/feed/",
+    "official_domain": "www.janushenderson.com",
+    "research_links": [],
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-05-10T09:05:17.032463+08:00"
   }
 ]
