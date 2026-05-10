@@ -109,9 +109,13 @@ Scorer weight optimization program using automated experiment loop:
 
 `gmia-trial-manager.py` — 3-day live trial window for candidate funds. Supports up to 3 concurrent trials (`MAX_CONCURRENT_TRIALS=3`). Runs daily via registered FETCHERS (Playwright/RSS/API — same fetchers as the main pipeline); falls back to httpx for sources without a registered fetcher. Requires articles on ≥2 of 3 days to pass quantity gate. Performs Haiku quality sampling on Day 1, Day 2, and Day 3 (3 articles each, relevance/depth/extractable scores) with cross-day URL dedup so up to 9 distinct articles are scored per trial; slow-updating sources naturally produce smaller samples on later days. Outcomes: APPROVE (add to sources), REJECT (remove from candidates).
 
+## Fetcher Synthesis
+
+`synthesize_fetchers.py` + `fetcher-synthesis/program.md` — weekly Sunday agent that auto-writes Playwright fetchers for `inaccessible` candidates (sites where listing pages are JS-only or selectors are broken), then promotes them back into trial. After `MAX_SYNTHESIS_FAILURES=3` recorded failures in `logs/fetcher-synthesis-history.jsonl`, the candidate is auto-rejected on the next run — bounding wasted agent invocations on candidates the agent cannot solve (e.g. IP/WAF-layer blocks Playwright cannot bypass). Manual override: restore status to `inaccessible` *and* remove the candidate's failed history entries.
+
 ## Tests
 
-403 passing, 15 deselected — unit, functional, and integration tests (live/nightly tests excluded by default via pytest.ini). Contract tests enforce `sources.json` stays in sync with the `FETCHERS` / `CONTENT_FETCHERS` dispatcher dicts and `BADGE_COLORS` palette, so adding a new production source without wiring the full pipeline fails fast at pytest time.
+410 passing, 15 deselected — unit, functional, and integration tests (live/nightly tests excluded by default via pytest.ini). Contract tests enforce `sources.json` stays in sync with the `FETCHERS` / `CONTENT_FETCHERS` dispatcher dicts and `BADGE_COLORS` palette, so adding a new production source without wiring the full pipeline fails fast at pytest time.
 
 ```bash
 python3 -m pytest tests/ -q
