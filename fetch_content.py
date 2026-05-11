@@ -898,6 +898,35 @@ def _fetch_content_natixis(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+def _fetch_content_kkr(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch KKR Insights article content via requests (SSR — AEM .cmp-text).
+
+    Listing page is Next.js CSR (fetch_articles uses Playwright), but
+    article body is SSR-rendered in initial HTML under AEM standard
+    `.cmp-text p` containers — same pattern as Apollo / JPMAM.
+    """
+    url = article["url"]
+    log.info("  KKR: fetching article page %s", url)
+
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  KKR: fetch failed: %s", e)
+        return None
+
+    text = _normalize_html(resp.text, ".cmp-text p")
+
+    if not _check_min_content_length(text):
+        log.warning("  KKR: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  KKR: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 def _fetch_content_msci(article: dict) -> Optional[tuple[Path, str]]:
     """Fetch MSCI Research & Insights article content via requests.
 
@@ -948,6 +977,7 @@ CONTENT_FETCHERS = {
     "msci-research": _fetch_content_msci,
     "natixis-im": _fetch_content_natixis,
     "apollo-global-management": _fetch_content_apollo,
+    "kkr": _fetch_content_kkr,
 }
 
 

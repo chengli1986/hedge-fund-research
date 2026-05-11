@@ -43,6 +43,7 @@ BADGE_COLORS: dict[str, str] = {
     "msci-research": "#1f49e0",         # MSCI cobalt blue
     "natixis-im": "#80276c",            # Natixis purple
     "apollo-global-management": "#5e3a82",  # Apollo plum (avoids existing navy/gold/purple clusters)
+    "kkr": "#556b2f",                       # KKR dark olive (unique among 19 existing colors)
 }
 
 INITIAL_VISIBLE = 20

@@ -241,6 +241,19 @@
       "notable_authors": ["Jim Zelter", "Torsten Slok", "John Zito"],
       "expected_hostname": "apollo.com",
       "max_articles": 10
+    },
+    {
+      "id": "kkr",
+      "strategy_tags": ["private_equity", "real_assets", "private_credit", "macro"],
+      "name": "KKR",
+      "short_name": "KKR",
+      "url": "https://www.kkr.com/insights",
+      "method": "playwright",
+      "frequency": "weekly",
+      "description": "Global alternatives leader (~$600B AUM). Buyout-pioneer firm founded 1976; covers private equity, infrastructure, real estate, private credit. Insights produced by Global Macro & Asset Allocation (GMAA) team.",
+      "notable_authors": ["Henry McVey", "Racim Allouani", "David McNellis"],
+      "expected_hostname": "kkr.com",
+      "max_articles": 10
     }
   ],
   "settings": {
