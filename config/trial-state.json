@@ -2725,49 +2725,17 @@
     {
       "id": "ares-management",
       "name": "Ares Management",
-      "research_url": "https://www.ares.com/news-views/perspectives",
+      "research_url": "https://www.ares.com/us/news-and-insights/perspectives",
       "homepage_url": "https://www.ares.com",
       "fit_score": 0.88,
       "quality": "HIGH",
       "topics": "private credit, private equity, alternatives, insurance",
-      "start_date": "2026-05-10",
+      "start_date": "2026-05-11",
       "end_date": null,
-      "daily_checks": {
-        "2026-05-10": {
-          "accessible": false,
-          "article_count": 0,
-          "date_count": 0,
-          "error": "HTTP 404",
-          "fetcher_used": false
-        },
-        "2026-05-11": {
-          "accessible": false,
-          "article_count": 0,
-          "date_count": 0,
-          "error": "HTTP 404",
-          "fetcher_used": false
-        }
-      },
+      "daily_checks": {},
       "auto_decided": false,
       "outcome": null,
-      "quality_samples": [
-        {
-          "sampled": 0,
-          "articles": [],
-          "avg_score": 0.0,
-          "error": "No article links found on index page",
-          "day": 1,
-          "date": "2026-05-10"
-        },
-        {
-          "sampled": 0,
-          "articles": [],
-          "avg_score": 0.0,
-          "error": "No article links found on index page",
-          "day": 2,
-          "date": "2026-05-11"
-        }
-      ]
+      "quality_samples": []
     }
   ],
   "last_summary_sent_date": "2026-05-11"
