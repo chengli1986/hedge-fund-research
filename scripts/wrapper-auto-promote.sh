@@ -90,6 +90,9 @@ $(cat "$PROGRAM_MD")
 "
 
 echo "$LOG_PREFIX Invoking Claude Code agent..."
+# Ensure the npm-global claude (2.x, supports --print) takes precedence over
+# the system /usr/bin/claude (1.0.65) that lives on cron's default PATH.
+export PATH="$HOME/.npm-global/bin:$PATH"
 echo "$PROMPT" | claude --print \
     --allowedTools "Bash,Read,Edit,Write,Glob,Grep" \
     --max-turns 60 \
