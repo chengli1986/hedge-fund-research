@@ -1136,7 +1136,7 @@
     "rss_url": null,
     "official_domain": "www.pgim.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "RECOMMEND: Broad alternatives/fixed income, fills PE gap",
+    "notes": "Institutional-gated; articles inaccessible for auto-fetch",
     "research_links": [
       {
         "url": "https://www.pgim.com/au/en/institutional/insights",
@@ -1254,10 +1254,10 @@
       "article_signals": 0
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-05-03T01:02:34Z",
-    "quality": "HIGH",
-    "quality_score": 0.78,
-    "topics": "fixed income, private credit, alternatives, ESG, multi-asset, equity",
+    "last_deep_analyzed_at": "2026-05-11T01:03:39Z",
+    "quality": "MEDIUM",
+    "quality_score": 0.5,
+    "topics": "fixed income, private credit, alternatives, ESG, multi-asset",
     "fit_score": 0.67,
     "last_validated_at": "2026-04-19T09:02:19.020103+08:00",
     "strategy_tags": [
@@ -1277,7 +1277,7 @@
     "rss_url": null,
     "official_domain": "www.aberdeeninvestments.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "RECOMMEND: Global macro research, JS-rendered, pro-only",
+    "notes": "JS-rendered; 0 articles loadable, inaccessible for scraping",
     "research_links": [
       {
         "url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/insights",
@@ -1300,16 +1300,16 @@
       "article_signals": 0
     },
     "screening_reason": "Insufficient article index signals",
-    "quality": "HIGH",
-    "quality_score": 0.7,
+    "quality": "MEDIUM",
+    "quality_score": 0.45,
     "topics": "macro, global macro research, credit, fixed income, multi-asset",
-    "last_deep_analyzed_at": "2026-05-03T01:02:34Z",
+    "last_deep_analyzed_at": "2026-05-11T01:03:39Z",
     "fit_score": 0.82,
     "strategy_tags": [
       "macro",
       "fixed_income",
       "multi_asset",
-      "event_driven"
+      "emerging_markets"
     ],
     "last_validated_at": "2026-04-19T09:02:22.948295+08:00",
     "source": "manual"
@@ -1821,7 +1821,7 @@
       }
     ],
     "discovery_method": "discover_fund_sites",
-    "notes": "RECOMMEND: trial passed (4/3 days with articles, quality=0.58)",
+    "notes": "Monthly macro podcast + written insights; overlaps Man Group",
     "last_discovered_at": "2026-05-02T09:03:53.598499+08:00",
     "is_publicly_accessible": true,
     "has_article_index": true,
@@ -1839,10 +1839,10 @@
     "screening_reason": "Research index detected",
     "fit_score": 0.85,
     "last_validated_at": "2026-05-03T09:00:33.191261+08:00",
-    "last_deep_analyzed_at": "2026-05-03T01:02:34Z",
+    "last_deep_analyzed_at": "2026-05-11T01:03:39Z",
     "quality": "MEDIUM",
-    "quality_score": 0.6,
-    "topics": "macro views, equity, fixed income, portfolio construction"
+    "quality_score": 0.55,
+    "topics": "macro, equity, fixed income, portfolio construction"
   },
   {
     "id": "lazard-am",
@@ -2093,17 +2093,47 @@
     "name": "Janus Henderson Investors",
     "homepage_url": "https://www.janushenderson.com",
     "source": "manual",
-    "status": "seed",
+    "status": "promoted",
     "strategy_tags": [
-      "equity",
       "fixed_income",
-      "multi_asset",
-      "macro"
+      "equity",
+      "macro",
+      "multi_asset"
     ],
     "rss_url": "https://www.janushenderson.com/feed/",
     "official_domain": "www.janushenderson.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-05-10T09:05:17.032463+08:00"
+    "last_discovered_at": "2026-05-11T09:00:09.554318+08:00",
+    "research_url": "https://www.janushenderson.com/en-us/investor/insights/",
+    "quality": "HIGH",
+    "quality_score": 0.78,
+    "topics": "fixed income, equity, macro, geopolitics, technology",
+    "notes": "RECOMMEND: Free weekly insights, equity+fixed income depth",
+    "last_deep_analyzed_at": "2026-05-11T01:03:39Z"
+  },
+  {
+    "id": "dimensional",
+    "name": "Dimensional Fund Advisors",
+    "homepage_url": "https://www.dimensional.com/us-en/insights",
+    "source": "manual",
+    "status": "discovered",
+    "strategy_tags": [
+      "quant",
+      "equity",
+      "multi_asset",
+      "fixed_income"
+    ],
+    "research_url": "https://www.dimensional.com/us-en/insights/strategies-to-protect-your-assets-for-a-low-stress-retirement",
+    "official_domain": "www.dimensional.com",
+    "research_links": [
+      {
+        "url": "https://www.dimensional.com/us-en/insights/strategies-to-protect-your-assets-for-a-low-stress-retirement",
+        "label": "View Here",
+        "path": "us-en/insights/strategies-to-protect-your-assets-for-a-low-stress-retirement"
+      }
+    ],
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-05-11T09:05:02.609145+08:00"
   }
 ]
