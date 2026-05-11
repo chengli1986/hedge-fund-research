@@ -2545,6 +2545,13 @@
           "date_count": 10,
           "error": null,
           "fetcher_used": true
+        },
+        "2026-05-11": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -2582,6 +2589,39 @@
           "error": null,
           "day": 1,
           "date": "2026-05-10"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.researchaffiliates.com/insights/publications/articles/1110-why-value-quality-and-momentum-belong-together",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.6,
+              "overall": 0.76,
+              "notes": "Research on integrating value, quality, and momentum signals for systematic equity portfolio construction; substantive but text is truncated mid-sentence"
+            },
+            {
+              "url": "https://www.researchaffiliates.com/insights/publications/articles/1112-winning-the-long-game-with-rafi",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.6,
+              "overall": 0.76,
+              "notes": "Analysis of RAFI (Fundamental Index) strategy performance vs cap-weighted indices with historical backtest data; text truncated, limiting full assessment of depth"
+            },
+            {
+              "url": "https://www.researchaffiliates.com/insights/publications/articles/1107-should-trend-follow-carry-lessons-from-bonds-gold-and-2022",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.6,
+              "overall": 0.82,
+              "notes": "Deep dive into trend-following vs carry filtering in multi-asset futures with 2022 case study and novel economic framework; longest article but still truncated"
+            }
+          ],
+          "avg_score": 0.78,
+          "error": null,
+          "day": 2,
+          "date": "2026-05-11"
         }
       ]
     },
@@ -2597,6 +2637,13 @@
       "end_date": null,
       "daily_checks": {
         "2026-05-10": {
+          "accessible": true,
+          "article_count": 23,
+          "date_count": 0,
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-05-11": {
           "accessible": true,
           "article_count": 23,
           "date_count": 0,
@@ -2639,6 +2686,39 @@
           "error": null,
           "day": 1,
           "date": "2026-05-10"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.robeco.com/en-int/insights/2026/05/a-value-investing-approach-that-doesn-t-need-typical-value-markets",
+              "relevance": 0.85,
+              "depth": 0.55,
+              "extractable": 0.7,
+              "overall": 0.7,
+              "notes": "Value investing strategy analysis claiming value can outperform in all market conditions; uses Boston Partners fund as case study but lacks detailed data/reasoning."
+            },
+            {
+              "url": "https://www.robeco.com/en-int/insights/2026/04/stewardship-report-2025-unwavering-commitment-to-drive-change",
+              "relevance": 0.6,
+              "depth": 0.5,
+              "extractable": 0.65,
+              "overall": 0.57,
+              "notes": "ESG/stewardship report summary with engagement case studies; more corporate responsibility/marketing focused than investment research, text truncated mid-sentence."
+            },
+            {
+              "url": "https://www.robeco.com/en-int/insights/2026/04/making-the-most-of-small-caps",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.75,
+              "overall": 0.79,
+              "notes": "Small-cap equity opportunity analysis with valuation data, market inefficiency thesis, and systematic approach to capture alpha; substantive but text cuts off abruptly."
+            }
+          ],
+          "avg_score": 0.687,
+          "error": null,
+          "day": 2,
+          "date": "2026-05-11"
         }
       ]
     },
@@ -2659,6 +2739,13 @@
           "date_count": 0,
           "error": "HTTP 404",
           "fetcher_used": false
+        },
+        "2026-05-11": {
+          "accessible": false,
+          "article_count": 0,
+          "date_count": 0,
+          "error": "HTTP 404",
+          "fetcher_used": false
         }
       },
       "auto_decided": false,
@@ -2671,9 +2758,17 @@
           "error": "No article links found on index page",
           "day": 1,
           "date": "2026-05-10"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No article links found on index page",
+          "day": 2,
+          "date": "2026-05-11"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-05-10"
+  "last_summary_sent_date": "2026-05-11"
 }
