@@ -45,9 +45,20 @@ from pathlib import Path
 BJT = timezone(timedelta(hours=8))
 BASE_DIR = Path(__file__).resolve().parent.parent
 SOURCES_FILE = BASE_DIR / "config" / "sources.json"
+CANDIDATES_FILE = BASE_DIR / "config" / "fund_candidates.json"
 LOGS_DIR = BASE_DIR / "logs"
 STATE_FILE = LOGS_DIR / "gmia-fetcher-health.json"
 ENV_FILE = Path.home() / ".stock-monitor.env"
+
+# Validated-candidate URL probe (--include-validated): catches the 2026-05-08
+# ares-management failure mode where status flipped to "validated" but the
+# saved research_url was 404 — no test or daily cron noticed for 2 days.
+CANDIDATE_PROBE_TIMEOUT_S = 15
+CANDIDATE_PROBE_UA = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+)
+CANDIDATE_SHELL_HTML_THRESHOLD = 5000  # below this is probably an error page
 
 WARN_ALERT_THRESHOLD = 3        # send WARN email after this many consecutive WARNs
 
@@ -545,6 +556,88 @@ def alerts_subject(alerts: dict) -> str:
     return f"GMIA fetcher health: {' / '.join(parts)}" if parts else "GMIA fetcher health: all OK"
 
 
+# ── validated-candidate URL liveness (--include-validated) ───────────────────
+
+
+def load_validated_candidates() -> list[dict]:
+    """Load candidates whose status is 'validated' — i.e. ready for trial.
+
+    These ARE NOT production sources (no fetcher registered), so the regular
+    probe_source() pipeline won't reach them. The probe below is intentionally
+    lightweight: just a GET to confirm the saved research_url still returns
+    a real-looking page.
+    """
+    if not CANDIDATES_FILE.exists():
+        return []
+    data = json.loads(CANDIDATES_FILE.read_text())
+    return [c for c in data if c.get("status") == "validated"]
+
+
+def probe_candidate_url(candidate: dict) -> dict:
+    """HTTP GET the candidate's research_url, return liveness verdict.
+
+    Returns a dict with:
+      status: "OK" | "WARN" | "FAIL"
+      http_code: int or None
+      reason: human-readable
+      content_size: bytes
+      elapsed_ms: int
+    """
+    import httpx  # local import — only needed for this code path
+
+    url = (candidate.get("research_url") or "").strip()
+    if not url:
+        return {"status": "FAIL", "http_code": None, "content_size": 0,
+                "reason": "candidate has no research_url", "elapsed_ms": 0}
+
+    started = time.monotonic()
+    try:
+        with httpx.Client(
+            headers={"User-Agent": CANDIDATE_PROBE_UA},
+            timeout=CANDIDATE_PROBE_TIMEOUT_S,
+            follow_redirects=True,
+        ) as client:
+            resp = client.get(url)
+            elapsed_ms = int((time.monotonic() - started) * 1000)
+            size = len(resp.content)
+            if resp.status_code >= 400:
+                return {"status": "FAIL", "http_code": resp.status_code,
+                        "content_size": size, "elapsed_ms": elapsed_ms,
+                        "reason": f"HTTP {resp.status_code}"}
+            if size < CANDIDATE_SHELL_HTML_THRESHOLD:
+                return {"status": "WARN", "http_code": resp.status_code,
+                        "content_size": size, "elapsed_ms": elapsed_ms,
+                        "reason": f"thin body ({size}b < {CANDIDATE_SHELL_HTML_THRESHOLD}b) "
+                                  f"— likely shell HTML or error page"}
+            return {"status": "OK", "http_code": resp.status_code,
+                    "content_size": size, "elapsed_ms": elapsed_ms,
+                    "reason": "ok"}
+    except Exception as exc:
+        elapsed_ms = int((time.monotonic() - started) * 1000)
+        return {"status": "FAIL", "http_code": None, "content_size": 0,
+                "elapsed_ms": elapsed_ms,
+                "reason": f"{type(exc).__name__}: {str(exc)[:120]}"}
+
+
+def print_candidate_report(per_candidate: dict[str, dict]) -> None:
+    """Print a section for validated-candidate liveness probes."""
+    if not per_candidate:
+        return
+    n_fail = sum(1 for r in per_candidate.values() if r["status"] == "FAIL")
+    n_warn = sum(1 for r in per_candidate.values() if r["status"] == "WARN")
+    n_ok = sum(1 for r in per_candidate.values() if r["status"] == "OK")
+    print()
+    print("─" * 72)
+    print(f"Validated-candidate URL liveness — {len(per_candidate)} probed "
+          f"({n_ok} OK · {n_warn} WARN · {n_fail} FAIL)")
+    print("─" * 72)
+    for cid, r in sorted(per_candidate.items()):
+        icon = {"OK": "✓", "WARN": "⚠", "FAIL": "✗"}[r["status"]]
+        code = r.get("http_code") or "-"
+        size = r.get("content_size", 0)
+        print(f"  {icon} {cid:30s} HTTP {code!s:>3s}  {size:>8d}b  {r['reason']}")
+
+
 # ── entry point ──────────────────────────────────────────────────────────────
 
 def main() -> int:
@@ -555,6 +648,9 @@ def main() -> int:
                         help="probe a single source by id (no state mutation)")
     parser.add_argument("--dry-run", action="store_true",
                         help="run probes but skip state-write and email")
+    parser.add_argument("--include-validated", action="store_true",
+                        help="also probe URL liveness of validated candidates "
+                             "(catches the 'status=validated but URL is 404' bug)")
     args = parser.parse_args()
 
     sources = load_sources()
@@ -585,6 +681,15 @@ def main() -> int:
 
     print_console_report(per_source, total_runtime_s)
 
+    # Validated-candidate URL probes (decoupled from production source state /
+    # email logic): purely informational, but a FAIL bumps the script's exit
+    # code so the cron-wrapper escalates via its standard non-zero alert path.
+    per_candidate: dict[str, dict] = {}
+    if args.include_validated:
+        for c in load_validated_candidates():
+            per_candidate[c["id"]] = probe_candidate_url(c)
+        print_candidate_report(per_candidate)
+
     # Single-source debug mode bypasses state and email entirely.
     if args.source:
         return 0 if all(r["status"] == "OK" for r in per_source.values()) else 1
@@ -606,8 +711,11 @@ def main() -> int:
     elif args.email and not needs_alert:
         print("All sources OK and no recoveries — email suppressed.")
 
-    # Exit code: 1 if any FAIL, 0 otherwise (cron-wrapper picks this up)
-    return 1 if alerts["failing"] else 0
+    candidate_fail = any(r["status"] == "FAIL" for r in per_candidate.values())
+
+    # Exit code: 1 if any production FAIL OR any validated-candidate URL FAIL
+    # (cron-wrapper picks this up and emails)
+    return 1 if (alerts["failing"] or candidate_fail) else 0
 
 
 if __name__ == "__main__":
