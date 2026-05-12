@@ -73,7 +73,7 @@
   {
     "id": "de-shaw",
     "name": "D. E. Shaw",
-    "status": "rejected",
+    "status": "validated",
     "homepage_url": "https://www.deshaw.com",
     "research_url": "https://www.deshaw.com/library",
     "rss_url": null,
@@ -86,7 +86,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.97,
-    "notes": "Watchlist: library page mostly CSS, minimal content",
+    "notes": "RECOMMEND: Quant library, macro+equity+credit research",
     "research_links": [
       {
         "url": "https://www.deshaw.com/library",
@@ -105,15 +105,19 @@
       "article_signals": 1
     },
     "screening_reason": "Insufficient article index signals",
-    "last_deep_analyzed_at": "2026-04-11T18:32:49.244440+00:00",
-    "quality": "LOW",
-    "topics": "quant",
+    "last_deep_analyzed_at": "2026-05-12T01:02:59Z",
+    "quality": "HIGH",
+    "topics": "macro, equity, credit, quant, portfolio management",
     "reject_reason": "no_public_research",
     "rejected_at": "2026-04-12T19:21:09.876510+08:00",
     "strategy_tags": [
+      "macro",
+      "equity",
+      "fixed_income",
       "quant"
     ],
-    "source": "auto_discovered"
+    "source": "auto_discovered",
+    "quality_score": 0.9
   },
   {
     "id": "blackstone",
@@ -213,7 +217,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.97,
-    "notes": "Watchlist: blog is HR/culture, not financial research",
+    "notes": "Rejected: 60% HR/culture, financial research sparse",
     "research_links": [
       {
         "url": "https://www.twosigma.com/insights/",
@@ -237,15 +241,17 @@
       "article_signals": 2
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-04-11T18:32:49.244440+00:00",
+    "last_deep_analyzed_at": "2026-05-12T01:02:59Z",
     "quality": "LOW",
-    "topics": "",
+    "topics": "quant, data science, HR/culture",
     "reject_reason": "content_not_research",
     "rejected_at": "2026-04-12T19:21:09.876510+08:00",
     "strategy_tags": [
-      "quant"
+      "quant",
+      "equity"
     ],
-    "source": "auto_discovered"
+    "source": "auto_discovered",
+    "quality_score": 0.35
   },
   {
     "id": "kkr",
@@ -793,7 +799,7 @@
     "official_domain": "www.fidelity.com",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-04-19T09:00:12.375997+08:00",
-    "notes": "Rejected: retail education portal, not institutional research",
+    "notes": "Rejected: retail education portal, not institutional",
     "research_links": [],
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -811,14 +817,15 @@
     "screening_reason": "Login/paywall detected",
     "fit_score": 0.82,
     "last_validated_at": "2026-04-16T09:01:28.399090+08:00",
-    "last_deep_analyzed_at": "2026-04-11T18:32:49.244440+00:00",
+    "last_deep_analyzed_at": "2026-05-12T01:02:59Z",
     "quality": "LOW",
-    "topics": "retail education",
+    "topics": "retail education, personal finance",
     "strategy_tags": [
-      "equity",
-      "multi_asset"
+      "multi_asset",
+      "equity"
     ],
-    "source": "manual"
+    "source": "manual",
+    "quality_score": 0.15
   },
   {
     "id": "msci-research",
@@ -2117,7 +2124,7 @@
     "name": "Dimensional Fund Advisors",
     "homepage_url": "https://www.dimensional.com/us-en/insights",
     "source": "manual",
-    "status": "discovered",
+    "status": "watchlist",
     "strategy_tags": [
       "quant",
       "equity",
@@ -2134,6 +2141,27 @@
       }
     ],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-05-11T09:05:02.609145+08:00"
+    "last_discovered_at": "2026-05-11T09:05:02.609145+08:00",
+    "is_publicly_accessible": false,
+    "has_article_index": false,
+    "last_screened_at": "2026-05-12T09:00:13.302995+08:00",
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 0,
+      "article_tags": 0,
+      "time_tags": 0,
+      "date_patterns": 1,
+      "h2_tags": 0,
+      "article_signals": 0
+    },
+    "screening_reason": "Insufficient article index signals",
+    "fit_score": 0.88,
+    "last_validated_at": "2026-05-12T09:00:20.241489+08:00",
+    "quality": "LOW",
+    "quality_score": 0.3,
+    "topics": "factor investing, equity, multi-asset",
+    "notes": "Watchlist: JS-heavy page, only podcast visible",
+    "last_deep_analyzed_at": "2026-05-12T01:02:59Z"
   }
 ]
