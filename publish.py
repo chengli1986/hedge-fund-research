@@ -184,6 +184,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "notable_en": "Pioneered private credit ABF (asset-backed finance); Athene merger created largest US insurance-linked asset manager; Marc Rowan and Torsten Slok widely cited on macro/private credit.",
         "notable_zh": "私募信贷 ABF（资产支持金融）开创者；与 Athene 合并后成为美国最大保险关联资管；Marc Rowan 与首席经济学家 Torsten Slok 是宏观与私募信贷领域的关键意见领袖。",
     },
+    "kkr": {
+        "founded": "1976", "aum": "~$600B", "hq": "New York, NY",
+        "type_en": "Listed Alternative Asset Manager (NYSE: KKR)", "type_zh": "上市另类资产管理公司 (纽交所: KKR)",
+        "desc_zh": "全球最大另类资产管理人之一，1976 年由 Henry Kravis、George Roberts 和 Jerome Kohlberg 创立，开创现代杠杆收购模式。业务涵盖私募股权、基础设施、地产、私募信贷及保险（通过 Global Atlantic 拓展），2010 年纽交所上市。",
+        "notable_en": "1988 RJR Nabisco buyout ($25B, the largest LBO at the time, subject of 'Barbarians at the Gate'). KKR Global Macro & Asset Allocation (GMAA) team led by Henry McVey produces widely-cited macro/portfolio research.",
+        "notable_zh": "1988 年主导对 RJR Nabisco 的 250 亿美元杠杆收购（当时史上最大 LBO，《门口的野蛮人》原型）。Henry McVey 领衔的 KKR Global Macro & Asset Allocation (GMAA) 团队定期发布广为机构引用的宏观及组合配置研究。",
+    },
     "janus-henderson": {
         "founded": "1969", "aum": "~$370B", "hq": "London, UK / Denver, CO",
         "type_en": "Active Asset Manager (NYSE)", "type_zh": "主动管理型资管 (纽交所)",
