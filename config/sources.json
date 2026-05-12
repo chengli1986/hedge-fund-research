@@ -254,6 +254,19 @@
       "notable_authors": ["Henry McVey", "Racim Allouani", "David McNellis"],
       "expected_hostname": "kkr.com",
       "max_articles": 10
+    },
+    {
+      "id": "janus-henderson",
+      "strategy_tags": ["fixed_income", "equity", "macro", "multi_asset"],
+      "name": "Janus Henderson Investors",
+      "short_name": "Janus Henderson",
+      "url": "https://www.janushenderson.com/en-us/investor/insights/",
+      "method": "requests",
+      "frequency": "weekly",
+      "description": "Active asset manager (~$370B AUM). Equity, fixed income, multi-asset and alternatives. Insights covers macro, geopolitics, AI and sector-level equity/credit analysis.",
+      "notable_authors": ["Ali Dibadj", "Matthew Bullock"],
+      "expected_hostname": "janushenderson.com",
+      "max_articles": 10
     }
   ],
   "settings": {

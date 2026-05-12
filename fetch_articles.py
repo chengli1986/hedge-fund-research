@@ -1915,6 +1915,81 @@ def fetch_natixis_im(source: dict) -> list[dict]:
     return articles[:source.get("max_articles", 10)]
 
 
+def fetch_janus_henderson(source: dict) -> list[dict]:
+    """Fetch articles from Janus Henderson Investors (SSR — WordPress).
+
+    Index: https://www.janushenderson.com/en-us/investor/insights/
+    Cards render server-side; h2/h3 elements inside each card hold the title,
+    and a sibling/parent <a href="/en-us/investor/article/SLUG/"> holds the URL.
+    Dates are absent from the index — each article page exposes them in a
+    class*='date' container as "Month DD, YYYY".
+    """
+    BASE = "https://www.janushenderson.com"
+    expected_host = source.get("expected_hostname", "janushenderson.com")
+    max_articles = source.get("max_articles", 10)
+
+    resp = requests.get(source["url"], headers=HEADERS, timeout=30)
+    resp.raise_for_status()
+    soup = BeautifulSoup(resp.text, "html.parser")
+
+    seen_urls: set[str] = set()
+    candidates: list[tuple[str, str]] = []
+
+    for h in soup.find_all(["h2", "h3"]):
+        title = html.unescape(h.get_text(strip=True))
+        if not title or len(title) < 8:
+            continue
+        link: Optional[str] = None
+        for ancestor in (h.parent, h.parent.parent if h.parent else None):
+            if ancestor is None:
+                continue
+            for a in ancestor.find_all("a", href=True):
+                href = a["href"]
+                if "/en-us/investor/article/" in href:
+                    link = href if href.startswith("http") else BASE + href
+                    break
+            if link:
+                break
+        if not link or link in seen_urls:
+            continue
+        if not _validate_hostname(link, expected_host):
+            continue
+        seen_urls.add(link)
+        candidates.append((title, link))
+
+    articles: list[dict] = []
+    session = requests.Session()
+    session.headers.update(HEADERS)
+    for title, url in candidates[:max_articles]:
+        date_raw = ""
+        date_parsed: Optional[str] = None
+        try:
+            art = session.get(url, timeout=15)
+            art.raise_for_status()
+            art_soup = BeautifulSoup(art.text, "html.parser")
+            for el in art_soup.find_all(class_=re.compile(r"date", re.I)):
+                m = re.search(
+                    r"(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?"
+                    r"|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)"
+                    r"\s+\d{1,2},?\s+\d{4}",
+                    el.get_text(strip=True),
+                )
+                if m:
+                    date_raw = m.group(0)
+                    date_parsed = parse_date(date_raw)
+                    break
+        except Exception as e:
+            log.debug("Janus Henderson: failed to fetch %s: %s", url, e)
+        articles.append({
+            "title": title,
+            "url": url,
+            "date": date_parsed,
+            "date_raw": date_raw,
+        })
+
+    return articles
+
+
 FETCHERS = {
     "cambridge-associates": fetch_cambridge_associates,
     "man-group": fetch_man_group,
@@ -1944,6 +2019,7 @@ FETCHERS = {
     "natixis-im": fetch_natixis_im,
     "apollo-global-management": fetch_apollo_global_management,
     "alliancebernstein": fetch_alliancebernstein,
+    "janus-henderson": fetch_janus_henderson,
 }
 
 

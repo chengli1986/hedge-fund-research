@@ -44,6 +44,7 @@ BADGE_COLORS: dict[str, str] = {
     "natixis-im": "#80276c",            # Natixis purple
     "apollo-global-management": "#5e3a82",  # Apollo plum (avoids existing navy/gold/purple clusters)
     "kkr": "#556b2f",                       # KKR dark olive (unique among 19 existing colors)
+    "janus-henderson": "#006d75",           # Janus Henderson teal
 }
 
 INITIAL_VISIBLE = 20
@@ -182,6 +183,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "美国最大私募信贷/另类资管之一，1990 年由 Leon Black、Marc Rowan、Joshua Harris 创立。核心业务：私募信贷（直接贷款、ABF 资产支持金融开创者）、私募股权（杠杆收购起家）、房地产、保险负债驱动投资。2022 年与 Athene 合并后成为美国最大年金/保险关联资管，永续保险负债成为基金重要资金来源。",
         "notable_en": "Pioneered private credit ABF (asset-backed finance); Athene merger created largest US insurance-linked asset manager; Marc Rowan and Torsten Slok widely cited on macro/private credit.",
         "notable_zh": "私募信贷 ABF（资产支持金融）开创者；与 Athene 合并后成为美国最大保险关联资管；Marc Rowan 与首席经济学家 Torsten Slok 是宏观与私募信贷领域的关键意见领袖。",
+    },
+    "janus-henderson": {
+        "founded": "1969", "aum": "~$370B", "hq": "London, UK / Denver, CO",
+        "type_en": "Active Asset Manager (NYSE)", "type_zh": "主动管理型资管 (纽交所)",
+        "desc_zh": "2017 年由 Janus Capital（1969，美国）与 Henderson Group（1934，英国）合并成立，纽交所上市。覆盖股票、固收、多资产及另类投资。宏观研究以全球利率周期和地缘政治框架见长；固收团队聚焦投资级信贷与国债；股票侧重科技、医疗健康及成长赛道。",
+        "notable_en": "Nick Sheridan's value equity team; Ben Lofthouse's global equity income franchise; Myron Scholes (Nobel laureate) formerly on advisory board.",
+        "notable_zh": "Nick Sheridan 价值股权团队；Ben Lofthouse 全球股息成长策略；宏观洞察系列持续跟踪全球利率周期与地缘政治风险。",
     },
 }
 
