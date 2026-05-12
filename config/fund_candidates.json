@@ -2100,7 +2100,7 @@
     "name": "Janus Henderson Investors",
     "homepage_url": "https://www.janushenderson.com",
     "source": "manual",
-    "status": "promoted",
+    "status": "wired",
     "strategy_tags": [
       "fixed_income",
       "equity",
@@ -2117,7 +2117,8 @@
     "quality_score": 0.78,
     "topics": "fixed income, equity, macro, geopolitics, technology",
     "notes": "RECOMMEND: Free weekly insights, equity+fixed income depth",
-    "last_deep_analyzed_at": "2026-05-11T01:03:39Z"
+    "last_deep_analyzed_at": "2026-05-11T01:03:39Z",
+    "promoted_at": "2026-05-12T10:19:29.746916+08:00"
   },
   {
     "id": "dimensional",
