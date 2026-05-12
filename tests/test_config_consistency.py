@@ -1,6 +1,6 @@
 """Config sanity checks — catch misclassifications and URL drift at test time.
 
-Two classes of bugs these guard against:
+Classes of bugs these guard against:
 
 1. **Frequency vs observed cadence mismatch** (Gap 1)
    The 2026-05-11 cambridge-associates + brookfield bug: both declared "weekly"
@@ -15,12 +15,24 @@ Two classes of bugs these guard against:
    live URL probe extension to gmia-fetcher-health.py), but it CAN catch
    missing/malformed URLs and host-vs-official-domain drift, which are also
    common manual-edit mistakes.
+
+3. **Fund profile coverage + pending profile validity** (Gap 4)
+   The 2026-05-12 Janus Henderson manual-wire path: auto-promote agent correctly
+   deferred (no fetcher in FETCHERS yet), so the Phase 5 validator never ran
+   on a pending_profile because there was none — the human wrote sources.json,
+   the fetcher, and _FUND_PROFILES directly in one pass. That worked this time,
+   but a future manual wire that adds sources.json + fetcher and forgets
+   the profile would silently render the Sources-tab card empty. These tests
+   enforce: every source id has a fund profile somewhere (production
+   _FUND_PROFILES or pending_profiles/<id>.json), and every pending profile
+   passes the validator's hard checks.
 """
 
 from __future__ import annotations
 
 import json
 import statistics
+import sys
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
@@ -30,6 +42,8 @@ REPO = Path(__file__).resolve().parent.parent
 SOURCES_FILE = REPO / "config" / "sources.json"
 CANDIDATES_FILE = REPO / "config" / "fund_candidates.json"
 ARTICLES_FILE = REPO / "data" / "articles.jsonl"
+PENDING_DIR = REPO / "pending_profiles"
+SCRIPTS_DIR = REPO / "scripts"
 
 # Mirror gmia-fetcher-health.py's FREQ_TO_STALE_DAYS — keep in sync if it changes.
 FREQ_TO_STALE_DAYS = {
@@ -195,4 +209,87 @@ def test_validated_candidate_url_host_matches_official_domain():
             )
     assert not mismatches, (
         "research_url / official_domain drift:\n  " + "\n  ".join(mismatches)
+    )
+
+
+# ───────── Gap 4: fund profile coverage + pending profile validity ───────────
+
+
+def _production_profile_ids() -> set[str]:
+    """Fund IDs that have a profile entry in publish._FUND_PROFILES."""
+    import publish  # repo root is on sys.path via conftest
+    return set(publish._FUND_PROFILES.keys())
+
+
+def _pending_profile_ids() -> set[str]:
+    """Fund IDs with a pending_profiles/<id>.json draft (auto-promote output)."""
+    if not PENDING_DIR.exists():
+        return set()
+    return {
+        p.stem for p in PENDING_DIR.glob("*.json")
+        if not p.name.endswith(".validation.json")
+    }
+
+
+def test_every_source_has_fund_profile():
+    """Each entry in sources.json must have a fund profile in either
+    publish._FUND_PROFILES (production) or pending_profiles/<id>.json
+    (auto-promote draft awaiting human merge).
+
+    Without a profile in one of those two places, publish.py renders an empty
+    Sources-tab card for that fund. The auto-promote agent writes a pending
+    profile during Phase 5 (validated by scripts/validate_pending_profile.py).
+    Manual wiring paths must either add to _FUND_PROFILES directly or drop a
+    pending_profiles/<id>.json — this test enforces that invariant.
+    """
+    sources = json.loads(SOURCES_FILE.read_text())["sources"]
+    in_production = _production_profile_ids()
+    in_pending = _pending_profile_ids()
+
+    missing = [
+        s["id"] for s in sources
+        if s["id"] not in in_production and s["id"] not in in_pending
+    ]
+    assert not missing, (
+        "sources.json entries without a fund profile (need entry in "
+        "publish._FUND_PROFILES or pending_profiles/<id>.json): "
+        f"{missing}"
+    )
+
+
+def test_pending_profiles_pass_validator():
+    """Every pending_profiles/<id>.json must pass the hard checks in
+    scripts/validate_pending_profile.py.
+
+    Phase 5 policy (auto-promote/program.md): exit 0 = clean, exit 1 with only
+    high-risk uncertainty markers is acceptable (human will see the flag and
+    decide), exit 1 with missing fields / AUM format / founded year /
+    hq format / desc length issues means the profile is unsafe to merge into
+    _FUND_PROFILES. This test enforces the latter — i.e., no hard violations
+    are allowed to sit in pending_profiles/ unnoticed.
+    """
+    sys.path.insert(0, str(SCRIPTS_DIR))
+    from validate_pending_profile import validate_profile  # type: ignore
+
+    failures = []
+    for path in sorted(PENDING_DIR.glob("*.json")):
+        if path.name.endswith(".validation.json"):
+            continue
+        try:
+            data = json.loads(path.read_text())
+        except json.JSONDecodeError as exc:
+            failures.append(f"{path.name}: malformed JSON — {exc}")
+            continue
+
+        result = validate_profile(data)
+        hard_issues = [
+            i for i in result["issues"]
+            if not i.startswith("high-risk uncertainty markers")
+        ]
+        if hard_issues:
+            failures.append(f"{path.name}: {hard_issues}")
+
+    assert not failures, (
+        "pending profiles with hard validation issues:\n  "
+        + "\n  ".join(failures)
     )
