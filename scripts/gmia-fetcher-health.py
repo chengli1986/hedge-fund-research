@@ -71,6 +71,13 @@ TERMINAL_OK_STATUSES = {"ok", "metadata_only"}
 TRANSIENT_EXC_NAMES = {"TimeoutError", "ReadTimeout", "ConnectionError", "ConnectTimeout"}
 RETRY_SLEEP_S = 5
 
+# Content probe walks the top N most-recent articles, passing on the first that
+# yields ≥MIN_CONTENT_LENGTH chars. Sites like Apollo intermix podcast/video
+# preview cards (which the per-source content fetcher correctly filters as
+# "too short") with full articles; probing only articles[0] confused legitimate
+# filtering with selector regression. 2026-05-13 incident.
+CONTENT_PROBE_TOP_N = 3
+
 # Staleness thresholds: how old can the most-recent article be before we WARN?
 # Set generous so known silent periods (Bridgewater monthly, AQR ~quarterly) don't
 # trip on normal cadence. Beyond these, the site is publishing materially less than
@@ -203,51 +210,93 @@ def _probe_once(source: dict) -> dict:
         result["reason"] = "fetch_articles returned 0 articles"
         return result
 
-    most_recent = articles[0]
-    result["most_recent_date"] = most_recent.get("date")
+    # Staleness/date is always reported relative to articles[0] — the genuinely
+    # most-recent article. The content probe may succeed on a later article
+    # (e.g. when articles[0] is a podcast preview card filtered by min-length),
+    # but that does NOT redefine which article is "most recent".
+    result["most_recent_date"] = articles[0].get("date")
 
     # Step 2: content probe — write into a private tmp dir to avoid touching
     # production content/. Patch fetch_content.CONTENT_DIR for the call only.
+    # Probe up to CONTENT_PROBE_TOP_N most-recent articles, pass on the first
+    # that yields ≥MIN_CONTENT_LENGTH chars with a TERMINAL_OK status.
     original_content_dir = fetch_content.CONTENT_DIR
     chars = 0
+    content_attempts: list[dict] = []
+    content_success = False
+    transient_exc_seen: Exception | None = None
+    all_failures_transient = True  # only true if every attempt raised transient
     try:
         with tempfile.TemporaryDirectory(prefix="gmia-health-") as td:
             fetch_content.CONTENT_DIR = Path(td)
-            probe_article = dict(most_recent)
-            probe_article["id"] = f"healthprobe_{sid}"
-            try:
-                outcome = content_fetcher(probe_article)
-            except Exception as exc:
-                result["status"] = "FAIL"
-                result["reason"] = f"fetch_content raised {type(exc).__name__}: {str(exc)[:120]}"
-                result["transient_exc"] = exc if _is_transient(exc) else None
-                return result
+            for idx, article in enumerate(articles[:CONTENT_PROBE_TOP_N]):
+                probe_article = dict(article)
+                probe_article["id"] = f"healthprobe_{sid}_{idx}"
+                attempt: dict = {"index": idx, "url": article.get("url", "")}
+                try:
+                    outcome = content_fetcher(probe_article)
+                except Exception as exc:
+                    attempt["reason"] = (
+                        f"raised {type(exc).__name__}: {str(exc)[:120]}"
+                    )
+                    if _is_transient(exc):
+                        transient_exc_seen = exc
+                    else:
+                        all_failures_transient = False
+                    content_attempts.append(attempt)
+                    continue
 
-            if outcome is None:
-                result["status"] = "FAIL"
-                result["reason"] = "fetch_content returned None (selector regression or HTTP error)"
-                return result
+                if outcome is None:
+                    attempt["reason"] = "returned None (selector regression or HTTP error)"
+                    all_failures_transient = False
+                    content_attempts.append(attempt)
+                    continue
 
-            path, status = outcome
-            if status not in TERMINAL_OK_STATUSES:
-                result["status"] = "FAIL"
-                result["reason"] = f"fetch_content status={status!r}"
-                return result
+                path, status = outcome
+                if status not in TERMINAL_OK_STATUSES:
+                    attempt["reason"] = f"status={status!r}"
+                    all_failures_transient = False
+                    content_attempts.append(attempt)
+                    continue
 
-            try:
-                chars = len(path.read_text(encoding="utf-8"))
-            except Exception:
-                chars = 0
-            result["content_chars"] = chars
-            result["content_status"] = status
+                try:
+                    this_chars = len(path.read_text(encoding="utf-8"))
+                except Exception:
+                    this_chars = 0
+                if this_chars < fetch_content.MIN_CONTENT_LENGTH:
+                    attempt["reason"] = (
+                        f"too short: {this_chars} chars (threshold "
+                        f"{fetch_content.MIN_CONTENT_LENGTH})"
+                    )
+                    all_failures_transient = False
+                    content_attempts.append(attempt)
+                    continue
+
+                attempt["reason"] = f"ok ({this_chars} chars)"
+                content_attempts.append(attempt)
+                chars = this_chars
+                result["content_chars"] = chars
+                result["content_status"] = status
+                result["content_probe_index"] = idx
+                content_success = True
+                break
     finally:
         fetch_content.CONTENT_DIR = original_content_dir
 
-    if chars < fetch_content.MIN_CONTENT_LENGTH:
+    if not content_success:
+        n_tried = len(content_attempts)
+        # Surface each attempt's reason for diagnostics. Distinct reason texts
+        # let on-call distinguish "selector broke for all 3" from "all 3 short"
+        # (the latter is a content-mix signal, not a regression).
+        summary = "; ".join(
+            f"#{a['index']}={a['reason']}" for a in content_attempts
+        )
         result["status"] = "FAIL"
         result["reason"] = (
-            f"content too short: {chars} chars (threshold {fetch_content.MIN_CONTENT_LENGTH})"
+            f"all top {n_tried} articles failed content probe: {summary}"
         )
+        if transient_exc_seen is not None and all_failures_transient:
+            result["transient_exc"] = transient_exc_seen
         return result
 
     # Step 3: date probe (warn-only)
@@ -510,7 +559,7 @@ def render_html_email(
 {body_html}
 
 <p style="color:#8b949e;font-size:11px;margin-top:20px">
-Probes per source: (1) fetch_articles ≥1 article · (2) fetch_content ≥{__import__("fetch_content").MIN_CONTENT_LENGTH} chars · (3) date parse OK<br>
+Probes per source: (1) fetch_articles ≥1 article · (2) fetch_content ≥{__import__("fetch_content").MIN_CONTENT_LENGTH} chars (tries top {CONTENT_PROBE_TOP_N}, passes on first OK) · (3) date parse OK<br>
 State: <code>~/hedge-fund-research/logs/gmia-fetcher-health.json</code>  ·  Cron: 04:30 BJT daily
 </p>
 </body></html>"""
