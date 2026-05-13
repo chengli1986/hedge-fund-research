@@ -1079,6 +1079,8 @@ a:hover {{ text-decoration: underline; }}
   <span class="lang-en">Hedge Fund Research Monitor &middot; Auto-generated dashboard</span><span class="lang-zh" style="display:none">对冲基金研究监控 &middot; 自动生成</span>
 </div>
 
+{details_island}
+
 <script>
 let langZh = false;
 const activeThemes = new Set();
@@ -1285,8 +1287,6 @@ function showAll() {{
 populateViewFromPool('themes');
 bindRowToggles();
 </script>
-
-{details_island}
 
 </body>
 </html>"""
