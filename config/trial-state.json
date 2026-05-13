@@ -2525,9 +2525,7 @@
       "total_articles": 20,
       "days_with_articles": 2,
       "avg_quality_score": 0.0
-    }
-  ],
-  "active_trials": [
+    },
     {
       "id": "research-affiliates",
       "name": "Research Affiliates",
@@ -2537,7 +2535,7 @@
       "quality": "HIGH",
       "topics": "factor investing, smart beta, fundamental indexing, AI, valuation",
       "start_date": "2026-05-10",
-      "end_date": null,
+      "end_date": "2026-05-13",
       "daily_checks": {
         "2026-05-10": {
           "accessible": true,
@@ -2559,10 +2557,17 @@
           "date_count": 10,
           "error": null,
           "fetcher_used": true
+        },
+        "2026-05-13": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -2663,7 +2668,10 @@
           "day": 3,
           "date": "2026-05-12"
         }
-      ]
+      ],
+      "total_articles": 40,
+      "days_with_articles": 4,
+      "avg_quality_score": 0.771
     },
     {
       "id": "robeco",
@@ -2674,7 +2682,7 @@
       "quality": "MEDIUM",
       "topics": "quant, ESG, emerging markets, fixed income, credit",
       "start_date": "2026-05-10",
-      "end_date": null,
+      "end_date": "2026-05-13",
       "daily_checks": {
         "2026-05-10": {
           "accessible": true,
@@ -2696,10 +2704,17 @@
           "date_count": 0,
           "error": null,
           "fetcher_used": false
+        },
+        "2026-05-13": {
+          "accessible": true,
+          "article_count": 23,
+          "date_count": 0,
+          "error": null,
+          "fetcher_used": false
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -2800,8 +2815,13 @@
           "day": 3,
           "date": "2026-05-12"
         }
-      ]
-    },
+      ],
+      "total_articles": 92,
+      "days_with_articles": 4,
+      "avg_quality_score": 0.65
+    }
+  ],
+  "active_trials": [
     {
       "id": "ares-management",
       "name": "Ares Management",
@@ -2819,6 +2839,13 @@
           "date_count": 0,
           "error": null,
           "fetcher_used": false
+        },
+        "2026-05-13": {
+          "accessible": true,
+          "article_count": 0,
+          "date_count": 0,
+          "error": null,
+          "fetcher_used": false
         }
       },
       "auto_decided": false,
@@ -2831,9 +2858,106 @@
           "error": "No article links found on index page",
           "day": 2,
           "date": "2026-05-12"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No article links found on index page",
+          "day": 3,
+          "date": "2026-05-13"
+        }
+      ]
+    },
+    {
+      "id": "de-shaw",
+      "name": "D. E. Shaw",
+      "research_url": "https://www.deshaw.com/library",
+      "homepage_url": "https://www.deshaw.com",
+      "fit_score": 0.97,
+      "quality": "HIGH",
+      "topics": "macro, equity, credit, quant, portfolio management",
+      "start_date": "2026-05-13",
+      "end_date": null,
+      "daily_checks": {
+        "2026-05-13": {
+          "accessible": true,
+          "article_count": 0,
+          "date_count": 0,
+          "error": null,
+          "fetcher_used": false
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "Could not extract text from any article",
+          "day": 1,
+          "date": "2026-05-13"
+        }
+      ]
+    },
+    {
+      "id": "gsam",
+      "name": "Goldman Sachs Asset Management",
+      "research_url": "https://am.gs.com/en-us/advisors/insights/list",
+      "homepage_url": "https://am.gs.com",
+      "fit_score": 0.9,
+      "quality": "MEDIUM",
+      "topics": "macro, equity, fixed income, investment strategy",
+      "start_date": "2026-05-13",
+      "end_date": null,
+      "daily_checks": {
+        "2026-05-13": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://am.gs.com/en-us/advisors/insights/article/market-monitor-weekly",
+              "relevance": 0.9,
+              "depth": 0.5,
+              "extractable": 0.7,
+              "overall": 0.7,
+              "notes": "Weekly market monitor covering S&P 500 concentration risk, AI theme resurgence, and narrow market breadth; brief thematic commentary with limited substantive analysis."
+            },
+            {
+              "url": "https://am.gs.com/en-us/advisors/insights/article/corporate-pension-monthly",
+              "relevance": 0.85,
+              "depth": 0.6,
+              "extractable": 0.6,
+              "overall": 0.7,
+              "notes": "Corporate pension funded status update (108.9% in April) with discussion of pension risk transfer trends; truncated text and limited depth on strategic implications."
+            },
+            {
+              "url": "https://am.gs.com/en-us/advisors/insights/article/2026/exploring-investors-concerns-about-equity-market-concentration",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.8,
+              "overall": 0.88,
+              "notes": "In-depth analysis of equity market concentration globally, examining volatility linkage, mega-cap valuations, and portfolio efficiency impacts; substantive research with data-driven insights."
+            }
+          ],
+          "avg_score": 0.76,
+          "error": null,
+          "day": 1,
+          "date": "2026-05-13"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-05-12"
+  "last_summary_sent_date": "2026-05-13"
 }
