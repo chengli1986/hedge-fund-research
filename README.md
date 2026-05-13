@@ -2,7 +2,7 @@
 
 Tracks and aggregates research insights, market commentary, and papers from top hedge funds. Summarizes via LLM and publishes a bilingual (CN/EN) dashboard.
 
-## Sources (19)
+## Sources (21)
 
 | Fund | Method | Frequency | Notable |
 |------|--------|-----------|---------|
@@ -12,19 +12,21 @@ Tracks and aggregates research insights, market commentary, and papers from top 
 | **GMO LLC** | JSON API | Quarterly | Value contrarian, 7-Year forecasts |
 | **Oaktree Capital** | Playwright (CSR) | Monthly | Howard Marks memos, credit/distressed |
 | **ARK Invest** | RSS feed | Weekly | Analyst Research, Market Commentary |
-| **Cambridge Associates** | SSR (requests) | Weekly | Private equity, venture capital, private credit |
+| **Cambridge Associates** | SSR (requests) | Monthly | Private equity, venture capital, private credit |
 | **Wellington Management** | Playwright (AEM) | Weekly | Equity, macro, fixed income, multi-asset, ESG |
 | **Amundi Research Center** | RSS | Weekly | Macro, ESG, emerging markets, fixed income |
 | **T. Rowe Price** | Playwright (AEM) | Weekly | Equity, fixed income, active management |
 | **PIMCO** | Playwright (Coveo) | Weekly | World's largest fixed-income manager; macro, credit, secular outlook |
 | **Aberdeen Investments** | Playwright (Next.js) | Weekly | EM debt, multi-asset, sustainable investing |
 | **PGIM** | SSR (AEM) | Weekly | Prudential's IM arm; fixed income, private credit, real estate, alternatives |
-| **Brookfield Asset Management** | SSR (Drupal) | Weekly | Real assets, infrastructure, renewable power, private equity |
+| **Brookfield Asset Management** | SSR (Drupal) | Monthly | Real assets, infrastructure, renewable power, private equity |
 | **J.P. Morgan Asset Management** | AEM JSON API | Weekly | Multi-asset, fixed income, market insights, Long-Term Capital Market Assumptions |
 | **Verdad Capital** | SSR (requests) | Monthly | Quant value/factor, emerging markets, private equity replication; Boston, ~$500M |
 | **MSCI Research** | Playwright (Next.js) | Weekly | Index/factor research, ESG & climate frameworks, multi-asset risk; $15T+ benchmarked |
 | **Natixis Investment Managers** | SSR (requests) | Monthly | Tactical Take podcast — macro/portfolio strategy with Janasiewicz & Hess |
 | **Apollo Global Management** | SSR (AEM) | Weekly | Private credit ABF, secondaries, View from Apollo, Apollo Academy |
+| **KKR** | Playwright (Next.js) | Weekly | Private equity / infrastructure / private credit / Global Atlantic insurance; NYC, 1976, ~$600B |
+| **Janus Henderson Investors** | SSR (requests) | Weekly | Equities / fixed income / multi-asset; global rates + geopolitics frame; London/Denver, 2017 merger, ~$370B |
 
 ## Pipeline
 
