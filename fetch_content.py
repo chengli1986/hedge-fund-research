@@ -985,51 +985,6 @@ def _fetch_content_janus_henderson(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
-def _fetch_content_research_affiliates(article: dict) -> Optional[tuple[Path, str]]:
-    """Fetch Research Affiliates article content via Playwright (Next.js CSR).
-
-    Article body is rendered client-side inside ``div.rendered-html`` (also
-    wrapped by ``.ra-mathjax-content`` for the MathJax post-processor). Listing
-    is also CSR (see ``fetch_researchaffiliates``), so Playwright is required
-    end-to-end.
-    """
-    from playwright.sync_api import sync_playwright
-
-    url = article["url"]
-    log.info("  Research Affiliates: fetching article page %s", url)
-
-    try:
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            context = browser.new_context(
-                user_agent=HEADERS["User-Agent"],
-                viewport={"width": 1440, "height": 900},
-            )
-            page = context.new_page()
-            page.goto(url, wait_until="domcontentloaded", timeout=30000)
-            try:
-                page.wait_for_selector("div.rendered-html", timeout=15000)
-            except Exception:
-                pass
-            page.wait_for_timeout(1500)
-            html = page.content()
-            browser.close()
-    except Exception as e:
-        log.error("  Research Affiliates: Playwright fetch failed: %s", e)
-        return None
-
-    text = _normalize_html(html, "div.rendered-html p, div.ra-mathjax-content p")
-
-    if not _check_min_content_length(text):
-        log.warning("  Research Affiliates: extracted text too short (%d chars)", len(text))
-        return None
-
-    content_path = CONTENT_DIR / f"{article['id']}.txt"
-    _atomic_write(content_path, text.encode("utf-8"))
-    log.info("  Research Affiliates: saved %d chars to %s", len(text), content_path.name)
-    return (content_path, "ok")
-
-
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -1052,7 +1007,6 @@ CONTENT_FETCHERS = {
     "apollo-global-management": _fetch_content_apollo,
     "kkr": _fetch_content_kkr,
     "janus-henderson": _fetch_content_janus_henderson,
-    "research-affiliates": _fetch_content_research_affiliates,
 }
 
 

@@ -45,7 +45,6 @@ BADGE_COLORS: dict[str, str] = {
     "apollo-global-management": "#5e3a82",  # Apollo plum (avoids existing navy/gold/purple clusters)
     "kkr": "#556b2f",                       # KKR dark olive (unique among 19 existing colors)
     "janus-henderson": "#006d75",           # Janus Henderson teal
-    "research-affiliates": "#c2185b",       # Research Affiliates deep pink (fills magenta gap)
 }
 
 INITIAL_VISIBLE = 20
