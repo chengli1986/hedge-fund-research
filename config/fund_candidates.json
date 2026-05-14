@@ -1970,7 +1970,7 @@
     "quality": "MEDIUM",
     "quality_score": 0.7,
     "topics": "quant, ESG, emerging markets, fixed income, credit",
-    "notes": "RECOMMEND: trial passed (4/3 days with articles, quality=0.65)",
+    "notes": "RECOMMEND: trial passed (4/3 days with articles, quality=0.65) [synthesis_priority backfilled 2026-05-14]",
     "last_deep_analyzed_at": "2026-05-08T01:02:53Z",
     "official_domain": "www.robeco.com",
     "discovery_method": "discover_fund_sites",
@@ -2092,7 +2092,9 @@
     },
     "screening_reason": "Research index detected",
     "fit_score": 0.895,
-    "last_validated_at": "2026-05-09T09:00:21.194397+08:00"
+    "last_validated_at": "2026-05-09T09:00:21.194397+08:00",
+    "synthesis_priority": true,
+    "synthesis_priority_set_at": "2026-05-14T18:38:50.246410+08:00"
   },
   {
     "id": "janus-henderson",
