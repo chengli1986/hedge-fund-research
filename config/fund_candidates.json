@@ -1563,7 +1563,8 @@
       "multi_asset"
     ],
     "discovery_method": "discover_fund_sites",
-    "notes": "JS-rendered, all paths blocked, content inaccessible",
+    "notes": "Playwright fetcher written 2026-04-24; returns articles but intentionally date=None (listing page has no publish dates by design). Health probe exempted via no_publish_dates=true.",
+    "no_publish_dates": true,
     "official_domain": "www.capitalgroup.com",
     "research_links": [],
     "last_discovered_at": "2026-04-23T09:00:12.674329+08:00",

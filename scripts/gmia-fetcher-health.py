@@ -299,8 +299,10 @@ def _probe_once(source: dict) -> dict:
             result["transient_exc"] = transient_exc_seen
         return result
 
-    # Step 3: date probe (warn-only)
-    if result["most_recent_date"] is None:
+    # Step 3: date probe (warn-only). Skip for sources that intentionally omit
+    # publish dates (no_publish_dates=True in sources.json) — Capital Group is
+    # an example: the listing page has no date fields by design.
+    if result["most_recent_date"] is None and not source.get("no_publish_dates", False):
         result["status"] = "WARN"
         result["reason"] = "most recent article has no parsed date"
         return result

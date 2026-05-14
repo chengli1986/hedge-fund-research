@@ -158,6 +158,18 @@ def test_probe_warn_for_no_date_takes_precedence_over_stale(monkeypatch):
     assert "most_recent_age_days" not in result
 
 
+def test_probe_ok_when_no_publish_dates_flag_set(monkeypatch):
+    """Sources with no_publish_dates=True must not WARN on date=None.
+    Capital Group intentionally omits dates from its listing page."""
+    sid = _install_fakes(monkeypatch, [
+        {"title": "Undated article", "url": "http://x", "date": None}
+    ])
+    source = {"id": sid, "frequency": "weekly", "no_publish_dates": True}
+    result = gfh._probe_once(source)
+    assert result["status"] == "OK", f"expected OK for no_publish_dates source, got {result}"
+    assert "most_recent_age_days" not in result
+
+
 # ── top-N content probe tests (Apollo 2026-05-13 incident) ─────────────────────
 #
 # Apollo started publishing podcast/video preview cards (<1500 chars filtered by

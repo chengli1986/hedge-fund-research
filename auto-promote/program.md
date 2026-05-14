@@ -82,6 +82,7 @@ EOF
     全部是研究频道的简介，不是基金本身。
 - `notable_authors`：candidate 的 `notable_authors`，没有就 `[]`
 - `expected_hostname`：从 url 提取主域名（去掉 www. 与子域）
+- `no_publish_dates`（可选）：若 fund_candidates.json 里该字段为 `true`，**原样复制**到 sources.json 条目。这告诉 health probe 跳过 date=None 的 WARN（该源设计上不提供日期）。不存在则不加该字段。
 
 **用 Edit 工具**插入到 `sources.json` 的 sources 列表末尾，**保留原文 indent 风格**
 （4-space indent + 紧凑数组）。不要让 JSON 重新格式化整个文件。
