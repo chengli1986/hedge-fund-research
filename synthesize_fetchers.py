@@ -44,12 +44,35 @@ def load_fetcher_ids() -> set[str]:
 
 
 def list_targets() -> list[dict]:
-    """Return inaccessible candidates that need a synthesis attempt."""
+    """Return candidates that need a synthesis attempt.
+
+    Two sources:
+    1. synthesis_priority=True candidates (status="promoted", no fetcher yet) — inserted first.
+    2. status="inaccessible" candidates — standard weekly-synthesis queue.
+    """
     candidates = load_candidates()
     fetcher_ids = load_fetcher_ids()
     now = datetime.now(timezone.utc)
     cutoff = now - timedelta(days=SKIP_WINDOW_DAYS)
 
+    # ── Priority queue: trial-passed, no fetcher yet ──────────────────────────
+    priority_targets = []
+    for c in candidates:
+        if not c.get("synthesis_priority"):
+            continue
+        if c["id"] in fetcher_ids:
+            continue  # fetcher already registered (synthesis succeeded earlier)
+        priority_targets.append({
+            "id": c["id"],
+            "name": c.get("name", c["id"]),
+            "homepage_url": c.get("homepage_url", ""),
+            "research_url": c.get("research_url") or c.get("homepage_url", ""),
+            "notes": c.get("notes", ""),
+            "needs_playwright": bool(c.get("requires_playwright") or c.get("needs_playwright")),
+            "quality": c.get("quality", "?"),
+        })
+
+    # ── Standard inaccessible queue ───────────────────────────────────────────
     targets = []
     for c in candidates:
         if c.get("status") != "inaccessible":
@@ -74,20 +97,17 @@ def list_targets() -> list[dict]:
             "homepage_url": c.get("homepage_url", ""),
             "research_url": c.get("research_url") or c.get("homepage_url", ""),
             "notes": c.get("notes", ""),
-            # Set by discover_candidate_entrypoints when httpx returned a shell
-            # page or no nav links — agent should skip httpx attempts and go
-            # straight to Playwright.
             "needs_playwright": bool(c.get("needs_playwright")),
             "quality": c.get("quality", "?"),
         })
-    # Sort: needs_playwright candidates first (we already know httpx can't see them),
-    # then by quality (HIGH > MEDIUM > unknown).
+
     quality_order = {"HIGH": 0, "MEDIUM": 1, "?": 2, "LOW": 3}
     targets.sort(key=lambda t: (
-        not t["needs_playwright"],  # False sorts before True → playwright targets first
+        not t["needs_playwright"],
         quality_order.get(t["quality"], 2),
     ))
-    return targets
+    # Priority candidates always come first (already sorted by insertion order)
+    return priority_targets + targets
 
 
 def _count_failures(fund_id: str, history_path: Path = HISTORY_FILE) -> int:

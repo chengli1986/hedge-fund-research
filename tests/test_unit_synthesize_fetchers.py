@@ -208,3 +208,44 @@ def test_auto_reject_only_flips_inaccessible(tmp_path):
         candidates_path=cf, history_path=hf, max_failures=3,
     )
     assert flipped == []
+
+
+# ---------------------------------------------------------------------------
+# synthesis_priority: promoted candidates with no fetcher get picked up
+# ---------------------------------------------------------------------------
+
+def test_list_targets_includes_synthesis_priority_promoted():
+    """Promoted candidate with synthesis_priority=True and no fetcher is included."""
+    candidates = [
+        _make_candidate("alpha", "promoted", "HIGH"),
+    ]
+    candidates[0]["synthesis_priority"] = True
+    with patch("synthesize_fetchers.load_candidates", return_value=candidates), \
+         patch("synthesize_fetchers.load_fetcher_ids", return_value=set()):
+        result = synthesize_fetchers.list_targets()
+    assert len(result) == 1
+    assert result[0]["id"] == "alpha"
+
+
+def test_list_targets_synthesis_priority_before_inaccessible():
+    """synthesis_priority candidates appear before inaccessible candidates."""
+    candidates = [
+        _make_candidate("inacc", "inaccessible", "HIGH"),
+        {**_make_candidate("prio", "promoted", "HIGH"), "synthesis_priority": True},
+    ]
+    with patch("synthesize_fetchers.load_candidates", return_value=candidates), \
+         patch("synthesize_fetchers.load_fetcher_ids", return_value=set()):
+        result = synthesize_fetchers.list_targets()
+    assert result[0]["id"] == "prio"
+    assert result[1]["id"] == "inacc"
+
+
+def test_list_targets_synthesis_priority_skipped_when_fetcher_exists():
+    """synthesis_priority candidate is skipped when fetcher already registered."""
+    candidates = [
+        {**_make_candidate("alpha", "promoted", "HIGH"), "synthesis_priority": True},
+    ]
+    with patch("synthesize_fetchers.load_candidates", return_value=candidates), \
+         patch("synthesize_fetchers.load_fetcher_ids", return_value={"alpha"}):
+        result = synthesize_fetchers.list_targets()
+    assert result == []
