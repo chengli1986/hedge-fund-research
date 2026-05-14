@@ -2819,9 +2819,7 @@
       "total_articles": 92,
       "days_with_articles": 4,
       "avg_quality_score": 0.65
-    }
-  ],
-  "active_trials": [
+    },
     {
       "id": "ares-management",
       "name": "Ares Management",
@@ -2831,7 +2829,7 @@
       "quality": "HIGH",
       "topics": "private credit, private equity, alternatives, insurance",
       "start_date": "2026-05-11",
-      "end_date": null,
+      "end_date": "2026-05-14",
       "daily_checks": {
         "2026-05-12": {
           "accessible": true,
@@ -2846,10 +2844,17 @@
           "date_count": 0,
           "error": null,
           "fetcher_used": false
+        },
+        "2026-05-14": {
+          "accessible": true,
+          "article_count": 0,
+          "date_count": 0,
+          "error": null,
+          "fetcher_used": false
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "fail_quantity",
       "quality_samples": [
         {
           "sampled": 0,
@@ -2867,8 +2872,13 @@
           "day": 3,
           "date": "2026-05-13"
         }
-      ]
-    },
+      ],
+      "total_articles": 0,
+      "days_with_articles": 0,
+      "avg_quality_score": 0.0
+    }
+  ],
+  "active_trials": [
     {
       "id": "de-shaw",
       "name": "D. E. Shaw",
@@ -2886,6 +2896,13 @@
           "date_count": 0,
           "error": null,
           "fetcher_used": false
+        },
+        "2026-05-14": {
+          "accessible": true,
+          "article_count": 0,
+          "date_count": 0,
+          "error": null,
+          "fetcher_used": false
         }
       },
       "auto_decided": false,
@@ -2898,6 +2915,14 @@
           "error": "Could not extract text from any article",
           "day": 1,
           "date": "2026-05-13"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "Could not extract text from any article",
+          "day": 2,
+          "date": "2026-05-14"
         }
       ]
     },
@@ -2913,6 +2938,13 @@
       "end_date": null,
       "daily_checks": {
         "2026-05-13": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-05-14": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -2955,6 +2987,39 @@
           "error": null,
           "day": 1,
           "date": "2026-05-13"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://am.gs.com/en-us/advisors/insights/article/2026/rethinking-securitized-credits-role-in-your-portfolio",
+              "relevance": 0.9,
+              "depth": 0.6,
+              "extractable": 0.7,
+              "overall": 0.74,
+              "notes": "Portfolio strategy on securitized credit positioning for 2026; discusses CLOs, economic tailwinds, and income generation but text appears truncated mid-sentence."
+            },
+            {
+              "url": "https://am.gs.com/en-us/advisors/insights/article/municipal-fixed-income-monthly",
+              "relevance": 0.95,
+              "depth": 0.7,
+              "extractable": 0.6,
+              "overall": 0.78,
+              "notes": "Municipal bond market analysis with April 2026 performance data, yield curves, and credit research on California wealth tax; text truncated at end."
+            },
+            {
+              "url": "https://am.gs.com/en-us/advisors/insights/article/2026/investing-architecture-infrastructure-ai-future",
+              "relevance": 0.85,
+              "depth": 0.8,
+              "extractable": 0.65,
+              "overall": 0.79,
+              "notes": "Infrastructure investment thesis on AI energy demands and physical bottlenecks; substantive analysis of agentic AI capex needs and 'pick and shovel' opportunities but text cut off."
+            }
+          ],
+          "avg_score": 0.77,
+          "error": null,
+          "day": 2,
+          "date": "2026-05-14"
         }
       ]
     }

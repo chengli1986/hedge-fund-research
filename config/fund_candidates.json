@@ -1702,7 +1702,7 @@
     "homepage_url": "https://www.ares.com",
     "research_url": "https://www.ares.com/us/news-and-insights/perspectives",
     "source": "manual",
-    "status": "validated",
+    "status": "inaccessible",
     "strategy_tags": [
       "private_credit",
       "private_equity",
@@ -1710,7 +1710,7 @@
       "multi_asset"
     ],
     "official_domain": "www.ares.com",
-    "notes": "Re-diagnosed 2026-05-08: previous '403 blocks scraper / aresmgmt.com redirect' no longer applies. httpx returns HTTP 200 + 124K HTML + 4 article links; Haiku quality avg 0.71 with all 3 samples real research (real-estate cycle rel=0.9 / portfolio strategy rel=0.8 / global RE expansion rel=0.6). Promoted to trial queue.",
+    "notes": "Trial failed: 0 articles detected across 3 days — site likely requires JS rendering or selector is broken. Routed to fetcher-synthesis queue.",
     "topics": "private credit, private equity, alternatives, insurance",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
