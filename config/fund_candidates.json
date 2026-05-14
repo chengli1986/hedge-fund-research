@@ -1095,6 +1095,7 @@
     "fit_score": 0.91,
     "last_validated_at": "2026-04-19T09:01:56.296708+08:00",
     "quality": "MEDIUM",
+    "quality_score": 0.34,
     "topics": "macro, equity, multi-asset, fixed income",
     "last_deep_analyzed_at": "2026-04-28T01:05:00Z",
     "strategy_tags": [
@@ -1117,7 +1118,7 @@
     "rss_url": null,
     "official_domain": "www.schroders.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "Trial inconclusive: no quality samples obtained",
+    "notes": "Trial inconclusive: articles detected but Haiku quality sampling returned 0 samples (content likely behind JS gate or short). quality=MEDIUM/0.6 is from pre-trial deep analysis only, not verified by trial.",
     "research_links": [],
     "last_discovered_at": "2026-04-19T09:00:14.174535+08:00",
     "last_deep_analyzed_at": "2026-05-06T01:03:12Z",
@@ -1672,7 +1673,7 @@
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-04-26T09:00:19.191409+08:00",
     "quality": "MEDIUM",
-    "quality_score": 0.55,
+    "quality_score": 0.0,
     "topics": "equity, fixed income, macro, municipal bonds",
     "notes": "Trial failed: low quality (0.00)",
     "last_deep_analyzed_at": "2026-05-05T01:00:00Z"

@@ -16,6 +16,12 @@ python3 synthesize_fetchers.py
 读取 JSON 输出，这是**目标列表**。每次最多处理 **2 个基金**（优先选 HIGH quality）。
 若列表为空，输出 "No targets" 并退出。
 
+> **`needs_playwright` 提示**：若某基金的 `needs_playwright=true`，表示 trial 期间 httpx
+> 探测已确认该站点是纯 JS 渲染（大体积 HTML + 无可提取正文）。对这类基金，**跳过 Phase 3
+> 的 httpx/RSS/JSON-API 备用策略**，直接从 Phase 1 Playwright 分析开始，Phase 2 直接写
+> Playwright 实现（`_get_playwright_page`）。`needs_playwright=false` 或字段缺失则按常规
+> 流程（先试 httpx/RSS，失败再 Playwright）。
+
 ## 每个基金的工作流程
 
 ### Phase 1 — 检查页面

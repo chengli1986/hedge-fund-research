@@ -274,7 +274,7 @@ cd /home/ubuntu/hedge-fund-research
 python3 -m pytest tests/ -q 2>&1 | tail -10
 ```
 
-必须全部通过（应该 303 passed → 304 不会变，没加测试只是 wiring）。
+必须全部通过（当前套件约 438 passed；wiring 只改 sources.json / publish.py / fetch_content.py，不加测试，数量不会变）。
 
 **若任何 test 失败**：
 ```bash
