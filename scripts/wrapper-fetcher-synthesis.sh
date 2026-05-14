@@ -9,6 +9,15 @@ SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
 LOG_PREFIX="[$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')]"
 
+# Prevent concurrent synthesis runs (trial-pass immediate trigger + weekly cron)
+LOCK_FILE="/tmp/cron-locks/gmia-fetcher-synthesis.lock"
+mkdir -p /tmp/cron-locks
+exec 9>"$LOCK_FILE"
+if ! flock -n 9; then
+    echo "$LOG_PREFIX Another fetcher-synthesis instance is running. Exiting."
+    exit 0
+fi
+
 cleanup() {
     local pids
     pids=$(jobs -p 2>/dev/null)
