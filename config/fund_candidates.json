@@ -15,7 +15,7 @@
     "is_publicly_accessible": true,
     "has_article_index": false,
     "fit_score": 0.82,
-    "notes": "RECOMMEND: Deep fixed income research, insights page JS-gated/EC2-403",
+    "notes": "RECOMMEND: Deep fixed income; EC2-403 persistent",
     "research_links": [
       {
         "url": "https://www.pimco.com/us/en/insights#sort=%40publishz32xdate%20descending&f:category=[70341f6de3a142ee89144df0ec44e3b8,8d35ad276c6c4c5caf4d9fed37c5f51d,1a3217a178b04eb18c1e4532665b184c,56ebfd2935044d1eb39b7e661d2d03fb,22ea0773e8f147e38e15655207e73e21,bdd17ed0ae9d4ddd96e9e60e51c47782,78449f5b2f5e4b6ebd2d6e90b7a9f889,9cfdb8bfe49a451a851cf9957c57cd32,eef114e6a525445a81d179b8adb018c7]",
@@ -59,7 +59,7 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-05-06T01:01:57Z",
+    "last_deep_analyzed_at": "2026-05-14T01:02:22Z",
     "quality": "HIGH",
     "topics": "fixed income, macro, credit, global economy",
     "strategy_tags": [
@@ -836,12 +836,12 @@
     "rss_url": null,
     "official_domain": "www.msci.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "RECOMMEND: trial passed (4/3 days with articles, quality=0.79)",
+    "notes": "Factor/ESG/risk research; nav portal, article access varies",
     "research_links": [],
     "last_discovered_at": "2026-04-19T09:00:14.697222+08:00",
     "quality": "MEDIUM",
     "topics": "factor investing, ESG, climate, multi-asset, risk, fixed income",
-    "last_deep_analyzed_at": "2026-05-05T01:00:00Z",
+    "last_deep_analyzed_at": "2026-05-14T01:02:22Z",
     "strategy_tags": [
       "quant",
       "esg_climate",
@@ -1539,11 +1539,11 @@
     ],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-04-20T09:01:24.288350+08:00",
-    "last_deep_analyzed_at": "2026-05-06T01:01:57Z",
+    "last_deep_analyzed_at": "2026-05-14T01:02:22Z",
     "quality": "HIGH",
-    "quality_score": 0.73,
-    "topics": "real assets, infrastructure, private credit, private equity, energy",
-    "notes": "RECOMMEND: Monthly white papers + case studies; sampled article is MEDIUM",
+    "quality_score": 0.7,
+    "topics": "real assets, infrastructure, private credit, real estate, private equity",
+    "notes": "RECOMMEND: Monthly real assets research; marketing-heavy tone",
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.88,
@@ -2163,5 +2163,22 @@
     "topics": "factor investing, equity, multi-asset",
     "notes": "Watchlist: JS-heavy page, only podcast visible",
     "last_deep_analyzed_at": "2026-05-12T01:02:59Z"
+  },
+  {
+    "id": "a16z",
+    "name": "Andreessen Horowitz (a16z)",
+    "homepage_url": "https://a16z.com",
+    "research_url": "https://a16z.com/news-content/",
+    "source": "manual",
+    "status": "seed",
+    "strategy_tags": [
+      "venture_capital",
+      "equity"
+    ],
+    "notes": "VC research: AI, enterprise, crypto, bio - fills VC gap",
+    "official_domain": "a16z.com",
+    "research_links": [],
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-05-14T09:05:14.961219+08:00"
   }
 ]
