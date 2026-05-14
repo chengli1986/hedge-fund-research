@@ -1225,6 +1225,22 @@ def cmd_run() -> None:
                         c["status"] = "promoted"
                         c["notes"] = (f"RECOMMEND: trial passed "
                                       f"({days_with_articles}/{TRIAL_DAYS} days with articles, quality={avg_quality:.2f})")
+                        # Aggregate js_only stats from quality_samples
+                        total_js_only = sum(
+                            s.get("js_only_count", 0)
+                            for s in active.get("quality_samples", [])
+                        )
+                        total_js_checked = sum(
+                            s.get("js_only_checked", 0)
+                            for s in active.get("quality_samples", [])
+                        )
+                        if total_js_checked > 0 and total_js_only / total_js_checked > 0.5:
+                            c["requires_playwright"] = True
+                        # If no registered fetcher, flag for immediate synthesis
+                        has_fetcher = active["id"] in _load_fetchers()
+                        if not has_fetcher:
+                            c["synthesis_priority"] = True
+                            c["synthesis_priority_set_at"] = datetime.now(BJT).isoformat()
                     break
             save_candidates(candidates)
 

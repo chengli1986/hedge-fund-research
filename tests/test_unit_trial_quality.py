@@ -566,6 +566,7 @@ def test_trial_passes_with_both_quantity_and_quality(trial_env, monkeypatch):
     monkeypatch.setattr(tm, "sample_article_quality", lambda url, trial=None: {
         "sampled": 0, "articles": [], "avg_score": 0.0, "error": "already sampled"})
     monkeypatch.setattr(tm, "send_trial_email", lambda *a, **k: None)
+    monkeypatch.setattr(tm, "_load_fetchers", lambda: {"test-fund": lambda s: []})
 
     tm.cmd_run()
 
@@ -1249,3 +1250,114 @@ def test_sample_article_quality_tracks_js_only_count(monkeypatch):
     assert result["js_only_count"] == 2
     assert result["js_only_checked"] == 2
     assert result["error"] == "Could not extract text from any article"
+
+
+# ---------------------------------------------------------------------------
+# Trial pass: synthesis_priority and requires_playwright flags
+# ---------------------------------------------------------------------------
+
+def _make_trial_state_pass(start_days_ago=4, js_only_count=0, js_only_checked=3):
+    """Build a trial_state dict for a PASS scenario with js_only tracking."""
+    BJT_local = timezone(timedelta(hours=8))
+    today = datetime.now(BJT_local)
+    start = today - timedelta(days=start_days_ago)
+    return {
+        "active_trials": [{
+            "id": "test-fund",
+            "name": "Test Fund",
+            "research_url": "https://example.com/research",
+            "homepage_url": "https://example.com",
+            "fit_score": 0.90,
+            "quality": "HIGH",
+            "topics": "equities",
+            "start_date": start.strftime("%Y-%m-%d"),
+            "end_date": None,
+            "daily_checks": {
+                (start + timedelta(days=i)).strftime("%Y-%m-%d"): {
+                    "accessible": True, "article_count": 10,
+                    "date_count": 5, "error": None,
+                }
+                for i in range(4)
+            },
+            "quality_samples": [{
+                "day": 1,
+                "date": start.strftime("%Y-%m-%d"),
+                "sampled": 2,
+                "articles": [
+                    {"url": "https://example.com/a1", "relevance": 0.9,
+                     "depth": 0.8, "extractable": 0.9, "overall": 0.86, "notes": "good"},
+                ],
+                "avg_score": 0.86,
+                "error": None,
+                "js_only_count": js_only_count,
+                "js_only_checked": js_only_checked,
+            }],
+            "auto_decided": False,
+            "outcome": None,
+        }],
+        "history": [],
+    }
+
+
+def test_trial_pass_sets_synthesis_priority_when_no_fetcher(trial_env, monkeypatch):
+    """On PASS with no registered fetcher, synthesis_priority is set on the candidate."""
+    trial_state = _make_trial_state_pass()
+    tm.TRIAL_STATE_FILE.write_text(json.dumps(trial_state))
+
+    monkeypatch.setattr(tm, "count_articles_with_fetcher", lambda trial: {
+        "accessible": True, "article_count": 10, "date_count": 5,
+        "error": None, "fetcher_used": False})
+    monkeypatch.setattr(tm, "sample_article_quality", lambda *a, **k: {
+        "sampled": 0, "articles": [], "avg_score": 0.0, "error": "already sampled",
+        "js_only_count": 0, "js_only_checked": 0})
+    monkeypatch.setattr(tm, "send_trial_email", lambda *a, **k: None)
+    monkeypatch.setattr(tm, "_load_fetchers", lambda: {})
+
+    tm.cmd_run()
+
+    candidates = json.loads(tm.CANDIDATES_FILE.read_text())
+    c = next(x for x in candidates if x["id"] == "test-fund")
+    assert c.get("synthesis_priority") is True
+    assert "synthesis_priority_set_at" in c
+
+
+def test_trial_pass_no_synthesis_priority_when_has_fetcher(trial_env, monkeypatch):
+    """On PASS when fetcher already registered, synthesis_priority is NOT set."""
+    trial_state = _make_trial_state_pass()
+    tm.TRIAL_STATE_FILE.write_text(json.dumps(trial_state))
+
+    monkeypatch.setattr(tm, "count_articles_with_fetcher", lambda trial: {
+        "accessible": True, "article_count": 10, "date_count": 5,
+        "error": None, "fetcher_used": True})
+    monkeypatch.setattr(tm, "sample_article_quality", lambda *a, **k: {
+        "sampled": 0, "articles": [], "avg_score": 0.0, "error": "already sampled",
+        "js_only_count": 0, "js_only_checked": 0})
+    monkeypatch.setattr(tm, "send_trial_email", lambda *a, **k: None)
+    monkeypatch.setattr(tm, "_load_fetchers", lambda: {"test-fund": lambda s: []})
+
+    tm.cmd_run()
+
+    candidates = json.loads(tm.CANDIDATES_FILE.read_text())
+    c = next(x for x in candidates if x["id"] == "test-fund")
+    assert not c.get("synthesis_priority")
+
+
+def test_trial_pass_sets_requires_playwright_when_majority_js_only(trial_env, monkeypatch):
+    """On PASS where >50% sampled articles were JS-only, requires_playwright is set."""
+    trial_state = _make_trial_state_pass(js_only_count=3, js_only_checked=3)
+    tm.TRIAL_STATE_FILE.write_text(json.dumps(trial_state))
+
+    monkeypatch.setattr(tm, "count_articles_with_fetcher", lambda trial: {
+        "accessible": True, "article_count": 10, "date_count": 5,
+        "error": None, "fetcher_used": False})
+    monkeypatch.setattr(tm, "sample_article_quality", lambda *a, **k: {
+        "sampled": 0, "articles": [], "avg_score": 0.0, "error": "already sampled",
+        "js_only_count": 0, "js_only_checked": 0})
+    monkeypatch.setattr(tm, "send_trial_email", lambda *a, **k: None)
+    monkeypatch.setattr(tm, "_load_fetchers", lambda: {})
+
+    tm.cmd_run()
+
+    candidates = json.loads(tm.CANDIDATES_FILE.read_text())
+    c = next(x for x in candidates if x["id"] == "test-fund")
+    assert c.get("requires_playwright") is True
