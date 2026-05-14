@@ -62,6 +62,17 @@ def list_targets() -> list[dict]:
             continue
         if c["id"] in fetcher_ids:
             continue  # fetcher already registered (synthesis succeeded earlier)
+        last = c.get("synthesis_attempted_at")
+        if last:
+            try:
+                last_dt = datetime.fromisoformat(last)
+                if last_dt.tzinfo is None:
+                    last_dt = last_dt.replace(tzinfo=timezone.utc)
+                if last_dt > cutoff:
+                    continue
+            except ValueError:
+                pass
+        # quality guard intentionally omitted: synthesis_priority implies trial-PASS validation
         priority_targets.append({
             "id": c["id"],
             "name": c.get("name", c["id"]),

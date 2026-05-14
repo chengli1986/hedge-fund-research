@@ -249,3 +249,27 @@ def test_list_targets_synthesis_priority_skipped_when_fetcher_exists():
          patch("synthesize_fetchers.load_fetcher_ids", return_value={"alpha"}):
         result = synthesize_fetchers.list_targets()
     assert result == []
+
+
+def test_list_targets_synthesis_priority_forwards_requires_playwright():
+    """requires_playwright on candidate is forwarded as needs_playwright in target."""
+    candidates = [
+        {**_make_candidate("alpha", "promoted", "HIGH"),
+         "synthesis_priority": True, "requires_playwright": True},
+    ]
+    with patch("synthesize_fetchers.load_candidates", return_value=candidates), \
+         patch("synthesize_fetchers.load_fetcher_ids", return_value=set()):
+        result = synthesize_fetchers.list_targets()
+    assert result[0]["needs_playwright"] is True
+
+
+def test_list_targets_synthesis_priority_legacy_needs_playwright():
+    """Legacy needs_playwright field also forwarded when requires_playwright absent."""
+    candidates = [
+        {**_make_candidate("alpha", "promoted", "HIGH"),
+         "synthesis_priority": True, "needs_playwright": True},
+    ]
+    with patch("synthesize_fetchers.load_candidates", return_value=candidates), \
+         patch("synthesize_fetchers.load_fetcher_ids", return_value=set()):
+        result = synthesize_fetchers.list_targets()
+    assert result[0]["needs_playwright"] is True
