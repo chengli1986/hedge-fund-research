@@ -985,6 +985,37 @@ def _fetch_content_janus_henderson(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+def _fetch_content_researchaffiliates(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Research Affiliates article content via requests (SSR).
+
+    Listing page is Next.js CSR (fetch_articles uses Playwright), but article
+    body is SSR-rendered into div.rendered-html (also tagged
+    ra-mathjax-content / article-html-lightbox). No <main>/<article> tags,
+    so the generic "main p" / "article p" selectors yield zero — must use the
+    rendered-html wrapper directly.
+    """
+    url = article["url"]
+    log.info("  Research Affiliates: fetching article page %s", url)
+
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Research Affiliates: fetch failed: %s", e)
+        return None
+
+    text = _normalize_html(resp.text, "div.rendered-html p")
+
+    if not _check_min_content_length(text):
+        log.warning("  Research Affiliates: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Research Affiliates: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -1007,6 +1038,7 @@ CONTENT_FETCHERS = {
     "apollo-global-management": _fetch_content_apollo,
     "kkr": _fetch_content_kkr,
     "janus-henderson": _fetch_content_janus_henderson,
+    "research-affiliates": _fetch_content_researchaffiliates,
 }
 
 

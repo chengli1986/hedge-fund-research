@@ -1,0 +1,13 @@
+{
+  "id": "research-affiliates",
+  "founded": "2002",
+  "aum": "~$170B",
+  "hq": "Newport Beach, CA",
+  "type_en": "Investment Research / Sub-Advisor",
+  "type_zh": "投资研究 / 策略授权方",
+  "desc_zh": "Rob Arnott 于 2002 年创立的量化投资研究公司。开创 RAFI 基本面指数化（Fundamental Indexation）策略——以销售额、现金流、账面价值、股息等公司经济规模指标加权，而非市值加权。不直接管理资产，而是将 RAFI 及 smart beta、多资产配置策略授权给 PIMCO、Charles Schwab 等合作机构。学术发表活跃，是 smart beta 概念的主要推广者之一。",
+  "notable_en": "Pioneered RAFI Fundamental Index (2005 paper in Financial Analysts Journal, co-authored by Arnott/Hsu/Moore) — first widely-adopted non-cap-weighted index; Rob Arnott has 100+ peer-reviewed papers; smart-beta term popularized through Research Affiliates' publications.",
+  "notable_zh": "开创 RAFI 基本面指数（Arnott/Hsu/Moore 2005 年发表于 Financial Analysts Journal）——首个被广泛采用的非市值加权指数；Rob Arnott 累计 100+ 篇同行评议论文；smart beta 概念由 Research Affiliates 出版物推广。",
+  "_generated_at": "2026-05-14T18:35:00+08:00",
+  "_confidence_notes": "AUM (~$170B) is the assets-following-RA-strategies figure from prior disclosures and may be outdated — Research Affiliates does not manage assets directly, so this is a licensee/AUA figure rather than AUM, and the latest official number should be verified before publishing to dashboard. Founded year (2002), founder (Rob Arnott), HQ (Newport Beach, CA), and RAFI launch (2005 FAJ paper) are well-documented and high-confidence."
+}

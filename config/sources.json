@@ -267,6 +267,19 @@
       "notable_authors": ["Ali Dibadj", "Matthew Bullock"],
       "expected_hostname": "janushenderson.com",
       "max_articles": 10
+    },
+    {
+      "id": "research-affiliates",
+      "strategy_tags": ["quant", "equity", "multi_asset"],
+      "name": "Research Affiliates",
+      "short_name": "Research Affiliates",
+      "url": "https://www.researchaffiliates.com/insights/publications",
+      "method": "playwright",
+      "frequency": "monthly",
+      "description": "Quantitative investment firm founded by Rob Arnott (2002). Pioneered RAFI Fundamental Indexation — weights stocks by economic size (sales/cash flow/book/dividends) rather than market cap. Smart beta, factor investing, capital-market assumptions licensed to ~$170B of strategies.",
+      "notable_authors": ["Rob Arnott", "Chris Brightman", "Jim Masturzo", "Ari Polychronopoulos"],
+      "expected_hostname": "researchaffiliates.com",
+      "max_articles": 10
     }
   ],
   "settings": {
