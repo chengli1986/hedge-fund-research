@@ -711,10 +711,14 @@ def fetch_researchaffiliates(source: dict) -> list[dict]:
 
     The same anchor appears multiple times on the listing page (related-articles
     rails, etc.), so we dedup by URL and trim to ``max_articles`` afterwards.
+
+    wait_until="networkidle" (not "domcontentloaded"): the anchor elements appear
+    early but Next.js hydrates the date text asynchronously — reading too soon
+    yields empty anchor text and date=None, which causes the health probe to WARN.
     """
     html = _get_playwright_page(
         source["url"],
-        wait_until="domcontentloaded",
+        wait_until="networkidle",
         wait_selector='a[href*="/insights/publications/articles/"]',
         timeout=30000,
     )
