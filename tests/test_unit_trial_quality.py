@@ -1190,3 +1190,62 @@ class TestExtractArticleLinksFiltering:
             "https://example.com/insights/", self._soup(items)
         )
         assert len(links) == tm.SAMPLE_SIZE * 3
+
+
+# ---------------------------------------------------------------------------
+# _is_likely_js_only: detect JS-shell pattern (HTTP 200 + large HTML + no text)
+# ---------------------------------------------------------------------------
+
+def test_is_likely_js_only_true_for_large_html_no_extractable_content(monkeypatch):
+    """HTTP 200 + HTML body > 1000 chars + _extract_article_text returns None → True."""
+    large_html = "<html><body>" + "<div class='nav'>" * 100 + "</div>" * 100 + "</body></html>"
+    assert len(large_html) > 1000
+
+    class FakeResp:
+        status_code = 200
+        text = large_html
+
+    monkeypatch.setattr(tm.httpx, "get", lambda *a, **k: FakeResp())
+    monkeypatch.setattr(tm, "_extract_article_text", lambda url, **k: None)
+    assert tm._is_likely_js_only("https://example.com/article") is True
+
+
+def test_is_likely_js_only_false_for_http_non200(monkeypatch):
+    """HTTP non-200 (auth wall, geoblock) → False, not a JS-rendering issue."""
+    class FakeResp:
+        status_code = 403
+        text = "<html>Forbidden</html>"
+
+    monkeypatch.setattr(tm.httpx, "get", lambda *a, **k: FakeResp())
+    assert tm._is_likely_js_only("https://example.com/article") is False
+
+
+def test_is_likely_js_only_false_for_small_html_body(monkeypatch):
+    """HTTP 200 but tiny HTML body (< 1000 chars) → False (network/empty response)."""
+    class FakeResp:
+        status_code = 200
+        text = "<html><body>tiny</body></html>"
+
+    monkeypatch.setattr(tm.httpx, "get", lambda *a, **k: FakeResp())
+    assert tm._is_likely_js_only("https://example.com/article") is False
+
+
+def test_is_likely_js_only_false_on_exception(monkeypatch):
+    """Network exception → False (not a JS-rendering signal)."""
+    monkeypatch.setattr(tm.httpx, "get", lambda *a, **k: (_ for _ in ()).throw(Exception("timeout")))
+    assert tm._is_likely_js_only("https://example.com/article") is False
+
+
+def test_sample_article_quality_tracks_js_only_count(monkeypatch):
+    """js_only_count in return dict reflects how many extraction failures were JS shells."""
+    monkeypatch.setattr(tm, "_get_article_links_for_sampling",
+                        lambda trial: ["https://example.com/a1", "https://example.com/a2"])
+    monkeypatch.setattr(tm, "_extract_article_text", lambda url, **k: None)
+    monkeypatch.setattr(tm, "_is_likely_js_only", lambda url, **k: True)
+    monkeypatch.setattr(tm, "_call_haiku", lambda *a, **k: None)
+
+    result = tm.sample_article_quality("https://example.com", trial={"id": "test"})
+
+    assert result["js_only_count"] == 2
+    assert result["js_only_checked"] == 2
+    assert result["error"] == "Could not extract text from any article"

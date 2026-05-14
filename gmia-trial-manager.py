@@ -354,6 +354,28 @@ def _extract_article_text(url: str, timeout: int = 20) -> str | None:
         return None
 
 
+def _is_likely_js_only(url: str, timeout: int = 15) -> bool:
+    """Return True when the page is likely JS-rendered (HTTP 200 + large HTML + no extractable text).
+
+    Three non-JS failure modes must NOT return True:
+    - Network error / timeout → caught by except, return False
+    - HTTP non-200 (auth wall, geoblock) → check status_code, return False
+    - HTTP 200 + tiny body (empty CDN response) → check len(text) < 1000, return False
+
+    Only HTTP 200 + large HTML (>1000 chars) + _extract_article_text returns None
+    → the site serves a JS shell that needs browser rendering.
+    """
+    try:
+        resp = httpx.get(url, headers=HEADERS, timeout=timeout, follow_redirects=True)
+        if resp.status_code != 200:
+            return False
+        if len(resp.text) < 1000:
+            return False
+        return _extract_article_text(url, timeout=timeout) is None
+    except Exception:
+        return False
+
+
 def _call_haiku(prompt: str, max_retries: int = 1) -> dict | None:
     """Call Claude Haiku for quality assessment. Returns parsed JSON or None.
 
@@ -494,16 +516,25 @@ def sample_article_quality(research_url: str, trial: dict | None = None,
 
     # Step 2: extract text from each article, using fallback links if needed
     article_texts: list[tuple[str, str]] = []  # (url, text)
+    js_only_count = 0
+    js_only_checked = 0
     for url in links:
         text = _extract_article_text(url)
         if text:
             article_texts.append((url, text))
+        else:
+            # Probe to distinguish JS shell from network/auth failure
+            js_only_checked += 1
+            if _is_likely_js_only(url):
+                js_only_count += 1
         if len(article_texts) >= SAMPLE_SIZE:
             break
 
     if not article_texts:
         return {"sampled": 0, "articles": [], "avg_score": 0.0,
-                "error": "Could not extract text from any article"}
+                "error": "Could not extract text from any article",
+                "js_only_count": js_only_count,
+                "js_only_checked": js_only_checked}
 
     # Step 3: batch assess via Haiku
     articles_block = ""
@@ -583,6 +614,8 @@ The "overall" score should be: 0.4*relevance + 0.4*depth + 0.2*extractable.
         "articles": scored_articles,
         "avg_score": round(avg_score, 3),
         "error": None,
+        "js_only_count": js_only_count,
+        "js_only_checked": js_only_checked,
     }
 
 
