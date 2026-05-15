@@ -485,10 +485,10 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.9,
-    "last_deep_analyzed_at": "2026-05-07T01:02:25Z",
+    "last_deep_analyzed_at": "2026-05-15T01:02:46Z",
     "quality": "MEDIUM",
     "topics": "macro, equity, fixed income, investment strategy",
-    "notes": "Landing page is subscription form; API fetcher works per prior test",
+    "notes": "Landing page gated; API access confirmed prior test",
     "research_links": [
       {
         "url": "https://am.gs.com/en-us/advisors/insights/list",
@@ -547,7 +547,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.8843,
-    "notes": "RECOMMEND: Multi-asset research, free access, weekly cadence",
+    "notes": "RECOMMEND: Multi-asset research, weekly cadence, free access",
     "research_links": [
       {
         "url": "https://www.wellington.com/en/insights",
@@ -626,18 +626,18 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-05-07T01:02:25Z",
+    "last_deep_analyzed_at": "2026-05-15T01:02:46Z",
     "quality": "HIGH",
-    "topics": "macro, fixed income, equity, private investing, ESG, alternatives",
+    "topics": "macro, fixed income, equity, private investing, multi-asset",
     "strategy_tags": [
       "macro",
       "equity",
       "fixed_income",
-      "esg_climate",
-      "private_equity"
+      "private_equity",
+      "multi_asset"
     ],
     "source": "manual",
-    "quality_score": 0.8
+    "quality_score": 0.82
   },
   {
     "id": "amundi",
@@ -1645,12 +1645,12 @@
       "fixed_income",
       "emerging_markets"
     ],
-    "notes": "RECOMMEND: Weekly quant research; trial passed 4/3 days",
+    "notes": "RECOMMEND: Weekly quant research; fills intl value gap",
     "official_domain": "verdadcap.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-04-29T09:00:09.051367+08:00",
-    "last_deep_analyzed_at": "2026-05-07T01:02:25Z",
+    "last_deep_analyzed_at": "2026-05-15T01:02:46Z",
     "quality": "HIGH",
     "quality_score": 0.87,
     "topics": "quant, value, factor investing, global equity, credit"
@@ -2174,15 +2174,18 @@
     "homepage_url": "https://a16z.com",
     "research_url": "https://a16z.com/news-content/",
     "source": "manual",
-    "status": "seed",
+    "status": "rejected",
     "strategy_tags": [
-      "venture_capital",
-      "equity"
+      "venture_capital"
     ],
-    "notes": "VC research: AI, enterprise, crypto, bio - fills VC gap",
+    "notes": "VC advocacy, not investment research; wrong category",
     "official_domain": "a16z.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-05-14T09:05:14.961219+08:00"
+    "last_discovered_at": "2026-05-15T09:00:10.435535+08:00",
+    "last_deep_analyzed_at": "2026-05-15T01:02:46Z",
+    "quality": "LOW",
+    "quality_score": 0.32,
+    "topics": "venture capital, AI, fintech, enterprise tech"
   }
 ]
