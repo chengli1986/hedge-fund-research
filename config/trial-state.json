@@ -2903,6 +2903,13 @@
           "date_count": 0,
           "error": null,
           "fetcher_used": false
+        },
+        "2026-05-15": {
+          "accessible": true,
+          "article_count": 0,
+          "date_count": 0,
+          "error": null,
+          "fetcher_used": false
         }
       },
       "auto_decided": false,
@@ -2923,6 +2930,16 @@
           "error": "Could not extract text from any article",
           "day": 2,
           "date": "2026-05-14"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "Could not extract text from any article",
+          "js_only_count": 9,
+          "js_only_checked": 9,
+          "day": 3,
+          "date": "2026-05-15"
         }
       ]
     },
@@ -2945,6 +2962,13 @@
           "fetcher_used": true
         },
         "2026-05-14": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-05-15": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -3020,6 +3044,41 @@
           "error": null,
           "day": 2,
           "date": "2026-05-14"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://am.gs.com/en-us/advisors/insights/article/market-pulse",
+              "relevance": 0.9,
+              "depth": 0.6,
+              "extractable": 0.5,
+              "overall": 0.7,
+              "notes": "Macro market pulse covering US/Europe/EM growth, energy disruption, and equity/commodity positioning; substantive but truncated mid-sentence."
+            },
+            {
+              "url": "https://am.gs.com/en-us/advisors/insights/article/2026/decoding-retirement-income-preference-gap",
+              "relevance": 0.8,
+              "depth": 0.7,
+              "extractable": 0.5,
+              "overall": 0.7,
+              "notes": "Portfolio strategy research on retirement income preferences based on ~5,000 participant survey; good insights but text cuts off mid-methodology section."
+            },
+            {
+              "url": "https://am.gs.com/en-us/advisors/insights/article/2026/decoding-retirement-income-plan-design-considerations",
+              "relevance": 0.7,
+              "depth": 0.5,
+              "extractable": 0.4,
+              "overall": 0.56,
+              "notes": "Brief plan design guidance for retirement income tiers using TURF analysis; short-form content with incomplete text and limited substantive detail."
+            }
+          ],
+          "avg_score": 0.653,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 3,
+          "date": "2026-05-15"
         }
       ]
     }
