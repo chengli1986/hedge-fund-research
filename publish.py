@@ -199,6 +199,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "notable_en": "Nick Sheridan's value equity team; Ben Lofthouse's global equity income franchise; Myron Scholes (Nobel laureate) formerly on advisory board.",
         "notable_zh": "Nick Sheridan 价值股权团队；Ben Lofthouse 全球股息成长策略；宏观洞察系列持续跟踪全球利率周期与地缘政治风险。",
     },
+    "research-affiliates": {
+        "founded": "2002", "aum": "~$170B (licensed)", "hq": "Newport Beach, CA",
+        "type_en": "Quantitative Research / Index Licensor", "type_zh": "量化研究 / 指数授权机构",
+        "desc_zh": "Newport Beach 量化投资研究机构，2002 年由 Rob Arnott 创立。开创 RAFI 基本面指数（Fundamental Indexation）——按销售/现金流/账面/分红等经济体量加权，作为市值加权基准的替代方案。本身不直接管钱，授权 Smart Beta、因子投资、Capital Market Assumptions（CMA）等策略至约 1700 亿美元资产规模。Insights 系列以学术风格的资产配置与长期回报预期分析见长。",
+        "notable_en": "Founded by Rob Arnott (2002); pioneered fundamental indexation (RAFI) as alternative to cap-weighted benchmarks; widely-cited Capital Market Assumptions and smart-beta research; licensed strategies on ~$170B of assets.",
+        "notable_zh": "Rob Arnott 2002 年创立；首创基本面指数（RAFI）作为市值加权基准的替代方案；Capital Market Assumptions 与 Smart Beta 研究为机构广泛引用；授权策略覆盖约 1700 亿美元资产规模。",
+    },
 }
 
 _STRATEGY_LABELS: dict[str, str] = {
