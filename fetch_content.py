@@ -1016,6 +1016,43 @@ def _fetch_content_researchaffiliates(article: dict) -> Optional[tuple[Path, str
     return (content_path, "ok")
 
 
+def _fetch_content_gsam(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Goldman Sachs Asset Management article content via requests (SSR).
+
+    Article body is SSR-rendered inside `<main>` as a series of `<p class="gs-text ...">`
+    paragraphs (hashed Emotion class). The same page appends 20+ paragraphs of legal
+    disclosures wrapped in containers with class `footer-disclosure-text` (Index
+    Benchmarks, jurisdictional disclaimers, etc.) — strip those before extracting,
+    otherwise the saved text is half boilerplate.
+    """
+    url = article["url"]
+    log.info("  GSAM: fetching article page %s", url)
+
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  GSAM: fetch failed: %s", e)
+        return None
+
+    soup = BeautifulSoup(resp.text, "html.parser")
+    for tag in soup.select("nav, footer, header, script, style, aside, "
+                           ".footer-disclosure-text"):
+        tag.decompose()
+
+    paragraphs = soup.select("main p")
+    text = "\n".join(p.get_text(strip=True) for p in paragraphs if p.get_text(strip=True))
+
+    if not _check_min_content_length(text):
+        log.warning("  GSAM: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  GSAM: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -1039,6 +1076,7 @@ CONTENT_FETCHERS = {
     "kkr": _fetch_content_kkr,
     "janus-henderson": _fetch_content_janus_henderson,
     "research-affiliates": _fetch_content_researchaffiliates,
+    "gsam": _fetch_content_gsam,
 }
 
 

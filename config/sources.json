@@ -280,6 +280,19 @@
       "notable_authors": ["Rob Arnott", "Chris Brightman", "Jim Masturzo", "Ari Polychronopoulos"],
       "expected_hostname": "researchaffiliates.com",
       "max_articles": 10
+    },
+    {
+      "id": "gsam",
+      "strategy_tags": ["macro", "equity", "fixed_income", "multi_asset"],
+      "name": "Goldman Sachs Asset Management",
+      "short_name": "GSAM",
+      "url": "https://am.gs.com/en-us/advisors/insights/list",
+      "method": "api",
+      "frequency": "weekly",
+      "description": "One of the world's largest asset managers (~$3T AUM) across public and private markets. Multi-asset, equity, fixed income, alternatives and liquidity solutions for institutions and advisors; Insights publishes macro outlooks, market commentary and strategy notes.",
+      "notable_authors": [],
+      "expected_hostname": "am.gs.com",
+      "max_articles": 10
     }
   ],
   "settings": {

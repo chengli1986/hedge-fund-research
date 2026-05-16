@@ -46,6 +46,7 @@ BADGE_COLORS: dict[str, str] = {
     "kkr": "#556b2f",                       # KKR dark olive (unique among 19 existing colors)
     "janus-henderson": "#006d75",           # Janus Henderson teal
     "research-affiliates": "#c2185b",       # Research Affiliates deep magenta (distinct from all 21 existing colors)
+    "gsam": "#4a6fa5",                      # Goldman steel blue (muted vs man/wellington/msci, lighter than pimco navy)
 }
 
 INITIAL_VISIBLE = 20
