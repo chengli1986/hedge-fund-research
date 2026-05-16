@@ -2876,9 +2876,7 @@
       "total_articles": 0,
       "days_with_articles": 0,
       "avg_quality_score": 0.0
-    }
-  ],
-  "active_trials": [
+    },
     {
       "id": "de-shaw",
       "name": "D. E. Shaw",
@@ -2888,7 +2886,7 @@
       "quality": "HIGH",
       "topics": "macro, equity, credit, quant, portfolio management",
       "start_date": "2026-05-13",
-      "end_date": null,
+      "end_date": "2026-05-16",
       "daily_checks": {
         "2026-05-13": {
           "accessible": true,
@@ -2910,10 +2908,17 @@
           "date_count": 0,
           "error": null,
           "fetcher_used": false
+        },
+        "2026-05-16": {
+          "accessible": true,
+          "article_count": 0,
+          "date_count": 0,
+          "error": null,
+          "fetcher_used": false
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "fail_quantity",
       "quality_samples": [
         {
           "sampled": 0,
@@ -2941,7 +2946,10 @@
           "day": 3,
           "date": "2026-05-15"
         }
-      ]
+      ],
+      "total_articles": 0,
+      "days_with_articles": 0,
+      "avg_quality_score": 0.0
     },
     {
       "id": "gsam",
@@ -2952,7 +2960,7 @@
       "quality": "MEDIUM",
       "topics": "macro, equity, fixed income, investment strategy",
       "start_date": "2026-05-13",
-      "end_date": null,
+      "end_date": "2026-05-16",
       "daily_checks": {
         "2026-05-13": {
           "accessible": true,
@@ -2974,10 +2982,17 @@
           "date_count": 10,
           "error": null,
           "fetcher_used": true
+        },
+        "2026-05-16": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "error": null,
+          "fetcher_used": true
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -3080,8 +3095,12 @@
           "day": 3,
           "date": "2026-05-15"
         }
-      ]
+      ],
+      "total_articles": 40,
+      "days_with_articles": 4,
+      "avg_quality_score": 0.728
     }
   ],
+  "active_trials": [],
   "last_summary_sent_date": "2026-05-13"
 }

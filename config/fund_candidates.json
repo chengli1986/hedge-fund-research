@@ -73,7 +73,7 @@
   {
     "id": "de-shaw",
     "name": "D. E. Shaw",
-    "status": "validated",
+    "status": "inaccessible",
     "homepage_url": "https://www.deshaw.com",
     "research_url": "https://www.deshaw.com/library",
     "rss_url": null,
@@ -86,7 +86,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.97,
-    "notes": "RECOMMEND: Quant library, macro+equity+credit research",
+    "notes": "Trial failed: 0 articles detected across 3 days — site likely requires JS rendering or selector is broken. Routed to fetcher-synthesis queue.",
     "research_links": [
       {
         "url": "https://www.deshaw.com/library",
@@ -472,7 +472,7 @@
   {
     "id": "gsam",
     "name": "Goldman Sachs Asset Management",
-    "status": "validated",
+    "status": "promoted",
     "homepage_url": "https://am.gs.com",
     "research_url": "https://am.gs.com/en-us/advisors/insights/list",
     "rss_url": null,
@@ -488,7 +488,7 @@
     "last_deep_analyzed_at": "2026-05-15T01:02:46Z",
     "quality": "MEDIUM",
     "topics": "macro, equity, fixed income, investment strategy",
-    "notes": "Landing page gated; API access confirmed prior test",
+    "notes": "RECOMMEND: trial passed (4/3 days with articles, quality=0.73)",
     "research_links": [
       {
         "url": "https://am.gs.com/en-us/advisors/insights/list",
