@@ -1688,12 +1688,12 @@
     "strategy_tags": [
       "multi_asset"
     ],
-    "notes": "Re-diagnosed 2026-05-07: original LOW score was a side-effect of JS-only rendering (httpx returns 2367-char shell, deep_analyze couldn't read content). Playwright probe returns 672K HTML with 23 article links — content quality is unknown until rendered, not low. Quality bumped LOW → MEDIUM and routed to fetcher-synthesis queue.",
+    "notes": "JS-only rendering; httpx returns shell; Playwright shows 23 articles. Re-verified inaccessible.",
     "official_domain": "www.franklintempleton.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-05-07T09:00:18.005906+08:00",
-    "last_deep_analyzed_at": "2026-05-07T01:02:25Z",
+    "last_deep_analyzed_at": "2026-05-16T01:04:05Z",
     "quality": "MEDIUM",
     "quality_score": 0.5,
     "topics": "multi-asset, market insights"
@@ -2187,5 +2187,115 @@
     "quality": "LOW",
     "quality_score": 0.32,
     "topics": "venture capital, AI, fintech, enterprise tech"
+  },
+  {
+    "id": "matthews-asia",
+    "name": "Matthews Asia",
+    "homepage_url": "https://www.matthewsasia.com",
+    "research_url": "https://www.matthewsasia.com/insights/",
+    "source": "manual",
+    "status": "inaccessible",
+    "strategy_tags": [
+      "equity",
+      "emerging_markets",
+      "macro",
+      "multi_asset"
+    ],
+    "notes": "JS-heavy like Franklin Templeton; 337 articles confirmed via WebFetch; needs Playwright",
+    "official_domain": "www.matthewsasia.com",
+    "research_links": [
+      {
+        "url": "https://www.matthewsasia.com/insights/",
+        "label": "Insights",
+        "path": "insights"
+      },
+      {
+        "url": "https://www.matthewsasia.com/insights/?insight-topics=China",
+        "label": "China",
+        "path": "insights"
+      },
+      {
+        "url": "https://www.matthewsasia.com/insights/?insight-topics=CIO%20Outlook",
+        "label": "CIO Outlook",
+        "path": "insights"
+      },
+      {
+        "url": "https://www.matthewsasia.com/insights/?insight-topics=Emerging%20Markets",
+        "label": "Emerging Markets",
+        "path": "insights"
+      },
+      {
+        "url": "https://www.matthewsasia.com/insights/?insight-topics=India",
+        "label": "India",
+        "path": "insights"
+      },
+      {
+        "url": "https://www.matthewsasia.com/insights/?insight-topics=Japan",
+        "label": "Japan",
+        "path": "insights"
+      },
+      {
+        "url": "https://www.matthewsasia.com/insights/?insight-topics=Sinology",
+        "label": "Sinology",
+        "path": "insights"
+      },
+      {
+        "url": "https://www.matthewsasia.com/insights/?insight-topics=Sustainable%20Investing",
+        "label": "Sustainable Investing",
+        "path": "insights"
+      },
+      {
+        "url": "https://www.matthewsasia.com/insights/?insight-topics=In%20the%20News",
+        "label": "In the News",
+        "path": "insights"
+      },
+      {
+        "url": "https://www.matthewsasia.com/insights/?insight-type=Article",
+        "label": "Article",
+        "path": "insights"
+      },
+      {
+        "url": "https://www.matthewsasia.com/insights/?insight-type=Video",
+        "label": "Video",
+        "path": "insights"
+      },
+      {
+        "url": "https://www.matthewsasia.com/insights/?insight-type=Webcast",
+        "label": "Webcast",
+        "path": "insights"
+      },
+      {
+        "url": "https://www.matthewsasia.com/insights/CIO-Outlook/q1-2026-cio-review-and-outlook-transcript/",
+        "label": "Read More",
+        "path": "insights/CIO-Outlook/q1-2026-cio-review-and-outlook-transcript"
+      },
+      {
+        "url": "https://www.matthewsasia.com/insights/emerging-markets/the-era-of-the-ABA-trade/",
+        "label": "EMERGING INSIGHT The Era of the ABA Trade? The U.S. market has outperformed the rest of the world ov",
+        "path": "insights/emerging-markets/the-era-of-the-ABA-trade"
+      }
+    ],
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-05-16T09:04:08.563247+08:00",
+    "is_publicly_accessible": false,
+    "has_article_index": false,
+    "last_screened_at": "2026-05-16T09:04:11.701601+08:00",
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 0,
+      "article_tags": 0,
+      "time_tags": 0,
+      "date_patterns": 0,
+      "h2_tags": 2,
+      "article_signals": 0
+    },
+    "screening_reason": "Insufficient article index signals",
+    "fit_score": 0.85,
+    "last_validated_at": "2026-05-16T09:04:19.082474+08:00",
+    "quality": "MEDIUM",
+    "quality_score": 0.62,
+    "topics": "Asian equities, China, India, Japan, emerging markets",
+    "last_deep_analyzed_at": "2026-05-16T01:04:33Z"
   }
 ]

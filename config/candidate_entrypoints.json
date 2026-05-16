@@ -797,6 +797,40 @@
           "label": "bad"
         }
       ]
+    },
+    "matthews-asia": {
+      "last_discovered_at": "2026-05-16T09:04:19.082474+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://www.matthewsasia.com/funds/etfs/",
+          "final_score": 0.85,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 1.0,
+          "gate_penalty": 0.0,
+          "active": true
+        },
+        {
+          "url": "https://www.matthewsasia.com/funds/etfs/emerging-markets-active-equity-etf/",
+          "final_score": 0.85,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 1.0,
+          "gate_penalty": 0.0,
+          "active": false
+        },
+        {
+          "url": "https://www.matthewsasia.com/funds/etfs/emerging-markets-ex-china-active-etf/",
+          "final_score": 0.85,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 1.0,
+          "gate_penalty": 0.0,
+          "active": false
+        }
+      ],
+      "rejected_pages": []
     }
   }
 }
