@@ -1967,6 +1967,83 @@ def fetch_ares_management(source: dict) -> list[dict]:
     return articles[:max_articles]
 
 
+def fetch_robeco(source: dict) -> list[dict]:
+    """Fetch articles from Robeco Insights (Playwright — Nuxt.js SPA).
+
+    Cards: div.clickable-wrapper.card containing:
+      a[href*='/insights/YYYY/MM/<slug>'] (URL + title via h2/h3 or link text),
+      <time> element with date in DD-MM-YYYY format (European).
+    """
+    base_url = "https://www.robeco.com"
+    html = _get_playwright_page(
+        source["url"],
+        wait_selector="div.clickable-wrapper.card",
+        wait_ms=4000,
+    )
+    soup = BeautifulSoup(html, "html.parser")
+    expected_host = source.get("expected_hostname", "robeco.com")
+
+    article_url_pattern = re.compile(r"/insights/\d{4}/\d{2}/")
+    date_pattern = re.compile(r"^(\d{2})-(\d{2})-(\d{4})$")
+
+    articles: list[dict] = []
+    seen: set[str] = set()
+
+    for card in soup.select("div.clickable-wrapper.card"):
+        link = None
+        for a in card.select("a[href*='/insights/']"):
+            href = a.get("href") or ""
+            if article_url_pattern.search(href):
+                link = a
+                break
+        if link is None:
+            continue
+
+        href = link.get("href", "")
+        url_target = urljoin(base_url, href)
+        if url_target in seen:
+            continue
+        seen.add(url_target)
+        if not _validate_hostname(url_target, expected_host):
+            continue
+
+        title = ""
+        for h_sel in ("h2", "h3", "h4"):
+            h = card.select_one(h_sel)
+            if h:
+                title = h.get_text(strip=True)
+                if title:
+                    break
+        if not title:
+            title = link.get_text(strip=True).split("\n")[0].strip()
+        if not title:
+            continue
+
+        time_el = card.find("time")
+        date_raw = ""
+        parsed_date: Optional[str] = None
+        if time_el:
+            date_raw = time_el.get_text(strip=True)
+            m = date_pattern.match(date_raw)
+            if m:
+                dd, mm, yyyy = m.groups()
+                try:
+                    parsed_date = datetime(int(yyyy), int(mm), int(dd)).strftime("%Y-%m-%d")
+                except ValueError:
+                    parsed_date = None
+            if not parsed_date:
+                parsed_date = parse_date(date_raw)
+
+        articles.append({
+            "title": title,
+            "url": url_target,
+            "date": parsed_date,
+            "date_raw": date_raw,
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
 # FETCHER_SYNTHESIS_INSERTION_POINT — auto-generated fetchers inserted above this line
 
 
@@ -2195,6 +2272,7 @@ FETCHERS = {
     "natixis-im": fetch_natixis_im,
     "apollo-global-management": fetch_apollo_global_management,
     "ares-management": fetch_ares_management,
+    "robeco": fetch_robeco,
     "alliancebernstein": fetch_alliancebernstein,
     "janus-henderson": fetch_janus_henderson,
 }

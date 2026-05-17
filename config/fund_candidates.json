@@ -1968,7 +1968,7 @@
     "homepage_url": "https://www.robeco.com/en-int/insights",
     "research_url": "https://www.robeco.com/en-int/insights",
     "source": "manual",
-    "status": "promoted",
+    "status": "validated",
     "strategy_tags": [
       "quant",
       "esg_climate",
@@ -2102,7 +2102,9 @@
     "fit_score": 0.895,
     "last_validated_at": "2026-05-09T09:00:21.194397+08:00",
     "synthesis_priority": true,
-    "synthesis_priority_set_at": "2026-05-14T18:38:50.246410+08:00"
+    "synthesis_priority_set_at": "2026-05-14T18:38:50.246410+08:00",
+    "synthesis_attempted_at": "2026-05-17T09:42:42.347082+00:00",
+    "synthesis_outcome": "success"
   },
   {
     "id": "janus-henderson",
