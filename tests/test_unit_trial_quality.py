@@ -70,11 +70,11 @@ def trial_env(tmp_path, monkeypatch):
 
 # ── Constants validation ─────────────────────────────────────────────────────
 
-def test_constants_match_3day_window():
-    assert tm.TRIAL_DAYS == 3, "TRIAL_DAYS must be 3"
-    assert tm.SAMPLE_DAYS == {1, 2, 3}, \
-        "SAMPLE_DAYS must sample every day so cross-day dedup yields 9 unique scores"
-    assert tm.MIN_DAYS_WITH_ARTICLES == 2, "MIN_DAYS_WITH_ARTICLES must be 2"
+def test_constants_match_7day_window():
+    assert tm.TRIAL_DAYS == 7, "TRIAL_DAYS must be 7"
+    assert tm.SAMPLE_DAYS == {1, 2, 3, 4, 5, 6, 7}, \
+        "SAMPLE_DAYS must sample every day so cross-day dedup yields 21 unique scores"
+    assert tm.MIN_DAYS_WITH_ARTICLES == 4, "MIN_DAYS_WITH_ARTICLES must be 4"
 
 
 # ── Bug 1: Day 1 quality sampling on new trial ──────────────────────────────
@@ -120,7 +120,7 @@ def test_new_trial_triggers_day1_quality_sampling(trial_env, monkeypatch):
 def test_trial_fails_without_quality_scores(trial_env, monkeypatch):
     """A trial with enough articles but zero quality scores must NOT pass."""
     today = datetime.now(BJT)
-    start = today - timedelta(days=4)
+    start = today - timedelta(days=8)
 
     trial_state = {
         "active_trials": [{
@@ -138,7 +138,7 @@ def test_trial_fails_without_quality_scores(trial_env, monkeypatch):
                     "accessible": True, "article_count": 10,
                     "date_count": 5, "error": None,
                 }
-                for i in range(4)
+                for i in range(8)
             },
             "quality_samples": [],
             "auto_decided": False,
@@ -171,7 +171,7 @@ def test_trial_fails_without_quality_scores(trial_env, monkeypatch):
 def test_trial_fails_with_low_quality_scores(trial_env, monkeypatch):
     """A trial with enough articles but low quality scores must fail."""
     today = datetime.now(BJT)
-    start = today - timedelta(days=4)
+    start = today - timedelta(days=8)
 
     trial_state = {
         "active_trials": [{
@@ -189,7 +189,7 @@ def test_trial_fails_with_low_quality_scores(trial_env, monkeypatch):
                     "accessible": True, "article_count": 10,
                     "date_count": 5, "error": None,
                 }
-                for i in range(4)
+                for i in range(8)
             },
             "quality_samples": [{
                 "day": 1,
@@ -234,7 +234,7 @@ def test_trial_fail_quantity_zero_articles_routes_to_inaccessible(trial_env, mon
     indefinitely because fetcher-synthesis only looks at status='inaccessible'.
     """
     today = datetime.now(BJT)
-    start = today - timedelta(days=4)
+    start = today - timedelta(days=8)
 
     trial_state = {
         "active_trials": [{
@@ -254,7 +254,7 @@ def test_trial_fail_quantity_zero_articles_routes_to_inaccessible(trial_env, mon
                     "accessible": True, "article_count": 0,
                     "date_count": 0, "error": None,
                 }
-                for i in range(4)
+                for i in range(8)
             },
             "quality_samples": [],
             "auto_decided": False,
@@ -293,12 +293,12 @@ def test_trial_fail_quantity_some_articles_stays_watchlist(trial_env, monkeypatc
     watchlist (genuine slow-publisher pattern, not an access issue).
     """
     today = datetime.now(BJT)
-    start = today - timedelta(days=4)
+    start = today - timedelta(days=8)
 
     # Articles on day 1 only — a publisher with one piece all month;
-    # MIN_DAYS_WITH_ARTICLES=2 requires articles on ≥2 days.
+    # MIN_DAYS_WITH_ARTICLES=4 requires articles on ≥4 of 7 days.
     daily = {}
-    for i in range(4):
+    for i in range(8):
         daily[(start + timedelta(days=i)).strftime("%Y-%m-%d")] = {
             "accessible": True,
             "article_count": 5 if i == 0 else 0,
@@ -520,7 +520,7 @@ def test_overall_score_computed_locally(monkeypatch):
 def test_trial_passes_with_both_quantity_and_quality(trial_env, monkeypatch):
     """A trial with enough articles AND good quality scores should pass."""
     today = datetime.now(BJT)
-    start = today - timedelta(days=4)
+    start = today - timedelta(days=8)
 
     trial_state = {
         "active_trials": [{
@@ -538,7 +538,7 @@ def test_trial_passes_with_both_quantity_and_quality(trial_env, monkeypatch):
                     "accessible": True, "article_count": 10,
                     "date_count": 5, "error": None,
                 }
-                for i in range(4)
+                for i in range(8)
             },
             "quality_samples": [{
                 "day": 1,
@@ -1256,7 +1256,7 @@ def test_sample_article_quality_tracks_js_only_count(monkeypatch):
 # Trial pass: synthesis_priority and requires_playwright flags
 # ---------------------------------------------------------------------------
 
-def _make_trial_state_pass(start_days_ago=4, js_only_count=0, js_only_checked=3):
+def _make_trial_state_pass(start_days_ago=8, js_only_count=0, js_only_checked=3):
     """Build a trial_state dict for a PASS scenario with js_only tracking."""
     BJT_local = timezone(timedelta(hours=8))
     today = datetime.now(BJT_local)
@@ -1277,7 +1277,7 @@ def _make_trial_state_pass(start_days_ago=4, js_only_count=0, js_only_checked=3)
                     "accessible": True, "article_count": 10,
                     "date_count": 5, "error": None,
                 }
-                for i in range(4)
+                for i in range(8)
             },
             "quality_samples": [{
                 "day": 1,

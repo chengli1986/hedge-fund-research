@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 """
-GMIA Trial Manager — validates candidate sources with 3-day live article checks
+GMIA Trial Manager — validates candidate sources with 7-day live article checks
 and Haiku-powered quality sampling.
 
 After the nightly discovery agent marks a candidate as validated (HIGH/MEDIUM quality),
-this manager picks one at a time, fetches its research URL daily for 3 days, counts
+this manager picks one at a time, fetches its research URL daily for 7 days, counts
 detectable articles, and auto-decides whether to send a graduation recommendation.
 
-On days 1 and 3, the manager samples up to 3 article links, extracts their text,
-and sends them to Claude Haiku for quality assessment (relevance, depth,
-extractability).  The quality score is factored into the pass/fail decision.
+Every day of the trial, the manager samples up to 3 *new* article links (deduplicated
+across days), extracts their text, and sends them to Claude Haiku for quality
+assessment (relevance, depth, extractability).  The quality score is factored into
+the pass/fail decision.  Article URLs seen each day are stored in daily_checks for
+transparency and to power the cross-day dedup.
 
 Trial SUCCESS = quantity (≥ MIN_DAYS_WITH_ARTICLES) AND quality (avg score ≥ 0.5)
 Trial FAIL    = either condition not met → candidate downgraded to watchlist
@@ -45,14 +47,14 @@ SOURCES_FILE = BASE_DIR / "config" / "sources.json"
 TRIAL_STATE_FILE = BASE_DIR / "config" / "trial-state.json"
 ENV_FILE = Path.home() / ".stock-monitor.env"
 
-TRIAL_DAYS = 3
+TRIAL_DAYS = 7
 MAX_CONCURRENT_TRIALS = 3
-MIN_DAYS_WITH_ARTICLES = 2  # fetcher must return >0 articles on ≥2 of 3 days
+MIN_DAYS_WITH_ARTICLES = 4  # fetcher must return >0 articles on ≥4 of 7 days
 MIN_QUALITY = {"HIGH", "MEDIUM"}
 MIN_QUALITY_SCORE = 0.5     # avg Haiku quality score to pass (0-1)
-SAMPLE_DAYS = {1, 2, 3}     # trial days on which to run quality sampling
-                            # (Day 1/2/3 each sample SAMPLE_SIZE articles, dedup
-                            # across days so 9 unique articles are scored total)
+SAMPLE_DAYS = {1, 2, 3, 4, 5, 6, 7}  # quality sampling runs every trial day
+                            # each day samples SAMPLE_SIZE *new* articles (dedup
+                            # across days); up to 21 unique articles scored total
 SAMPLE_SIZE = 3             # articles to sample per quality check
 HAIKU_MODEL = "claude-haiku-4-5-20251001"
 
@@ -179,6 +181,7 @@ def count_articles_with_fetcher(trial: dict) -> dict:
             "accessible": True,
             "article_count": count,
             "date_count": sum(1 for a in articles if a.get("date")),
+            "article_urls": [a["url"] for a in articles if a.get("url")][:50],
             "error": None,
             "fetcher_used": True,
         }
@@ -187,6 +190,7 @@ def count_articles_with_fetcher(trial: dict) -> dict:
             "accessible": False,
             "article_count": 0,
             "date_count": 0,
+            "article_urls": [],
             "error": str(exc)[:120],
             "fetcher_used": True,
         }
@@ -205,14 +209,15 @@ _DATE_RE = re.compile("|".join(_DATE_PATTERNS), re.IGNORECASE)
 def count_articles(url: str, timeout: int = 20) -> dict:
     """Fetch research URL and count detectable article signals.
 
-    Returns dict with keys: accessible, article_count, date_count, error
+    Returns dict with keys: accessible, article_count, date_count, article_urls, error
+    article_urls is a list of up to 50 article-like hrefs seen on the page (best-effort).
     """
     try:
         resp = httpx.get(url, headers=HEADERS, timeout=timeout,
                          follow_redirects=True)
         if resp.status_code != 200:
             return {"accessible": False, "article_count": 0, "date_count": 0,
-                    "error": f"HTTP {resp.status_code}"}
+                    "article_urls": [], "error": f"HTTP {resp.status_code}"}
 
         soup = BeautifulSoup(resp.text, "html.parser")
 
@@ -235,16 +240,24 @@ def count_articles(url: str, timeout: int = 20) -> dict:
             min(h_tags, 20),       # h-tags capped (navs have many h2s)
         )
 
+        # Best-effort URL extraction for the trial article database
+        # (_extract_article_links defined below; forward reference is fine at call time)
+        try:
+            article_urls = _extract_article_links(url, soup)[:50]
+        except Exception:
+            article_urls = []
+
         return {
             "accessible": True,
             "article_count": article_count,
             "date_count": date_matches,
+            "article_urls": article_urls,
             "error": None,
         }
 
     except Exception as exc:
         return {"accessible": False, "article_count": 0, "date_count": 0,
-                "error": str(exc)[:120]}
+                "article_urls": [], "error": str(exc)[:120]}
 
 
 # ── quality sampling (Haiku) ─────────────────────────────────────────────────
@@ -448,10 +461,9 @@ def _get_article_links_for_sampling(trial: dict) -> list[str]:
         source_dict = _candidate_to_source_dict(candidate)
         try:
             articles = fetchers[source_id](source_dict)
-            # SAMPLE_SIZE * 5 = 15 candidates leaves headroom for cross-day
-            # dedup (Day 1/2/3 each consume ≤ SAMPLE_SIZE links + extraction
-            # failures need fallbacks).
-            return [a["url"] for a in articles[:SAMPLE_SIZE * 5] if a.get("url")]
+            # SAMPLE_SIZE * 10 = 30 candidates; 7-day trial needs up to 21
+            # unique URLs (7 × SAMPLE_SIZE), plus headroom for extraction failures.
+            return [a["url"] for a in articles[:SAMPLE_SIZE * 10] if a.get("url")]
         except Exception:
             return []
 
@@ -474,10 +486,10 @@ def sample_article_quality(research_url: str, trial: dict | None = None,
     """Sample articles from a source and assess quality via Haiku.
 
     ``exclude_urls`` is the set of URLs sampled on previous trial days; passing
-    it makes Day 2 / Day 3 score *new* articles instead of re-scoring whatever
-    sat at the top of the listing. Each unique article is scored once across
-    the 3-day trial, so the final average reflects up to ``SAMPLE_SIZE`` ×
-    ``len(SAMPLE_DAYS)`` distinct articles.
+    it makes each day score *new* articles instead of re-scoring whatever sat at
+    the top of the listing. Each unique article is scored once across the trial,
+    so the final average reflects up to ``SAMPLE_SIZE`` × ``len(SAMPLE_DAYS)``
+    (currently 21) distinct articles.
 
     Returns dict with keys: sampled, articles, avg_score, error
     Each article entry: {url, title_hint, score, relevance, depth, extractable, notes}
