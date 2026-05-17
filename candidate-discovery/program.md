@@ -91,9 +91,8 @@ For any promising new fund NOT already in fund_candidates.json:
 
 ```bash
 cd /home/ubuntu/hedge-fund-research
-DISCOVERY_DATE=$(TZ='Asia/Shanghai' date '+%Y-%m-%d')
 git add config/fund_candidates.json config/candidate_entrypoints.json
-git diff --cached --quiet || git commit -m "data(candidate): daily discovery run ${DISCOVERY_DATE}"
+git diff --cached --quiet || git commit -m "data(candidate): daily discovery run $(TZ='Asia/Shanghai' date '+%Y-%m-%d')"
 git push
 ```
 
