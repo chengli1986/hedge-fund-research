@@ -50,6 +50,7 @@ BADGE_COLORS: dict[str, str] = {
 }
 
 INITIAL_VISIBLE = 20
+RECENT_DAYS = 180  # Articles older than this are folded behind a "Show older" toggle
 
 # ── Static fund profile data (displayed in Sources tab) ──
 _FUND_PROFILES: dict[str, dict] = {
@@ -389,6 +390,15 @@ def generate_html(articles: list[dict]) -> str:
     fund_count = len(set(a.get("source_id", "") for a in sorted_articles)) or len(sources) or 5
     production_source_count = len(sources)
 
+    # Recency split: articles older than RECENT_DAYS days are tagged data-age="older"
+    # so CSS (body.hide-older …) can fold them by default. Empty/unparseable dates
+    # default to "recent" (safer: visible, not silently hidden).
+    older_cutoff = (datetime.now(BJT) - timedelta(days=RECENT_DAYS)).strftime("%Y-%m-%d")
+    def _age_of(a: dict) -> str:
+        d = a.get("date") or ""
+        return "older" if d and d < older_cutoff else "recent"
+    older_count = sum(1 for a in sorted_articles if _age_of(a) == "older")
+
     # ── Theme grouping (all articles, for sidebar) ──
     themes: dict[str, list[dict]] = defaultdict(list)
     for a in sorted_articles:
@@ -444,6 +454,7 @@ def generate_html(articles: list[dict]) -> str:
             f'<article id="a-{_esc(aid)}" class="pool-article" '
             f'data-source-id="{_esc(sid)}" '
             f'data-date="{_esc(a.get("date", ""))}" '
+            f'data-age="{_age_of(a)}" '
             f'data-themes="{theme_slugs}">'
             f'{card_html}</article>'
         )
@@ -653,6 +664,13 @@ def generate_html(articles: list[dict]) -> str:
     )
     meta_description = _esc(f"Research aggregator: {fund_names_for_meta}.")
 
+    older_toggle_btn = (
+        f'<button id="btn-show-older" class="btn-toggle" onclick="toggleOlder()">'
+        f'<span class="lang-en">Show older ({older_count})</span>'
+        f'<span class="lang-zh" style="display:none">显示更旧 ({older_count})</span>'
+        f'</button>'
+    ) if older_count > 0 else ""
+
     page = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -699,6 +717,12 @@ a:hover {{ text-decoration: underline; }}
   text-transform: uppercase; letter-spacing: 0.04em;
 }}
 .btn-toggle:hover {{ background: var(--border); }}
+
+/* ── Older-article folding: hide articles older than RECENT_DAYS by default ──
+   Selector covers the pool itself and every view container that may host pool
+   articles (themes/funds/timeline). #btn-show-older toggles body.hide-older. */
+body.hide-older article.pool-article[data-age="older"] {{ display: none !important; }}
+#btn-show-older.active {{ background: var(--accent); color: #0b1220; border-color: var(--accent); }}
 
 /* ── View switcher ── */
 .view-bar {{
@@ -992,7 +1016,7 @@ a:hover {{ text-decoration: underline; }}
 </style>
 </noscript>
 </head>
-<body>
+<body class="hide-older">
 
 <div class="header">
   <div class="container">
@@ -1008,6 +1032,7 @@ a:hover {{ text-decoration: underline; }}
       </div>
     </div>
     <div class="header-actions">
+      {older_toggle_btn}
       <button class="btn-toggle" onclick="toggleLang()">CN / EN</button>
     </div>
   </div>
@@ -1155,6 +1180,29 @@ function toggleLang() {{
   langZh = !langZh;
   document.querySelectorAll('.lang-en').forEach(el => el.style.display = langZh ? 'none' : '');
   document.querySelectorAll('.lang-zh').forEach(el => el.style.display = langZh ? '' : 'none');
+}}
+
+function toggleOlder() {{
+  const body = document.body;
+  const btn = document.getElementById('btn-show-older');
+  body.classList.toggle('hide-older');
+  if (btn) {{
+    const showing = !body.classList.contains('hide-older');
+    btn.classList.toggle('active', showing);
+    /* Update label so it inverts on the second click. We only swap the
+       leading verb; the count parenthesis stays intact in both langs. */
+    btn.querySelectorAll('.lang-en').forEach(el => {{
+      el.textContent = el.textContent.replace(showing ? 'Show older' : 'Hide older',
+                                              showing ? 'Hide older' : 'Show older');
+    }});
+    btn.querySelectorAll('.lang-zh').forEach(el => {{
+      el.textContent = el.textContent.replace(showing ? '显示更旧' : '隐藏更旧',
+                                              showing ? '隐藏更旧' : '显示更旧');
+    }});
+  }}
+  /* If timeline view is active, refresh the Load-more counter — older rows
+     becoming visible changes the "remaining hidden" set. */
+  if (typeof updateLoadMoreCount === 'function') updateLoadMoreCount();
 }}
 
 /* ── Row toggle (Open/Close) + lazy <details> hydration ──

@@ -1,9 +1,17 @@
 """Unit tests for publish.py — Stage 4 HTML dashboard."""
 
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import pytest
 
 from publish import BADGE_COLORS, generate_html, publish_html
+
+BJT = timezone(timedelta(hours=8))
+
+
+def _date_str(days_ago: int) -> str:
+    """Return an ISO date string for `days_ago` days before today (BJT)."""
+    return (datetime.now(BJT) - timedelta(days=days_ago)).strftime("%Y-%m-%d")
 
 # --- Sample data ---
 
@@ -52,7 +60,7 @@ class TestHtmlOutputValid:
     def test_html_output_valid(self) -> None:
         result = generate_html(SAMPLE_ARTICLES)
         assert "<html" in result
-        assert "<body>" in result
+        assert "<body" in result  # may carry classes (e.g. hide-older)
         assert "</html>" in result
         assert "<!DOCTYPE html>" in result
         assert "Bulletin Feed" in result
@@ -307,4 +315,147 @@ class TestFundDistributionChart:
         assert m_mid is not None, "bridgewater bar not found"
         assert 49.0 <= float(m_mid.group(1)) <= 51.0, (
             f"bridgewater bar should be ~50%, got {m_mid.group(1)}%"
+        )
+
+
+class TestOlderArticleFolding:
+    """UI folds articles older than RECENT_DAYS (180d) by default. Pool articles
+    carry data-age="recent"|"older"; body starts with class hide-older; a toolbar
+    button reveals older articles when present."""
+
+    # Articles spanning recent (<180d) and older (>180d) buckets.
+    # Dates computed dynamically to keep tests stable across calendar drift.
+    MIXED_ARTICLES = [
+        {  # Recent — well inside 180d window
+            "id": "rec1", "source_id": "man-group", "source_name": "Man",
+            "title": "Recent Macro Note", "url": "https://man.com/recent",
+            "date": _date_str(30), "summarized": True,
+            "summary_en": "Recent macro analysis.", "summary_zh": "近期宏观分析。",
+            "key_takeaway_en": "Macro tailwinds.", "key_takeaway_zh": "宏观顺风。",
+            "themes": ["Macro/Rates"],
+        },
+        {  # Recent — right at the 180d boundary (179d ago, should still be recent)
+            "id": "rec2", "source_id": "bridgewater", "source_name": "Bridgewater",
+            "title": "Boundary Recent", "url": "https://bridgewater.com/boundary",
+            "date": _date_str(179), "summarized": False,
+        },
+        {  # Older — just past 180d boundary (181d ago)
+            "id": "old1", "source_id": "gmo", "source_name": "GMO",
+            "title": "Just Over Boundary", "url": "https://gmo.com/just-over",
+            "date": _date_str(181), "summarized": True,
+            "summary_en": "Older but still relevant.", "summary_zh": "较旧但仍相关。",
+            "key_takeaway_en": "Long-term thesis.", "key_takeaway_zh": "长期论点。",
+            "themes": ["Equities/Value"],
+        },
+        {  # Older — way out (1 year ago)
+            "id": "old2", "source_id": "ark-invest", "source_name": "ARK",
+            "title": "Year Old Report", "url": "https://ark.com/year-old",
+            "date": _date_str(365), "summarized": False,
+        },
+    ]
+
+    ALL_RECENT_ARTICLES = [
+        {"id": "r1", "source_id": "man-group", "source_name": "Man",
+         "title": "Fresh A", "url": "u", "date": _date_str(10), "summarized": False},
+        {"id": "r2", "source_id": "gmo", "source_name": "GMO",
+         "title": "Fresh B", "url": "u", "date": _date_str(60), "summarized": False},
+    ]
+
+    def test_recent_article_has_data_age_recent(self) -> None:
+        result = generate_html(self.MIXED_ARTICLES)
+        import re
+        for aid in ("rec1", "rec2"):
+            tag = re.search(rf'<article[^>]*id="a-{aid}"[^>]*>', result)
+            assert tag is not None, f"pool article {aid} missing"
+            assert 'data-age="recent"' in tag.group(0), (
+                f"{aid} should be tagged data-age=recent (it's <180d), got: {tag.group(0)}"
+            )
+
+    def test_older_article_has_data_age_older(self) -> None:
+        result = generate_html(self.MIXED_ARTICLES)
+        import re
+        for aid in ("old1", "old2"):
+            tag = re.search(rf'<article[^>]*id="a-{aid}"[^>]*>', result)
+            assert tag is not None, f"pool article {aid} missing"
+            assert 'data-age="older"' in tag.group(0), (
+                f"{aid} should be tagged data-age=older (it's >180d), got: {tag.group(0)}"
+            )
+
+    def test_180d_boundary_inclusive(self) -> None:
+        """Articles dated exactly 180 days ago count as recent (>= cutoff)."""
+        articles = [
+            {"id": "edge", "source_id": "man-group", "source_name": "Man",
+             "title": "Edge", "url": "u", "date": _date_str(180), "summarized": False},
+        ]
+        result = generate_html(articles)
+        import re
+        tag = re.search(r'<article[^>]*id="a-edge"[^>]*>', result)
+        assert tag is not None
+        assert 'data-age="recent"' in tag.group(0), (
+            f"Article exactly 180d old should be recent (inclusive boundary), got: {tag.group(0)}"
+        )
+
+    def test_unknown_date_defaults_to_recent(self) -> None:
+        """Missing/empty date field — fall back to 'recent' so data isn't silently hidden."""
+        articles = [
+            {"id": "nodate", "source_id": "man-group", "source_name": "Man",
+             "title": "No Date", "url": "u", "date": "", "summarized": False},
+        ]
+        result = generate_html(articles)
+        import re
+        tag = re.search(r'<article[^>]*id="a-nodate"[^>]*>', result)
+        assert tag is not None
+        assert 'data-age="recent"' in tag.group(0), (
+            "Articles without a parseable date should default to 'recent' "
+            "(safer: visible by default, not silently folded)"
+        )
+
+    def test_body_has_hide_older_class_by_default(self) -> None:
+        """Body element carries `hide-older` class on initial render so CSS
+        folds older articles by default."""
+        result = generate_html(self.MIXED_ARTICLES)
+        import re
+        body_tag = re.search(r'<body[^>]*>', result)
+        assert body_tag is not None, "body tag missing"
+        assert 'hide-older' in body_tag.group(0), (
+            f"body should start with class hide-older, got: {body_tag.group(0)}"
+        )
+
+    def test_hide_older_css_rule_present(self) -> None:
+        """CSS hides data-age=older articles when body has hide-older class."""
+        result = generate_html(self.MIXED_ARTICLES)
+        # Normalize whitespace for robust matching
+        compact = " ".join(result.split())
+        assert 'body.hide-older' in compact, "missing body.hide-older CSS scope"
+        assert 'data-age="older"' in compact or "data-age='older'" in compact
+
+    def test_show_older_toggle_button_rendered_when_older_exist(self) -> None:
+        """Toolbar shows a toggle button when there are older articles."""
+        result = generate_html(self.MIXED_ARTICLES)
+        import re
+        btn = re.search(
+            r'<button[^>]*id="btn-show-older"[^>]*>([\s\S]*?)</button>',
+            result,
+        )
+        assert btn is not None, "btn-show-older button missing when 2 older articles exist"
+        body = btn.group(1)
+        assert "(2)" in body, (
+            f"button body should display older count (2), got: {body!r}"
+        )
+        # Bilingual labels expected (lang-en/lang-zh spans toggle visibility via toggleLang).
+        assert "Show older" in body, f"missing English label, got: {body!r}"
+        assert "显示更旧" in body, f"missing Chinese label, got: {body!r}"
+
+    def test_no_toggle_button_when_all_recent(self) -> None:
+        """When 0 older articles exist, the toggle button is suppressed."""
+        result = generate_html(self.ALL_RECENT_ARTICLES)
+        assert 'id="btn-show-older"' not in result, (
+            "button must not appear when there are no older articles"
+        )
+
+    def test_toggle_button_wires_to_toggleOlder(self) -> None:
+        """Button onclick (or addEventListener target) names toggleOlder."""
+        result = generate_html(self.MIXED_ARTICLES)
+        assert 'toggleOlder' in result, (
+            "publish.py must emit a toggleOlder() JS handler for the button"
         )
