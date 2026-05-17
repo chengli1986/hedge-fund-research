@@ -13,7 +13,8 @@ cd /home/ubuntu/hedge-fund-research
 python3 synthesize_fetchers.py
 ```
 
-读取 JSON 输出，这是**目标列表**。每次最多处理 **2 个基金**（优先选 HIGH quality）。
+读取 JSON 输出，这是**目标列表**。每次最多处理 **2 个基金**。
+**优先顺序**：① `synthesis_priority=true` 的基金（trial 刚通过、等待最久，最高优先）；② HIGH quality；③ 其余。
 若列表为空，输出 "No targets" 并退出。
 
 > **`needs_playwright` 提示**：若某基金的 `needs_playwright=true`，表示 trial 期间 httpx
