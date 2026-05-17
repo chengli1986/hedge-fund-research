@@ -109,6 +109,39 @@ if ! git diff --quiet config/trial-state.json config/fund_candidates.json 2>/dev
     git push 2>&1 || echo "$LOG_PREFIX WARNING: git push (trial state) failed"
 fi
 
+# --- Immediate synthesis trigger for trial-pass candidates ---
+# If any synthesis_priority candidate has no registered fetcher, kick off
+# fetcher-synthesis now instead of waiting up to 7 days for the weekly cron.
+# The synthesis wrapper has its own flock guard, so concurrent weekly cron
+# runs exit cleanly without double-processing.
+SYNTH_PRIORITY_COUNT=$(
+    cd "$REPO_DIR" && python3 -c "
+import json, sys
+from pathlib import Path
+sys.path.insert(0, '.')
+try:
+    from fetch_articles import FETCHERS
+    registered = set(FETCHERS.keys())
+except Exception:
+    registered = set()
+candidates = json.loads(Path('config/fund_candidates.json').read_text())
+print(sum(1 for c in candidates if c.get('synthesis_priority') and c['id'] not in registered))
+" 2>/dev/null || echo 0
+)
+
+if [ "${SYNTH_PRIORITY_COUNT:-0}" -gt 0 ]; then
+    echo "$LOG_PREFIX $SYNTH_PRIORITY_COUNT synthesis_priority target(s) detected — launching fetcher-synthesis in background"
+    SYNTH_LOG="$HOME/logs/gmia-fetcher-synthesis.log"
+    # Restore original API key state (synthesis wrapper will unset it itself for Max plan auth)
+    export ANTHROPIC_API_KEY="$SAVED_ANTHROPIC_API_KEY"
+    nohup bash "$REPO_DIR/scripts/wrapper-fetcher-synthesis.sh" >> "$SYNTH_LOG" 2>&1 &
+    SYNTH_PID=$!
+    disown $SYNTH_PID
+    echo "$LOG_PREFIX Fetcher-synthesis started (PID $SYNTH_PID) — log: $SYNTH_LOG"
+else
+    echo "$LOG_PREFIX No synthesis_priority targets without fetchers — skipping immediate trigger"
+fi
+
 # --- Email report ---
 echo "$LOG_PREFIX Sending email report..."
 source ~/.stock-monitor.env 2>/dev/null || true
