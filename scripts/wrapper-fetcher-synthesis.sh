@@ -71,8 +71,9 @@ $(cat "$PROGRAM_MD")
 - 每次成功注入后立即 commit + push
 "
 
-echo "$LOG_PREFIX Invoking Claude Code agent..."
-echo "$PROMPT" | claude --print \
+CLAUDE_BIN="${CLAUDE_BIN:-/home/ubuntu/.npm-global/bin/claude}"
+echo "$LOG_PREFIX Invoking Claude Code agent ($("$CLAUDE_BIN" --version 2>/dev/null | head -1))..."
+echo "$PROMPT" | "$CLAUDE_BIN" --print \
     --allowedTools "Bash,Read,Edit,Write,Glob,Grep" \
     --max-turns 60 \
     2>&1
