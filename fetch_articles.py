@@ -1797,6 +1797,55 @@ def fetch_alliancebernstein(source: dict) -> list[dict]:
     return articles[:source.get("max_articles", 10)]
 
 
+def fetch_de_shaw(source: dict) -> list[dict]:
+    """Fetch articles from D. E. Shaw Library (Playwright — Next.js SPA).
+
+    Title + canonical URL are recovered from each card's mailto share link
+    (body param formatted as "TITLE - URL"); the site exposes only the
+    year, so date is normalized to YYYY-01-01.
+    """
+    base_url = "https://www.deshaw.com"
+    html = _get_playwright_page(
+        source["url"],
+        wait_selector="article.library-item",
+        wait_ms=5000,
+    )
+    soup = BeautifulSoup(html, "html.parser")
+    expected_host = source.get("expected_hostname", "deshaw.com")
+
+    articles = []
+    for card in soup.select("article.library-item"):
+        year_el = card.find("span", class_=lambda c: c and "LibraryItem_year" in c)
+        year = year_el.get_text(strip=True) if year_el else ""
+
+        mailto = card.find("a", href=lambda h: h and h.startswith("mailto:"))
+        title = ""
+        url_target = ""
+        if mailto:
+            m = re.search(r"body=(.+?)\s*-\s*(https?://\S+)", mailto.get("href", ""))
+            if m:
+                title = m.group(1).strip()
+                url_target = m.group(2).strip()
+
+        if not (title and url_target):
+            continue
+        if not _validate_hostname(url_target, expected_host):
+            continue
+
+        date_str = None
+        if year and year.isdigit() and len(year) == 4:
+            date_str = f"{year}-01-01"
+
+        articles.append({
+            "title": title,
+            "url": url_target,
+            "date": date_str,
+            "date_raw": year or "",
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
 # FETCHER_SYNTHESIS_INSERTION_POINT — auto-generated fetchers inserted above this line
 
 
@@ -2014,6 +2063,7 @@ FETCHERS = {
     "aberdeen": fetch_aberdeen,
     "research-affiliates": fetch_researchaffiliates,
     "pimco": fetch_pimco,
+    "de-shaw": fetch_de_shaw,
     "kkr": fetch_kkr,
     "msci-research": fetch_msci_research,
     "schroders": fetch_schroders,

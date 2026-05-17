@@ -73,7 +73,7 @@
   {
     "id": "de-shaw",
     "name": "D. E. Shaw",
-    "status": "inaccessible",
+    "status": "validated",
     "homepage_url": "https://www.deshaw.com",
     "research_url": "https://www.deshaw.com/library",
     "rss_url": null,
@@ -117,7 +117,9 @@
       "quant"
     ],
     "source": "auto_discovered",
-    "quality_score": 0.9
+    "quality_score": 0.9,
+    "synthesis_attempted_at": "2026-05-17T08:30:42.494662+00:00",
+    "synthesis_outcome": "success"
   },
   {
     "id": "blackstone",
