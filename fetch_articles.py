@@ -1846,6 +1846,63 @@ def fetch_de_shaw(source: dict) -> list[dict]:
     return articles[:source.get("max_articles", 10)]
 
 
+def fetch_pinebridge(source: dict) -> list[dict]:
+    """Fetch articles from PineBridge Investments (Playwright — Next.js SPA).
+
+    The GMIA `our-insights` URL is a hub page; the real listing lives at
+    `/en/all-insights`, so we always load the full listing.
+    """
+    base_url = "https://www.pinebridge.com"
+    listing_url = "https://www.pinebridge.com/en/all-insights"
+    html = _get_playwright_page(
+        listing_url,
+        wait_selector="a[href*='/en/insights/']",
+        wait_ms=6000,
+    )
+    soup = BeautifulSoup(html, "html.parser")
+    expected_host = source.get("expected_hostname", "pinebridge.com")
+
+    articles = []
+    seen = set()
+    for link in soup.select("a[href*='/en/insights/']"):
+        href = link.get("href", "")
+        if not href or href in seen:
+            continue
+        seen.add(href)
+
+        url_target = urljoin(base_url, href)
+        if not _validate_hostname(url_target, expected_host):
+            continue
+
+        title_el = link.select_one("div.text-pinebridgeblue-50") or link.find("img")
+        title = ""
+        if title_el is not None:
+            if title_el.name == "img":
+                title = (title_el.get("alt") or "").strip()
+            else:
+                title = title_el.get_text(strip=True)
+        if not title:
+            continue
+
+        date_el = link.select_one("div.text-pinebridgegrey-200")
+        date_raw = ""
+        parsed_date = None
+        if date_el:
+            for sp in date_el.find_all("span"):
+                sp.extract()
+            date_raw = date_el.get_text(strip=True)
+            parsed_date = parse_date(date_raw)
+
+        articles.append({
+            "title": title,
+            "url": url_target,
+            "date": parsed_date,
+            "date_raw": date_raw,
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
 # FETCHER_SYNTHESIS_INSERTION_POINT — auto-generated fetchers inserted above this line
 
 
@@ -2064,6 +2121,7 @@ FETCHERS = {
     "research-affiliates": fetch_researchaffiliates,
     "pimco": fetch_pimco,
     "de-shaw": fetch_de_shaw,
+    "pinebridge": fetch_pinebridge,
     "kkr": fetch_kkr,
     "msci-research": fetch_msci_research,
     "schroders": fetch_schroders,

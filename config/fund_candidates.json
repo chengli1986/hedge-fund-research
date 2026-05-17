@@ -1583,7 +1583,7 @@
     "name": "PineBridge Investments",
     "homepage_url": "https://www.pinebridge.com",
     "source": "manual",
-    "status": "inaccessible",
+    "status": "validated",
     "strategy_tags": [
       "fixed_income",
       "emerging_markets",
@@ -1632,7 +1632,9 @@
       }
     ],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-04-24T09:03:34.493346+08:00"
+    "last_discovered_at": "2026-04-24T09:03:34.493346+08:00",
+    "synthesis_attempted_at": "2026-05-17T08:32:58.639690+00:00",
+    "synthesis_outcome": "success"
   },
   {
     "id": "verdad-capital",
