@@ -1708,7 +1708,7 @@
     "homepage_url": "https://www.ares.com",
     "research_url": "https://www.ares.com/us/news-and-insights/perspectives",
     "source": "manual",
-    "status": "inaccessible",
+    "status": "validated",
     "strategy_tags": [
       "private_credit",
       "private_equity",
@@ -1724,7 +1724,9 @@
     "last_deep_analyzed_at": "2026-05-17T01:02:20Z",
     "quality": "HIGH",
     "quality_score": 0.7,
-    "fit_score": 0.88
+    "fit_score": 0.88,
+    "synthesis_attempted_at": "2026-05-17T09:39:29.474699+00:00",
+    "synthesis_outcome": "success"
   },
   {
     "id": "natixis-im",

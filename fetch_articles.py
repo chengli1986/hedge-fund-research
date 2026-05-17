@@ -1903,6 +1903,70 @@ def fetch_pinebridge(source: dict) -> list[dict]:
     return articles[:source.get("max_articles", 10)]
 
 
+def fetch_ares_management(source: dict) -> list[dict]:
+    """Fetch articles from Ares Management Perspectives (sitemap + page scrape).
+
+    The /perspectives listing is gated by an interactive country+role attestation
+    modal that's impractical to bypass programmatically. We parse sitemap.xml
+    (publicly accessible) for /us/news-and-insights/perspectives/* URLs sorted by
+    lastmod desc, then fetch each article HTML to extract real title and the
+    publish date from <span class="share-print-date">.
+    """
+    base_url = "https://www.ares.com"
+    sitemap_url = "https://www.ares.com/sitemap.xml"
+    expected_host = source.get("expected_hostname", "ares.com")
+    max_articles = source.get("max_articles", 10)
+
+    resp = requests.get(sitemap_url, headers=HEADERS, timeout=20)
+    resp.raise_for_status()
+
+    pattern = re.compile(
+        r"<loc>(https://www\.ares\.com/us/news-and-insights/perspectives/[^<]+)</loc>\s*<lastmod>([^<]+)</lastmod>",
+        re.IGNORECASE,
+    )
+    entries = pattern.findall(resp.text)
+    entries.sort(key=lambda x: x[1], reverse=True)
+
+    articles: list[dict] = []
+    for url, lastmod in entries[: max_articles * 2]:
+        if not _validate_hostname(url, expected_host):
+            continue
+        try:
+            art_resp = requests.get(url, headers=HEADERS, timeout=15)
+            if art_resp.status_code != 200:
+                continue
+            art_soup = BeautifulSoup(art_resp.text, "html.parser")
+            h1 = art_soup.find("h1")
+            title = h1.get_text(strip=True) if h1 else ""
+            if not title:
+                og = art_soup.find("meta", property="og:title")
+                if og:
+                    title = (og.get("content") or "").strip()
+            if not title:
+                continue
+
+            date_el = art_soup.select_one("span.share-print-date")
+            date_raw = date_el.get_text(strip=True) if date_el else ""
+            parsed_date = parse_date(date_raw) if date_raw else None
+            if not parsed_date:
+                parsed_date = parse_date(lastmod[:10])
+                if not date_raw:
+                    date_raw = lastmod[:10]
+
+            articles.append({
+                "title": title,
+                "url": url,
+                "date": parsed_date,
+                "date_raw": date_raw,
+            })
+            if len(articles) >= max_articles:
+                break
+        except Exception:
+            continue
+
+    return articles[:max_articles]
+
+
 # FETCHER_SYNTHESIS_INSERTION_POINT — auto-generated fetchers inserted above this line
 
 
@@ -2130,6 +2194,7 @@ FETCHERS = {
     "capital-group": fetch_capital_group,
     "natixis-im": fetch_natixis_im,
     "apollo-global-management": fetch_apollo_global_management,
+    "ares-management": fetch_ares_management,
     "alliancebernstein": fetch_alliancebernstein,
     "janus-henderson": fetch_janus_henderson,
 }
