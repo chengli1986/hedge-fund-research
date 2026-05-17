@@ -2,7 +2,7 @@
 
 Tracks and aggregates research insights, market commentary, and papers from top hedge funds. Summarizes via LLM and publishes a bilingual (CN/EN) dashboard.
 
-## Sources (22)
+## Sources (23)
 
 | Fund | Method | Frequency | Notable |
 |------|--------|-----------|---------|
@@ -28,6 +28,7 @@ Tracks and aggregates research insights, market commentary, and papers from top 
 | **KKR** | Playwright (Next.js) | Weekly | Private equity / infrastructure / private credit / Global Atlantic insurance; NYC, 1976, ~$600B |
 | **Janus Henderson Investors** | SSR (requests) | Weekly | Equities / fixed income / multi-asset; global rates + geopolitics frame; London/Denver, 2017 merger, ~$370B |
 | **Research Affiliates** | Playwright (Next.js) | Monthly | Quantitative research / index licensor; RAFI fundamental indices + Smart Beta; Newport Beach, 2002, ~$170B licensed (Rob Arnott) |
+| **Goldman Sachs Asset Management** | TBD | TBD | Asset management arm of Goldman Sachs (auto-promoted 2026-05-17 via `5cd3241` — pending profile review) |
 
 ## Pipeline
 
@@ -118,7 +119,7 @@ Scorer weight optimization program using automated experiment loop:
 
 ## Tests
 
-444 passing, 15 deselected — unit, functional, and integration tests (live/nightly tests excluded by default via pytest.ini). Contract tests enforce `sources.json` stays in sync with the `FETCHERS` / `CONTENT_FETCHERS` dispatcher dicts and `BADGE_COLORS` palette, so adding a new production source without wiring the full pipeline fails fast at pytest time. Consistency tests (`tests/test_config_consistency.py`) additionally guard against frequency-vs-observed-cadence drift, validated-candidate URL invariants, and fund-profile coverage (every `sources.json` id must have a profile in `publish._FUND_PROFILES` or `pending_profiles/<id>.json`).
+453 passing, 15 deselected — unit, functional, and integration tests (live/nightly tests excluded by default via pytest.ini). Contract tests enforce `sources.json` stays in sync with the `FETCHERS` / `CONTENT_FETCHERS` dispatcher dicts and `BADGE_COLORS` palette, so adding a new production source without wiring the full pipeline fails fast at pytest time. Consistency tests (`tests/test_config_consistency.py`) additionally guard against frequency-vs-observed-cadence drift, validated-candidate URL invariants, and fund-profile coverage (every `sources.json` id must have a profile in `publish._FUND_PROFILES` or `pending_profiles/<id>.json`). `TestOlderArticleFolding` covers the `data-age` recency split (180d boundary inclusive, no-date defaults to recent, page-level toggle button render/suppress).
 
 ```bash
 python3 -m pytest tests/ -q
