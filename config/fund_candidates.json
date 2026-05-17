@@ -1712,12 +1712,12 @@
       "multi_asset"
     ],
     "official_domain": "www.ares.com",
-    "notes": "Trial failed: 0 articles detected across 3 days — site likely requires JS rendering or selector is broken. Routed to fetcher-synthesis queue.",
+    "notes": "Still 403 on all pages; JS-rendered, cannot access via WebFetch",
     "topics": "private credit, private equity, alternatives, insurance",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-05-01T01:03:53Z",
-    "last_deep_analyzed_at": "2026-05-08T01:30:00Z",
+    "last_deep_analyzed_at": "2026-05-17T01:02:20Z",
     "quality": "HIGH",
     "quality_score": 0.7,
     "fit_score": 0.88
@@ -1970,10 +1970,10 @@
       "multi_asset"
     ],
     "quality": "MEDIUM",
-    "quality_score": 0.7,
+    "quality_score": 0.72,
     "topics": "quant, ESG, emerging markets, fixed income, credit",
-    "notes": "RECOMMEND: trial passed (4/3 days with articles, quality=0.65) [synthesis_priority backfilled 2026-05-14]",
-    "last_deep_analyzed_at": "2026-05-08T01:02:53Z",
+    "notes": "RECOMMEND: quant+EM research; fills ESG+EM gap in GMIA",
+    "last_deep_analyzed_at": "2026-05-17T01:02:20Z",
     "official_domain": "www.robeco.com",
     "discovery_method": "discover_fund_sites",
     "research_links": [
@@ -2297,5 +2297,19 @@
     "quality_score": 0.62,
     "topics": "Asian equities, China, India, Japan, emerging markets",
     "last_deep_analyzed_at": "2026-05-16T01:04:33Z"
+  },
+  {
+    "id": "cohen-steers",
+    "name": "Cohen & Steers",
+    "homepage_url": "https://www.cohenandsteers.com/insights/",
+    "research_url": "https://www.cohenandsteers.com/insights/",
+    "source": "manual",
+    "status": "seed",
+    "strategy_tags": [
+      "real_assets",
+      "equity"
+    ],
+    "topics": "real assets, REITs, infrastructure, real estate",
+    "notes": "REIT/real assets specialist; fills real assets gap in GMIA"
   }
 ]
