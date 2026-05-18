@@ -9,7 +9,7 @@ CANDIDATES_FILE = CONFIG_DIR / "fund_candidates.json"
 SOURCES_FILE = CONFIG_DIR / "sources.json"
 
 VALID_STATUSES = {
-    "seed", "discovered", "screened", "screen_failed", "validated", "inaccessible",
+    "seed", "discovered", "screened", "screen_failed", "visitable", "inaccessible",
     "watchlist", "rejected", "promoted",
 }
 
@@ -144,7 +144,7 @@ class TestPassPendingClassification:
         }
         queue = [
             c for c in candidates
-            if c["status"] == "validated"
+            if c["status"] == "visitable"
             and c["id"] not in production_ids
             and c["id"] not in active_trial_ids
             and c["id"] not in pass_pending_ids
@@ -155,28 +155,28 @@ class TestPassPendingClassification:
         return queue, pass_pending
 
     def test_pass_outcome_not_in_production_goes_to_pass_pending(self):
-        candidates = [{"id": "alpha", "status": "validated", "name": "Alpha"}]
+        candidates = [{"id": "alpha", "status": "visitable", "name": "Alpha"}]
         history = [{"id": "alpha", "outcome": "pass"}]
         queue, pass_pending = self._classify(candidates, set(), history)
         assert any(c["id"] == "alpha" for c in pass_pending)
         assert not any(c["id"] == "alpha" for c in queue)
 
     def test_pass_outcome_already_in_production_excluded_from_pass_pending(self):
-        candidates = [{"id": "alpha", "status": "validated", "name": "Alpha"}]
+        candidates = [{"id": "alpha", "status": "visitable", "name": "Alpha"}]
         history = [{"id": "alpha", "outcome": "pass"}]
         queue, pass_pending = self._classify(candidates, {"alpha"}, history)
         assert not any(c["id"] == "alpha" for c in pass_pending)
         assert not any(c["id"] == "alpha" for c in queue)
 
     def test_fail_outcome_stays_out_of_pass_pending(self):
-        candidates = [{"id": "beta", "status": "validated", "name": "Beta"}]
+        candidates = [{"id": "beta", "status": "visitable", "name": "Beta"}]
         history = [{"id": "beta", "outcome": "fail"}]
         queue, pass_pending = self._classify(candidates, set(), history)
         assert not any(c["id"] == "beta" for c in pass_pending)
         assert any(c["id"] == "beta" for c in queue)
 
     def test_validated_no_trial_goes_to_queue(self):
-        candidates = [{"id": "gamma", "status": "validated", "name": "Gamma"}]
+        candidates = [{"id": "gamma", "status": "visitable", "name": "Gamma"}]
         queue, pass_pending = self._classify(candidates, set(), history=[])
         assert any(c["id"] == "gamma" for c in queue)
         assert not any(c["id"] == "gamma" for c in pass_pending)

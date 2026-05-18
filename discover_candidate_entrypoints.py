@@ -388,7 +388,7 @@ def main() -> None:
             # candidate hasn't been "evaluated" — it just couldn't be evaluated by
             # httpx. Don't pollute its quality signal with that fact.
             if result.get("needs_playwright"):
-                if c["status"] != "validated":
+                if c["status"] != "visitable":
                     c["status"] = "inaccessible"
                 c["needs_playwright"] = True
                 c["last_validated_at"] = now
@@ -411,8 +411,8 @@ def main() -> None:
 
             # Update candidate state — distinguish accessible vs inaccessible
             # Never downgrade a manually-confirmed validated candidate
-            if c["status"] != "validated":
-                c["status"] = "validated" if c.get("is_publicly_accessible") else "inaccessible"
+            if c["status"] != "visitable":
+                c["status"] = "visitable" if c.get("is_publicly_accessible") else "inaccessible"
             c["fit_score"] = result["fit_score"]
             c["last_validated_at"] = now
             # Clear stale needs_playwright flag if a previous run set it

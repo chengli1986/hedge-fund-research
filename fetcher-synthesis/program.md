@@ -4,7 +4,7 @@
 
 你是一名 Python 爬虫工程师。目标：对 GMIA 候选列表中每个 `inaccessible` 基金，
 尝试多种抓取策略，写出可运行的 `fetch_<id>()` 函数，注入 `fetch_articles.py`，
-并将该基金状态更新为 `validated`。若所有策略均失败，记录尝试并继续。
+并将该基金状态更新为 `promoted`。若所有策略均失败，记录尝试并继续。
 
 ## 准备
 

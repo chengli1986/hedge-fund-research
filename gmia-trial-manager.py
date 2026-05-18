@@ -651,7 +651,7 @@ def get_trial_queue(state: dict) -> list[dict]:
 
     queue = []
     for c in candidates:
-        if c["status"] != "validated":
+        if c["status"] != "visitable":
             continue
         if c.get("quality") not in MIN_QUALITY:
             continue

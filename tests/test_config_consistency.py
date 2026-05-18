@@ -10,7 +10,7 @@ Classes of bugs these guard against:
    the historical median gap from articles.jsonl catches this at config time.
 
 2. **Candidate URL invariants** (Gap 3)
-   The 2026-05-08 ares-management bug: status flipped to "validated" but the
+   The 2026-05-08 ares-management bug: status flipped to "visitable" but the
    research_url was 404. A static lint test cannot catch live 404s (that's the
    live URL probe extension to gmia-fetcher-health.py), but it CAN catch
    missing/malformed URLs and host-vs-official-domain drift, which are also
@@ -167,7 +167,7 @@ def test_validated_candidates_have_research_url():
     missing = [
         c["id"]
         for c in _candidate_records()
-        if c.get("status") == "validated"
+        if c.get("status") == "visitable"
         and not (c.get("research_url") or "").strip()
     ]
     assert not missing, f"validated candidates with empty research_url: {missing}"
@@ -177,7 +177,7 @@ def test_validated_candidate_research_url_is_parseable():
     """research_url must parse to a valid http(s) URL with a hostname."""
     bad = []
     for c in _candidate_records():
-        if c.get("status") != "validated":
+        if c.get("status") != "visitable":
             continue
         url = c.get("research_url", "")
         parsed = urlparse(url)
@@ -194,7 +194,7 @@ def test_validated_candidate_url_host_matches_official_domain():
     """
     mismatches = []
     for c in _candidate_records():
-        if c.get("status") != "validated":
+        if c.get("status") != "visitable":
             continue
         url = c.get("research_url", "")
         official = (c.get("official_domain") or "").lower().strip()

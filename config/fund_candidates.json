@@ -1561,7 +1561,7 @@
     "homepage_url": "https://www.capitalgroup.com",
     "research_url": "https://www.capitalgroup.com/advisor/insights.html",
     "source": "manual",
-    "status": "validated",
+    "status": "visitable",
     "strategy_tags": [
       "equity",
       "fixed_income",

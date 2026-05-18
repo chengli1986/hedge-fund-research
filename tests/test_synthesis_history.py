@@ -39,7 +39,7 @@ def test_reconcile_appends_new_entries(monkeypatch, tmp_path):
     cand_file = tmp_path / "fund_candidates.json"
     history_file = tmp_path / "logs" / "history.jsonl"
     _make_candidates_file(cand_file, [
-        {"id": "fund-a", "name": "Fund A", "status": "validated",
+        {"id": "fund-a", "name": "Fund A", "status": "visitable",
          "synthesis_attempted_at": _utc_iso(0),
          "synthesis_outcome": "success", "quality": "HIGH"},
         {"id": "fund-b", "name": "Fund B", "status": "inaccessible",
@@ -64,7 +64,7 @@ def test_reconcile_is_idempotent(monkeypatch, tmp_path):
     cand_file = tmp_path / "fund_candidates.json"
     history_file = tmp_path / "logs" / "history.jsonl"
     _make_candidates_file(cand_file, [
-        {"id": "fund-a", "name": "Fund A", "status": "validated",
+        {"id": "fund-a", "name": "Fund A", "status": "visitable",
          "synthesis_attempted_at": _utc_iso(0),
          "synthesis_outcome": "success"},
     ])
@@ -99,7 +99,7 @@ def test_reconcile_skips_candidates_without_attempt(monkeypatch, tmp_path):
     cand_file = tmp_path / "fund_candidates.json"
     history_file = tmp_path / "logs" / "history.jsonl"
     _make_candidates_file(cand_file, [
-        {"id": "untried", "name": "Untried", "status": "validated"},
+        {"id": "untried", "name": "Untried", "status": "visitable"},
     ])
     monkeypatch.setattr(sync_mod, "CANDIDATES_FILE", cand_file)
     monkeypatch.setattr(sync_mod, "HISTORY_FILE", history_file)
@@ -113,7 +113,7 @@ def test_reconcile_handles_dict_wrapped_candidates(monkeypatch, tmp_path):
     history_file = tmp_path / "logs" / "history.jsonl"
     cand_file.write_text(json.dumps({
         "candidates": [
-            {"id": "fund-a", "name": "Fund A", "status": "validated",
+            {"id": "fund-a", "name": "Fund A", "status": "visitable",
              "synthesis_attempted_at": _utc_iso(0),
              "synthesis_outcome": "success"},
         ]
@@ -194,10 +194,10 @@ def test_reconcile_writes_needs_playwright_field(monkeypatch, tmp_path):
     cand_file = tmp_path / "fund_candidates.json"
     history_file = tmp_path / "logs" / "history.jsonl"
     _make_candidates_file(cand_file, [
-        {"id": "fund-a", "name": "A", "status": "validated",
+        {"id": "fund-a", "name": "A", "status": "visitable",
          "synthesis_attempted_at": _utc_iso(0), "synthesis_outcome": "success",
          "needs_playwright": True},
-        {"id": "fund-b", "name": "B", "status": "validated",
+        {"id": "fund-b", "name": "B", "status": "visitable",
          "synthesis_attempted_at": _utc_iso(0), "synthesis_outcome": "success"},
         # ^ no needs_playwright field
     ])

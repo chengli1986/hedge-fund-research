@@ -194,7 +194,7 @@ for cid in pass_pending_ids:
     pass_pending.append(c)
 pass_pending.sort(key=lambda c: -(c.get("fit_score") or 0))
 
-queue = [c for c in candidates if c["status"] == "validated"
+queue = [c for c in candidates if c["status"] == "visitable"
          and c["id"] not in production_ids
          and c["id"] not in active_trial_ids
          and c["id"] not in pass_pending_ids]

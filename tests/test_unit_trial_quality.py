@@ -35,7 +35,7 @@ def _make_candidates_file(tmp_path: Path) -> Path:
         {
             "id": "test-fund",
             "name": "Test Fund",
-            "status": "validated",
+            "status": "visitable",
             "quality": "HIGH",
             "fit_score": 0.95,
             "research_url": "https://example.com/research",
@@ -328,7 +328,7 @@ def test_trial_fail_quantity_some_articles_stays_watchlist(trial_env, monkeypatc
     # Seed candidates file with this fund
     candidates = json.loads(tm.CANDIDATES_FILE.read_text())
     candidates.append({
-        "id": "slow-fund", "name": "Slow Fund", "status": "validated",
+        "id": "slow-fund", "name": "Slow Fund", "status": "visitable",
         "quality": "HIGH", "fit_score": 0.90,
         "research_url": "https://example.com/quarterly-only",
         "homepage_url": "https://example.com", "topics": "macro",
@@ -433,7 +433,7 @@ def test_count_articles_with_fetcher_uses_fetcher_when_registered(monkeypatch):
         cands_path.write_text(json.dumps([{
             "id": "test-source",
             "name": "Test Source",
-            "status": "validated",
+            "status": "visitable",
             "research_url": "https://example.com/research",
             "homepage_url": "https://example.com",
         }]))
@@ -590,7 +590,7 @@ def test_trial_passes_with_both_quantity_and_quality(trial_env, monkeypatch):
 
 def _make_candidate(id_, quality, fit_score, quality_score=None):
     c = {
-        "id": id_, "name": id_, "status": "validated",
+        "id": id_, "name": id_, "status": "visitable",
         "quality": quality, "fit_score": fit_score,
         "research_url": f"https://{id_}.com/research",
         "homepage_url": f"https://{id_}.com",
@@ -722,7 +722,7 @@ def test_sample_quality_uses_fetcher_links_when_trial_provided(monkeypatch):
     with tempfile.TemporaryDirectory() as tmp:
         cands_path = Path(tmp) / "fund_candidates.json"
         cands_path.write_text(json.dumps([{
-            "id": "test-fund", "name": "Test Fund", "status": "validated",
+            "id": "test-fund", "name": "Test Fund", "status": "visitable",
             "research_url": "https://example.com/research",
             "homepage_url": "https://example.com",
         }]))

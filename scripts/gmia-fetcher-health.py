@@ -51,7 +51,7 @@ STATE_FILE = LOGS_DIR / "gmia-fetcher-health.json"
 ENV_FILE = Path.home() / ".stock-monitor.env"
 
 # Validated-candidate URL probe (--include-validated): catches the 2026-05-08
-# ares-management failure mode where status flipped to "validated" but the
+# ares-management failure mode where status flipped to "visitable" but the
 # saved research_url was 404 — no test or daily cron noticed for 2 days.
 CANDIDATE_PROBE_TIMEOUT_S = 15
 CANDIDATE_PROBE_UA = (
@@ -611,7 +611,7 @@ def alerts_subject(alerts: dict) -> str:
 
 
 def load_validated_candidates() -> list[dict]:
-    """Load candidates whose status is 'validated' — i.e. ready for trial.
+    """Load candidates whose status is 'visitable' — i.e. ready for trial.
 
     These ARE NOT production sources (no fetcher registered), so the regular
     probe_source() pipeline won't reach them. The probe below is intentionally
@@ -621,7 +621,7 @@ def load_validated_candidates() -> list[dict]:
     if not CANDIDATES_FILE.exists():
         return []
     data = json.loads(CANDIDATES_FILE.read_text())
-    return [c for c in data if c.get("status") == "validated"]
+    return [c for c in data if c.get("status") == "visitable"]
 
 
 def probe_candidate_url(candidate: dict) -> dict:
@@ -701,7 +701,7 @@ def main() -> int:
                         help="run probes but skip state-write and email")
     parser.add_argument("--include-validated", action="store_true",
                         help="also probe URL liveness of validated candidates "
-                             "(catches the 'status=validated but URL is 404' bug)")
+                             "(catches the 'status=visitable but URL is 404' bug)")
     args = parser.parse_args()
 
     sources = load_sources()

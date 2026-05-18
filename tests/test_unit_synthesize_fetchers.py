@@ -44,7 +44,7 @@ def _make_candidate(id_, status, quality, attempted_at=None):
 def test_list_targets_returns_only_inaccessible():
     candidates = [
         _make_candidate("alpha", "inaccessible", "HIGH"),
-        _make_candidate("beta",  "validated",    "HIGH"),
+        _make_candidate("beta",  "visitable",    "HIGH"),
         _make_candidate("gamma", "rejected",     "HIGH"),
     ]
     with patch("synthesize_fetchers.load_candidates", return_value=candidates), \
@@ -193,7 +193,7 @@ def test_auto_reject_only_flips_inaccessible(tmp_path):
     if they have failure history (e.g. left over from a prior status)."""
     cf = tmp_path / "fund_candidates.json"
     cf.write_text(json.dumps([
-        _make_candidate("alpha", "validated", "HIGH"),
+        _make_candidate("alpha", "visitable", "HIGH"),
         _make_candidate("beta", "promoted", "HIGH"),
         _make_candidate("gamma", "rejected", "HIGH"),
     ]) + "\n")
