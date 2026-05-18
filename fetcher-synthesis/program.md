@@ -139,8 +139,10 @@ now = datetime.now(timezone.utc).isoformat()
 
 for c in candidates:
     if c["id"] == "FUNDID":
-        # 成功路径：
-        c["status"] = "validated"
+        # 成功路径：status 设为 "promoted"，auto-promote agent 可直接接手
+        c["status"] = "promoted"
+        c["promoted_at"] = now
+        c["promoted_reason"] = "fetcher_synthesis_success"
         c["synthesis_attempted_at"] = now
         c["synthesis_outcome"] = "success"
         # 失败路径（注释掉成功路径，用这段）：
