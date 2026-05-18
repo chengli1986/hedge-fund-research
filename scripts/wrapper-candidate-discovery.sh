@@ -235,7 +235,7 @@ def group_table(items: list, show_fit: bool = True, show_trial: bool = False) ->
             t = active_trial_info[c["id"]]
             start = datetime.fromisoformat(t["start_date"]).replace(tzinfo=timezone.utc)
             day = (now_dt.replace(tzinfo=None) - start.replace(tzinfo=None)).days + 1
-            trial_day = f' <span style="color:#0969da;font-size:10px">Day {day}/3</span>'
+            trial_day = f' <span style="color:#0969da;font-size:10px">Day {day}/7</span>'
         fit_cell = fit_pct(c.get("fit_score")) if show_fit else "—"
         notes_full = c.get("notes") or ""
         is_rec = notes_full.startswith("RECOMMEND")
@@ -312,9 +312,9 @@ def pass_pending_section(items: list) -> str:
     return f"""
 <div style="margin:0 0 20px;border-left:3px solid {color};padding-left:10px">
   <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px">
-    <span style="font-size:15px;font-weight:700;color:{color}">✅ Trial Passed — Promote?</span>
+    <span style="font-size:15px;font-weight:700;color:{color}">✅ Trial Passed — Awaiting Auto-Promote</span>
     <span style="background:{color};color:#fff;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:600">{count}</span>
-    <span style="color:#959da5;font-size:12px">Trial 已通过·等待人工晋升到 sources.json</span>
+    <span style="color:#959da5;font-size:12px">Trial 已通过·等 auto-promote 次日 02:30 BJT 自动 wire 入 sources.json（无需人工操作）</span>
   </div>
   {pass_pending_table(items)}
 </div>"""
@@ -347,7 +347,7 @@ stats = {
 stats_bar = " &nbsp;·&nbsp; ".join([
     f'<span style="color:#1a7f37;font-weight:600">🟢 Production {stats["production"]}</span>',
     f'<span style="color:#0969da;font-weight:600">🔵 Trials {stats["trials"]}</span>',
-    f'<span style="color:#8250df;font-weight:600">✅ Promote? {stats["pass_pending"]}</span>',
+    f'<span style="color:#8250df;font-weight:600">✅ Awaiting Auto-Promote {stats["pass_pending"]}</span>',
     f'<span style="color:#9a6700;font-weight:600">🟡 Queue {stats["queue"]}</span>',
     f'<span style="color:#cf222e;font-weight:600">🟠 Inaccessible {stats["inaccessible"]}</span>',
     f'<span style="color:#57606a;font-weight:600">🌱 Seed {stats["seed"]}</span>',
@@ -356,7 +356,7 @@ stats_bar = " &nbsp;·&nbsp; ".join([
 
 body_sections = (
     section("🟢", "Production", "每日 pipeline 正在抓取", prod_items, "#1a7f37", show_fit=False)
-    + section("🔵", "Active Trials", "3天窗口·每日质量采样", active_trial_candidates, "#0969da", show_trial=True)
+    + section("🔵", "Active Trials", "7天窗口·每日质量采样", active_trial_candidates, "#0969da", show_trial=True)
     + pass_pending_section(pass_pending)
     + section("🟡", "Queue", "已验证·等待进入 Trial", queue, "#9a6700")
     + section("🟠", "Inaccessible", "JS渲染/403阻断·Fetcher Synthesis 目标", inaccessible, "#cf222e")
@@ -379,8 +379,8 @@ html = f"""<html><body style="font-family:-apple-system,BlinkMacSystemFont,'Sego
   <strong style="color:#1f2328">如何解读本报告</strong><br>
   <strong>状态含义：</strong>
   🟢 Production — 已接入每日抓取 pipeline；
-  🔵 Active Trials — 3天试运行，验证可访问性和内容质量；
-  ✅ Trial Passed — Trial 已通过，等待人工晋升至 sources.json（需操作）；
+  🔵 Active Trials — 7天试运行，验证可访问性和内容质量；
+  ✅ Trial Passed — Trial 已通过，等 auto-promote 次日 02:30 BJT 自动 wire 入 sources.json（无需人工操作）；
   🟡 Queue — 已通过人工或 AI 验证，等待进入 Trial；
   🟠 Inaccessible — 技术阻断（JS渲染/403），Fetcher Synthesis 自动尝试生成新爬虫；
   🌱 Seed — 待评分候选；
