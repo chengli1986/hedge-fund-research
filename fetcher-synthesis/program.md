@@ -127,6 +127,13 @@ python3 -m pytest tests/ -q --timeout=30 2>&1 | tail -5
 
 ### Phase 5 — 更新 `fund_candidates.json`
 
+**两种成功路径**（synthesis 只验证"能不能抓"，trial 验证"内容值不值得抓"）：
+
+1. **`synthesis_priority=True`**（5-14 引入的 trial-PASS 短路路径）：trial 已经验过质量 → 直接 `status="promoted"`，进 auto-promote 队列
+2. **标准 `inaccessible` 路径**（原本就因 httpx 抓不到无法 trial）：fetcher 修好了 → `status="visitable"` → 让 trial-manager 重新验证内容质量 → trial PASS 才 promoted
+
+设计原理：trial 是质量唯一守门员，synthesis 不绕过 trial。否则会出现"trial 已判定低质 → synthesis 让它进生产 → GMIA 拿到低质内容"的 bug（典型案例：pinebridge 5-04 trial avg_quality=0.237 fail，但因 synthesis success 被错误 promoted）。
+
 ```python
 import json
 from datetime import datetime, timezone
@@ -139,12 +146,32 @@ now = datetime.now(timezone.utc).isoformat()
 
 for c in candidates:
     if c["id"] == "FUNDID":
-        # 成功路径：status 设为 "promoted"，auto-promote agent 可直接接手
-        c["status"] = "promoted"
-        c["promoted_at"] = now
-        c["promoted_reason"] = "fetcher_synthesis_success"
         c["synthesis_attempted_at"] = now
         c["synthesis_outcome"] = "success"
+
+        if c.get("synthesis_priority"):
+            # 路径 1: trial-PASS 短路 (5-14 引入) — trial 已验质量
+            c["status"] = "promoted"
+            c["promoted_at"] = now
+            c["promoted_reason"] = "fetcher_synthesis_success (trial-PASS shortcut)"
+        else:
+            # 路径 2: 标准 inaccessible — trial 没验过质量，让它进 trial
+            c["status"] = "visitable"
+            # 清理 fail_quantity history entry（如有）—— 那些 0 articles 是
+            # fetcher 缺失的副作用，不是 candidate 本身的问题。fetcher 修好
+            # 后让 trial-manager 重新评估。保留 fail_quality entry —— 质量
+            # fail 是内容本身的问题，跟 fetcher 无关，不能被 synthesis 洗掉。
+            ts_file = Path("config/trial-state.json")
+            ts = json.loads(ts_file.read_text())
+            before = len(ts["history"])
+            ts["history"] = [
+                h for h in ts["history"]
+                if not (h["id"] == "FUNDID" and h.get("outcome") == "fail_quantity")
+            ]
+            cleared = before - len(ts["history"])
+            ts_file.write_text(json.dumps(ts, indent=2, ensure_ascii=False) + "\n")
+            if cleared:
+                print(f"Cleared {cleared} fail_quantity history entry/entries for FUNDID — re-trial now possible")
         # 失败路径（注释掉成功路径，用这段）：
         # c["synthesis_attempted_at"] = now
         # c["synthesis_outcome"] = "failed"
@@ -154,6 +181,15 @@ out = candidates if isinstance(data, list) else {**data, "candidates": candidate
 f.write_text(json.dumps(out, indent=2, ensure_ascii=False) + "\n")
 print(f"Updated FUNDID")
 ```
+
+**修改前后对比**：
+
+| 场景 | 旧逻辑（a788fd2 引入的 bug） | 新逻辑（恢复设计原意） |
+|---|---|---|
+| trial fail_quantity → synthesis success | 直接 promoted（跳过 trial 质量验证）❌ | visitable + 清 fail_quantity history → 重新 trial ✓ |
+| trial fail_quality → synthesis success | 直接 promoted（绕过 trial 已做的"质量不行"判定）❌ | visitable + 保留 fail_quality history → trial-manager 不再接 → 候选孤儿（需人工决策）✓ |
+| trial PASS 但缺 fetcher (`synthesis_priority=True`) → synthesis success | 直接 promoted ✓ | 直接 promoted ✓ (保留旧行为) |
+| inaccessible 从未 trial → synthesis success | 直接 promoted ❌ | visitable → 进 trial 验质量 ✓ |
 
 ### Phase 6 — 提交
 
