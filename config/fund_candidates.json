@@ -86,7 +86,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.97,
-    "notes": "Trial failed: 0 articles detected across 3 days — site likely requires JS rendering or selector is broken. Routed to fetcher-synthesis queue.",
+    "notes": "RECOMMEND: macro/equity/credit/quant research (quality 0.9); trial fail (0 articles) → Playwright fetcher synthesized 2026-05-17, awaiting auto-promote",
     "research_links": [
       {
         "url": "https://www.deshaw.com/library",
@@ -1721,7 +1721,7 @@
       "multi_asset"
     ],
     "official_domain": "www.ares.com",
-    "notes": "Still 403 on all pages; JS-rendered, cannot access via WebFetch",
+    "notes": "RECOMMEND: private credit/PE/alternatives/insurance research (quality 0.7); 403 + JS-rendered → Playwright fetcher synthesized 2026-05-17, awaiting auto-promote",
     "topics": "private credit, private equity, alternatives, insurance",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
