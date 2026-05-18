@@ -293,6 +293,19 @@
       "notable_authors": [],
       "expected_hostname": "am.gs.com",
       "max_articles": 10
+    },
+    {
+      "id": "robeco",
+      "strategy_tags": ["quant", "esg_climate", "emerging_markets", "multi_asset"],
+      "name": "Robeco",
+      "short_name": "Robeco",
+      "url": "https://www.robeco.com/en-int/insights",
+      "method": "playwright",
+      "frequency": "weekly",
+      "description": "Dutch asset manager (~€200B AUM) headquartered in Rotterdam, founded 1929. Pioneer in quantitative equity investing and sustainable/ESG integration since the 1990s. Strong franchises in emerging-markets equity, global credit and factor-based strategies; Insights publishes quant research, ESG/climate analysis and EM/macro commentary.",
+      "notable_authors": [],
+      "expected_hostname": "robeco.com",
+      "max_articles": 10
     }
   ],
   "settings": {
