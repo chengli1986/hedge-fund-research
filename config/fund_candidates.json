@@ -73,7 +73,7 @@
   {
     "id": "de-shaw",
     "name": "D. E. Shaw",
-    "status": "promoted",
+    "status": "visitable",
     "homepage_url": "https://www.deshaw.com",
     "research_url": "https://www.deshaw.com/library",
     "rss_url": null,
@@ -86,7 +86,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.97,
-    "notes": "RECOMMEND: macro/equity/credit/quant research (quality 0.9); trial fail (0 articles) → Playwright fetcher synthesized 2026-05-17, awaiting auto-promote",
+    "notes": "[5-18 reset visitable: re-trial synthesized fetcher to verify 7-day stability] RECOMMEND: macro/equity/credit/quant research (quality 0.9); trial fail (0 articles) → Playwright fetcher synthesized 2026-05-17, awaiting auto-promote",
     "research_links": [
       {
         "url": "https://www.deshaw.com/library",
@@ -119,9 +119,7 @@
     "source": "auto_discovered",
     "quality_score": 0.9,
     "synthesis_attempted_at": "2026-05-17T08:30:42.494662+00:00",
-    "synthesis_outcome": "success",
-    "promoted_at": "2026-05-18T08:15:50.343378+00:00",
-    "promoted_reason": "fetcher_synthesis_success"
+    "synthesis_outcome": "success"
   },
   {
     "id": "blackstone",
@@ -1586,7 +1584,7 @@
     "name": "PineBridge Investments",
     "homepage_url": "https://www.pinebridge.com",
     "source": "manual",
-    "status": "promoted",
+    "status": "visitable",
     "strategy_tags": [
       "fixed_income",
       "emerging_markets",
@@ -1596,7 +1594,7 @@
     "quality": "HIGH",
     "quality_score": 0.85,
     "topics": "fixed income, multi-asset, macro, emerging markets, equities",
-    "notes": "RECOMMEND: Multi-asset+EM research, free, fills FI/EM gap",
+    "notes": "[5-18 force re-trial: cleared 5-04 fail_quality history (avg 0.237). Hypothesis: 5-01→5-04 trial pre-dated 5-17 Playwright fetcher and used trial-manager's generic httpx fallback which may have scraped bios/landing-page links. Now testing whether the synthesized Playwright fetcher returns different (higher-quality) content. If trial fails again → confirmed low quality, status → watchlist.] RECOMMEND: Multi-asset+EM research, free, fills FI/EM gap",
     "last_deep_analyzed_at": "2026-05-10T01:01:12Z",
     "is_publicly_accessible": true,
     "has_article_index": true,
@@ -1637,9 +1635,7 @@
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-04-24T09:03:34.493346+08:00",
     "synthesis_attempted_at": "2026-05-17T08:32:58.639690+00:00",
-    "synthesis_outcome": "success",
-    "promoted_at": "2026-05-18T08:15:50.343378+00:00",
-    "promoted_reason": "fetcher_synthesis_success"
+    "synthesis_outcome": "success"
   },
   {
     "id": "verdad-capital",
@@ -1713,7 +1709,7 @@
     "homepage_url": "https://www.ares.com",
     "research_url": "https://www.ares.com/us/news-and-insights/perspectives",
     "source": "manual",
-    "status": "promoted",
+    "status": "visitable",
     "strategy_tags": [
       "private_credit",
       "private_equity",
@@ -1721,7 +1717,7 @@
       "multi_asset"
     ],
     "official_domain": "www.ares.com",
-    "notes": "RECOMMEND: private credit/PE/alternatives/insurance research (quality 0.7); 403 + JS-rendered → Playwright fetcher synthesized 2026-05-17, awaiting auto-promote",
+    "notes": "[5-18 reset visitable: re-trial synthesized fetcher to verify 7-day stability] RECOMMEND: private credit/PE/alternatives/insurance research (quality 0.7); 403 + JS-rendered → Playwright fetcher synthesized 2026-05-17, awaiting auto-promote",
     "topics": "private credit, private equity, alternatives, insurance",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
@@ -1731,9 +1727,7 @@
     "quality_score": 0.7,
     "fit_score": 0.88,
     "synthesis_attempted_at": "2026-05-17T09:39:29.474699+00:00",
-    "synthesis_outcome": "success",
-    "promoted_at": "2026-05-18T08:15:50.343378+00:00",
-    "promoted_reason": "fetcher_synthesis_success"
+    "synthesis_outcome": "success"
   },
   {
     "id": "natixis-im",
