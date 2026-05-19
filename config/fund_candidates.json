@@ -1147,7 +1147,7 @@
     "rss_url": null,
     "official_domain": "www.pgim.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "Institutional-gated; articles inaccessible for auto-fetch",
+    "notes": "Broad institutional portal; FI+alternatives depth",
     "research_links": [
       {
         "url": "https://www.pgim.com/au/en/institutional/insights",
@@ -1265,10 +1265,10 @@
       "article_signals": 0
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-05-11T01:03:39Z",
+    "last_deep_analyzed_at": "2026-05-19T01:01:44Z",
     "quality": "MEDIUM",
-    "quality_score": 0.5,
-    "topics": "fixed income, private credit, alternatives, ESG, multi-asset",
+    "quality_score": 0.52,
+    "topics": "fixed income, alternatives, private credit, ESG, multi-asset",
     "fit_score": 0.67,
     "last_validated_at": "2026-04-19T09:02:19.020103+08:00",
     "strategy_tags": [
@@ -1282,13 +1282,13 @@
   {
     "id": "aberdeen",
     "name": "Aberdeen Investments",
-    "status": "promoted",
+    "status": "watchlist",
     "homepage_url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research",
     "research_url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/insights",
     "rss_url": null,
     "official_domain": "www.aberdeeninvestments.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "JS-rendered; 0 articles loadable, inaccessible for scraping",
+    "notes": "JS-rendered, 0 articles scraped, gated professional only",
     "research_links": [
       {
         "url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/insights",
@@ -1311,10 +1311,10 @@
       "article_signals": 0
     },
     "screening_reason": "Insufficient article index signals",
-    "quality": "MEDIUM",
-    "quality_score": 0.45,
-    "topics": "macro, global macro research, credit, fixed income, multi-asset",
-    "last_deep_analyzed_at": "2026-05-11T01:03:39Z",
+    "quality": "LOW",
+    "quality_score": 0.32,
+    "topics": "macro, fixed income, multi-asset, emerging markets",
+    "last_deep_analyzed_at": "2026-05-19T01:01:44Z",
     "fit_score": 0.82,
     "strategy_tags": [
       "macro",
@@ -1592,10 +1592,10 @@
       "multi_asset"
     ],
     "quality": "HIGH",
-    "quality_score": 0.85,
+    "quality_score": 0.82,
     "topics": "fixed income, multi-asset, macro, emerging markets, equities",
-    "notes": "[5-18 force re-trial: cleared 5-04 fail_quality history (avg 0.237). Hypothesis: 5-01→5-04 trial pre-dated 5-17 Playwright fetcher and used trial-manager's generic httpx fallback which may have scraped bios/landing-page links. Now testing whether the synthesized Playwright fetcher returns different (higher-quality) content. If trial fails again → confirmed low quality, status → watchlist.] RECOMMEND: Multi-asset+EM research, free, fills FI/EM gap",
-    "last_deep_analyzed_at": "2026-05-10T01:01:12Z",
+    "notes": "RECOMMEND: Multi-asset+EM research, free, fills FI/EM gap",
+    "last_deep_analyzed_at": "2026-05-19T01:01:44Z",
     "is_publicly_accessible": true,
     "has_article_index": true,
     "research_url": "https://www.pinebridge.com/en/our-insights",
@@ -1836,7 +1836,7 @@
       }
     ],
     "discovery_method": "discover_fund_sites",
-    "notes": "Monthly macro podcast + written insights; overlaps Man Group",
+    "notes": "Free monthly articles; macro+equity affiliate views",
     "last_discovered_at": "2026-05-02T09:03:53.598499+08:00",
     "is_publicly_accessible": true,
     "has_article_index": true,
@@ -1854,10 +1854,10 @@
     "screening_reason": "Research index detected",
     "fit_score": 0.85,
     "last_validated_at": "2026-05-03T09:00:33.191261+08:00",
-    "last_deep_analyzed_at": "2026-05-11T01:03:39Z",
+    "last_deep_analyzed_at": "2026-05-19T01:01:44Z",
     "quality": "MEDIUM",
-    "quality_score": 0.55,
-    "topics": "macro, equity, fixed income, portfolio construction"
+    "quality_score": 0.6,
+    "topics": "macro, equity, fixed income, energy, portfolio construction"
   },
   {
     "id": "lazard-am",
