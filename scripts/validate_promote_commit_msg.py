@@ -80,7 +80,8 @@ def validate_haiku_quality(msg: str) -> Tuple[bool, str]:
     if avg < MIN_AVG_QUALITY:
         return False, f"avg={avg} below threshold ({MIN_AVG_QUALITY})"
 
-    rel_matches = re.findall(r"rel\s*=\s*([\d.]+)", msg, re.IGNORECASE)
+    # Accept "rel=0.9" or "rel/dep/ext = 0.95/0.80/0.85" (agent may vary format)
+    rel_matches = re.findall(r"rel\s*(?:/\S+)?\s*=\s*([\d.]+)", msg, re.IGNORECASE)
     if not rel_matches:
         return False, "missing rel=X (per-article relevance)"
 
@@ -110,13 +111,15 @@ def validate_method(msg: str) -> Tuple[bool, str]:
 
 def validate_preview(msg: str) -> Tuple[bool, str]:
     """Check quoted Preview line with >= 50 chars of body text."""
-    # Either: Preview: "..." (straight quotes) or Preview: "..." (curly)
+    # Accept Preview: "..." on one line, or Preview (...): \n "..." on next line.
+    # Use single-quoted pattern to avoid escaping double-quotes in the regex.
     m = re.search(
-        r"Preview\s*:\s*[\"“]([^\"”]+)[\"”]",
+        r'Preview[^:]*:\s*["“”]([^"“”]+)["“”]',
         msg,
+        re.DOTALL,
     )
     if not m:
-        return False, "missing 'Preview: \"...\"' line"
+        return False, 'missing \'Preview: "..."\' line'
     preview = m.group(1).strip()
     if len(preview) < PREVIEW_MIN_CHARS:
         return False, f"preview only {len(preview)} chars (need {PREVIEW_MIN_CHARS})"
