@@ -2831,6 +2831,219 @@
       "avg_quality_score": 0.728
     }
   ],
-  "active_trials": [],
-  "last_summary_sent_date": "2026-05-13"
+  "active_trials": [
+    {
+      "id": "de-shaw",
+      "name": "D. E. Shaw",
+      "research_url": "https://www.deshaw.com/library",
+      "homepage_url": "https://www.deshaw.com",
+      "fit_score": 0.97,
+      "quality": "HIGH",
+      "topics": "macro, equity, credit, quant, portfolio management",
+      "start_date": "2026-05-19",
+      "end_date": null,
+      "daily_checks": {
+        "2026-05-19": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.deshaw.com/library/concentration-game",
+            "https://www.deshaw.com/library/worth-its-weight",
+            "https://www.deshaw.com/library/pjrmi",
+            "https://www.deshaw.com/library/imbalance-sheet",
+            "https://www.deshaw.com/library/tunnel-vision",
+            "https://www.deshaw.com/library/machine-teaching",
+            "https://www.deshaw.com/library/factored-in",
+            "https://www.deshaw.com/library/anchors-that-stay",
+            "https://www.deshaw.com/library/projecting-the-structure-of-us-treasury-debt",
+            "https://www.deshaw.com/assets/articles/DESCO_Market_Insights_Dispersion_in_Stock_Bond_Sensitivities_20220622.pdf"
+          ],
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.deshaw.com/library/concentration-game",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.7,
+              "overall": 0.86,
+              "notes": "Deep analysis of S&P 500 concentration effects on portfolio risk and active management performance, with international comparisons and historical context."
+            },
+            {
+              "url": "https://www.deshaw.com/library/worth-its-weight",
+              "relevance": 0.9,
+              "depth": 0.8,
+              "extractable": 0.65,
+              "overall": 0.81,
+              "notes": "Portfolio optimization framework for assessing gold's utility as hedge asset, using long-term wealth growth forecasting and correlation analysis."
+            },
+            {
+              "url": "https://www.deshaw.com/library/pjrmi",
+              "relevance": 0.15,
+              "depth": 0.6,
+              "extractable": 0.8,
+              "overall": 0.46,
+              "notes": "Technical software engineering article about Python-Java interoperability tool (PJRmi); not investment research or portfolio strategy."
+            }
+          ],
+          "avg_score": 0.71,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 1,
+          "date": "2026-05-19"
+        }
+      ]
+    },
+    {
+      "id": "ares-management",
+      "name": "Ares Management",
+      "research_url": "https://www.ares.com/us/news-and-insights/perspectives",
+      "homepage_url": "https://www.ares.com",
+      "fit_score": 0.88,
+      "quality": "HIGH",
+      "topics": "private credit, private equity, alternatives, insurance",
+      "start_date": "2026-05-19",
+      "end_date": null,
+      "daily_checks": {
+        "2026-05-19": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.ares.com/us/news-and-insights/perspectives/understanding-private-market-fund-structures",
+            "https://www.ares.com/us/news-and-insights/perspectives/real-estate-recovery-running",
+            "https://www.ares.com/us/news-and-insights/perspectives/total-portfolio-thinking-real-world",
+            "https://www.ares.com/us/news-and-insights/perspectives/secondaries-take-spotlight",
+            "https://www.ares.com/us/news-and-insights/perspectives/on-the-ground-around-the-world",
+            "https://www.ares.com/us/news-and-insights/perspectives/esg-across-ares-platform",
+            "https://www.ares.com/us/news-and-insights/perspectives/convergence-digital-infrastructure-and-energy-transition",
+            "https://www.ares.com/us/news-and-insights/perspectives/ares-global-credit-monitor-fourth-quarter-2024",
+            "https://www.ares.com/us/news-and-insights/perspectives/tectonic-shifts-supply-chain",
+            "https://www.ares.com/us/news-and-insights/perspectives/stephane-etroy-interviews-slr-consulting-ceo-bradley-andrews"
+          ],
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.ares.com/us/news-and-insights/perspectives/understanding-private-market-fund-structures",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.6,
+              "overall": 0.76,
+              "notes": "Educational analysis of private market fund structures (closed-end vs. semi-liquid evergreen funds) and liquidity matching principles; substantive but truncated mid-sentence."
+            },
+            {
+              "url": "https://www.ares.com/us/news-and-insights/perspectives/real-estate-recovery-running",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.7,
+              "overall": 0.84,
+              "notes": "Real estate investment thesis with five supporting factors (supply/demand, liquidity, transaction volumes, REIT valuations, fundraising); data-driven but truncated at end."
+            },
+            {
+              "url": "https://www.ares.com/us/news-and-insights/perspectives/total-portfolio-thinking-real-world",
+              "relevance": 0.9,
+              "depth": 0.75,
+              "extractable": 0.5,
+              "overall": 0.76,
+              "notes": "Portfolio strategy framework on Total Portfolio Approach (TPA) vs. asset-class silos; substantive conceptual analysis but significantly truncated mid-discussion."
+            }
+          ],
+          "avg_score": 0.787,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 1,
+          "date": "2026-05-19"
+        }
+      ]
+    },
+    {
+      "id": "pinebridge",
+      "name": "PineBridge Investments",
+      "research_url": "https://www.pinebridge.com/en/our-insights",
+      "homepage_url": "https://www.pinebridge.com",
+      "fit_score": null,
+      "quality": "HIGH",
+      "topics": "fixed income, multi-asset, macro, emerging markets, equities",
+      "start_date": "2026-05-19",
+      "end_date": null,
+      "daily_checks": {
+        "2026-05-19": {
+          "accessible": true,
+          "article_count": 9,
+          "date_count": 9,
+          "article_urls": [
+            "https://www.pinebridge.com/en/insights/investment-strategy-insights-the-straits-fate-and-timing-have-diverging-sector-impacts",
+            "https://www.pinebridge.com/en/insights/capital-market-line-a-passing-energy-shock-meets-a-lasting-productivity-surge",
+            "https://www.pinebridge.com/en/insights/asia-pacific-investment-grade-bonds-q1-2026-review-and-a-look-ahead",
+            "https://www.pinebridge.com/en/insights/investment-strategy-insights-strait-tension-portends-a-short-and-sharp",
+            "https://www.pinebridge.com/en/insights/japan-equities-a-reinflation-powered-rebound-thats-set-to-last",
+            "https://www.pinebridge.com/en/insights/fixed-income-asset-allocation-insights-geopolitical-uncertainty-and",
+            "https://www.pinebridge.com/en/insights/japans-reflation-experiment-boj-hikes-weak-technicals-and-yen-upside",
+            "https://www.pinebridge.com/en/insights/leveraged-finance-asset-allocation-insights-markets-hit-an-ai-inflection-point",
+            "https://www.pinebridge.com/en/insights/investment-strategy-insights-a-commodities-comeback"
+          ],
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.pinebridge.com/en/insights/investment-strategy-insights-the-straits-fate-and-timing-have-diverging-sector-impacts",
+              "relevance": 0.9,
+              "depth": 0.8,
+              "extractable": 0.6,
+              "overall": 0.8,
+              "notes": "Sector-level analysis of Strait of Hormuz geopolitical risk on energy, food, and chemicals with scenario-based timing analysis; text appears truncated mid-sentence."
+            },
+            {
+              "url": "https://www.pinebridge.com/en/insights/capital-market-line-a-passing-energy-shock-meets-a-lasting-productivity-surge",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.7,
+              "overall": 0.86,
+              "notes": "Multi-author macro strategy piece linking energy shock, productivity surge, AI investment, and long-term real rates with detailed reasoning; text truncated at end."
+            },
+            {
+              "url": "https://www.pinebridge.com/en/insights/asia-pacific-investment-grade-bonds-q1-2026-review-and-a-look-ahead",
+              "relevance": 0.7,
+              "depth": 0.3,
+              "extractable": 0.4,
+              "overall": 0.48,
+              "notes": "Brief Asia fixed income commentary on Iran headlines; mostly boilerplate disclosure language, minimal substantive content, heavily truncated."
+            }
+          ],
+          "avg_score": 0.713,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 1,
+          "date": "2026-05-19"
+        }
+      ]
+    }
+  ],
+  "last_summary_sent_date": "2026-05-19"
 }
