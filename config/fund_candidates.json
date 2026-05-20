@@ -86,7 +86,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.97,
-    "notes": "[5-18 reset visitable: re-trial synthesized fetcher to verify 7-day stability] RECOMMEND: macro/equity/credit/quant research (quality 0.9); trial fail (0 articles) → Playwright fetcher synthesized 2026-05-17, awaiting auto-promote",
+    "notes": "RECOMMEND: Proprietary quant/macro; Playwright fetcher live",
     "research_links": [
       {
         "url": "https://www.deshaw.com/library",
@@ -105,7 +105,7 @@
       "article_signals": 1
     },
     "screening_reason": "Insufficient article index signals",
-    "last_deep_analyzed_at": "2026-05-12T01:02:59Z",
+    "last_deep_analyzed_at": "2026-05-20T01:10:00Z",
     "quality": "HIGH",
     "topics": "macro, equity, credit, quant, portfolio management",
     "reject_reason": "no_public_research",
@@ -350,7 +350,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.97,
-    "notes": "RECOMMEND: PE/VC/private credit, soft gate, Apr 2026",
+    "notes": "RECOMMEND: PE/VC benchmarks; institutional gate confirmed",
     "research_links": [
       {
         "url": "https://www.cambridgeassociates.com/insights/private-investments/",
@@ -459,9 +459,9 @@
       "article_signals": 1
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-05-13T01:02:33Z",
+    "last_deep_analyzed_at": "2026-05-20T01:10:00Z",
     "quality": "HIGH",
-    "quality_score": 0.84,
+    "quality_score": 0.78,
     "topics": "private equity, venture capital, private credit, macro, ESG",
     "strategy_tags": [
       "private_equity",
@@ -887,7 +887,7 @@
     "rss_url": null,
     "official_domain": "www.researchaffiliates.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "RECOMMEND: trial passed (4/3 days with articles, quality=0.77)",
+    "notes": "RECOMMEND: Factor/smart-beta; trial-verified, gated web",
     "research_links": [
       {
         "url": "https://www.researchaffiliates.com/insights/publications",
@@ -993,9 +993,9 @@
     "fit_score": 0.94,
     "last_validated_at": "2026-04-19T09:01:48.873166+08:00",
     "quality": "HIGH",
-    "quality_score": 0.9,
+    "quality_score": 0.87,
     "topics": "factor investing, smart beta, fundamental indexing, AI, valuation, economics",
-    "last_deep_analyzed_at": "2026-05-13T01:02:33Z",
+    "last_deep_analyzed_at": "2026-05-20T01:10:00Z",
     "strategy_tags": [
       "quant",
       "equity",
@@ -2128,10 +2128,10 @@
     "last_discovered_at": "2026-05-11T09:00:09.554318+08:00",
     "research_url": "https://www.janushenderson.com/en-us/investor/insights/",
     "quality": "HIGH",
-    "quality_score": 0.78,
+    "quality_score": 0.80,
     "topics": "fixed income, equity, macro, geopolitics, technology",
-    "notes": "RECOMMEND: Free weekly insights, equity+fixed income depth",
-    "last_deep_analyzed_at": "2026-05-11T01:03:39Z",
+    "notes": "RECOMMEND: Free weekly research, verified substantive FI",
+    "last_deep_analyzed_at": "2026-05-20T01:10:00Z",
     "promoted_at": "2026-05-12T10:19:29.746916+08:00"
   },
   {
