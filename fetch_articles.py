@@ -1029,6 +1029,7 @@ def fetch_brookfield(source: dict) -> list[dict]:
             "date_raw": date_raw,
         })
 
+    articles.sort(key=lambda x: x.get("date") or "", reverse=True)
     return articles[:source.get("max_articles", 10)]
 
 
