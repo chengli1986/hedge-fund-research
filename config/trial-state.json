@@ -2880,6 +2880,25 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-05-21": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.deshaw.com/library/concentration-game",
+            "https://www.deshaw.com/library/worth-its-weight",
+            "https://www.deshaw.com/library/pjrmi",
+            "https://www.deshaw.com/library/imbalance-sheet",
+            "https://www.deshaw.com/library/tunnel-vision",
+            "https://www.deshaw.com/library/machine-teaching",
+            "https://www.deshaw.com/library/factored-in",
+            "https://www.deshaw.com/library/anchors-that-stay",
+            "https://www.deshaw.com/library/projecting-the-structure-of-us-treasury-debt",
+            "https://www.deshaw.com/assets/articles/DESCO_Market_Insights_Dispersion_in_Stock_Bond_Sensitivities_20220622.pdf"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -2954,6 +2973,41 @@
           "js_only_checked": 0,
           "day": 2,
           "date": "2026-05-20"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.deshaw.com/library/factored-in",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.85,
+              "overall": 0.89,
+              "notes": "Deep research on carbon footprint reduction in equity portfolios, examining emissions concentration, sector exposure, and portfolio construction trade-offs with detailed data from Russell 1000 Index."
+            },
+            {
+              "url": "https://www.deshaw.com/library/anchors-that-stay",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.8,
+              "overall": 0.86,
+              "notes": "Macro analysis of Fed policy impact on inflation expectations during 2022, using inflation swaps and OIS rates to quantify policy effectiveness with methodological framework."
+            },
+            {
+              "url": "https://www.deshaw.com/library/projecting-the-structure-of-us-treasury-debt",
+              "relevance": 0.9,
+              "depth": 0.75,
+              "extractable": 0.75,
+              "overall": 0.81,
+              "notes": "Technical research on Treasury debt structure projections, describing a modeling tool for forecasting debt issuance patterns and maturity composition with policy implications."
+            }
+          ],
+          "avg_score": 0.853,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 3,
+          "date": "2026-05-21"
         }
       ]
     },
@@ -2988,6 +3042,25 @@
           "fetcher_used": true
         },
         "2026-05-20": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.ares.com/us/news-and-insights/perspectives/taking-long-view",
+            "https://www.ares.com/us/news-and-insights/perspectives/understanding-private-market-fund-structures",
+            "https://www.ares.com/us/news-and-insights/perspectives/real-estate-recovery-running",
+            "https://www.ares.com/us/news-and-insights/perspectives/total-portfolio-thinking-real-world",
+            "https://www.ares.com/us/news-and-insights/perspectives/secondaries-take-spotlight",
+            "https://www.ares.com/us/news-and-insights/perspectives/on-the-ground-around-the-world",
+            "https://www.ares.com/us/news-and-insights/perspectives/esg-across-ares-platform",
+            "https://www.ares.com/us/news-and-insights/perspectives/convergence-digital-infrastructure-and-energy-transition",
+            "https://www.ares.com/us/news-and-insights/perspectives/ares-global-credit-monitor-fourth-quarter-2024",
+            "https://www.ares.com/us/news-and-insights/perspectives/tectonic-shifts-supply-chain"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-05-21": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -3079,6 +3152,41 @@
           "js_only_checked": 0,
           "day": 2,
           "date": "2026-05-20"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.ares.com/us/news-and-insights/perspectives/esg-across-ares-platform",
+              "relevance": 0.6,
+              "depth": 0.2,
+              "extractable": 0.3,
+              "overall": 0.38,
+              "notes": "ESG value creation discussion; mostly promotional with minimal substantive content and login wall barrier"
+            },
+            {
+              "url": "https://www.ares.com/us/news-and-insights/perspectives/convergence-digital-infrastructure-and-energy-transition",
+              "relevance": 0.7,
+              "depth": 0.3,
+              "extractable": 0.2,
+              "overall": 0.44,
+              "notes": "Data center/energy transition infrastructure analysis; brief teaser format with heavy login/subscription requirements and reference to external white paper"
+            },
+            {
+              "url": "https://www.ares.com/us/news-and-insights/perspectives/ares-global-credit-monitor-fourth-quarter-2024",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.95,
+              "overall": 0.91,
+              "notes": "Substantive macro credit analysis comparing current environment to 1995; includes economic data tables, historical parallels, and forward-looking credit market outlook"
+            }
+          ],
+          "avg_score": 0.577,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 3,
+          "date": "2026-05-21"
         }
       ]
     },
@@ -3112,6 +3220,24 @@
           "fetcher_used": true
         },
         "2026-05-20": {
+          "accessible": true,
+          "article_count": 9,
+          "date_count": 9,
+          "article_urls": [
+            "https://www.pinebridge.com/en/insights/global-multi-asset-esg-report-2h25",
+            "https://www.pinebridge.com/en/insights/investment-strategy-insights-the-straits-fate-and-timing-have-diverging-sector-impacts",
+            "https://www.pinebridge.com/en/insights/capital-market-line-a-passing-energy-shock-meets-a-lasting-productivity-surge",
+            "https://www.pinebridge.com/en/insights/asia-pacific-investment-grade-bonds-q1-2026-review-and-a-look-ahead",
+            "https://www.pinebridge.com/en/insights/investment-strategy-insights-strait-tension-portends-a-short-and-sharp",
+            "https://www.pinebridge.com/en/insights/japan-equities-a-reinflation-powered-rebound-thats-set-to-last",
+            "https://www.pinebridge.com/en/insights/fixed-income-asset-allocation-insights-geopolitical-uncertainty-and",
+            "https://www.pinebridge.com/en/insights/japans-reflation-experiment-boj-hikes-weak-technicals-and-yen-upside",
+            "https://www.pinebridge.com/en/insights/leveraged-finance-asset-allocation-insights-markets-hit-an-ai-inflection-point"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-05-21": {
           "accessible": true,
           "article_count": 9,
           "date_count": 9,
@@ -3202,9 +3328,44 @@
           "js_only_checked": 0,
           "day": 2,
           "date": "2026-05-20"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.pinebridge.com/en/insights/fixed-income-asset-allocation-insights-geopolitical-uncertainty-and",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.7,
+              "overall": 0.86,
+              "notes": "Fixed income asset allocation analysis covering geopolitical risks, Fed policy, and credit market positioning with multi-author research team perspective."
+            },
+            {
+              "url": "https://www.pinebridge.com/en/insights/japans-reflation-experiment-boj-hikes-weak-technicals-and-yen-upside",
+              "relevance": 0.9,
+              "depth": 0.4,
+              "extractable": 0.3,
+              "overall": 0.58,
+              "notes": "Podcast transcript on Japan's BoJ policy and yen implications; mostly metadata and legal disclaimers with minimal substantive content extracted."
+            },
+            {
+              "url": "https://www.pinebridge.com/en/insights/leveraged-finance-asset-allocation-insights-markets-hit-an-ai-inflection-point",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.75,
+              "overall": 0.85,
+              "notes": "Leveraged finance analysis examining AI disruption as market inflection point, with sector-specific outlooks and CLO positioning recommendations."
+            }
+          ],
+          "avg_score": 0.763,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 3,
+          "date": "2026-05-21"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-05-20"
+  "last_summary_sent_date": "2026-05-21"
 }
