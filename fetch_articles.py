@@ -339,11 +339,14 @@ def _get_playwright_page(
     wait_ms: int = 5000,
     wait_until: str = "networkidle",
     timeout: int = 30000,
+    init_script: Optional[str] = None,
 ):
     """Launch Playwright, navigate, wait for content, return page HTML.
 
     Sites with always-on analytics beacons (BlackRock, Capital Group) never
     reach `networkidle` — pass `wait_until="domcontentloaded"` for those.
+    Use `init_script` to pre-seed localStorage/cookies before page JS runs
+    (e.g. Osano consent state to unblock dynamically-loaded content).
     """
     from playwright.sync_api import sync_playwright
 
@@ -353,6 +356,8 @@ def _get_playwright_page(
             user_agent=HEADERS["User-Agent"],
             viewport={"width": 1440, "height": 900},
         )
+        if init_script:
+            context.add_init_script(init_script)
         page = context.new_page()
         page.goto(url, wait_until=wait_until, timeout=timeout)
         if wait_selector:
@@ -366,15 +371,49 @@ def _get_playwright_page(
     return html
 
 
+# AQR's Sitecore backend returns data-totalpages=0 (empty article list) unless the
+# request carries a valid Osano consent cookie + shell#lang + Referer from aqr.com.
+# No Playwright needed — articles are fully SSR once these headers/cookies are present.
+# Update _AQR_OSANO_TOKEN if articles stop loading (token has ~1-year lifetime).
+_AQR_OSANO_TOKEN = (
+    "lBVecmehIKRriI_rY5HtooflVbH-f_18C3DCFCWu0U1dStkxpU_1WBQkISt-A-wVHKcX204"
+    "RHo1XSokM7ulNEei-r2qDTpa2m4V7YMZ4ClwpmaMzQ9TYLZ23dbGJn8TsBKH1rh0pw3NKFAUMz"
+    "Hl8zY2JXf1xtfWVKGWiO7eDZBDhUnQOEr-ovB-wTBqFJCS-y2WQSial0IC-xkcSYbAjsGZVqRm"
+    "T-yq4dAb8V4X1If17ULB6vDAiYy2Lua-Y72P0BFIQN_7tI2qGs2FIJkeesVF_4EA3DbzDeQJB1"
+    "d2hBgFsvsfQewTSiaWL1CdTvjhyqzRkcFOMDfI="
+)
+
+
 def fetch_aqr(source: dict) -> list[dict]:
-    """Fetch articles from AQR (Playwright — CSR).
+    """Fetch articles from AQR (requests — SSR with consent cookie).
 
     Structure:
-      Featured: h2 > a.insights-featured-article-v2 + p.article-date
-      List: div.search-list-v2__item > h2 > a + p.article__date
+      Featured: a.insights-featured-article-v2 + p.article-date
+      List: div.search-list-v2__item > a.h2 + p.article__date
+    AQR's Sitecore returns data-totalpages=0 without Osano consent + Referer.
+    Articles are fully server-side rendered when the right cookies are present.
+    Citrix NetScaler rate-limits burst requests — retry once after 15s on empty response.
     """
-    html = _get_playwright_page(source["url"], wait_selector="div.search-list-v2__item")
-    soup = BeautifulSoup(html, "html.parser")
+    _AQR_HEADERS = {
+        # Chrome/124 is required — AQR's Sitecore returns totalpages=0 with Chrome/131+
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Referer": "https://www.aqr.com/",
+    }
+    _AQR_COOKIES = {"osano_consentmanager": _AQR_OSANO_TOKEN, "shell#lang": "en"}
+
+    resp = requests.get(source["url"], headers=_AQR_HEADERS, cookies=_AQR_COOKIES, timeout=30)
+    resp.raise_for_status()
+
+    # If Sitecore returned an empty listing (rate-limited by Citrix NetScaler after a
+    # burst of prior requests from the same IP), wait and retry once.
+    if 'data-totalpages="0"' in resp.text or 'data-totalpages="' not in resp.text:
+        log.warning("AQR: empty response (totalpages=0), retrying after 15s")
+        time.sleep(15)
+        resp = requests.get(source["url"], headers=_AQR_HEADERS, cookies=_AQR_COOKIES, timeout=30)
+        resp.raise_for_status()
+
+    soup = BeautifulSoup(resp.text, "html.parser")
     articles = []
 
     # Featured article
@@ -400,7 +439,7 @@ def fetch_aqr(source: dict) -> list[dict]:
 
     # List articles
     for item in soup.select("div.search-list-v2__item"):
-        link = item.select_one("h2 a")
+        link = item.select_one("a.h2")
         if not link:
             continue
         title = link.get_text(strip=True)
