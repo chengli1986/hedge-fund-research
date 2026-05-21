@@ -271,7 +271,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.94,
-    "notes": "RECOMMEND: insights page 403 today; prior trial passed",
+    "notes": "Site persists 403 via WebFetch; prior Playwright trial showed MEDIUM quality",
     "research_links": [
       {
         "url": "https://www.kkr.com/insights",
@@ -320,7 +320,7 @@
       "article_signals": 1
     },
     "screening_reason": "Insufficient article index signals",
-    "last_deep_analyzed_at": "2026-05-13T01:02:33Z",
+    "last_deep_analyzed_at": "2026-05-21T01:01:50Z",
     "quality": "MEDIUM",
     "topics": "private equity, macro, infrastructure, credit",
     "strategy_tags": [
@@ -1422,13 +1422,14 @@
     "strategy_tags": [
       "private_credit",
       "private_equity",
-      "fixed_income"
+      "fixed_income",
+      "multi_asset"
     ],
     "quality": "MEDIUM",
-    "quality_score": 0.63,
+    "quality_score": 0.6,
     "topics": "private credit, private equity, structured credit, macro",
-    "notes": "Mixed: daily posts but sampled article is gated whitepaper",
-    "last_deep_analyzed_at": "2026-05-13T01:02:33Z",
+    "notes": "Frequent posts; mostly interviews/thought leadership, mixed gating",
+    "last_deep_analyzed_at": "2026-05-21T01:01:50Z",
     "research_url": "https://www.apollo.com/insights-news/insights",
     "official_domain": "www.apollo.com",
     "research_links": [
@@ -2128,7 +2129,7 @@
     "last_discovered_at": "2026-05-11T09:00:09.554318+08:00",
     "research_url": "https://www.janushenderson.com/en-us/investor/insights/",
     "quality": "HIGH",
-    "quality_score": 0.80,
+    "quality_score": 0.8,
     "topics": "fixed income, equity, macro, geopolitics, technology",
     "notes": "RECOMMEND: Free weekly research, verified substantive FI",
     "last_deep_analyzed_at": "2026-05-20T01:10:00Z",
@@ -2325,5 +2326,30 @@
     "last_deep_analyzed_at": "2026-05-18T01:05:00Z",
     "quality": "LOW",
     "quality_score": 0.0
+  },
+  {
+    "id": "generation-investment-management",
+    "name": "Generation Investment Management",
+    "homepage_url": "https://www.generationim.com",
+    "research_url": "https://www.generationim.com/our-thinking/insights/how-we-think-about-behavioural-biases-in-investing/",
+    "source": "manual",
+    "status": "discovered",
+    "strategy_tags": [
+      "esg_climate",
+      "equity",
+      "private_equity"
+    ],
+    "topics": "ESG, climate, sustainability, equity",
+    "notes": "ESG-focused, annual Sustainability Trends Report, free access",
+    "official_domain": "www.generationim.com",
+    "research_links": [
+      {
+        "url": "https://www.generationim.com/our-thinking/insights/how-we-think-about-behavioural-biases-in-investing/",
+        "label": "Take me to the Insight",
+        "path": "our-thinking/insights/how-we-think-about-behavioural-biases-in-investing"
+      }
+    ],
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-05-21T09:03:01.792783+08:00"
   }
 ]
