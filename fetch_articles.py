@@ -371,27 +371,17 @@ def _get_playwright_page(
     return html
 
 
-# AQR's Sitecore backend returns data-totalpages=0 (empty article list) unless the
-# request carries a valid Osano consent cookie + shell#lang + Referer from aqr.com.
-# No Playwright needed — articles are fully SSR once these headers/cookies are present.
-# Update _AQR_OSANO_TOKEN if articles stop loading (token has ~1-year lifetime).
-_AQR_OSANO_TOKEN = (
-    "lBVecmehIKRriI_rY5HtooflVbH-f_18C3DCFCWu0U1dStkxpU_1WBQkISt-A-wVHKcX204"
-    "RHo1XSokM7ulNEei-r2qDTpa2m4V7YMZ4ClwpmaMzQ9TYLZ23dbGJn8TsBKH1rh0pw3NKFAUMz"
-    "Hl8zY2JXf1xtfWVKGWiO7eDZBDhUnQOEr-ovB-wTBqFJCS-y2WQSial0IC-xkcSYbAjsGZVqRm"
-    "T-yq4dAb8V4X1If17ULB6vDAiYy2Lua-Y72P0BFIQN_7tI2qGs2FIJkeesVF_4EA3DbzDeQJB1"
-    "d2hBgFsvsfQewTSiaWL1CdTvjhyqzRkcFOMDfI="
-)
+# AQR's Sitecore is fully SSR with the right headers; no consent cookie needed.
+# Previously required an Osano consent token, but an expired/invalid token now causes
+# Sitecore to return data-totalpages=0 (empty list). Omitting the cookie works correctly.
 
 
 def fetch_aqr(source: dict) -> list[dict]:
-    """Fetch articles from AQR (requests — SSR with consent cookie).
+    """Fetch articles from AQR (requests — SSR).
 
     Structure:
       Featured: a.insights-featured-article-v2 + p.article-date
       List: div.search-list-v2__item > a.h2 + p.article__date
-    AQR's Sitecore returns data-totalpages=0 without Osano consent + Referer.
-    Articles are fully server-side rendered when the right cookies are present.
     Citrix NetScaler rate-limits burst requests — retry once after 15s on empty response.
     """
     _AQR_HEADERS = {
@@ -400,7 +390,7 @@ def fetch_aqr(source: dict) -> list[dict]:
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Referer": "https://www.aqr.com/",
     }
-    _AQR_COOKIES = {"osano_consentmanager": _AQR_OSANO_TOKEN, "shell#lang": "en"}
+    _AQR_COOKIES = {"shell#lang": "en"}
 
     resp = requests.get(source["url"], headers=_AQR_HEADERS, cookies=_AQR_COOKIES, timeout=30)
     resp.raise_for_status()
