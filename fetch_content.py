@@ -23,6 +23,7 @@ import logging
 import os
 import re
 import tempfile
+import time
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Optional
@@ -646,21 +647,27 @@ def _fetch_content_troweprice(article: dict) -> Optional[tuple[Path, str]]:
     url = article["url"]
     log.info("  T.Rowe Price: fetching article page %s", url)
 
-    try:
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            context = browser.new_context(
-                user_agent=HEADERS["User-Agent"],
-                viewport={"width": 1440, "height": 900},
-            )
-            page = context.new_page()
-            page.goto(url, wait_until="networkidle", timeout=30000)
-            page.wait_for_timeout(2000)
-            html = page.content()
-            browser.close()
-    except Exception as e:
-        log.error("  T.Rowe Price: Playwright fetch failed: %s", e)
-        return None
+    html = ""
+    for attempt in range(1, 3):
+        try:
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                context = browser.new_context(
+                    user_agent=HEADERS["User-Agent"],
+                    viewport={"width": 1440, "height": 900},
+                )
+                page = context.new_page()
+                page.goto(url, wait_until="networkidle", timeout=30000)
+                page.wait_for_timeout(2000)
+                html = page.content()
+                browser.close()
+            break
+        except Exception as e:
+            log.warning("  T.Rowe Price: Playwright attempt %d failed: %s", attempt, e)
+            if attempt == 2:
+                log.error("  T.Rowe Price: all attempts failed, giving up")
+                return None
+            time.sleep(5)
 
     text = _normalize_html(
         html,

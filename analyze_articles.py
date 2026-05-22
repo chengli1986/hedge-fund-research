@@ -122,7 +122,13 @@ def _call_gemini(prompt: str, api_key: str) -> tuple[str, dict, str]:
     )
     resp.raise_for_status()
     data = resp.json()
-    text = data["candidates"][0]["content"]["parts"][0]["text"]
+    candidate = data["candidates"][0]
+    content = candidate.get("content", {})
+    parts = content.get("parts", [])
+    if not parts:
+        finish_reason = candidate.get("finishReason", "UNKNOWN")
+        raise ValueError(f"Gemini returned no content parts (finishReason={finish_reason})")
+    text = parts[0]["text"]
     usage = data.get("usageMetadata", {})
     return (text, usage, "gemini-2.5-pro")
 

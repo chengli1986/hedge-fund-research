@@ -30,7 +30,7 @@
       "name": "AQR Capital Management",
       "short_name": "AQR",
       "url": "https://www.aqr.com/Insights/Research",
-      "method": "playwright",
+      "method": "requests",
       "frequency": "monthly",
       "description": "Quantitative investing pioneer. Factor investing, alternatives, tax-aware.",
       "notable_authors": ["Cliff Asness", "Antti Ilmanen", "Jordan Brooks", "Ronen Israel"],

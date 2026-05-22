@@ -2046,6 +2046,10 @@ def fetch_robeco(source: dict) -> list[dict]:
         seen.add(url_target)
         if not _validate_hostname(url_target, expected_host):
             continue
+        # Skip podcast and video pages — content fetch extracts 0 chars from them
+        if re.search(r"/podcast|/video|/webinar", href, re.IGNORECASE):
+            log.debug("Robeco: skipping non-article URL %s", url_target)
+            continue
 
         title = ""
         for h_sel in ("h2", "h3", "h4"):
