@@ -2899,6 +2899,25 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-05-22": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.deshaw.com/library/concentration-game",
+            "https://www.deshaw.com/library/worth-its-weight",
+            "https://www.deshaw.com/library/pjrmi",
+            "https://www.deshaw.com/library/imbalance-sheet",
+            "https://www.deshaw.com/library/tunnel-vision",
+            "https://www.deshaw.com/library/machine-teaching",
+            "https://www.deshaw.com/library/factored-in",
+            "https://www.deshaw.com/library/anchors-that-stay",
+            "https://www.deshaw.com/library/projecting-the-structure-of-us-treasury-debt",
+            "https://www.deshaw.com/assets/articles/DESCO_Market_Insights_Dispersion_in_Stock_Bond_Sensitivities_20220622.pdf"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -3008,6 +3027,16 @@
           "js_only_checked": 0,
           "day": 3,
           "date": "2026-05-21"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "Could not extract text from any article",
+          "js_only_count": 1,
+          "js_only_checked": 1,
+          "day": 4,
+          "date": "2026-05-22"
         }
       ]
     },
@@ -3075,6 +3104,25 @@
             "https://www.ares.com/us/news-and-insights/perspectives/convergence-digital-infrastructure-and-energy-transition",
             "https://www.ares.com/us/news-and-insights/perspectives/ares-global-credit-monitor-fourth-quarter-2024",
             "https://www.ares.com/us/news-and-insights/perspectives/tectonic-shifts-supply-chain"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-05-22": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.ares.com/us/news-and-insights/perspectives/driving-value-creation-unlocking-liquidity-private-equity-secondaries",
+            "https://www.ares.com/us/news-and-insights/perspectives/taking-long-view",
+            "https://www.ares.com/us/news-and-insights/perspectives/understanding-private-market-fund-structures",
+            "https://www.ares.com/us/news-and-insights/perspectives/real-estate-recovery-running",
+            "https://www.ares.com/us/news-and-insights/perspectives/total-portfolio-thinking-real-world",
+            "https://www.ares.com/us/news-and-insights/perspectives/secondaries-take-spotlight",
+            "https://www.ares.com/us/news-and-insights/perspectives/on-the-ground-around-the-world",
+            "https://www.ares.com/us/news-and-insights/perspectives/esg-across-ares-platform",
+            "https://www.ares.com/us/news-and-insights/perspectives/convergence-digital-infrastructure-and-energy-transition",
+            "https://www.ares.com/us/news-and-insights/perspectives/ares-global-credit-monitor-fourth-quarter-2024"
           ],
           "error": null,
           "fetcher_used": true
@@ -3187,6 +3235,25 @@
           "js_only_checked": 0,
           "day": 3,
           "date": "2026-05-21"
+        },
+        {
+          "sampled": 1,
+          "articles": [
+            {
+              "url": "https://www.ares.com/us/news-and-insights/perspectives/driving-value-creation-unlocking-liquidity-private-equity-secondaries",
+              "relevance": 0.85,
+              "depth": 0.7,
+              "extractable": 0.6,
+              "overall": 0.74,
+              "notes": "Investment strategy analysis on PE market shift toward operational value creation and secondaries liquidity mechanisms in higher-rate environment; truncated at end"
+            }
+          ],
+          "avg_score": 0.74,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 4,
+          "date": "2026-05-22"
         }
       ]
     },
@@ -3238,6 +3305,24 @@
           "fetcher_used": true
         },
         "2026-05-21": {
+          "accessible": true,
+          "article_count": 9,
+          "date_count": 9,
+          "article_urls": [
+            "https://www.pinebridge.com/en/insights/global-multi-asset-esg-report-2h25",
+            "https://www.pinebridge.com/en/insights/investment-strategy-insights-the-straits-fate-and-timing-have-diverging-sector-impacts",
+            "https://www.pinebridge.com/en/insights/capital-market-line-a-passing-energy-shock-meets-a-lasting-productivity-surge",
+            "https://www.pinebridge.com/en/insights/asia-pacific-investment-grade-bonds-q1-2026-review-and-a-look-ahead",
+            "https://www.pinebridge.com/en/insights/investment-strategy-insights-strait-tension-portends-a-short-and-sharp",
+            "https://www.pinebridge.com/en/insights/japan-equities-a-reinflation-powered-rebound-thats-set-to-last",
+            "https://www.pinebridge.com/en/insights/fixed-income-asset-allocation-insights-geopolitical-uncertainty-and",
+            "https://www.pinebridge.com/en/insights/japans-reflation-experiment-boj-hikes-weak-technicals-and-yen-upside",
+            "https://www.pinebridge.com/en/insights/leveraged-finance-asset-allocation-insights-markets-hit-an-ai-inflection-point"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-05-22": {
           "accessible": true,
           "article_count": 9,
           "date_count": 9,
@@ -3363,9 +3448,17 @@
           "js_only_checked": 0,
           "day": 3,
           "date": "2026-05-21"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 4,
+          "date": "2026-05-22"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-05-21"
+  "last_summary_sent_date": "2026-05-22"
 }
