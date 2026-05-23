@@ -487,10 +487,10 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.9,
-    "last_deep_analyzed_at": "2026-05-15T01:02:46Z",
+    "last_deep_analyzed_at": "2026-05-23T01:30:00Z",
     "quality": "MEDIUM",
-    "topics": "macro, equity, fixed income, investment strategy",
-    "notes": "RECOMMEND: trial passed (4/3 days with articles, quality=0.73)",
+    "topics": "macro, equity, fixed income, geopolitics, multi-asset",
+    "notes": "Multi-asset market briefs, free articles, overlaps JPMAM",
     "research_links": [
       {
         "url": "https://am.gs.com/en-us/advisors/insights/list",
@@ -531,7 +531,7 @@
       "multi_asset"
     ],
     "source": "manual",
-    "quality_score": 0.6
+    "quality_score": 0.67
   },
   {
     "id": "wellington",
@@ -549,7 +549,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.8843,
-    "notes": "RECOMMEND: Multi-asset research, weekly cadence, free access",
+    "notes": "RECOMMEND: Weekly institutional research, free access confirmed",
     "research_links": [
       {
         "url": "https://www.wellington.com/en/insights",
@@ -628,9 +628,9 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-05-15T01:02:46Z",
+    "last_deep_analyzed_at": "2026-05-23T01:30:00Z",
     "quality": "HIGH",
-    "topics": "macro, fixed income, equity, private investing, multi-asset",
+    "topics": "macro, fixed income, equity, private investing, ESG, alternatives",
     "strategy_tags": [
       "macro",
       "equity",
@@ -639,7 +639,7 @@
       "multi_asset"
     ],
     "source": "manual",
-    "quality_score": 0.82
+    "quality_score": 0.83
   },
   {
     "id": "amundi",
@@ -1656,10 +1656,10 @@
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-04-29T09:00:09.051367+08:00",
-    "last_deep_analyzed_at": "2026-05-15T01:02:46Z",
+    "last_deep_analyzed_at": "2026-05-23T01:30:00Z",
     "quality": "HIGH",
     "quality_score": 0.87,
-    "topics": "quant, value, factor investing, global equity, credit"
+    "topics": "quant, value investing, factor investing, global equity, credit"
   },
   {
     "id": "alliancebernstein",
