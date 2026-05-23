@@ -209,6 +209,20 @@ _FUND_PROFILES: dict[str, dict] = {
         "notable_en": "Founded by Rob Arnott (2002); pioneered fundamental indexation (RAFI) as alternative to cap-weighted benchmarks; widely-cited Capital Market Assumptions and smart-beta research; licensed strategies on ~$170B of assets.",
         "notable_zh": "Rob Arnott 2002 年创立；首创基本面指数（RAFI）作为市值加权基准的替代方案；Capital Market Assumptions 与 Smart Beta 研究为机构广泛引用；授权策略覆盖约 1700 亿美元资产规模。",
     },
+    "gsam": {
+        "founded": "1988", "aum": "~$3T", "hq": "New York, USA",
+        "type_en": "Asset Management Arm of Global IB", "type_zh": "全球投行旗下资产管理子公司",
+        "desc_zh": "高盛集团旗下资产管理子公司，全球前十大资管之一，跨公开市场与另类资产管理约 3 万亿美元。业务涵盖多资产配置、主动股票、固定收益（含 GIPS 机构平台）、ETF 与流动性管理，以及由 External Investing Group 与并购整合后的另类平台主导的私募股权、私募信贷、地产、基础设施和对冲基金多策略。服务机构、主权基金、保险及顾问渠道。",
+        "notable_en": "Manages one of the world's largest fixed-income franchises; following the 2021 absorption of Goldman's Merchant Banking Division and the 2022 NN Investment Partners acquisition, alternatives AUM has scaled to ~$500B (private credit, PE, real assets, hedge funds). Petershill platform takes minority stakes in alternative GPs.",
+        "notable_zh": "全球最大固收主动管理平台之一；2021 年整合高盛 Merchant Banking 部门、2022 年完成 NN Investment Partners 收购后，另类资产管理规模达约 5000 亿美元（私募信贷、私募股权、实物资产、对冲基金）。Petershill 平台对外少数股权投资多家另类 GP。",
+    },
+    "robeco": {
+        "founded": "1929", "aum": "~€200B", "hq": "Rotterdam, Netherlands",
+        "type_en": "Asset Manager", "type_zh": "资产管理公司",
+        "desc_zh": "荷兰资产管理公司（~2000 亿欧元 AUM），1929 年成立于鹿特丹。量化股票投资先驱，1990 年代起将可持续投资 / ESG 全面整合到投资流程。强项：新兴市场股票、全球信贷、因子（价值/动量/质量/低波）策略。",
+        "notable_en": "Quant equity pioneer (factor strategies since the 1990s) and one of the earliest mainstream managers to fully integrate sustainability/ESG into core investing; long-standing emerging-markets equity franchise.",
+        "notable_zh": "量化股票投资先驱（1990 年代起部署因子策略），最早将可持续 / ESG 全面整合到主流投资流程的资管之一；新兴市场股票特许经营历史悠久。",
+    },
 }
 
 _STRATEGY_LABELS: dict[str, str] = {
