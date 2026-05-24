@@ -2367,5 +2367,22 @@
     "last_deep_analyzed_at": "2026-05-22T01:10:00Z",
     "quality": "LOW",
     "quality_score": 0.32
+  },
+  {
+    "id": "rothschild-co-am",
+    "name": "Rothschild & Co Asset Management",
+    "homepage_url": "https://www.rothschildandco.com",
+    "research_url": "https://www.rothschildandco.com/en/newsroom/insights/",
+    "source": "manual",
+    "status": "inaccessible",
+    "inaccessible_reason": "EC2-403 on homepage and article pages; index page accessible but content blocked",
+    "strategy_tags": ["macro", "multi_asset", "equity", "fixed_income"],
+    "topics": "macro, wealth management, asset allocation, geopolitics, ESG",
+    "quality": "MEDIUM",
+    "quality_score": 0.58,
+    "notes": "Monthly macro insights (728 articles); EC2-403 blocks homepage+articles",
+    "last_deep_analyzed_at": "2026-05-24T01:02:00Z",
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-05-24T01:02:30Z"
   }
 ]
