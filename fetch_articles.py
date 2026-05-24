@@ -397,9 +397,10 @@ def fetch_aqr(source: dict) -> list[dict]:
 
     # If Sitecore returned an empty listing (rate-limited by Citrix NetScaler after a
     # burst of prior requests from the same IP), wait and retry once.
+    # Rate-limit window measured at 30–60s; 15s was insufficient.
     if 'data-totalpages="0"' in resp.text or 'data-totalpages="' not in resp.text:
-        log.warning("AQR: empty response (totalpages=0), retrying after 15s")
-        time.sleep(15)
+        log.warning("AQR: empty response (totalpages=0), retrying after 60s")
+        time.sleep(60)
         resp = requests.get(source["url"], headers=_AQR_HEADERS, cookies=_AQR_COOKIES, timeout=30)
         resp.raise_for_status()
 
