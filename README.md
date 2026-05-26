@@ -8,7 +8,7 @@ Tracks and aggregates research insights, market commentary, and papers from top 
 |------|--------|-----------|---------|
 | **Man Group** | SSR (requests) | Weekly | Macro, quant, systematic trading |
 | **Bridgewater Associates** | SSR (requests) | Monthly | Macro, risk parity, All Weather — full content + LLM analysis |
-| **AQR Capital** | Playwright (CSR) | Monthly | Factor investing, quantitative research |
+| **AQR Capital** | SSR (requests) | Monthly | Factor investing, quantitative research; Citrix WAF blocks EC2 IPs intermittently — nightly test auto-skips when 0 articles |
 | **GMO LLC** | JSON API | Quarterly | Value contrarian, 7-Year forecasts |
 | **Oaktree Capital** | Playwright (CSR) | Monthly | Howard Marks memos, credit/distressed |
 | **ARK Invest** | RSS feed | Weekly | Analyst Research, Market Commentary |
@@ -18,7 +18,7 @@ Tracks and aggregates research insights, market commentary, and papers from top 
 | **T. Rowe Price** | Playwright (AEM) | Weekly | Equity, fixed income, active management |
 | **PIMCO** | Playwright (Coveo) | Weekly | World's largest fixed-income manager; macro, credit, secular outlook |
 | **Aberdeen Investments** | Playwright (Next.js) | Weekly | EM debt, multi-asset, sustainable investing |
-| **PGIM** | SSR (AEM) | Weekly | Prudential's IM arm; fixed income, private credit, real estate, alternatives |
+| **PGIM** | SSR (AEM) | Quarterly | Prudential's IM arm; fixed income, private credit, real estate, alternatives; free research is quarterly not weekly |
 | **Brookfield Asset Management** | SSR (Drupal) | Monthly | Real assets, infrastructure, renewable power, private equity |
 | **J.P. Morgan Asset Management** | AEM JSON API | Weekly | Multi-asset, fixed income, market insights, Long-Term Capital Market Assumptions |
 | **Verdad Capital** | SSR (requests) | Monthly | Quant value/factor, emerging markets, private equity replication; Boston, ~$500M |
@@ -119,7 +119,7 @@ Scorer weight optimization program using automated experiment loop:
 
 ## Tests
 
-453 passing, 15 deselected — unit, functional, and integration tests (live/nightly tests excluded by default via pytest.ini). Contract tests enforce `sources.json` stays in sync with the `FETCHERS` / `CONTENT_FETCHERS` dispatcher dicts and `BADGE_COLORS` palette, so adding a new production source without wiring the full pipeline fails fast at pytest time. Consistency tests (`tests/test_config_consistency.py`) additionally guard against frequency-vs-observed-cadence drift, validated-candidate URL invariants, and fund-profile coverage (every `sources.json` id must have a profile in `publish._FUND_PROFILES` or `pending_profiles/<id>.json`). `TestOlderArticleFolding` covers the `data-age` recency split (180d boundary inclusive, no-date defaults to recent, page-level toggle button render/suppress).
+453 passing, 1 skipped (AQR WAF block — transient), 15 deselected — unit, functional, and integration tests (live/nightly tests excluded by default via pytest.ini). Contract tests enforce `sources.json` stays in sync with the `FETCHERS` / `CONTENT_FETCHERS` dispatcher dicts and `BADGE_COLORS` palette, so adding a new production source without wiring the full pipeline fails fast at pytest time. Consistency tests (`tests/test_config_consistency.py`) additionally guard against frequency-vs-observed-cadence drift, validated-candidate URL invariants, and fund-profile coverage (every `sources.json` id must have a profile in `publish._FUND_PROFILES` or `pending_profiles/<id>.json`). `TestOlderArticleFolding` covers the `data-age` recency split (180d boundary inclusive, no-date defaults to recent, page-level toggle button render/suppress).
 
 ```bash
 python3 -m pytest tests/ -q
