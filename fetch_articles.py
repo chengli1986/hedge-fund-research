@@ -374,6 +374,15 @@ def _get_playwright_page(
 # AQR's Sitecore is fully SSR with the right headers; no consent cookie needed.
 # Previously required an Osano consent token, but an expired/invalid token now causes
 # Sitecore to return data-totalpages=0 (empty list). Omitting the cookie works correctly.
+#
+# WAF block pattern: Citrix NetScaler WAF (IP reputation) returns the page skeleton with
+# data-totalpages=0 AND empty featured-article content (&nbsp; placeholder).  This is an
+# IP-level block (e.g. datacenter IPs) and a 60s retry won't help — skip retry in that case.
+
+
+def _aqr_is_waf_blocked(html: str) -> bool:
+    """Return True when Citrix NetScaler WAF blocks article content for this IP."""
+    return 'data-totalpages="0"' in html and 'insights-featured-article-v2__content' in html and '<p>&nbsp;</p>' in html
 
 
 def fetch_aqr(source: dict) -> list[dict]:
@@ -382,7 +391,8 @@ def fetch_aqr(source: dict) -> list[dict]:
     Structure:
       Featured: a.insights-featured-article-v2 + p.article-date
       List: div.search-list-v2__item > a.h2 + p.article__date
-    Citrix NetScaler rate-limits burst requests — retry once after 15s on empty response.
+    Citrix NetScaler rate-limits burst requests — retry once after 60s on empty response.
+    If WAF IP-block is detected (empty skeleton), skip retry and return [] immediately.
     """
     _AQR_HEADERS = {
         # Chrome/124 is required — AQR's Sitecore returns totalpages=0 with Chrome/131+
@@ -395,10 +405,10 @@ def fetch_aqr(source: dict) -> list[dict]:
     resp = requests.get(source["url"], headers=_AQR_HEADERS, cookies=_AQR_COOKIES, timeout=30)
     resp.raise_for_status()
 
-    # If Sitecore returned an empty listing (rate-limited by Citrix NetScaler after a
-    # burst of prior requests from the same IP), wait and retry once.
-    # Rate-limit window measured at 30–60s; 15s was insufficient.
     if 'data-totalpages="0"' in resp.text or 'data-totalpages="' not in resp.text:
+        if _aqr_is_waf_blocked(resp.text):
+            log.warning("AQR: Citrix WAF IP-block detected (empty skeleton) — skipping retry")
+            return []
         log.warning("AQR: empty response (totalpages=0), retrying after 60s")
         time.sleep(60)
         resp = requests.get(source["url"], headers=_AQR_HEADERS, cookies=_AQR_COOKIES, timeout=30)
