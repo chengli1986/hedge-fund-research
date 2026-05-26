@@ -306,6 +306,19 @@
       "notable_authors": [],
       "expected_hostname": "robeco.com",
       "max_articles": 10
+    },
+    {
+      "id": "de-shaw",
+      "strategy_tags": ["macro", "equity", "fixed_income", "quant"],
+      "name": "D. E. Shaw",
+      "short_name": "D. E. Shaw",
+      "url": "https://www.deshaw.com/library",
+      "method": "playwright",
+      "frequency": "quarterly",
+      "description": "Quantitative multi-strategy hedge fund (~$60B AUM) founded 1988 by David E. Shaw. Pioneer of systematic/statistical-arbitrage investing with strong technology and computational-science DNA; trades across global equities, macro, credit, convertibles and private capital. Library publishes long-form research on portfolio construction, market microstructure and applied quant techniques.",
+      "notable_authors": [],
+      "expected_hostname": "deshaw.com",
+      "max_articles": 10
     }
   ],
   "settings": {

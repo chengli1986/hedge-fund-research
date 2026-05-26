@@ -1,0 +1,13 @@
+{
+  "id": "de-shaw",
+  "founded": "1988",
+  "aum": "~$60B",
+  "hq": "New York, USA",
+  "type_en": "Quantitative Hedge Fund / Multi-Strategy",
+  "type_zh": "量化对冲基金 / 多策略",
+  "desc_zh": "由计算机科学家 David E. Shaw 于 1988 年创立的量化多策略对冲基金（约 $60B AUM），以系统化/统计套利投资和深度技术能力见长。覆盖全球股票、宏观、信贷、可转债与私募资本；以严格的量化研究流程和强工程化基础设施区别于传统对冲基金。",
+  "notable_en": "Pioneer of computational/statistical-arbitrage investing; alumni network spawned multiple successful funds (Two Sigma, Hudson River Trading). The Library publishes long-form quant research papers (often only 1-3 per year) with academic-style rigor.",
+  "notable_zh": "计算/统计套利量化投资的先驱；前员工创立了多家成功量化对冲基金（Two Sigma、Hudson River Trading）。Library 每年只发布 1-3 篇长篇量化研究论文，学术级别的严谨性。",
+  "_generated_at": "2026-05-26T18:35:00+08:00",
+  "_confidence_notes": "AUM ~$60B is approximate (firm does not publicly disclose; figure based on industry reports as of 2024). Founded date (1988) is well established. HQ New York is firm-stated."
+}

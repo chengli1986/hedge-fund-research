@@ -48,6 +48,7 @@ BADGE_COLORS: dict[str, str] = {
     "research-affiliates": "#c2185b",       # Research Affiliates deep magenta (distinct from all 21 existing colors)
     "gsam": "#4a6fa5",                      # Goldman steel blue (muted vs man/wellington/msci, lighter than pimco navy)
     "robeco": "#2d6a4f",                    # Robeco pine/forest green (ESG heritage; distinct from #3fb950 bright lime and #1e7f3e Brookfield mid-green)
+    "de-shaw": "#cd853f",                   # D. E. Shaw bronze/peru (warm earth; distinct from #c45000 ARK deep-orange and #e8601c Amundi red-orange)
 }
 
 INITIAL_VISIBLE = 20

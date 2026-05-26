@@ -1094,6 +1094,42 @@ def _fetch_content_robeco(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+def _fetch_content_de_shaw(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch D. E. Shaw Library article content via requests (SSR — Next.js).
+
+    Listing page is Next.js CSR (fetch_articles uses Playwright), but article
+    body is SSR-rendered in the initial HTML. Paragraphs live inside
+    `div[class*='Blogs_']` (CSS-modules hashed prefix) containers; the trailing
+    legal disclosure block uses `p.Blogs_MILegal__*` and must be excluded —
+    otherwise ~12% of the saved text is copyright/jurisdiction boilerplate.
+    """
+    url = article["url"]
+    log.info("  D. E. Shaw: fetching article page %s", url)
+
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  D. E. Shaw: fetch failed: %s", e)
+        return None
+
+    soup = BeautifulSoup(resp.text, "html.parser")
+    for tag in soup.select("nav, footer, header, script, style, aside"):
+        tag.decompose()
+
+    paragraphs = soup.select("div[class*='Blogs_'] p:not([class*='MILegal'])")
+    text = "\n".join(p.get_text(strip=True) for p in paragraphs if p.get_text(strip=True))
+
+    if not _check_min_content_length(text):
+        log.warning("  D. E. Shaw: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  D. E. Shaw: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -1119,6 +1155,7 @@ CONTENT_FETCHERS = {
     "research-affiliates": _fetch_content_researchaffiliates,
     "gsam": _fetch_content_gsam,
     "robeco": _fetch_content_robeco,
+    "de-shaw": _fetch_content_de_shaw,
 }
 
 
