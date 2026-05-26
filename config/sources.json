@@ -158,7 +158,7 @@
       "short_name": "PGIM",
       "url": "https://www.pgim.com/au/en/institutional/insights",
       "method": "playwright",
-      "frequency": "weekly",
+      "frequency": "quarterly",
       "description": "Prudential's global investment management arm. Fixed income, private credit, real estate, alternatives.",
       "notable_authors": [],
       "expected_hostname": "pgim.com",
