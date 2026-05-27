@@ -138,7 +138,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.88,
-    "notes": "Trial failed: low quality (0.43)",
+    "notes": "Active posting, but articles often webinar/gated. Score 0.43.",
     "research_links": [
       {
         "url": "https://www.blackstone.com/insights/",
@@ -192,17 +192,16 @@
       "article_signals": 3
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-04-27T01:00:00Z",
+    "last_deep_analyzed_at": "2026-05-27T01:02:57Z",
     "quality": "MEDIUM",
-    "topics": "private credit, private equity, real estate",
+    "topics": "private credit, private equity, real assets",
     "strategy_tags": [
       "private_equity",
       "real_assets",
-      "private_credit",
-      "multi_asset"
+      "private_credit"
     ],
     "source": "manual",
-    "quality_score": 0.42
+    "quality_score": 0.43
   },
   {
     "id": "two-sigma",
@@ -781,7 +780,7 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-05-18T01:05:00Z",
+    "last_deep_analyzed_at": "2026-05-27T01:02:57Z",
     "quality": "MEDIUM",
     "quality_score": 0.68,
     "topics": "equity, AI/tech, macro, fixed income, active management",
@@ -1569,12 +1568,12 @@
       "multi_asset"
     ],
     "discovery_method": "discover_fund_sites",
-    "notes": "MEDIUM quality (0.50): 7 fetched articles split ~3/7 investment commentary (geopolitics/gold/volatility) and ~4/7 advisor practice management. Title-only sampling — article bodies not WebFetch-able (JS-rendered). Released to trial-manager; trial quality sampling will produce the real verdict.",
+    "notes": "JS-rendered; mix ~3/7 investment commentary, ~4/7 advisor practice",
     "no_publish_dates": true,
     "official_domain": "www.capitalgroup.com",
     "research_links": [],
     "last_discovered_at": "2026-04-23T09:00:12.674329+08:00",
-    "last_deep_analyzed_at": "2026-05-18T12:45:29Z",
+    "last_deep_analyzed_at": "2026-05-27T01:02:57Z",
     "quality": "MEDIUM",
     "quality_score": 0.5,
     "topics": "macro, geopolitics, advisor practice (mixed: ~3/7 investment commentary, ~4/7 advisor practice management)",
@@ -2207,14 +2206,13 @@
     "homepage_url": "https://www.matthewsasia.com",
     "research_url": "https://www.matthewsasia.com/insights/",
     "source": "manual",
-    "status": "inaccessible",
+    "status": "visitable",
     "strategy_tags": [
       "equity",
       "emerging_markets",
-      "macro",
-      "multi_asset"
+      "macro"
     ],
-    "notes": "JS-heavy like Franklin Templeton; 337 articles confirmed via WebFetch; needs Playwright",
+    "notes": "Asia EM specialist; landing accessible; articles mix video/text",
     "official_domain": "www.matthewsasia.com",
     "research_links": [
       {
@@ -2290,7 +2288,7 @@
     ],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-05-16T09:04:08.563247+08:00",
-    "is_publicly_accessible": false,
+    "is_publicly_accessible": true,
     "has_article_index": false,
     "last_screened_at": "2026-05-16T09:04:11.701601+08:00",
     "screening_signals": {
@@ -2307,9 +2305,9 @@
     "fit_score": 0.85,
     "last_validated_at": "2026-05-16T09:04:19.082474+08:00",
     "quality": "MEDIUM",
-    "quality_score": 0.62,
+    "quality_score": 0.6,
     "topics": "Asian equities, China, India, Japan, emerging markets",
-    "last_deep_analyzed_at": "2026-05-16T01:04:33Z"
+    "last_deep_analyzed_at": "2026-05-27T01:02:57Z"
   },
   {
     "id": "cohen-steers",
