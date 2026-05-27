@@ -3788,6 +3788,14 @@
           "article_urls": [],
           "error": null,
           "fetcher_used": false
+        },
+        "2026-05-27": {
+          "accessible": true,
+          "article_count": 0,
+          "date_count": 0,
+          "article_urls": [],
+          "error": null,
+          "fetcher_used": false
         }
       },
       "auto_decided": false,
@@ -3800,6 +3808,14 @@
           "error": "No article links found on index page",
           "day": 1,
           "date": "2026-05-26"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No article links found on index page",
+          "day": 2,
+          "date": "2026-05-27"
         }
       ]
     },
@@ -3831,6 +3847,24 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-05-27": {
+          "accessible": true,
+          "article_count": 9,
+          "date_count": 0,
+          "article_urls": [
+            "https://www.capitalgroup.com/advisor/insights/articles/why-ai-artificial-intelligence-will-transform-not-replace-your-job.html",
+            "https://www.capitalgroup.com/advisor/insights/articles/midterm-elections-markets-5-charts.html",
+            "https://www.capitalgroup.com/advisor/insights/articles/looking-beyond-conflict-viewing-volatility-as-opportunity.html",
+            "https://www.capitalgroup.com/advisor/insights/articles/how-ai-is-reshaping-US-equity-markets.html",
+            "https://www.capitalgroup.com/advisor/practicelab/articles/help-clients-sell-a-business.html",
+            "https://www.capitalgroup.com/advisor/insights/articles/ir-retirement-longevity.html",
+            "https://www.capitalgroup.com/advisor/practicelab/articles/david-devoe-improving-human-capital-for-advisors.html",
+            "https://www.capitalgroup.com/advisor/practicelab/articles/AI-prompt-library-for-financial-advisors.html",
+            "https://www.capitalgroup.com/advisor/practicelab/articles/wealth-planning-life-events.html"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -3845,9 +3879,89 @@
           "js_only_checked": 9,
           "day": 1,
           "date": "2026-05-26"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "Could not extract text from any article",
+          "js_only_count": 9,
+          "js_only_checked": 9,
+          "day": 2,
+          "date": "2026-05-27"
+        }
+      ]
+    },
+    {
+      "id": "matthews-asia",
+      "name": "Matthews Asia",
+      "research_url": "https://www.matthewsasia.com/insights/",
+      "homepage_url": "https://www.matthewsasia.com",
+      "fit_score": 0.85,
+      "quality": "MEDIUM",
+      "topics": "Asian equities, China, India, Japan, emerging markets",
+      "start_date": "2026-05-27",
+      "end_date": null,
+      "daily_checks": {
+        "2026-05-27": {
+          "accessible": true,
+          "article_count": 2,
+          "date_count": 0,
+          "article_urls": [
+            "https://www.matthewsasia.com/insights/all-insights/aisas-key-role-in-the-ai-ecosystem/",
+            "https://www.matthewsasia.com/insights/CIO-Outlook/q1-2026-cio-review-and-outlook-transcript/",
+            "https://www.matthewsasia.com/insights/CIO-Outlook/q1-2026-cio-review-and-outlook/",
+            "https://www.matthewsasia.com/insights/emerging-markets/a-perspective-on-the-middle-east-crisis/",
+            "https://www.matthewsasia.com/insights/emerging-markets/an-emerging-markets-perspective-on-the-middle-east/",
+            "https://www.matthewsasia.com/insights/all-insights/how-we-research-and-find-innovative-companies/",
+            "https://www.matthewsasia.com/insights/all-insights/how-we-construct-and-manage-portfolios/",
+            "https://www.matthewsasia.com/insights/all-insights/how-we-approach-investing-in-innovation/",
+            "https://www.matthewsasia.com/insights/india/believing-in-india/"
+          ],
+          "error": null,
+          "fetcher_used": false
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.matthewsasia.com/insights/all-insights/aisas-key-role-in-the-ai-ecosystem/",
+              "relevance": 0.9,
+              "depth": 0.4,
+              "extractable": 0.3,
+              "overall": 0.58,
+              "notes": "Investment thesis on Asia's role in AI supply chain; mostly metadata/teaser without substantive content"
+            },
+            {
+              "url": "https://www.matthewsasia.com/insights/CIO-Outlook/q1-2026-cio-review-and-outlook-transcript/",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.7,
+              "overall": 0.84,
+              "notes": "Detailed Q1 2026 macro review covering geopolitical risk, emerging market performance, and sector analysis; text appears truncated mid-sentence"
+            },
+            {
+              "url": "https://www.matthewsasia.com/insights/CIO-Outlook/q1-2026-cio-review-and-outlook/",
+              "relevance": 0.9,
+              "depth": 0.3,
+              "extractable": 0.2,
+              "overall": 0.52,
+              "notes": "CIO outlook summary on Q1 2026 volatility; appears to be landing page with minimal substantive content"
+            }
+          ],
+          "avg_score": 0.647,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 1,
+          "date": "2026-05-27"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-05-26"
+  "last_summary_sent_date": "2026-05-27"
 }
