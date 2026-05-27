@@ -50,6 +50,7 @@ BADGE_COLORS: dict[str, str] = {
     "robeco": "#2d6a4f",                    # Robeco pine/forest green (ESG heritage; distinct from #3fb950 bright lime and #1e7f3e Brookfield mid-green)
     "de-shaw": "#cd853f",                   # D. E. Shaw bronze/peru (warm earth; distinct from #c45000 ARK deep-orange and #e8601c Amundi red-orange)
     "pinebridge": "#00838f",                # PineBridge deep cyan (matches "pinebridgeblue" site palette; distinct from #006d75 Janus emerald-teal and #2ba397 Cambridge teal)
+    "ares-management": "#b85450",           # Ares dark coral (distinct from #f85149 Oaktree bright red, #9d2235 Aberdeen burgundy, #7c2d12 Verdad terracotta, and warm-orange ARK/Amundi)
 }
 
 INITIAL_VISIBLE = 20

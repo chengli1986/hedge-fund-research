@@ -504,6 +504,24 @@
       "notable_authors": [],
       "expected_hostname": "pinebridge.com",
       "max_articles": 10
+    },
+    {
+      "id": "ares-management",
+      "strategy_tags": [
+        "private_credit",
+        "private_equity",
+        "real_assets",
+        "multi_asset"
+      ],
+      "name": "Ares Management",
+      "short_name": "Ares",
+      "url": "https://www.ares.com/us/news-and-insights/perspectives",
+      "method": "ssr",
+      "frequency": "weekly",
+      "description": "Leading global alternative investment manager (~$450B AUM) specializing in private credit, private equity, real assets and infrastructure. Founded in 1997, listed on NYSE (ARES). Direct-lending pioneer with one of the largest US middle-market credit platforms; significant insurance solutions business via Aspida.",
+      "notable_authors": [],
+      "expected_hostname": "ares.com",
+      "max_articles": 10
     }
   ],
   "settings": {

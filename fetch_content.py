@@ -1170,6 +1170,37 @@ def _fetch_content_pinebridge(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+def _fetch_content_ares(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Ares Management Perspectives article content via requests (SSR — AEM .cmp-text).
+
+    Same AEM-standard `.cmp-text p` pattern as Apollo / KKR / JPMAM — body
+    paragraphs are SSR-rendered in initial HTML. The /perspectives listing
+    itself is gated by a country+role attestation modal (fetch_articles
+    bypasses via sitemap.xml), but individual article pages serve their
+    body unconditionally.
+    """
+    url = article["url"]
+    log.info("  Ares: fetching article page %s", url)
+
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Ares: fetch failed: %s", e)
+        return None
+
+    text = _normalize_html(resp.text, ".cmp-text p")
+
+    if not _check_min_content_length(text):
+        log.warning("  Ares: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Ares: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -1197,6 +1228,7 @@ CONTENT_FETCHERS = {
     "robeco": _fetch_content_robeco,
     "de-shaw": _fetch_content_de_shaw,
     "pinebridge": _fetch_content_pinebridge,
+    "ares-management": _fetch_content_ares,
 }
 
 
