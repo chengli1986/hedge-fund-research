@@ -2,67 +2,113 @@
   "sources": [
     {
       "id": "man-group",
-      "strategy_tags": ["macro", "quant", "fixed_income", "multi_asset"],
+      "strategy_tags": [
+        "macro",
+        "quant",
+        "fixed_income",
+        "multi_asset"
+      ],
       "name": "Man Group",
       "short_name": "Man",
       "url": "https://www.man.com/insights",
       "method": "ssr",
       "frequency": "weekly",
       "description": "Multi-strategy: macro, quant, credit. Known for AHL systematic trading.",
-      "notable_authors": ["Teun Draaisma", "Ed Cole", "Matthew Sherwood"],
+      "notable_authors": [
+        "Teun Draaisma",
+        "Ed Cole",
+        "Matthew Sherwood"
+      ],
       "expected_hostname": "man.com"
     },
     {
       "id": "bridgewater",
-      "strategy_tags": ["macro", "multi_asset"],
+      "strategy_tags": [
+        "macro",
+        "multi_asset"
+      ],
       "name": "Bridgewater Associates",
       "short_name": "Bridgewater",
       "url": "https://www.bridgewater.com/research-and-insights",
       "method": "ssr",
       "frequency": "monthly",
       "description": "World's largest hedge fund. Macro, risk parity, All Weather strategy.",
-      "notable_authors": ["Ray Dalio", "Bob Prince", "Greg Jensen", "Karen Karniol-Tambour"],
+      "notable_authors": [
+        "Ray Dalio",
+        "Bob Prince",
+        "Greg Jensen",
+        "Karen Karniol-Tambour"
+      ],
       "expected_hostname": "bridgewater.com"
     },
     {
       "id": "aqr",
-      "strategy_tags": ["quant", "multi_asset", "equity"],
+      "strategy_tags": [
+        "quant",
+        "multi_asset",
+        "equity"
+      ],
       "name": "AQR Capital Management",
       "short_name": "AQR",
       "url": "https://www.aqr.com/Insights/Research",
       "method": "requests",
       "frequency": "monthly",
       "description": "Quantitative investing pioneer. Factor investing, alternatives, tax-aware.",
-      "notable_authors": ["Cliff Asness", "Antti Ilmanen", "Jordan Brooks", "Ronen Israel"],
+      "notable_authors": [
+        "Cliff Asness",
+        "Antti Ilmanen",
+        "Jordan Brooks",
+        "Ronen Israel"
+      ],
       "expected_hostname": "aqr.com"
     },
     {
       "id": "gmo",
-      "strategy_tags": ["equity", "multi_asset", "emerging_markets"],
+      "strategy_tags": [
+        "equity",
+        "multi_asset",
+        "emerging_markets"
+      ],
       "name": "GMO LLC",
       "short_name": "GMO",
       "url": "https://www.gmo.com/americas/research-library/",
       "method": "api",
       "frequency": "quarterly",
       "description": "Value-oriented, contrarian. Famous for bubble calls and 7-Year forecasts.",
-      "notable_authors": ["Jeremy Grantham", "Ben Inker", "Tom Hancock", "John Pease"],
+      "notable_authors": [
+        "Jeremy Grantham",
+        "Ben Inker",
+        "Tom Hancock",
+        "John Pease"
+      ],
       "expected_hostname": "gmo.com"
     },
     {
       "id": "oaktree",
-      "strategy_tags": ["fixed_income", "private_credit", "event_driven"],
+      "strategy_tags": [
+        "fixed_income",
+        "private_credit",
+        "event_driven"
+      ],
       "name": "Oaktree Capital Management",
       "short_name": "Oaktree",
       "url": "https://www.oaktreecapital.com/insights",
       "method": "playwright",
       "frequency": "monthly",
       "description": "Credit/distressed debt specialist. Howard Marks memos are legendary.",
-      "notable_authors": ["Howard Marks", "Bruce Karsh", "Armen Panossian"],
+      "notable_authors": [
+        "Howard Marks",
+        "Bruce Karsh",
+        "Armen Panossian"
+      ],
       "expected_hostname": "oaktreecapital.com"
     },
     {
       "id": "ark-invest",
-      "strategy_tags": ["equity", "venture_capital"],
+      "strategy_tags": [
+        "equity",
+        "venture_capital"
+      ],
       "name": "ARK Invest",
       "short_name": "ARK",
       "url": "https://www.ark-invest.com/feed",
@@ -70,11 +116,20 @@
       "frequency": "weekly",
       "expected_hostname": "ark-invest.com",
       "description": "Disruptive innovation investing. AI, genomics, fintech, space, energy.",
-      "notable_authors": ["Cathie Wood", "Brett Winton", "Sam Korus"]
+      "notable_authors": [
+        "Cathie Wood",
+        "Brett Winton",
+        "Sam Korus"
+      ]
     },
     {
       "id": "cambridge-associates",
-      "strategy_tags": ["private_equity", "venture_capital", "private_credit", "multi_asset"],
+      "strategy_tags": [
+        "private_equity",
+        "venture_capital",
+        "private_credit",
+        "multi_asset"
+      ],
       "name": "Cambridge Associates",
       "short_name": "Cambridge",
       "url": "https://www.cambridgeassociates.com/insights/private-investments/",
@@ -87,7 +142,13 @@
     },
     {
       "id": "wellington",
-      "strategy_tags": ["equity", "macro", "fixed_income", "multi_asset", "esg_climate"],
+      "strategy_tags": [
+        "equity",
+        "macro",
+        "fixed_income",
+        "multi_asset",
+        "esg_climate"
+      ],
       "name": "Wellington Management",
       "short_name": "Wellington",
       "url": "https://www.wellington.com/en/insights",
@@ -100,7 +161,13 @@
     },
     {
       "id": "amundi",
-      "strategy_tags": ["macro", "fixed_income", "emerging_markets", "multi_asset", "esg_climate"],
+      "strategy_tags": [
+        "macro",
+        "fixed_income",
+        "emerging_markets",
+        "multi_asset",
+        "esg_climate"
+      ],
       "name": "Amundi Research Center",
       "short_name": "Amundi",
       "url": "https://research-center.amundi.com",
@@ -114,7 +181,11 @@
     },
     {
       "id": "troweprice",
-      "strategy_tags": ["equity", "macro", "fixed_income"],
+      "strategy_tags": [
+        "equity",
+        "macro",
+        "fixed_income"
+      ],
       "name": "T. Rowe Price",
       "short_name": "T. Rowe Price",
       "url": "https://www.troweprice.com/en/us/insights",
@@ -127,7 +198,11 @@
     },
     {
       "id": "pimco",
-      "strategy_tags": ["fixed_income", "macro", "multi_asset"],
+      "strategy_tags": [
+        "fixed_income",
+        "macro",
+        "multi_asset"
+      ],
       "name": "PIMCO",
       "short_name": "PIMCO",
       "url": "https://www.pimco.com/us/en/insights#sort=%40publishz32xdate%20descending&f:category=[70341f6de3a142ee89144df0ec44e3b8,8d35ad276c6c4c5caf4d9fed37c5f51d,1a3217a178b04eb18c1e4532665b184c,56ebfd2935044d1eb39b7e661d2d03fb,22ea0773e8f147e38e15655207e73e21,bdd17ed0ae9d4ddd96e9e60e51c47782,78449f5b2f5e4b6ebd2d6e90b7a9f889,9cfdb8bfe49a451a851cf9957c57cd32,eef114e6a525445a81d179b8adb018c7]",
@@ -140,7 +215,13 @@
     },
     {
       "id": "aberdeen",
-      "strategy_tags": ["macro", "fixed_income", "emerging_markets", "equity", "multi_asset"],
+      "strategy_tags": [
+        "macro",
+        "fixed_income",
+        "emerging_markets",
+        "equity",
+        "multi_asset"
+      ],
       "name": "Aberdeen Investments",
       "short_name": "Aberdeen",
       "url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/insights",
@@ -153,7 +234,13 @@
     },
     {
       "id": "pgim",
-      "strategy_tags": ["fixed_income", "private_credit", "alternatives", "esg_climate", "multi_asset"],
+      "strategy_tags": [
+        "fixed_income",
+        "private_credit",
+        "alternatives",
+        "esg_climate",
+        "multi_asset"
+      ],
       "name": "PGIM",
       "short_name": "PGIM",
       "url": "https://www.pgim.com/au/en/institutional/insights",
@@ -166,7 +253,13 @@
     },
     {
       "id": "brookfield",
-      "strategy_tags": ["real_assets", "infrastructure", "private_credit", "private_equity", "esg_climate"],
+      "strategy_tags": [
+        "real_assets",
+        "infrastructure",
+        "private_credit",
+        "private_equity",
+        "esg_climate"
+      ],
       "name": "Brookfield Asset Management",
       "short_name": "Brookfield",
       "url": "https://www.brookfield.com/views-news/insights",
@@ -179,7 +272,13 @@
     },
     {
       "id": "jpmam",
-      "strategy_tags": ["macro", "equity", "fixed_income", "alternatives", "multi_asset"],
+      "strategy_tags": [
+        "macro",
+        "equity",
+        "fixed_income",
+        "alternatives",
+        "multi_asset"
+      ],
       "name": "J.P. Morgan Asset Management",
       "short_name": "JPMAM",
       "url": "https://am.jpmorgan.com/us/en/asset-management/adv/insights/market-insights/market-updates/on-the-minds-of-investors/",
@@ -192,7 +291,12 @@
     },
     {
       "id": "verdad-capital",
-      "strategy_tags": ["quant", "equity", "macro", "multi_asset"],
+      "strategy_tags": [
+        "quant",
+        "equity",
+        "macro",
+        "multi_asset"
+      ],
       "name": "Verdad Capital",
       "short_name": "Verdad",
       "url": "https://verdadcap.com/weekly-research",
@@ -205,7 +309,12 @@
     },
     {
       "id": "msci-research",
-      "strategy_tags": ["quant", "esg_climate", "multi_asset", "fixed_income"],
+      "strategy_tags": [
+        "quant",
+        "esg_climate",
+        "multi_asset",
+        "fixed_income"
+      ],
       "name": "MSCI Research",
       "short_name": "MSCI",
       "url": "https://www.msci.com/research-and-insights",
@@ -218,72 +327,120 @@
     },
     {
       "id": "natixis-im",
-      "strategy_tags": ["macro", "multi_asset", "fixed_income", "equity"],
+      "strategy_tags": [
+        "macro",
+        "multi_asset",
+        "fixed_income",
+        "equity"
+      ],
       "name": "Natixis Investment Managers",
       "short_name": "Natixis IM",
       "url": "https://www.im.natixis.com/en-us/insights/the-tactical-take",
       "method": "requests",
       "frequency": "monthly",
       "description": "European multi-affiliate platform — 15+ boutiques (Loomis Sayles, Harris Associates, Mirova). Fixed income, value equity, ESG/climate, multi-asset. Tactical Take macro podcast.",
-      "notable_authors": ["Jack Janasiewicz", "Brian Hess"],
+      "notable_authors": [
+        "Jack Janasiewicz",
+        "Brian Hess"
+      ],
       "expected_hostname": "im.natixis.com",
       "max_articles": 10
     },
     {
       "id": "apollo-global-management",
-      "strategy_tags": ["private_equity", "private_credit", "macro", "multi_asset"],
+      "strategy_tags": [
+        "private_equity",
+        "private_credit",
+        "macro",
+        "multi_asset"
+      ],
       "name": "Apollo Global Management",
       "short_name": "Apollo",
       "url": "https://www.apollo.com/insights-news/insights",
       "method": "requests",
       "frequency": "weekly",
       "description": "Largest US private credit / alts platform (~$700B). Pioneered ABF (asset-backed finance); private equity, real estate, insurance-solutions via Athene merger. Macro commentary from Marc Rowan and Torsten Slok.",
-      "notable_authors": ["Jim Zelter", "Torsten Slok", "John Zito"],
+      "notable_authors": [
+        "Jim Zelter",
+        "Torsten Slok",
+        "John Zito"
+      ],
       "expected_hostname": "apollo.com",
       "max_articles": 10
     },
     {
       "id": "kkr",
-      "strategy_tags": ["private_equity", "real_assets", "private_credit", "macro"],
+      "strategy_tags": [
+        "private_equity",
+        "real_assets",
+        "private_credit",
+        "macro"
+      ],
       "name": "KKR",
       "short_name": "KKR",
       "url": "https://www.kkr.com/insights",
       "method": "playwright",
       "frequency": "weekly",
       "description": "Global alternatives leader (~$600B AUM). Buyout-pioneer firm founded 1976; covers private equity, infrastructure, real estate, private credit. Insights produced by Global Macro & Asset Allocation (GMAA) team.",
-      "notable_authors": ["Henry McVey", "Racim Allouani", "David McNellis"],
+      "notable_authors": [
+        "Henry McVey",
+        "Racim Allouani",
+        "David McNellis"
+      ],
       "expected_hostname": "kkr.com",
       "max_articles": 10
     },
     {
       "id": "janus-henderson",
-      "strategy_tags": ["fixed_income", "equity", "macro", "multi_asset"],
+      "strategy_tags": [
+        "fixed_income",
+        "equity",
+        "macro",
+        "multi_asset"
+      ],
       "name": "Janus Henderson Investors",
       "short_name": "Janus Henderson",
       "url": "https://www.janushenderson.com/en-us/investor/insights/",
       "method": "requests",
       "frequency": "weekly",
       "description": "Active asset manager (~$370B AUM). Equity, fixed income, multi-asset and alternatives. Insights covers macro, geopolitics, AI and sector-level equity/credit analysis.",
-      "notable_authors": ["Ali Dibadj", "Matthew Bullock"],
+      "notable_authors": [
+        "Ali Dibadj",
+        "Matthew Bullock"
+      ],
       "expected_hostname": "janushenderson.com",
       "max_articles": 10
     },
     {
       "id": "research-affiliates",
-      "strategy_tags": ["quant", "equity", "multi_asset"],
+      "strategy_tags": [
+        "quant",
+        "equity",
+        "multi_asset"
+      ],
       "name": "Research Affiliates",
       "short_name": "Research Affiliates",
       "url": "https://www.researchaffiliates.com/insights/publications",
       "method": "playwright",
       "frequency": "monthly",
       "description": "Quantitative investment firm founded by Rob Arnott (2002). Pioneered RAFI Fundamental Indexation — weights stocks by economic size (sales/cash flow/book/dividends) rather than market cap. Smart beta, factor investing, capital-market assumptions licensed to ~$170B of strategies.",
-      "notable_authors": ["Rob Arnott", "Chris Brightman", "Jim Masturzo", "Ari Polychronopoulos"],
+      "notable_authors": [
+        "Rob Arnott",
+        "Chris Brightman",
+        "Jim Masturzo",
+        "Ari Polychronopoulos"
+      ],
       "expected_hostname": "researchaffiliates.com",
       "max_articles": 10
     },
     {
       "id": "gsam",
-      "strategy_tags": ["macro", "equity", "fixed_income", "multi_asset"],
+      "strategy_tags": [
+        "macro",
+        "equity",
+        "fixed_income",
+        "multi_asset"
+      ],
       "name": "Goldman Sachs Asset Management",
       "short_name": "GSAM",
       "url": "https://am.gs.com/en-us/advisors/insights/list",
@@ -296,7 +453,12 @@
     },
     {
       "id": "robeco",
-      "strategy_tags": ["quant", "esg_climate", "emerging_markets", "multi_asset"],
+      "strategy_tags": [
+        "quant",
+        "esg_climate",
+        "emerging_markets",
+        "multi_asset"
+      ],
       "name": "Robeco",
       "short_name": "Robeco",
       "url": "https://www.robeco.com/en-int/insights",
@@ -309,15 +471,38 @@
     },
     {
       "id": "de-shaw",
-      "strategy_tags": ["macro", "equity", "fixed_income", "quant"],
+      "strategy_tags": [
+        "macro",
+        "equity",
+        "fixed_income",
+        "quant"
+      ],
       "name": "D. E. Shaw",
       "short_name": "D. E. Shaw",
       "url": "https://www.deshaw.com/library",
       "method": "playwright",
-      "frequency": "quarterly",
+      "frequency": "annual",
       "description": "Quantitative multi-strategy hedge fund (~$60B AUM) founded 1988 by David E. Shaw. Pioneer of systematic/statistical-arbitrage investing with strong technology and computational-science DNA; trades across global equities, macro, credit, convertibles and private capital. Library publishes long-form research on portfolio construction, market microstructure and applied quant techniques.",
       "notable_authors": [],
       "expected_hostname": "deshaw.com",
+      "max_articles": 10
+    },
+    {
+      "id": "pinebridge",
+      "strategy_tags": [
+        "fixed_income",
+        "emerging_markets",
+        "macro",
+        "multi_asset"
+      ],
+      "name": "PineBridge Investments",
+      "short_name": "PineBridge",
+      "url": "https://www.pinebridge.com/en/our-insights",
+      "method": "playwright",
+      "frequency": "weekly",
+      "description": "Global asset manager (~$190B AUM) headquartered in New York with deep Asia-Pacific roots; spun out of AIG Investments in 2010. Specializes in fixed income (EM debt, leveraged finance, IG bonds), multi-asset and active equities; widely followed publications include Capital Market Line (5-year capital-market assumptions) and Investment Strategy Insights (weekly macro/positioning).",
+      "notable_authors": [],
+      "expected_hostname": "pinebridge.com",
       "max_articles": 10
     }
   ],

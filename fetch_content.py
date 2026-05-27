@@ -1130,6 +1130,46 @@ def _fetch_content_de_shaw(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+def _fetch_content_pinebridge(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch PineBridge Investments article content via requests (SSR — Next.js).
+
+    Listing page is Next.js CSR (fetch_articles uses Playwright), but article
+    body is SSR-rendered in the initial HTML. Body paragraphs live inside
+    `div[class*='rich-content-module__']` containers (CSS-modules hashed
+    prefix). A sibling `rich-content-module__*__disclaimer` div carries the
+    legal disclaimer and must be stripped first. Note: a minority of
+    "report-style" insight pages are PDF-only landing pages with no inline
+    body paragraphs — those will fall under _check_min_content_length and be
+    silently skipped by the GMIA pipeline.
+    """
+    url = article["url"]
+    log.info("  PineBridge: fetching article page %s", url)
+
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  PineBridge: fetch failed: %s", e)
+        return None
+
+    soup = BeautifulSoup(resp.text, "html.parser")
+    for tag in soup.select("nav, footer, header, script, style, aside, "
+                            "div[class*='disclaimer']"):
+        tag.decompose()
+
+    paragraphs = soup.select("div[class*='rich-content-module__'] p")
+    text = "\n".join(p.get_text(strip=True) for p in paragraphs if p.get_text(strip=True))
+
+    if not _check_min_content_length(text):
+        log.warning("  PineBridge: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  PineBridge: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -1156,6 +1196,7 @@ CONTENT_FETCHERS = {
     "gsam": _fetch_content_gsam,
     "robeco": _fetch_content_robeco,
     "de-shaw": _fetch_content_de_shaw,
+    "pinebridge": _fetch_content_pinebridge,
 }
 
 
