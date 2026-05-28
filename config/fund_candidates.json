@@ -1147,7 +1147,7 @@
     "rss_url": null,
     "official_domain": "www.pgim.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "Broad institutional portal; FI+alternatives depth",
+    "notes": "Broad institutional portal; FI+alternatives depth; AU page accessible",
     "research_links": [
       {
         "url": "https://www.pgim.com/au/en/institutional/insights",
@@ -1265,17 +1265,17 @@
       "article_signals": 0
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-05-19T01:01:44Z",
+    "last_deep_analyzed_at": "2026-05-28T01:02:52Z",
     "quality": "MEDIUM",
-    "quality_score": 0.52,
-    "topics": "fixed income, alternatives, private credit, ESG, multi-asset",
+    "quality_score": 0.62,
+    "topics": "fixed income, alternatives, private credit, emerging markets, multi-asset",
     "fit_score": 0.67,
     "last_validated_at": "2026-04-19T09:02:19.020103+08:00",
     "strategy_tags": [
       "fixed_income",
       "private_credit",
       "multi_asset",
-      "esg_climate"
+      "emerging_markets"
     ],
     "source": "manual"
   },
@@ -1288,7 +1288,7 @@
     "rss_url": null,
     "official_domain": "www.aberdeeninvestments.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "JS-rendered, 0 articles scraped, gated professional only",
+    "notes": "Email-gated insights page; shows 0 articles without registration",
     "research_links": [
       {
         "url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/insights",
@@ -1314,7 +1314,7 @@
     "quality": "LOW",
     "quality_score": 0.32,
     "topics": "macro, fixed income, multi-asset, emerging markets",
-    "last_deep_analyzed_at": "2026-05-19T01:01:44Z",
+    "last_deep_analyzed_at": "2026-05-28T01:02:52Z",
     "fit_score": 0.82,
     "strategy_tags": [
       "macro",
@@ -1692,17 +1692,19 @@
     "source": "manual",
     "status": "inaccessible",
     "strategy_tags": [
-      "multi_asset"
+      "multi_asset",
+      "equity",
+      "fixed_income"
     ],
-    "notes": "JS-only rendering; httpx returns shell; Playwright shows 23 articles. Re-verified inaccessible.",
+    "notes": "JS-only; WebFetch returns empty (confirmed). Keep inaccessible.",
     "official_domain": "www.franklintempleton.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-05-07T09:00:18.005906+08:00",
-    "last_deep_analyzed_at": "2026-05-16T01:04:05Z",
+    "last_deep_analyzed_at": "2026-05-28T01:02:52Z",
     "quality": "MEDIUM",
     "quality_score": 0.5,
-    "topics": "multi-asset, market insights"
+    "topics": "multi-asset, market insights, equity, fixed income"
   },
   {
     "id": "ares-management",
@@ -2321,9 +2323,9 @@
       "equity"
     ],
     "topics": "real assets, REITs, infrastructure, real estate",
-    "notes": "403 Forbidden on insights page, cannot access content",
-    "last_deep_analyzed_at": "2026-05-18T01:05:00Z",
-    "quality": "LOW",
+    "notes": "403 Forbidden confirmed; quality unverifiable. Real assets specialist.",
+    "last_deep_analyzed_at": "2026-05-28T01:02:52Z",
+    "quality": "MEDIUM",
     "quality_score": 0.0
   },
   {
