@@ -54,7 +54,13 @@ BADGE_COLORS: dict[str, str] = {
 }
 
 INITIAL_VISIBLE = 20
-RECENT_DAYS = 180  # Articles older than this are folded behind a "Show older" toggle
+RECENT_DAYS = 90  # Articles older than this are folded behind a "Show older" toggle
+                  # AND excluded from the inline article-details JSON island.
+                  # Tightened 180 → 90 on 2026-05-29 to keep initial JSON parse cost
+                  # flat as the production source list grows. Older articles still
+                  # render their <article> shell (Show older reveals title + source
+                  # link), but their LLM analysis body is omitted from JSON island —
+                  # clicking Open shows a "see source above" bilingual notice.
 
 # ── Static fund profile data (displayed in Sources tab) ──
 _FUND_PROFILES: dict[str, dict] = {
@@ -488,7 +494,11 @@ def generate_html(articles: list[dict]) -> str:
             _slugify_theme(t) for t in a.get("themes", [])
         ) if a.get("themes") else "unthemed"
         card_html, details_payload = _article_card(a, show_takeaway=True)
-        if details_payload is not None:
+        # Articles older than RECENT_DAYS are folded behind "Show older" by CSS;
+        # their LLM analysis bodies are also excluded from the JSON island to
+        # keep initial parse cost flat. Clicking Open on a revealed older article
+        # shows a bilingual "see source above" notice (handled in JS hydrate).
+        if details_payload is not None and _age_of(a) != "older":
             details_by_aid[f"a-{_esc(aid)}"] = details_payload
         pool_parts.append(
             f'<article id="a-{_esc(aid)}" class="pool-article" '
@@ -1267,7 +1277,21 @@ function hydrateArticleDetails(article) {{
   const details = article && article.querySelector('.summary-panel');
   if (!details || details.dataset.hydrated === 'true') return;
   const d = ARTICLE_DETAILS[article.id];
-  if (!d) return;
+  if (!d) {{
+    // Older article (>RECENT_DAYS): LLM analysis omitted from JSON island to
+    // keep initial parse cost flat. Show a bilingual "see source above" notice
+    // so the user knows why the panel is empty.
+    details.insertAdjacentHTML('beforeend',
+      '<div class="summary-copy lang-en"><em class="older-notice">Older article — see source link above for full content.</em></div>' +
+      '<div class="summary-copy lang-zh" style="display:none"><em class="older-notice">较旧文章 — 请查看上方源链接获取完整内容。</em></div>'
+    );
+    details.dataset.hydrated = 'true';
+    if (langZh) {{
+      details.querySelectorAll('.lang-en').forEach(el => el.style.display = 'none');
+      details.querySelectorAll('.lang-zh').forEach(el => el.style.display = '');
+    }}
+    return;
+  }}
   details.insertAdjacentHTML('beforeend',
     '<div class="summary-copy lang-en">' +
       '<p class="takeaway"><strong>Takeaway:</strong> ' + d.tk_en + '</p>' +

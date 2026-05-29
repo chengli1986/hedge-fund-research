@@ -319,14 +319,16 @@ class TestFundDistributionChart:
 
 
 class TestOlderArticleFolding:
-    """UI folds articles older than RECENT_DAYS (180d) by default. Pool articles
+    """UI folds articles older than RECENT_DAYS (90d) by default. Pool articles
     carry data-age="recent"|"older"; body starts with class hide-older; a toolbar
-    button reveals older articles when present."""
+    button reveals older articles when present. Older articles' LLM analysis
+    bodies are also excluded from the inline JSON island to keep parse cost flat
+    (2026-05-29 — tightened from 180d to 90d for perf)."""
 
-    # Articles spanning recent (<180d) and older (>180d) buckets.
+    # Articles spanning recent (≤90d) and older (>90d) buckets.
     # Dates computed dynamically to keep tests stable across calendar drift.
     MIXED_ARTICLES = [
-        {  # Recent — well inside 180d window
+        {  # Recent — well inside 90d window
             "id": "rec1", "source_id": "man-group", "source_name": "Man",
             "title": "Recent Macro Note", "url": "https://man.com/recent",
             "date": _date_str(30), "summarized": True,
@@ -334,15 +336,15 @@ class TestOlderArticleFolding:
             "key_takeaway_en": "Macro tailwinds.", "key_takeaway_zh": "宏观顺风。",
             "themes": ["Macro/Rates"],
         },
-        {  # Recent — right at the 180d boundary (179d ago, should still be recent)
+        {  # Recent — close to 90d boundary (89d ago, should still be recent)
             "id": "rec2", "source_id": "bridgewater", "source_name": "Bridgewater",
             "title": "Boundary Recent", "url": "https://bridgewater.com/boundary",
-            "date": _date_str(179), "summarized": False,
+            "date": _date_str(89), "summarized": False,
         },
-        {  # Older — just past 180d boundary (181d ago)
+        {  # Older — just past 90d boundary (91d ago)
             "id": "old1", "source_id": "gmo", "source_name": "GMO",
             "title": "Just Over Boundary", "url": "https://gmo.com/just-over",
-            "date": _date_str(181), "summarized": True,
+            "date": _date_str(91), "summarized": True,
             "summary_en": "Older but still relevant.", "summary_zh": "较旧但仍相关。",
             "key_takeaway_en": "Long-term thesis.", "key_takeaway_zh": "长期论点。",
             "themes": ["Equities/Value"],
@@ -368,7 +370,7 @@ class TestOlderArticleFolding:
             tag = re.search(rf'<article[^>]*id="a-{aid}"[^>]*>', result)
             assert tag is not None, f"pool article {aid} missing"
             assert 'data-age="recent"' in tag.group(0), (
-                f"{aid} should be tagged data-age=recent (it's <180d), got: {tag.group(0)}"
+                f"{aid} should be tagged data-age=recent (it's ≤90d), got: {tag.group(0)}"
             )
 
     def test_older_article_has_data_age_older(self) -> None:
@@ -378,22 +380,62 @@ class TestOlderArticleFolding:
             tag = re.search(rf'<article[^>]*id="a-{aid}"[^>]*>', result)
             assert tag is not None, f"pool article {aid} missing"
             assert 'data-age="older"' in tag.group(0), (
-                f"{aid} should be tagged data-age=older (it's >180d), got: {tag.group(0)}"
+                f"{aid} should be tagged data-age=older (it's >90d), got: {tag.group(0)}"
             )
 
-    def test_180d_boundary_inclusive(self) -> None:
-        """Articles dated exactly 180 days ago count as recent (>= cutoff)."""
+    def test_90d_boundary_inclusive(self) -> None:
+        """Articles dated exactly 90 days ago count as recent (>= cutoff)."""
         articles = [
             {"id": "edge", "source_id": "man-group", "source_name": "Man",
-             "title": "Edge", "url": "u", "date": _date_str(180), "summarized": False},
+             "title": "Edge", "url": "u", "date": _date_str(90), "summarized": False},
         ]
         result = generate_html(articles)
         import re
         tag = re.search(r'<article[^>]*id="a-edge"[^>]*>', result)
         assert tag is not None
         assert 'data-age="recent"' in tag.group(0), (
-            f"Article exactly 180d old should be recent (inclusive boundary), got: {tag.group(0)}"
+            f"Article exactly 90d old should be recent (inclusive boundary), got: {tag.group(0)}"
         )
+
+    def test_older_article_details_excluded_from_json_island(self) -> None:
+        """Articles >RECENT_DAYS have their LLM analysis bodies excluded from the
+        inline JSON island. The <article> shell still renders (so 'Show older'
+        reveals title + source link), but bodies don't add parse cost upfront.
+
+        old1 is summarized + has body text "Older but still relevant." — this
+        text must NOT appear anywhere in the rendered HTML, because the article
+        was excluded from the JSON island."""
+        import json, re
+        result = generate_html(self.MIXED_ARTICLES)
+
+        # rec1 (≤90d summarized) MUST be in JSON island
+        m = re.search(r'<script[^>]*id="article-details-data"[^>]*>(.*?)</script>',
+                      result, re.S)
+        assert m, "JSON island must be present"
+        inline = json.loads(m.group(1))
+        assert "a-rec1" in inline, \
+            f"recent summarized article should be in JSON island, got keys: {list(inline)}"
+
+        # old1 (>90d summarized) MUST NOT be in JSON island
+        assert "a-old1" not in inline, \
+            f"older summarized article should be excluded, got keys: {list(inline)}"
+
+        # And old1's body text must not appear anywhere in HTML
+        assert "Older but still relevant." not in result, (
+            "Older article body should be entirely absent from HTML"
+        )
+        # But old1's <article> shell must still be present (so Show older works)
+        assert 'id="a-old1"' in result
+
+    def test_js_renders_older_notice_when_details_missing(self) -> None:
+        """JS hydrate function falls back to a bilingual 'see source above' notice
+        when the JSON island has no entry for an article (older case). Verify the
+        notice text appears in the JS template (the older-notice class is the marker)."""
+        result = generate_html(self.MIXED_ARTICLES)
+        assert "older-notice" in result, \
+            "JS hydrate fallback (older-notice class) must be present in JS template"
+        assert "Older article — see source link above" in result
+        assert "请查看上方源链接" in result
 
     def test_unknown_date_defaults_to_recent(self) -> None:
         """Missing/empty date field — fall back to 'recent' so data isn't silently hidden."""
