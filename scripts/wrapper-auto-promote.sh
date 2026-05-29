@@ -85,8 +85,13 @@ $(cat "$PROGRAM_MD")
 - 最长 20 分钟
 - 最多处理 2 个基金
 - 接入后必须运行 pytest；若失败则回滚（git checkout 已修改的文件 + 删 pending_profiles 草稿）
-- 每次成功接入后立即 commit + push
-- 即使 deferred / failed 也要写一行到 logs/auto-promote-history.jsonl
+- **单基金原子操作顺序（不可拆，不可推迟，不可批量化）**：
+  1. \`git commit\` → 2. \`git push origin main\` → 3. \`logs/auto-promote-history.jsonl\` 追加一行
+  → 才能进入下一个基金或退出 session
+- Wrapper 用 history 文件认定哪些 commit 已成功；若 commit/push 后 history 未写完就撞 --max-turns
+  被截，那笔工作会被误判为 deferred / 漏报。**永远不要把 history-write 推到 session 末尾批量做**。
+- 即使 deferred / failed 也要写一行到 logs/auto-promote-history.jsonl（commit/push 跳过，
+  但 history 写入照常）
 "
 
 echo "$LOG_PREFIX Invoking Claude Code agent..."
@@ -95,7 +100,7 @@ echo "$LOG_PREFIX Invoking Claude Code agent..."
 export PATH="$HOME/.npm-global/bin:$PATH"
 echo "$PROMPT" | claude --print \
     --allowedTools "Bash,Read,Edit,Write,Glob,Grep" \
-    --max-turns 60 \
+    --max-turns 120 \
     2>&1
 
 EXIT_CODE=$?
@@ -325,5 +330,43 @@ PYEOF
 
 PROBE_EXIT=$?
 echo "$LOG_PREFIX Post-commit probe done (exit $PROBE_EXIT)"
+
+# ─── Exit-code reconciliation ────────────────────────────────────────────────
+# Agent's exit code is unreliable: hitting --max-turns produces exit=1 even when
+# all commits succeeded. Source of truth is the history file + validate-msg + probe.
+# If history has today's promoted entries AND both verification steps passed,
+# the work landed cleanly regardless of how the agent exited.
+PROMOTED_TODAY=$(cd "$REPO_DIR" && python3 - << 'PYEOF'
+import json
+from datetime import datetime, timezone, timedelta
+from pathlib import Path
+BJT = timezone(timedelta(hours=8))
+today = datetime.now(BJT).strftime("%Y-%m-%d")
+log = Path("logs/auto-promote-history.jsonl")
+if not log.exists():
+    print(0)
+else:
+    n = 0
+    for line in log.read_text().splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            e = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if e.get("date") == today and e.get("outcome") == "promoted":
+            n += 1
+    print(n)
+PYEOF
+)
+
+if [ "$EXIT_CODE" -ne 0 ] \
+    && [ "$VALIDATE_EXIT" -eq 0 ] \
+    && [ "$PROBE_EXIT" -eq 0 ] \
+    && [ "${PROMOTED_TODAY:-0}" -gt 0 ]; then
+    echo "$LOG_PREFIX Agent exit=$EXIT_CODE but $PROMOTED_TODAY promotion(s) verified (validate-msg + probe) — treating as success"
+    exit 0
+fi
 
 exit $EXIT_CODE

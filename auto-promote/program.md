@@ -286,6 +286,17 @@ rm -f pending_profiles/FUNDID.json
 
 ### Phase 6 — Commit + push + 写日志
 
+⚠️ **顺序硬约束**：每个基金的 commit + push + history-write **必须是同一原子操作组**，
+中间不要插入任何其他工作（不要先 commit/push 两个基金再统一写 history，不要把 history-write
+留到 session 末尾）。Wrapper 用 history 文件判断哪些 commit 已成功；如果 agent 在 commit/push
+后、history-write 前撞 `--max-turns 120` 被截，wrapper 会把成功工作误判为失败。
+
+正确单基金序列（不可拆）：
+
+```
+1. git add … → 2. git commit → 3. git push → 4. 写 history JSONL 一行 → 处理下一个基金
+```
+
 成功路径：
 ```bash
 git add config/sources.json publish.py fetch_content.py pending_profiles/FUNDID.json
@@ -298,7 +309,7 @@ Auto-promote agent run 2026-XX-XX."
 git push origin main
 ```
 
-附加 `logs/auto-promote-history.jsonl`（一行 JSON）：
+**push 成功后立即**附加 `logs/auto-promote-history.jsonl`（一行 JSON，不可推迟）：
 ```python
 import json
 from datetime import datetime, timezone, timedelta
