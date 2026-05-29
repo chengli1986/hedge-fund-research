@@ -500,7 +500,7 @@
       "url": "https://www.pinebridge.com/en/our-insights",
       "method": "playwright",
       "frequency": "weekly",
-      "description": "Global asset manager (~$190B AUM) headquartered in New York with deep Asia-Pacific roots; spun out of AIG Investments in 2010. Specializes in fixed income (EM debt, leveraged finance, IG bonds), multi-asset and active equities; widely followed publications include Capital Market Line (5-year capital-market assumptions) and Investment Strategy Insights (weekly macro/positioning).",
+      "description": "Global asset manager (~$100B AUM) headquartered in New York with deep Asia-Pacific roots; originated as AIG Investments (1996), spun out under Pacific Century Group in 2010 and acquired by MetLife Investment Management (completed Dec 2025). Specializes in fixed income (EM debt, leveraged finance, IG bonds), multi-asset and active equities; widely followed publications include Capital Market Line (5-year capital-market assumptions) and Investment Strategy Insights (weekly macro/positioning).",
       "notable_authors": [],
       "expected_hostname": "pinebridge.com",
       "max_articles": 10
@@ -518,7 +518,7 @@
       "url": "https://www.ares.com/us/news-and-insights/perspectives",
       "method": "ssr",
       "frequency": "weekly",
-      "description": "Leading global alternative investment manager (~$450B AUM) specializing in private credit, private equity, real assets and infrastructure. Founded in 1997, listed on NYSE (ARES). Direct-lending pioneer with one of the largest US middle-market credit platforms; significant insurance solutions business via Aspida.",
+      "description": "Leading global alternative investment manager (~$484B AUM, year-end 2024) specializing in private credit, private equity, real assets and infrastructure. Founded in 1997, listed on NYSE (ARES). Direct-lending pioneer with one of the largest US middle-market credit platforms; significant insurance solutions business via Aspida.",
       "notable_authors": [],
       "expected_hostname": "ares.com",
       "max_articles": 10
