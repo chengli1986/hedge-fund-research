@@ -240,6 +240,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "notable_en": "Spun out of AIG Investments in 2010 and majority-owned by Pacific Century Group (Richard Li). Widely followed publications: 'Capital Market Line' (5-year capital-market assumptions framework) and 'Investment Strategy Insights' (weekly multi-asset positioning).",
         "notable_zh": "2010 年从 AIG Investments 剥离，目前由李泽楷的 Pacific Century Group 控股。代表研究：'Capital Market Line'（5 年期资本市场假设框架）和 'Investment Strategy Insights'（每周多资产配置策略）。",
     },
+    "ares-management": {
+        "founded": "1997", "aum": "~$450B", "hq": "Los Angeles, USA",
+        "type_en": "Listed Alternative Asset Manager (NYSE: ARES)", "type_zh": "上市另类资产管理公司 (NYSE: ARES)",
+        "desc_zh": "全球领先另类资产管理公司（约 $450B AUM），1997 年由 Tony Ressler 等人创立，2014 年纽交所上市。核心业务：私募信贷（美国直接借贷与中端市场最大平台之一）、私募股权、不动产/基础设施，以及通过 Aspida 开展的保险解决方案。",
+        "notable_en": "Pioneer of US middle-market direct lending; Ares Capital Corporation (NASDAQ: ARCC) is the largest publicly traded BDC. Acquired Landmark Partners (2021), AMP Capital infrastructure (2022) and GLP Capital Partners' international platform (2024), expanding real assets footprint substantially.",
+        "notable_zh": "美国中端市场直接借贷开创者；旗下 Ares Capital Corporation（NASDAQ: ARCC）是规模最大的上市 BDC。先后并购 Landmark Partners（2021）、AMP Capital 基础设施业务（2022）与 GLP Capital Partners 国际平台（2024），大幅扩展实物资产规模。",
+    },
 }
 
 _STRATEGY_LABELS: dict[str, str] = {
