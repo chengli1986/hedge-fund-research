@@ -226,6 +226,20 @@ _FUND_PROFILES: dict[str, dict] = {
         "notable_en": "Quant equity pioneer (factor strategies since the 1990s) and one of the earliest mainstream managers to fully integrate sustainability/ESG into core investing; long-standing emerging-markets equity franchise.",
         "notable_zh": "量化股票投资先驱（1990 年代起部署因子策略），最早将可持续 / ESG 全面整合到主流投资流程的资管之一；新兴市场股票特许经营历史悠久。",
     },
+    "de-shaw": {
+        "founded": "1988", "aum": "~$60B", "hq": "New York, USA",
+        "type_en": "Quantitative Hedge Fund / Multi-Strategy", "type_zh": "量化对冲基金 / 多策略",
+        "desc_zh": "由计算机科学家 David E. Shaw 于 1988 年创立的量化多策略对冲基金（约 $60B AUM），以系统化/统计套利投资和深度技术能力见长。覆盖全球股票、宏观、信贷、可转债与私募资本；以严格的量化研究流程和强工程化基础设施区别于传统对冲基金。",
+        "notable_en": "Pioneer of computational/statistical-arbitrage investing; alumni network spawned multiple successful funds (Two Sigma, Hudson River Trading). The Library publishes long-form quant research papers (often only 1-3 per year) with academic-style rigor.",
+        "notable_zh": "计算/统计套利量化投资的先驱；前员工创立了多家成功量化对冲基金（Two Sigma、Hudson River Trading）。Library 每年只发布 1-3 篇长篇量化研究论文，学术级别的严谨性。",
+    },
+    "pinebridge": {
+        "founded": "2010", "aum": "~$190B", "hq": "New York, USA",
+        "type_en": "Global Asset Manager / Multi-Strategy", "type_zh": "全球资产管理 / 多策略",
+        "desc_zh": "全球资产管理公司（约 $190B AUM），总部纽约，2010 年从 AIG Investments 剥离独立，亚太业务渊源深厚。专长固定收益（新兴市场债、杠杆融资、投资级债券）、多资产与主动股票；服务全球机构与高净值客户。",
+        "notable_en": "Spun out of AIG Investments in 2010 and majority-owned by Pacific Century Group (Richard Li). Widely followed publications: 'Capital Market Line' (5-year capital-market assumptions framework) and 'Investment Strategy Insights' (weekly multi-asset positioning).",
+        "notable_zh": "2010 年从 AIG Investments 剥离，目前由李泽楷的 Pacific Century Group 控股。代表研究：'Capital Market Line'（5 年期资本市场假设框架）和 'Investment Strategy Insights'（每周多资产配置策略）。",
+    },
 }
 
 _STRATEGY_LABELS: dict[str, str] = {
