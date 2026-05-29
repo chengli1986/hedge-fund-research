@@ -55,12 +55,6 @@ BADGE_COLORS: dict[str, str] = {
 
 INITIAL_VISIBLE = 20
 RECENT_DAYS = 180  # Articles older than this are folded behind a "Show older" toggle
-# Inline JSON island (shipped synchronously with the HTML page) only carries
-# tk_en / tk_zh / tags for articles ≤ INLINE_DETAILS_DAYS — the long bd_en /
-# bd_zh fields and everything for articles > cutoff live in a sibling JSON
-# file that the page lazy-fetches on first <details> open. Keeps the initial
-# parse cost flat as the production source list grows.
-INLINE_DETAILS_DAYS = 90
 
 # ── Static fund profile data (displayed in Sources tab) ──
 _FUND_PROFILES: dict[str, dict] = {
@@ -416,15 +410,8 @@ def _article_card(a: dict, show_takeaway: bool = False) -> tuple[str, dict | Non
     return html, details_payload
 
 
-def generate_html(articles: list[dict], *, return_external_details: bool = False):
-    """Generate the full HTML dashboard string from a list of article dicts.
-
-    By default returns the HTML string (backward-compatible with existing
-    callers). Pass `return_external_details=True` to also receive the full
-    article-details dict that needs to be written to the sibling JSON file
-    for the page's lazy-fetch path:
-        (html, full_details_dict) = generate_html(articles, return_external_details=True)
-    """
+def generate_html(articles: list[dict]) -> str:
+    """Generate the full HTML dashboard string from a list of article dicts."""
     sources = _load_sources()
     now = datetime.now(BJT).strftime("%Y-%m-%d %H:%M BJT")
 
@@ -491,15 +478,8 @@ def generate_html(articles: list[dict], *, return_external_details: bool = False
     # returns the first match; the second pool entry is orphaned (no view
     # container ever references it, so it stays hidden in the pool). This is
     # intentional graceful degradation, not a behavior this refactor introduces.
-    # Inline JSON cutoff — articles older than this only live in the external
-    # details file. tk_en / tk_zh / tags for ≤ cutoff articles travel inline so
-    # the takeaway can render synchronously on first <details> open; bodies
-    # always lazy-fetch.
-    inline_cutoff = (datetime.now(BJT) - timedelta(days=INLINE_DETAILS_DAYS)).strftime("%Y-%m-%d")
-
     pool_parts: list[str] = []
-    inline_details_by_aid: dict[str, dict] = {}
-    full_details_by_aid: dict[str, dict] = {}
+    details_by_aid: dict[str, dict] = {}
     for a in sorted_articles:
         sid = a.get("source_id", "unknown")
         aid = a.get("id", "")
@@ -508,19 +488,7 @@ def generate_html(articles: list[dict], *, return_external_details: bool = False
         ) if a.get("themes") else "unthemed"
         card_html, details_payload = _article_card(a, show_takeaway=True)
         if details_payload is not None:
-            aid_key = f"a-{_esc(aid)}"
-            # External (sibling JSON file) always carries full payload —
-            # users that click into older articles still see complete content.
-            full_details_by_aid[aid_key] = details_payload
-            # Inline carries only the short fields, and only for articles
-            # within the cutoff window. >cutoff articles get a fetch on Open.
-            article_date = a.get("date") or ""
-            if article_date >= inline_cutoff:
-                inline_details_by_aid[aid_key] = {
-                    "tk_en": details_payload["tk_en"],
-                    "tk_zh": details_payload["tk_zh"],
-                    "tags": details_payload["tags"],
-                }
+            details_by_aid[f"a-{_esc(aid)}"] = details_payload
         pool_parts.append(
             f'<article id="a-{_esc(aid)}" class="pool-article" '
             f'data-source-id="{_esc(sid)}" '
@@ -531,14 +499,13 @@ def generate_html(articles: list[dict], *, return_external_details: bool = False
         )
     article_pool_html = "\n".join(pool_parts)
 
-    # Inline JSON data island — small, parses synchronously on page load.
-    # Escape </ to <\/ so the HTML parser does not prematurely close the
-    # script tag if any field happens to contain a literal '</script>'-like
-    # substring.
-    inline_details_json = json.dumps(inline_details_by_aid, ensure_ascii=False).replace("</", "<\\/")
+    # JSON data island for lazy <details> hydration. Escape </ to <\/ so the
+    # HTML parser does not prematurely close the script tag if any analysis
+    # body happens to contain a literal '</script>'-like substring.
+    details_json = json.dumps(details_by_aid, ensure_ascii=False).replace("</", "<\\/")
     details_island = (
         f'<script type="application/json" id="article-details-data">'
-        f'{inline_details_json}</script>'
+        f'{details_json}</script>'
     )
 
     # ── Build cluster HTML (Themes view) ──
@@ -1277,134 +1244,47 @@ function toggleOlder() {{
   if (typeof updateLoadMoreCount === 'function') updateLoadMoreCount();
 }}
 
-/* ── Row toggle (Open/Close) + two-tier lazy <details> hydration ──
+/* ── Row toggle (Open/Close) + lazy <details> hydration ──
  * After the unified-pool refactor each article is a .pool-article; legacy
  * .timeline-row / .cluster-item selectors remain as fallback in case future
  * views reintroduce those wrappers.
  *
- * Tier 1 — Inline JSON island (#article-details-data): only tk_en / tk_zh /
- *   tags for articles within INLINE_DETAILS_DAYS (default 90d). Parses
- *   synchronously on page load; small payload keeps the initial parse cost
- *   flat as the production source list grows.
- * Tier 2 — Sibling JSON file (./hedge-fund-research-details.json): full
- *   bodies (bd_en / bd_zh) for everything, plus all fields for articles
- *   beyond the inline cutoff. Fetched lazily on first <details> open and
- *   cached for the rest of the session.
- *
- * On open: takeaway + tags render synchronously from Tier 1 (if present);
- * a "Loading…" placeholder occupies the body slot until Tier 2 resolves,
- * at which point bodies swap in. Articles past the inline cutoff fetch
- * everything from Tier 2.
+ * Hydration: <details> shells are emitted with only <summary> inside.
+ * Full analysis bodies live in the #article-details-data JSON island and
+ * are injected into the matching <details> on first open. Cuts initial DOM
+ * construction by ~50% (~6000 nodes → ~3000) since most users never expand
+ * more than a handful of articles per session.
  */
-const ARTICLE_DETAILS_INLINE = (() => {{
+const ARTICLE_DETAILS = (() => {{
   const el = document.getElementById('article-details-data');
   if (!el) return {{}};
   try {{ return JSON.parse(el.textContent); }}
   catch (e) {{ console.error('article-details parse failed', e); return {{}}; }}
 }})();
 
-const EXTERNAL_DETAILS_URL = './hedge-fund-research-details.json';
-let _externalDetailsCache = null;
-let _externalDetailsPromise = null;
-function loadExternalDetails() {{
-  if (_externalDetailsCache) return Promise.resolve(_externalDetailsCache);
-  if (_externalDetailsPromise) return _externalDetailsPromise;
-  _externalDetailsPromise = fetch(EXTERNAL_DETAILS_URL)
-    .then(r => {{ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }})
-    .then(data => {{ _externalDetailsCache = data; return data; }})
-    .catch(e => {{
-      console.error('external details fetch failed', e);
-      _externalDetailsPromise = null;  // allow retry on next open
-      throw e;
-    }});
-  return _externalDetailsPromise;
-}}
-
-function _renderDetailsBody(details, d) {{
+function hydrateArticleDetails(article) {{
+  const details = article && article.querySelector('.summary-panel');
+  if (!details || details.dataset.hydrated === 'true') return;
+  const d = ARTICLE_DETAILS[article.id];
+  if (!d) return;
   details.insertAdjacentHTML('beforeend',
     '<div class="summary-copy lang-en">' +
-      '<p class="takeaway"><strong>Takeaway:</strong> ' + (d.tk_en || '') + '</p>' +
-      '<p class="body-en">' + (d.bd_en || '') + '</p>' +
+      '<p class="takeaway"><strong>Takeaway:</strong> ' + d.tk_en + '</p>' +
+      '<p>' + d.bd_en + '</p>' +
     '</div>' +
     '<div class="summary-copy lang-zh" style="display:none">' +
-      '<p class="takeaway"><strong>要点:</strong> ' + (d.tk_zh || '') + '</p>' +
-      '<p class="body-zh">' + (d.bd_zh || '') + '</p>' +
+      '<p class="takeaway"><strong>要点:</strong> ' + d.tk_zh + '</p>' +
+      '<p>' + d.bd_zh + '</p>' +
     '</div>' +
-    '<div class="theme-tags">' + (d.tags || '') + '</div>'
+    '<div class="theme-tags">' + d.tags + '</div>'
   );
+  details.dataset.hydrated = 'true';
   // Apply current lang state so newly-injected lang-en/lang-zh follow the
   // already-toggled UI; lang-zh starts with inline display:none which is
   // correct for default (English) mode.
   if (langZh) {{
     details.querySelectorAll('.lang-en').forEach(el => el.style.display = 'none');
     details.querySelectorAll('.lang-zh').forEach(el => el.style.display = '');
-  }}
-}}
-
-function _swapBody(details, bd_en, bd_zh) {{
-  const enBody = details.querySelector('p.body-en');
-  const zhBody = details.querySelector('p.body-zh');
-  if (enBody) enBody.innerHTML = bd_en;
-  if (zhBody) zhBody.innerHTML = bd_zh;
-}}
-
-function hydrateArticleDetails(article) {{
-  const details = article && article.querySelector('.summary-panel');
-  if (!details || details.dataset.hydrated === 'true') return;
-  details.dataset.hydrated = 'true';
-
-  const inline = ARTICLE_DETAILS_INLINE[article.id];
-  const LOAD_EN = '<em class="body-loading">Loading…</em>';
-  const LOAD_ZH = '<em class="body-loading">加载中…</em>';
-
-  if (inline) {{
-    // Tier 1 present — render takeaway + tags now, swap body once Tier 2 lands.
-    _renderDetailsBody(details, {{
-      tk_en: inline.tk_en, tk_zh: inline.tk_zh,
-      bd_en: LOAD_EN, bd_zh: LOAD_ZH,
-      tags: inline.tags,
-    }});
-    loadExternalDetails().then(full => {{
-      const d = full[article.id];
-      if (d) _swapBody(details, d.bd_en || '', d.bd_zh || '');
-      else _swapBody(details,
-        '<em>Full content unavailable.</em>',
-        '<em>无完整内容。</em>');
-    }}).catch(_ => {{
-      _swapBody(details,
-        '<em>Could not load full content — see source link above.</em>',
-        '<em>无法加载完整内容 — 请查看上方源链接。</em>');
-    }});
-  }} else {{
-    // No inline (article older than inline cutoff) — fetch everything.
-    _renderDetailsBody(details, {{
-      tk_en: LOAD_EN, tk_zh: LOAD_ZH,
-      bd_en: '', bd_zh: '',
-      tags: '',
-    }});
-    loadExternalDetails().then(full => {{
-      const d = full[article.id];
-      details.querySelectorAll('.summary-copy, .theme-tags').forEach(el => el.remove());
-      if (d) _renderDetailsBody(details, d);
-      else {{
-        details.insertAdjacentHTML('beforeend',
-          '<div class="summary-copy lang-en"><em>Article details not available.</em></div>' +
-          '<div class="summary-copy lang-zh" style="display:none"><em>无文章详情。</em></div>');
-        if (langZh) {{
-          details.querySelectorAll('.lang-en').forEach(el => el.style.display = 'none');
-          details.querySelectorAll('.lang-zh').forEach(el => el.style.display = '');
-        }}
-      }}
-    }}).catch(_ => {{
-      details.querySelectorAll('.summary-copy, .theme-tags').forEach(el => el.remove());
-      details.insertAdjacentHTML('beforeend',
-        '<div class="summary-copy lang-en"><em>Could not load — see source link above.</em></div>' +
-        '<div class="summary-copy lang-zh" style="display:none"><em>无法加载 — 请查看上方源链接。</em></div>');
-      if (langZh) {{
-        details.querySelectorAll('.lang-en').forEach(el => el.style.display = 'none');
-        details.querySelectorAll('.lang-zh').forEach(el => el.style.display = '');
-      }}
-    }});
   }}
 }}
 
@@ -1507,8 +1387,6 @@ bindRowToggles();
 </body>
 </html>"""
 
-    if return_external_details:
-        return page, full_details_by_aid
     return page
 
 
@@ -1523,27 +1401,6 @@ def publish_html(output_file: Path, html_content: str) -> Path:
     return gzip_path
 
 
-def external_details_path(output_file: Path) -> Path:
-    """Return the sibling JSON path that holds full article details for the
-    page's lazy-fetch path. e.g. hedge-fund-research.html → hedge-fund-research-details.json."""
-    return output_file.with_name(output_file.stem + "-details.json")
-
-
-def publish_external_details(output_file: Path, details: dict) -> Path:
-    """Write the full article-details JSON (and gzip) to a sibling of the HTML
-    file. Returns the gzip path. The JSON is served at the same URL prefix as
-    the HTML; the page fetches it on first <details> open."""
-    json_path = external_details_path(output_file)
-    json_text = json.dumps(details, ensure_ascii=False)
-    json_path.parent.mkdir(parents=True, exist_ok=True)
-    json_path.write_text(json_text, encoding="utf-8")
-
-    gzip_path = json_path.with_suffix(json_path.suffix + ".gz")
-    with gzip.open(gzip_path, "wt", encoding="utf-8") as f:
-        f.write(json_text)
-    return gzip_path
-
-
 def main() -> None:
     """Load data, generate HTML, and publish to the configured output path."""
     parser = argparse.ArgumentParser(description="Hedge Fund Research — HTML publisher")
@@ -1555,15 +1412,12 @@ def main() -> None:
     args = parser.parse_args()
 
     articles = load_articles()
-    html_content, full_details = generate_html(articles, return_external_details=True)
+    html_content = generate_html(articles)
 
     output_file = Path(args.output)
     gzip_path = publish_html(output_file, html_content)
     print(f"Written {len(html_content)} bytes to {output_file}")
     print(f"Gzipped: {gzip_path}")
-
-    details_gzip = publish_external_details(output_file, full_details)
-    print(f"Details JSON ({len(full_details)} entries) written next to HTML; gzip: {details_gzip}")
 
     # Sync generated page back to docs-site repo so docs-sync stays consistent
     docs_page = Path.home() / "docs-site" / "pages" / "hedge-fund-research.html"
