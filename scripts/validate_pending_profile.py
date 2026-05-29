@@ -22,13 +22,56 @@ from pathlib import Path
 REQUIRED_FIELDS = ("id", "founded", "aum", "hq", "type_en", "type_zh",
                    "desc_zh", "notable_en", "notable_zh")
 
+# Evidence fields: a citation (URL or domain) the agent must record after
+# web-verifying the corresponding fact. The whole point of the auto-graduate
+# gate is that AUM/founded are *checked against a source*, not recalled from
+# the model's parametric memory (which is where the PineBridge ~$190B and the
+# Ares ~$450B confabulations came from). No source → not auto-graduatable.
+EVIDENCE_FIELDS = {"aum": "aum_source", "founded": "founded_source"}
+
 HIGH_RISK_MARKERS = ("unknown", "unclear", "tbd", "n/a", "n.a.", "unverified",
-                     "估计", "未知", "待定")
+                     "reportedly", "rumored", "circa", "estimated",
+                     "估计", "未知", "待定", "推测", "据传", "存疑")
 
 DESC_MIN = 50
 DESC_MAX = 300
 FOUNDED_MIN = 1700
 FOUNDED_MAX = 2026
+
+# AUM plausibility band (rough USD magnitude). Catches absurd values
+# (e.g. "$50T", "$5") but NOT in-band confabulations — the evidence
+# requirement is what guards the latter.
+AUM_MIN_USD = 1e7   # $10M
+AUM_MAX_USD = 2e13  # $20T
+
+# A citation must look like a real source: a URL or a bare domain.
+_CITATION_RE = re.compile(
+    r"https?://\S+|\b[\w-]+\.(?:com|org|gov|net|edu|io|co|cn|uk|asia)\b", re.I)
+
+# Currency-prefixed money token, e.g. "$190B", "€2.2T", "~$500M".
+_MONEY_TOKEN_RE = re.compile(r"[\$¥€£]\s*(\d+(?:\.\d+)?)\s*([KMBT])\b", re.I)
+
+_UNIT_MULT = {"k": 1e3, "m": 1e6, "b": 1e9, "t": 1e12}
+
+
+def _money_tokens(text: str) -> set[str]:
+    """Normalised currency-figure tokens in `text`, e.g. {'190b', '2.2t'}.
+    Currency symbol is ignored on purpose (we compare magnitudes, not FX)."""
+    return {f"{num}{unit.lower()}"
+            for num, unit in _MONEY_TOKEN_RE.findall(text or "")}
+
+
+def _aum_usd_magnitude(aum: str) -> float | None:
+    """Rough USD magnitude of the first money token in `aum`, or None if the
+    value has no parseable number+unit (e.g. '$15T+ benchmarked' still parses
+    the 15T part; 'lots of money' returns None)."""
+    m = _MONEY_TOKEN_RE.search(aum or "")
+    if not m:
+        return None
+    try:
+        return float(m.group(1)) * _UNIT_MULT[m.group(2).lower()]
+    except (ValueError, KeyError):
+        return None
 
 
 def validate_profile(data: dict) -> dict:
@@ -48,6 +91,12 @@ def validate_profile(data: dict) -> dict:
             issues.append(f"aum field has no currency symbol: {aum!r}")
         if not re.search(r"\d", aum):
             issues.append(f"aum field has no numeric value: {aum!r}")
+        mag = _aum_usd_magnitude(aum)
+        if mag is not None and not (AUM_MIN_USD <= mag <= AUM_MAX_USD):
+            issues.append(
+                f"aum magnitude implausible: {aum!r} parses to ~${mag:,.0f} "
+                f"(expected ${AUM_MIN_USD:,.0f}–${AUM_MAX_USD:,.0f})"
+            )
 
     founded = str(data.get("founded", "")).strip()
     if founded:
@@ -58,6 +107,24 @@ def validate_profile(data: dict) -> dict:
             issues.append(
                 f"founded year {founded} out of range "
                 f"{FOUNDED_MIN}-{FOUNDED_MAX}"
+            )
+
+    # Evidence requirement: each verifiable fact (aum, founded) must carry a
+    # citation that looks like a real source (URL or domain). Missing/weak
+    # evidence is a HARD issue → blocks auto-graduate (and prompts the human to
+    # record the source they verified against before a manual graduate).
+    for fact, src_field in EVIDENCE_FIELDS.items():
+        if not str(data.get(fact, "")).strip():
+            continue  # absence already reported by missing-fields check
+        src = str(data.get(src_field, "")).strip()
+        if not src:
+            issues.append(
+                f"missing evidence: {src_field} required to back {fact!r} "
+                f"(record a source URL — verify, don't recall from memory)"
+            )
+        elif not _CITATION_RE.search(src):
+            issues.append(
+                f"{src_field} is not a citation (need a URL or domain): {src!r}"
             )
 
     hq = str(data.get("hq", "")).strip()
@@ -73,6 +140,19 @@ def validate_profile(data: dict) -> dict:
             issues.append(f"desc_zh too short ({n} chars, need ≥{DESC_MIN})")
         elif n > DESC_MAX:
             issues.append(f"desc_zh too long ({n} chars, max {DESC_MAX})")
+
+    # AUM internal-consistency: when both the structured aum field and desc_zh
+    # state a currency figure, they must share at least one. Catches the LLM
+    # self-contradiction case (aum="$100B" but desc says "$190B"). Conservative:
+    # only fires when both sides carry a parseable currency token, so a desc
+    # written in Chinese 亿/万亿 notation (no $ token) never false-positives.
+    aum_tokens = _money_tokens(aum)
+    desc_tokens = _money_tokens(desc_zh)
+    if aum_tokens and desc_tokens and aum_tokens.isdisjoint(desc_tokens):
+        issues.append(
+            f"aum/desc_zh figure mismatch: aum has {sorted(aum_tokens)} but "
+            f"desc_zh has {sorted(desc_tokens)} (possible confabulation)"
+        )
 
     high_risk = False
     risk_hits: list[str] = []

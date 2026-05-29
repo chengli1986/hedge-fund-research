@@ -225,7 +225,12 @@ Preview: "BlackRock Investment Institute weekly outlook — Markets digest..."
 **重要**：这一步**不修改 publish.py**。LLM 生成的 profile 数据（AUM、创立年、总部）
 有出错风险，不直接上线 dashboard。
 
-用网络搜索 + 你已有的知识，针对该基金生成结构化 profile，写到 JSON 文件：
+**⚠️ AUM 与 founded 必须用 WebSearch / WebFetch 核实，禁止凭记忆或行业常识填写。**
+教训：2026-05-29 auto-graduate 把凭记忆编的 PineBridge `~$190B`（实际 ~$100B）和
+Ares `~$450B`（实际 ~$484B）直接上线了。模型参数记忆里的金融数字经常过时或错误。
+对每个数字：搜一下 → 找到可信来源（官网 / SEC 文件 / 收购公告 / Wikipedia）→ 把
+**来源 URL 写进 `aum_source` / `founded_source` 字段**。validator 现在**硬性要求**这
+两个字段含 URL 或域名，没有就不会 auto-graduate（保留转人工 review）。
 
 ```bash
 mkdir -p pending_profiles
@@ -240,17 +245,21 @@ mkdir -p pending_profiles
   "hq": "City, Country",
   "type_en": "Asset Manager / HF / PE / etc.",
   "type_zh": "资产管理 / 对冲基金 / 私募 / 等",
-  "desc_zh": "中文一两句简介，重点说投资风格、起源、特色（如何区别于其他基金）。",
+  "desc_zh": "中文一两句简介，重点说投资风格、起源、特色（如何区别于其他基金）。AUM 数字应与 aum 字段一致。",
   "notable_en": "1-2 sentence English: notable fact / track record / signature strategy",
   "notable_zh": "中文 1-2 句：代表事迹 / 业绩记录 / 招牌策略",
+  "aum_source": "https://example.com/... (核实 AUM 的来源 URL/域名，必填)",
+  "founded_source": "https://example.com/... (核实 founded 的来源 URL/域名，必填)",
   "//desc_zh-rule": "desc_zh 必须描述基金本身（市场覆盖/策略/特色），不能描述研究频道。错误示例：'Tactical Take 月度宏观播客由...主持' — 这是把频道介绍当基金简介。正确示例：'美国最大私募信贷/另类资管之一，1990 年由 Leon Black 等创立。核心业务：私募信贷（ABF 开创者）、私募股权、保险负债驱动投资。' 标志性研究输出（Howard Marks memos / Tactical Take podcast）放 notable_zh，不放 desc_zh。",
   "_generated_at": "ISO timestamp",
-  "_confidence_notes": "Areas where you're less sure (e.g., 'AUM may be outdated as of Q3 2024')"
+  "_confidence_notes": "Areas where you're less sure (e.g., 'AUM as of Q4 2024 per source')"
 }
 ```
 
-数字（AUM、创立年）若不确定就**写不确定的范围**（"~$1-2T"）+ 在 `_confidence_notes`
-里说明。**不要瞎编精确数字。**
+规则：
+- AUM、founded 必须有来源；`aum` 字段里的金额要和 `desc_zh` 里复述的金额一致（validator 会做 disjoint 检查）。
+- 数字若实在核实不到精确值就**写来源给出的范围**（"~$1-2T"）+ `_confidence_notes` 说明；但凭空精确数字 = 严禁。
+- 数量级要合理（$10M–$20T 之间），validator 会拦明显离谱的值。
 
 **写完后必须跑 sanity check**：
 ```bash
@@ -258,14 +267,14 @@ python3 scripts/validate_pending_profile.py pending_profiles/FUNDID.json --write
 ```
 
 退出码：
-- `0` → profile 通过所有 regex 检查（aum 含货币符号+数字 / founded 4 位数 1700-2026 / hq 含逗号 / desc_zh 50-300 字 / 无 unknown/TBD/未知 等高风险标记）
+- `0` → profile 通过所有检查（aum 含货币符号+数字+数量级合理 / founded 4 位数 1700-2026 / hq 含逗号 / desc_zh 50-300 字 / **aum_source + founded_source 含 URL 或域名** / **aum 与 desc_zh 金额一致** / 无 unknown/TBD/reportedly/未知/据传 等高风险标记）
 - `1` → 有 issues（验证文件 `<id>.validation.json` 已写出，列出问题）
 - `2` → 文件读不了
 
 **判定**：
 - 退出码 `0` → 继续 Phase 5 后续
-- 退出码 `1` 但**只是 high_risk markers**（unknown/未知）→ 继续，但 history.jsonl 加 `profile_high_risk: true`
-- 退出码 `1` 且**有 missing fields 或硬约束违规**（aum 没货币符号、founded 不是 4 位数等）→ **重写 profile**（最多 1 次重试），仍失败就跳过整个 Phase 5（不写 profile）但继续 Phase 6（仍 commit 代码 wiring，只是没 profile 草稿）
+- 退出码 `1` 但**只是 high_risk markers**（unknown/未知/reportedly 等）→ 继续，但 history.jsonl 加 `profile_high_risk: true`（不会 auto-graduate，转人工）
+- 退出码 `1` 且**有硬约束违规**（缺 aum_source/founded_source 来源、来源不是 URL/域名、aum 与 desc_zh 金额对不上、aum 数量级离谱、aum 没货币符号、founded 不是 4 位数、missing fields 等）→ **回去补 WebSearch 核实并重写 profile**（最多 1 次重试），仍失败就跳过整个 Phase 5（不写 profile）但继续 Phase 6（仍 commit 代码 wiring，只是没 profile 草稿）
 
 ### Phase 4.5 — Auto-graduate profile（条件触发）
 

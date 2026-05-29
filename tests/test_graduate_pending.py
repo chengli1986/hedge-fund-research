@@ -68,6 +68,8 @@ def _setup(tmp_path: Path, fund_id: str = "research-affiliates",
             "desc_zh": "Newport Beach 量化投资研究机构，2002 年由 Rob Arnott 创立。开创 RAFI 基本面指数化。授权 Smart Beta 策略至约 1700 亿美元资产。",
             "notable_en": "Founded by Rob Arnott (2002); pioneered fundamental indexation.",
             "notable_zh": "Rob Arnott 2002 年创立；首创基本面指数。",
+            "aum_source": "https://www.researchaffiliates.com/about-us",
+            "founded_source": "researchaffiliates.com",
             "_generated_at": "2026-05-15T22:00:00+08:00",
             "_confidence_notes": "AUM may be outdated.",
         }
@@ -135,6 +137,7 @@ def test_graduate_refuses_when_already_in_FUND_PROFILES(tmp_path):
         "type_en": "X", "type_zh": "X",
         "desc_zh": "Newport Beach 量化投资研究机构，2002 年由 Rob Arnott 创立。开创 RAFI 基本面指数化。授权 Smart Beta 策略至约 1700 亿美元资产。",
         "notable_en": "X", "notable_zh": "X",
+        "aum_source": "researchaffiliates.com", "founded_source": "researchaffiliates.com",
     }, ensure_ascii=False))
 
     rc = gp.graduate("research-affiliates", base_dir=tmp_path)
