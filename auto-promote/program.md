@@ -267,6 +267,44 @@ python3 scripts/validate_pending_profile.py pending_profiles/FUNDID.json --write
 - 退出码 `1` 但**只是 high_risk markers**（unknown/未知）→ 继续，但 history.jsonl 加 `profile_high_risk: true`
 - 退出码 `1` 且**有 missing fields 或硬约束违规**（aum 没货币符号、founded 不是 4 位数等）→ **重写 profile**（最多 1 次重试），仍失败就跳过整个 Phase 5（不写 profile）但继续 Phase 6（仍 commit 代码 wiring，只是没 profile 草稿）
 
+### Phase 4.5 — Auto-graduate profile（条件触发）
+
+⚠️ **仅当 `.validation.json` 同时满足 `ok=true` AND `high_risk=false` 时**触发本步骤；
+任一不满足则保留 `pending_profiles/<id>.json` 等人工 review，跳过本步直接进 Phase 5。
+
+```bash
+# 读 validation 结果
+python3 - << 'EOF'
+import json
+import subprocess
+import sys
+from pathlib import Path
+val = json.loads(Path("pending_profiles/FUNDID.validation.json").read_text())
+if val.get("ok") is True and val.get("high_risk") is False:
+    r = subprocess.run(["python3", "scripts/graduate_pending.py", "FUNDID"],
+                       capture_output=True, text=True)
+    sys.stdout.write(r.stdout)
+    sys.stderr.write(r.stderr)
+    sys.exit(r.returncode)
+else:
+    print(f"[auto-graduate] skipped: ok={val.get('ok')} high_risk={val.get('high_risk')}")
+    sys.exit(0)
+EOF
+```
+
+`graduate_pending.py` 成功后副作用：
+- `publish.py` 多了一条 `_FUND_PROFILES["FUNDID"] = {...}` 条目
+- `pending_profiles/FUNDID.json` 和 `pending_profiles/FUNDID.validation.json` 被脚本删掉
+
+**判定**：
+- 退出码 `0` → auto-graduated；Phase 6 commit 须包含 `publish.py` 改动，history 加 `auto_graduated: true`
+- 退出码 `1` (validation 仍 fail) / `2` (已存在) / `3` (pending 文件丢了) / `4` (publish.py 格式异常) → **不重试，不阻塞**；继续 Phase 5（pending 文件保留在原地，等人工 graduate）；history 加 `auto_graduated: false` + `auto_graduate_error: "exit_code=<n>"`
+- 跳过（不满足条件）→ history 加 `auto_graduated: false` + `auto_graduate_skip_reason: "validation_ok=false"` 或 `"high_risk=true"`
+
+**Why this gate is conservative**：`graduate_pending.py` 内部只拦 hard_issues，**接受**纯
+high_risk markers 通过（设计上是给人工 invoke 留口子，假设人会自己核对）。Auto-mode 下没人核对，
+所以本步要在调用前自己加守门——only `ok=true AND high_risk=false` 才放行。
+
 ### Phase 5 — 跑 contract test
 
 ```bash
@@ -279,10 +317,11 @@ python3 -m pytest tests/ -q 2>&1 | tail -10
 **若任何 test 失败**：
 ```bash
 git checkout config/sources.json publish.py fetch_content.py
-rm -f pending_profiles/FUNDID.json
+rm -f pending_profiles/FUNDID.json pending_profiles/FUNDID.validation.json
 ```
 回滚后将该基金记到 `logs/auto-promote-history.jsonl`（见 Phase 6），outcome=`"failed"`，
-继续下一个目标。
+继续下一个目标。`git checkout publish.py` 一次同时撤销 wiring 和 Phase 4.5 的 auto-graduate
+插入（如果当时执行了的话）。
 
 ### Phase 6 — Commit + push + 写日志
 
@@ -299,11 +338,23 @@ rm -f pending_profiles/FUNDID.json
 
 成功路径：
 ```bash
-git add config/sources.json publish.py fetch_content.py pending_profiles/FUNDID.json
+# publish.py 和 sources.json / fetch_content.py 总是要 add。
+# pending_profiles/FUNDID.json 仅在未 auto-graduate 时才存在 — 用条件 add。
+git add config/sources.json publish.py fetch_content.py
+if [ -f pending_profiles/FUNDID.json ]; then
+    git add pending_profiles/FUNDID.json pending_profiles/FUNDID.validation.json
+fi
+
+# commit message 文案根据是否 auto-graduated 而变：
+# - auto_graduated=true → "wired up + _FUND_PROFILES entry graduated automatically"
+# - auto_graduated=false → "_FUND_PROFILES draft written to pending_profiles/..."
+
 git commit -m "feat: auto-promote FUND_NAME to production sources
 
 Trial passed — wired up sources.json + BADGE_COLORS + CONTENT_FETCHERS.
-_FUND_PROFILES draft written to pending_profiles/FUNDID.json (manual review needed).
+[ Phase 4.5 outcome — choose one based on actual result:
+  · _FUND_PROFILES entry auto-graduated (validation ok + no high-risk markers).
+  · _FUND_PROFILES draft written to pending_profiles/FUNDID.json (manual review needed). ]
 
 Auto-promote agent run 2026-XX-XX."
 git push origin main
@@ -319,7 +370,9 @@ BJT = timezone(timedelta(hours=8))
 log = Path("logs/auto-promote-history.jsonl")
 log.parent.mkdir(exist_ok=True)
 
-# Read profile validation if exists
+# Read profile validation if it still exists. Note: when Phase 4.5 auto-graduates,
+# `graduate_pending.py` deletes both pending_profiles/<id>.json and the .validation.json,
+# so val_path.exists() will be False — keep profile_val_ok/high_risk as None in that case.
 profile_val_ok = None
 profile_high_risk = None
 val_path = Path(f"pending_profiles/FUNDID.validation.json")
@@ -328,17 +381,25 @@ if val_path.exists():
     profile_val_ok = val.get("ok")
     profile_high_risk = val.get("high_risk")
 
+# Auto-graduate outcome: True only if Phase 4.5 actually ran graduate_pending.py
+# successfully; False otherwise (skipped due to gate, or graduate exit non-zero).
+# Set this based on what Phase 4.5 actually did in this run.
+auto_graduated = True   # or False — set explicitly per Phase 4.5 outcome
+auto_graduate_skip_reason = None  # "validation_ok=false" | "high_risk=true" | "exit_code=N" | None
+
 entry = {
     "date": datetime.now(BJT).strftime("%Y-%m-%d"),
     "timestamp": datetime.now(BJT).isoformat(),
     "id": "FUNDID",
     "name": "FUND_NAME",
     "outcome": "promoted",  # or other (see below)
-    "notes": "Wired sources.json + BADGE + CONTENT_FETCHERS. _FUND_PROFILES draft pending review.",
+    "notes": "Wired sources.json + BADGE + CONTENT_FETCHERS. _FUND_PROFILES entry auto-graduated.",
     "commit": "<git rev-parse HEAD output>",
     "live_test": {"articles": 10, "content_chars": 4823, "avg_quality": 0.72},
     "profile_validation_ok": profile_val_ok,
     "profile_high_risk": profile_high_risk,
+    "auto_graduated": auto_graduated,
+    "auto_graduate_skip_reason": auto_graduate_skip_reason,
 }
 with log.open("a") as f:
     f.write(json.dumps(entry, ensure_ascii=False) + "\n")

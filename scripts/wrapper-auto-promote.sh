@@ -84,12 +84,20 @@ $(cat "$PROGRAM_MD")
 ## Session constraints (added by wrapper)
 - 最长 20 分钟
 - 最多处理 2 个基金
-- 接入后必须运行 pytest；若失败则回滚（git checkout 已修改的文件 + 删 pending_profiles 草稿）
+- 接入后必须运行 pytest；若失败则回滚（git checkout 已修改的文件 + 删
+  pending_profiles/FUNDID.json 和 pending_profiles/FUNDID.validation.json 草稿）
+- **Phase 4.5 auto-graduate**：validation \`ok=true\` AND \`high_risk=false\` 时立即
+  跑 \`python3 scripts/graduate_pending.py FUNDID\`，让 _FUND_PROFILES 条目直接进 publish.py；
+  否则保留 pending 等人工。这是 commit 前的最后一步代码修改，必须在 pytest 之前完成
+  （Phase 5 pytest 验证 graduated 后的状态）。
 - **单基金原子操作顺序（不可拆，不可推迟，不可批量化）**：
   1. \`git commit\` → 2. \`git push origin main\` → 3. \`logs/auto-promote-history.jsonl\` 追加一行
   → 才能进入下一个基金或退出 session
 - Wrapper 用 history 文件认定哪些 commit 已成功；若 commit/push 后 history 未写完就撞 --max-turns
   被截，那笔工作会被误判为 deferred / 漏报。**永远不要把 history-write 推到 session 末尾批量做**。
+- history 条目必须显式记录 \`auto_graduated: true|false\`（成功 graduate 或跳过）+
+  \`auto_graduate_skip_reason\`（跳过时填 "validation_ok=false" / "high_risk=true" /
+  "exit_code=N"；成功时填 null）—— 方便日后审计哪些条目自动进了 publish.py
 - 即使 deferred / failed 也要写一行到 logs/auto-promote-history.jsonl（commit/push 跳过，
   但 history 写入照常）
 "
