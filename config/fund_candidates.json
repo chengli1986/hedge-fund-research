@@ -1100,7 +1100,7 @@
     "quality": "MEDIUM",
     "quality_score": 0.34,
     "topics": "macro, equity, multi-asset, fixed income",
-    "last_deep_analyzed_at": "2026-04-28T01:05:00Z",
+    "last_deep_analyzed_at": "2026-05-29T01:00:00Z",
     "strategy_tags": [
       "macro",
       "equity",
@@ -1596,7 +1596,7 @@
     "quality_score": 0.82,
     "topics": "fixed income, multi-asset, macro, emerging markets, equities",
     "notes": "RECOMMEND: trial passed (8/7 days with articles, quality=0.72)",
-    "last_deep_analyzed_at": "2026-05-19T01:01:44Z",
+    "last_deep_analyzed_at": "2026-05-29T01:00:00Z",
     "is_publicly_accessible": true,
     "has_article_index": true,
     "research_url": "https://www.pinebridge.com/en/our-insights",
@@ -1857,7 +1857,7 @@
     "screening_reason": "Research index detected",
     "fit_score": 0.85,
     "last_validated_at": "2026-05-03T09:00:33.191261+08:00",
-    "last_deep_analyzed_at": "2026-05-19T01:01:44Z",
+    "last_deep_analyzed_at": "2026-05-29T01:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.6,
     "topics": "macro, equity, fixed income, energy, portfolio construction"
@@ -2131,10 +2131,10 @@
     "last_discovered_at": "2026-05-11T09:00:09.554318+08:00",
     "research_url": "https://www.janushenderson.com/en-us/investor/insights/",
     "quality": "HIGH",
-    "quality_score": 0.8,
+    "quality_score": 0.82,
     "topics": "fixed income, equity, macro, geopolitics, technology",
-    "notes": "RECOMMEND: Free weekly research, verified substantive FI",
-    "last_deep_analyzed_at": "2026-05-20T01:10:00Z",
+    "notes": "RECOMMEND: Free weekly, ELN/FI depth confirmed May 2026",
+    "last_deep_analyzed_at": "2026-05-29T01:00:00Z",
     "promoted_at": "2026-05-12T10:19:29.746916+08:00"
   },
   {
