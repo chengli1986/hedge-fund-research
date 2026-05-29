@@ -3804,6 +3804,14 @@
           "article_urls": [],
           "error": null,
           "fetcher_used": false
+        },
+        "2026-05-29": {
+          "accessible": true,
+          "article_count": 0,
+          "date_count": 0,
+          "article_urls": [],
+          "error": null,
+          "fetcher_used": false
         }
       },
       "auto_decided": false,
@@ -3832,6 +3840,14 @@
           "error": "No article links found on index page",
           "day": 3,
           "date": "2026-05-28"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No article links found on index page",
+          "day": 4,
+          "date": "2026-05-29"
         }
       ]
     },
@@ -3899,6 +3915,24 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-05-29": {
+          "accessible": true,
+          "article_count": 9,
+          "date_count": 0,
+          "article_urls": [
+            "https://www.capitalgroup.com/advisor/insights/articles/why-ai-artificial-intelligence-will-transform-not-replace-your-job.html",
+            "https://www.capitalgroup.com/advisor/insights/articles/midterm-elections-markets-5-charts.html",
+            "https://www.capitalgroup.com/advisor/insights/articles/looking-beyond-conflict-viewing-volatility-as-opportunity.html",
+            "https://www.capitalgroup.com/advisor/insights/articles/how-ai-is-reshaping-US-equity-markets.html",
+            "https://www.capitalgroup.com/advisor/practicelab/articles/help-clients-sell-a-business.html",
+            "https://www.capitalgroup.com/advisor/insights/articles/ir-retirement-longevity.html",
+            "https://www.capitalgroup.com/advisor/practicelab/articles/david-devoe-improving-human-capital-for-advisors.html",
+            "https://www.capitalgroup.com/advisor/practicelab/articles/AI-prompt-library-for-financial-advisors.html",
+            "https://www.capitalgroup.com/advisor/practicelab/articles/wealth-planning-life-events.html"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -3933,6 +3967,16 @@
           "js_only_checked": 9,
           "day": 3,
           "date": "2026-05-28"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "Could not extract text from any article",
+          "js_only_count": 9,
+          "js_only_checked": 9,
+          "day": 4,
+          "date": "2026-05-29"
         }
       ]
     },
@@ -3966,6 +4010,24 @@
           "fetcher_used": false
         },
         "2026-05-28": {
+          "accessible": true,
+          "article_count": 2,
+          "date_count": 0,
+          "article_urls": [
+            "https://www.matthewsasia.com/insights/all-insights/aisas-key-role-in-the-ai-ecosystem/",
+            "https://www.matthewsasia.com/insights/CIO-Outlook/q1-2026-cio-review-and-outlook-transcript/",
+            "https://www.matthewsasia.com/insights/CIO-Outlook/q1-2026-cio-review-and-outlook/",
+            "https://www.matthewsasia.com/insights/emerging-markets/a-perspective-on-the-middle-east-crisis/",
+            "https://www.matthewsasia.com/insights/emerging-markets/an-emerging-markets-perspective-on-the-middle-east/",
+            "https://www.matthewsasia.com/insights/all-insights/how-we-research-and-find-innovative-companies/",
+            "https://www.matthewsasia.com/insights/all-insights/how-we-construct-and-manage-portfolios/",
+            "https://www.matthewsasia.com/insights/all-insights/how-we-approach-investing-in-innovation/",
+            "https://www.matthewsasia.com/insights/india/believing-in-india/"
+          ],
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-05-29": {
           "accessible": true,
           "article_count": 2,
           "date_count": 0,
@@ -4056,9 +4118,44 @@
           "js_only_checked": 0,
           "day": 2,
           "date": "2026-05-28"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.matthewsasia.com/insights/all-insights/how-we-construct-and-manage-portfolios/",
+              "relevance": 0.85,
+              "depth": 0.6,
+              "extractable": 0.9,
+              "overall": 0.76,
+              "notes": "Portfolio construction framework for innovation investing using modern portfolio theory and behavioral finance principles"
+            },
+            {
+              "url": "https://www.matthewsasia.com/insights/all-insights/how-we-approach-investing-in-innovation/",
+              "relevance": 0.8,
+              "depth": 0.5,
+              "extractable": 0.9,
+              "overall": 0.7,
+              "notes": "Investment philosophy on identifying innovative problem solvers addressing societal challenges"
+            },
+            {
+              "url": "https://www.matthewsasia.com/insights/india/believing-in-india/",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.7,
+              "overall": 0.86,
+              "notes": "Macro analysis of India's 2025 economic slowdown, geopolitical headwinds, and structural investment case with detailed reasoning"
+            }
+          ],
+          "avg_score": 0.773,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 3,
+          "date": "2026-05-29"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-05-28"
+  "last_summary_sent_date": "2026-05-29"
 }
