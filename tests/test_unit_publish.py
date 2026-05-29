@@ -69,12 +69,109 @@ class TestHtmlOutputValid:
 
 
 class TestBilingualContent:
-    def test_bilingual_content_present(self) -> None:
+    def test_bilingual_takeaways_inline(self) -> None:
+        """Takeaways (tk_en/tk_zh) ship inline in the JSON island for recent articles."""
         result = generate_html(SAMPLE_ARTICLES)
         assert "AI valuations face mean reversion risk." in result
-        assert "Man Group analyzes AI investment cycle risks." in result
         assert "AI估值面临均值回归风险。" in result
-        assert "Man Group分析了AI投资周期的风险。" in result
+
+    def test_bilingual_bodies_in_external_details(self) -> None:
+        """Bodies (bd_en/bd_zh) live in the external JSON, not inline.
+
+        After the 2-tier hydration refactor (90d inline cutoff), bd_en /
+        bd_zh moved out of the HTML to keep initial parse cost flat as
+        the production source list grows. Bodies are fetched lazily on
+        first <details> open.
+        """
+        result, full_details = generate_html(SAMPLE_ARTICLES, return_external_details=True)
+        # Bodies must NOT appear inline (the whole point of the refactor)
+        assert "Man Group analyzes AI investment cycle risks." not in result
+        assert "Man Group分析了AI投资周期的风险。" not in result
+        # Bodies MUST appear in the external dict for lazy fetch
+        all_bodies = " ".join(
+            (entry.get("bd_en", "") + " " + entry.get("bd_zh", ""))
+            for entry in full_details.values()
+        )
+        assert "Man Group analyzes AI investment cycle risks." in all_bodies
+        assert "Man Group分析了AI投资周期的风险。" in all_bodies
+
+
+class TestTwoTierHydration:
+    """Inline (Tier 1) JSON island ships small payload; external (Tier 2) JSON
+    file ships everything. Articles ≤ INLINE_DETAILS_DAYS get tk/tags inline;
+    older articles get nothing inline — they're fetched entirely on Open."""
+
+    def _build_article(self, days_ago: int, aid: str) -> dict:
+        return {
+            "id": aid, "source_id": "man-group", "source_name": "Man",
+            "title": f"Article {aid}", "url": f"https://man.com/{aid}",
+            "date": _date_str(days_ago), "summarized": True,
+            "summary_en": f"BODY_EN_{aid}", "summary_zh": f"正文_{aid}",
+            "key_takeaway_en": f"TAKE_EN_{aid}", "key_takeaway_zh": f"要点_{aid}",
+            "themes": ["AI/Tech"],
+        }
+
+    def test_inline_payload_excludes_body_fields(self) -> None:
+        """Inline JSON must not contain bd_en/bd_zh — those moved to external."""
+        import json, re
+        articles = [self._build_article(30, "recent01")]
+        result = generate_html(articles)
+        m = re.search(r'<script[^>]*id="article-details-data"[^>]*>(.*?)</script>',
+                      result, re.S)
+        assert m, "inline JSON island must be present"
+        inline = json.loads(m.group(1))
+        entry = inline["a-recent01"]
+        assert set(entry.keys()) == {"tk_en", "tk_zh", "tags"}, \
+            f"inline payload must be (tk_en, tk_zh, tags), got {set(entry.keys())}"
+        # Body content must not appear anywhere in the HTML
+        assert "BODY_EN_recent01" not in result
+        assert "正文_recent01" not in result
+
+    def test_inline_excludes_articles_older_than_cutoff(self) -> None:
+        """Articles older than INLINE_DETAILS_DAYS (90d) are not in inline JSON."""
+        import json, re
+        articles = [
+            self._build_article(30, "recent01"),    # within cutoff
+            self._build_article(200, "old01"),      # past cutoff
+        ]
+        result = generate_html(articles)
+        m = re.search(r'<script[^>]*id="article-details-data"[^>]*>(.*?)</script>',
+                      result, re.S)
+        inline = json.loads(m.group(1))
+        assert "a-recent01" in inline
+        assert "a-old01" not in inline
+
+    def test_external_includes_all_articles_with_full_payload(self) -> None:
+        """External JSON has every summarized article and every field."""
+        articles = [
+            self._build_article(30, "recent01"),
+            self._build_article(200, "old01"),
+        ]
+        _, full = generate_html(articles, return_external_details=True)
+        for aid in ("a-recent01", "a-old01"):
+            assert aid in full, f"{aid} missing from external details"
+            entry = full[aid]
+            assert set(entry.keys()) == {"tk_en", "tk_zh", "bd_en", "bd_zh", "tags"}, \
+                f"external payload missing fields for {aid}"
+
+    def test_publish_external_details_writes_json_and_gzip(self, tmp_path: Path) -> None:
+        """publish_external_details writes a sibling JSON + gzip next to the HTML."""
+        import gzip as _gzip
+        import json as _json
+        from publish import publish_external_details, external_details_path
+
+        html_path = tmp_path / "hedge-fund-research.html"
+        details = {"a-x1": {"tk_en": "t", "tk_zh": "要点", "bd_en": "BODY", "bd_zh": "正文", "tags": ""}}
+        gzip_path = publish_external_details(html_path, details)
+
+        json_path = external_details_path(html_path)
+        assert json_path.exists() and json_path.name == "hedge-fund-research-details.json"
+        loaded = _json.loads(json_path.read_text())
+        assert loaded == details
+
+        assert gzip_path.exists() and gzip_path.suffix == ".gz"
+        with _gzip.open(gzip_path, "rt") as f:
+            assert _json.loads(f.read()) == details
 
 
 class TestTimelineSorted:
