@@ -233,19 +233,22 @@ def count_articles(url: str, timeout: int = 20) -> dict:
         time_tags = len(soup.find_all("time"))
         date_matches = len(_DATE_RE.findall(text))
 
-        # Heuristic: article count = strongest signal
-        article_count = max(
-            time_tags,
-            date_matches,
-            min(h_tags, 20),       # h-tags capped (navs have many h2s)
-        )
-
         # Best-effort URL extraction for the trial article database
         # (_extract_article_links defined below; forward reference is fine at call time)
         try:
             article_urls = _extract_article_links(url, soup)[:50]
         except Exception:
             article_urls = []
+
+        # Heuristic: article count = strongest signal across all indicators.
+        # Include len(article_urls) so article_count is never less than the
+        # number of extracted links — avoids article_count/article_urls mismatch.
+        article_count = max(
+            time_tags,
+            date_matches,
+            min(h_tags, 20),       # h-tags capped (navs have many h2s)
+            len(article_urls),
+        )
 
         return {
             "accessible": True,
