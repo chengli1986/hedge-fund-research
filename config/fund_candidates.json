@@ -1561,7 +1561,7 @@
     "homepage_url": "https://www.capitalgroup.com",
     "research_url": "https://www.capitalgroup.com/advisor/insights.html",
     "source": "manual",
-    "status": "watchlist",
+    "status": "visitable",
     "strategy_tags": [
       "equity",
       "fixed_income",
@@ -1569,7 +1569,7 @@
       "multi_asset"
     ],
     "discovery_method": "discover_fund_sites",
-    "notes": "Trial inconclusive: no quality samples obtained",
+    "notes": "Re-trial approved 2026-06-02: previous trial scored 0.00 because the sampler hit the Akamai cookie gate on every article (sampler bug, fixed). Not a content-quality verdict.",
     "no_publish_dates": true,
     "official_domain": "www.capitalgroup.com",
     "research_links": [],

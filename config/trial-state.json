@@ -4065,7 +4065,7 @@
         }
       },
       "auto_decided": true,
-      "outcome": "fail_quality",
+      "outcome": "inconclusive",
       "quality_samples": [
         {
           "sampled": 0,
@@ -4140,7 +4140,8 @@
       ],
       "total_articles": 72,
       "days_with_articles": 8,
-      "avg_quality_score": 0.0
+      "avg_quality_score": 0.0,
+      "relabel_note": "2026-06-02: original fail_quality was a sampler bug (Akamai cookie gate misread as js_only), not a content verdict. Sampler fixed (commits a10a506..da0cd7b); re-trial approved by user."
     }
   ],
   "active_trials": [
