@@ -1367,7 +1367,7 @@ def test_trial_pass_sets_requires_playwright_when_majority_js_only(trial_env, mo
 
 # ── Task 3: inconclusive history does not block re-trial ─────────────────────
 
-def test_inconclusive_history_does_not_block_retrial(trial_env, monkeypatch):
+def test_inconclusive_history_does_not_block_retrial(trial_env):
     """An inconclusive trial (no verdict) must not permanently lock the candidate
     out of the queue — once a human flips status back to visitable, re-trial works.
 
@@ -1384,7 +1384,7 @@ def test_inconclusive_history_does_not_block_retrial(trial_env, monkeypatch):
     assert [c["id"] for c in queue] == ["test-fund"]
 
 
-def test_fail_quality_history_still_blocks_retrial(trial_env, monkeypatch):
+def test_fail_quality_history_still_blocks_retrial(trial_env):
     """Real verdicts (fail_quality) must still lock the candidate out."""
     state = {
         "active_trials": [],

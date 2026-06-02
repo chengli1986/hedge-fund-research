@@ -265,3 +265,68 @@ def test_trial_continues_day1_with_fetcher_even_if_zero_articles(trial_env, monk
     state = tm.load_state()
     assert len(state["active_trials"]) == 1  # trial 正常进行中
     assert state["history"] == []
+
+
+# ── 邮件标签 ──────────────────────────────────────────────────────────────────
+
+def test_result_label_inconclusive_not_low_quality():
+    icon, text, color = tm._trial_result_label("inconclusive", passed=False)
+    assert "LOW QUALITY" not in text
+    assert "INCONCLUSIVE" in text
+    assert icon == "⚠️"
+
+
+def test_result_label_fail_quality_unchanged():
+    icon, text, color = tm._trial_result_label("fail_quality", passed=False)
+    assert text == "FAILED — LOW QUALITY"
+    assert icon == "❌"
+
+
+def test_result_label_fail_quantity_unchanged():
+    icon, text, color = tm._trial_result_label("fail_quantity", passed=False)
+    assert text == "FAILED — INSUFFICIENT CONTENT"
+
+
+def test_result_label_pass_unchanged():
+    icon, text, color = tm._trial_result_label("pass", passed=True)
+    assert text == "READY TO INTEGRATE"
+    assert icon == "✅"
+
+
+def test_result_label_skipped_aborted():
+    icon, text, color = tm._trial_result_label("skipped", passed=False)
+    assert "ABORTED" in text or "SKIPPED" in text
+    assert icon == "⚠️"
+
+
+def test_summary_bucket_routing():
+    assert tm._summary_bucket({"outcome": "pass"}) == "pass"
+    assert tm._summary_bucket({"outcome": "inconclusive"}) == "inconclusive"
+    assert tm._summary_bucket({"outcome": "fail_quality"}) == "fail_quality"
+    assert tm._summary_bucket(
+        {"outcome": "skipped", "skip_reason": "needs_fetcher"}) == "aborted_needs_fetcher"
+    assert tm._summary_bucket({"outcome": "skipped"}) == "other"
+    assert tm._summary_bucket(
+        {"outcome": "fail_quantity", "total_articles": 0}) == "inaccessible"
+    assert tm._summary_bucket(
+        {"outcome": "fail_quantity", "total_articles": 12}) == "low_cadence"
+
+
+def test_abort_history_entry_has_zero_counts(trial_env, monkeypatch):
+    """abort 的 history 条目要有 total_articles=0 / days_with_articles=0 字段
+    （否则 cmd_status 显示 '?' ）。"""
+    monkeypatch.setattr(tm, "_load_fetchers", lambda: {})
+    monkeypatch.setattr(tm, "count_articles_with_fetcher", lambda trial: {
+        "accessible": True, "article_count": 0, "date_count": 0,
+        "article_urls": [], "error": None, "fetcher_used": False})
+    monkeypatch.setattr(
+        tm, "sample_article_quality",
+        lambda url, trial=None, exclude_urls=None: pytest.fail("must not sample"))
+    monkeypatch.setattr(tm, "send_trial_email", lambda *a, **k: None)
+    monkeypatch.setattr(tm, "send_daily_summary_email", lambda *a, **k: None)
+
+    tm.cmd_run()
+
+    state = tm.load_state()
+    assert state["history"][0]["total_articles"] == 0
+    assert state["history"][0]["days_with_articles"] == 0

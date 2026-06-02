@@ -738,6 +738,40 @@ def existing_source_ids() -> set[str]:
 
 # ── email ─────────────────────────────────────────────────────────────────────
 
+def _trial_result_label(outcome: str, passed: bool) -> tuple[str, str, str]:
+    """Return (icon, text, color) for a trial verdict — shared by trial emails."""
+    if passed:
+        return "✅", "READY TO INTEGRATE", "#1a7f37"
+    if outcome == "inconclusive":
+        return ("⚠️", "INCONCLUSIVE — ARTICLES DETECTED BUT SAMPLING FAILED",
+                "#9a6700")
+    if outcome == "skipped":
+        return "⚠️", "ABORTED — NEEDS FETCHER (ROUTED TO SYNTHESIS)", "#9a6700"
+    if outcome == "fail_quality":
+        return "❌", "FAILED — LOW QUALITY", "#cf222e"
+    return "❌", "FAILED — INSUFFICIENT CONTENT", "#cf222e"
+
+
+def _summary_bucket(t: dict) -> str:
+    """Classify a decided trial into a daily-summary-email section bucket.
+
+    Manual skips (cmd_skip, no skip_reason) land in "other" — intentionally
+    invisible in the summary email: a human did it, no notification needed.
+    """
+    outcome = t.get("outcome", "")
+    if outcome == "pass":
+        return "pass"
+    if outcome == "inconclusive":
+        return "inconclusive"
+    if outcome == "fail_quality":
+        return "fail_quality"
+    if outcome == "skipped" and t.get("skip_reason") == "needs_fetcher":
+        return "aborted_needs_fetcher"
+    if outcome == "fail_quantity":
+        return "inaccessible" if t.get("total_articles", 0) == 0 else "low_cadence"
+    return "other"
+
+
 def send_trial_email(trial: dict, passed: bool, total_articles: int,
                      days_with_articles: int | None = None) -> None:
     env = load_env()
@@ -749,15 +783,8 @@ def send_trial_email(trial: dict, passed: bool, total_articles: int,
         return
 
     now_bjt = datetime.now(BJT).strftime("%Y-%m-%d %H:%M BJT")
-    result_icon = "✅" if passed else "❌"
     outcome = trial.get("outcome", "")
-    if outcome == "fail_quality":
-        result_text = "FAILED — LOW QUALITY"
-    elif outcome.startswith("fail"):
-        result_text = "FAILED — INSUFFICIENT CONTENT"
-    else:
-        result_text = "READY TO INTEGRATE"
-    result_color = "#1a7f37" if passed else "#cf222e"
+    result_icon, result_text, result_color = _trial_result_label(outcome, passed)
 
     avg_quality = trial.get("avg_quality_score", 0)
     quality_color = "#1a7f37" if avg_quality >= MIN_QUALITY_SCORE else "#cf222e"
@@ -982,13 +1009,14 @@ def send_daily_summary_email(state: dict, today: str) -> None:
 
     pass_rows = ""
     fail_quality_rows = ""
+    inconclusive_rows = ""
+    aborted_rows = ""
     fail_quantity_inaccessible_rows = ""
     fail_quantity_watchlist_rows = ""
     for t in decided_today:
         name = html.escape(t.get("name", t.get("id", "?")))
         dwa = t.get("days_with_articles", "?")
         avg_q = t.get("avg_quality_score", 0)
-        outcome = t.get("outcome", "")
         url = t.get("research_url", "")
         row = (
             f"<tr><td style='padding:6px 10px'>{name}</td>"
@@ -997,17 +1025,19 @@ def send_daily_summary_email(state: dict, today: str) -> None:
             f"<td style='padding:6px 10px;font-size:11px'>"
             f"<a href='{html.escape(url)}'>{html.escape(url[:60])}</a></td></tr>\n"
         )
-        if outcome == "pass":
+        bucket = _summary_bucket(t)
+        if bucket == "pass":
             pass_rows += row
-        elif outcome == "fail_quality":
+        elif bucket == "fail_quality":
             fail_quality_rows += row
-        elif outcome == "fail_quantity":
-            # Distinguish inaccessible (0 articles) vs watchlist (some but not enough days)
-            total = t.get("total_articles", 0)
-            if total == 0:
-                fail_quantity_inaccessible_rows += row
-            else:
-                fail_quantity_watchlist_rows += row
+        elif bucket == "inconclusive":
+            inconclusive_rows += row
+        elif bucket == "aborted_needs_fetcher":
+            aborted_rows += row
+        elif bucket == "inaccessible":
+            fail_quantity_inaccessible_rows += row
+        elif bucket == "low_cadence":
+            fail_quantity_watchlist_rows += row
 
     active_rows = ""
     for a in active_progress:
@@ -1100,6 +1130,8 @@ def send_daily_summary_email(state: dict, today: str) -> None:
 
     n_pass = pass_rows.count("<tr>")
     n_fail_quality = fail_quality_rows.count("<tr>")
+    n_inconclusive = inconclusive_rows.count("<tr>")
+    n_aborted = aborted_rows.count("<tr>")
     n_inaccessible = fail_quantity_inaccessible_rows.count("<tr>")
     n_fail_qty_watch = fail_quantity_watchlist_rows.count("<tr>")
     n_active = len(active_progress)
@@ -1121,6 +1153,19 @@ def send_daily_summary_email(state: dict, today: str) -> None:
             f"{n_pending_total} pending profile(s)</span>"
         )
 
+    inconclusive_chip = ""
+    if n_inconclusive:
+        inconclusive_chip = (
+            f"<span style='display:inline-block;padding:4px 10px;margin:2px;background:#fff8c5;"
+            f"color:#9a6700;border-radius:12px;font-size:12px'>{n_inconclusive} inconclusive</span>"
+        )
+    aborted_chip = ""
+    if n_aborted:
+        aborted_chip = (
+            f"<span style='display:inline-block;padding:4px 10px;margin:2px;background:#ffebe9;"
+            f"color:#cf222e;border-radius:12px;font-size:12px'>{n_aborted} aborted (needs fetcher)</span>"
+        )
+
     summary_chips = (
         f"<span style='display:inline-block;padding:4px 10px;margin:2px;background:#dafbe1;color:#1a7f37;border-radius:12px;font-size:12px'>{n_pass} promoted</span>"
         f"<span style='display:inline-block;padding:4px 10px;margin:2px;background:#fff8c5;color:#9a6700;border-radius:12px;font-size:12px'>{n_fail_quality} watchlist (low quality)</span>"
@@ -1128,6 +1173,7 @@ def send_daily_summary_email(state: dict, today: str) -> None:
         f"<span style='display:inline-block;padding:4px 10px;margin:2px;background:#ffebe9;color:#cf222e;border-radius:12px;font-size:12px'>{n_inaccessible} inaccessible</span>"
         f"<span style='display:inline-block;padding:4px 10px;margin:2px;background:#ddf4ff;color:#0969da;border-radius:12px;font-size:12px'>{n_active} active</span>"
         f"<span style='display:inline-block;padding:4px 10px;margin:2px;background:#f0e7ff;color:#6639ba;border-radius:12px;font-size:12px'>{n_auto} auto-promote actions</span>"
+        f"{inconclusive_chip}{aborted_chip}"
         f"{pending_chip}"
     )
 
@@ -1139,6 +1185,8 @@ def send_daily_summary_email(state: dict, today: str) -> None:
 {section("⚙️ Auto-promote agent results", auto_promoted_rows, promote_header, "#6639ba")}
 {section("📝 Pending profiles awaiting human review", pending_rows, pending_header, "#cf222e" if pending_urgent else "#9a6700")}
 {section("⚠️ Watchlist — low quality", fail_quality_rows, trial_header, "#9a6700")}
+{section("⚠️ Inconclusive — articles detected but sampling failed", inconclusive_rows, trial_header, "#9a6700")}
+{section("🔧 Aborted day 1 — needs fetcher (routed to synthesis)", aborted_rows, trial_header, "#cf222e")}
 {section("⚠️ Watchlist — low cadence (some articles, not enough days)", fail_quantity_watchlist_rows, trial_header, "#9a6700")}
 {section("🚫 Inaccessible — 0 articles (routed to fetcher-synthesis)", fail_quantity_inaccessible_rows, trial_header, "#cf222e")}
 {section("🔄 Active trials (in progress)", active_rows, active_header, "#0969da")}
@@ -1153,7 +1201,7 @@ def send_daily_summary_email(state: dict, today: str) -> None:
     msg = MIMEMultipart("alternative")
     pending_tag = f" / ⚠️{n_pending_urgent}PP" if n_pending_urgent else ""
     msg["Subject"] = (f"GMIA Daily Summary {today}: {n_pass}P / "
-                      f"{n_fail_quality + n_fail_qty_watch}W / "
+                      f"{n_fail_quality + n_fail_qty_watch + n_inconclusive}W / "
                       f"{n_inaccessible}I / {n_active}A / {n_auto}AP"
                       f"{pending_tag}")
     msg["From"] = smtp_user
@@ -1389,6 +1437,8 @@ def cmd_run() -> None:
                 new_trial["end_date"] = today
                 new_trial["outcome"] = "skipped"
                 new_trial["skip_reason"] = "needs_fetcher"
+                new_trial["total_articles"] = 0
+                new_trial["days_with_articles"] = 0
                 candidates = load_candidates()
                 for c in candidates:
                     if c["id"] == new_trial["id"]:
