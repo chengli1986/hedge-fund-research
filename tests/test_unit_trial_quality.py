@@ -118,7 +118,8 @@ def test_new_trial_triggers_day1_quality_sampling(trial_env, monkeypatch):
 # ── Bug 2: No quality scores → trial must fail ──────────────────────────────
 
 def test_trial_fails_without_quality_scores(trial_env, monkeypatch):
-    """A trial with enough articles but zero quality scores must NOT pass."""
+    """A trial with enough articles but zero quality scores must NOT pass —
+    and must be labeled inconclusive (sampling failure), not fail_quality."""
     today = datetime.now(BJT)
     start = today - timedelta(days=8)
 
@@ -161,7 +162,9 @@ def test_trial_fails_without_quality_scores(trial_env, monkeypatch):
     state = tm.load_state()
     assert len(state["active_trials"]) == 0
     assert len(state["history"]) == 1
-    assert state["history"][0]["outcome"] == "fail_quality"
+    # 0 个样本 = 采样失败，不是质量判定 — 不能叫 fail_quality（2026-06-02
+    # capital-group 教训：采样器 bug 被误报成 "FAILED — LOW QUALITY"）
+    assert state["history"][0]["outcome"] == "inconclusive"
 
     candidates = json.loads(tm.CANDIDATES_FILE.read_text())
     test_candidate = next(c for c in candidates if c["id"] == "test-fund")
@@ -1360,3 +1363,36 @@ def test_trial_pass_sets_requires_playwright_when_majority_js_only(trial_env, mo
     candidates = json.loads(tm.CANDIDATES_FILE.read_text())
     c = next(x for x in candidates if x["id"] == "test-fund")
     assert c.get("requires_playwright") is True
+
+
+# ── Task 3: inconclusive history does not block re-trial ─────────────────────
+
+def test_inconclusive_history_does_not_block_retrial(trial_env, monkeypatch):
+    """An inconclusive trial (no verdict) must not permanently lock the candidate
+    out of the queue — once a human flips status back to visitable, re-trial works.
+
+    Contrast: fail_quality / fail_quantity / pass DO lock (they are verdicts)."""
+    state = {
+        "active_trials": [],
+        "history": [
+            {"id": "test-fund", "name": "Test Fund", "outcome": "inconclusive"},
+        ],
+    }
+    tm.TRIAL_STATE_FILE.write_text(json.dumps(state))
+
+    queue = tm.get_trial_queue(tm.load_state())
+    assert [c["id"] for c in queue] == ["test-fund"]
+
+
+def test_fail_quality_history_still_blocks_retrial(trial_env, monkeypatch):
+    """Real verdicts (fail_quality) must still lock the candidate out."""
+    state = {
+        "active_trials": [],
+        "history": [
+            {"id": "test-fund", "name": "Test Fund", "outcome": "fail_quality"},
+        ],
+    }
+    tm.TRIAL_STATE_FILE.write_text(json.dumps(state))
+
+    queue = tm.get_trial_queue(tm.load_state())
+    assert queue == []

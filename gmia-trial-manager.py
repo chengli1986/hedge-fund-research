@@ -698,11 +698,14 @@ def get_trial_queue(state: dict) -> list[dict]:
     verdict on the candidate. Without this exclusion a skipped candidate is
     permanently locked out of the queue (regression that stranded goldman-sam
     and research-affiliates after their 2026-04-19 skips).
+    Same for outcome="inconclusive" (sampling never worked, no verdict reached):
+    the candidate stays on watchlist, but if a human fixes the underlying issue
+    and flips status back to "visitable", re-trial must not be blocked by history.
     """
     candidates = load_candidates()
     trialed_ids = {
         h["id"] for h in state.get("history", [])
-        if h.get("outcome") != "skipped"
+        if h.get("outcome") not in ("skipped", "inconclusive")
     }
     active_ids = {t["id"] for t in state.get("active_trials", [])}
 
@@ -1253,6 +1256,11 @@ def cmd_run() -> None:
             active["avg_quality_score"] = round(avg_quality, 3)
             if not quantity_ok:
                 active["outcome"] = "fail_quantity"
+            elif not all_scores:
+                # Articles were detected on enough days but not a single one
+                # could be sampled — that is a sampling failure, not a quality
+                # verdict. Do not label it fail_quality / LOW QUALITY.
+                active["outcome"] = "inconclusive"
             elif not quality_ok:
                 active["outcome"] = "fail_quality"
             else:
