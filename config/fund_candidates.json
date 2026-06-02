@@ -1561,7 +1561,7 @@
     "homepage_url": "https://www.capitalgroup.com",
     "research_url": "https://www.capitalgroup.com/advisor/insights.html",
     "source": "manual",
-    "status": "visitable",
+    "status": "watchlist",
     "strategy_tags": [
       "equity",
       "fixed_income",
@@ -1569,7 +1569,7 @@
       "multi_asset"
     ],
     "discovery_method": "discover_fund_sites",
-    "notes": "JS-rendered; mix ~3/7 investment commentary, ~4/7 advisor practice",
+    "notes": "Trial inconclusive: no quality samples obtained",
     "no_publish_dates": true,
     "official_domain": "www.capitalgroup.com",
     "research_links": [],
@@ -2398,7 +2398,7 @@
     "homepage_url": "https://www.acadian-asset.com",
     "research_url": "https://www.acadian-asset.com/investment-insights",
     "source": "manual",
-    "status": "visitable",
+    "status": "inaccessible",
     "strategy_tags": [
       "quant",
       "equity",
@@ -2430,7 +2430,7 @@
     "quality": "HIGH",
     "quality_score": 0.82,
     "topics": "quant, equity, global allocation, ESG, credit, behavioral finance",
-    "notes": "RECOMMEND: Deep quant/equity research confirmed, fills AI-quant gap",
+    "notes": "Trial failed: 0 articles detected across 7 days — site likely requires JS rendering or selector is broken. Routed to fetcher-synthesis queue.",
     "last_deep_analyzed_at": "2026-06-02T00:00:00Z",
     "inaccessible_reason": null,
     "promotion_notes": "JS-rendered homepage; article URLs directly accessible via WebFetch. Needs Playwright fetcher for full index scraping."
