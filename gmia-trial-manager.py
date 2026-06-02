@@ -1374,6 +1374,37 @@ def cmd_run() -> None:
             else:
                 print(f"[trial]   Day 1: unreachable — {result['error']}")
 
+            # Fail-fast: index reachable but zero articles AND no registered
+            # fetcher → static HTML has no article links (JS-rendered index).
+            # A 7-day trial cannot succeed; route to fetcher-synthesis now
+            # instead of wasting the window (lesson: acadian-asset 5-26→6-02
+            # burned 7 days at 0 articles/day).
+            has_fetcher = new_trial["id"] in _load_fetchers()
+            if (not has_fetcher
+                    and result.get("accessible")
+                    and result.get("article_count", 0) == 0):
+                print(f"[trial]   Aborting — no article links in static HTML and "
+                      f"no registered fetcher; routing to fetcher-synthesis")
+                new_trial["auto_decided"] = True
+                new_trial["end_date"] = today
+                new_trial["outcome"] = "skipped"
+                new_trial["skip_reason"] = "needs_fetcher"
+                candidates = load_candidates()
+                for c in candidates:
+                    if c["id"] == new_trial["id"]:
+                        c["status"] = "inaccessible"
+                        c["notes"] = ("Trial aborted on day 1: index reachable but "
+                                      "no article links in static HTML — needs a "
+                                      "fetcher. Routed to fetcher-synthesis queue.")
+                        break
+                save_candidates(candidates)
+                state.setdefault("history", []).append(new_trial)
+                state["active_trials"] = [
+                    t for t in state["active_trials"] if t["id"] != new_trial["id"]
+                ]
+                save_state(state)
+                continue
+
             # Day 1 quality sampling
             if 1 in SAMPLE_DAYS:
                 print(f"[trial] Quality sampling day 1 for {next_candidate['name']}...")

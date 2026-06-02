@@ -8,6 +8,7 @@ flipping a sampler failure into a (wrong) LOW QUALITY verdict.
 """
 
 import importlib.util
+import json
 from pathlib import Path
 
 import pytest
@@ -180,3 +181,87 @@ def test_is_likely_js_only_still_true_for_real_js_shell(monkeypatch):
 
     monkeypatch.setattr(tm.httpx, "Client", _JsShellClient)
     assert tm._is_likely_js_only(ARTICLE_URL) is True
+
+
+# ── day-1 fail-fast ───────────────────────────────────────────────────────────
+
+def _make_candidates_file(tmp_path: Path) -> Path:
+    f = tmp_path / "fund_candidates.json"
+    f.write_text(json.dumps([
+        {
+            "id": "js-only-fund",
+            "name": "JS Only Fund",
+            "status": "visitable",
+            "quality": "HIGH",
+            "fit_score": 0.9,
+            "research_url": "https://example.com/insights",
+            "homepage_url": "https://example.com",
+            "topics": "quant",
+        },
+    ]))
+    return f
+
+
+@pytest.fixture
+def trial_env(tmp_path, monkeypatch):
+    monkeypatch.setattr(tm, "CANDIDATES_FILE", _make_candidates_file(tmp_path))
+    sources = tmp_path / "sources.json"
+    sources.write_text(json.dumps({"sources": []}))
+    monkeypatch.setattr(tm, "SOURCES_FILE", sources)
+    state = tmp_path / "trial-state.json"
+    state.write_text(json.dumps({"active_trials": [], "history": []}))
+    monkeypatch.setattr(tm, "TRIAL_STATE_FILE", state)
+    monkeypatch.setattr(tm, "ENV_FILE", tmp_path / "nonexistent.env")
+    return tmp_path
+
+
+def test_trial_aborts_day1_without_fetcher_and_zero_articles(trial_env, monkeypatch):
+    """无注册 fetcher 且 index 0 文章的候选：day-1 中止，不浪费 7 天 trial。
+
+    2026-05-26 acadian-asset 教训：promotion_notes 已写明需要 Playwright fetcher，
+    但 trial 照样裸跑了 7 天 × 0 文章。
+    """
+    monkeypatch.setattr(tm, "_load_fetchers", lambda: {})
+    monkeypatch.setattr(tm, "count_articles_with_fetcher", lambda trial: {
+        "accessible": True, "article_count": 0, "date_count": 0,
+        "article_urls": [], "error": None, "fetcher_used": False})
+    monkeypatch.setattr(
+        tm, "sample_article_quality",
+        lambda url, trial=None, exclude_urls=None: pytest.fail(
+            "quality sampling must not run for an aborted trial"))
+    monkeypatch.setattr(tm, "send_trial_email", lambda *a, **k: None)
+    monkeypatch.setattr(tm, "send_daily_summary_email", lambda *a, **k: None)
+
+    tm.cmd_run()
+
+    state = tm.load_state()
+    assert state["active_trials"] == []
+    assert len(state["history"]) == 1
+    assert state["history"][0]["outcome"] == "skipped"
+    assert state["history"][0]["skip_reason"] == "needs_fetcher"
+
+    candidates = json.loads(tm.CANDIDATES_FILE.read_text())
+    fund = next(c for c in candidates if c["id"] == "js-only-fund")
+    assert fund["status"] == "inaccessible"
+    assert "fetcher-synthesis" in fund["notes"]
+
+
+def test_trial_continues_day1_with_fetcher_even_if_zero_articles(trial_env, monkeypatch):
+    """有注册 fetcher 的候选即使 day-1 是 0 文章也正常跑 trial（可能是临时没新文章）。"""
+    monkeypatch.setattr(tm, "_load_fetchers", lambda: {"js-only-fund": lambda s: []})
+    monkeypatch.setattr(tm, "count_articles_with_fetcher", lambda trial: {
+        "accessible": True, "article_count": 0, "date_count": 0,
+        "article_urls": [], "error": None, "fetcher_used": True})
+    monkeypatch.setattr(
+        tm, "sample_article_quality",
+        lambda url, trial=None, exclude_urls=None: {
+            "sampled": 0, "articles": [], "avg_score": 0.0,
+            "error": "No article links found on index page"})
+    monkeypatch.setattr(tm, "send_trial_email", lambda *a, **k: None)
+    monkeypatch.setattr(tm, "send_daily_summary_email", lambda *a, **k: None)
+
+    tm.cmd_run()
+
+    state = tm.load_state()
+    assert len(state["active_trials"]) == 1  # trial 正常进行中
+    assert state["history"] == []
