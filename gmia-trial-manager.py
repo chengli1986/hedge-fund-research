@@ -87,6 +87,15 @@ HEADERS = {
     "Accept-Language": "en-US,en;q=0.9",
 }
 
+# Markers that identify an authentication/login gate page in a redirect target.
+# Kept conservative: "auth" alone would false-positive on /author/ pages.
+# Real-world case 2026-06-02: Capital Group's Akamai "Content Gate" edge worker
+# 302-redirects cookie-less requests to /advisor/public/authentication-0.htm.
+AUTH_GATE_MARKERS = (
+    "authentication", "login", "logon", "signin", "sign-in",
+    "/auth/", "/sso/", "/gateway/",
+)
+
 
 # ── state helpers ─────────────────────────────────────────────────────────────
 
@@ -312,6 +321,45 @@ def _extract_article_links(base_url: str, soup: BeautifulSoup) -> list[str]:
     if len(research_links) >= SAMPLE_SIZE:
         return research_links[:cap]
     return (research_links + neutral_links)[:cap]
+
+
+def _is_auth_gate_url(requested_url: str, final_url: str) -> bool:
+    """Return True when a request was redirected to an auth/login gate page.
+
+    A gate redirect = the final path differs from the requested path AND the
+    final path contains an auth marker. Same-path responses and ordinary
+    canonical-slug redirects are not gates.
+    """
+    req_path = urlparse(requested_url).path.rstrip("/").lower()
+    fin_path = urlparse(final_url).path.rstrip("/").lower()
+    if req_path == fin_path:
+        return False
+    return any(marker in fin_path for marker in AUTH_GATE_MARKERS)
+
+
+def _get_with_auth_retry(url: str, timeout: int = 20) -> "httpx.Response | None":
+    """GET a URL with cookie persistence and a single auth-gate retry.
+
+    Sites behind a cookie content-gate (e.g. Capital Group's Akamai "Content
+    Gate" edge worker) 302-redirect cookie-less first visits to an auth page
+    that *sets* session cookies; a second request with those cookies passes
+    through to the real content. A stateless httpx.get() therefore always
+    lands on the gate — this helper detects that and retries once inside the
+    same cookie session.
+
+    Returns the final httpx.Response (which may still be the gate page for a
+    hard login wall — callers must check with _is_auth_gate_url), or None on
+    network error.
+    """
+    try:
+        with httpx.Client(headers=HEADERS, timeout=timeout,
+                          follow_redirects=True) as client:
+            resp = client.get(url)
+            if _is_auth_gate_url(url, str(resp.url)) and client.cookies:
+                resp = client.get(url)
+            return resp
+    except Exception:
+        return None
 
 
 def _extract_article_text(url: str, timeout: int = 20) -> str | None:
