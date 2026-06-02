@@ -657,7 +657,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.95,
-    "notes": "RECOMMEND: Weekly macro/EM/ESG research by named analysts",
+    "notes": "RECOMMEND: Monthly views + EM/ESG active Jun 2026, prof. gated",
     "research_links": [],
     "screening_signals": {
       "status_code": 200,
@@ -670,7 +670,7 @@
       "article_signals": 3
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-05-26T01:00:00Z",
+    "last_deep_analyzed_at": "2026-06-02T00:00:00Z",
     "quality": "HIGH",
     "quality_score": 0.85,
     "topics": "macro, fixed income, ESG, emerging markets, private assets",
@@ -699,7 +699,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.88,
-    "notes": "Guide to Markets + market updates; broad macro coverage",
+    "notes": "Guide to Markets + weekly updates hub; broad macro, free",
     "research_links": [],
     "screening_signals": {
       "status_code": 200,
@@ -712,7 +712,7 @@
       "article_signals": 0
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-05-26T01:00:00Z",
+    "last_deep_analyzed_at": "2026-06-02T00:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.65,
     "topics": "macro, equity, fixed income, multi-asset, retirement",
@@ -2384,11 +2384,11 @@
       "equity",
       "fixed_income"
     ],
-    "topics": "macro, wealth management, asset allocation, geopolitics, ESG",
+    "topics": "macro, wealth management, geopolitics, alternatives, ESG",
     "quality": "MEDIUM",
-    "quality_score": 0.58,
-    "notes": "Monthly macro insights (728 articles); EC2-403 blocks homepage+articles",
-    "last_deep_analyzed_at": "2026-05-24T01:02:00Z",
+    "quality_score": 0.55,
+    "notes": "725-article index visible but all article URLs 403 from EC2",
+    "last_deep_analyzed_at": "2026-06-02T00:00:00Z",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-05-24T01:02:30Z"
   },
@@ -2429,9 +2429,9 @@
     "has_article_index": true,
     "quality": "HIGH",
     "quality_score": 0.82,
-    "topics": "quant, ML in finance, systematic investing, equity, ESG, macro",
-    "notes": "RECOMMEND: ML-driven quant research, free, fills AI-quant gap",
-    "last_deep_analyzed_at": "2026-05-25T01:02:00Z",
+    "topics": "quant, equity, global allocation, ESG, credit, behavioral finance",
+    "notes": "RECOMMEND: Deep quant/equity research confirmed, fills AI-quant gap",
+    "last_deep_analyzed_at": "2026-06-02T00:00:00Z",
     "inaccessible_reason": null,
     "promotion_notes": "JS-rendered homepage; article URLs directly accessible via WebFetch. Needs Playwright fetcher for full index scraping."
   }
