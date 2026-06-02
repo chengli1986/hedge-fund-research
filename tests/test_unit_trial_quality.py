@@ -758,15 +758,18 @@ def test_sample_quality_uses_fetcher_links_when_trial_provided(monkeypatch):
 
 class _StubResponse:
     """Minimal httpx.Response stand-in for _extract_article_text tests."""
-    def __init__(self, text: str, status_code: int = 200):
+    def __init__(self, text: str, status_code: int = 200, url: str = "https://example.com/article"):
         self.text = text
         self.status_code = status_code
+        self.url = url
 
 
-def _patch_httpx_get(monkeypatch, html_body: str, status_code: int = 200):
-    def fake_get(url, headers=None, timeout=20, follow_redirects=True):
-        return _StubResponse(html_body, status_code)
-    monkeypatch.setattr(tm.httpx, "get", fake_get)
+def _patch_httpx_get(monkeypatch, html_body: str, status_code: int = 200,
+                     url: str = "https://example.com/article"):
+    """Patch _get_with_auth_retry (the new entry point replacing httpx.get)."""
+    def fake_retry(u, timeout=20):
+        return _StubResponse(html_body, status_code, url=u)
+    monkeypatch.setattr(tm, "_get_with_auth_retry", fake_retry)
 
 
 def test_extract_text_handles_aem_multi_teaser_articles(monkeypatch):
@@ -1201,39 +1204,35 @@ def test_is_likely_js_only_true_for_large_html_no_extractable_content(monkeypatc
     """HTTP 200 + HTML body > 1000 chars + _extract_article_text returns None → True."""
     large_html = "<html><body>" + "<div class='nav'>" * 100 + "</div>" * 100 + "</body></html>"
     assert len(large_html) > 1000
+    url = "https://example.com/article"
 
-    class FakeResp:
-        status_code = 200
-        text = large_html
-
-    monkeypatch.setattr(tm.httpx, "get", lambda *a, **k: FakeResp())
+    monkeypatch.setattr(tm, "_get_with_auth_retry",
+                        lambda u, timeout=15: _StubResponse(large_html, 200, url=u))
     monkeypatch.setattr(tm, "_extract_article_text", lambda url, **k: None)
-    assert tm._is_likely_js_only("https://example.com/article") is True
+    assert tm._is_likely_js_only(url) is True
 
 
 def test_is_likely_js_only_false_for_http_non200(monkeypatch):
     """HTTP non-200 (auth wall, geoblock) → False, not a JS-rendering issue."""
-    class FakeResp:
-        status_code = 403
-        text = "<html>Forbidden</html>"
-
-    monkeypatch.setattr(tm.httpx, "get", lambda *a, **k: FakeResp())
-    assert tm._is_likely_js_only("https://example.com/article") is False
+    url = "https://example.com/article"
+    monkeypatch.setattr(tm, "_get_with_auth_retry",
+                        lambda u, timeout=15: _StubResponse("<html>Forbidden</html>", 403, url=u))
+    assert tm._is_likely_js_only(url) is False
 
 
 def test_is_likely_js_only_false_for_small_html_body(monkeypatch):
     """HTTP 200 but tiny HTML body (< 1000 chars) → False (network/empty response)."""
-    class FakeResp:
-        status_code = 200
-        text = "<html><body>tiny</body></html>"
-
-    monkeypatch.setattr(tm.httpx, "get", lambda *a, **k: FakeResp())
-    assert tm._is_likely_js_only("https://example.com/article") is False
+    url = "https://example.com/article"
+    monkeypatch.setattr(tm, "_get_with_auth_retry",
+                        lambda u, timeout=15: _StubResponse("<html><body>tiny</body></html>", 200, url=u))
+    assert tm._is_likely_js_only(url) is False
 
 
 def test_is_likely_js_only_false_on_exception(monkeypatch):
     """Network exception → False (not a JS-rendering signal)."""
-    monkeypatch.setattr(tm.httpx, "get", lambda *a, **k: (_ for _ in ()).throw(Exception("timeout")))
+    def _raise(u, timeout=15):
+        raise Exception("timeout")
+    monkeypatch.setattr(tm, "_get_with_auth_retry", _raise)
     assert tm._is_likely_js_only("https://example.com/article") is False
 
 

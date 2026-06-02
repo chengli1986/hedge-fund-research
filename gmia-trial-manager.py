@@ -375,9 +375,11 @@ def _extract_article_text(url: str, timeout: int = 20) -> str | None:
     3. <main>, then <body> as last resort.
     """
     try:
-        resp = httpx.get(url, headers=HEADERS, timeout=timeout, follow_redirects=True)
-        if resp.status_code != 200:
+        resp = _get_with_auth_retry(url, timeout=timeout)
+        if resp is None or resp.status_code != 200:
             return None
+        if _is_auth_gate_url(url, str(resp.url)):
+            return None  # still stuck on a login gate after cookie retry
         soup = BeautifulSoup(resp.text, "html.parser")
         for tag in soup.select("nav, footer, header, .nav, .footer, .header, "
                                "script, style, aside, .sidebar"):
@@ -421,18 +423,22 @@ def _extract_article_text(url: str, timeout: int = 20) -> str | None:
 def _is_likely_js_only(url: str, timeout: int = 15) -> bool:
     """Return True when the page is likely JS-rendered (HTTP 200 + large HTML + no extractable text).
 
-    Three non-JS failure modes must NOT return True:
+    Four non-JS failure modes must NOT return True:
     - Network error / timeout → caught by except, return False
     - HTTP non-200 (auth wall, geoblock) → check status_code, return False
     - HTTP 200 + tiny body (empty CDN response) → check len(text) < 1000, return False
+    - HTTP 200 redirect to an auth/login gate (cookie content-gate) → check
+      _is_auth_gate_url, return False
 
     Only HTTP 200 + large HTML (>1000 chars) + _extract_article_text returns None
     → the site serves a JS shell that needs browser rendering.
     """
     try:
-        resp = httpx.get(url, headers=HEADERS, timeout=timeout, follow_redirects=True)
-        if resp.status_code != 200:
+        resp = _get_with_auth_retry(url, timeout=timeout)
+        if resp is None or resp.status_code != 200:
             return False
+        if _is_auth_gate_url(url, str(resp.url)):
+            return False  # auth gate ≠ JS shell — do not misclassify
         if len(resp.text) < 1000:
             return False
         return _extract_article_text(url, timeout=timeout) is None

@@ -141,3 +141,42 @@ def test_no_gate_only_fetches_once(monkeypatch):
     resp = tm._get_with_auth_retry(ARTICLE_URL)
     assert resp is not None
     assert holder["client"].calls == 1
+
+
+# ── _extract_article_text / _is_likely_js_only 接线 ──────────────────────────
+
+def test_extract_article_text_passes_cookie_gate(monkeypatch):
+    """有 cookie 软门禁的文章：重试后应提取到正文（修复前返回 None）。"""
+    monkeypatch.setattr(tm.httpx, "Client", _CookieGateClient)
+    text = tm._extract_article_text(ARTICLE_URL)
+    assert text is not None
+    assert "real investment research" in text
+
+
+def test_extract_article_text_returns_none_on_hard_gate(monkeypatch):
+    """硬登录墙：重试后仍在 gate 上 → 返回 None（而不是把 gate 页面当正文）。"""
+    monkeypatch.setattr(tm.httpx, "Client", _HardGateClient)
+    assert tm._extract_article_text(ARTICLE_URL) is None
+
+
+def test_is_likely_js_only_false_for_auth_gate(monkeypatch):
+    """核心 bug 修复：auth gate（大 HTML + 无正文）不得再被判为 js_only。"""
+    monkeypatch.setattr(tm.httpx, "Client", _HardGateClient)
+    assert tm._is_likely_js_only(ARTICLE_URL) is False
+
+
+def test_is_likely_js_only_still_true_for_real_js_shell(monkeypatch):
+    """回归保护：真正的 JS shell（200 + 大 HTML + 无正文 + 无重定向）仍判为 True。"""
+
+    class _JsShellClient(_CookieGateClient):
+        def get(self, url):
+            self.calls += 1
+            # 同 URL 返回（无重定向），大体积 HTML 但没有可提取正文
+            return _FakeResponse(
+                url=url,
+                text="<html><head>" + "<script>app.render();</script>" * 100
+                     + "</head><body><div id='root'></div></body></html>",
+            )
+
+    monkeypatch.setattr(tm.httpx, "Client", _JsShellClient)
+    assert tm._is_likely_js_only(ARTICLE_URL) is True
