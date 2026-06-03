@@ -741,7 +741,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.97,
-    "notes": "Active equity/AI/macro research, freely accessible articles",
+    "notes": "Active equity/macro research; directional analysis, free access",
     "research_links": [
       {
         "url": "https://www.troweprice.com/en/us/insights",
@@ -780,9 +780,9 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-05-27T01:02:57Z",
+    "last_deep_analyzed_at": "2026-06-03T00:00:00Z",
     "quality": "MEDIUM",
-    "quality_score": 0.68,
+    "quality_score": 0.65,
     "topics": "equity, AI/tech, macro, fixed income, active management",
     "strategy_tags": [
       "equity",
@@ -1721,12 +1721,12 @@
       "multi_asset"
     ],
     "official_domain": "www.ares.com",
-    "notes": "RECOMMEND: trial passed (8/7 days with articles, quality=0.70)",
+    "notes": "RECOMMEND: trial passed 7/7 days, quality=0.70",
     "topics": "private credit, private equity, alternatives, insurance",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-05-01T01:03:53Z",
-    "last_deep_analyzed_at": "2026-05-26T01:00:00Z",
+    "last_deep_analyzed_at": "2026-06-03T00:00:00Z",
     "quality": "HIGH",
     "quality_score": 0.7,
     "fit_score": 0.88,
@@ -1981,10 +1981,10 @@
       "multi_asset"
     ],
     "quality": "MEDIUM",
-    "quality_score": 0.65,
-    "topics": "quant, ESG, emerging markets, fixed income, credit",
-    "notes": "quant+EM research; sampled article marketing-heavy, mixed quality",
-    "last_deep_analyzed_at": "2026-05-26T01:00:00Z",
+    "quality_score": 0.68,
+    "topics": "quant, ESG, emerging markets, fixed income, credit, European equity",
+    "notes": "Quant+EM+ESG 865 articles weekly; substantive research",
+    "last_deep_analyzed_at": "2026-06-03T00:00:00Z",
     "official_domain": "www.robeco.com",
     "discovery_method": "discover_fund_sites",
     "research_links": [
@@ -2215,7 +2215,7 @@
       "emerging_markets",
       "macro"
     ],
-    "notes": "Asia EM specialist; landing accessible; articles mix video/text",
+    "notes": "Asia EM specialist; narrative research, quarterly CIO depth",
     "official_domain": "www.matthewsasia.com",
     "research_links": [
       {
@@ -2309,8 +2309,8 @@
     "last_validated_at": "2026-05-16T09:04:19.082474+08:00",
     "quality": "MEDIUM",
     "quality_score": 0.6,
-    "topics": "Asian equities, China, India, Japan, emerging markets",
-    "last_deep_analyzed_at": "2026-05-27T01:02:57Z"
+    "topics": "Asian equities, China, India, Japan, EM, AI/tech innovation",
+    "last_deep_analyzed_at": "2026-06-03T00:00:00Z"
   },
   {
     "id": "cohen-steers",
@@ -2434,5 +2434,53 @@
     "last_deep_analyzed_at": "2026-06-02T00:00:00Z",
     "inaccessible_reason": null,
     "promotion_notes": "JS-rendered homepage; article URLs directly accessible via WebFetch. Needs Playwright fetcher for full index scraping."
+  },
+  {
+    "id": "guggenheim-investments",
+    "name": "Guggenheim Investments",
+    "homepage_url": "https://www.guggenheiminvestments.com",
+    "research_url": "https://www.guggenheiminvestments.com/perspectives",
+    "source": "manual",
+    "status": "discovered",
+    "strategy_tags": [
+      "macro",
+      "fixed_income",
+      "multi_asset"
+    ],
+    "official_domain": "www.guggenheiminvestments.com",
+    "research_links": [
+      {
+        "url": "https://www.guggenheiminvestments.com/perspectives",
+        "label": "Thought Leadership",
+        "path": "perspectives"
+      },
+      {
+        "url": "https://www.guggenheiminvestments.com/perspectives/macroeconomic-research",
+        "label": "Macroeconomic Research",
+        "path": "perspectives/macroeconomic-research"
+      },
+      {
+        "url": "https://www.guggenheiminvestments.com/perspectives/portfolio-strategy",
+        "label": "Portfolio Strategy",
+        "path": "perspectives/portfolio-strategy"
+      },
+      {
+        "url": "https://www.guggenheiminvestments.com/perspectives/sector-views",
+        "label": "Sector Views",
+        "path": "perspectives/sector-views"
+      },
+      {
+        "url": "https://www.guggenheiminvestments.com/perspectives/media",
+        "label": "Video and Podcasts",
+        "path": "perspectives/media"
+      },
+      {
+        "url": "https://www.guggenheiminvestments.com/perspectives/weekly-viewpoint",
+        "label": "Weekly Viewpoint",
+        "path": "perspectives/weekly-viewpoint"
+      }
+    ],
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-06-03T09:05:12.088054+08:00"
   }
 ]
