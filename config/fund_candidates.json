@@ -2404,7 +2404,7 @@
     "homepage_url": "https://www.acadian-asset.com",
     "research_url": "https://www.acadian-asset.com/investment-insights",
     "source": "manual",
-    "status": "inaccessible",
+    "status": "visitable",
     "strategy_tags": [
       "quant",
       "equity",
@@ -2439,7 +2439,9 @@
     "notes": "Trial failed: 0 articles detected across 7 days — site likely requires JS rendering or selector is broken. Routed to fetcher-synthesis queue.",
     "last_deep_analyzed_at": "2026-06-02T00:00:00Z",
     "inaccessible_reason": null,
-    "promotion_notes": "JS-rendered homepage; article URLs directly accessible via WebFetch. Needs Playwright fetcher for full index scraping."
+    "promotion_notes": "JS-rendered homepage; article URLs directly accessible via WebFetch. Needs Playwright fetcher for full index scraping.",
+    "synthesis_attempted_at": "2026-06-03T01:10:11.791298+00:00",
+    "synthesis_outcome": "success"
   },
   {
     "id": "guggenheim-investments",

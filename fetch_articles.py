@@ -2138,6 +2138,53 @@ def fetch_matthews_asia(source: dict) -> list[dict]:
     return articles[:source.get("max_articles", 10)]
 
 
+def fetch_acadian_asset(source: dict) -> list[dict]:
+    """Fetch articles from Acadian Asset Management (Playwright — CSR).
+
+    The SSR HTML only carries 2 featured items; the full insight list is
+    client-rendered. Structure: article.news-insights-card containing:
+      h3 > a.news-insights-card__title (title + href),
+      span.news-insights-card__theme-date ("May 2026" → %B %Y)
+    """
+    base_url = "https://www.acadian-asset.com"
+    html = _get_playwright_page(source["url"], wait_selector="article.news-insights-card")
+    soup = BeautifulSoup(html, "html.parser")
+    expected_host = source.get("expected_hostname", "acadian-asset.com")
+
+    seen_urls: set[str] = set()
+    articles = []
+    for card in soup.select("article.news-insights-card"):
+        link_el = card.select_one("a.news-insights-card__title")
+        if not link_el:
+            continue
+        href = link_el.get("href", "")
+        if not href:
+            continue
+        url = urljoin(base_url, href)
+        if not _validate_hostname(url, expected_host):
+            continue
+        if url in seen_urls:
+            continue
+        seen_urls.add(url)
+
+        title = link_el.get_text(strip=True)
+        if not title:
+            continue
+
+        date_el = card.select_one("span.news-insights-card__theme-date")
+        date_raw = date_el.get_text(strip=True) if date_el else ""
+        parsed_date = parse_date(date_raw) if date_raw else None
+
+        articles.append({
+            "title": title,
+            "url": url,
+            "date": parsed_date,
+            "date_raw": date_raw,
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
 # FETCHER_SYNTHESIS_INSERTION_POINT — auto-generated fetchers inserted above this line
 
 
@@ -2356,6 +2403,7 @@ FETCHERS = {
     "research-affiliates": fetch_researchaffiliates,
     "pimco": fetch_pimco,
     "matthews-asia": fetch_matthews_asia,
+    "acadian-asset": fetch_acadian_asset,
     "de-shaw": fetch_de_shaw,
     "pinebridge": fetch_pinebridge,
     "kkr": fetch_kkr,
