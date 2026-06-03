@@ -2312,7 +2312,11 @@
     "topics": "Asian equities, China, India, Japan, EM, AI/tech innovation",
     "last_deep_analyzed_at": "2026-06-03T00:00:00Z",
     "synthesis_priority": true,
-    "synthesis_priority_set_at": "2026-06-03T09:05:38.825095+08:00"
+    "synthesis_priority_set_at": "2026-06-03T09:05:38.825095+08:00",
+    "synthesis_attempted_at": "2026-06-03T01:08:23.985559+00:00",
+    "synthesis_outcome": "success",
+    "promoted_at": "2026-06-03T01:08:23.985559+00:00",
+    "promoted_reason": "fetcher_synthesis_success (trial-PASS shortcut)"
   },
   {
     "id": "cohen-steers",

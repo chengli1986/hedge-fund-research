@@ -2090,6 +2090,54 @@ def fetch_robeco(source: dict) -> list[dict]:
     return articles[:source.get("max_articles", 10)]
 
 
+def fetch_matthews_asia(source: dict) -> list[dict]:
+    """Fetch articles from Matthews Asia (requests — SSR).
+
+    Structure: a.item[href] insight cards containing:
+      div.text > p.category (type),
+      h4.title (title),
+      small.date ("03/27/2026" → %m/%d/%Y)
+    Filter/topic nav links share no h4.title, so requiring it skips them.
+    """
+    base_url = "https://www.matthewsasia.com"
+    resp = requests.get(source["url"], headers=HEADERS, timeout=30)
+    resp.raise_for_status()
+    soup = BeautifulSoup(resp.text, "html.parser")
+    expected_host = source.get("expected_hostname", "matthewsasia.com")
+
+    seen_urls: set[str] = set()
+    articles = []
+    for item in soup.select("a.item[href]"):
+        title_el = item.select_one("h4.title")
+        if not title_el:
+            continue
+        title = title_el.get_text(strip=True)
+        if not title:
+            continue
+        href = item.get("href", "")
+        if not href:
+            continue
+        url = urljoin(base_url, href)
+        if not _validate_hostname(url, expected_host):
+            continue
+        if url in seen_urls:
+            continue
+        seen_urls.add(url)
+
+        date_el = item.select_one("small.date")
+        date_raw = date_el.get_text(strip=True) if date_el else ""
+        parsed_date = parse_date(date_raw) if date_raw else None
+
+        articles.append({
+            "title": title,
+            "url": url,
+            "date": parsed_date,
+            "date_raw": date_raw,
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
 # FETCHER_SYNTHESIS_INSERTION_POINT — auto-generated fetchers inserted above this line
 
 
@@ -2307,6 +2355,7 @@ FETCHERS = {
     "aberdeen": fetch_aberdeen,
     "research-affiliates": fetch_researchaffiliates,
     "pimco": fetch_pimco,
+    "matthews-asia": fetch_matthews_asia,
     "de-shaw": fetch_de_shaw,
     "pinebridge": fetch_pinebridge,
     "kkr": fetch_kkr,
