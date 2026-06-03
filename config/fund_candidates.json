@@ -2209,13 +2209,13 @@
     "homepage_url": "https://www.matthewsasia.com",
     "research_url": "https://www.matthewsasia.com/insights/",
     "source": "manual",
-    "status": "visitable",
+    "status": "promoted",
     "strategy_tags": [
       "equity",
       "emerging_markets",
       "macro"
     ],
-    "notes": "Asia EM specialist; narrative research, quarterly CIO depth",
+    "notes": "RECOMMEND: trial passed (8/7 days with articles, quality=0.67)",
     "official_domain": "www.matthewsasia.com",
     "research_links": [
       {
@@ -2310,7 +2310,9 @@
     "quality": "MEDIUM",
     "quality_score": 0.6,
     "topics": "Asian equities, China, India, Japan, EM, AI/tech innovation",
-    "last_deep_analyzed_at": "2026-06-03T00:00:00Z"
+    "last_deep_analyzed_at": "2026-06-03T00:00:00Z",
+    "synthesis_priority": true,
+    "synthesis_priority_set_at": "2026-06-03T09:05:38.825095+08:00"
   },
   {
     "id": "cohen-steers",
