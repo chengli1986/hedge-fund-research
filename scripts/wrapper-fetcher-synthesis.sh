@@ -40,6 +40,11 @@ if [ "$TARGET_COUNT" -eq 0 ]; then
 fi
 echo "$LOG_PREFIX Found $TARGET_COUNT target(s)."
 
+# Timestamp before the agent runs — the summary email reports only the history
+# entries appended at/after this instant (this session's work), so concurrent
+# or prior runs don't bleed into the digest.
+SYNTH_RUN_START="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
 # 取消 API key 使 Claude 走 Max plan（不走付费 API）
 if [[ -z "${ANTHROPIC_API_KEY:-}" ]]; then
     SAVED_ANTHROPIC_API_KEY="$(
@@ -105,6 +110,19 @@ HEARTBEAT_EXIT=$?
 
 # Quick stats line for the log (does not affect exit code)
 python3 "$REPO_DIR/scripts/fetcher_synthesis_stats.py" --window 30 2>&1 | head -10 || true
+
+# ── Summary email: one digest per synthesis session (this run's results) ──────
+# Notification only — never affects EXIT_CODE. Reads SMTP/recipient from
+# ~/.stock-monitor.env (same as trial daily summary). --since scopes the digest
+# to entries appended by this session.
+echo "$LOG_PREFIX Sending synthesis summary email..."
+# shellcheck disable=SC1090
+source "$HOME/.stock-monitor.env" 2>/dev/null || true
+SMTP_USER="${SMTP_USER:-}" SMTP_PASS="${SMTP_PASS:-}" MAIL_TO="${MAIL_TO:-}" \
+    python3 "$REPO_DIR/scripts/send_synthesis_summary.py" \
+        --since "$SYNTH_RUN_START" \
+        --targets-count "$TARGET_COUNT" \
+    || echo "$LOG_PREFIX WARN: summary email step failed (non-fatal)"
 
 # Propagate inconsistency: if heartbeat detected agent ran without recording
 # anything, exit non-zero so cron-wrapper alerts (even if agent itself returned 0).
