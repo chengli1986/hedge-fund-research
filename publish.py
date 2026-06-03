@@ -51,6 +51,7 @@ BADGE_COLORS: dict[str, str] = {
     "de-shaw": "#cd853f",                   # D. E. Shaw bronze/peru (warm earth; distinct from #c45000 ARK deep-orange and #e8601c Amundi red-orange)
     "pinebridge": "#00838f",                # PineBridge deep cyan (matches "pinebridgeblue" site palette; distinct from #006d75 Janus emerald-teal and #2ba397 Cambridge teal)
     "ares-management": "#b85450",           # Ares dark coral (distinct from #f85149 Oaktree bright red, #9d2235 Aberdeen burgundy, #7c2d12 Verdad terracotta, and warm-orange ARK/Amundi)
+    "matthews-asia": "#3949ab",             # Matthews Asia indigo (fills blue↔violet gap; muted vs #1f49e0 MSCI electric cobalt, deeper/bluer than #7a4cb1 JPMAM violet, WCAG AA ~5.9:1 on white)
 }
 
 INITIAL_VISIBLE = 20
@@ -252,6 +253,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "全球领先另类资产管理公司（约 $484B AUM，2024 年底），1997 年由 Tony Ressler 等人创立，2014 年纽交所上市。核心业务：私募信贷（美国直接借贷与中端市场最大平台之一）、私募股权、不动产/基础设施，以及通过 Aspida 开展的保险解决方案。",
         "notable_en": "Pioneer of US middle-market direct lending; Ares Capital Corporation (NASDAQ: ARCC) is the largest publicly traded BDC. Acquired Landmark Partners (2021), AMP Capital infrastructure (2022) and GLP Capital Partners' international platform (2024), expanding real assets footprint substantially.",
         "notable_zh": "美国中端市场直接借贷开创者；旗下 Ares Capital Corporation（NASDAQ: ARCC）是规模最大的上市 BDC。先后并购 Landmark Partners（2021）、AMP Capital 基础设施业务（2022）与 GLP Capital Partners 国际平台（2024），大幅扩展实物资产规模。",
+    },
+    "matthews-asia": {
+        "founded": "1991", "aum": "~$7.1B", "hq": "San Francisco, CA",
+        "type_en": "Asia/EM Equity Specialist", "type_zh": "亚洲/新兴市场股票专家",
+        "desc_zh": "专注亚洲与新兴市场股票的资产管理公司，1991 年创立、私人持股，办公室设于旧金山与香港，管理规模约 71 亿美元。坚持主动、自下而上的基本面投资，覆盖中国、印度、日本及更广泛的新兴市场，产品线涵盖全市值成长、股息、小盘与创新主题，并新增主动型 ETF。",
+        "notable_en": "One of the longest-established US-based Asia and emerging-markets equity specialists (privately owned since 1991); expanded from mutual funds into active ETFs in 2022, with CIO Sean Taylor leading a San Francisco- and Hong Kong-based investment team.",
+        "notable_zh": "美国历史最悠久的专注亚洲及新兴市场股票的投资机构之一（1991 年成立、私人持股）；2022 年从共同基金扩展至主动型 ETF，由首席投资官 Sean Taylor 领导旧金山与香港两地的投研团队。",
     },
 }
 

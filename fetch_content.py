@@ -213,6 +213,7 @@ def _check_min_content_length(text: str, min_length: int = MIN_CONTENT_LENGTH) -
 # for funds whose typical article body is meaningfully longer than 100 chars
 # and where short pieces are non-research (video/podcast preview blurbs).
 APOLLO_MIN_CONTENT = 1500  # Filter "In this episode..." video/podcast preview cards
+MATTHEWS_MIN_CONTENT = 500  # Filter video/teaser pages whose only text is the ~300-char header lead
 
 
 
@@ -1201,6 +1202,58 @@ def _fetch_content_ares(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+_MATTHEWS_DISCLAIMER = "The views and information discussed in this report"
+
+
+def _fetch_content_matthews_asia(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Matthews Asia Insights article content via requests (SSR).
+
+    Article bodies are SSR-rendered inside <main>, but the template varies:
+    long-form pieces use div.article_body-content, transcript pages use a
+    section.module_spacing block. Plain "main p" therefore captures the body
+    across templates — but also two boilerplate blocks that live in <main>:
+      - the fixed ~1.3K-char legal disclaimer (a section.module_spacing whose
+        text begins "The views and information discussed in this report"), and
+      - "related insights" card teasers in a.item.
+    Both are stripped here. The disclaimer strip is text-scoped (only the
+    module_spacing section that holds it) so the transcript template's own
+    module_spacing body survives. Video/teaser pages carry only the ~300-char
+    header lead; they fall below MATTHEWS_MIN_CONTENT and are skipped (same
+    intent as the Apollo podcast-preview filter).
+    """
+    url = article["url"]
+    log.info("  Matthews Asia: fetching article page %s", url)
+
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Matthews Asia: fetch failed: %s", e)
+        return None
+
+    soup = BeautifulSoup(resp.text, "html.parser")
+    for tag in soup.select("nav, footer, header, script, style, a.item"):
+        tag.decompose()
+    for sec in soup.select("section.module_spacing"):
+        if _MATTHEWS_DISCLAIMER in sec.get_text(" ", strip=True):
+            sec.decompose()
+
+    paragraphs = soup.select("main p")
+    text = "\n".join(
+        p.get_text(" ", strip=True) for p in paragraphs if p.get_text(strip=True)
+    )
+
+    if not _check_min_content_length(text, MATTHEWS_MIN_CONTENT):
+        log.warning("  Matthews Asia: extracted text too short (%d chars, min %d "
+                    "filters video/teaser pages)", len(text), MATTHEWS_MIN_CONTENT)
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Matthews Asia: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -1229,6 +1282,7 @@ CONTENT_FETCHERS = {
     "de-shaw": _fetch_content_de_shaw,
     "pinebridge": _fetch_content_pinebridge,
     "ares-management": _fetch_content_ares,
+    "matthews-asia": _fetch_content_matthews_asia,
 }
 
 

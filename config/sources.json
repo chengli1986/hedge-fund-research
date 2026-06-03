@@ -522,6 +522,23 @@
       "notable_authors": [],
       "expected_hostname": "ares.com",
       "max_articles": 10
+    },
+    {
+      "id": "matthews-asia",
+      "strategy_tags": [
+        "equity",
+        "emerging_markets",
+        "macro"
+      ],
+      "name": "Matthews Asia",
+      "short_name": "Matthews Asia",
+      "url": "https://www.matthewsasia.com/insights/",
+      "method": "ssr",
+      "frequency": "weekly",
+      "description": "Asia- and emerging-markets equity specialist (~$7.1B AUM), founded 1991 and privately owned, with offices in San Francisco and Hong Kong. Active, bottom-up fundamental investing across Asian and EM equities — China, India, Japan and broader emerging markets — spanning all-cap growth, dividend, small-cap and innovation strategies plus a more recent active-ETF lineup.",
+      "notable_authors": [],
+      "expected_hostname": "matthewsasia.com",
+      "max_articles": 10
     }
   ],
   "settings": {
