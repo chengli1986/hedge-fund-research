@@ -61,8 +61,21 @@ class TestParseDate:
         assert parse_date("2026-03-18") == "2026-03-18"
 
     def test_month_year_only(self):
-        result = parse_date("March 2026")
-        assert result == "2026-03-01"
+        # Month-only dates use last day of month so staleness checks don't
+        # penalise sources 30 days earlier than needed (KKR / Cambridge pattern)
+        assert parse_date("March 2026") == "2026-03-31"
+
+    def test_month_year_only_abbrev(self):
+        assert parse_date("Mar 2026") == "2026-03-31"
+
+    def test_month_year_only_end_of_month(self):
+        assert parse_date("May 2026") == "2026-05-31"
+
+    def test_month_year_only_feb_leap(self):
+        assert parse_date("Feb 2024") == "2024-02-29"
+
+    def test_month_year_only_feb_nonleap(self):
+        assert parse_date("Feb 2025") == "2025-02-28"
 
     def test_invalid_returns_none(self):
         assert parse_date("not a date") is None
@@ -543,10 +556,10 @@ class TestFetchResearchAffiliates:
         assert len(articles) == 2
         assert articles[0]["title"] == "When Will AI Be Both Powerful and Profitable?"
         assert articles[0]["url"] == "https://www.researchaffiliates.com/insights/publications/articles/1111-when-will-ai-be-profitable"
-        assert articles[0]["date"] == "2026-04-01"
+        assert articles[0]["date"] == "2026-04-30"
         assert articles[0]["date_raw"] == "APR 2026"
         assert articles[1]["title"] == "Winning the Long Game with RAFI"
-        assert articles[1]["date"] == "2026-03-01"
+        assert articles[1]["date"] == "2026-03-31"
 
     def test_dedups_repeated_anchors(self):
         """Site renders the same article in multiple rails — dedup by URL."""
@@ -587,7 +600,7 @@ class TestFetchResearchAffiliates:
 
         assert len(articles) == 1
         assert articles[0]["title"] == "Article Without Image"
-        assert articles[0]["date"] == "2026-02-01"
+        assert articles[0]["date"] == "2026-02-28"
 
     def test_respects_max_articles(self):
         items = "".join(
@@ -1214,9 +1227,9 @@ class TestFetchCambridgeAssociates:
         assert len(articles) == 2
         assert articles[0]["title"] == "Has Private Equity Hit Peak Software?"
         assert articles[0]["url"] == "https://www.cambridgeassociates.com/insight/has-private-equity-hit-peak-software"
-        assert articles[0]["date"] == "2026-02-01"
+        assert articles[0]["date"] == "2026-02-28"
         assert articles[0]["date_raw"] == "February 2026"
-        assert articles[1]["date"] == "2025-12-01"
+        assert articles[1]["date"] == "2025-12-31"
 
     def test_skips_cards_without_link(self):
         html = (

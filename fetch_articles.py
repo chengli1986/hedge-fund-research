@@ -147,8 +147,15 @@ def check_anomalies(metrics: dict) -> list[str]:
 
 
 def parse_date(date_str: str) -> Optional[str]:
-    """Try to parse various date formats into ISO format."""
+    """Try to parse various date formats into ISO format.
+
+    Month-only formats (e.g. "May 2026") resolve to the last day of that month
+    so staleness checks don't penalise sources ~30 days early (KKR / Cambridge
+    Associates publish month-granularity dates with no specific day).
+    """
+    import calendar as _cal
     date_str = date_str.strip()
+    _MONTH_ONLY_FMTS = {"%B %Y", "%b %Y"}
     for fmt in [
         "%B %d, %Y",      # March 18, 2026
         "%b %d, %Y",      # Mar 18, 2026
@@ -162,6 +169,9 @@ def parse_date(date_str: str) -> Optional[str]:
     ]:
         try:
             dt = datetime.strptime(date_str, fmt)
+            if fmt in _MONTH_ONLY_FMTS:
+                last_day = _cal.monthrange(dt.year, dt.month)[1]
+                dt = dt.replace(day=last_day)
             return dt.strftime("%Y-%m-%d")
         except ValueError:
             continue
