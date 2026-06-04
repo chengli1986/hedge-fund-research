@@ -831,6 +831,122 @@
         }
       ],
       "rejected_pages": []
+    },
+    "guggenheim-investments": {
+      "last_discovered_at": "2026-06-04T09:00:53.176165+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://www.guggenheiminvestments.com/cef",
+          "final_score": 0.74,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.8333,
+          "gate_penalty": 0.3,
+          "active": true
+        },
+        {
+          "url": "https://www.guggenheiminvestments.com/separately-managed-accounts",
+          "final_score": 0.69,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.6667,
+          "gate_penalty": 0.3,
+          "active": false
+        },
+        {
+          "url": "https://www.guggenheiminvestments.com/perspectives",
+          "final_score": 0.64,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.0,
+          "gate_penalty": 0.3,
+          "active": false
+        }
+      ],
+      "rejected_pages": [
+        {
+          "url": "https://www.guggenheiminvestments.com/advisor/events",
+          "final_score": 0.34,
+          "domain_score": 1.0,
+          "path_score": 0.0,
+          "structure_score": 0.0,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        },
+        {
+          "url": "https://www.guggenheiminvestments.com/institutional",
+          "final_score": 0.49,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.0,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        },
+        {
+          "url": "https://www.guggenheiminvestments.com/firm",
+          "final_score": 0.49,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.0,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        },
+        {
+          "url": "https://www.guggenheiminvestments.com/firm/heritage",
+          "final_score": 0.49,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.0,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        },
+        {
+          "url": "https://www.guggenheiminvestments.com/firm/guiding-principles",
+          "final_score": 0.49,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.0,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        },
+        {
+          "url": "https://www.guggenheiminvestments.com/firm/our-people",
+          "final_score": 0.49,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.0,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        },
+        {
+          "url": "https://www.guggenheiminvestments.com/products",
+          "final_score": 0.49,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.0,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        },
+        {
+          "url": "https://www.guggenheiminvestments.com/advisor",
+          "final_score": 0.49,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.0,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        },
+        {
+          "url": "https://www.guggenheiminvestments.com/credit-income-fund",
+          "final_score": 0.49,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.0,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        }
+      ]
     }
   }
 }
