@@ -1266,7 +1266,7 @@
       "article_signals": 0
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-05-28T01:02:52Z",
+    "last_deep_analyzed_at": "2026-06-05T01:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.62,
     "topics": "fixed income, alternatives, private credit, emerging markets, multi-asset",
@@ -1569,12 +1569,12 @@
       "multi_asset"
     ],
     "discovery_method": "discover_fund_sites",
-    "notes": "Re-trial approved 2026-06-02: previous trial scored 0.00 because the sampler hit the Akamai cookie gate on every article (sampler bug, fixed). Not a content-quality verdict.",
+    "notes": "Re-trial pending; Akamai blocks WebFetch, needs Playwright",
     "no_publish_dates": true,
     "official_domain": "www.capitalgroup.com",
     "research_links": [],
     "last_discovered_at": "2026-04-23T09:00:12.674329+08:00",
-    "last_deep_analyzed_at": "2026-05-27T01:02:57Z",
+    "last_deep_analyzed_at": "2026-06-05T01:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.5,
     "topics": "macro, geopolitics, advisor practice (mixed: ~3/7 investment commentary, ~4/7 advisor practice management)",
@@ -1682,8 +1682,8 @@
     "quality": "MEDIUM",
     "quality_score": 0.0,
     "topics": "equity, fixed income, macro, municipal bonds",
-    "notes": "Trial failed: low quality (0.00)",
-    "last_deep_analyzed_at": "2026-05-05T01:00:00Z"
+    "notes": "Gated + advisor practice mgmt; trial score 0.00 confirmed",
+    "last_deep_analyzed_at": "2026-06-05T01:00:00Z"
   },
   {
     "id": "franklin-templeton",
@@ -1868,14 +1868,15 @@
     "name": "Lazard Asset Management",
     "homepage_url": "https://www.lazardassetmanagement.com/us/en_us/research-insights",
     "source": "manual",
-    "status": "watchlist",
+    "status": "visitable",
     "strategy_tags": [
-      "fixed_income",
+      "emerging_markets",
+      "equity",
       "macro",
-      "emerging_markets"
+      "fixed_income"
     ],
-    "notes": "Fixed income viewpoints stale (last: Jan 2025)",
-    "research_url": "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/viewpoints",
+    "notes": "RECOMMEND: Active Jun 2026, EM+equity+AI; FI series stale",
+    "research_url": "https://www.lazardassetmanagement.com/us/en_us/research-insights",
     "official_domain": "www.lazardassetmanagement.com",
     "research_links": [
       {
@@ -1962,10 +1963,10 @@
     "screening_reason": "Research index detected",
     "fit_score": 0.94,
     "last_validated_at": "2026-05-04T09:00:19.804656+08:00",
-    "last_deep_analyzed_at": "2026-05-04T01:02:43Z",
-    "quality": "MEDIUM",
-    "quality_score": 0.5,
-    "topics": "fixed income, macro, bonds, interest rates"
+    "last_deep_analyzed_at": "2026-06-05T01:00:00Z",
+    "quality": "HIGH",
+    "quality_score": 0.75,
+    "topics": "emerging markets, equity, macro, AI/tech, fixed income, geopolitics"
   },
   {
     "id": "robeco",
