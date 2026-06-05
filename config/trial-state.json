@@ -4370,6 +4370,24 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-06-05": {
+          "accessible": true,
+          "article_count": 9,
+          "date_count": 0,
+          "article_urls": [
+            "https://www.capitalgroup.com/advisor/insights/articles/why-ai-artificial-intelligence-will-transform-not-replace-your-job.html",
+            "https://www.capitalgroup.com/advisor/insights/articles/midterm-elections-markets-5-charts.html",
+            "https://www.capitalgroup.com/advisor/insights/articles/looking-beyond-conflict-viewing-volatility-as-opportunity.html",
+            "https://www.capitalgroup.com/advisor/insights/articles/how-ai-is-reshaping-US-equity-markets.html",
+            "https://www.capitalgroup.com/advisor/practicelab/articles/help-clients-sell-a-business.html",
+            "https://www.capitalgroup.com/advisor/insights/articles/ir-retirement-longevity.html",
+            "https://www.capitalgroup.com/advisor/practicelab/articles/david-devoe-improving-human-capital-for-advisors.html",
+            "https://www.capitalgroup.com/advisor/practicelab/articles/AI-prompt-library-for-financial-advisors.html",
+            "https://www.capitalgroup.com/advisor/practicelab/articles/wealth-planning-life-events.html"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -4479,6 +4497,14 @@
           "js_only_checked": 0,
           "day": 3,
           "date": "2026-06-04"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 4,
+          "date": "2026-06-05"
         }
       ]
     },
@@ -4494,6 +4520,25 @@
       "end_date": null,
       "daily_checks": {
         "2026-06-04": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.acadian-asset.com/investment-insights/equities/quick-take-china-a-shares-analysts-move-on-mispricings-remain",
+            "https://www.acadian-asset.com/investment-insights/equities/quick-take-when-markets-decorrelate-diversify",
+            "https://www.acadian-asset.com/investment-insights/equities/china-a-shares-the-more-things-change-the-stronger-the-case-for-active",
+            "https://www.acadian-asset.com/investment-insights/equities/putting-portfolios-together-when-the-world-is-falling-apart",
+            "https://www.acadian-asset.com/investment-insights/systematic-methods/misplaced-anxiety-a-reassessment-of-crowding-in-systematic-investing",
+            "https://www.acadian-asset.com/investment-insights/credit/quick-take-the-rise-of-systematic-credit-again",
+            "https://www.acadian-asset.com/investment-insights/equities/we-are-not-in-an-ai-bubble",
+            "https://www.acadian-asset.com/investment-insights/equities/the-siren-song-of-concentrated-equity",
+            "https://www.acadian-asset.com/investment-insights/equities/quick-take-ems-giant-and-the-opportunities-it-overshadows",
+            "https://www.acadian-asset.com/investment-insights/equities/quick-take-us-equities-ten-out-of-g-10"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-06-05": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -4550,9 +4595,114 @@
           "js_only_checked": 0,
           "day": 1,
           "date": "2026-06-04"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.acadian-asset.com/investment-insights/equities/putting-portfolios-together-when-the-world-is-falling-apart",
+              "relevance": 0.9,
+              "depth": 0.75,
+              "extractable": 0.6,
+              "overall": 0.78,
+              "notes": "Portfolio diversification strategy in context of deglobalization; analyzes equity market correlations and implications for global asset allocation."
+            },
+            {
+              "url": "https://www.acadian-asset.com/investment-insights/systematic-methods/misplaced-anxiety-a-reassessment-of-crowding-in-systematic-investing",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.65,
+              "overall": 0.85,
+              "notes": "Systematic equity investing analysis; reassesses 'quant crowding' risk with empirical indicators and argues crowding concerns are overstated relative to 2007."
+            },
+            {
+              "url": "https://www.acadian-asset.com/investment-insights/credit/quick-take-the-rise-of-systematic-credit-again",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.55,
+              "overall": 0.75,
+              "notes": "Systematic credit market analysis; discusses growth of systematic credit strategies, electronification trends, and competitive dynamics using poker analogy."
+            }
+          ],
+          "avg_score": 0.793,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 2,
+          "date": "2026-06-05"
+        }
+      ]
+    },
+    {
+      "id": "lazard-am",
+      "name": "Lazard Asset Management",
+      "research_url": "https://www.lazardassetmanagement.com/us/en_us/research-insights",
+      "homepage_url": "https://www.lazardassetmanagement.com/us/en_us/research-insights",
+      "fit_score": 0.94,
+      "quality": "HIGH",
+      "topics": "emerging markets, equity, macro, AI/tech, fixed income, geopolitics",
+      "start_date": "2026-06-05",
+      "end_date": null,
+      "daily_checks": {
+        "2026-06-05": {
+          "accessible": true,
+          "article_count": 93,
+          "date_count": 93,
+          "article_urls": [
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/investment-research/etf-tax-efficiency",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/investment-research/etf-active-passive-design",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/investment-research/beyond-data-center-headlines-ai-value-chain-opportunities",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/november-21-2025",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/december-5-2025",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/december-12-2025",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/december-19-2025",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/january-9-2026",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/january-16-2026"
+          ],
+          "error": null,
+          "fetcher_used": false
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/investment-research/etf-tax-efficiency",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.6,
+              "overall": 0.76,
+              "notes": "ETF tax efficiency analysis explaining in-kind creation/redemption mechanics and capital gains advantages vs mutual funds"
+            },
+            {
+              "url": "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/investment-research/etf-active-passive-design",
+              "relevance": 0.85,
+              "depth": 0.6,
+              "extractable": 0.5,
+              "overall": 0.68,
+              "notes": "Overview of active vs passive ETF design and portfolio diversification benefits; somewhat generic educational content"
+            },
+            {
+              "url": "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/investment-research/beyond-data-center-headlines-ai-value-chain-opportunities",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.4,
+              "overall": 0.78,
+              "notes": "AI infrastructure investment thesis analyzing data center capex trends and value chain opportunities; text appears truncated mid-sentence"
+            }
+          ],
+          "avg_score": 0.74,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 1,
+          "date": "2026-06-05"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-06-04"
+  "last_summary_sent_date": "2026-06-05"
 }
