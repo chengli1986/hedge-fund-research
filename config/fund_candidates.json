@@ -1122,10 +1122,10 @@
     "rss_url": null,
     "official_domain": "www.schroders.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "Trial inconclusive: articles detected but Haiku quality sampling returned 0 samples (content likely behind JS gate or short). quality=MEDIUM/0.6 is from pre-trial deep analysis only, not verified by trial.",
+    "notes": "JS-rendered; WebFetch returns empty content confirmed Jun 2026; watchlist unchanged",
     "research_links": [],
     "last_discovered_at": "2026-04-19T09:00:14.174535+08:00",
-    "last_deep_analyzed_at": "2026-05-06T01:03:12Z",
+    "last_deep_analyzed_at": "2026-06-06T01:00:00Z",
     "quality": "MEDIUM",
     "topics": "ESG, emerging markets, multi-asset, fixed income",
     "strategy_tags": [
@@ -1289,7 +1289,7 @@
     "rss_url": null,
     "official_domain": "www.aberdeeninvestments.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "Email-gated insights page; shows 0 articles without registration",
+    "notes": "Still gated: 0 articles shown without email registration (confirmed Jun 2026)",
     "research_links": [
       {
         "url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/insights",
@@ -1315,7 +1315,7 @@
     "quality": "LOW",
     "quality_score": 0.32,
     "topics": "macro, fixed income, multi-asset, emerging markets",
-    "last_deep_analyzed_at": "2026-05-28T01:02:52Z",
+    "last_deep_analyzed_at": "2026-06-06T01:00:00Z",
     "fit_score": 0.82,
     "strategy_tags": [
       "macro",
@@ -1840,7 +1840,7 @@
       }
     ],
     "discovery_method": "discover_fund_sites",
-    "notes": "Free monthly articles; macro+equity affiliate views",
+    "notes": "Free monthly articles; macro+equity affiliate views; energy analysis confirmed Jun 2026",
     "last_discovered_at": "2026-05-02T09:03:53.598499+08:00",
     "is_publicly_accessible": true,
     "has_article_index": true,
@@ -1858,7 +1858,7 @@
     "screening_reason": "Research index detected",
     "fit_score": 0.85,
     "last_validated_at": "2026-05-03T09:00:33.191261+08:00",
-    "last_deep_analyzed_at": "2026-05-29T01:00:00Z",
+    "last_deep_analyzed_at": "2026-06-06T01:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.6,
     "topics": "macro, equity, fixed income, energy, portfolio construction"
@@ -2134,9 +2134,9 @@
     "research_url": "https://www.janushenderson.com/en-us/investor/insights/",
     "quality": "HIGH",
     "quality_score": 0.82,
-    "topics": "fixed income, equity, macro, geopolitics, technology",
-    "notes": "RECOMMEND: Free weekly, ELN/FI depth confirmed May 2026",
-    "last_deep_analyzed_at": "2026-05-29T01:00:00Z",
+    "topics": "fixed income, equity, macro, geopolitics, AI/technology",
+    "notes": "RECOMMEND: Free weekly, FI/equity depth confirmed Jun 2026",
+    "last_deep_analyzed_at": "2026-06-06T01:00:00Z",
     "promoted_at": "2026-05-12T10:19:29.746916+08:00"
   },
   {
