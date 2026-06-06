@@ -4388,6 +4388,24 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-06-06": {
+          "accessible": true,
+          "article_count": 9,
+          "date_count": 0,
+          "article_urls": [
+            "https://www.capitalgroup.com/advisor/insights/articles/2026-midyear-stock-market-outlook.html",
+            "https://www.capitalgroup.com/advisor/insights/articles/midterm-elections-markets-5-charts.html",
+            "https://www.capitalgroup.com/advisor/insights/articles/why-ai-artificial-intelligence-will-transform-not-replace-your-job.html",
+            "https://www.capitalgroup.com/advisor/insights/articles/short-term-bonds-volatility.html",
+            "https://www.capitalgroup.com/advisor/insights/articles/ir-retirement-income-planning.html",
+            "https://www.capitalgroup.com/advisor/practicelab/articles/concierge-services-that-add-value.html",
+            "https://www.capitalgroup.com/advisor/practicelab/articles/how-scale-RIA-without-sacrificing-culture.html",
+            "https://www.capitalgroup.com/advisor/practicelab/articles/AI-prompt-library-for-financial-advisors.html",
+            "https://www.capitalgroup.com/advisor/practicelab/articles/wealth-planning-life-events.html"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -4505,6 +4523,41 @@
           "error": "No new (un-sampled) article links available",
           "day": 4,
           "date": "2026-06-05"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.capitalgroup.com/advisor/insights/articles/2026-midyear-stock-market-outlook.html",
+              "relevance": 0.95,
+              "depth": 0.75,
+              "extractable": 0.85,
+              "overall": 0.85,
+              "notes": "Mid-2026 equity market outlook focused on earnings growth, AI investment cycle, and emerging market valuations with sector-specific analysis"
+            },
+            {
+              "url": "https://www.capitalgroup.com/advisor/insights/articles/short-term-bonds-volatility.html",
+              "relevance": 0.9,
+              "depth": 0.8,
+              "extractable": 0.8,
+              "overall": 0.84,
+              "notes": "Fixed income strategy analysis on short-term bonds vs. cash alternatives, with flow data and yield curve dynamics in response to geopolitical events"
+            },
+            {
+              "url": "https://www.capitalgroup.com/advisor/insights/articles/ir-retirement-income-planning.html",
+              "relevance": 0.7,
+              "depth": 0.65,
+              "extractable": 0.75,
+              "overall": 0.69,
+              "notes": "Retirement income planning guidance on longevity assumptions and withdrawal strategies; more advisory/educational than investment research"
+            }
+          ],
+          "avg_score": 0.793,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 5,
+          "date": "2026-06-06"
         }
       ]
     },
@@ -4539,6 +4592,25 @@
           "fetcher_used": true
         },
         "2026-06-05": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.acadian-asset.com/investment-insights/equities/quick-take-china-a-shares-analysts-move-on-mispricings-remain",
+            "https://www.acadian-asset.com/investment-insights/equities/quick-take-when-markets-decorrelate-diversify",
+            "https://www.acadian-asset.com/investment-insights/equities/china-a-shares-the-more-things-change-the-stronger-the-case-for-active",
+            "https://www.acadian-asset.com/investment-insights/equities/putting-portfolios-together-when-the-world-is-falling-apart",
+            "https://www.acadian-asset.com/investment-insights/systematic-methods/misplaced-anxiety-a-reassessment-of-crowding-in-systematic-investing",
+            "https://www.acadian-asset.com/investment-insights/credit/quick-take-the-rise-of-systematic-credit-again",
+            "https://www.acadian-asset.com/investment-insights/equities/we-are-not-in-an-ai-bubble",
+            "https://www.acadian-asset.com/investment-insights/equities/the-siren-song-of-concentrated-equity",
+            "https://www.acadian-asset.com/investment-insights/equities/quick-take-ems-giant-and-the-opportunities-it-overshadows",
+            "https://www.acadian-asset.com/investment-insights/equities/quick-take-us-equities-ten-out-of-g-10"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-06-06": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -4630,6 +4702,41 @@
           "js_only_checked": 0,
           "day": 2,
           "date": "2026-06-05"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.acadian-asset.com/investment-insights/equities/we-are-not-in-an-ai-bubble",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.75,
+              "overall": 0.87,
+              "notes": "Deep analysis of whether U.S. stock market is in an AI bubble, using historical bubble diagnostics and equity issuance patterns as key differentiators."
+            },
+            {
+              "url": "https://www.acadian-asset.com/investment-insights/equities/the-siren-song-of-concentrated-equity",
+              "relevance": 0.9,
+              "depth": 0.8,
+              "extractable": 0.7,
+              "overall": 0.82,
+              "notes": "Portfolio strategy analysis examining behavioral vulnerabilities driving concentrated equity investing and associated risks including manager selection bias and underperformance."
+            },
+            {
+              "url": "https://www.acadian-asset.com/investment-insights/equities/quick-take-ems-giant-and-the-opportunities-it-overshadows",
+              "relevance": 0.85,
+              "depth": 0.75,
+              "extractable": 0.8,
+              "overall": 0.8,
+              "notes": "EM equity research highlighting TSMC's outsized index weight and broader AI supply-chain opportunities across 1,100+ EM stocks, advocating for active stock picking."
+            }
+          ],
+          "avg_score": 0.83,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 3,
+          "date": "2026-06-06"
         }
       ]
     },
@@ -4658,6 +4765,24 @@
             "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/december-19-2025",
             "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/january-9-2026",
             "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/january-16-2026"
+          ],
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-06-06": {
+          "accessible": true,
+          "article_count": 93,
+          "date_count": 93,
+          "article_urls": [
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/investment-research/etf-tax-efficiency",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/investment-research/etf-active-passive-design",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/investment-research/beyond-data-center-headlines-ai-value-chain-opportunities",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/december-5-2025",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/december-12-2025",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/december-19-2025",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/january-9-2026",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/january-16-2026",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/january-23-2026"
           ],
           "error": null,
           "fetcher_used": false
@@ -4700,9 +4825,44 @@
           "js_only_checked": 0,
           "day": 1,
           "date": "2026-06-05"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/december-5-2025",
+              "relevance": 0.9,
+              "depth": 0.5,
+              "extractable": 0.7,
+              "overall": 0.7,
+              "notes": "Weekly macro commentary on US retail weakness, China PMI contraction, and Fed rate cut expectations; lacks detailed data/analysis but provides investor-relevant forward guidance."
+            },
+            {
+              "url": "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/december-12-2025",
+              "relevance": 0.9,
+              "depth": 0.5,
+              "extractable": 0.6,
+              "overall": 0.68,
+              "notes": "Weekly macro update on Fed rate cut, Powell's hawkish signal, China inflation/deflation dynamics, and central bank outlook; substantive but brief commentary with truncated text."
+            },
+            {
+              "url": "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/december-19-2025",
+              "relevance": 0.9,
+              "depth": 0.5,
+              "extractable": 0.6,
+              "overall": 0.68,
+              "notes": "Weekly macro analysis on US labor market weakness from tariffs, CPI data concerns, and China's export dependency; brief commentary with truncated legal disclaimers."
+            }
+          ],
+          "avg_score": 0.687,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 2,
+          "date": "2026-06-06"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-06-05"
+  "last_summary_sent_date": "2026-06-06"
 }
