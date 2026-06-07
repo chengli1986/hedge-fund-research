@@ -2,7 +2,7 @@
 
 Tracks and aggregates research insights, market commentary, and papers from top hedge funds. Summarizes via LLM and publishes a bilingual (CN/EN) dashboard.
 
-## Sources (23)
+## Sources (28)
 
 | Fund | Method | Frequency | Notable |
 |------|--------|-----------|---------|
@@ -21,14 +21,19 @@ Tracks and aggregates research insights, market commentary, and papers from top 
 | **PGIM** | SSR (AEM) | Quarterly | Prudential's IM arm; fixed income, private credit, real estate, alternatives; free research is quarterly not weekly |
 | **Brookfield Asset Management** | SSR (Drupal) | Monthly | Real assets, infrastructure, renewable power, private equity |
 | **J.P. Morgan Asset Management** | AEM JSON API | Weekly | Multi-asset, fixed income, market insights, Long-Term Capital Market Assumptions |
-| **Verdad Capital** | SSR (requests) | Monthly | Quant value/factor, emerging markets, private equity replication; Boston, ~$500M |
-| **MSCI Research** | Playwright (Next.js) | Weekly | Index/factor research, ESG & climate frameworks, multi-asset risk; $15T+ benchmarked |
+| **Verdad Capital** | SSR (requests) | Monthly | Quant value/factor, emerging markets, private equity replication; Boston, ~$1B |
+| **MSCI Research** | Playwright (Next.js) | Weekly | Index/factor research, ESG & climate frameworks, multi-asset risk; $16.5T+ benchmarked |
 | **Natixis Investment Managers** | SSR (requests) | Monthly | Tactical Take podcast — macro/portfolio strategy with Janasiewicz & Hess |
 | **Apollo Global Management** | SSR (AEM) | Weekly | Private credit ABF, secondaries, View from Apollo, Apollo Academy |
-| **KKR** | Playwright (Next.js) | Weekly | Private equity / infrastructure / private credit / Global Atlantic insurance; NYC, 1976, ~$600B |
-| **Janus Henderson Investors** | SSR (requests) | Weekly | Equities / fixed income / multi-asset; global rates + geopolitics frame; London/Denver, 2017 merger, ~$370B |
-| **Research Affiliates** | Playwright (Next.js) | Monthly | Quantitative research / index licensor; RAFI fundamental indices + Smart Beta; Newport Beach, 2002, ~$170B licensed (Rob Arnott) |
-| **Goldman Sachs Asset Management** | TBD | TBD | Asset management arm of Goldman Sachs (auto-promoted 2026-05-17 via `5cd3241` — pending profile review) |
+| **KKR** | Playwright (Next.js) | Weekly | Private equity / infrastructure / private credit / Global Atlantic insurance; NYC, 1976, ~$758B |
+| **Janus Henderson Investors** | SSR (requests) | Weekly | Equities / fixed income / multi-asset; global rates + geopolitics frame; London/Denver, 2017 merger, ~$480B (take-private pending) |
+| **Research Affiliates** | Playwright (Next.js) | Monthly | Quantitative research / index licensor; RAFI fundamental indices + Smart Beta; Newport Beach, 2002, ~$159B licensed (Rob Arnott) |
+| **Goldman Sachs Asset Management** | JSON API | Weekly | Multi-asset, equity, fixed income, alternatives, liquidity; macro outlooks + market commentary; ~$3.3T |
+| **Robeco** | Playwright | Weekly | Quant equity pioneer, sustainability/ESG integration, EM equity & global credit; Rotterdam, 1929, ~€200B |
+| **D. E. Shaw** | Playwright | Annual | Quant multi-strategy; computational/statistical-arbitrage; Library publishes 1-3 long-form papers/year; 1988, ~$65B |
+| **PineBridge Investments** | Playwright | Weekly | Fixed income (EM debt, leveraged finance), multi-asset, active equities; Capital Market Line; ex-AIG, acquired by MetLife IM (Dec 2025), ~$100B |
+| **Ares Management** | SSR (requests) | Weekly | Private credit / private equity / real assets / infrastructure; US direct-lending leader; 1997, NYSE: ARES, ~$620B |
+| **Matthews Asia** | SSR (requests) | Weekly | Asia & emerging-markets equity specialist; active bottom-up; SF/HK, 1991, ~$6.6B |
 
 ## Pipeline
 
