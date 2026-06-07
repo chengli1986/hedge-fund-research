@@ -4406,6 +4406,24 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-06-07": {
+          "accessible": true,
+          "article_count": 9,
+          "date_count": 0,
+          "article_urls": [
+            "https://www.capitalgroup.com/advisor/insights/articles/2026-midyear-stock-market-outlook.html",
+            "https://www.capitalgroup.com/advisor/insights/articles/midterm-elections-markets-5-charts.html",
+            "https://www.capitalgroup.com/advisor/insights/articles/why-ai-artificial-intelligence-will-transform-not-replace-your-job.html",
+            "https://www.capitalgroup.com/advisor/insights/articles/short-term-bonds-volatility.html",
+            "https://www.capitalgroup.com/advisor/insights/articles/ir-retirement-income-planning.html",
+            "https://www.capitalgroup.com/advisor/practicelab/articles/concierge-services-that-add-value.html",
+            "https://www.capitalgroup.com/advisor/practicelab/articles/how-scale-RIA-without-sacrificing-culture.html",
+            "https://www.capitalgroup.com/advisor/practicelab/articles/AI-prompt-library-for-financial-advisors.html",
+            "https://www.capitalgroup.com/advisor/practicelab/articles/wealth-planning-life-events.html"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -4558,6 +4576,33 @@
           "js_only_checked": 0,
           "day": 5,
           "date": "2026-06-06"
+        },
+        {
+          "sampled": 2,
+          "articles": [
+            {
+              "url": "https://www.capitalgroup.com/advisor/practicelab/articles/concierge-services-that-add-value.html",
+              "relevance": 0.4,
+              "depth": 0.5,
+              "extractable": 0.7,
+              "overall": 0.5,
+              "notes": "Advisory practice management article on concierge services and client retention; tangentially related to investment strategy but primarily focused on advisor business development tactics."
+            },
+            {
+              "url": "https://www.capitalgroup.com/advisor/practicelab/articles/how-scale-RIA-without-sacrificing-culture.html",
+              "relevance": 0.5,
+              "depth": 0.6,
+              "extractable": 0.6,
+              "overall": 0.56,
+              "notes": "Case study on RIA scaling and organizational culture; relevant to asset management industry but lacks investment research or portfolio strategy content; text appears truncated mid-sentence."
+            }
+          ],
+          "avg_score": 0.53,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 6,
+          "date": "2026-06-07"
         }
       ]
     },
@@ -4611,6 +4656,25 @@
           "fetcher_used": true
         },
         "2026-06-06": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.acadian-asset.com/investment-insights/equities/quick-take-china-a-shares-analysts-move-on-mispricings-remain",
+            "https://www.acadian-asset.com/investment-insights/equities/quick-take-when-markets-decorrelate-diversify",
+            "https://www.acadian-asset.com/investment-insights/equities/china-a-shares-the-more-things-change-the-stronger-the-case-for-active",
+            "https://www.acadian-asset.com/investment-insights/equities/putting-portfolios-together-when-the-world-is-falling-apart",
+            "https://www.acadian-asset.com/investment-insights/systematic-methods/misplaced-anxiety-a-reassessment-of-crowding-in-systematic-investing",
+            "https://www.acadian-asset.com/investment-insights/credit/quick-take-the-rise-of-systematic-credit-again",
+            "https://www.acadian-asset.com/investment-insights/equities/we-are-not-in-an-ai-bubble",
+            "https://www.acadian-asset.com/investment-insights/equities/the-siren-song-of-concentrated-equity",
+            "https://www.acadian-asset.com/investment-insights/equities/quick-take-ems-giant-and-the-opportunities-it-overshadows",
+            "https://www.acadian-asset.com/investment-insights/equities/quick-take-us-equities-ten-out-of-g-10"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-06-07": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -4737,6 +4801,25 @@
           "js_only_checked": 0,
           "day": 3,
           "date": "2026-06-06"
+        },
+        {
+          "sampled": 1,
+          "articles": [
+            {
+              "url": "https://www.acadian-asset.com/investment-insights/equities/quick-take-us-equities-ten-out-of-g-10",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.6,
+              "overall": 0.76,
+              "notes": "Equity allocation analysis comparing G-10 performance, highlighting non-U.S. outperformance and divergent return drivers from U.S. tech concentration"
+            }
+          ],
+          "avg_score": 0.76,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 4,
+          "date": "2026-06-07"
         }
       ]
     },
@@ -4770,6 +4853,24 @@
           "fetcher_used": false
         },
         "2026-06-06": {
+          "accessible": true,
+          "article_count": 93,
+          "date_count": 93,
+          "article_urls": [
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/investment-research/etf-tax-efficiency",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/investment-research/etf-active-passive-design",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/investment-research/beyond-data-center-headlines-ai-value-chain-opportunities",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/december-5-2025",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/december-12-2025",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/december-19-2025",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/january-9-2026",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/january-16-2026",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/january-23-2026"
+          ],
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-06-07": {
           "accessible": true,
           "article_count": 93,
           "date_count": 93,
@@ -4860,9 +4961,44 @@
           "js_only_checked": 0,
           "day": 2,
           "date": "2026-06-06"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/january-9-2026",
+              "relevance": 0.9,
+              "depth": 0.6,
+              "extractable": 0.7,
+              "overall": 0.74,
+              "notes": "Weekly macro commentary on US labor market, consumer sentiment, and China inflation with forward-looking investor implications; truncated legal disclaimer reduces extractability."
+            },
+            {
+              "url": "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/january-16-2026",
+              "relevance": 0.9,
+              "depth": 0.6,
+              "extractable": 0.7,
+              "overall": 0.74,
+              "notes": "Weekly macro analysis covering US CPI/retail sales, K-shaped economy dynamics, and China's trade surplus with protectionism outlook; similarly truncated."
+            },
+            {
+              "url": "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/january-23-2026",
+              "relevance": 0.9,
+              "depth": 0.6,
+              "extractable": 0.65,
+              "overall": 0.73,
+              "notes": "Weekly macro update on US consumption/savings trends, China GDP imbalances, and BoJ policy normalization signals; more heavily truncated than prior articles."
+            }
+          ],
+          "avg_score": 0.737,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 3,
+          "date": "2026-06-07"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-06-06"
+  "last_summary_sent_date": "2026-06-07"
 }
