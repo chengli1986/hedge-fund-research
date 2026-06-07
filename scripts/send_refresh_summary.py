@@ -41,8 +41,10 @@ def main() -> int:
     ap.add_argument("--applied", default=""); ap.add_argument("--flagged", default="")
     ap.add_argument("--alert-only", default="1")
     a = ap.parse_args()
-    applied = [x for x in a.applied.split() if x]
-    flagged = [x for x in a.flagged.split() if x]
+    # Split on newline (not whitespace): flagged entries contain spaces, e.g.
+    # "man-group (apply_refresh rc=1)".
+    applied = [x.strip() for x in a.applied.split("\n") if x.strip()]
+    flagged = [x.strip() for x in a.flagged.split("\n") if x.strip()]
     alert_only = a.alert_only == "1"
     html_body = render_summary(applied=applied, flagged=flagged, alert_only=alert_only)
     send(f"GMIA Profile Refresh — {len(applied)} applied / {len(flagged)} flagged", html_body)

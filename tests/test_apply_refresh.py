@@ -124,3 +124,58 @@ def test_apply_syncs_sources_json_aum(tmp_path):
     assert "~$700B" not in apollo["description"]
     man = next(s for s in data["sources"] if s["id"] == "man-group")
     assert man["description"] == "Multi-strategy: macro, quant, credit."
+
+
+def test_apply_leaves_all_unchanged_fields_byte_identical(tmp_path):
+    (tmp_path / "publish.py").write_text(PUBLISH_TEMPLATE)
+    s0 = importlib.util.spec_from_file_location("pub0", tmp_path / "publish.py")
+    m0 = importlib.util.module_from_spec(s0); s0.loader.exec_module(m0)
+    orig = dict(m0.render()["apollo-global-management"])
+    _write_draft(tmp_path, "apollo-global-management",
+                 {"aum": "~$1.03T", "aum_source": "https://sec.gov/x"},
+                 [{"field": "aum", "old": "~$700B", "new": "~$1.03T",
+                   "reason": "Q1 2026 8-K", "source": "https://sec.gov/x"}])
+    assert ar.apply_refresh("apollo-global-management", base_dir=tmp_path) == 0
+    s1 = importlib.util.spec_from_file_location("pub1b", tmp_path / "publish.py")
+    m1 = importlib.util.module_from_spec(s1); s1.loader.exec_module(m1)
+    after = m1.render()["apollo-global-management"]
+    assert after["aum"] == "~$1.03T"
+    for f in ("founded", "hq", "type_en", "type_zh", "desc_zh", "notable_en", "notable_zh"):
+        assert after[f] == orig[f], f"{f} changed unexpectedly"
+
+
+def test_apply_uses_changelog_when_top_level_field_absent(tmp_path):
+    (tmp_path / "publish.py").write_text(PUBLISH_TEMPLATE)
+    _write_draft(tmp_path, "apollo-global-management",
+                 {"aum_source": "https://sec.gov/x"},  # no top-level aum key
+                 [{"field": "aum", "old": "~$700B", "new": "~$1.03T",
+                   "reason": "Q1 2026 8-K", "source": "https://sec.gov/x"}])
+    assert ar.apply_refresh("apollo-global-management", base_dir=tmp_path) == 0
+    s1 = importlib.util.spec_from_file_location("pub_cl", tmp_path / "publish.py")
+    m1 = importlib.util.module_from_spec(s1); s1.loader.exec_module(m1)
+    assert m1.render()["apollo-global-management"]["aum"] == "~$1.03T"
+
+
+def test_apply_rejects_malformed_changelog_entry(tmp_path):
+    (tmp_path / "publish.py").write_text(PUBLISH_TEMPLATE)
+    pdir = tmp_path / "pending_profiles"; pdir.mkdir(exist_ok=True)
+    (pdir / "apollo-global-management.refresh.json").write_text(
+        json.dumps({"id": "apollo-global-management",
+                    "change_log": [{"old": "~$700B", "new": "~$1.03T"}]}))  # no "field"
+    assert ar.apply_refresh("apollo-global-management", base_dir=tmp_path) == ar.EXIT_VALIDATION_FAILED
+
+
+def test_apply_event_text_field_change(tmp_path):
+    (tmp_path / "publish.py").write_text(PUBLISH_TEMPLATE)
+    s0 = importlib.util.spec_from_file_location("pub_e0", tmp_path / "publish.py")
+    m0 = importlib.util.module_from_spec(s0); s0.loader.exec_module(m0)
+    old_desc = m0.render()["apollo-global-management"]["desc_zh"]
+    new_desc = old_desc + " 2026 年完成对某平台的收购。"
+    _write_draft(tmp_path, "apollo-global-management",
+                 {"desc_zh": new_desc, "aum_source": "https://apollo.com/x"},
+                 [{"field": "desc_zh", "old": old_desc, "new": new_desc,
+                   "reason": "收购 acquisition completed", "source": "https://apollo.com/x"}])
+    assert ar.apply_refresh("apollo-global-management", base_dir=tmp_path) == 0
+    s1 = importlib.util.spec_from_file_location("pub_e1", tmp_path / "publish.py")
+    m1 = importlib.util.module_from_spec(s1); s1.loader.exec_module(m1)
+    assert m1.render()["apollo-global-management"]["desc_zh"] == new_desc

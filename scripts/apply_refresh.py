@@ -150,12 +150,26 @@ def apply_refresh(fund_id: str, *, base_dir: Path | None = None,
                          f"(use graduate_pending for new funds)\n")
         return EXIT_NOT_PRESENT
 
+    # change_log is the single source of truth for what changes and to what.
+    # Build `merged` from each entry's `new` (not from optional top-level keys),
+    # so a draft can never silently "apply" a field while publish.py keeps the
+    # old value. Also guards malformed change_log shapes.
     change_log = draft.get("change_log", [])
-    changed_fields = {c["field"] for c in change_log}
+    if not isinstance(change_log, list):
+        sys.stderr.write("[apply_refresh] change_log must be a list\n")
+        return EXIT_VALIDATION_FAILED
     merged = dict(current_profiles[fund_id])
-    for field in changed_fields:
-        if field in draft:
-            merged[field] = draft[field]
+    changed_fields: set[str] = set()
+    for c in change_log:
+        if not isinstance(c, dict):
+            sys.stderr.write(f"[apply_refresh] change_log entry is not an object: {c!r}\n")
+            return EXIT_VALIDATION_FAILED
+        field, new_val = c.get("field"), c.get("new")
+        if not field or new_val is None:
+            sys.stderr.write(f"[apply_refresh] change_log entry missing field/new: {c}\n")
+            return EXIT_VALIDATION_FAILED
+        merged[field] = new_val
+        changed_fields.add(field)
 
     vpp = _load_validate_module(base)
     result = vpp.validate_refresh({**merged, "id": fund_id,

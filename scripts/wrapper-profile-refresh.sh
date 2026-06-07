@@ -66,9 +66,12 @@ if [[ "$ALERT_ONLY" != "1" && ${#APPLIED[@]} -gt 0 ]]; then
     && git push
 fi
 
-# 4) summary email (notification only — never affect exit code)
+# 4) summary email (notification only — never affect exit code).
+#    Newline-delimit so flagged entries (which contain spaces) stay intact.
+applied_str="$(printf '%s\n' ${APPLIED[@]+"${APPLIED[@]}"})"
+flagged_str="$(printf '%s\n' ${FLAGGED[@]+"${FLAGGED[@]}"})"
 python3 scripts/send_refresh_summary.py \
-  --applied "${APPLIED[*]:-}" --flagged "${FLAGGED[*]:-}" \
+  --applied "$applied_str" --flagged "$flagged_str" \
   --alert-only "$ALERT_ONLY" >>logs/profile-refresh.log 2>&1 || echo "[profile-refresh] summary email WARN"
 
 echo "[profile-refresh] done: applied=${#APPLIED[@]} flagged=${#FLAGGED[@]} alert_only=$ALERT_ONLY"
