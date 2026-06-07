@@ -117,12 +117,27 @@ Scorer weight optimization program using automated experiment loop:
 
 `synthesize_fetchers.py` + `fetcher-synthesis/program.md` — weekly Sunday agent that auto-writes Playwright fetchers for `inaccessible` candidates (sites where listing pages are JS-only or selectors are broken), then promotes them back into trial. After `MAX_SYNTHESIS_FAILURES=3` recorded failures in `logs/fetcher-synthesis-history.jsonl`, the candidate is auto-rejected on the next run — bounding wasted agent invocations on candidates the agent cannot solve (e.g. IP/WAF-layer blocks Playwright cannot bypass). Manual override: restore status to `inaccessible` *and* remove the candidate's failed history entries.
 
+## Profile Refresh
+
+`scripts/wrapper-profile-refresh.sh` + `auto-promote/refresh-program.md` — monthly agent that keeps the Sources-tab fund profiles fresh. A headless Claude (Max Plan, `--print`) web-verifies each fund's **time-sensitive** facts (AUM + corporate events: M&A, delisting/take-private, rebrand) and writes a `pending_profiles/<id>.refresh.json` draft only when something changed materially. Static facts (founders, history) are never touched.
+
+Each draft is gated by `validate_refresh()` (reuses the auto-promote evidence gate: every changed fact needs a source URL, AUM magnitude/self-consistency sane, no uncertainty markers; prose rewrites with no corporate-event reason are diff-capped). `scripts/apply_refresh.py` applies a passing draft to the existing `publish._FUND_PROFILES` entry — **change_log is the single source of truth**, so only listed fields change and every other field stays byte-identical; the embedded AUM figure in `config/sources.json` is synced too. `scripts/send_refresh_summary.py` emails an applied/flagged summary (notification only).
+
+```bash
+# Manual run (Phase 1 alert-only: gate + email, no write/publish)
+ALERT_ONLY=1 bash scripts/wrapper-profile-refresh.sh
+
+# Cron: monthly, 1st at 09:00 BJT (gmia-profile-refresh)
+# Phased rollout: ALERT_ONLY=1 (dry-run + email) -> flip to ALERT_ONLY=0 for auto-apply + publish
+```
+
 ## Tests
 
-509 passing, 15 deselected — unit, functional, and integration tests (live/nightly tests excluded by default via pytest.ini). Contract tests enforce `sources.json` stays in sync with the `FETCHERS` / `CONTENT_FETCHERS` dispatcher dicts and `BADGE_COLORS` palette, so adding a new production source without wiring the full pipeline fails fast at pytest time. Consistency tests (`tests/test_config_consistency.py`) additionally guard against frequency-vs-observed-cadence drift, validated-candidate URL invariants, and fund-profile coverage (every `sources.json` id must have a profile in `publish._FUND_PROFILES` or `pending_profiles/<id>.json`). `TestOlderArticleFolding` covers the `data-age` recency split (90d boundary inclusive after the 5-29 `f561da8` Show-older fold tightening, no-date defaults to recent, page-level toggle button render/suppress). `tests/test_validate_pending_profile.py` (added 5-29 `13c51f0`) enforces auto-graduate evidence gates — `aum_source` / `founded_source` URL/domain citations, AUM↔desc_zh currency consistency, $10M-$20T magnitude bounds. `tests/test_trial_auth_gate.py` (added 6-02) covers trial-manager auth-gate detection — cookie content-gates (Akamai-style 302→200 redirects) are retried with a persistent-cookie session instead of being misclassified as JS-only / LOW QUALITY, plus day-1 fail-fast for fetcher-less candidates and inconclusive/aborted email labeling.
+529 passing, 15 deselected — unit, functional, and integration tests (live/nightly tests excluded by default via pytest.ini). Contract tests enforce `sources.json` stays in sync with the `FETCHERS` / `CONTENT_FETCHERS` dispatcher dicts and `BADGE_COLORS` palette, so adding a new production source without wiring the full pipeline fails fast at pytest time. Consistency tests (`tests/test_config_consistency.py`) additionally guard against frequency-vs-observed-cadence drift, validated-candidate URL invariants, and fund-profile coverage (every `sources.json` id must have a profile in `publish._FUND_PROFILES` or `pending_profiles/<id>.json`). `TestOlderArticleFolding` covers the `data-age` recency split (90d boundary inclusive after the 5-29 `f561da8` Show-older fold tightening, no-date defaults to recent, page-level toggle button render/suppress). `tests/test_validate_pending_profile.py` (added 5-29 `13c51f0`) enforces auto-graduate evidence gates — `aum_source` / `founded_source` URL/domain citations, AUM↔desc_zh currency consistency, $10M-$20T magnitude bounds. `tests/test_trial_auth_gate.py` (added 6-02) covers trial-manager auth-gate detection — cookie content-gates (Akamai-style 302→200 redirects) are retried with a persistent-cookie session instead of being misclassified as JS-only / LOW QUALITY, plus day-1 fail-fast for fetcher-less candidates and inconclusive/aborted email labeling. `tests/test_apply_refresh.py`, `tests/test_validate_refresh.py`, `tests/test_send_refresh_summary.py`, and `tests/test_profile_static_facts.py` (added 6-08) cover the monthly profile-refresh path — change_log-driven entry updates that leave every unchanged field byte-identical, per-changed-field evidence gating (drops `validate_profile`'s unconditional source demands), and a static-fact guard that fails if a hand-audited founder/claim (e.g. GMO's `Eyk van Otterloo`) is ever regressed.
 
 ```bash
 python3 -m pytest tests/ -q
+```
 
 ## Requirements
 
