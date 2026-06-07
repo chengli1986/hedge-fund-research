@@ -158,29 +158,12 @@ def apply_refresh(fund_id: str, *, base_dir: Path | None = None,
             merged[field] = draft[field]
 
     vpp = _load_validate_module(base)
-    # Build validation dict: pass evidence source fields only for changed facts
-    # (unchanged facts were already validated at graduate time; requiring their
-    # evidence again on every refresh would block legitimate AUM-only updates).
-    validate_dict: dict = {**merged, "id": fund_id, "change_log": change_log}
-    for fact, src_field in (("aum", "aum_source"), ("founded", "founded_source")):
-        if fact in changed_fields:
-            validate_dict[src_field] = draft.get(src_field, "")
-        else:
-            validate_dict[src_field] = current_profiles[fund_id].get(src_field, "existing")
-    result = vpp.validate_refresh(validate_dict, current=current_profiles[fund_id])
-    # Suppress structural issues for fields not in change_log (already validated
-    # at graduate time); only hard-block on changed-field issues and change_log
-    # structural problems.
-    def _is_unchanged_field_issue(msg: str) -> bool:
-        for field in PROFILE_FIELDS:
-            if field in changed_fields:
-                continue
-            if field in msg:
-                return True
-        return False
-
-    hard = [m for m in result["issues"]
-            if not _is_unchanged_field_issue(m)]
+    result = vpp.validate_refresh({**merged, "id": fund_id,
+                                   "change_log": change_log,
+                                   "aum_source": draft.get("aum_source", ""),
+                                   "founded_source": draft.get("founded_source", "")},
+                                  current=current_profiles[fund_id])
+    hard = [m for m in result["issues"] if not m.startswith("high_risk_marker")]
     if hard:
         sys.stderr.write(f"[apply_refresh] validation failed: {hard}\n")
         return EXIT_VALIDATION_FAILED

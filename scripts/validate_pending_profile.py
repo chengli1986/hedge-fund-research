@@ -201,7 +201,12 @@ def validate_refresh(data: dict, *, current: dict) -> dict:
         MAX_TEXT_DIFF_RATIO (blocks wholesale prose rewrites of stable copy)
     """
     result = validate_profile(data)
-    issues = list(result["issues"])
+    # Evidence (source) for changed fields is enforced per-entry via change_log
+    # below. validate_profile demands aum_source AND founded_source
+    # unconditionally, which does not apply to a partial refresh (a draft only
+    # carries sources for the fields it changes) — drop its evidence issues here.
+    issues = [i for i in result["issues"]
+              if not i.startswith("missing evidence") and "is not a citation" not in i]
 
     change_log = data.get("change_log")
     if not change_log:

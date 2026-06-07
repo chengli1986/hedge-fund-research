@@ -22,7 +22,7 @@ _FUND_PROFILES: dict[str, dict] = {
     "apollo-global-management": {
         "founded": "1990", "aum": "~$700B", "hq": "New York, NY",
         "type_en": "Listed Alt Manager (NYSE)", "type_zh": "上市另类资管 (纽交所)",
-        "desc_zh": "美国最大私募信贷/另类资管之一，1990 年创立，业务涵盖私募信贷与私募股权及房地产等。",
+        "desc_zh": "美国最大私募信贷与另类资产管理机构之一，1990 年创立，业务涵盖私募信贷、私募股权、房地产与保险解决方案等多个核心领域。",
         "notable_en": "ABF pioneer.",
         "notable_zh": "ABF 开创者。",
     },
