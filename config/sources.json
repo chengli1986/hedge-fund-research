@@ -320,7 +320,7 @@
       "url": "https://www.msci.com/research-and-insights",
       "method": "playwright",
       "frequency": "weekly",
-      "description": "Index, factor and ESG analytics provider; ACWI/EAFE/EM benchmarks tracked by $15T+. Factor models (Quality/Value/Momentum), climate risk, multi-asset risk modelling.",
+      "description": "Index, factor and ESG analytics provider; ACWI/EAFE/EM benchmarks tracked by $16.5T+. Factor models (Quality/Value/Momentum), climate risk, multi-asset risk modelling.",
       "notable_authors": [],
       "expected_hostname": "msci.com",
       "max_articles": 10
@@ -359,7 +359,7 @@
       "url": "https://www.apollo.com/insights-news/insights",
       "method": "requests",
       "frequency": "weekly",
-      "description": "Largest US private credit / alts platform (~$700B). Pioneered ABF (asset-backed finance); private equity, real estate, insurance-solutions via Athene merger. Macro commentary from Marc Rowan and Torsten Slok.",
+      "description": "Largest US private credit / alts platform (~$1.03T). Pioneered ABF (asset-backed finance); private equity, real estate, insurance-solutions via Athene merger. Macro commentary from Marc Rowan and Torsten Slok.",
       "notable_authors": [
         "Jim Zelter",
         "Torsten Slok",
@@ -381,7 +381,7 @@
       "url": "https://www.kkr.com/insights",
       "method": "playwright",
       "frequency": "weekly",
-      "description": "Global alternatives leader (~$600B AUM). Buyout-pioneer firm founded 1976; covers private equity, infrastructure, real estate, private credit. Insights produced by Global Macro & Asset Allocation (GMAA) team.",
+      "description": "Global alternatives leader (~$758B AUM). Buyout-pioneer firm founded 1976; covers private equity, infrastructure, real estate, private credit. Insights produced by Global Macro & Asset Allocation (GMAA) team.",
       "notable_authors": [
         "Henry McVey",
         "Racim Allouani",
@@ -403,7 +403,7 @@
       "url": "https://www.janushenderson.com/en-us/investor/insights/",
       "method": "requests",
       "frequency": "weekly",
-      "description": "Active asset manager (~$370B AUM). Equity, fixed income, multi-asset and alternatives. Insights covers macro, geopolitics, AI and sector-level equity/credit analysis.",
+      "description": "Active asset manager (~$480B AUM; take-private pending). Equity, fixed income, multi-asset and alternatives. Insights covers macro, geopolitics, AI and sector-level equity/credit analysis.",
       "notable_authors": [
         "Ali Dibadj",
         "Matthew Bullock"
@@ -423,7 +423,7 @@
       "url": "https://www.researchaffiliates.com/insights/publications",
       "method": "playwright",
       "frequency": "monthly",
-      "description": "Quantitative investment firm founded by Rob Arnott (2002). Pioneered RAFI Fundamental Indexation — weights stocks by economic size (sales/cash flow/book/dividends) rather than market cap. Smart beta, factor investing, capital-market assumptions licensed to ~$170B of strategies.",
+      "description": "Quantitative investment firm founded by Rob Arnott (2002). Pioneered RAFI Fundamental Indexation — weights stocks by economic size (sales/cash flow/book/dividends) rather than market cap. Smart beta, factor investing, capital-market assumptions licensed to ~$159B of strategies.",
       "notable_authors": [
         "Rob Arnott",
         "Chris Brightman",
@@ -446,7 +446,7 @@
       "url": "https://am.gs.com/en-us/advisors/insights/list",
       "method": "api",
       "frequency": "weekly",
-      "description": "One of the world's largest asset managers (~$3T AUM) across public and private markets. Multi-asset, equity, fixed income, alternatives and liquidity solutions for institutions and advisors; Insights publishes macro outlooks, market commentary and strategy notes.",
+      "description": "One of the world's largest asset managers (~$3.3T AUM) across public and private markets. Multi-asset, equity, fixed income, alternatives and liquidity solutions for institutions and advisors; Insights publishes macro outlooks, market commentary and strategy notes.",
       "notable_authors": [],
       "expected_hostname": "am.gs.com",
       "max_articles": 10
@@ -482,7 +482,7 @@
       "url": "https://www.deshaw.com/library",
       "method": "playwright",
       "frequency": "annual",
-      "description": "Quantitative multi-strategy hedge fund (~$60B AUM) founded 1988 by David E. Shaw. Pioneer of systematic/statistical-arbitrage investing with strong technology and computational-science DNA; trades across global equities, macro, credit, convertibles and private capital. Library publishes long-form research on portfolio construction, market microstructure and applied quant techniques.",
+      "description": "Quantitative multi-strategy hedge fund (~$65B AUM) founded 1988 by David E. Shaw. Pioneer of systematic/statistical-arbitrage investing with strong technology and computational-science DNA; trades across global equities, macro, credit, convertibles and private capital. Library publishes long-form research on portfolio construction, market microstructure and applied quant techniques.",
       "notable_authors": [],
       "expected_hostname": "deshaw.com",
       "max_articles": 10
@@ -518,7 +518,7 @@
       "url": "https://www.ares.com/us/news-and-insights/perspectives",
       "method": "ssr",
       "frequency": "weekly",
-      "description": "Leading global alternative investment manager (~$484B AUM, year-end 2024) specializing in private credit, private equity, real assets and infrastructure. Founded in 1997, listed on NYSE (ARES). Direct-lending pioneer with one of the largest US middle-market credit platforms; significant insurance solutions business via Aspida.",
+      "description": "Leading global alternative investment manager (~$620B AUM) specializing in private credit, private equity, real assets and infrastructure. Founded in 1997, listed on NYSE (ARES). Direct-lending pioneer with one of the largest US middle-market credit platforms; significant insurance solutions business via Aspida.",
       "notable_authors": [],
       "expected_hostname": "ares.com",
       "max_articles": 10
@@ -535,7 +535,7 @@
       "url": "https://www.matthewsasia.com/insights/",
       "method": "ssr",
       "frequency": "weekly",
-      "description": "Asia- and emerging-markets equity specialist (~$7.1B AUM), founded 1991 and privately owned, with offices in San Francisco and Hong Kong. Active, bottom-up fundamental investing across Asian and EM equities — China, India, Japan and broader emerging markets — spanning all-cap growth, dividend, small-cap and innovation strategies plus a more recent active-ETF lineup.",
+      "description": "Asia- and emerging-markets equity specialist (~$6.6B AUM), founded 1991 and privately owned, with offices in San Francisco and Hong Kong. Active, bottom-up fundamental investing across Asian and EM equities — China, India, Japan and broader emerging markets — spanning all-cap growth, dividend, small-cap and innovation strategies plus a more recent active-ETF lineup.",
       "notable_authors": [],
       "expected_hostname": "matthewsasia.com",
       "max_articles": 10
