@@ -1346,7 +1346,7 @@
     "research_links": [],
     "screening_signals": {},
     "screening_reason": null,
-    "last_deep_analyzed_at": "2026-05-05T01:00:00Z",
+    "last_deep_analyzed_at": "2026-06-07T01:00:00Z",
     "quality": "MEDIUM",
     "topics": "macro, equity, multi-asset, private equity",
     "strategy_tags": [
@@ -1400,7 +1400,7 @@
       "article_signals": 0
     },
     "screening_reason": "429 rate-limited; content confirmed via search (CIO Weekly, quarterly AAC outlook)",
-    "last_deep_analyzed_at": "2026-05-06T01:01:57Z",
+    "last_deep_analyzed_at": "2026-06-07T01:00:00Z",
     "quality": "HIGH",
     "topics": "macro, multi-asset, fixed income, real assets, private equity",
     "strategy_tags": [
@@ -1596,11 +1596,11 @@
     "quality": "HIGH",
     "quality_score": 0.82,
     "topics": "fixed income, multi-asset, macro, emerging markets, equities",
-    "notes": "RECOMMEND: trial passed (8/7 days with articles, quality=0.72)",
-    "last_deep_analyzed_at": "2026-05-29T01:00:00Z",
+    "notes": "RECOMMEND: trial passed; /en/our-insights→404, articles at /en/insights/",
+    "last_deep_analyzed_at": "2026-06-07T01:00:00Z",
     "is_publicly_accessible": true,
     "has_article_index": true,
-    "research_url": "https://www.pinebridge.com/en/our-insights",
+    "research_url": "https://www.pinebridge.com/en/all-insights",
     "official_domain": "www.pinebridge.com",
     "research_links": [
       {
