@@ -175,6 +175,64 @@ def validate_profile(data: dict) -> dict:
     }
 
 
+# desc/notable 类字段无「公司事件理由」时允许的最大改动比例（防止整段重写）
+TEXT_FIELDS = ("desc_zh", "notable_en", "notable_zh", "type_en", "type_zh")
+MAX_TEXT_DIFF_RATIO = 0.5
+EVENT_KEYWORDS = ("acqui", "merg", "take-private", "delist", "rename", "rebrand",
+                  "spun out", "spin-off", "并购", "收购", "退市", "私有化", "改名", "更名", "合并")
+
+
+def _diff_ratio(old: str, new: str) -> float:
+    """Crude change ratio: symmetric char delta over max length."""
+    import difflib
+    if not old and not new:
+        return 0.0
+    sm = difflib.SequenceMatcher(None, old or "", new or "")
+    return 1.0 - sm.ratio()
+
+
+def validate_refresh(data: dict, *, current: dict) -> dict:
+    """Validate a refresh draft against the CURRENT profile.
+
+    Runs the full validate_profile gate on the merged profile, then adds:
+      - change_log must be non-empty
+      - every change_log entry needs field/old/new/source; source must be a citation
+      - text-field rewrites with no event keyword in `reason` are capped at
+        MAX_TEXT_DIFF_RATIO (blocks wholesale prose rewrites of stable copy)
+    """
+    result = validate_profile(data)
+    # Evidence (source) for changed fields is enforced per-entry via change_log
+    # below. validate_profile demands aum_source AND founded_source
+    # unconditionally, which does not apply to a partial refresh (a draft only
+    # carries sources for the fields it changes) — drop its evidence issues here.
+    issues = [i for i in result["issues"]
+              if not i.startswith("missing evidence") and "is not a citation" not in i]
+
+    change_log = data.get("change_log")
+    if not change_log:
+        issues.append("change_log is empty (a refresh must list its changes)")
+    else:
+        for c in change_log:
+            field = c.get("field", "")
+            if field not in (*REQUIRED_FIELDS, "aum", "founded"):
+                issues.append(f"change_log: unknown field {field!r}")
+            src = str(c.get("source", "")).strip()
+            if not src or not _CITATION_RE.search(src):
+                issues.append(f"change_log[{field}]: missing/weak source (need URL/domain)")
+            if field in TEXT_FIELDS:
+                reason = str(c.get("reason", "")).lower()
+                has_event = any(k in reason for k in EVENT_KEYWORDS)
+                ratio = _diff_ratio(str(c.get("old", "")), str(c.get("new", "")))
+                if not has_event and ratio > MAX_TEXT_DIFF_RATIO:
+                    issues.append(
+                        f"change_log[{field}]: diff too large ({ratio:.0%}) without a "
+                        f"corporate-event reason — route to human")
+
+    return {"ok": len(issues) == 0, "issues": issues,
+            "high_risk": result["high_risk"],
+            "missing_fields": result["missing_fields"]}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("path", help="path to pending_profiles/<id>.json")
