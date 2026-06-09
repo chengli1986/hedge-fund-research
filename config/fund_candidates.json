@@ -350,7 +350,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.97,
-    "notes": "RECOMMEND: PE/VC benchmarks; active 2026, inst. gated",
+    "notes": "RECOMMEND: PE/VC benchmarks; monthly 2026, inst. gated",
     "research_links": [
       {
         "url": "https://www.cambridgeassociates.com/insights/private-investments/",
@@ -459,9 +459,9 @@
       "article_signals": 1
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-05-30T01:01:58Z",
+    "last_deep_analyzed_at": "2026-06-09T01:00:00Z",
     "quality": "HIGH",
-    "quality_score": 0.78,
+    "quality_score": 0.88,
     "topics": "private equity, venture capital, private credit, macro, ESG",
     "strategy_tags": [
       "private_equity",
@@ -487,10 +487,10 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.9,
-    "last_deep_analyzed_at": "2026-05-31T01:00:00Z",
+    "last_deep_analyzed_at": "2026-06-09T01:00:00Z",
     "quality": "MEDIUM",
     "topics": "macro, equity, fixed income, geopolitics, multi-asset",
-    "notes": "Multi-asset market briefs, free articles, overlaps JPMAM",
+    "notes": "Subscription landing page; real articles exist but listing gated",
     "research_links": [
       {
         "url": "https://am.gs.com/en-us/advisors/insights/list",
@@ -531,7 +531,7 @@
       "multi_asset"
     ],
     "source": "manual",
-    "quality_score": 0.67
+    "quality_score": 0.6
   },
   {
     "id": "wellington",
@@ -865,8 +865,8 @@
     "rss_url": null,
     "official_domain": null,
     "discovery_method": "seed",
-    "notes": "Reclassified inaccessible→rejected 2026-05-10: anti-scraping is policy-level (robots.txt allow-lists only Googlebot/Bingbot; /insights returns 403 even with stealth Playwright). Requires residential-IP proxy = out of scope. fetcher-synthesis cannot solve.",
-    "last_deep_analyzed_at": "2026-05-08T01:02:53Z",
+    "notes": "Rejected: 403 anti-scraping policy; EC2 permanently blocked",
+    "last_deep_analyzed_at": "2026-06-09T01:00:00Z",
     "quality": "MEDIUM",
     "topics": "private equity, credit, real assets, macro",
     "strategy_tags": [
@@ -876,7 +876,8 @@
     ],
     "source": "manual",
     "inaccessible_reason": "Policy block (not fingerprint): robots.txt allow-lists only Googlebot/Bingbot (User-agent:* Disallow:/); /insights returns 403 + redirect to /global-insights-0 Access-denied page even in headless Playwright with stealth UA. Would need residential-IP proxy — out of scope.",
-    "last_probed": "2026-04-24"
+    "last_probed": "2026-04-24",
+    "quality_score": 0.35
   },
   {
     "id": "research-affiliates",
@@ -887,7 +888,7 @@
     "rss_url": null,
     "official_domain": "www.researchaffiliates.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "RECOMMEND: Monthly pubs 2026, factor/smart-beta free",
+    "notes": "RECOMMEND: Monthly factor/quant, free, JUN 2026 active",
     "research_links": [
       {
         "url": "https://www.researchaffiliates.com/insights/publications",
@@ -993,9 +994,9 @@
     "fit_score": 0.94,
     "last_validated_at": "2026-04-19T09:01:48.873166+08:00",
     "quality": "HIGH",
-    "quality_score": 0.87,
-    "topics": "factor investing, smart beta, fundamental indexing, AI, valuation, economics",
-    "last_deep_analyzed_at": "2026-05-30T01:01:58Z",
+    "quality_score": 0.9,
+    "topics": "factor investing, smart beta, fundamental indexing, AI, macro, emerging markets",
+    "last_deep_analyzed_at": "2026-06-09T01:00:00Z",
     "strategy_tags": [
       "quant",
       "equity",
