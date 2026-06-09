@@ -1562,7 +1562,7 @@
     "homepage_url": "https://www.capitalgroup.com",
     "research_url": "https://www.capitalgroup.com/advisor/insights.html",
     "source": "manual",
-    "status": "visitable",
+    "status": "promoted",
     "strategy_tags": [
       "equity",
       "fixed_income",
@@ -1570,7 +1570,7 @@
       "multi_asset"
     ],
     "discovery_method": "discover_fund_sites",
-    "notes": "Re-trial pending; Akamai blocks WebFetch, needs Playwright",
+    "notes": "RECOMMEND: trial passed (8/7 days with articles, quality=0.68)",
     "no_publish_dates": true,
     "official_domain": "www.capitalgroup.com",
     "research_links": [],
