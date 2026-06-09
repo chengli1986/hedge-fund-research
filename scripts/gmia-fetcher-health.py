@@ -210,11 +210,12 @@ def _probe_once(source: dict) -> dict:
         result["reason"] = "fetch_articles returned 0 articles"
         return result
 
-    # Staleness/date is always reported relative to articles[0] — the genuinely
-    # most-recent article. The content probe may succeed on a later article
-    # (e.g. when articles[0] is a podcast preview card filtered by min-length),
-    # but that does NOT redefine which article is "most recent".
-    result["most_recent_date"] = articles[0].get("date")
+    # Staleness is reported relative to the most-recent date across ALL returned
+    # articles. Some sources (e.g. Robeco) pin an older featured article at the
+    # top of the page, so articles[0] may be older than later entries.
+    # Content probe continues to use articles[0] onward (page order is fine for probing).
+    all_dates = [a.get("date") for a in articles if a.get("date")]
+    result["most_recent_date"] = max(all_dates) if all_dates else None
 
     # Step 2: content probe — write into a private tmp dir to avoid touching
     # production content/. Patch fetch_content.CONTENT_DIR for the call only.
