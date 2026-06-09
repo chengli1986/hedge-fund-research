@@ -539,6 +539,25 @@
       "notable_authors": [],
       "expected_hostname": "matthewsasia.com",
       "max_articles": 10
+    },
+    {
+      "id": "capital-group",
+      "strategy_tags": [
+        "equity",
+        "fixed_income",
+        "macro",
+        "multi_asset"
+      ],
+      "name": "Capital Group (Capital Ideas)",
+      "short_name": "Capital Group",
+      "url": "https://www.capitalgroup.com/advisor/insights.html",
+      "method": "playwright",
+      "frequency": "weekly",
+      "description": "One of the world's largest active asset managers (~$3.3T AUM), founded 1931 and home to the American Funds. Known for 'The Capital System' — several portfolio managers independently run sleeves of each fund — and a long-horizon, fundamental, active approach spanning global equity, fixed income and multi-asset strategies.",
+      "notable_authors": [],
+      "expected_hostname": "capitalgroup.com",
+      "no_publish_dates": true,
+      "max_articles": 10
     }
   ],
   "settings": {

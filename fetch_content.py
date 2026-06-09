@@ -1254,6 +1254,48 @@ def _fetch_content_matthews_asia(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+def _fetch_content_capital_group(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Capital Group ('Capital Ideas') article content via Playwright.
+
+    Article pages are CSR (the requests-only HTML is a ~7KB shell — same
+    DataDog/mPulse/Evidon beacon stack as the listing). Body renders after
+    domcontentloaded; AEM standard `.cmp-text p` containers hold the article
+    text (same selector family as Apollo/KKR/JPMAM, but those serve SSR while
+    Capital Group needs a browser to hydrate).
+    """
+    from playwright.sync_api import sync_playwright
+
+    url = article["url"]
+    log.info("  Capital Group: fetching article page %s", url)
+
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            context = browser.new_context(
+                user_agent=HEADERS["User-Agent"],
+                viewport={"width": 1440, "height": 900},
+            )
+            page = context.new_page()
+            page.goto(url, wait_until="domcontentloaded", timeout=30000)
+            page.wait_for_timeout(4000)
+            html = page.content()
+            browser.close()
+    except Exception as e:
+        log.error("  Capital Group: Playwright fetch failed: %s", e)
+        return None
+
+    text = _normalize_html(html, ".cmp-text p")
+
+    if not _check_min_content_length(text):
+        log.warning("  Capital Group: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Capital Group: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -1283,6 +1325,7 @@ CONTENT_FETCHERS = {
     "pinebridge": _fetch_content_pinebridge,
     "ares-management": _fetch_content_ares,
     "matthews-asia": _fetch_content_matthews_asia,
+    "capital-group": _fetch_content_capital_group,
 }
 
 

@@ -52,6 +52,7 @@ BADGE_COLORS: dict[str, str] = {
     "pinebridge": "#00838f",                # PineBridge deep cyan (matches "pinebridgeblue" site palette; distinct from #006d75 Janus emerald-teal and #2ba397 Cambridge teal)
     "ares-management": "#b85450",           # Ares dark coral (distinct from #f85149 Oaktree bright red, #9d2235 Aberdeen burgundy, #7c2d12 Verdad terracotta, and warm-orange ARK/Amundi)
     "matthews-asia": "#3949ab",             # Matthews Asia indigo (fills blue↔violet gap; muted vs #1f49e0 MSCI electric cobalt, deeper/bluer than #7a4cb1 JPMAM violet, WCAG AA ~5.9:1 on white)
+    "capital-group": "#37474f",             # Capital Group slate blue-grey (fills the empty neutral-slate niche — only desaturated gray in palette; WCAG AA 9.65:1; avoids the crowded saturated-blue cluster)
 }
 
 INITIAL_VISIBLE = 20
@@ -260,6 +261,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "专注亚洲与新兴市场股票的资产管理公司，1991 年创立、私人持股，办公室设于旧金山与香港，管理规模约 66 亿美元。坚持主动、自下而上的基本面投资，覆盖中国、印度、日本及更广泛的新兴市场，产品线涵盖全市值成长、股息、小盘与创新主题，并新增主动型 ETF。",
         "notable_en": "One of the longest-established US-based Asia and emerging-markets equity specialists (privately owned since 1991); expanded from mutual funds into active ETFs in 2022, with CIO Sean Taylor leading a San Francisco- and Hong Kong-based investment team.",
         "notable_zh": "美国历史最悠久的专注亚洲及新兴市场股票的投资机构之一（1991 年成立、私人持股）；2022 年从共同基金扩展至主动型 ETF，由首席投资官 Sean Taylor 领导旧金山与香港两地的投研团队。",
+    },
+    "capital-group": {
+        "founded": "1931", "aum": "~$3.3T", "hq": "Los Angeles, California, USA",
+        "type_en": "Active Asset Manager", "type_zh": "主动型资产管理公司",
+        "desc_zh": "全球最大的主动型资产管理公司之一（约 3.3 万亿美元 AUM），1931 年由 Jonathan Bell Lovelace 创立于洛杉矶，是 American Funds 的母公司。招牌「Capital System」让多位基金经理各自独立管理同一只基金的不同份额，再辅以长期、基本面驱动的主动投资，覆盖全球股票、固定收益与多资产策略。",
+        "notable_en": "Home to the American Funds; pioneered 'The Capital System' multi-manager structure where several portfolio managers each run an independent sleeve of a single fund, pursuing consistent long-horizon active returns at massive scale.",
+        "notable_zh": "American Funds 的母公司；首创「Capital System」多经理人结构——一只基金由多位经理人各自管理独立份额，在巨大规模下追求稳定的长期主动回报。",
     },
 }
 
