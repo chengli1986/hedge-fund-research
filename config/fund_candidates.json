@@ -2450,7 +2450,7 @@
     "homepage_url": "https://www.guggenheiminvestments.com",
     "research_url": "https://www.guggenheiminvestments.com/perspectives",
     "source": "manual",
-    "status": "promoted",
+    "status": "rejected",
     "strategy_tags": [
       "fixed_income",
       "macro",
@@ -2512,6 +2512,6 @@
     "quality": "HIGH",
     "quality_score": 0.72,
     "topics": "fixed income, credit, macro, real assets",
-    "notes": "RECOMMEND: Fixed income quarterly, fills IG credit gap"
+    "notes": "Demoted 2026-06-10 from 'promoted': discovery auto-promoted it 2026-06-04 without a trial -> orphaned (synthesis_priority never set, no fetcher, never queued). Site is login/paywall (is_publicly_accessible=false, 0 article signals) - not a usable public source."
   }
 ]
