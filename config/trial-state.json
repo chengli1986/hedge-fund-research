@@ -4777,6 +4777,25 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-06-10": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.acadian-asset.com/investment-insights/equities/quick-take-the-new-challenge-funding-ideas-not-finding-them",
+            "https://www.acadian-asset.com/investment-insights/equities/quick-take-china-a-shares-analysts-move-on-mispricings-remain",
+            "https://www.acadian-asset.com/investment-insights/equities/quick-take-when-markets-decorrelate-diversify",
+            "https://www.acadian-asset.com/investment-insights/equities/china-a-shares-the-more-things-change-the-stronger-the-case-for-active",
+            "https://www.acadian-asset.com/investment-insights/equities/putting-portfolios-together-when-the-world-is-falling-apart",
+            "https://www.acadian-asset.com/investment-insights/systematic-methods/misplaced-anxiety-a-reassessment-of-crowding-in-systematic-investing",
+            "https://www.acadian-asset.com/investment-insights/credit/quick-take-the-rise-of-systematic-credit-again",
+            "https://www.acadian-asset.com/investment-insights/equities/we-are-not-in-an-ai-bubble",
+            "https://www.acadian-asset.com/investment-insights/equities/the-siren-song-of-concentrated-equity",
+            "https://www.acadian-asset.com/investment-insights/equities/quick-take-ems-giant-and-the-opportunities-it-overshadows"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -4921,6 +4940,25 @@
           "error": "No new (un-sampled) article links available",
           "day": 6,
           "date": "2026-06-09"
+        },
+        {
+          "sampled": 1,
+          "articles": [
+            {
+              "url": "https://www.acadian-asset.com/investment-insights/equities/quick-take-the-new-challenge-funding-ideas-not-finding-them",
+              "relevance": 0.9,
+              "depth": 0.8,
+              "extractable": 0.85,
+              "overall": 0.85,
+              "notes": "Portfolio strategy analysis on how EM benchmark concentration constrains active managers' flexibility; proposes extension strategies (130/30) as solution with quantitative illustrations."
+            }
+          ],
+          "avg_score": 0.85,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 7,
+          "date": "2026-06-10"
         }
       ]
     },
@@ -5008,6 +5046,24 @@
           "fetcher_used": false
         },
         "2026-06-09": {
+          "accessible": true,
+          "article_count": 93,
+          "date_count": 93,
+          "article_urls": [
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/investment-research/etf-tax-efficiency",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/investment-research/etf-active-passive-design",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/investment-research/beyond-data-center-headlines-ai-value-chain-opportunities",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/december-5-2025",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/december-12-2025",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/december-19-2025",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/january-9-2026",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/january-16-2026",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/january-23-2026"
+          ],
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-06-10": {
           "accessible": true,
           "article_count": 93,
           "date_count": 93,
@@ -5149,6 +5205,14 @@
           "error": "No new (un-sampled) article links available",
           "day": 5,
           "date": "2026-06-09"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 6,
+          "date": "2026-06-10"
         }
       ]
     }
