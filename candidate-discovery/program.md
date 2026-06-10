@@ -67,6 +67,7 @@ For each candidate that NEEDS analysis:
    - Set `notes` field to a **one-line summary, max 60 characters** (e.g., "Weekly private credit research, fills PE gap")
    - If quality is HIGH and updated within 30 days: prefix notes with "RECOMMEND: " (still max 60 chars total)
    - If clearly not suitable: set status to "watchlist" or "rejected" with reason in notes
+   - **NEVER set `status` to `promoted` (or `visitable` / `inaccessible` / `screened`).** Those are owned by the screening/trial pipeline. **Promotion happens ONLY via `gmia-trial-manager.py` after a trial PASS** — that path also sets `synthesis_priority` so the fetcher gets built. If you set `promoted` directly, the candidate is orphaned (no trial → no `synthesis_priority` → never synthesized) and a guard will auto-revert it and email an alert. The ONLY status values you may set are `watchlist` and `rejected` (downgrades), plus `seed` for a brand-new candidate. A HIGH-quality / "RECOMMEND" candidate keeps its current status and flows to the trial on its own — do NOT promote it yourself.
 
 ## Phase 3: Discover NEW candidates (beyond seed list)
 

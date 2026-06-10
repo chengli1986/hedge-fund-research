@@ -64,6 +64,13 @@ $(cat "$PROGRAM_MD")
 #   Read/Edit/Write — update config files
 #   WebFetch — fetch fund research pages for analysis
 #   WebSearch — discover new candidate funds
+
+# Snapshot candidate statuses BEFORE the agent runs so the post-run guard can
+# detect any illegal status change it makes (agent may only set watchlist/
+# rejected; promotion belongs to trial-manager after a trial).
+GUARD_BEFORE="/tmp/gmia-guard-before-$$.json"
+cp "$REPO_DIR/config/fund_candidates.json" "$GUARD_BEFORE" 2>/dev/null || true
+
 CLAUDE_BIN="${CLAUDE_BIN:-/home/ubuntu/.npm-global/bin/claude}"
 timeout --kill-after=30 930 "$CLAUDE_BIN" -p \
     --allowedTools "Bash Read Edit Write WebFetch WebSearch" \
@@ -88,6 +95,43 @@ if [ -n "$REMOTE_HEAD" ] && [ "$REMOTE_HEAD" != "$LOCAL_HEAD" ]; then
     git push 2>&1 || echo "$LOG_PREFIX WARNING: git push failed"
 else
     echo "$LOG_PREFIX No new commits to push"
+fi
+
+# --- Status guard: revert any illegal status change the agent made ---
+# The agent must never set "promoted" (trial-manager owns promotion, only after a
+# trial PASS). If it did, revert + commit + alert. Self-heals the 2026-06-10
+# Guggenheim-class orphan bug. Quiet no-op ("guard: 0") on a well-behaved run.
+if [ -f "$GUARD_BEFORE" ]; then
+    GUARD_OUT=$(cd "$REPO_DIR" && python3 guard_candidate_status.py \
+        --before "$GUARD_BEFORE" --after config/fund_candidates.json 2>&1)
+    echo "$GUARD_OUT"
+    GUARD_N=$(printf '%s\n' "$GUARD_OUT" | sed -n 's/^guard: \([0-9]*\) .*/\1/p')
+    if [ "${GUARD_N:-0}" -gt 0 ]; then
+        echo "$LOG_PREFIX GUARD reverted $GUARD_N illegal status change(s)"
+        git add config/fund_candidates.json
+        git diff --cached --quiet || git commit -m "guard: revert $GUARD_N illegal agent status change(s) (auto)"
+        git push 2>&1 || echo "$LOG_PREFIX WARNING: git push (guard) failed"
+        source ~/.stock-monitor.env 2>/dev/null || true
+        GUARD_REVERTS="$(printf '%s\n' "$GUARD_OUT" | grep '^REVERTED' || true)" \
+        GUARD_SUBJECT="[GMIA GUARD] reverted $GUARD_N illegal agent status change(s)" \
+        GUARD_TO="${MAIL_TO:-ch_w10@outlook.com}" SMTP_USER="${SMTP_USER:-}" SMTP_PASS="${SMTP_PASS:-}" \
+        python3 -c "
+import os, smtplib
+from email.mime.text import MIMEText
+u=os.environ.get('SMTP_USER',''); to=os.environ['GUARD_TO']
+if not u or not os.environ.get('SMTP_PASS'): raise SystemExit(0)
+body=('Discovery agent set a forbidden status and was auto-reverted:\n\n'
+      + os.environ.get('GUARD_REVERTS','')
+      + '\n\nPromotion is trial-managers job, only after a trial PASS. If recurring, check candidate-discovery/program.md.')
+m=MIMEText(body,'plain','utf-8'); m['Subject']=os.environ['GUARD_SUBJECT']; m['From']=u; m['To']=to
+try:
+    with smtplib.SMTP_SSL('smtp.163.com',465,timeout=10) as s:
+        s.login(u, os.environ['SMTP_PASS']); s.sendmail(u,[to],m.as_string())
+except Exception as e:
+    print('guard alert email failed:', e)
+" 2>&1 || true
+    fi
+    rm -f "$GUARD_BEFORE"
 fi
 
 # --- Trial manager (runs regardless of discovery exit code) ---
