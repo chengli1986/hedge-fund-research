@@ -33,6 +33,7 @@ from __future__ import annotations
 import argparse
 import json
 import smtplib
+import statistics
 import sys
 import tempfile
 import time
@@ -153,6 +154,28 @@ def _parse_article_date(raw: str | None) -> datetime | None:
 def _stale_threshold_days(source: dict) -> int:
     freq = (source.get("frequency") or "").strip().lower()
     return FREQ_TO_STALE_DAYS.get(freq, DEFAULT_STALE_DAYS)
+
+
+def _observed_cadence_note(date_strings: list[str | None]) -> str:
+    """Summarise the publishing cadence seen in THIS fetch, for appending to a
+    staleness WARN. A bursty publisher (e.g. Matthews Asia) shows a small median
+    gap with a much larger max gap — surfacing both lets on-call tell a normal
+    quiet stretch (declared frequency too tight) from a genuine multi-month
+    freeze, without opening the site. Returns '' if fewer than 2 dates parse.
+
+    Note: the fetch only carries the most-recent N articles (max_articles), so
+    this reflects recent cadence, not the source's full history — it is a
+    diagnostic hint, not an authoritative reclassification."""
+    parsed = [d.date() for s in date_strings if (d := _parse_article_date(s)) is not None]
+    unique = sorted(set(parsed), reverse=True)
+    if len(unique) < 2:
+        return ""
+    gaps = [(unique[i] - unique[i + 1]).days for i in range(len(unique) - 1)]
+    median_gap = statistics.median(gaps)
+    return (
+        f"observed cadence: {len(parsed)} dated articles, "
+        f"median gap {median_gap:.0f}d, max gap {max(gaps)}d"
+    )
 
 
 # ── per-source probe ─────────────────────────────────────────────────────────
@@ -320,10 +343,14 @@ def _probe_once(source: dict) -> dict:
         if age_days > threshold:
             freq_label = source.get("frequency") or "unknown frequency"
             result["status"] = "WARN"
-            result["reason"] = (
+            reason = (
                 f"stale: most recent article {age_days}d old "
                 f"(frequency={freq_label}, threshold {threshold}d)"
             )
+            cadence = _observed_cadence_note(all_dates)
+            if cadence:
+                reason += f" — {cadence}"
+            result["reason"] = reason
 
     return result
 

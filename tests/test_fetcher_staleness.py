@@ -423,3 +423,51 @@ def test_probe_records_non_transient_exception_in_fail_reason(monkeypatch):
     result = gfh._probe_once(source)
     assert result["status"] == "FAIL"
     assert "ValueError" in result["reason"]
+
+
+# ── observed-cadence diagnostic on stale WARN ───────────────────────────────────
+# A bursty publisher (e.g. Matthews Asia) clusters several posts within days, then
+# goes quiet for weeks. The single-most-recent staleness gate trips during the
+# quiet stretch even though that's normal cadence. Appending the observed cadence
+# (article count + median/max gap from THIS fetch) to the WARN lets the on-call
+# tell a normal quiet stretch from a genuine multi-month freeze at a glance.
+
+def test_stale_warn_appends_observed_cadence(monkeypatch):
+    today = datetime.now(gfh.BJT).date()
+
+    def d(days_ago):
+        return (today - timedelta(days=days_ago)).strftime("%Y-%m-%d")
+
+    # Newest is 100d old → trips monthly (90d) threshold. Articles themselves are
+    # clustered 4–8d apart → small median gap, the hallmark of a bursty source.
+    sid = _install_fakes(monkeypatch, [
+        {"title": "a", "url": "http://x/1", "date": d(100)},
+        {"title": "b", "url": "http://x/2", "date": d(104)},
+        {"title": "c", "url": "http://x/3", "date": d(110)},
+        {"title": "e", "url": "http://x/4", "date": d(118)},
+    ])
+    source = {"id": sid, "frequency": "monthly"}
+    result = gfh._probe_once(source)
+
+    assert result["status"] == "WARN"
+    assert "stale" in result["reason"].lower()
+    # New diagnostic: observed cadence appended
+    reason = result["reason"].lower()
+    assert "observed cadence" in reason, f"no cadence note: {result['reason']}"
+    assert "4 dated articles" in reason
+    assert "median gap 6d" in reason
+    assert "max gap 8d" in reason
+
+
+def test_ok_result_has_no_cadence_note(monkeypatch):
+    """The cadence note is scoped to stale WARNs — a healthy source's reason
+    stays empty (no diagnostic noise on OK)."""
+    today_iso = datetime.now(gfh.BJT).strftime("%Y-%m-%d")
+    sid = _install_fakes(monkeypatch, [
+        {"title": "fresh", "url": "http://x/1", "date": today_iso},
+        {"title": "fresh2", "url": "http://x/2", "date": today_iso},
+    ])
+    source = {"id": sid, "frequency": "monthly"}
+    result = gfh._probe_once(source)
+    assert result["status"] == "OK"
+    assert "observed cadence" not in (result["reason"] or "").lower()
