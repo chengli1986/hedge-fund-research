@@ -2405,7 +2405,7 @@
     "homepage_url": "https://www.acadian-asset.com",
     "research_url": "https://www.acadian-asset.com/investment-insights",
     "source": "manual",
-    "status": "visitable",
+    "status": "promoted",
     "strategy_tags": [
       "quant",
       "equity",
@@ -2437,7 +2437,7 @@
     "quality": "HIGH",
     "quality_score": 0.82,
     "topics": "quant, equity, global allocation, ESG, credit, behavioral finance",
-    "notes": "Trial failed: 0 articles detected across 7 days — site likely requires JS rendering or selector is broken. Routed to fetcher-synthesis queue.",
+    "notes": "RECOMMEND: trial passed (8/7 days with articles, quality=0.80)",
     "last_deep_analyzed_at": "2026-06-02T00:00:00Z",
     "inaccessible_reason": null,
     "promotion_notes": "JS-rendered homepage; article URLs directly accessible via WebFetch. Needs Playwright fetcher for full index scraping.",
