@@ -53,6 +53,7 @@ BADGE_COLORS: dict[str, str] = {
     "ares-management": "#b85450",           # Ares dark coral (distinct from #f85149 Oaktree bright red, #9d2235 Aberdeen burgundy, #7c2d12 Verdad terracotta, and warm-orange ARK/Amundi)
     "matthews-asia": "#3949ab",             # Matthews Asia indigo (fills blue↔violet gap; muted vs #1f49e0 MSCI electric cobalt, deeper/bluer than #7a4cb1 JPMAM violet, WCAG AA ~5.9:1 on white)
     "capital-group": "#37474f",             # Capital Group slate blue-grey (fills the empty neutral-slate niche — only desaturated gray in palette; WCAG AA 9.65:1; avoids the crowded saturated-blue cluster)
+    "acadian-asset": "#5d4037",             # Acadian coffee/umber brown (fills the empty muted-brown niche; brand steel-blue avoided as the blue cluster is crowded; distinct from #7c2d12 Verdad terracotta by far-lower saturation; WCAG AA ~8.9:1 on white)
 }
 
 INITIAL_VISIBLE = 20
@@ -268,6 +269,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "全球最大的主动型资产管理公司之一（约 3.3 万亿美元 AUM），1931 年由 Jonathan Bell Lovelace 创立于洛杉矶，是 American Funds 的母公司。招牌「Capital System」让多位基金经理各自独立管理同一只基金的不同份额，再辅以长期、基本面驱动的主动投资，覆盖全球股票、固定收益与多资产策略。",
         "notable_en": "Home to the American Funds; pioneered 'The Capital System' multi-manager structure where several portfolio managers each run an independent sleeve of a single fund, pursuing consistent long-horizon active returns at massive scale.",
         "notable_zh": "American Funds 的母公司；首创「Capital System」多经理人结构——一只基金由多位经理人各自管理独立份额，在巨大规模下追求稳定的长期主动回报。",
+    },
+    "acadian-asset": {
+        "founded": "1986", "aum": "~$120B", "hq": "Boston, MA",
+        "type_en": "Quant Asset Manager", "type_zh": "量化资产管理公司",
+        "desc_zh": "全球领先的量化、系统化投资管理公司（管理规模约 ~$120B），1986 年创立，总部位于波士顿。以因子驱动的自下而上选股著称：用模型对全球数千只股票按估值、质量、成长与市场情绪等信号系统化打分，覆盖全球、国际、新兴及前沿市场股票，并将同一套量化流程延伸至系统化信用与多资产策略。",
+        "notable_en": "One of the oldest and largest systematic equity managers; its factor-based process spans global, international, emerging- and frontier-market equities and has been extended to systematic fixed income. Publicly traded on the NYSE as AAMI (formerly BrightSphere Investment Group).",
+        "notable_zh": "业界历史最悠久、规模最大的系统化股票管理人之一；因子化流程覆盖全球、国际、新兴及前沿市场股票，并已延伸至系统化固定收益。以 NYSE 代码 AAMI 上市（前身为 BrightSphere Investment Group）。",
     },
 }
 

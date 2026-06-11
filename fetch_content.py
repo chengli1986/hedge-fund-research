@@ -1296,6 +1296,38 @@ def _fetch_content_capital_group(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+def _fetch_content_acadian_asset(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Acadian Asset Management article content via requests (SSR).
+
+    The insights listing is client-rendered (fetch_articles uses Playwright),
+    but the article body itself is SSR in the initial HTML — same split as
+    KKR / MSCI. Body lives in a single `div.long-form__main` (rich-text)
+    container. Selecting `main p` would double-count text because html.parser
+    nests the article's paragraphs inside one malformed outer <p>; selecting
+    the container once yields the deduplicated body.
+    """
+    url = article["url"]
+    log.info("  Acadian: fetching article page %s", url)
+
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Acadian: fetch failed: %s", e)
+        return None
+
+    text = _normalize_html(resp.text, "div.long-form__main")
+
+    if not _check_min_content_length(text):
+        log.warning("  Acadian: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Acadian: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -1326,6 +1358,7 @@ CONTENT_FETCHERS = {
     "ares-management": _fetch_content_ares,
     "matthews-asia": _fetch_content_matthews_asia,
     "capital-group": _fetch_content_capital_group,
+    "acadian-asset": _fetch_content_acadian_asset,
 }
 
 
