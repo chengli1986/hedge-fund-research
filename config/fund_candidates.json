@@ -740,7 +740,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.97,
-    "notes": "Active equity/macro research; directional analysis, free access",
+    "notes": "Brief directional insights, free access; surface-level Mar 2026",
     "research_links": [
       {
         "url": "https://www.troweprice.com/en/us/insights",
@@ -779,9 +779,9 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-06-03T00:00:00Z",
+    "last_deep_analyzed_at": "2026-06-12T01:00:00Z",
     "quality": "MEDIUM",
-    "quality_score": 0.65,
+    "quality_score": 0.6,
     "topics": "equity, AI/tech, macro, fixed income, active management",
     "strategy_tags": [
       "equity",
@@ -1721,12 +1721,12 @@
       "multi_asset"
     ],
     "official_domain": "www.ares.com",
-    "notes": "RECOMMEND: trial passed 7/7 days, quality=0.70",
+    "notes": "EC2-403 detected Jun 2026; previously trial passed 7/7, quality=0.70",
     "topics": "private credit, private equity, alternatives, insurance",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-05-01T01:03:53Z",
-    "last_deep_analyzed_at": "2026-06-03T00:00:00Z",
+    "last_deep_analyzed_at": "2026-06-12T01:00:00Z",
     "quality": "HIGH",
     "quality_score": 0.7,
     "fit_score": 0.88,
@@ -2394,8 +2394,8 @@
     "topics": "macro, wealth management, geopolitics, alternatives, ESG",
     "quality": "MEDIUM",
     "quality_score": 0.55,
-    "notes": "725-article index visible but all article URLs 403 from EC2",
-    "last_deep_analyzed_at": "2026-06-02T00:00:00Z",
+    "notes": "Index accessible (726 articles) but all article URLs EC2-403; confirmed Jun 2026",
+    "last_deep_analyzed_at": "2026-06-12T01:00:00Z",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-05-24T01:02:30Z"
   },
@@ -2437,8 +2437,8 @@
     "quality": "HIGH",
     "quality_score": 0.82,
     "topics": "quant, equity, global allocation, ESG, credit, behavioral finance",
-    "notes": "RECOMMEND: trial passed (8/7 days with articles, quality=0.80)",
-    "last_deep_analyzed_at": "2026-06-02T00:00:00Z",
+    "notes": "RECOMMEND: trial passed; quant/systematic articles free Apr 2026",
+    "last_deep_analyzed_at": "2026-06-12T01:00:00Z",
     "inaccessible_reason": null,
     "promotion_notes": "JS-rendered homepage; article URLs directly accessible via WebFetch. Needs Playwright fetcher for full index scraping.",
     "synthesis_attempted_at": "2026-06-03T01:10:11.791298+00:00",
