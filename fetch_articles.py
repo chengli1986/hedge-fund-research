@@ -2246,6 +2246,59 @@ def fetch_lazard_am(source: dict) -> list[dict]:
     return articles[:source.get("max_articles", 10)]
 
 
+def fetch_rothschild_co_am(source: dict) -> list[dict]:
+    """Fetch articles from Rothschild & Co Asset Management (SSR — insights listing).
+
+    Structure: li.filterFormListingItem containing:
+      time.filterFormListingItemDate[datetime="2026-06-09"] (ISO date attr),
+      span.filterFormListingItemTitle > a (title + absolute href).
+    The insights *index* is server-rendered and accessible from EC2; only the
+    individual article pages return 403, which doesn't affect listing scrape.
+    """
+    base_url = "https://www.rothschildandco.com"
+    expected_host = source.get("expected_hostname", "rothschildandco.com")
+    resp = requests.get(source["url"], headers=HEADERS, timeout=20)
+    resp.raise_for_status()
+    soup = BeautifulSoup(resp.text, "html.parser")
+
+    seen_urls: set[str] = set()
+    articles = []
+    for card in soup.select("li.filterFormListingItem"):
+        link_el = card.select_one("span.filterFormListingItemTitle a") or card.select_one("a[href]")
+        if not link_el:
+            continue
+        href = link_el.get("href", "")
+        if not href:
+            continue
+        url = urljoin(base_url, href)
+        if not _validate_hostname(url, expected_host):
+            continue
+        if url in seen_urls:
+            continue
+        seen_urls.add(url)
+
+        title = link_el.get_text(strip=True)
+        if not title:
+            continue
+
+        time_el = card.select_one("time.filterFormListingItemDate") or card.select_one("time[datetime]")
+        date_raw = ""
+        parsed_date = None
+        if time_el:
+            dt_attr = time_el.get("datetime", "")
+            date_raw = time_el.get_text(strip=True) or dt_attr
+            parsed_date = parse_date(dt_attr) or parse_date(date_raw)
+
+        articles.append({
+            "title": title,
+            "url": url,
+            "date": parsed_date,
+            "date_raw": date_raw,
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
 # FETCHER_SYNTHESIS_INSERTION_POINT — auto-generated fetchers inserted above this line
 
 
@@ -2464,6 +2517,7 @@ FETCHERS = {
     "research-affiliates": fetch_researchaffiliates,
     "pimco": fetch_pimco,
     "lazard-am": fetch_lazard_am,
+    "rothschild-co-am": fetch_rothschild_co_am,
     "matthews-asia": fetch_matthews_asia,
     "acadian-asset": fetch_acadian_asset,
     "de-shaw": fetch_de_shaw,

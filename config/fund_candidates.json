@@ -2389,7 +2389,7 @@
     "homepage_url": "https://www.rothschildandco.com",
     "research_url": "https://www.rothschildandco.com/en/newsroom/insights/",
     "source": "manual",
-    "status": "inaccessible",
+    "status": "visitable",
     "inaccessible_reason": "EC2-403 on homepage and article pages; index page accessible but content blocked",
     "strategy_tags": [
       "macro",
@@ -2403,7 +2403,9 @@
     "notes": "Index accessible (726 articles) but all article URLs EC2-403; confirmed Jun 2026",
     "last_deep_analyzed_at": "2026-06-12T01:00:00Z",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-05-24T01:02:30Z"
+    "last_discovered_at": "2026-05-24T01:02:30Z",
+    "synthesis_attempted_at": "2026-06-12T01:08:13.034245+00:00",
+    "synthesis_outcome": "success"
   },
   {
     "id": "acadian-asset",
