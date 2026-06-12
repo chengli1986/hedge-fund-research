@@ -1328,6 +1328,34 @@ def _fetch_content_acadian_asset(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+def _fetch_content_lazard_am(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Lazard Asset Management article content via requests (SSR — AEM .cmp-text).
+
+    Individual article pages are server-rendered using the same AEM .cmp-text
+    pattern as Ares / Apollo. A plain requests.get suffices; no Playwright needed.
+    """
+    url = article["url"]
+    log.info("  Lazard: fetching article page %s", url)
+
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Lazard: fetch failed: %s", e)
+        return None
+
+    text = _normalize_html(resp.text, ".cmp-text p")
+
+    if not _check_min_content_length(text):
+        log.warning("  Lazard: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Lazard: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -1341,7 +1369,6 @@ CONTENT_FETCHERS = {
     "troweprice": _fetch_content_troweprice,
     "pimco": _fetch_content_pimco,
     "aberdeen": _fetch_content_aberdeen,
-    "pgim": _fetch_content_pgim,
     "brookfield": _fetch_content_brookfield,
     "jpmam": _fetch_content_jpmam,
     "verdad-capital": _fetch_content_verdad,
@@ -1359,6 +1386,7 @@ CONTENT_FETCHERS = {
     "matthews-asia": _fetch_content_matthews_asia,
     "capital-group": _fetch_content_capital_group,
     "acadian-asset": _fetch_content_acadian_asset,
+    "lazard-am": _fetch_content_lazard_am,
 }
 
 

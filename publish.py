@@ -54,6 +54,7 @@ BADGE_COLORS: dict[str, str] = {
     "matthews-asia": "#3949ab",             # Matthews Asia indigo (fills blue↔violet gap; muted vs #1f49e0 MSCI electric cobalt, deeper/bluer than #7a4cb1 JPMAM violet, WCAG AA ~5.9:1 on white)
     "capital-group": "#37474f",             # Capital Group slate blue-grey (fills the empty neutral-slate niche — only desaturated gray in palette; WCAG AA 9.65:1; avoids the crowded saturated-blue cluster)
     "acadian-asset": "#5d4037",             # Acadian coffee/umber brown (fills the empty muted-brown niche; brand steel-blue avoided as the blue cluster is crowded; distinct from #7c2d12 Verdad terracotta by far-lower saturation; WCAG AA ~8.9:1 on white)
+    "lazard-am": "#b07d12",                 # Lazard warm amber-gold (EM/macro heritage; distinct from #d29922 Bridgewater mustard-gold and #cd853f D.E.Shaw bronze; WCAG AA ~4.8:1 on white)
 }
 
 INITIAL_VISIBLE = 20
@@ -276,6 +277,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "全球领先的量化、系统化投资管理公司（管理规模约 ~$120B），1986 年创立，总部位于波士顿。以因子驱动的自下而上选股著称：用模型对全球数千只股票按估值、质量、成长与市场情绪等信号系统化打分，覆盖全球、国际、新兴及前沿市场股票，并将同一套量化流程延伸至系统化信用与多资产策略。",
         "notable_en": "One of the oldest and largest systematic equity managers; its factor-based process spans global, international, emerging- and frontier-market equities and has been extended to systematic fixed income. Publicly traded on the NYSE as AAMI (formerly BrightSphere Investment Group).",
         "notable_zh": "业界历史最悠久、规模最大的系统化股票管理人之一；因子化流程覆盖全球、国际、新兴及前沿市场股票，并已延伸至系统化固定收益。以 NYSE 代码 AAMI 上市（前身为 BrightSphere Investment Group）。",
+    },
+    "lazard-am": {
+        "founded": "1848", "aum": "~$200B", "hq": "New York, NY",
+        "type_en": "Independent Active Manager", "type_zh": "独立主动管理资产公司",
+        "desc_zh": "全球主动管理资产公司，1848 年创立，总部位于纽约，以新兴市场股票和宏观固定收益研究著称。覆盖股票、固定收益、多资产与实物资产策略，尤其在新兴市场基本面分析和地缘政治宏观研究方面具有深度积累。",
+        "notable_en": "EM equity specialist and macro fixed-income manager; 'Lazard Perspective' research is widely cited for geopolitics, EM fundamentals, and global monetary policy analysis; founded by the Lazard brothers in New Orleans, 1848.",
+        "notable_zh": "新兴市场股票和宏观固定收益领域专家；《Lazard Perspective》系列研究以地缘政治分析、新兴市场基本面和全球货币政策洞察著称；由 Lazard 兄弟 1848 年于新奥尔良创立。",
     },
 }
 

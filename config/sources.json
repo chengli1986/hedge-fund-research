@@ -557,6 +557,24 @@
       "notable_authors": [],
       "expected_hostname": "acadian-asset.com",
       "max_articles": 10
+    },
+    {
+      "id": "lazard-am",
+      "strategy_tags": [
+        "emerging_markets",
+        "equity",
+        "macro",
+        "fixed_income"
+      ],
+      "name": "Lazard Asset Management",
+      "short_name": "Lazard",
+      "url": "https://www.lazardassetmanagement.com/us/en_us/research-insights",
+      "method": "requests",
+      "frequency": "weekly",
+      "description": "Global active asset manager (~$200B AUM), founded 1848, headquartered in New York. Known for emerging-markets equity research and macro fixed-income perspectives across geopolitics, EM fundamentals, and global monetary policy.",
+      "notable_authors": [],
+      "expected_hostname": "lazardassetmanagement.com",
+      "max_articles": 10
     }
   ],
   "settings": {
