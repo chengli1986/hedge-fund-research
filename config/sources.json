@@ -233,25 +233,6 @@
       "max_articles": 10
     },
     {
-      "id": "pgim",
-      "strategy_tags": [
-        "fixed_income",
-        "private_credit",
-        "alternatives",
-        "esg_climate",
-        "multi_asset"
-      ],
-      "name": "PGIM",
-      "short_name": "PGIM",
-      "url": "https://www.pgim.com/au/en/institutional/insights",
-      "method": "playwright",
-      "frequency": "quarterly",
-      "description": "Prudential's global investment management arm. Fixed income, private credit, real estate, alternatives.",
-      "notable_authors": [],
-      "expected_hostname": "pgim.com",
-      "max_articles": 10
-    },
-    {
       "id": "brookfield",
       "strategy_tags": [
         "real_assets",

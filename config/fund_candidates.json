@@ -1142,13 +1142,13 @@
   {
     "id": "pgim",
     "name": "PGIM",
-    "status": "promoted",
+    "status": "watchlist",
     "homepage_url": "https://www.pgim.com/us/en/institutional/insights",
     "research_url": "https://www.pgim.com/au/en/institutional/insights",
     "rss_url": null,
     "official_domain": "www.pgim.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "Broad institutional portal; FI+alternatives depth; AU page accessible",
+    "notes": "Broad institutional portal; FI+alternatives depth; AU page accessible; 20 regional sub-sites (AU/HK/SG/UK/DE etc.) — US path stale, AU promoted then demoted; retry with regional page if content policy differs",
     "research_links": [
       {
         "url": "https://www.pgim.com/au/en/institutional/insights",
