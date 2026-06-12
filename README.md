@@ -2,7 +2,7 @@
 
 Tracks and aggregates research insights, market commentary, and papers from top hedge funds. Summarizes via LLM and publishes a bilingual (CN/EN) dashboard.
 
-## Sources (28)
+## Sources (29)
 
 | Fund | Method | Frequency | Notable |
 |------|--------|-----------|---------|
@@ -18,7 +18,6 @@ Tracks and aggregates research insights, market commentary, and papers from top 
 | **T. Rowe Price** | Playwright (AEM) | Weekly | Equity, fixed income, active management |
 | **PIMCO** | Playwright (Coveo) | Weekly | World's largest fixed-income manager; macro, credit, secular outlook |
 | **Aberdeen Investments** | Playwright (Next.js) | Weekly | EM debt, multi-asset, sustainable investing |
-| **PGIM** | SSR (AEM) | Quarterly | Prudential's IM arm; fixed income, private credit, real estate, alternatives; free research is quarterly not weekly |
 | **Brookfield Asset Management** | SSR (Drupal) | Monthly | Real assets, infrastructure, renewable power, private equity |
 | **J.P. Morgan Asset Management** | AEM JSON API | Weekly | Multi-asset, fixed income, market insights, Long-Term Capital Market Assumptions |
 | **Verdad Capital** | SSR (requests) | Monthly | Quant value/factor, emerging markets, private equity replication; Boston, ~$1B |
@@ -33,7 +32,9 @@ Tracks and aggregates research insights, market commentary, and papers from top 
 | **D. E. Shaw** | Playwright | Annual | Quant multi-strategy; computational/statistical-arbitrage; Library publishes 1-3 long-form papers/year; 1988, ~$65B |
 | **PineBridge Investments** | Playwright | Weekly | Fixed income (EM debt, leveraged finance), multi-asset, active equities; Capital Market Line; ex-AIG, acquired by MetLife IM (Dec 2025), ~$100B |
 | **Ares Management** | SSR (requests) | Weekly | Private credit / private equity / real assets / infrastructure; US direct-lending leader; 1997, NYSE: ARES, ~$620B |
-| **Matthews Asia** | SSR (requests) | Weekly | Asia & emerging-markets equity specialist; active bottom-up; SF/HK, 1991, ~$6.6B |
+| **Matthews Asia** | SSR (requests) | Monthly | Asia & emerging-markets equity specialist; active bottom-up; SF/HK, 1991, ~$6.6B |
+| **Capital Group** | Playwright (AEM) | Weekly | One of the world's largest active managers (~$3.3T); American Funds; 1931; "The Capital System" multi-manager approach; global equity, fixed income, multi-asset |
+| **Acadian Asset Management** | Playwright | Monthly | Quantitative/systematic manager (~$120B); Boston, 1986; factor-based equity (valuation/quality/growth/sentiment) across global/EM/frontier markets; systematic credit + multi-asset |
 
 ## Pipeline
 
