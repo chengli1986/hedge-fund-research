@@ -1868,14 +1868,14 @@
     "name": "Lazard Asset Management",
     "homepage_url": "https://www.lazardassetmanagement.com/us/en_us/research-insights",
     "source": "manual",
-    "status": "visitable",
+    "status": "promoted",
     "strategy_tags": [
       "emerging_markets",
       "equity",
       "macro",
       "fixed_income"
     ],
-    "notes": "RECOMMEND: Active Jun 2026, EM+equity+AI; FI series stale",
+    "notes": "RECOMMEND: trial passed (8/7 days with articles, quality=0.72)",
     "research_url": "https://www.lazardassetmanagement.com/us/en_us/research-insights",
     "official_domain": "www.lazardassetmanagement.com",
     "research_links": [
@@ -1966,7 +1966,9 @@
     "last_deep_analyzed_at": "2026-06-05T01:00:00Z",
     "quality": "HIGH",
     "quality_score": 0.75,
-    "topics": "emerging markets, equity, macro, AI/tech, fixed income, geopolitics"
+    "topics": "emerging markets, equity, macro, AI/tech, fixed income, geopolitics",
+    "synthesis_priority": true,
+    "synthesis_priority_set_at": "2026-06-12T09:03:52.684367+08:00"
   },
   {
     "id": "robeco",

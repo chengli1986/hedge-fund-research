@@ -4981,9 +4981,7 @@
       "total_articles": 80,
       "days_with_articles": 8,
       "avg_quality_score": 0.805
-    }
-  ],
-  "active_trials": [
+    },
     {
       "id": "lazard-am",
       "name": "Lazard Asset Management",
@@ -4993,7 +4991,7 @@
       "quality": "HIGH",
       "topics": "emerging markets, equity, macro, AI/tech, fixed income, geopolitics",
       "start_date": "2026-06-05",
-      "end_date": null,
+      "end_date": "2026-06-12",
       "daily_checks": {
         "2026-06-05": {
           "accessible": true,
@@ -5120,10 +5118,28 @@
           ],
           "error": null,
           "fetcher_used": false
+        },
+        "2026-06-12": {
+          "accessible": true,
+          "article_count": 94,
+          "date_count": 94,
+          "article_urls": [
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/investment-research/etf-tax-efficiency",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/investment-research/etf-active-passive-design",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/investment-research/beyond-data-center-headlines-ai-value-chain-opportunities",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/december-5-2025",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/december-12-2025",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/december-19-2025",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/january-9-2026",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/january-16-2026",
+            "https://www.lazardassetmanagement.com/us/en_us/research-insights/market-insights/behind-the-headlines/january-23-2026"
+          ],
+          "error": null,
+          "fetcher_used": false
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -5262,8 +5278,12 @@
           "day": 7,
           "date": "2026-06-11"
         }
-      ]
+      ],
+      "total_articles": 746,
+      "days_with_articles": 8,
+      "avg_quality_score": 0.721
     }
   ],
+  "active_trials": [],
   "last_summary_sent_date": "2026-06-08"
 }
