@@ -1968,7 +1968,11 @@
     "quality_score": 0.75,
     "topics": "emerging markets, equity, macro, AI/tech, fixed income, geopolitics",
     "synthesis_priority": true,
-    "synthesis_priority_set_at": "2026-06-12T09:03:52.684367+08:00"
+    "synthesis_priority_set_at": "2026-06-12T09:03:52.684367+08:00",
+    "synthesis_attempted_at": "2026-06-12T01:06:44.191476+00:00",
+    "synthesis_outcome": "success",
+    "promoted_at": "2026-06-12T01:06:44.191476+00:00",
+    "promoted_reason": "fetcher_synthesis_success (trial-PASS shortcut)"
   },
   {
     "id": "robeco",

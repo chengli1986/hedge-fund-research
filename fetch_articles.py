@@ -2195,6 +2195,57 @@ def fetch_acadian_asset(source: dict) -> list[dict]:
     return articles[:source.get("max_articles", 10)]
 
 
+def fetch_lazard_am(source: dict) -> list[dict]:
+    """Fetch articles from Lazard Asset Management (SSR — AEM insights cards).
+
+    Structure: a.cmp-insights-card__link (aria-label = title, href) wrapping
+      div.cmp-insights-card__container with data-date="Apr 07 2025" attribute.
+    The index page is server-rendered, so a plain requests.get works — no
+    Playwright needed. data-date ("Apr 07 2025", no comma) is normalised to
+    "Apr 07, 2025" so parse_date's "%b %d, %Y" format matches.
+    """
+    base_url = "https://www.lazardassetmanagement.com"
+    expected_host = source.get("expected_hostname", "lazardassetmanagement.com")
+    resp = requests.get(source["url"], headers=HEADERS, timeout=20)
+    resp.raise_for_status()
+    soup = BeautifulSoup(resp.text, "html.parser")
+
+    seen_urls: set[str] = set()
+    articles = []
+    for link_el in soup.select("a.cmp-insights-card__link"):
+        href = link_el.get("href", "")
+        if not href:
+            continue
+        url = urljoin(base_url, href)
+        if not _validate_hostname(url, expected_host):
+            continue
+        if url in seen_urls:
+            continue
+        seen_urls.add(url)
+
+        container = link_el.select_one(".cmp-insights-card__container")
+        title = (link_el.get("aria-label") or "").strip()
+        if not title:
+            title_el = link_el.select_one(".cmp-insights-card__title")
+            title = title_el.get_text(strip=True) if title_el else ""
+        if not title:
+            continue
+
+        date_raw = container.get("data-date", "").strip() if container else ""
+        # "Apr 07 2025" -> "Apr 07, 2025" so parse_date's "%b %d, %Y" matches
+        normalized = re.sub(r"^([A-Za-z]+ \d{1,2}) (\d{4})$", r"\1, \2", date_raw)
+        parsed_date = parse_date(normalized) if date_raw else None
+
+        articles.append({
+            "title": title,
+            "url": url,
+            "date": parsed_date,
+            "date_raw": date_raw,
+        })
+
+    return articles[:source.get("max_articles", 10)]
+
+
 # FETCHER_SYNTHESIS_INSERTION_POINT — auto-generated fetchers inserted above this line
 
 
@@ -2412,6 +2463,7 @@ FETCHERS = {
     "aberdeen": fetch_aberdeen,
     "research-affiliates": fetch_researchaffiliates,
     "pimco": fetch_pimco,
+    "lazard-am": fetch_lazard_am,
     "matthews-asia": fetch_matthews_asia,
     "acadian-asset": fetch_acadian_asset,
     "de-shaw": fetch_de_shaw,
