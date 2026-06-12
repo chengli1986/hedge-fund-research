@@ -2,7 +2,7 @@
 
 Tracks and aggregates research insights, market commentary, and papers from top hedge funds. Summarizes via LLM and publishes a bilingual (CN/EN) dashboard.
 
-## Sources (29)
+## Sources (30)
 
 | Fund | Method | Frequency | Notable |
 |------|--------|-----------|---------|
@@ -35,6 +35,7 @@ Tracks and aggregates research insights, market commentary, and papers from top 
 | **Matthews Asia** | SSR (requests) | Monthly | Asia & emerging-markets equity specialist; active bottom-up; SF/HK, 1991, ~$6.6B |
 | **Capital Group** | Playwright (AEM) | Weekly | One of the world's largest active managers (~$3.3T); American Funds; 1931; "The Capital System" multi-manager approach; global equity, fixed income, multi-asset |
 | **Acadian Asset Management** | Playwright | Monthly | Quantitative/systematic manager (~$120B); Boston, 1986; factor-based equity (valuation/quality/growth/sentiment) across global/EM/frontier markets; systematic credit + multi-asset |
+| **Lazard Asset Management** | SSR (requests/AEM) | Weekly | EM equity specialist + macro fixed-income; founded 1848, New York, ~$200B; Lazard Perspective research on geopolitics, EM fundamentals, global monetary policy |
 
 ## Pipeline
 
