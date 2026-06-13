@@ -2520,5 +2520,22 @@
     "quality_score": 0.72,
     "topics": "fixed income, credit, macro, real assets",
     "notes": "Demoted 2026-06-10 from 'promoted': discovery auto-promoted it 2026-06-04 without a trial -> orphaned (synthesis_priority never set, no fetcher, never queued). Site is login/paywall (is_publicly_accessible=false, 0 article signals) - not a usable public source."
+  },
+  {
+    "id": "principal-am",
+    "name": "Principal Asset Management",
+    "homepage_url": "https://www.principalam.com/us/insights",
+    "source": "manual",
+    "status": "seed",
+    "strategy_tags": [
+      "fixed_income",
+      "multi_asset",
+      "real_assets",
+      "private_equity"
+    ],
+    "official_domain": "www.principalam.com",
+    "research_links": [],
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-06-13T09:04:30.736234+08:00"
   }
 ]
