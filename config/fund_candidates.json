@@ -1375,7 +1375,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.88,
-    "notes": "Reclassified inaccessible→rejected 2026-05-10: Vercel WAF returns 429 rate-limit to EC2 IP (HIGH quality content but unreachable). fetcher-synthesis cannot solve (rate-limit is at IP layer, not browser-rendering). Reconsider if EC2 IP changes or fund moves off Vercel.",
+    "notes": "Reclassified inaccessible→rejected 2026-05-10: Vercel WAF returns 429 rate-limit to EC2 IP (HIGH quality content but unreachable). fetcher-synthesis cannot solve (rate-limit is at IP layer, not browser-rendering). Reconsider if EC2 IP changes or fund moves off Vercel. 2026-06-13 re-verify (no proxy infra): EC2 direct = 429 regardless of UA/full browser headers (pure IP-layer, ~0.085s edge reject); jina.ai reader (real-browser stack, non-EC2 datacenter IP) also hit Vercel Security Checkpoint 429; allorigins 522. Block is datacenter-IP reputation, not TLS fingerprint, so curl_cffi/playwright-stealth on EC2 IP expected to fail too. Only a residential rotating proxy could bypass. Content quality stays HIGH (0.82, confirmed via search) - rejection is reachability, not fund quality.",
     "research_links": [
       {
         "url": "https://www.nb.com/en/global/insights",
