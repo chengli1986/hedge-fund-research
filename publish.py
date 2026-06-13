@@ -36,7 +36,6 @@ BADGE_COLORS: dict[str, str] = {
     "troweprice": "#00607a",            # T. Rowe Price teal-navy
     "pimco": "#003a70",                 # PIMCO navy
     "aberdeen": "#9d2235",              # Aberdeen burgundy
-    "pgim": "#231f20",                  # PGIM near-black
     "brookfield": "#1e7f3e",            # Brookfield green
     "jpmam": "#7a4cb1",                 # JPMorgan purple
     "verdad-capital": "#7c2d12",        # Verdad terracotta (rust)
@@ -151,13 +150,6 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "1983 年于苏格兰阿伯丁创立，2017 年与 Standard Life 合并。新兴市场债务和亚洲股票团队最为知名，本地分析师覆盖深度行业领先。2021 年改名「abrdn」后于 2025 年回归「Aberdeen」品牌。",
         "notable_en": "One of the UK's largest independent asset managers; world-leading EM debt franchise; pioneer in Asian equity research with on-the-ground analyst coverage.",
         "notable_zh": "英国领先的独立资产管理公司之一；全球领先新兴市场债务投资人；亚洲股票研究先驱，本地分析师团队深度覆盖。",
-    },
-    "pgim": {
-        "founded": "1875", "aum": "~$1.5T", "hq": "Newark, NJ",
-        "type_en": "Insurance-Affiliated AM", "type_zh": "保险系资产管理",
-        "desc_zh": "Prudential Financial 旗下全球资产管理子公司，可溯源至 1875 年。固定收益、私募信贷、房地产为核心强项；PGIM Real Estate 全球房地产投资规模前 10。机构客户为主，尤擅长保险公司资产负债匹配方案与年金产品。",
-        "notable_en": "One of world's largest fixed income managers; PGIM Real Estate top-10 globally; serves 60+ of world's largest pension funds and insurers.",
-        "notable_zh": "全球最大固定收益管理人之一；PGIM Real Estate 全球房地产投资规模前 10；服务 60+ 全球大型养老金及保险机构。",
     },
     "brookfield": {
         "founded": "1899", "aum": "~$1T+", "hq": "New York, NY",
