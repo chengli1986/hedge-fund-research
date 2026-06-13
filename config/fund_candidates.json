@@ -219,7 +219,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.97,
-    "notes": "Rejected: HR/culture majority, quant research sparse/dated",
+    "notes": "[白话] 网站进得去，但发的多是公司文化/招聘内容，真正的量化研究又少又旧——内容本身不合格。 Rejected: HR/culture majority, quant research sparse/dated",
     "research_links": [
       {
         "url": "https://www.twosigma.com/insights/",
@@ -800,7 +800,7 @@
     "official_domain": "www.fidelity.com",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-04-19T09:00:12.375997+08:00",
-    "notes": "Rejected: retail education portal, not institutional",
+    "notes": "[白话] 面向散户的理财教育网站、还得登录，不是机构研究——定位不对。 Rejected: retail education portal, not institutional",
     "research_links": [],
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -863,7 +863,7 @@
     "rss_url": null,
     "official_domain": null,
     "discovery_method": "seed",
-    "notes": "Rejected: 403 anti-scraping policy; EC2 permanently blocked",
+    "notes": "[白话] 网站直接拦掉我们服务器的访问，内容根本没看过——是进不去、不是研究差。 Rejected: 403 anti-scraping policy; EC2 permanently blocked",
     "last_deep_analyzed_at": "2026-06-09T01:00:00Z",
     "quality": "MEDIUM",
     "topics": "private equity, credit, real assets, macro",
@@ -1341,7 +1341,7 @@
     "is_publicly_accessible": null,
     "has_article_index": null,
     "fit_score": null,
-    "notes": "Reclassified inaccessible→rejected 2026-05-10: 403 bot protection on all paths from EC2; content quality unverifiable. fetcher-synthesis cannot solve (block is at IP/WAF layer, not browser-rendering).",
+    "notes": "[白话] 同样被网站挡在门外，研究质量没法验证——进不去、不是研究差。 Reclassified inaccessible→rejected 2026-05-10: 403 bot protection on all paths from EC2; content quality unverifiable. fetcher-synthesis cannot solve (block is at IP/WAF layer, not browser-rendering).",
     "research_links": [],
     "screening_signals": {},
     "screening_reason": null,
@@ -2199,7 +2199,7 @@
     "strategy_tags": [
       "venture_capital"
     ],
-    "notes": "VC advocacy, not investment research; wrong category",
+    "notes": "[白话] 它发的是风投宣传和观点，不是买方投资研究——类别不对，不归我们收。 VC advocacy, not investment research; wrong category",
     "official_domain": "a16z.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
@@ -2519,7 +2519,7 @@
     "quality": "HIGH",
     "quality_score": 0.72,
     "topics": "fixed income, credit, macro, real assets",
-    "notes": "Demoted 2026-06-10 from 'promoted': discovery auto-promoted it 2026-06-04 without a trial -> orphaned (synthesis_priority never set, no fetcher, never queued). Site is login/paywall (is_publicly_accessible=false, 0 article signals) - not a usable public source."
+    "notes": "[白话] 研究质量其实不错，但公开页要登录/付费、抓不到文章；之前还因流程 bug 被误自动上线、6-10 已降级——公开渠道用不了。 Demoted 2026-06-10 from 'promoted': discovery auto-promoted it 2026-06-04 without a trial -> orphaned (synthesis_priority never set, no fetcher, never queued). Site is login/paywall (is_publicly_accessible=false, 0 article signals) - not a usable public source."
   },
   {
     "id": "principal-am",
