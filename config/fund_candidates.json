@@ -219,7 +219,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.97,
-    "notes": "Rejected: 60% HR/culture, financial research sparse",
+    "notes": "Rejected: HR/culture majority, quant research sparse/dated",
     "research_links": [
       {
         "url": "https://www.twosigma.com/insights/",
@@ -243,17 +243,16 @@
       "article_signals": 2
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-05-12T01:02:59Z",
+    "last_deep_analyzed_at": "2026-06-13T01:00:00Z",
     "quality": "LOW",
     "topics": "quant, data science, HR/culture",
     "reject_reason": "content_not_research",
     "rejected_at": "2026-04-12T19:21:09.876510+08:00",
     "strategy_tags": [
-      "quant",
-      "equity"
+      "quant"
     ],
     "source": "auto_discovered",
-    "quality_score": 0.35
+    "quality_score": 0.2
   },
   {
     "id": "kkr",
@@ -819,7 +818,7 @@
     "screening_reason": "Login/paywall detected",
     "fit_score": 0.82,
     "last_validated_at": "2026-04-16T09:01:28.399090+08:00",
-    "last_deep_analyzed_at": "2026-05-12T01:02:59Z",
+    "last_deep_analyzed_at": "2026-06-13T01:00:00Z",
     "quality": "LOW",
     "topics": "retail education, personal finance",
     "strategy_tags": [
@@ -827,7 +826,7 @@
       "equity"
     ],
     "source": "manual",
-    "quality_score": 0.15
+    "quality_score": 0.1
   },
   {
     "id": "msci-research",
@@ -1988,10 +1987,10 @@
       "multi_asset"
     ],
     "quality": "MEDIUM",
-    "quality_score": 0.68,
-    "topics": "quant, ESG, emerging markets, fixed income, credit, European equity",
-    "notes": "Quant+EM+ESG 865 articles weekly; substantive research",
-    "last_deep_analyzed_at": "2026-06-03T00:00:00Z",
+    "quality_score": 0.72,
+    "topics": "quant, ESG, emerging markets, fixed income, credit",
+    "notes": "867 articles EM/ESG/quant weekly; strong EM gap fill",
+    "last_deep_analyzed_at": "2026-06-13T01:00:00Z",
     "official_domain": "www.robeco.com",
     "discovery_method": "discover_fund_sites",
     "research_links": [
@@ -2187,8 +2186,8 @@
     "quality": "LOW",
     "quality_score": 0.3,
     "topics": "factor investing, equity, multi-asset",
-    "notes": "Watchlist: JS-heavy page, only podcast visible",
-    "last_deep_analyzed_at": "2026-05-12T01:02:59Z"
+    "notes": "Watchlist: JS-heavy, podcast-only, no research index",
+    "last_deep_analyzed_at": "2026-06-13T01:00:00Z"
   },
   {
     "id": "a16z",
