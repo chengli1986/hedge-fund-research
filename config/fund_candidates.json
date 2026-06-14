@@ -1874,7 +1874,7 @@
       "macro",
       "fixed_income"
     ],
-    "notes": "RECOMMEND: trial passed (8/7 days with articles, quality=0.72)",
+    "notes": "RECOMMEND: Weekly Behind Headlines + EM depth; Jun 2026 active",
     "research_url": "https://www.lazardassetmanagement.com/us/en_us/research-insights",
     "official_domain": "www.lazardassetmanagement.com",
     "research_links": [
@@ -1962,9 +1962,9 @@
     "screening_reason": "Research index detected",
     "fit_score": 0.94,
     "last_validated_at": "2026-05-04T09:00:19.804656+08:00",
-    "last_deep_analyzed_at": "2026-06-05T01:00:00Z",
+    "last_deep_analyzed_at": "2026-06-14T01:00:00Z",
     "quality": "HIGH",
-    "quality_score": 0.75,
+    "quality_score": 0.77,
     "topics": "emerging markets, equity, macro, AI/tech, fixed income, geopolitics",
     "synthesis_priority": true,
     "synthesis_priority_set_at": "2026-06-12T09:03:52.684367+08:00",
@@ -2314,9 +2314,9 @@
     "fit_score": 0.85,
     "last_validated_at": "2026-05-16T09:04:19.082474+08:00",
     "quality": "MEDIUM",
-    "quality_score": 0.6,
+    "quality_score": 0.62,
     "topics": "Asian equities, China, India, Japan, EM, AI/tech innovation",
-    "last_deep_analyzed_at": "2026-06-03T00:00:00Z",
+    "last_deep_analyzed_at": "2026-06-14T01:00:00Z",
     "synthesis_priority": true,
     "synthesis_priority_set_at": "2026-06-03T09:05:38.825095+08:00",
     "synthesis_attempted_at": "2026-06-03T01:08:23.985559+00:00",
@@ -2522,9 +2522,24 @@
     "notes": "[白话] 研究质量其实不错，但公开页要登录/付费、抓不到文章；之前还因流程 bug 被误自动上线、6-10 已降级——公开渠道用不了。 Demoted 2026-06-10 from 'promoted': discovery auto-promoted it 2026-06-04 without a trial -> orphaned (synthesis_priority never set, no fetcher, never queued). Site is login/paywall (is_publicly_accessible=false, 0 article signals) - not a usable public source."
   },
   {
+    "id": "nuveen",
+    "name": "Nuveen (TIAA)",
+    "homepage_url": "https://www.nuveen.com",
+    "research_url": "https://www.nuveen.com/en-us/insights",
+    "source": "manual",
+    "status": "seed",
+    "strategy_tags": [
+      "fixed_income",
+      "real_assets",
+      "multi_asset",
+      "esg_climate"
+    ]
+  },
+  {
     "id": "principal-am",
     "name": "Principal Asset Management",
     "homepage_url": "https://www.principalam.com/us/insights",
+    "research_url": "https://www.principalam.com/us/insights",
     "source": "manual",
     "status": "seed",
     "strategy_tags": [
@@ -2536,6 +2551,11 @@
     "official_domain": "www.principalam.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-06-13T09:04:30.736234+08:00"
+    "last_discovered_at": "2026-06-14T09:00:09.857069+08:00",
+    "last_deep_analyzed_at": "2026-06-14T01:00:00Z",
+    "quality": "MEDIUM",
+    "quality_score": 0.62,
+    "topics": "macro, fixed income, real assets, alternatives, asset allocation",
+    "notes": "445-entry library; weekly macro+real assets; mixed video/article"
   }
 ]
