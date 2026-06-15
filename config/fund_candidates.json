@@ -1314,7 +1314,7 @@
     "quality": "LOW",
     "quality_score": 0.32,
     "topics": "macro, fixed income, multi-asset, emerging markets",
-    "last_deep_analyzed_at": "2026-06-06T01:00:00Z",
+    "last_deep_analyzed_at": "2026-06-15T01:00:00Z",
     "fit_score": 0.82,
     "strategy_tags": [
       "macro",
@@ -1573,7 +1573,7 @@
     "official_domain": "www.capitalgroup.com",
     "research_links": [],
     "last_discovered_at": "2026-04-23T09:00:12.674329+08:00",
-    "last_deep_analyzed_at": "2026-06-05T01:00:00Z",
+    "last_deep_analyzed_at": "2026-06-15T01:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.5,
     "topics": "macro, geopolitics, advisor practice (mixed: ~3/7 investment commentary, ~4/7 advisor practice management)",
@@ -1857,7 +1857,7 @@
     "screening_reason": "Research index detected",
     "fit_score": 0.85,
     "last_validated_at": "2026-05-03T09:00:33.191261+08:00",
-    "last_deep_analyzed_at": "2026-06-06T01:00:00Z",
+    "last_deep_analyzed_at": "2026-06-15T01:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.6,
     "topics": "macro, equity, fixed income, energy, portfolio construction"
@@ -2533,7 +2533,12 @@
       "real_assets",
       "multi_asset",
       "esg_climate"
-    ]
+    ],
+    "last_deep_analyzed_at": "2026-06-15T01:00:00Z",
+    "quality": "MEDIUM",
+    "quality_score": 0.5,
+    "topics": "fixed income, real assets, multi-asset, ESG, municipal bonds",
+    "notes": "EC2 timeout persistent; content unverifiable from datacenter IP"
   },
   {
     "id": "principal-am",
@@ -2551,7 +2556,7 @@
     "official_domain": "www.principalam.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-06-14T09:00:09.857069+08:00",
+    "last_discovered_at": "2026-06-15T09:00:38.816432+08:00",
     "last_deep_analyzed_at": "2026-06-14T01:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.62,
