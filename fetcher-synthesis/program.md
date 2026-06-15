@@ -66,7 +66,12 @@ EOF
 - 静态页面用 `requests.get(url, headers=HEADERS, timeout=20)`
 - 日期解析用 `parse_date()`
 - URL 验证用 `_validate_hostname(url, expected_host)`
-- 返回 `articles[:source.get("max_articles", 10)]`
+- **返回前必须按日期降序排序**，再取前 `max_articles`：
+  ```python
+  articles.sort(key=lambda a: a["date"] or "", reverse=True)
+  return articles[:source.get("max_articles", 10)]
+  ```
+  > **原因**：许多机构网站在列表页顶部置顶"精选/宣传"文章（可能是数月前的旧内容），真正的最新文章排在位置 10+ 之后。若直接按页面顺序取前 N 个，会把钉顶旧文当最新，导致 staleness 告警（lazard-am Jun 2026 最新文章排在位置 27，被前 10 位的 Apr 2025 ETF 文章遮住，`6633d35`）。
 
 ### Phase 3 — 测试 fetcher
 
