@@ -2243,6 +2243,9 @@ def fetch_lazard_am(source: dict) -> list[dict]:
             "date_raw": date_raw,
         })
 
+    # Page order is not chronological (featured/pinned cards appear first).
+    # Sort by date descending so max_articles always yields the most recent ones.
+    articles.sort(key=lambda a: a["date"] or "", reverse=True)
     return articles[:source.get("max_articles", 10)]
 
 
