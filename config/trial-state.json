@@ -5333,6 +5333,25 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-06-15": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/06/ga_growth_equity_update_edition_51/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/wealth-management-insights-issue-17/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/rothschild-martin-maurel-the-new-world-order-of-industrial-metals/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/wm-market-perspective-inflation-stock-valuations-ai-faqs/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/wm-hold-and-review-an-approach-for-investments-and-tax/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/ga_growth_equity_update_edition_50/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/wealth-management-insights-issue-16/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/ga_geopolitical_signals/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/04/ga_growth_equity_update_edition_49/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/04/asset-management-monthly-macro-insights---april-2026/"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -5357,6 +5376,16 @@
           "js_only_checked": 10,
           "day": 2,
           "date": "2026-06-14"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "Could not extract text from any article",
+          "js_only_count": 0,
+          "js_only_checked": 10,
+          "day": 3,
+          "date": "2026-06-15"
         }
       ]
     }
