@@ -5352,6 +5352,25 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-06-16": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/06/ga_growth_equity_update_edition_51/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/wealth-management-insights-issue-17/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/rothschild-martin-maurel-the-new-world-order-of-industrial-metals/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/wm-market-perspective-inflation-stock-valuations-ai-faqs/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/wm-hold-and-review-an-approach-for-investments-and-tax/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/ga_growth_equity_update_edition_50/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/wealth-management-insights-issue-16/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/ga_geopolitical_signals/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/04/ga_growth_equity_update_edition_49/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/04/asset-management-monthly-macro-insights---april-2026/"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -5386,6 +5405,41 @@
           "js_only_checked": 10,
           "day": 3,
           "date": "2026-06-15"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.rothschildandco.com/en/newsroom/insights/2026/06/ga_growth_equity_update_edition_51/",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.85,
+              "overall": 0.81,
+              "notes": "Growth equity market update covering VC fundraising trends, unicorn valuations, European initiatives, and public market performance with specific data points."
+            },
+            {
+              "url": "https://www.rothschildandco.com/en/newsroom/insights/2026/05/wealth-management-insights-issue-17/",
+              "relevance": 0.2,
+              "depth": 0.3,
+              "extractable": 0.6,
+              "overall": 0.32,
+              "notes": "Interview with ice hockey player about pressure management; tangentially relates investing to sports psychology but lacks investment substance or analysis."
+            },
+            {
+              "url": "https://www.rothschildandco.com/en/newsroom/insights/2026/05/rothschild-martin-maurel-the-new-world-order-of-industrial-metals/",
+              "relevance": 0.85,
+              "depth": 0.75,
+              "extractable": 0.8,
+              "overall": 0.8,
+              "notes": "Investment thesis on industrial metals demand driven by AI, energy transition, and decarbonization; analyzes supply constraints and structural vs. cyclical demand dynamics."
+            }
+          ],
+          "avg_score": 0.643,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 4,
+          "date": "2026-06-16"
         }
       ]
     }
