@@ -349,7 +349,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.97,
-    "notes": "RECOMMEND: PE/VC benchmarks; monthly 2026, inst. gated",
+    "notes": "RECOMMEND: PE/VC benchmarks; monthly, soft inst. disclaimer",
     "research_links": [
       {
         "url": "https://www.cambridgeassociates.com/insights/private-investments/",
@@ -458,9 +458,9 @@
       "article_signals": 1
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-06-09T01:00:00Z",
+    "last_deep_analyzed_at": "2026-06-16T01:07:36Z",
     "quality": "HIGH",
-    "quality_score": 0.88,
+    "quality_score": 0.85,
     "topics": "private equity, venture capital, private credit, macro, ESG",
     "strategy_tags": [
       "private_equity",
@@ -1594,9 +1594,9 @@
     ],
     "quality": "HIGH",
     "quality_score": 0.82,
-    "topics": "fixed income, multi-asset, macro, emerging markets, equities",
-    "notes": "RECOMMEND: trial passed; /en/our-insights→404, articles at /en/insights/",
-    "last_deep_analyzed_at": "2026-06-07T01:00:00Z",
+    "topics": "multi-asset, macro, fixed income, equity, emerging markets",
+    "notes": "RECOMMEND: Proprietary CML 17-min research, free access",
+    "last_deep_analyzed_at": "2026-06-16T01:07:36Z",
     "is_publicly_accessible": true,
     "has_article_index": true,
     "research_url": "https://www.pinebridge.com/en/all-insights",
@@ -2138,10 +2138,10 @@
     "last_discovered_at": "2026-05-11T09:00:09.554318+08:00",
     "research_url": "https://www.janushenderson.com/en-us/investor/insights/",
     "quality": "HIGH",
-    "quality_score": 0.82,
-    "topics": "fixed income, equity, macro, geopolitics, AI/technology",
-    "notes": "RECOMMEND: Free weekly, FI/equity depth confirmed Jun 2026",
-    "last_deep_analyzed_at": "2026-06-06T01:00:00Z",
+    "quality_score": 0.84,
+    "topics": "fixed income, equity, multi-asset, macro, AI/technology, pharma",
+    "notes": "RECOMMEND: Free, 3-4/week; FI/equity/macro June 2026 active",
+    "last_deep_analyzed_at": "2026-06-16T01:07:36Z",
     "promoted_at": "2026-05-12T10:19:29.746916+08:00"
   },
   {
@@ -2199,15 +2199,15 @@
     "strategy_tags": [
       "venture_capital"
     ],
-    "notes": "[白话] 它发的是风投宣传和观点，不是买方投资研究——类别不对，不归我们收。 VC advocacy, not investment research; wrong category",
+    "notes": "VC advocacy, not buy-side research; wrong fund category",
     "official_domain": "a16z.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-05-15T09:00:10.435535+08:00",
-    "last_deep_analyzed_at": "2026-05-15T01:02:46Z",
+    "last_deep_analyzed_at": "2026-06-16T01:07:36Z",
     "quality": "LOW",
-    "quality_score": 0.32,
-    "topics": "venture capital, AI, fintech, enterprise tech"
+    "quality_score": 0.1,
+    "topics": "venture capital, AI, enterprise tech, founder commentary"
   },
   {
     "id": "matthews-asia",
@@ -2556,7 +2556,7 @@
     "official_domain": "www.principalam.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-06-15T09:00:38.816432+08:00",
+    "last_discovered_at": "2026-06-16T09:01:19.509815+08:00",
     "last_deep_analyzed_at": "2026-06-14T01:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.62,
