@@ -5371,6 +5371,25 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-06-17": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/06/ga_growth_equity_update_edition_51/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/wealth-management-insights-issue-17/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/rothschild-martin-maurel-the-new-world-order-of-industrial-metals/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/wm-market-perspective-inflation-stock-valuations-ai-faqs/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/wm-hold-and-review-an-approach-for-investments-and-tax/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/ga_growth_equity_update_edition_50/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/wealth-management-insights-issue-16/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/ga_geopolitical_signals/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/04/ga_growth_equity_update_edition_49/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/04/asset-management-monthly-macro-insights---april-2026/"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -5440,6 +5459,41 @@
           "js_only_checked": 0,
           "day": 4,
           "date": "2026-06-16"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.rothschildandco.com/en/newsroom/insights/2026/05/wm-market-perspective-inflation-stock-valuations-ai-faqs/",
+              "relevance": 0.9,
+              "depth": 0.8,
+              "extractable": 0.7,
+              "overall": 0.82,
+              "notes": "Market perspective on inflation, stock valuations, and AI with macro analysis and investment implications; truncated at end"
+            },
+            {
+              "url": "https://www.rothschildandco.com/en/newsroom/insights/2026/05/wm-hold-and-review-an-approach-for-investments-and-tax/",
+              "relevance": 0.6,
+              "depth": 0.6,
+              "extractable": 0.6,
+              "overall": 0.6,
+              "notes": "Long-term investment philosophy and UK tax planning guidance; more advisory/planning than investment research; truncated"
+            },
+            {
+              "url": "https://www.rothschildandco.com/en/newsroom/insights/2026/05/ga_growth_equity_update_edition_50/",
+              "relevance": 0.85,
+              "depth": 0.75,
+              "extractable": 0.65,
+              "overall": 0.77,
+              "notes": "Growth equity and venture capital market update with data on funding rounds, NASDAQ changes, and AI sector concentration; truncated"
+            }
+          ],
+          "avg_score": 0.73,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 5,
+          "date": "2026-06-17"
         }
       ]
     }
