@@ -486,10 +486,11 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.9,
-    "last_deep_analyzed_at": "2026-06-09T01:00:00Z",
+    "last_deep_analyzed_at": "2026-06-17T01:00:00Z",
     "quality": "MEDIUM",
     "topics": "macro, equity, fixed income, geopolitics, multi-asset",
-    "notes": "Subscription landing page; real articles exist but listing gated",
+    "notes": "Articles by direct URL; listing gated; cross-asset Jun 2026",
+    "quality_score": 0.63,
     "research_links": [
       {
         "url": "https://am.gs.com/en-us/advisors/insights/list",
@@ -529,8 +530,7 @@
       "fixed_income",
       "multi_asset"
     ],
-    "source": "manual",
-    "quality_score": 0.6
+    "source": "manual"
   },
   {
     "id": "wellington",
@@ -886,7 +886,7 @@
     "rss_url": null,
     "official_domain": "www.researchaffiliates.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "RECOMMEND: Monthly factor/quant, free, JUN 2026 active",
+    "notes": "RECOMMEND: NLP+factor research, 40+/yr, free, JUN 2026",
     "research_links": [
       {
         "url": "https://www.researchaffiliates.com/insights/publications",
@@ -994,7 +994,7 @@
     "quality": "HIGH",
     "quality_score": 0.9,
     "topics": "factor investing, smart beta, fundamental indexing, AI, macro, emerging markets",
-    "last_deep_analyzed_at": "2026-06-09T01:00:00Z",
+    "last_deep_analyzed_at": "2026-06-17T01:00:00Z",
     "strategy_tags": [
       "quant",
       "equity",
@@ -2556,11 +2556,28 @@
     "official_domain": "www.principalam.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-06-16T09:01:19.509815+08:00",
+    "last_discovered_at": "2026-06-17T09:00:39.688011+08:00",
     "last_deep_analyzed_at": "2026-06-14T01:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.62,
     "topics": "macro, fixed income, real assets, alternatives, asset allocation",
     "notes": "445-entry library; weekly macro+real assets; mixed video/article"
+  },
+  {
+    "id": "longleaf-partners",
+    "name": "Longleaf Partners (Southeastern Asset Management)",
+    "homepage_url": "https://www.southeasternasset.com",
+    "research_url": "https://www.southeasternasset.com",
+    "source": "manual",
+    "status": "seed",
+    "strategy_tags": [
+      "equity",
+      "multi_asset",
+      "emerging_markets"
+    ],
+    "official_domain": "www.southeasternasset.com",
+    "research_links": [],
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-06-17T09:06:39.819719+08:00"
   }
 ]
