@@ -548,7 +548,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.8843,
-    "notes": "RECOMMEND: Multi-asset weekly; institutional disclaimer, accessible",
+    "notes": "RECOMMEND: Multi-asset, 40+ free articles, broad coverage",
     "research_links": [
       {
         "url": "https://www.wellington.com/en/insights",
@@ -630,7 +630,6 @@
     "last_deep_analyzed_at": "2026-06-18T01:00:00Z",
     "quality": "HIGH",
     "topics": "macro, fixed income, equity, multi-asset, alternatives, emerging markets",
-    "notes": "RECOMMEND: Multi-asset, 40+ free articles, broad coverage",
     "strategy_tags": [
       "macro",
       "equity",
@@ -1278,7 +1277,9 @@
       "multi_asset",
       "emerging_markets"
     ],
-    "source": "manual"
+    "source": "manual",
+    "watchlist_reason": "trial-pass blocked 2026-06-18: FI/EM/private_credit already covered by 24/30 production sources; MEDIUM quality (0.66) adds no differentiation; previously demoted 2026-06-12 when lazard-am joined",
+    "watchlist_at": "2026-06-18T05:15:48.566569+00:00"
   },
   {
     "id": "aberdeen",
@@ -2581,7 +2582,7 @@
     "last_discovered_at": "2026-06-18T09:00:39.193854+08:00",
     "last_deep_analyzed_at": "2026-06-18T01:00:00Z",
     "quality": "MEDIUM",
-    "quality_score": 0.60,
+    "quality_score": 0.6,
     "topics": "equity, value investing, company analysis",
     "notes": "Quarterly fund letters + podcasts; value investing niche"
   }
