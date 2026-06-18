@@ -5390,6 +5390,25 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-06-18": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/06/wealth-management-insights-issue-17/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/06/ga_growth_equity_update_edition_51/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/wealth-management-insights-issue-17/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/rothschild-martin-maurel-the-new-world-order-of-industrial-metals/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/wm-market-perspective-inflation-stock-valuations-ai-faqs/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/wm-hold-and-review-an-approach-for-investments-and-tax/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/ga_growth_equity_update_edition_50/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/wealth-management-insights-issue-16/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/ga_geopolitical_signals/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/04/ga_growth_equity_update_edition_49/"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -5494,6 +5513,41 @@
           "js_only_checked": 0,
           "day": 5,
           "date": "2026-06-17"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.rothschildandco.com/en/newsroom/insights/2026/06/wealth-management-insights-issue-17/",
+              "relevance": 0.7,
+              "depth": 0.3,
+              "extractable": 0.4,
+              "overall": 0.48,
+              "notes": "Gold market analysis with historical context, but article is truncated behind paywall; mostly marketing for full magazine"
+            },
+            {
+              "url": "https://www.rothschildandco.com/en/newsroom/insights/2026/05/wealth-management-insights-issue-16/",
+              "relevance": 0.6,
+              "depth": 0.4,
+              "extractable": 0.3,
+              "overall": 0.46,
+              "notes": "Wealth management philosophy piece on calm investing; light on data/specifics, heavily truncated, primarily editorial/brand messaging"
+            },
+            {
+              "url": "https://www.rothschildandco.com/en/newsroom/insights/2026/05/ga_geopolitical_signals/",
+              "relevance": 0.9,
+              "depth": 0.8,
+              "extractable": 0.7,
+              "overall": 0.82,
+              "notes": "Substantive geopolitical macro analysis covering US-Iran conflict, Gulf tensions, NATO rifts, and trade chokepoints with specific risk assessment"
+            }
+          ],
+          "avg_score": 0.587,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 6,
+          "date": "2026-06-18"
         }
       ]
     }
