@@ -86,7 +86,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.97,
-    "notes": "RECOMMEND: Free quant library, 2026 articles confirmed",
+    "notes": "RECOMMEND: 30-article free library; quant+macro research 2026 active",
     "research_links": [
       {
         "url": "https://www.deshaw.com/library",
@@ -105,9 +105,9 @@
       "article_signals": 1
     },
     "screening_reason": "Insufficient article index signals",
-    "last_deep_analyzed_at": "2026-06-08T01:02:20Z",
+    "last_deep_analyzed_at": "2026-06-19T01:00:00Z",
     "quality": "HIGH",
-    "topics": "quant, equity, macro, portfolio management, credit",
+    "topics": "quant, portfolio management, equity, macro, credit, interest rates",
     "reject_reason": "no_public_research",
     "rejected_at": "2026-04-12T19:21:09.876510+08:00",
     "strategy_tags": [
@@ -1428,10 +1428,10 @@
       "multi_asset"
     ],
     "quality": "MEDIUM",
-    "quality_score": 0.62,
-    "topics": "private credit, private equity, retirement income, macro",
-    "notes": "Weekly; private credit + PE research, some podcast format",
-    "last_deep_analyzed_at": "2026-06-10T01:00:00Z",
+    "quality_score": 0.58,
+    "topics": "private credit, private equity, macro, Japan/Asia, alternatives",
+    "notes": "Mixed: podcasts+interviews dominate; some genuine credit articles",
+    "last_deep_analyzed_at": "2026-06-19T01:00:00Z",
     "research_url": "https://www.apollo.com/insights-news/insights",
     "official_domain": "www.apollo.com",
     "research_links": [
@@ -1546,11 +1546,11 @@
     ],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-04-20T09:01:24.288350+08:00",
-    "last_deep_analyzed_at": "2026-06-10T01:00:00Z",
+    "last_deep_analyzed_at": "2026-06-19T01:00:00Z",
     "quality": "MEDIUM",
-    "quality_score": 0.63,
-    "topics": "real assets, infrastructure, private credit, real estate, private equity",
-    "notes": "Monthly white papers on real assets/infra; fills unique gap",
+    "quality_score": 0.58,
+    "topics": "real assets, infrastructure, private credit, real estate, private equity, energy",
+    "notes": "Monthly thematic; advocacy-oriented; limited quant depth confirmed",
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.88,
@@ -1658,10 +1658,10 @@
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-04-29T09:00:09.051367+08:00",
-    "last_deep_analyzed_at": "2026-06-11T01:02:30Z",
+    "last_deep_analyzed_at": "2026-06-19T01:00:00Z",
     "quality": "HIGH",
     "quality_score": 0.88,
-    "topics": "quant, value investing, factor investing, global equity, credit, private equity"
+    "topics": "quant, value investing, factor investing, global equity, credit, private equity, Japan, Europe"
   },
   {
     "id": "alliancebernstein",
@@ -2558,7 +2558,7 @@
     "official_domain": "www.principalam.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-06-18T09:00:37.544843+08:00",
+    "last_discovered_at": "2026-06-19T09:00:39.965635+08:00",
     "last_deep_analyzed_at": "2026-06-14T01:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.62,
@@ -2579,11 +2579,25 @@
     "official_domain": "www.southeasternasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-06-18T09:00:39.193854+08:00",
+    "last_discovered_at": "2026-06-19T09:00:40.536065+08:00",
     "last_deep_analyzed_at": "2026-06-18T01:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.6,
     "topics": "equity, value investing, company analysis",
     "notes": "Quarterly fund letters + podcasts; value investing niche"
+  },
+  {
+    "id": "goehring-rozencwajg",
+    "name": "Goehring & Rozencwajg",
+    "homepage_url": "https://www.gorozen.com",
+    "research_url": "https://blog.gorozen.com/blog",
+    "source": "manual",
+    "status": "seed",
+    "strategy_tags": [
+      "real_assets",
+      "macro",
+      "equity"
+    ],
+    "notes": "Quarterly commodity/energy research; quarterly requires email form; blog may be free"
   }
 ]
