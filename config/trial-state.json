@@ -5409,6 +5409,25 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-06-19": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/06/wealth-management-insights-issue-17/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/06/ga_growth_equity_update_edition_51/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/wealth-management-insights-issue-17/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/rothschild-martin-maurel-the-new-world-order-of-industrial-metals/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/wm-market-perspective-inflation-stock-valuations-ai-faqs/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/wm-hold-and-review-an-approach-for-investments-and-tax/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/ga_growth_equity_update_edition_50/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/wealth-management-insights-issue-16/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/05/ga_geopolitical_signals/",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/04/ga_growth_equity_update_edition_49/"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -5548,6 +5567,25 @@
           "js_only_checked": 0,
           "day": 6,
           "date": "2026-06-18"
+        },
+        {
+          "sampled": 1,
+          "articles": [
+            {
+              "url": "https://www.rothschildandco.com/en/newsroom/insights/2026/04/ga_growth_equity_update_edition_49/",
+              "relevance": 0.9,
+              "depth": 0.75,
+              "extractable": 0.6,
+              "overall": 0.78,
+              "notes": "Growth equity market update covering Q1 2026 fundraising trends, new trading venues (PISCES), unicorn creation, and geopolitical market impacts with specific data on US/European raises and impending funding rounds."
+            }
+          ],
+          "avg_score": 0.78,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 7,
+          "date": "2026-06-19"
         }
       ]
     }
