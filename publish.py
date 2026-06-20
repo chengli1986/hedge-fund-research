@@ -54,6 +54,7 @@ BADGE_COLORS: dict[str, str] = {
     "capital-group": "#37474f",             # Capital Group slate blue-grey (fills the empty neutral-slate niche — only desaturated gray in palette; WCAG AA 9.65:1; avoids the crowded saturated-blue cluster)
     "acadian-asset": "#5d4037",             # Acadian coffee/umber brown (fills the empty muted-brown niche; brand steel-blue avoided as the blue cluster is crowded; distinct from #7c2d12 Verdad terracotta by far-lower saturation; WCAG AA ~8.9:1 on white)
     "lazard-am": "#b07d12",                 # Lazard warm amber-gold (EM/macro heritage; distinct from #d29922 Bridgewater mustard-gold and #cd853f D.E.Shaw bronze; WCAG AA ~4.8:1 on white)
+    "rothschild-co-am": "#6a1b4d",          # Rothschild deep claret/Bordeaux-wine (nods to family Bordeaux estates Lafite/Mouton; fills the sparse wine-magenta niche — nearest neighbors #80276c Natixis purple and #c2185b Research-Affiliates magenta are both far in lightness/hue; min perceptual ΔE ~65; WCAG AA 11.2:1 on white)
 }
 
 INITIAL_VISIBLE = 20
@@ -276,6 +277,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "全球主动管理资产公司，1848 年创立，总部位于纽约，以新兴市场股票和宏观固定收益研究著称。覆盖股票、固定收益、多资产与实物资产策略，尤其在新兴市场基本面分析和地缘政治宏观研究方面具有深度积累。",
         "notable_en": "EM equity specialist and macro fixed-income manager; 'Lazard Perspective' research is widely cited for geopolitics, EM fundamentals, and global monetary policy analysis; founded by the Lazard brothers in New Orleans, 1848.",
         "notable_zh": "新兴市场股票和宏观固定收益领域专家；《Lazard Perspective》系列研究以地缘政治分析、新兴市场基本面和全球货币政策洞察著称；由 Lazard 兄弟 1848 年于新奥尔良创立。",
+    },
+    "rothschild-co-am": {
+        "founded": "1811", "aum": "~€40B", "hq": "Paris, France",
+        "type_en": "Boutique Asset Manager", "type_zh": "精品资产管理公司",
+        "desc_zh": "罗斯柴尔德集团旗下精品主动资产管理部门,总部位于巴黎,管理约 €40B 资产,约 170 名投资专业人士遍布 9 个国家。秉持高信念、研究驱动的投资理念,覆盖多资产与宏观配置、欧洲及主题股票、信贷与固定收益,并融入财富管理视角,关注地缘政治、另类资产与 ESG。背靠逾两百年罗斯柴尔德金融世家传承。",
+        "notable_en": "Active boutique within the 200-year-old Rothschild & Co group; the controlling family also owns the Bordeaux first-growth estates Château Lafite and Mouton Rothschild. The asset-management arm runs conviction-driven European equity, multi-asset and credit strategies for institutional and intermediary clients.",
+        "notable_zh": "背靠拥有逾两百年历史的罗斯柴尔德金融世家;控股家族同时拥有波尔多一级名庄拉菲(Château Lafite)与木桐(Mouton Rothschild)。资产管理部门为机构与中介客户运作高信念欧洲股票、多资产及信贷策略。",
     },
 }
 

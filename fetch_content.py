@@ -1359,6 +1359,37 @@ def _fetch_content_lazard_am(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+def _fetch_content_rothschild_co_am(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Rothschild & Co Asset Management article content via requests (SSR).
+
+    Although the candidate notes flagged EC2-403 on article pages, plain
+    requests.get now returns HTTP 200 for the insight bodies. The article body
+    lives in <article> with <p> paragraphs (verified 1.9K–50K chars across the
+    sampled insights). _normalize_html falls back to article/main/.content if
+    the primary "article p" selector yields nothing.
+    """
+    url = article["url"]
+    log.info("  Rothschild: fetching article page %s", url)
+
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Rothschild: fetch failed: %s", e)
+        return None
+
+    text = _normalize_html(resp.text, "article p")
+
+    if not _check_min_content_length(text):
+        log.warning("  Rothschild: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Rothschild: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -1390,6 +1421,7 @@ CONTENT_FETCHERS = {
     "capital-group": _fetch_content_capital_group,
     "acadian-asset": _fetch_content_acadian_asset,
     "lazard-am": _fetch_content_lazard_am,
+    "rothschild-co-am": _fetch_content_rothschild_co_am,
 }
 
 

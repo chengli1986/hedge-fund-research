@@ -575,6 +575,24 @@
       "notable_authors": [],
       "expected_hostname": "lazardassetmanagement.com",
       "max_articles": 10
+    },
+    {
+      "id": "rothschild-co-am",
+      "strategy_tags": [
+        "macro",
+        "multi_asset",
+        "equity",
+        "fixed_income"
+      ],
+      "name": "Rothschild & Co Asset Management",
+      "short_name": "Rothschild",
+      "url": "https://www.rothschildandco.com/en/newsroom/insights/",
+      "method": "ssr",
+      "frequency": "weekly",
+      "description": "Active boutique asset manager within the 200-year-old Rothschild & Co group (~€38B AUM), based in Paris with ~170 professionals across 9 countries. Conviction-driven, research-led investing across multi-asset/macro allocation, European and thematic equities, and credit/fixed income, with a wealth-management lens spanning geopolitics, alternatives and ESG.",
+      "notable_authors": [],
+      "expected_hostname": "rothschildandco.com",
+      "max_articles": 10
     }
   ],
   "settings": {
