@@ -2390,7 +2390,7 @@
     "homepage_url": "https://www.rothschildandco.com",
     "research_url": "https://www.rothschildandco.com/en/newsroom/insights/",
     "source": "manual",
-    "status": "visitable",
+    "status": "promoted",
     "inaccessible_reason": "EC2-403 on homepage and article pages; index page accessible but content blocked",
     "strategy_tags": [
       "macro",
@@ -2401,7 +2401,7 @@
     "topics": "macro, wealth management, geopolitics, alternatives, ESG",
     "quality": "MEDIUM",
     "quality_score": 0.55,
-    "notes": "Index accessible (726 articles) but all article URLs EC2-403; confirmed Jun 2026",
+    "notes": "RECOMMEND: trial passed (8/7 days with articles, quality=0.67)",
     "last_deep_analyzed_at": "2026-06-12T01:00:00Z",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-05-24T01:02:30Z",
