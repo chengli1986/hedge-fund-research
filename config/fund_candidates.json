@@ -668,7 +668,7 @@
       "article_signals": 3
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-06-11T01:02:30Z",
+    "last_deep_analyzed_at": "2026-06-20T01:10:00Z",
     "quality": "HIGH",
     "quality_score": 0.85,
     "topics": "macro, fixed income, ESG, emerging markets, private assets",
@@ -710,7 +710,7 @@
       "article_signals": 0
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-06-11T01:02:30Z",
+    "last_deep_analyzed_at": "2026-06-20T01:10:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.65,
     "topics": "macro, equity, fixed income, multi-asset, retirement",
@@ -739,7 +739,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.97,
-    "notes": "Brief directional insights, free access; surface-level Mar 2026",
+    "notes": "Brief directional insights, free access; surface-level Jun 2026",
     "research_links": [
       {
         "url": "https://www.troweprice.com/en/us/insights",
@@ -778,7 +778,7 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-06-12T01:00:00Z",
+    "last_deep_analyzed_at": "2026-06-20T01:10:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.6,
     "topics": "equity, AI/tech, macro, fixed income, active management",
@@ -2558,7 +2558,7 @@
     "official_domain": "www.principalam.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-06-19T09:00:39.965635+08:00",
+    "last_discovered_at": "2026-06-20T09:01:41.025419+08:00",
     "last_deep_analyzed_at": "2026-06-14T01:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.62,
@@ -2579,7 +2579,7 @@
     "official_domain": "www.southeasternasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-06-19T09:00:40.536065+08:00",
+    "last_discovered_at": "2026-06-20T09:01:41.729414+08:00",
     "last_deep_analyzed_at": "2026-06-18T01:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.6,
@@ -2598,6 +2598,14 @@
       "macro",
       "equity"
     ],
-    "notes": "Quarterly commodity/energy research; quarterly requires email form; blog may be free"
+    "notes": "RECOMMEND: Deep free energy research; fills commodities gap",
+    "official_domain": "www.gorozen.com",
+    "research_links": [],
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-06-20T09:01:41.801468+08:00",
+    "last_deep_analyzed_at": "2026-06-20T01:10:00Z",
+    "quality": "HIGH",
+    "quality_score": 0.87,
+    "topics": "energy, natural resources, commodities, oil"
   }
 ]
