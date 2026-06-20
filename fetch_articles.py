@@ -974,6 +974,10 @@ def fetch_gsam(source: dict) -> list[dict]:
             "url": url,
             "date": parsed_date,
             "date_raw": date_raw,
+            "gsam_summary": (
+                (hit.get("summaryDescription") or "") + "\n" +
+                (hit.get("summaryTeaserText") or "")
+            ).strip(),
         })
 
     return articles[:source.get("max_articles", 10)]
