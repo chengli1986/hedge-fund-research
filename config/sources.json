@@ -445,7 +445,7 @@
       "url": "https://www.robeco.com/en-int/insights",
       "method": "playwright",
       "frequency": "weekly",
-      "description": "Dutch asset manager (~€200B AUM) headquartered in Rotterdam, founded 1929. Pioneer in quantitative equity investing and sustainable/ESG integration since the 1990s. Strong franchises in emerging-markets equity, global credit and factor-based strategies; Insights publishes quant research, ESG/climate analysis and EM/macro commentary.",
+      "description": "Dutch asset manager (~€228B AUM) headquartered in Rotterdam, founded 1929. Pioneer in quantitative equity investing and sustainable/ESG integration since the 1990s. Strong franchises in emerging-markets equity, global credit and factor-based strategies; Insights publishes quant research, ESG/climate analysis and EM/macro commentary.",
       "notable_authors": [],
       "expected_hostname": "robeco.com",
       "max_articles": 10
@@ -499,7 +499,7 @@
       "url": "https://www.ares.com/us/news-and-insights/perspectives",
       "method": "ssr",
       "frequency": "weekly",
-      "description": "Leading global alternative investment manager (~$620B AUM) specializing in private credit, private equity, real assets and infrastructure. Founded in 1997, listed on NYSE (ARES). Direct-lending pioneer with one of the largest US middle-market credit platforms; significant insurance solutions business via Aspida.",
+      "description": "Leading global alternative investment manager (~$644B AUM) specializing in private credit, private equity, real assets and infrastructure. Founded in 1997, listed on NYSE (ARES). Direct-lending pioneer with one of the largest US middle-market credit platforms; significant insurance solutions business via Aspida.",
       "notable_authors": [],
       "expected_hostname": "ares.com",
       "max_articles": 10
@@ -571,7 +571,7 @@
       "url": "https://www.lazardassetmanagement.com/us/en_us/research-insights",
       "method": "requests",
       "frequency": "weekly",
-      "description": "Global active asset manager (~$200B AUM), founded 1848, headquartered in New York. Known for emerging-markets equity research and macro fixed-income perspectives across geopolitics, EM fundamentals, and global monetary policy.",
+      "description": "Global active asset manager (~$260B AUM), founded 1848, headquartered in New York. Known for emerging-markets equity research and macro fixed-income perspectives across geopolitics, EM fundamentals, and global monetary policy.",
       "notable_authors": [],
       "expected_hostname": "lazardassetmanagement.com",
       "max_articles": 10

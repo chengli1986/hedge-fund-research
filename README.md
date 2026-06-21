@@ -2,7 +2,7 @@
 
 Tracks and aggregates research insights, market commentary, and papers from top hedge funds. Summarizes via LLM and publishes a bilingual (CN/EN) dashboard.
 
-## Sources (30)
+## Sources (31)
 
 | Fund | Method | Frequency | Notable |
 |------|--------|-----------|---------|
@@ -28,14 +28,15 @@ Tracks and aggregates research insights, market commentary, and papers from top 
 | **Janus Henderson Investors** | SSR (requests) | Weekly | Equities / fixed income / multi-asset; global rates + geopolitics frame; London/Denver, 2017 merger, ~$480B (take-private pending) |
 | **Research Affiliates** | Playwright (Next.js) | Monthly | Quantitative research / index licensor; RAFI fundamental indices + Smart Beta; Newport Beach, 2002, ~$159B licensed (Rob Arnott) |
 | **Goldman Sachs Asset Management** | JSON API | Weekly | Multi-asset, equity, fixed income, alternatives, liquidity; macro outlooks + market commentary; ~$3.3T |
-| **Robeco** | Playwright | Weekly | Quant equity pioneer, sustainability/ESG integration, EM equity & global credit; Rotterdam, 1929, ~€200B |
+| **Robeco** | Playwright | Weekly | Quant equity pioneer, sustainability/ESG integration, EM equity & global credit; Rotterdam, 1929, ~€228B |
 | **D. E. Shaw** | Playwright | Annual | Quant multi-strategy; computational/statistical-arbitrage; Library publishes 1-3 long-form papers/year; 1988, ~$65B |
 | **PineBridge Investments** | Playwright | Weekly | Fixed income (EM debt, leveraged finance), multi-asset, active equities; Capital Market Line; ex-AIG, acquired by MetLife IM (Dec 2025), ~$100B |
-| **Ares Management** | SSR (requests) | Weekly | Private credit / private equity / real assets / infrastructure; US direct-lending leader; 1997, NYSE: ARES, ~$620B |
+| **Ares Management** | SSR (requests) | Weekly | Private credit / private equity / real assets / infrastructure; US direct-lending leader; 1997, NYSE: ARES, ~$644B |
 | **Matthews Asia** | SSR (requests) | Monthly | Asia & emerging-markets equity specialist; active bottom-up; SF/HK, 1991, ~$6.6B |
 | **Capital Group** | Playwright (AEM) | Weekly | One of the world's largest active managers (~$3.3T); American Funds; 1931; "The Capital System" multi-manager approach; global equity, fixed income, multi-asset |
 | **Acadian Asset Management** | Playwright | Monthly | Quantitative/systematic manager (~$120B); Boston, 1986; factor-based equity (valuation/quality/growth/sentiment) across global/EM/frontier markets; systematic credit + multi-asset |
-| **Lazard Asset Management** | SSR (requests/AEM) | Weekly | EM equity specialist + macro fixed-income; founded 1848, New York, ~$200B; Lazard Perspective research on geopolitics, EM fundamentals, global monetary policy |
+| **Lazard Asset Management** | SSR (requests/AEM) | Weekly | EM equity specialist + macro fixed-income; founded 1848, New York, ~$260B; Lazard Perspective research on geopolitics, EM fundamentals, global monetary policy |
+| **Rothschild & Co Asset Management** | SSR (requests) | Weekly | Active boutique within the 200-year-old Rothschild & Co group; Paris, ~€38B; conviction-driven European/thematic equity, multi-asset/macro, credit/fixed income |
 
 ## Pipeline
 

@@ -69,7 +69,7 @@ RECENT_DAYS = 90  # Articles older than this are folded behind a "Show older" to
 # ── Static fund profile data (displayed in Sources tab) ──
 _FUND_PROFILES: dict[str, dict] = {
     "man-group": {
-        "founded": "1783", "aum": "~$193B", "hq": "London, UK",
+        "founded": "1783", "aum": "~$229B", "hq": "London, UK",
         "type_en": "Listed HF (LSE)", "type_zh": "上市对冲基金 (伦交所)",
         "desc_zh": "全球最大上市对冲基金。AHL 系统化量化与 GLG 主观宏观及信贷多策略并举，伦交所上市。最初为大宗商品经纪商，1980 年代转型资产管理。",
         "notable_en": "AHL Diversified ~15% annualized since 1990s; significant positive returns during 2008 financial crisis, providing genuine equity hedge.",
@@ -90,7 +90,7 @@ _FUND_PROFILES: dict[str, dict] = {
         "notable_zh": "多篇论文发表于《Journal of Finance》；2022 年全球股债双杀中录得正回报；'Betting Against Beta' 论文重塑了因子投资理论。",
     },
     "gmo": {
-        "founded": "1977", "aum": "~$65B", "hq": "Boston, MA",
+        "founded": "1977", "aum": "~$82B", "hq": "Boston, MA",
         "type_en": "Value Hedge Fund", "type_zh": "价值对冲基金",
         "desc_zh": "Jeremy Grantham、Richard Mayo 和 Eyk van Otterloo 创立（公司名 Grantham, Mayo, Van Otterloo 即源于三位创始人）。深度价值、逆向风格。以季度《7 年资产类别预测》著称——跨全球股票和固定收益市场的机构级预期回报估算。",
         "notable_en": "Accurately called the 1989 Japan bubble, 2000 dot-com crash, and 2007 housing bubble; the quarterly 7-Year Asset Class Forecasts are a long-standing institutional reference for return expectations.",
@@ -104,7 +104,7 @@ _FUND_PROFILES: dict[str, dict] = {
         "notable_zh": "困境债连续 30 年无亏损年度；Opportunities Fund VIII 2008-09 危机期间回报超 30%；Warren Buffett 称 Marks 备忘录「每次必读」。",
     },
     "ark-invest": {
-        "founded": "2014", "aum": "~$14B", "hq": "St. Petersburg, FL",
+        "founded": "2014", "aum": "~$30B", "hq": "St. Petersburg, FL",
         "type_en": "Thematic ETF", "type_zh": "主题 ETF",
         "desc_zh": "Cathie Wood 创立，专注颠覆性创新——AI、基因组学、机器人、储能、金融科技和太空。在 ETF 行业首创每日持仓公开透明，打破传统主动管理的不透明模式。",
         "notable_en": "ARKK +152% in 2020 (best-performing active ETF); early Tesla conviction at ~$17 split-adjusted — held through 10x gain; pioneered daily holdings disclosure in the industry.",
@@ -132,7 +132,7 @@ _FUND_PROFILES: dict[str, dict] = {
         "notable_zh": "欧洲最大资产管理公司；ESG 整合先驱，联合国 PRI 首批签署方；2021 年收购 Lyxor 巩固欧洲 ETF 市场地位。",
     },
     "troweprice": {
-        "founded": "1937", "aum": "~$1.6T", "hq": "Baltimore, MD",
+        "founded": "1937", "aum": "~$1.9T", "hq": "Baltimore, MD",
         "type_en": "Listed (NASDAQ)", "type_zh": "上市 (NASDAQ)",
         "desc_zh": "由 Thomas Rowe Price Jr. 创立，被誉为「成长股投资之父」，1930 年代即提出成长股投资理念并于 1937 年据此创立公司。以基本面研究文化著称，分析师须长期深度覆盖其研究领域。",
         "notable_en": "Founder credited as 'father of growth investing'; 30+ consecutive years without a net annual loss (through 2020); target-date fund series globally top-3 by AUM.",
@@ -146,7 +146,7 @@ _FUND_PROFILES: dict[str, dict] = {
         "notable_zh": "Total Return Fund 2008–14 年间为全球最大共同基金；Bill Gross 被誉为「债券之王」；「新常态」框架重塑了后金融危机宏观思维。",
     },
     "aberdeen": {
-        "founded": "1983", "aum": "~£510B", "hq": "Edinburgh, UK",
+        "founded": "1983", "aum": "~£556B", "hq": "Edinburgh, UK",
         "type_en": "Listed (LSE)", "type_zh": "上市 (伦交所)",
         "desc_zh": "1983 年于苏格兰阿伯丁创立，2017 年与 Standard Life 合并。新兴市场债务和亚洲股票团队最为知名，本地分析师覆盖深度行业领先。2021 年改名「abrdn」后于 2025 年回归「Aberdeen」品牌。",
         "notable_en": "One of the UK's largest independent asset managers; world-leading EM debt franchise; pioneer in Asian equity research with on-the-ground analyst coverage.",
@@ -181,7 +181,7 @@ _FUND_PROFILES: dict[str, dict] = {
         "notable_zh": "MSCI ACWI/EAFE/新兴市场指数全球跟踪规模超 $16.5 万亿；首创因子指数构建方法论（质量、价值、动量）；ESG 评级被 1,700+ 机构投资者采用。",
     },
     "natixis-im": {
-        "founded": "2007", "aum": "~$1.4T", "hq": "Paris, France / Boston, MA",
+        "founded": "2007", "aum": "~$1.5T", "hq": "Paris, France / Boston, MA",
         "type_en": "Multi-Affiliate Asset Manager", "type_zh": "多附属机构资管平台",
         "desc_zh": "法国 Groupe BPCE 旗下多附属机构资管平台，2007 年合并成立。汇集 15+ 家投资附属机构——Loomis Sayles（核心固收/credit）、Harris Associates（价值股）、Mirova（ESG/气候/影响力投资）等——以联邦化模式保留各家投资风格自主性。策略覆盖固定收益、价值股票、ESG/气候、多资产配置，欧洲 + 北美双总部。",
         "notable_en": "Multi-affiliate model preserves boutique autonomy across Loomis Sayles, Harris Associates, Mirova, etc.; Tactical Take podcast is one of the most accessible macro/portfolio strategy series among large managers.",
@@ -223,7 +223,7 @@ _FUND_PROFILES: dict[str, dict] = {
         "notable_zh": "全球最大固收主动管理平台之一；2020 年整合高盛 Merchant Banking 部门、2022 年完成 NN Investment Partners 收购后，另类资产管理规模达约 4300 亿美元（私募信贷、私募股权、实物资产、对冲基金）。Petershill 平台对外少数股权投资多家另类 GP。",
     },
     "robeco": {
-        "founded": "1929", "aum": "~€200B", "hq": "Rotterdam, Netherlands",
+        "founded": "1929", "aum": "~€228B", "hq": "Rotterdam, Netherlands",
         "type_en": "Asset Manager", "type_zh": "资产管理公司",
         "desc_zh": "荷兰资产管理公司（~2000 亿欧元 AUM），1929 年成立于鹿特丹。量化股票投资先驱，1990 年代起将可持续投资 / ESG 全面整合到投资流程。强项：新兴市场股票、全球信贷、因子（价值/动量/质量/低波）策略。",
         "notable_en": "Quant equity pioneer (factor strategies since the 1990s) and one of the earliest mainstream managers to fully integrate sustainability/ESG into core investing; long-standing emerging-markets equity franchise.",
@@ -244,7 +244,7 @@ _FUND_PROFILES: dict[str, dict] = {
         "notable_zh": "前身为 AIG Investments（1996），2010 年由李泽楷的 Pacific Century Group 分拆独立，2025 年 12 月被 MetLife Investment Management 完成收购。代表研究：'Capital Market Line'（5 年期资本市场假设框架）和 'Investment Strategy Insights'（每周多资产配置策略）。",
     },
     "ares-management": {
-        "founded": "1997", "aum": "~$620B", "hq": "Los Angeles, USA",
+        "founded": "1997", "aum": "~$644B", "hq": "Los Angeles, USA",
         "type_en": "Listed Alternative Asset Manager (NYSE: ARES)", "type_zh": "上市另类资产管理公司 (NYSE: ARES)",
         "desc_zh": "全球领先另类资产管理公司（约 $620B AUM），1997 年由 Tony Ressler 等人创立，2014 年纽交所上市。核心业务：私募信贷（美国直接借贷与中端市场最大平台之一）、私募股权、不动产/基础设施，以及通过 Aspida 开展的保险解决方案。",
         "notable_en": "Pioneer of US middle-market direct lending; Ares Capital Corporation (NASDAQ: ARCC) is the largest publicly traded BDC. Acquired Landmark Partners (2021), AMP Capital infrastructure (2022) and GLP Capital Partners' international platform (2025), expanding real assets footprint substantially.",
@@ -272,7 +272,7 @@ _FUND_PROFILES: dict[str, dict] = {
         "notable_zh": "业界历史最悠久、规模最大的系统化股票管理人之一；因子化流程覆盖全球、国际、新兴及前沿市场股票，并已延伸至系统化固定收益。以 NYSE 代码 AAMI 上市（前身为 BrightSphere Investment Group）。",
     },
     "lazard-am": {
-        "founded": "1848", "aum": "~$200B", "hq": "New York, NY",
+        "founded": "1848", "aum": "~$260B", "hq": "New York, NY",
         "type_en": "Independent Active Manager", "type_zh": "独立主动管理资产公司",
         "desc_zh": "全球主动管理资产公司，1848 年创立，总部位于纽约，以新兴市场股票和宏观固定收益研究著称。覆盖股票、固定收益、多资产与实物资产策略，尤其在新兴市场基本面分析和地缘政治宏观研究方面具有深度积累。",
         "notable_en": "EM equity specialist and macro fixed-income manager; 'Lazard Perspective' research is widely cited for geopolitics, EM fundamentals, and global monetary policy analysis; founded by the Lazard brothers in New Orleans, 1848.",
@@ -281,7 +281,7 @@ _FUND_PROFILES: dict[str, dict] = {
     "rothschild-co-am": {
         "founded": "1811", "aum": "~€40B", "hq": "Paris, France",
         "type_en": "Boutique Asset Manager", "type_zh": "精品资产管理公司",
-        "desc_zh": "罗斯柴尔德集团旗下精品主动资产管理部门,总部位于巴黎,管理约 €40B 资产,约 170 名投资专业人士遍布 9 个国家。秉持高信念、研究驱动的投资理念,覆盖多资产与宏观配置、欧洲及主题股票、信贷与固定收益,并融入财富管理视角,关注地缘政治、另类资产与 ESG。背靠逾两百年罗斯柴尔德金融世家传承。",
+        "desc_zh": "罗斯柴尔德集团旗下精品主动资产管理部门,总部位于巴黎,管理约 €40B 资产,约 170 名员工遍布 9 个国家。秉持高信念、研究驱动的投资理念,覆盖多资产与宏观配置、欧洲及主题股票、信贷与固定收益,并融入财富管理视角,关注地缘政治、另类资产与 ESG。背靠逾两百年罗斯柴尔德金融世家传承。",
         "notable_en": "Active boutique within the 200-year-old Rothschild & Co group; the controlling family also owns the Bordeaux first-growth estates Château Lafite and Mouton Rothschild. The asset-management arm runs conviction-driven European equity, multi-asset and credit strategies for institutional and intermediary clients.",
         "notable_zh": "背靠拥有逾两百年历史的罗斯柴尔德金融世家;控股家族同时拥有波尔多一级名庄拉菲(Château Lafite)与木桐(Mouton Rothschild)。资产管理部门为机构与中介客户运作高信念欧洲股票、多资产及信贷策略。",
     },
@@ -295,6 +295,70 @@ _STRATEGY_LABELS: dict[str, str] = {
     "private_credit": "Private Credit", "event_driven": "Event Driven",
     "real_assets": "Real Assets",
 }
+
+# ── Country flags (inline SVG, rendered next to each fund's badge) ──
+# Self-contained SVGs: no <defs>/id references, so the same flag can be inlined
+# many times without DOM id collisions. Country is derived from the profile HQ
+# string (which may list two HQs separated by "/", e.g. dual-HQ managers).
+_FLAG_SVGS: dict[str, str] = {
+    "US": ('<svg class="flag" viewBox="0 0 39 26" role="img" aria-label="United States">'
+           '<rect width="39" height="26" fill="#b22234"/>'
+           '<g fill="#fff"><rect y="2" width="39" height="2"/><rect y="6" width="39" height="2"/>'
+           '<rect y="10" width="39" height="2"/><rect y="14" width="39" height="2"/>'
+           '<rect y="18" width="39" height="2"/><rect y="22" width="39" height="2"/></g>'
+           '<rect width="16" height="14" fill="#3c3b6e"/></svg>'),
+    "GB": ('<svg class="flag" viewBox="0 0 60 30" role="img" aria-label="United Kingdom">'
+           '<rect width="60" height="30" fill="#012169"/>'
+           '<path d="M0,0 60,30 M60,0 0,30" stroke="#fff" stroke-width="6"/>'
+           '<path d="M0,0 60,30 M60,0 0,30" stroke="#c8102e" stroke-width="3.5"/>'
+           '<path d="M30,0 V30 M0,15 H60" stroke="#fff" stroke-width="10"/>'
+           '<path d="M30,0 V30 M0,15 H60" stroke="#c8102e" stroke-width="6"/></svg>'),
+    "FR": ('<svg class="flag" viewBox="0 0 3 2" role="img" aria-label="France">'
+           '<rect width="3" height="2" fill="#fff"/><rect width="1" height="2" fill="#002395"/>'
+           '<rect x="2" width="1" height="2" fill="#ed2939"/></svg>'),
+    "NL": ('<svg class="flag" viewBox="0 0 9 6" role="img" aria-label="Netherlands">'
+           '<rect width="9" height="6" fill="#fff"/><rect width="9" height="2" fill="#ae1c28"/>'
+           '<rect y="4" width="9" height="2" fill="#21468b"/></svg>'),
+}
+
+_US_STATES = {
+    "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL",
+    "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT",
+    "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI",
+    "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY", "DC",
+}
+
+# Non-US country keywords → ISO code. Order matters (most specific first).
+_HQ_COUNTRY_KEYWORDS = [
+    ("netherlands", "NL"), ("france", "FR"),
+    ("united kingdom", "GB"), ("uk", "GB"), ("scotland", "GB"), ("england", "GB"),
+    ("canada", "CA"), ("germany", "DE"), ("switzerland", "CH"),
+    ("japan", "JP"), ("hong kong", "HK"), ("singapore", "SG"), ("australia", "AU"),
+]
+
+
+def _hq_to_flags(hq: str) -> list[str]:
+    """Map an HQ string to a list of ISO country codes that have a flag SVG.
+
+    Handles dual-HQ managers (parts split on '/'). US is inferred from a
+    trailing 2-letter state code or a 'USA'/'United States' token. Unknown
+    countries return no flag rather than a wrong one (safe for future funds)."""
+    codes: list[str] = []
+    for part in hq.split("/"):
+        p = part.strip()
+        code = None
+        pl = p.lower()
+        for kw, c in _HQ_COUNTRY_KEYWORDS:
+            if kw in pl:
+                code = c
+                break
+        if code is None:
+            last = p.split(",")[-1].strip().upper().rstrip(".")
+            if last in {"USA", "US", "UNITED STATES"} or last in _US_STATES:
+                code = "US"
+        if code and code not in codes:
+            codes.append(code)
+    return [c for c in codes if c in _FLAG_SVGS]
 
 
 def _build_sources_view(sources: dict[str, dict]) -> str:
@@ -322,6 +386,11 @@ def _build_sources_view(sources: dict[str, dict]) -> str:
             f'<span class="sc-tag">{html.escape(_STRATEGY_LABELS.get(t, t))}</span>'
             for t in src.get("strategy_tags", [])
         )
+        flag_svgs = "".join(_FLAG_SVGS[c] for c in _hq_to_flags(str(hq)))
+        flags_html = (
+            f'<span class="sc-flags" title="{html.escape(str(hq))}">{flag_svgs}</span>'
+            if flag_svgs else ""
+        )
         badge_text = "#0b1220" if color in ("#7dd3fc", "#86efac") else "#fff"
 
         desc_block = f'<p class="sc-desc lang-en">{desc_en}</p>'
@@ -331,7 +400,7 @@ def _build_sources_view(sources: dict[str, dict]) -> str:
         cards.append(f"""      <div class="source-card" style="--sc-accent:{color}">
         <div class="sc-head">
           <div class="sc-title">
-            <span class="badge" style="background:{color};color:{badge_text}">{short}</span>
+            {flags_html}<span class="badge" style="background:{color};color:{badge_text}">{short}</span>
             <span class="sc-name">{name}</span>
           </div>
           <span class="sc-founded"><span class="lang-en">Est. {founded}</span><span class="lang-zh" style="display:none">创立 {founded}</span></span>
@@ -1063,6 +1132,8 @@ body.hide-older article.pool-article[data-age="older"] {{ display: none !importa
 }}
 .sc-head {{ display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }}
 .sc-title {{ display: flex; align-items: center; gap: 8px; }}
+.sc-flags {{ display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; }}
+.flag {{ height: 13px; width: auto; border-radius: 2px; display: block; box-shadow: 0 0 0 0.5px rgba(0,0,0,0.25); }}
 .sc-name {{ font-size: 1rem; font-weight: 700; }}
 .sc-founded {{ color: var(--text-muted); font-size: 0.74rem; white-space: nowrap; flex-shrink: 0; }}
 .sc-stats {{ display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 9px; }}
