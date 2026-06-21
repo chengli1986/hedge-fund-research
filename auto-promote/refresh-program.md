@@ -1,6 +1,6 @@
 # GMIA Profile Refresh — Agent Program (monthly)
 
-You are refreshing the **time-sensitive** facts of the 28 production fund
+You are refreshing the **time-sensitive** facts of the 31 production fund
 profiles that render the Sources tab of hedge-fund-research.html.
 
 ## Hard rules
@@ -37,6 +37,12 @@ profiles that render the Sources tab of hedge-fund-research.html.
    - Keep the same currency/scale convention as the existing value (e.g. `~$1.03T`).
    - For口径-ambiguous managers (e.g. GSAM total AUS vs AM vs alternatives),
      state the basis in `reason` and keep the existing basis.
+   - **PineBridge (pinebridge)**: the existing `~$100B` is the WHOLLY-OWNED AUM
+     and is CORRECT. The firm's headline `~$200B` / `$215.1B` figures are GROSS,
+     including ~$99B of JV / non-wholly-owned assets (per the 2025-06-30 fact
+     sheet: total $199.9B − $98.86B JV ≈ $101B wholly-owned). Do NOT "correct"
+     ~$100B up to the gross figure — keep the wholly-owned basis. A sourced gross
+     figure is NOT a reason to change this one.
    - For corporate events, include the changed text field(s) with full new text
      and an event keyword in `reason` (acqui / merg / delist / take-private /
      rebrand / 收购 / 退市 / 私有化 / 改名). Keep each text field's diff small —
