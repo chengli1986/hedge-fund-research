@@ -103,6 +103,8 @@ def test_send_summary_does_not_skip_when_only_urgent_pending(monkeypatch, tmp_pa
     pending_dir.mkdir()
     _make_pending(pending_dir, "stale-fund", 10)  # >= URGENT_DAYS=7
     monkeypatch.setattr(gtm, "PENDING_PROFILES_DIR", pending_dir)
+    # Hermetic: ignore the real auto-promote log (see fresh-pending test).
+    monkeypatch.setattr(gtm, "AUTO_PROMOTE_LOG", tmp_path / "no-auto-promote.jsonl")
 
     # Capture the email send attempt
     sent = []
@@ -142,6 +144,11 @@ def test_send_summary_skips_when_only_fresh_pending(monkeypatch, tmp_path):
     pending_dir.mkdir()
     _make_pending(pending_dir, "fresh-fund", 1)
     monkeypatch.setattr(gtm, "PENDING_PROFILES_DIR", pending_dir)
+    # Isolate the real auto-promote log: a genuinely quiet day must not read the
+    # production logs/auto-promote-history.jsonl (which may hold a promotion
+    # dated today, e.g. 2026-06-21 rothschild-co-am) — that would spuriously
+    # turn a "quiet day" into an eventful one and fail the skip assertion.
+    monkeypatch.setattr(gtm, "AUTO_PROMOTE_LOG", tmp_path / "no-auto-promote.jsonl")
 
     sent = []
 
@@ -172,6 +179,8 @@ def test_subject_flags_urgent_pending(monkeypatch, tmp_path):
     _make_pending(pending_dir, "stale-1", 10)
     _make_pending(pending_dir, "stale-2", 8)
     monkeypatch.setattr(gtm, "PENDING_PROFILES_DIR", pending_dir)
+    # Hermetic: ignore the real auto-promote log (see fresh-pending test).
+    monkeypatch.setattr(gtm, "AUTO_PROMOTE_LOG", tmp_path / "no-auto-promote.jsonl")
 
     sent = []
 
