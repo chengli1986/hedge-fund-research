@@ -39,7 +39,7 @@ mkdir -p logs
 PROMPT="$(cat auto-promote/refresh-program.md)"
 
 # 1) agent generates pending_profiles/*.refresh.json (only for funds that changed)
-timeout --kill-after=30 1500 "$CLAUDE_BIN" --print --max-turns 120 "$PROMPT" \
+timeout --kill-after=30 3000 "$CLAUDE_BIN" --print --max-turns 120 "$PROMPT" \
   > logs/profile-refresh-agent.log 2>&1 || echo "[profile-refresh] agent exit $? (max-turns ok)"
 
 # 2) apply each draft. apply_refresh.py gates internally via validate_refresh:
