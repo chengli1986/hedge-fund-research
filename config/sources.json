@@ -301,7 +301,7 @@
       "url": "https://www.msci.com/research-and-insights",
       "method": "playwright",
       "frequency": "weekly",
-      "description": "Index, factor and ESG analytics provider; ACWI/EAFE/EM benchmarks tracked by $16.5T+. Factor models (Quality/Value/Momentum), climate risk, multi-asset risk modelling.",
+      "description": "Index, factor and ESG analytics provider; ACWI/EAFE/EM benchmarks tracked by $18T+. Factor models (Quality/Value/Momentum), climate risk, multi-asset risk modelling.",
       "notable_authors": [],
       "expected_hostname": "msci.com",
       "max_articles": 10

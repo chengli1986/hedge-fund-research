@@ -174,11 +174,11 @@ _FUND_PROFILES: dict[str, dict] = {
         "notable_zh": "Dan Rasmussen（前 Bain Capital）创立；以拆解私募股权回报神话的实证研究著称；杠杆微盘因子研究先驱。",
     },
     "msci-research": {
-        "founded": "1969", "aum": "$16.5T+ benchmarked", "hq": "New York, NY",
+        "founded": "1969", "aum": "~$18T+ benchmarked", "hq": "New York, NY",
         "type_en": "Listed Index/Analytics Provider (NYSE)", "type_zh": "上市指数与分析提供商 (纽交所)",
-        "desc_zh": "全球领先的指数、ESG/气候分析与因子模型提供商，1969 年由 Capital International 创立，2007 年从 Morgan Stanley 分拆独立上市。核心业务覆盖：ACWI/EAFE/新兴市场基准指数（全球约 $16.5T 资金跟踪）、Quality/Value/Momentum 等因子指数、ESG 与气候评级、多资产风险模型与指数构建方法论。",
-        "notable_en": "MSCI ACWI/EAFE/EM indexes benchmarked by $16.5T+ globally; pioneered factor index construction (Quality, Value, Momentum); ESG ratings used by 1,700+ institutional investors.",
-        "notable_zh": "MSCI ACWI/EAFE/新兴市场指数全球跟踪规模超 $16.5 万亿；首创因子指数构建方法论（质量、价值、动量）；ESG 评级被 1,700+ 机构投资者采用。",
+        "desc_zh": "全球领先的指数、ESG/气候分析与因子模型提供商，1969 年由 Capital International 创立，2007 年从 Morgan Stanley 分拆独立上市。核心业务覆盖：ACWI/EAFE/新兴市场基准指数（全球约 $18T 资金跟踪）、Quality/Value/Momentum 等因子指数、ESG 与气候评级、多资产风险模型与指数构建方法论。",
+        "notable_en": "MSCI ACWI/EAFE/EM indexes benchmarked by $18T+ globally; pioneered factor index construction (Quality, Value, Momentum); ESG ratings used by 1,700+ institutional investors.",
+        "notable_zh": "MSCI ACWI/EAFE/新兴市场指数全球跟踪规模超 $18 万亿；首创因子指数构建方法论（质量、价值、动量）；ESG 评级被 1,700+ 机构投资者采用。",
     },
     "natixis-im": {
         "founded": "2007", "aum": "~$1.5T", "hq": "Paris, France / Boston, MA",
@@ -1257,8 +1257,8 @@ body.hide-older article.pool-article[data-age="older"] {{ display: none !importa
     <div class="sources-grid">
 {sources_view_html}
     </div>
-    <p class="sources-aum-note lang-en">AUM figures as of 2024 estimates. Cambridge Associates figure reflects advisory assets, not directly managed AUM.</p>
-    <p class="sources-aum-note lang-zh" style="display:none">AUM 数据为 2024 年估算值。Cambridge Associates 数字反映受托咨询资产，非直接管理规模。</p>
+    <p class="sources-aum-note lang-en">AUM figures as of latest available estimates. Cambridge Associates figure reflects advisory assets, not directly managed AUM.</p>
+    <p class="sources-aum-note lang-zh" style="display:none">AUM 数据为最新可得估算值。Cambridge Associates 数字反映受托咨询资产，非直接管理规模。</p>
   </div>
 </div>
 
