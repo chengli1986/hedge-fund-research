@@ -837,12 +837,12 @@
     "rss_url": null,
     "official_domain": "www.msci.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "Factor/ESG data tools; EC2-403 persistent",
+    "notes": "Factor/ESG data tools; EC2-403 persistent Jun 2026",
     "research_links": [],
     "last_discovered_at": "2026-04-19T09:00:14.697222+08:00",
     "quality": "MEDIUM",
     "topics": "factor investing, ESG, climate, multi-asset, risk, fixed income",
-    "last_deep_analyzed_at": "2026-06-11T01:02:30Z",
+    "last_deep_analyzed_at": "2026-06-21T01:00:00Z",
     "strategy_tags": [
       "quant",
       "esg_climate",
@@ -1694,19 +1694,20 @@
     "source": "manual",
     "status": "inaccessible",
     "strategy_tags": [
-      "multi_asset",
+      "macro",
       "equity",
-      "fixed_income"
+      "fixed_income",
+      "emerging_markets"
     ],
-    "notes": "JS-only; WebFetch returns empty, keep inaccessible",
+    "notes": "JS-SPA; WebFetch returns empty, EC2 blocked; keep inaccessible",
     "official_domain": "www.franklintempleton.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-05-07T09:00:18.005906+08:00",
-    "last_deep_analyzed_at": "2026-06-08T01:02:20Z",
+    "last_deep_analyzed_at": "2026-06-21T01:00:00Z",
     "quality": "MEDIUM",
-    "quality_score": 0.5,
-    "topics": "multi-asset, equity, fixed income, market insights"
+    "quality_score": 0.55,
+    "topics": "macro, equity, fixed income, emerging markets, multi-asset"
   },
   {
     "id": "ares-management",
@@ -1722,12 +1723,12 @@
       "multi_asset"
     ],
     "official_domain": "www.ares.com",
-    "notes": "EC2-403 detected Jun 2026; previously trial passed 7/7, quality=0.70",
+    "notes": "EC2-403 persists Jun 2026; previously trial passed 7/7",
     "topics": "private credit, private equity, alternatives, insurance",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-05-01T01:03:53Z",
-    "last_deep_analyzed_at": "2026-06-12T01:00:00Z",
+    "last_deep_analyzed_at": "2026-06-21T01:00:00Z",
     "quality": "HIGH",
     "quality_score": 0.7,
     "fit_score": 0.88,
@@ -2335,11 +2336,13 @@
     "status": "inaccessible",
     "strategy_tags": [
       "real_assets",
-      "equity"
+      "fixed_income",
+      "equity",
+      "multi_asset"
     ],
-    "topics": "real assets, REITs, infrastructure, real estate",
-    "notes": "403 Forbidden persists; real assets/REITs specialist",
-    "last_deep_analyzed_at": "2026-06-08T01:02:20Z",
+    "topics": "real assets, REITs, infrastructure, preferred securities",
+    "notes": "403 Forbidden persists; real assets/REITs/infra specialist",
+    "last_deep_analyzed_at": "2026-06-21T01:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.55
   },
@@ -2550,20 +2553,20 @@
     "source": "manual",
     "status": "seed",
     "strategy_tags": [
+      "macro",
       "fixed_income",
       "multi_asset",
-      "real_assets",
-      "private_equity"
+      "real_assets"
     ],
     "official_domain": "www.principalam.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-06-20T09:01:41.025419+08:00",
-    "last_deep_analyzed_at": "2026-06-14T01:00:00Z",
+    "last_discovered_at": "2026-06-21T09:00:38.698360+08:00",
+    "last_deep_analyzed_at": "2026-06-21T01:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.62,
-    "topics": "macro, fixed income, real assets, alternatives, asset allocation",
-    "notes": "445-entry library; weekly macro+real assets; mixed video/article"
+    "topics": "macro, fixed income, real assets, multi-asset, equity",
+    "notes": "450 articles, weekly; SPA article URLs; macro+FI depth"
   },
   {
     "id": "longleaf-partners",
@@ -2579,7 +2582,7 @@
     "official_domain": "www.southeasternasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-06-20T09:01:41.729414+08:00",
+    "last_discovered_at": "2026-06-21T09:00:39.244468+08:00",
     "last_deep_analyzed_at": "2026-06-18T01:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.6,
@@ -2602,7 +2605,7 @@
     "official_domain": "www.gorozen.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-06-20T09:01:41.801468+08:00",
+    "last_discovered_at": "2026-06-21T09:00:39.369639+08:00",
     "last_deep_analyzed_at": "2026-06-20T01:10:00Z",
     "quality": "HIGH",
     "quality_score": 0.87,
