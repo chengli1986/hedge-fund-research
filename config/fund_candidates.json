@@ -1147,7 +1147,7 @@
     "rss_url": null,
     "official_domain": "www.pgim.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "Broad institutional portal; FI+alternatives depth; AU page accessible; 20 regional sub-sites (AU/HK/SG/UK/DE etc.) — US path stale, AU promoted then demoted; retry with regional page if content policy differs",
+    "notes": "Broad institutional portal; FI+alternatives depth; AU page accessible; 20 regional sub-sites (AU/HK/SG/UK/DE etc.) — US path stale, AU promoted then demoted. BLOCKED from promotion 2026-06-18 (see watchlist_reason); do not retry without human review.",
     "research_links": [
       {
         "url": "https://www.pgim.com/au/en/institutional/insights",
