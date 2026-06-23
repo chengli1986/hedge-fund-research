@@ -2358,7 +2358,7 @@
       "equity"
     ],
     "topics": "ESG, climate, sustainability, long-term equity",
-    "notes": "ESG/sustainability; sparse public output (~1 article/yr)",
+    "notes": "Watchlist: annual sustainability reports only; too sparse",
     "official_domain": "www.generationim.com",
     "research_links": [
       {
@@ -2383,9 +2383,9 @@
       "article_signals": 0
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-05-22T01:10:00Z",
+    "last_deep_analyzed_at": "2026-06-23T01:00:00Z",
     "quality": "LOW",
-    "quality_score": 0.32
+    "quality_score": 0.28
   },
   {
     "id": "rothschild-co-am",
@@ -2405,7 +2405,7 @@
     "quality": "MEDIUM",
     "quality_score": 0.55,
     "notes": "RECOMMEND: trial passed (8/7 days with articles, quality=0.67)",
-    "last_deep_analyzed_at": "2026-06-12T01:00:00Z",
+    "last_deep_analyzed_at": "2026-06-23T01:00:00Z",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-05-24T01:02:30Z",
     "synthesis_attempted_at": "2026-06-12T01:08:13.034245+00:00",
@@ -2447,10 +2447,10 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "quality": "HIGH",
-    "quality_score": 0.82,
+    "quality_score": 0.85,
     "topics": "quant, equity, global allocation, ESG, credit, behavioral finance",
-    "notes": "RECOMMEND: trial passed; quant/systematic articles free Apr 2026",
-    "last_deep_analyzed_at": "2026-06-12T01:00:00Z",
+    "notes": "RECOMMEND: Free quant; data-backed analysis, Jun 2026 active",
+    "last_deep_analyzed_at": "2026-06-23T01:00:00Z",
     "inaccessible_reason": null,
     "promotion_notes": "JS-rendered homepage; article URLs directly accessible via WebFetch. Needs Playwright fetcher for full index scraping.",
     "synthesis_attempted_at": "2026-06-03T01:10:11.791298+00:00",
@@ -2539,11 +2539,11 @@
       "multi_asset",
       "esg_climate"
     ],
-    "last_deep_analyzed_at": "2026-06-15T01:00:00Z",
+    "last_deep_analyzed_at": "2026-06-23T01:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.5,
     "topics": "fixed income, real assets, multi-asset, ESG, municipal bonds",
-    "notes": "EC2 timeout persistent; content unverifiable from datacenter IP"
+    "notes": "EC2 timeout persistent; unverifiable from datacenter IP"
   },
   {
     "id": "principal-am",
@@ -2561,7 +2561,7 @@
     "official_domain": "www.principalam.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-06-21T09:00:38.698360+08:00",
+    "last_discovered_at": "2026-06-23T09:00:39.552125+08:00",
     "last_deep_analyzed_at": "2026-06-21T01:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.62,
@@ -2582,7 +2582,7 @@
     "official_domain": "www.southeasternasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-06-21T09:00:39.244468+08:00",
+    "last_discovered_at": "2026-06-23T09:00:40.131303+08:00",
     "last_deep_analyzed_at": "2026-06-18T01:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.6,
@@ -2605,7 +2605,7 @@
     "official_domain": "www.gorozen.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-06-21T09:00:39.369639+08:00",
+    "last_discovered_at": "2026-06-23T09:00:40.250825+08:00",
     "last_deep_analyzed_at": "2026-06-20T01:10:00Z",
     "quality": "HIGH",
     "quality_score": 0.87,
