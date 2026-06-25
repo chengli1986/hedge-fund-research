@@ -225,12 +225,34 @@ class TestContentFetchers:
             f"Add a _fetch_content_<id> function and register it in CONTENT_FETCHERS."
         )
 
+    def _load_trial_ids(self) -> set[str]:
+        """IDs of candidates in active trial or visitable (pre-production) state.
+
+        These are allowed to have CONTENT_FETCHERS handlers without being in
+        sources.json — the handler is written ahead of trial so the health
+        check and quality sampler can exercise it before promotion.
+        """
+        candidates_path = Path(__file__).resolve().parent.parent / "config" / "fund_candidates.json"
+        candidates = json.loads(candidates_path.read_text())
+        trial_statuses = {"visitable", "active_trial"}
+        trial_ids: set[str] = {c["id"] for c in candidates if c.get("status") in trial_statuses}
+
+        trial_state_path = Path(__file__).resolve().parent.parent / "config" / "trial-state.json"
+        trial_state = json.loads(trial_state_path.read_text())
+        for t in trial_state.get("active_trials", []):
+            trial_ids.add(t["id"])
+
+        return trial_ids
+
     def test_no_orphan_content_fetchers(self):
         """Every CONTENT_FETCHERS key must correspond to a source in sources.json.
 
         Catches stale handlers left after a source is removed from production.
+        Trial-phase sources (visitable / active_trial) are exempt — their handlers
+        are registered ahead of promotion so the health check can exercise them.
         """
-        orphans = sorted(set(CONTENT_FETCHERS) - self._load_source_ids())
+        allowed = self._load_source_ids() | self._load_trial_ids()
+        orphans = sorted(set(CONTENT_FETCHERS) - allowed)
         assert not orphans, (
             f"CONTENT_FETCHERS keys not in sources.json: {orphans}. "
             f"Remove stale handlers or re-add source to config."

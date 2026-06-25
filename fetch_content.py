@@ -1390,6 +1390,33 @@ def _fetch_content_rothschild_co_am(article: dict) -> Optional[tuple[Path, str]]
     return (content_path, "ok")
 
 
+def _fetch_content_goehring_rozencwajg(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Goehring & Rozencwajg article content via requests (SSR — HubSpot CMS).
+
+    Article body renders server-side inside <main p>; confirmed ~47k chars typical.
+    """
+    url = article["url"]
+    log.info("  G&R: fetching article page %s", url)
+
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  G&R: fetch failed: %s", e)
+        return None
+
+    text = _normalize_html(resp.text, "main p")
+
+    if not _check_min_content_length(text):
+        log.warning("  G&R: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  G&R: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -1422,6 +1449,7 @@ CONTENT_FETCHERS = {
     "acadian-asset": _fetch_content_acadian_asset,
     "lazard-am": _fetch_content_lazard_am,
     "rothschild-co-am": _fetch_content_rothschild_co_am,
+    "goehring-rozencwajg": _fetch_content_goehring_rozencwajg,
 }
 
 

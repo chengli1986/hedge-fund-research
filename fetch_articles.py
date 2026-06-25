@@ -2503,6 +2503,61 @@ def fetch_janus_henderson(source: dict) -> list[dict]:
     return articles
 
 
+def fetch_goehring_rozencwajg(source: dict) -> list[dict]:
+    """Fetch articles from Goehring & Rozencwajg energy/commodities research blog.
+
+    Uses sitemap.xml for URLs + dates (lastmod), then fetches each article page
+    for the title (og:title). Blog is SSR (HubSpot CMS); ~weekly publish cadence.
+    """
+    sitemap_url = "https://blog.gorozen.com/sitemap.xml"
+    resp = requests.get(sitemap_url, headers=HEADERS, timeout=30)
+    resp.raise_for_status()
+
+    ns = {"s": "http://www.sitemaps.org/schemas/sitemap/0.9"}
+    root = ET.fromstring(resp.text)
+
+    entries: list[tuple[str, str]] = []
+    for url_el in root.findall("s:url", ns):
+        loc = url_el.findtext("s:loc", "", ns)
+        lastmod = url_el.findtext("s:lastmod", "", ns)
+        if "/blog/" in loc and loc != "https://blog.gorozen.com/blog" and lastmod:
+            entries.append((lastmod, loc))
+
+    entries.sort(reverse=True)
+    max_articles = source.get("max_articles", 10)
+
+    articles: list[dict] = []
+    seen: set[str] = set()
+    for date_raw, url in entries[:max_articles * 2]:
+        if url in seen:
+            continue
+        seen.add(url)
+        if not _validate_hostname(url, "blog.gorozen.com"):
+            continue
+        try:
+            r = requests.get(url, headers=HEADERS, timeout=20)
+            r.raise_for_status()
+            soup = BeautifulSoup(r.text, "html.parser")
+            og = soup.find("meta", property="og:title")
+            title = og.get("content", "").strip() if og else ""
+            if not title:
+                t = soup.title
+                title = t.get_text(strip=True) if t else ""
+            for suffix in [" | Goehring & Rozencwajg", " - Goehring & Rozencwajg"]:
+                if title.endswith(suffix):
+                    title = title[: -len(suffix)]
+            if not title:
+                continue
+            articles.append({"title": html.unescape(title), "url": url, "date": date_raw})
+        except Exception as e:
+            log.warning("  G&R: skipping %s — %s", url, e)
+            continue
+        if len(articles) >= max_articles:
+            break
+
+    return articles
+
+
 FETCHERS = {
     "cambridge-associates": fetch_cambridge_associates,
     "man-group": fetch_man_group,
@@ -2541,6 +2596,7 @@ FETCHERS = {
     "robeco": fetch_robeco,
     "alliancebernstein": fetch_alliancebernstein,
     "janus-henderson": fetch_janus_henderson,
+    "goehring-rozencwajg": fetch_goehring_rozencwajg,
 }
 
 
