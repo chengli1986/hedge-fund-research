@@ -349,7 +349,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.97,
-    "notes": "RECOMMEND: PE/VC benchmarks; monthly, soft inst. disclaimer",
+    "notes": "RECOMMEND: PE/VC + mega-IPO analysis, monthly, semi-gated",
     "research_links": [
       {
         "url": "https://www.cambridgeassociates.com/insights/private-investments/",
@@ -458,10 +458,10 @@
       "article_signals": 1
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-06-16T01:07:36Z",
+    "last_deep_analyzed_at": "2026-06-25T01:02:46Z",
     "quality": "HIGH",
-    "quality_score": 0.85,
-    "topics": "private equity, venture capital, private credit, macro, ESG",
+    "quality_score": 0.84,
+    "topics": "private equity, venture capital, private credit, macro, ESG, AI/tech",
     "strategy_tags": [
       "private_equity",
       "venture_capital",
@@ -486,10 +486,10 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.9,
-    "last_deep_analyzed_at": "2026-06-17T01:00:00Z",
+    "last_deep_analyzed_at": "2026-06-25T01:02:46Z",
     "quality": "MEDIUM",
-    "topics": "macro, equity, fixed income, geopolitics, multi-asset",
-    "notes": "Articles by direct URL; listing gated; cross-asset Jun 2026",
+    "topics": "macro, equity, fixed income, alternatives, portfolio construction",
+    "notes": "Articles by direct URL; listing gated; cross-asset 2026",
     "quality_score": 0.63,
     "research_links": [
       {
@@ -1290,7 +1290,7 @@
     "rss_url": null,
     "official_domain": "www.aberdeeninvestments.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "Still gated: 0 articles shown without email registration (confirmed Jun 2026)",
+    "notes": "JS-rendered, 0 articles static fetch; needs Playwright",
     "research_links": [
       {
         "url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/insights",
@@ -1316,7 +1316,7 @@
     "quality": "LOW",
     "quality_score": 0.32,
     "topics": "macro, fixed income, multi-asset, emerging markets",
-    "last_deep_analyzed_at": "2026-06-15T01:00:00Z",
+    "last_deep_analyzed_at": "2026-06-25T01:02:46Z",
     "fit_score": 0.82,
     "strategy_tags": [
       "macro",
@@ -1842,7 +1842,7 @@
       }
     ],
     "discovery_method": "discover_fund_sites",
-    "notes": "Free monthly articles; macro+equity affiliate views; energy analysis confirmed Jun 2026",
+    "notes": "Free articles by direct URL; role-select gateway, macro",
     "last_discovered_at": "2026-05-02T09:03:53.598499+08:00",
     "is_publicly_accessible": true,
     "has_article_index": true,
@@ -1860,7 +1860,7 @@
     "screening_reason": "Research index detected",
     "fit_score": 0.85,
     "last_validated_at": "2026-05-03T09:00:33.191261+08:00",
-    "last_deep_analyzed_at": "2026-06-15T01:00:00Z",
+    "last_deep_analyzed_at": "2026-06-25T01:02:46Z",
     "quality": "MEDIUM",
     "quality_score": 0.6,
     "topics": "macro, equity, fixed income, energy, portfolio construction"
@@ -2561,7 +2561,7 @@
     "official_domain": "www.principalam.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-06-24T09:00:43.816191+08:00",
+    "last_discovered_at": "2026-06-25T09:00:39.935109+08:00",
     "last_deep_analyzed_at": "2026-06-21T01:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.62,
@@ -2582,7 +2582,7 @@
     "official_domain": "www.southeasternasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-06-24T09:00:44.353581+08:00",
+    "last_discovered_at": "2026-06-25T09:00:40.518782+08:00",
     "last_deep_analyzed_at": "2026-06-18T01:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.6,
@@ -2605,7 +2605,7 @@
     "official_domain": "www.gorozen.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-06-24T09:00:44.468860+08:00",
+    "last_discovered_at": "2026-06-25T09:00:40.632255+08:00",
     "last_deep_analyzed_at": "2026-06-20T01:10:00Z",
     "quality": "HIGH",
     "quality_score": 0.87,
