@@ -220,10 +220,13 @@ active_trial_info = {t["id"]: t for t in trial_data.get("active_trials", [])}
 # Classify candidates into groups
 cand_map = {c["id"]: c for c in candidates}
 
-# Trial PASS but human hasn't promoted to sources.json yet
+# Trial PASS but human hasn't promoted to sources.json yet.
+# Exclude watchlist — those are intentionally held back and won't be auto-promoted.
 pass_pending_ids = {
     h["id"] for h in trial_data.get("history", [])
-    if h.get("outcome") == "pass" and h["id"] not in production_ids
+    if h.get("outcome") == "pass"
+    and h["id"] not in production_ids
+    and cand_map.get(h["id"], {}).get("status") != "watchlist"
 }
 _pass_history = {h["id"]: h for h in trial_data.get("history", []) if h.get("outcome") == "pass"}
 pass_pending = []
