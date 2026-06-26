@@ -5610,6 +5610,105 @@
       "avg_quality_score": 0.666
     }
   ],
-  "active_trials": [],
-  "last_summary_sent_date": "2026-06-13"
+  "active_trials": [
+    {
+      "id": "goehring-rozencwajg",
+      "name": "Goehring & Rozencwajg",
+      "research_url": "https://blog.gorozen.com/blog",
+      "homepage_url": "https://www.gorozen.com",
+      "fit_score": null,
+      "quality": "HIGH",
+      "topics": "energy, natural resources, commodities, oil",
+      "start_date": "2026-06-25",
+      "end_date": null,
+      "daily_checks": {
+        "2026-06-25": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://blog.gorozen.com/blog/are-energy-markets-tighter-than-investors-realize",
+            "https://blog.gorozen.com/blog/adam-rozencwajg-on-money-life-why-todays-oil-shock-may-be-only-the-beginning",
+            "https://blog.gorozen.com/blog/marketwatch-why-the-current-oil-crisis-could-haunt-markets-for-years",
+            "https://blog.gorozen.com/blog/capital-cycles-and-the-next-commodity-bull-market",
+            "https://blog.gorozen.com/blog/podcast-energy-shock-oil-markets-the-new-commodity-cycle-with-adam-rozencwajg",
+            "https://blog.gorozen.com/blog/podcast-the-greatest-energy-shock-in-history-is-unfolding",
+            "https://blog.gorozen.com/blog/podcast-gold-silver-vs-energy-where-we-are-focusing-now",
+            "https://blog.gorozen.com/blog/are-we-still-in-the-early-stages-of-the-commodities-cycle",
+            "https://blog.gorozen.com/blog/podcast-macrovoices-what-comes-next-after-the-iran-crisis",
+            "https://blog.gorozen.com/blog/video-the-commodity-bull-market-and-the-capital-cycle"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-06-26": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://blog.gorozen.com/blog/are-energy-markets-tighter-than-investors-realize",
+            "https://blog.gorozen.com/blog/adam-rozencwajg-on-money-life-why-todays-oil-shock-may-be-only-the-beginning",
+            "https://blog.gorozen.com/blog/marketwatch-why-the-current-oil-crisis-could-haunt-markets-for-years",
+            "https://blog.gorozen.com/blog/capital-cycles-and-the-next-commodity-bull-market",
+            "https://blog.gorozen.com/blog/podcast-energy-shock-oil-markets-the-new-commodity-cycle-with-adam-rozencwajg",
+            "https://blog.gorozen.com/blog/podcast-the-greatest-energy-shock-in-history-is-unfolding",
+            "https://blog.gorozen.com/blog/podcast-gold-silver-vs-energy-where-we-are-focusing-now",
+            "https://blog.gorozen.com/blog/are-we-still-in-the-early-stages-of-the-commodities-cycle",
+            "https://blog.gorozen.com/blog/podcast-macrovoices-what-comes-next-after-the-iran-crisis",
+            "https://blog.gorozen.com/blog/video-the-commodity-bull-market-and-the-capital-cycle"
+          ],
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "Haiku returned invalid response",
+          "day": 1,
+          "date": "2026-06-25"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://blog.gorozen.com/blog/are-energy-markets-tighter-than-investors-realize",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.6,
+              "overall": 0.84,
+              "notes": "Deep commodity market analysis examining energy market tightness, supply cycles, and price dynamics with substantive reasoning; text appears truncated mid-sentence."
+            },
+            {
+              "url": "https://blog.gorozen.com/blog/adam-rozencwajg-on-money-life-why-todays-oil-shock-may-be-only-the-beginning",
+              "relevance": 0.85,
+              "depth": 0.45,
+              "extractable": 0.5,
+              "overall": 0.62,
+              "notes": "Podcast interview announcement about oil supply shocks and macro implications; mostly promotional with limited substantive content and heavy boilerplate disclaimers."
+            },
+            {
+              "url": "https://blog.gorozen.com/blog/marketwatch-why-the-current-oil-crisis-could-haunt-markets-for-years",
+              "relevance": 0.9,
+              "depth": 0.35,
+              "extractable": 0.4,
+              "overall": 0.58,
+              "notes": "Brief MarketWatch video interview summary on oil crisis persistence; minimal analytical depth, primarily promotional with link to video content rather than full text."
+            }
+          ],
+          "avg_score": 0.68,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 2,
+          "date": "2026-06-26"
+        }
+      ]
+    }
+  ],
+  "last_summary_sent_date": "2026-06-25"
 }
