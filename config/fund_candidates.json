@@ -59,7 +59,7 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-06-18T01:00:00Z",
+    "last_deep_analyzed_at": "2026-06-27T01:02:55Z",
     "quality": "HIGH",
     "topics": "fixed income, macro, credit, global economy",
     "strategy_tags": [
@@ -138,7 +138,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.88,
-    "notes": "Active posting, but articles often webinar/gated. Score 0.43.",
+    "notes": "Monthly articles, quantitative content, promotional tone",
     "research_links": [
       {
         "url": "https://www.blackstone.com/insights/",
@@ -192,7 +192,7 @@
       "article_signals": 3
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-05-27T01:02:57Z",
+    "last_deep_analyzed_at": "2026-06-27T01:02:55Z",
     "quality": "MEDIUM",
     "topics": "private credit, private equity, real assets",
     "strategy_tags": [
@@ -201,7 +201,7 @@
       "private_credit"
     ],
     "source": "manual",
-    "quality_score": 0.43
+    "quality_score": 0.55
   },
   {
     "id": "two-sigma",
@@ -319,7 +319,7 @@
       "article_signals": 1
     },
     "screening_reason": "Insufficient article index signals",
-    "last_deep_analyzed_at": "2026-06-18T01:00:00Z",
+    "last_deep_analyzed_at": "2026-06-27T01:02:55Z",
     "quality": "MEDIUM",
     "topics": "private equity, macro, infrastructure, credit",
     "strategy_tags": [
@@ -548,7 +548,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.8843,
-    "notes": "RECOMMEND: Multi-asset, 40+ free articles, broad coverage",
+    "notes": "RECOMMEND: Multi-asset, deep macro analysis, free access",
     "research_links": [
       {
         "url": "https://www.wellington.com/en/insights",
@@ -627,7 +627,7 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-06-18T01:00:00Z",
+    "last_deep_analyzed_at": "2026-06-27T01:02:55Z",
     "quality": "HIGH",
     "topics": "macro, fixed income, equity, multi-asset, alternatives, emerging markets",
     "strategy_tags": [
@@ -637,7 +637,7 @@
       "multi_asset"
     ],
     "source": "manual",
-    "quality_score": 0.85
+    "quality_score": 0.82
   },
   {
     "id": "amundi",
@@ -2561,7 +2561,7 @@
     "official_domain": "www.principalam.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-06-26T09:00:39.494728+08:00",
+    "last_discovered_at": "2026-06-27T09:00:40.337551+08:00",
     "last_deep_analyzed_at": "2026-06-21T01:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.62,
@@ -2582,7 +2582,7 @@
     "official_domain": "www.southeasternasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-06-26T09:00:40.022546+08:00",
+    "last_discovered_at": "2026-06-27T09:00:40.912270+08:00",
     "last_deep_analyzed_at": "2026-06-26T01:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.6,
