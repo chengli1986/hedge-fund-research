@@ -70,11 +70,18 @@ class TestHtmlOutputValid:
 
 class TestBilingualContent:
     def test_bilingual_content_present(self) -> None:
-        result = generate_html(SAMPLE_ARTICLES)
-        assert "AI valuations face mean reversion risk." in result
-        assert "Man Group analyzes AI investment cycle risks." in result
-        assert "AI估值面临均值回归风险。" in result
-        assert "Man Group分析了AI投资周期的风险。" in result
+        # Use a recent date: publish.py excludes the analysis BODY (summary) of
+        # articles older than RECENT_DAYS (90) from the lazy-hydration JSON island
+        # to keep initial parse cost flat (inline takeaways still render at any
+        # age). SAMPLE_ARTICLES carries hard-coded 2026-03 dates that have since
+        # aged past 90d, which would drop the summary from the HTML — so date the
+        # article relative to "now" to exercise the full bilingual body + takeaway.
+        article = {**SAMPLE_ARTICLES[0], "date": _date_str(2)}
+        result = generate_html([article])
+        assert "AI valuations face mean reversion risk." in result  # key_takeaway_en (inline)
+        assert "Man Group analyzes AI investment cycle risks." in result  # summary_en (island)
+        assert "AI估值面临均值回归风险。" in result  # key_takeaway_zh (inline)
+        assert "Man Group分析了AI投资周期的风险。" in result  # summary_zh (island)
 
 
 class TestTimelineSorted:
