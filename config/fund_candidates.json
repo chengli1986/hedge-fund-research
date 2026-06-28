@@ -1012,7 +1012,7 @@
     "rss_url": null,
     "official_domain": "www.blackrock.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "Trial failed: low quality (0.34)",
+    "notes": "Archives 403 again; WAF-blocked; trial score 0.34",
     "research_links": [
       {
         "url": "https://www.blackrock.com/us/individual/insights/blackrock-investment-institute/weekly-commentary",
@@ -1098,15 +1098,14 @@
     "fit_score": 0.91,
     "last_validated_at": "2026-04-19T09:01:56.296708+08:00",
     "quality": "MEDIUM",
-    "quality_score": 0.34,
-    "topics": "macro, equity, multi-asset, fixed income",
-    "last_deep_analyzed_at": "2026-05-29T01:00:00Z",
+    "quality_score": 0.35,
+    "topics": "macro, fixed income, equity",
+    "last_deep_analyzed_at": "2026-06-28T01:02:48Z",
     "strategy_tags": [
       "macro",
-      "equity",
-      "fixed_income",
       "multi_asset",
-      "esg_climate"
+      "fixed_income",
+      "equity"
     ],
     "source": "manual",
     "inaccessible_reason": null,
@@ -2554,19 +2553,19 @@
     "status": "seed",
     "strategy_tags": [
       "macro",
-      "fixed_income",
       "multi_asset",
-      "real_assets"
+      "real_assets",
+      "fixed_income"
     ],
     "official_domain": "www.principalam.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-06-27T09:00:40.337551+08:00",
-    "last_deep_analyzed_at": "2026-06-21T01:00:00Z",
+    "last_discovered_at": "2026-06-28T09:00:39.989262+08:00",
+    "last_deep_analyzed_at": "2026-06-28T01:02:48Z",
     "quality": "MEDIUM",
     "quality_score": 0.62,
-    "topics": "macro, fixed income, real assets, multi-asset, equity",
-    "notes": "450 articles, weekly; SPA article URLs; macro+FI depth"
+    "topics": "macro, fixed income, real estate",
+    "notes": "454 articles weekly; SPA routing blocks direct article fetch"
   },
   {
     "id": "longleaf-partners",
@@ -2582,7 +2581,7 @@
     "official_domain": "www.southeasternasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-06-27T09:00:40.912270+08:00",
+    "last_discovered_at": "2026-06-28T09:00:40.500717+08:00",
     "last_deep_analyzed_at": "2026-06-26T01:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.6,
@@ -2598,17 +2597,16 @@
     "status": "visitable",
     "strategy_tags": [
       "real_assets",
-      "macro",
-      "equity"
+      "macro"
     ],
-    "notes": "RECOMMEND: Deep free energy research; fills commodities gap",
+    "notes": "RECOMMEND: Deep energy/commodity research; fills gap",
     "official_domain": "www.gorozen.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-06-25T09:00:40.632255+08:00",
-    "last_deep_analyzed_at": "2026-06-20T01:10:00Z",
+    "last_deep_analyzed_at": "2026-06-28T01:02:48Z",
     "quality": "HIGH",
-    "quality_score": 0.87,
-    "topics": "energy, natural resources, commodities, oil"
+    "quality_score": 0.88,
+    "topics": "energy, commodities, macro"
   }
 ]
