@@ -5697,6 +5697,25 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-06-29": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://blog.gorozen.com/blog/are-energy-markets-tighter-than-investors-realize",
+            "https://blog.gorozen.com/blog/adam-rozencwajg-on-money-life-why-todays-oil-shock-may-be-only-the-beginning",
+            "https://blog.gorozen.com/blog/marketwatch-why-the-current-oil-crisis-could-haunt-markets-for-years",
+            "https://blog.gorozen.com/blog/capital-cycles-and-the-next-commodity-bull-market",
+            "https://blog.gorozen.com/blog/podcast-energy-shock-oil-markets-the-new-commodity-cycle-with-adam-rozencwajg",
+            "https://blog.gorozen.com/blog/podcast-the-greatest-energy-shock-in-history-is-unfolding",
+            "https://blog.gorozen.com/blog/podcast-gold-silver-vs-energy-where-we-are-focusing-now",
+            "https://blog.gorozen.com/blog/are-we-still-in-the-early-stages-of-the-commodities-cycle",
+            "https://blog.gorozen.com/blog/podcast-macrovoices-what-comes-next-after-the-iran-crisis",
+            "https://blog.gorozen.com/blog/video-the-commodity-bull-market-and-the-capital-cycle"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -5814,6 +5833,25 @@
           "js_only_checked": 0,
           "day": 4,
           "date": "2026-06-28"
+        },
+        {
+          "sampled": 1,
+          "articles": [
+            {
+              "url": "https://blog.gorozen.com/blog/video-the-commodity-bull-market-and-the-capital-cycle",
+              "relevance": 0.85,
+              "depth": 0.55,
+              "extractable": 0.75,
+              "overall": 0.71,
+              "notes": "Investment thesis on commodity bull market cycles with capital cycle analysis; video-based format limits depth of extractable text"
+            }
+          ],
+          "avg_score": 0.71,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 5,
+          "date": "2026-06-29"
         }
       ]
     }
