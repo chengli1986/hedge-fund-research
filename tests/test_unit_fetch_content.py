@@ -17,6 +17,7 @@ from fetch_content import (
     CONTENT_FETCHERS,
     _fetch_content_bridgewater,
     _extract_bridgewater_text,
+    _fetch_content_principal_am,
 )
 
 
@@ -353,6 +354,31 @@ class TestBridgewaterExtraction:
             result = _fetch_content_bridgewater(article)
 
         assert result is None
+
+
+class TestPrincipalAMFetcher:
+    def test_fetch_content_principal_am_saves_body(self, tmp_path, monkeypatch):
+        import fetch_content as fc
+        monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
+        html = "<html><body><main><p>%s</p></main></body></html>" % ("Principal CRE analysis. " * 30)
+        resp = MagicMock(status_code=200, text=html); resp.raise_for_status = lambda: None
+        monkeypatch.setattr(fc.requests, "get", lambda *a, **k: resp)
+        out = fc._fetch_content_principal_am({"id": "principal-am-001", "url": "https://principalam.com/x"})
+        assert out is not None
+        path, status = out
+        assert status == "ok" and path.exists()
+        assert "Principal CRE analysis." in path.read_text()
+
+    def test_fetch_content_principal_am_none_on_http_error(self, tmp_path, monkeypatch):
+        import fetch_content as fc
+        monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
+        def boom(*a, **k): raise fc.requests.RequestException("500")
+        monkeypatch.setattr(fc.requests, "get", boom)
+        assert fc._fetch_content_principal_am({"id": "principal-am-002", "url": "https://x"}) is None
+
+    def test_principal_am_registered(self):
+        from fetch_content import CONTENT_FETCHERS
+        assert "principal-am" in CONTENT_FETCHERS
 
 
 class TestWellingtonFetcher:
