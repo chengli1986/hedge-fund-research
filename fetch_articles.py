@@ -2306,6 +2306,98 @@ def fetch_rothschild_co_am(source: dict) -> list[dict]:
     return articles[:source.get("max_articles", 10)]
 
 
+def fetch_cohen_steers(source: dict) -> list[dict]:
+    """Fetch articles from Cohen & Steers (Playwright — Cloudflare-gated WordPress).
+
+    The /insights/ listing sits behind a Cloudflare JS challenge (requests → 403
+    "Just a moment..."); a real Chromium session clears it. Listing cards
+    (div.card.card-bottom-line > h4.card-title > a) expose title + URL but carry
+    NO publish date, and the WP REST `insights` collection is deliberately empty
+    (X-WP-Total=0). Real dates live in each article's Yoast JSON-LD
+    ("datePublished"), fetched in-page via Promise.all so the Cloudflare clearance
+    cookie is reused (avoids re-challenging each article request).
+    Listing order pins a promo video first, so sort by date desc before slicing.
+    """
+    from playwright.sync_api import sync_playwright
+
+    expected_host = source.get("expected_hostname", "cohenandsteers.com")
+    max_articles = source.get("max_articles", 10)
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        ctx = browser.new_context(
+            user_agent=HEADERS["User-Agent"],
+            viewport={"width": 1440, "height": 900},
+        )
+        page = ctx.new_page()
+        page.goto(source["url"], wait_until="domcontentloaded", timeout=45000)
+        try:
+            page.wait_for_selector("div.card.card-bottom-line", timeout=15000)
+        except Exception:
+            pass
+        page.wait_for_timeout(3000)
+        html = page.content()
+
+        soup = BeautifulSoup(html, "html.parser")
+        seen: set[str] = set()
+        cards = []
+        for card in soup.select("div.card.card-bottom-line"):
+            a = card.select_one("h4.card-title a[href]")
+            if not a:
+                continue
+            href = urljoin("https://www.cohenandsteers.com", a.get("href", ""))
+            if not _validate_hostname(href, expected_host):
+                continue
+            # only real article slugs: /insights/<slug>/  (skip filter/nav links)
+            if not re.search(r"/insights/[^/]+/?$", href):
+                continue
+            if href in seen:
+                continue
+            seen.add(href)
+            title = a.get_text(strip=True)
+            if title:
+                cards.append({"title": title, "url": href})
+
+        # Publish dates aren't on the listing — pull each article's Yoast JSON-LD
+        # datePublished via in-page fetch (reuses Cloudflare clearance cookie).
+        urls = [c["url"] for c in cards]
+        date_map = {}
+        if urls:
+            try:
+                date_map = page.evaluate(
+                    '''async (urls) => {
+                        const out = {};
+                        await Promise.all(urls.map(async (u) => {
+                            try {
+                                const r = await fetch(u);
+                                const t = await r.text();
+                                const m = t.match(/"datePublished":"([^"]+)"/);
+                                out[u] = m ? m[1] : null;
+                            } catch (e) { out[u] = null; }
+                        }));
+                        return out;
+                    }''',
+                    urls,
+                )
+            except Exception:
+                date_map = {}
+        browser.close()
+
+    articles = []
+    for c in cards:
+        iso = date_map.get(c["url"])
+        parsed_date = parse_date(iso[:10]) if iso else None
+        articles.append({
+            "title": c["title"],
+            "url": c["url"],
+            "date": parsed_date,
+            "date_raw": iso or "",
+        })
+
+    articles.sort(key=lambda a: a["date"] or "", reverse=True)
+    return articles[:max_articles]
+
+
 # FETCHER_SYNTHESIS_INSERTION_POINT — auto-generated fetchers inserted above this line
 
 
@@ -2578,6 +2670,7 @@ FETCHERS = {
     "aberdeen": fetch_aberdeen,
     "research-affiliates": fetch_researchaffiliates,
     "pimco": fetch_pimco,
+    "cohen-steers": fetch_cohen_steers,
     "lazard-am": fetch_lazard_am,
     "rothschild-co-am": fetch_rothschild_co_am,
     "matthews-asia": fetch_matthews_asia,
