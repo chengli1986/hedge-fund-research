@@ -362,8 +362,8 @@ def _get_with_auth_retry(url: str, timeout: int = 20) -> "httpx.Response | None"
         return None
 
 
-def _extract_article_text(url: str, timeout: int = 20) -> str | None:
-    """Fetch a single article page and extract clean body text.
+def _extract_body_from_soup(soup: "BeautifulSoup") -> str | None:
+    """Extract clean body text from a parsed soup (shared by httpx + Playwright paths).
 
     Strategy (handles both standard <article> pages and component-based CMS):
     1. Longest <article> tag (not first — AEM pages have many tiny teaser
@@ -374,6 +374,45 @@ def _extract_article_text(url: str, timeout: int = 20) -> str | None:
        to skip subscribe/legal boilerplate.
     3. <main>, then <body> as last resort.
     """
+    for tag in soup.select("nav, footer, header, .nav, .footer, .header, "
+                           "script, style, aside, .sidebar"):
+        tag.decompose()
+
+    articles = soup.find_all("article")
+    if articles:
+        longest = max(articles, key=lambda a: len(a.get_text(" ", strip=True)))
+        text = longest.get_text(" ", strip=True)
+        if len(text) > 200:
+            return text[:3000]
+
+    for selector in (
+        ".cmp-text",                 # Adobe Experience Manager Core Components
+        "[itemprop='articleBody']",  # schema.org microdata (Reuters, NYT, WSJ, ...)
+        ".rich-text",                # generic WYSIWYG output (Contentful, Prismic, Strapi)
+        ".article-body",             # common news-site convention
+        ".article-content",          # common news-site convention
+        ".entry-content",            # WordPress default themes (~43% of the web)
+        ".post-content",             # Ghost, Hugo, Jekyll, most SSGs
+    ):
+        parts = soup.select(selector)
+        if parts:
+            joined = "\n\n".join(
+                p.get_text(" ", strip=True)
+                for p in parts
+                if len(p.get_text(" ", strip=True)) > 100
+            )
+            if len(joined) > 200:
+                return joined[:3000]
+
+    content = soup.find("main") or soup.find("body")
+    if not content:
+        return None
+    text = content.get_text(" ", strip=True)
+    return text[:3000] if len(text) > 200 else None
+
+
+def _extract_article_text(url: str, timeout: int = 20) -> str | None:
+    """Fetch a single article page (httpx) and extract clean body text."""
     try:
         resp = _get_with_auth_retry(url, timeout=timeout)
         if resp is None or resp.status_code != 200:
@@ -381,41 +420,7 @@ def _extract_article_text(url: str, timeout: int = 20) -> str | None:
         if _is_auth_gate_url(url, str(resp.url)):
             return None  # still stuck on a login gate after cookie retry
         soup = BeautifulSoup(resp.text, "html.parser")
-        for tag in soup.select("nav, footer, header, .nav, .footer, .header, "
-                               "script, style, aside, .sidebar"):
-            tag.decompose()
-
-        articles = soup.find_all("article")
-        if articles:
-            longest = max(articles, key=lambda a: len(a.get_text(" ", strip=True)))
-            text = longest.get_text(" ", strip=True)
-            if len(text) > 200:
-                return text[:3000]
-
-        for selector in (
-            ".cmp-text",                 # Adobe Experience Manager Core Components
-            "[itemprop='articleBody']",  # schema.org microdata (Reuters, NYT, WSJ, ...)
-            ".rich-text",                # generic WYSIWYG output (Contentful, Prismic, Strapi)
-            ".article-body",             # common news-site convention
-            ".article-content",          # common news-site convention
-            ".entry-content",            # WordPress default themes (~43% of the web)
-            ".post-content",             # Ghost, Hugo, Jekyll, most SSGs
-        ):
-            parts = soup.select(selector)
-            if parts:
-                joined = "\n\n".join(
-                    p.get_text(" ", strip=True)
-                    for p in parts
-                    if len(p.get_text(" ", strip=True)) > 100
-                )
-                if len(joined) > 200:
-                    return joined[:3000]
-
-        content = soup.find("main") or soup.find("body")
-        if not content:
-            return None
-        text = content.get_text(" ", strip=True)
-        return text[:3000] if len(text) > 200 else None
+        return _extract_body_from_soup(soup)
     except Exception:
         return None
 

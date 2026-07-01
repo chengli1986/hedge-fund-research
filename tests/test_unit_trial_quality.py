@@ -1396,3 +1396,30 @@ def test_fail_quality_history_still_blocks_retrial(trial_env):
 
     queue = tm.get_trial_queue(tm.load_state())
     assert queue == []
+
+
+# ── Task 1: extract _extract_body_from_soup helper ───────────────────────────
+
+def test_extract_body_from_soup_longest_article():
+    """Test that _extract_body_from_soup finds the longest <article> tag."""
+    from bs4 import BeautifulSoup
+    html = """
+    <html><body>
+      <nav>menu junk</nav>
+      <article>tiny teaser</article>
+      <article><p>%s</p></article>
+      <footer>footer junk</footer>
+    </body></html>
+    """ % ("Real investment analysis. " * 20)
+    soup = BeautifulSoup(html, "html.parser")
+    text = tm._extract_body_from_soup(soup)
+    assert text is not None
+    assert "Real investment analysis." in text
+    assert "menu junk" not in text and "footer junk" not in text
+
+
+def test_extract_body_from_soup_returns_none_when_too_short():
+    """Test that _extract_body_from_soup returns None for text shorter than 200 chars."""
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup("<html><body><p>hi</p></body></html>", "html.parser")
+    assert tm._extract_body_from_soup(soup) is None
