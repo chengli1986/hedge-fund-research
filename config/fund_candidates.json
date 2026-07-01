@@ -2552,7 +2552,7 @@
     "homepage_url": "https://www.principalam.com/us/insights",
     "research_url": "https://www.principalam.com/us/insights/equities/rethinking-diversification-ai-driven-world",
     "source": "manual",
-    "status": "inaccessible",
+    "status": "visitable",
     "strategy_tags": [
       "macro",
       "multi_asset",
@@ -2599,7 +2599,9 @@
     },
     "screening_reason": "Login/paywall detected",
     "fit_score": 0.91,
-    "last_validated_at": "2026-07-01T09:00:56.605017+08:00"
+    "last_validated_at": "2026-07-01T09:00:56.605017+08:00",
+    "synthesis_attempted_at": "2026-07-01T11:14:55.259326+00:00",
+    "synthesis_outcome": "success"
   },
   {
     "id": "longleaf-partners",

@@ -2398,6 +2398,112 @@ def fetch_cohen_steers(source: dict) -> list[dict]:
     return articles[:max_articles]
 
 
+def fetch_principal_am(source: dict) -> list[dict]:
+    """Fetch articles from Principal Asset Management (Playwright + Coveo API).
+
+    The /us/insights feed is a Coveo-powered SPA: the main article grid never
+    renders in headless DOM (only a 3-item "Trending" sidebar does), so scraping
+    yields nothing — hence the candidate sat `inaccessible` ("SPA routing blocks
+    direct article fetch"). Instead we scavenge the page's live Coveo search
+    bearer token (emitted by the search box's `querySuggest` request), then POST
+    the same `/rest/search/v2` endpoint the site uses, filtered to `@level1==Insights`
+    and sorted by date desc — the real ~399-doc insights index. The token is grabbed
+    fresh each run (no hardcoded secret). Uses `publishdate` (true publish date),
+    falling back to Coveo's `date`; keeps only real /us/insights/<cat>/<slug> articles.
+    """
+    from playwright.sync_api import sync_playwright
+
+    expected_host = source.get("expected_hostname", "principalam.com")
+    max_articles = source.get("max_articles", 10)
+    org = "principalfinancialgroupqpnzn1vj"
+    token = {"v": None}
+
+    def _grab_token(req):
+        if token["v"] is None and "coveo.com" in req.url and "querySuggest" in req.url:
+            token["v"] = req.headers.get("authorization")
+
+    raw_results = []
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        ctx = browser.new_context(
+            user_agent=HEADERS["User-Agent"],
+            viewport={"width": 1440, "height": 900},
+        )
+        page = ctx.new_page()
+        page.on("request", _grab_token)
+        page.goto(source["url"], wait_until="domcontentloaded", timeout=45000)
+        try:
+            page.wait_for_load_state("networkidle", timeout=20000)
+        except Exception:
+            pass
+        # poll up to ~12s for the search box to emit its bearer token
+        for _ in range(12):
+            if token["v"]:
+                break
+            page.wait_for_timeout(1000)
+
+        if token["v"]:
+            endpoint = f"https://{org}.org.coveo.com/rest/search/v2?organizationId={org}"
+            body = {
+                "q": "",
+                "numberOfResults": 25,
+                "sortCriteria": "date descending",
+                "searchHub": "web-search",
+                "locale": "en-US",
+                "aq": "@level1==Insights",
+                "context": {"region": "8", "hostname": "www.principalam.com"},
+            }
+            try:
+                res = page.evaluate(
+                    '''async ({endpoint, auth, body}) => {
+                        const r = await fetch(endpoint, {
+                            method: 'POST',
+                            headers: {'Authorization': auth, 'Content-Type': 'application/json', 'Accept': 'application/json'},
+                            body: JSON.stringify(body),
+                        });
+                        return r.ok ? await r.text() : null;
+                    }''',
+                    {"endpoint": endpoint, "auth": token["v"], "body": body},
+                )
+                if res:
+                    raw_results = json.loads(res).get("results", [])
+            except Exception:
+                raw_results = []
+        browser.close()
+
+    articles = []
+    seen: set[str] = set()
+    for it in raw_results:
+        url = it.get("clickUri") or ""
+        if not _validate_hostname(url, expected_host):
+            continue
+        # real articles only: /us/insights/<category>/<slug> (skip hubs like /us/insights/events)
+        if not re.search(r"/us/insights/[^/]+/[^/?#]+", url):
+            continue
+        if url in seen:
+            continue
+        seen.add(url)
+        title = (it.get("title") or "").strip()
+        if not title:
+            continue
+        raw = it.get("raw", {})
+        epoch = raw.get("publishdate") or raw.get("date")
+        parsed_date, date_raw = None, ""
+        if isinstance(epoch, (int, float)):
+            dt = datetime.fromtimestamp(epoch / 1000, tz=timezone.utc)
+            parsed_date = dt.strftime("%Y-%m-%d")
+            date_raw = dt.isoformat()
+        articles.append({
+            "title": title,
+            "url": url,
+            "date": parsed_date,
+            "date_raw": date_raw,
+        })
+
+    articles.sort(key=lambda a: a["date"] or "", reverse=True)
+    return articles[:max_articles]
+
+
 # FETCHER_SYNTHESIS_INSERTION_POINT — auto-generated fetchers inserted above this line
 
 
@@ -2671,6 +2777,7 @@ FETCHERS = {
     "research-affiliates": fetch_researchaffiliates,
     "pimco": fetch_pimco,
     "cohen-steers": fetch_cohen_steers,
+    "principal-am": fetch_principal_am,
     "lazard-am": fetch_lazard_am,
     "rothschild-co-am": fetch_rothschild_co_am,
     "matthews-asia": fetch_matthews_asia,
