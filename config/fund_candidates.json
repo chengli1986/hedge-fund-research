@@ -1698,12 +1698,12 @@
       "fixed_income",
       "emerging_markets"
     ],
-    "notes": "JS-SPA; WebFetch returns empty, EC2 blocked; keep inaccessible",
+    "notes": "JS-SPA; WebFetch still empty too; keep inaccessible",
     "official_domain": "www.franklintempleton.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-05-07T09:00:18.005906+08:00",
-    "last_deep_analyzed_at": "2026-06-21T01:00:00Z",
+    "last_deep_analyzed_at": "2026-07-01T01:02:05Z",
     "quality": "MEDIUM",
     "quality_score": 0.55,
     "topics": "macro, equity, fixed income, emerging markets, multi-asset"
@@ -1722,12 +1722,12 @@
       "multi_asset"
     ],
     "official_domain": "www.ares.com",
-    "notes": "EC2-403 persists Jun 2026; previously trial passed 7/7",
+    "notes": "EC2+WebFetch both 403 Jun2026; trial passed 7/7 prior",
     "topics": "private credit, private equity, alternatives, insurance",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-05-01T01:03:53Z",
-    "last_deep_analyzed_at": "2026-06-21T01:00:00Z",
+    "last_deep_analyzed_at": "2026-07-01T01:02:05Z",
     "quality": "HIGH",
     "quality_score": 0.7,
     "fit_score": 0.88,
@@ -2340,8 +2340,8 @@
       "multi_asset"
     ],
     "topics": "real assets, REITs, infrastructure, preferred securities",
-    "notes": "403 Forbidden persists; real assets/REITs/infra specialist",
-    "last_deep_analyzed_at": "2026-06-21T01:00:00Z",
+    "notes": "403 persists (EC2+WebFetch); real assets/REITs specialist",
+    "last_deep_analyzed_at": "2026-07-01T01:02:05Z",
     "quality": "MEDIUM",
     "quality_score": 0.55
   },
@@ -2400,11 +2400,11 @@
       "equity",
       "fixed_income"
     ],
-    "topics": "macro, wealth management, geopolitics, alternatives, ESG",
+    "topics": "macro, wealth management, geopolitics, gold, quarterly letters",
     "quality": "MEDIUM",
-    "quality_score": 0.55,
-    "notes": "RECOMMEND: trial passed (8/7 days with articles, quality=0.67)",
-    "last_deep_analyzed_at": "2026-06-23T01:00:00Z",
+    "quality_score": 0.58,
+    "notes": "Confirmed active: 729 articles, latest 26/06/2026",
+    "last_deep_analyzed_at": "2026-07-01T01:02:05Z",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-05-24T01:02:30Z",
     "synthesis_attempted_at": "2026-06-12T01:08:13.034245+00:00",
@@ -2548,9 +2548,9 @@
     "id": "principal-am",
     "name": "Principal Asset Management",
     "homepage_url": "https://www.principalam.com/us/insights",
-    "research_url": "https://www.principalam.com/us/insights",
+    "research_url": "https://www.principalam.com/us/insights/equities/rethinking-diversification-ai-driven-world",
     "source": "manual",
-    "status": "seed",
+    "status": "inaccessible",
     "strategy_tags": [
       "macro",
       "multi_asset",
@@ -2558,14 +2558,46 @@
       "fixed_income"
     ],
     "official_domain": "www.principalam.com",
-    "research_links": [],
+    "research_links": [
+      {
+        "url": "https://www.principalam.com/us/insights/equities/rethinking-diversification-ai-driven-world",
+        "label": "1 Equities Rethinking diversification in an AI-driven world June 03, 2026",
+        "path": "us/insights/equities/rethinking-diversification-ai-driven-world"
+      },
+      {
+        "url": "https://www.principalam.com/us/insights/macro-views/five-dynamics-shaping-todays-investment-landscape",
+        "label": "2 Macro views Five dynamics shaping today’s investment landscape May 29, 2026",
+        "path": "us/insights/macro-views/five-dynamics-shaping-todays-investment-landscape"
+      },
+      {
+        "url": "https://www.principalam.com/us/insights/macro-views/five-dynamics-are-shaping-todays-investment-landscape",
+        "label": "3 Macro views The five dynamics that are shaping today’s investment landscape June 12, 2026",
+        "path": "us/insights/macro-views/five-dynamics-are-shaping-todays-investment-landscape"
+      }
+    ],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-06-30T09:00:39.657080+08:00",
+    "last_discovered_at": "2026-07-01T09:00:47.942381+08:00",
     "last_deep_analyzed_at": "2026-06-28T01:02:48Z",
     "quality": "MEDIUM",
     "quality_score": 0.62,
     "topics": "macro, fixed income, real estate",
-    "notes": "454 articles weekly; SPA routing blocks direct article fetch"
+    "notes": "454 articles weekly; SPA routing blocks direct article fetch",
+    "is_publicly_accessible": false,
+    "has_article_index": false,
+    "last_screened_at": "2026-07-01T09:00:51.472778+08:00",
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 4,
+      "article_tags": 0,
+      "time_tags": 0,
+      "date_patterns": 0,
+      "h2_tags": 0,
+      "article_signals": 0
+    },
+    "screening_reason": "Login/paywall detected",
+    "fit_score": 0.91,
+    "last_validated_at": "2026-07-01T09:00:56.605017+08:00"
   },
   {
     "id": "longleaf-partners",
@@ -2581,7 +2613,7 @@
     "official_domain": "www.southeasternasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-06-30T09:00:40.269655+08:00",
+    "last_discovered_at": "2026-07-01T09:00:48.701052+08:00",
     "last_deep_analyzed_at": "2026-06-26T01:00:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.6,

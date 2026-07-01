@@ -947,6 +947,40 @@
           "label": "bad"
         }
       ]
+    },
+    "principal-am": {
+      "last_discovered_at": "2026-07-01T09:00:56.605017+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://www.principalam.com/us/insights/equities/rethinking-diversification-ai-driven-world",
+          "final_score": 0.91,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 1.0,
+          "gate_penalty": 0.45,
+          "active": true
+        },
+        {
+          "url": "https://www.principalam.com/us/insights/macro-views/five-dynamics-shaping-todays-investment-landscape",
+          "final_score": 0.91,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 1.0,
+          "gate_penalty": 0.45,
+          "active": false
+        },
+        {
+          "url": "https://www.principalam.com/employee-bio/114794",
+          "final_score": 0.76,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 1.0,
+          "gate_penalty": 0.45,
+          "active": false
+        }
+      ],
+      "rejected_pages": []
     }
   }
 }
