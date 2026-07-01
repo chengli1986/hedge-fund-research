@@ -393,3 +393,27 @@ class TestWellingtonFetcher:
             "Wellington pages have persistent analytics that never idle out."
         )
         assert 'wait_until="networkidle"' not in src
+
+
+class TestCohenSteersPlaywrightFetcher:
+    def test_fetch_content_cohen_steers_saves_body(self, tmp_path, monkeypatch):
+        import fetch_content as fc
+        monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
+        html = "<html><body><article><p>%s</p></article></body></html>" % ("Cohen REIT insight. " * 30)
+        monkeypatch.setattr("fetch_articles._get_playwright_page", lambda url, **kw: html)
+        out = fc._fetch_content_cohen_steers({"id": "cohen-steers-001", "url": "https://cohenandsteers.com/x"})
+        assert out is not None
+        path, status = out
+        assert status == "ok" and path.exists()
+        assert "Cohen REIT insight." in path.read_text()
+
+    def test_fetch_content_cohen_steers_none_on_browser_error(self, tmp_path, monkeypatch):
+        import fetch_content as fc
+        monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
+        def boom(url, **kw): raise RuntimeError("browser crash")
+        monkeypatch.setattr("fetch_articles._get_playwright_page", boom)
+        assert fc._fetch_content_cohen_steers({"id": "cohen-steers-002", "url": "https://x"}) is None
+
+    def test_cohen_steers_registered(self):
+        from fetch_content import CONTENT_FETCHERS
+        assert "cohen-steers" in CONTENT_FETCHERS

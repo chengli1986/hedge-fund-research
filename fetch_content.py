@@ -1443,6 +1443,34 @@ def _fetch_content_principal_am(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+def _fetch_content_cohen_steers(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Cohen & Steers article content via Playwright (Cloudflare-gated bodies).
+
+    Article pages sit behind the same CF challenge as the listing, so httpx 403s;
+    a real browser renders the body. Reuses fetch_articles._get_playwright_page.
+    """
+    url = article["url"]
+    log.info("  Cohen & Steers: fetching article page %s", url)
+    try:
+        from fetch_articles import _get_playwright_page
+        html = _get_playwright_page(url, wait_until="domcontentloaded", wait_ms=3000)
+    except Exception as e:
+        log.error("  Cohen & Steers: fetch failed: %s", e)
+        return None
+    if not html:
+        return None
+
+    text = _normalize_html(html, ".article-body, article p, main p")
+    if not _check_min_content_length(text):
+        log.warning("  Cohen & Steers: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Cohen & Steers: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -1477,6 +1505,7 @@ CONTENT_FETCHERS = {
     "rothschild-co-am": _fetch_content_rothschild_co_am,
     "goehring-rozencwajg": _fetch_content_goehring_rozencwajg,
     "principal-am": _fetch_content_principal_am,
+    "cohen-steers": _fetch_content_cohen_steers,
 }
 
 
