@@ -617,6 +617,16 @@ def sample_article_quality(research_url: str, trial: dict | None = None,
             break
 
     if not article_texts:
+        # Playwright fallback: httpx reached no body (CF 403 / JS shell). Retry a
+        # bounded number of links with a real browser before giving up.
+        for url in links[:SAMPLE_SIZE * 2]:
+            text = _extract_article_text_playwright(url)
+            if text:
+                article_texts.append((url, text))
+            if len(article_texts) >= SAMPLE_SIZE:
+                break
+
+    if not article_texts:
         return {"sampled": 0, "articles": [], "avg_score": 0.0,
                 "error": "Could not extract text from any article",
                 "js_only_count": js_only_count,

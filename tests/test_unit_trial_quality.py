@@ -1441,3 +1441,36 @@ def test_extract_article_text_playwright_none_on_error(monkeypatch):
         raise RuntimeError("CF hard-block")
     monkeypatch.setattr("fetch_articles._get_playwright_page", boom)
     assert tm._extract_article_text_playwright("https://blocked.example/x") is None
+
+
+# ── Task 3: Playwright fallback when httpx extracts no article text ────────────
+
+def test_quality_gate_playwright_fallback_on_total_httpx_failure(trial_env, monkeypatch):
+    """When httpx extracts nothing, Playwright fallback recovers bodies."""
+    links = ["https://cf.example/a", "https://cf.example/b", "https://cf.example/c"]
+    monkeypatch.setattr(tm, "_get_article_links_for_sampling", lambda trial: links)
+    monkeypatch.setattr(tm, "_extract_article_text", lambda url, timeout=20: None)  # httpx 403
+    monkeypatch.setattr(tm, "_is_likely_js_only", lambda url, timeout=15: False)
+    monkeypatch.setattr(tm, "_extract_article_text_playwright",
+                        lambda url: "Recovered CF body. " * 30)
+    monkeypatch.setattr(tm, "_call_haiku", lambda prompt, max_retries=1: {
+        "articles": [{"article_num": i, "relevance": 0.8, "depth": 0.7,
+                      "extractable": 0.9, "overall": 0.8, "notes": "ok"} for i in (1, 2, 3)]})
+    result = tm.sample_article_quality("https://cf.example/", trial={"id": "cohen-steers"})
+    assert result["sampled"] == tm.SAMPLE_SIZE
+    assert result.get("error") is None
+
+
+def test_quality_gate_no_playwright_when_httpx_succeeds(trial_env, monkeypatch):
+    """Healthy source: httpx works → Playwright fallback must NOT run (zero overhead)."""
+    links = ["https://ok.example/a", "https://ok.example/b", "https://ok.example/c"]
+    monkeypatch.setattr(tm, "_get_article_links_for_sampling", lambda trial: links)
+    monkeypatch.setattr(tm, "_extract_article_text", lambda url, timeout=20: "Good body. " * 30)
+    pw = MagicMock(side_effect=AssertionError("Playwright must not be called"))
+    monkeypatch.setattr(tm, "_extract_article_text_playwright", pw)
+    monkeypatch.setattr(tm, "_call_haiku", lambda prompt, max_retries=1: {
+        "articles": [{"article_num": i, "relevance": 0.8, "depth": 0.7,
+                      "extractable": 0.9, "overall": 0.8, "notes": "ok"} for i in (1, 2, 3)]})
+    result = tm.sample_article_quality("https://ok.example/", trial={"id": "healthy"})
+    assert result["sampled"] == tm.SAMPLE_SIZE
+    pw.assert_not_called()
