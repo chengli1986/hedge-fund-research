@@ -30,7 +30,8 @@ HISTORY_FILE = BASE_DIR / "logs" / "fetcher-synthesis-history.jsonl"
 
 
 def write_heartbeat(targets_count: int, reconcile_appended: int,
-                    agent_exit: int, history_path: Path = HISTORY_FILE) -> dict:
+                    agent_exit: int, history_path: Path = HISTORY_FILE,
+                    backfilled_count: int = 0) -> dict:
     """Append a heartbeat entry. Returns the entry dict for inspection."""
     entry = {
         "date": datetime.now(BJT).strftime("%Y-%m-%d"),
@@ -40,6 +41,7 @@ def write_heartbeat(targets_count: int, reconcile_appended: int,
         "targets_count": int(targets_count),
         "reconcile_appended": int(reconcile_appended),
         "agent_exit": int(agent_exit),
+        "backfilled_count": int(backfilled_count),
     }
     history_path.parent.mkdir(exist_ok=True)
     with history_path.open("a") as f:
@@ -48,14 +50,20 @@ def write_heartbeat(targets_count: int, reconcile_appended: int,
 
 
 def detect_inconsistency(targets_count: int, reconcile_appended: int,
-                         agent_exit: int) -> str | None:
+                         agent_exit: int, backfilled_count: int = 0) -> str | None:
     """Return reason string if state is inconsistent, else None.
 
-    Inconsistency = agent claimed success (exit 0) on a non-empty target list
-    but reconcile found nothing to log. Means either the agent didn't write
-    synthesis_attempted_at + synthesis_outcome, or the schema drifted, or the
-    agent crashed mid-update without exit-code propagation.
+    Two signals, either → alert:
+    1. backfill_failed_synthesis marked >=1 planned target as failed → the agent
+       skipped or silently failed work it should have done this session (the
+       franklin-templeton "stuck, never processed, never alerted" failure mode).
+    2. (fallback) agent claimed success (exit 0) on a non-empty target list but
+       reconcile found nothing to log — schema drift or a silent failure the
+       backfill step didn't cover.
     """
+    if backfilled_count > 0:
+        return (f"{backfilled_count} planned target(s) went unprocessed and were "
+                f"auto-marked failed — agent skipped or silently failed them")
     if targets_count > 0 and reconcile_appended == 0 and agent_exit == 0:
         return (f"agent ran with {targets_count} target(s) but reconcile "
                 f"appended 0 entries — schema drift or silent agent failure")
@@ -70,21 +78,25 @@ def main() -> int:
                         help="how many entries sync_synthesis_history.py wrote")
     parser.add_argument("--agent-exit", type=int, required=True,
                         help="agent process exit code")
+    parser.add_argument("--backfilled-count", type=int, default=0,
+                        help="how many planned targets backfill_failed_synthesis marked failed")
     args = parser.parse_args()
 
     try:
         entry = write_heartbeat(args.targets_count, args.reconcile_appended,
-                                args.agent_exit)
+                                args.agent_exit,
+                                backfilled_count=args.backfilled_count)
     except OSError as exc:
         print(f"ERROR: heartbeat write failed: {exc}", file=sys.stderr)
         return 2
 
     print(f"[heartbeat] wrote session_end entry: "
           f"targets={entry['targets_count']} appended={entry['reconcile_appended']} "
-          f"agent_exit={entry['agent_exit']}")
+          f"backfilled={entry['backfilled_count']} agent_exit={entry['agent_exit']}")
 
     reason = detect_inconsistency(args.targets_count, args.reconcile_appended,
-                                  args.agent_exit)
+                                  args.agent_exit,
+                                  backfilled_count=args.backfilled_count)
     if reason:
         print(f"[heartbeat] ⚠️ INCONSISTENCY: {reason}", file=sys.stderr)
         return 1

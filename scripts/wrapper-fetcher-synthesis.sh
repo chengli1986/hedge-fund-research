@@ -33,7 +33,11 @@ trap cleanup EXIT
 echo "$LOG_PREFIX Starting fetcher synthesis session..."
 
 # 若无目标则提前退出，不启动 Agent
-TARGET_COUNT=$(cd "$REPO_DIR" && python3 synthesize_fetchers.py | python3 -c "import json,sys; d=json.load(sys.stdin); print(len(d))")
+TARGETS_JSON=$(cd "$REPO_DIR" && python3 synthesize_fetchers.py)
+TARGET_COUNT=$(echo "$TARGETS_JSON" | python3 -c "import json,sys; print(len(json.load(sys.stdin)))")
+# The first 2 ids are what this session is expected to process (program.md's
+# "handle at most 2 funds"). backfill marks any of these the agent leaves undone.
+PLANNED_IDS=$(echo "$TARGETS_JSON" | python3 -c "import json,sys; d=json.load(sys.stdin); print(','.join(t['id'] for t in d[:2]))")
 if [ "$TARGET_COUNT" -eq 0 ]; then
     echo "$LOG_PREFIX No inaccessible targets to process. Exiting."
     exit 0
@@ -87,8 +91,22 @@ echo "$PROMPT" | "$CLAUDE_BIN" --print \
 EXIT_CODE=$?
 echo "$LOG_PREFIX Agent exited with code $EXIT_CODE"
 
+# ── Backfill: mark this session's planned targets the agent left unprocessed ──
+# The agent can silently skip a target (never writing synthesis_outcome). Without
+# this the candidate stays inaccessible forever — no history, no auto_reject
+# 3-strike, no alert (the franklin-templeton "stuck 8 weeks" mode). Run BEFORE
+# reconcile so the auto-marked failures flow into history this session.
+echo "$LOG_PREFIX Backfilling unprocessed targets..."
+BACKFILL_OUTPUT=$(python3 "$REPO_DIR/scripts/backfill_failed_synthesis.py" \
+    --planned-ids "$PLANNED_IDS" --run-start "$SYNTH_RUN_START" 2>&1) || \
+    echo "$LOG_PREFIX WARN: backfill_failed_synthesis exited non-zero"
+echo "$BACKFILL_OUTPUT"
+BACKFILLED=$(echo "$BACKFILL_OUTPUT" | grep -oP 'marked \K\d+' | head -1)
+BACKFILLED=${BACKFILLED:-0}
+
 # Reconcile any synthesis outcomes the agent recorded in fund_candidates.json
-# into the time-series history log. Idempotent — safe to run repeatedly.
+# into the time-series log (now also picks up the backfilled failures above).
+# Idempotent — safe to run repeatedly.
 # Capture appended count so heartbeat can detect "agent ran but recorded nothing".
 echo "$LOG_PREFIX Syncing synthesis history..."
 RECONCILE_OUTPUT=$(python3 "$REPO_DIR/scripts/sync_synthesis_history.py" --lookback-days 1 2>&1) || \
@@ -106,7 +124,8 @@ APPENDED=${APPENDED:-0}
 python3 "$REPO_DIR/scripts/write_session_heartbeat.py" \
     --targets-count "$TARGET_COUNT" \
     --reconcile-appended "$APPENDED" \
-    --agent-exit "$EXIT_CODE"
+    --agent-exit "$EXIT_CODE" \
+    --backfilled-count "$BACKFILLED"
 HEARTBEAT_EXIT=$?
 
 # Quick stats line for the log (does not affect exit code)

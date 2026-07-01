@@ -165,3 +165,28 @@ def test_main_returns_0_on_consistent_state(tmp_path, monkeypatch):
         assert rc == 0
     finally:
         sys.argv = sys_argv_orig
+
+
+# ── ② backfill-driven inconsistency: agent left planned targets unprocessed ──
+
+def test_inconsistency_detected_when_targets_backfilled():
+    """backfill marked planned targets failed → agent left work undone → alert."""
+    reason = hb.detect_inconsistency(targets_count=2, reconcile_appended=1,
+                                     agent_exit=0, backfilled_count=1)
+    assert reason is not None
+    assert "unprocessed" in reason
+
+
+def test_no_inconsistency_when_nothing_backfilled():
+    """All planned targets attempted, healthy reconcile → no alert."""
+    reason = hb.detect_inconsistency(targets_count=2, reconcile_appended=2,
+                                     agent_exit=0, backfilled_count=0)
+    assert reason is None
+
+
+def test_heartbeat_records_backfilled_count(tmp_path):
+    log = tmp_path / "history.jsonl"
+    entry = hb.write_heartbeat(targets_count=2, reconcile_appended=0,
+                               agent_exit=0, history_path=log, backfilled_count=2)
+    assert entry["backfilled_count"] == 2
+    assert json.loads(log.read_text().splitlines()[0])["backfilled_count"] == 2
