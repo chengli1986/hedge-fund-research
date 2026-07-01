@@ -1423,3 +1423,21 @@ def test_extract_body_from_soup_returns_none_when_too_short():
     from bs4 import BeautifulSoup
     soup = BeautifulSoup("<html><body><p>hi</p></body></html>", "html.parser")
     assert tm._extract_body_from_soup(soup) is None
+
+
+# ── Task 2: Playwright-based body extractor ─────────────────────────────────
+
+def test_extract_article_text_playwright_extracts_body(monkeypatch):
+    """Render a page in a real browser (bypasses CF/JS) and extract body."""
+    html = "<html><body><article><p>%s</p></article></body></html>" % ("Deep macro research. " * 20)
+    monkeypatch.setattr("fetch_articles._get_playwright_page", lambda url, **kw: html)
+    text = tm._extract_article_text_playwright("https://blocked.example/insight")
+    assert text is not None and "Deep macro research." in text
+
+
+def test_extract_article_text_playwright_none_on_error(monkeypatch):
+    """When Playwright fails, return None."""
+    def boom(url, **kw):
+        raise RuntimeError("CF hard-block")
+    monkeypatch.setattr("fetch_articles._get_playwright_page", boom)
+    assert tm._extract_article_text_playwright("https://blocked.example/x") is None

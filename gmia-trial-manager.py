@@ -425,6 +425,18 @@ def _extract_article_text(url: str, timeout: int = 20) -> str | None:
         return None
 
 
+def _extract_article_text_playwright(url: str) -> str | None:
+    """Render a single article page in a real browser (bypasses CF/JS) and extract body."""
+    try:
+        from fetch_articles import _get_playwright_page
+        html = _get_playwright_page(url, wait_until="domcontentloaded", wait_ms=3000)
+        if not html:
+            return None
+        return _extract_body_from_soup(BeautifulSoup(html, "html.parser"))
+    except Exception:
+        return None
+
+
 def _is_likely_js_only(url: str, timeout: int = 15) -> bool:
     """Return True when the page is likely JS-rendered (HTTP 200 + large HTML + no extractable text).
 
