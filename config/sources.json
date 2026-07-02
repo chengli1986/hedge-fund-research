@@ -593,6 +593,22 @@
       "notable_authors": [],
       "expected_hostname": "rothschildandco.com",
       "max_articles": 10
+    },
+    {
+      "id": "goehring-rozencwajg",
+      "strategy_tags": [
+        "real_assets",
+        "macro"
+      ],
+      "name": "Goehring & Rozencwajg",
+      "short_name": "G&R",
+      "url": "https://blog.gorozen.com/blog",
+      "method": "ssr",
+      "frequency": "weekly",
+      "description": "Contrarian natural-resources investment boutique founded 2015 in New York by Leigh Goehring and Adam Rozencwajg. Deep fundamental research on energy, precious metals, uranium, agriculture and base metals, anchored by widely-read quarterly commentaries on commodity capital cycles.",
+      "notable_authors": ["Leigh Goehring", "Adam Rozencwajg"],
+      "expected_hostname": "gorozen.com",
+      "max_articles": 10
     }
   ],
   "settings": {

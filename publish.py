@@ -55,6 +55,7 @@ BADGE_COLORS: dict[str, str] = {
     "acadian-asset": "#5d4037",             # Acadian coffee/umber brown (fills the empty muted-brown niche; brand steel-blue avoided as the blue cluster is crowded; distinct from #7c2d12 Verdad terracotta by far-lower saturation; WCAG AA ~8.9:1 on white)
     "lazard-am": "#b07d12",                 # Lazard warm amber-gold (EM/macro heritage; distinct from #d29922 Bridgewater mustard-gold and #cd853f D.E.Shaw bronze; WCAG AA ~4.8:1 on white)
     "rothschild-co-am": "#6a1b4d",          # Rothschild deep claret/Bordeaux-wine (nods to family Bordeaux estates Lafite/Mouton; fills the sparse wine-magenta niche — nearest neighbors #80276c Natixis purple and #c2185b Research-Affiliates magenta are both far in lightness/hue; min perceptual ΔE ~65; WCAG AA 11.2:1 on white)
+    "goehring-rozencwajg": "#827717",       # G&R dark yellow-olive "oilfield khaki" (energy/commodities heritage; sits between #b07d12 Lazard amber — lighter, more orange — and #556b2f KKR olive — darker, greener — with RGB dist ≥47 to both; WCAG AA 4.56:1 on white)
 }
 
 INITIAL_VISIBLE = 20
@@ -284,6 +285,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "罗斯柴尔德集团旗下精品主动资产管理部门,总部位于巴黎,管理约 €40B 资产,约 170 名员工遍布 9 个国家。秉持高信念、研究驱动的投资理念,覆盖多资产与宏观配置、欧洲及主题股票、信贷与固定收益,并融入财富管理视角,关注地缘政治、另类资产与 ESG。背靠逾两百年罗斯柴尔德金融世家传承。",
         "notable_en": "Active boutique within the 200-year-old Rothschild & Co group; the controlling family also owns the Bordeaux first-growth estates Château Lafite and Mouton Rothschild. The asset-management arm runs conviction-driven European equity, multi-asset and credit strategies for institutional and intermediary clients.",
         "notable_zh": "背靠拥有逾两百年历史的罗斯柴尔德金融世家;控股家族同时拥有波尔多一级名庄拉菲(Château Lafite)与木桐(Mouton Rothschild)。资产管理部门为机构与中介客户运作高信念欧洲股票、多资产及信贷策略。",
+    },
+    "goehring-rozencwajg": {
+        "founded": "2015", "aum": "~$1.5B", "hq": "New York, USA",
+        "type_en": "Natural Resources Asset Manager", "type_zh": "自然资源资产管理",
+        "desc_zh": "专注自然资源的逆向价值投资精品资管（管理规模 ~$1.5B），2015 年由 Leigh Goehring 与 Adam Rozencwajg 在纽约创立。深耕能源、贵金属、铀、农业与基本金属的基本面研究，以大宗商品资本周期分析框架和集中持仓的长线逆向投资著称。",
+        "notable_en": "Quarterly market commentaries read by 10,000+ investment professionals. Leigh Goehring has managed natural-resources portfolios since 1991 (Prudential Jennison, then Chilton's $5B Global Natural Resources Fund).",
+        "notable_zh": "季度市场评论拥有超过 1 万名专业投资者读者。Leigh Goehring 自 1991 年起管理自然资源组合（先后执掌 Prudential Jennison 与 Chilton 规模达 $5B 的全球自然资源基金）。",
     },
 }
 
