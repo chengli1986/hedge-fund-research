@@ -47,6 +47,7 @@ BJT = timezone(timedelta(hours=8))
 BASE_DIR = Path(__file__).resolve().parent.parent
 SOURCES_FILE = BASE_DIR / "config" / "sources.json"
 CANDIDATES_FILE = BASE_DIR / "config" / "fund_candidates.json"
+TRIAL_STATE_FILE = BASE_DIR / "config" / "trial-state.json"
 LOGS_DIR = BASE_DIR / "logs"
 STATE_FILE = LOGS_DIR / "gmia-fetcher-health.json"
 ENV_FILE = Path.home() / ".stock-monitor.env"
@@ -638,18 +639,37 @@ def alerts_subject(alerts: dict) -> str:
 # ── validated-candidate URL liveness (--include-validated) ───────────────────
 
 
+def _active_trial_ids() -> set[str]:
+    """Ids currently in trial per trial-state.json (candidate status stays
+    'visitable' for the whole trial — trial-manager only flips it at verdict
+    time: promoted/watchlist/inaccessible)."""
+    if not TRIAL_STATE_FILE.exists():
+        return set()
+    state = json.loads(TRIAL_STATE_FILE.read_text())
+    return {t["id"] for t in state.get("active_trials", [])}
+
+
 def load_validated_candidates() -> list[dict]:
-    """Load candidates whose status is 'visitable' — i.e. ready for trial.
+    """Load candidates whose status is 'visitable' — i.e. waiting for trial.
 
     These ARE NOT production sources (no fetcher registered), so the regular
     probe_source() pipeline won't reach them. The probe below is intentionally
     lightweight: just a GET to confirm the saved research_url still returns
     a real-looking page.
+
+    Candidates already in an active trial are excluded: the trial itself
+    exercises real fetching daily (including Playwright fallbacks for
+    Cloudflare-403 sites like cohen-steers), so a plain-GET liveness probe
+    would only re-report blocks the trial pipeline already handles.
     """
     if not CANDIDATES_FILE.exists():
         return []
     data = json.loads(CANDIDATES_FILE.read_text())
-    return [c for c in data if c.get("status") == "visitable"]
+    in_trial = _active_trial_ids()
+    return [
+        c for c in data
+        if c.get("status") == "visitable" and c.get("id") not in in_trial
+    ]
 
 
 def probe_candidate_url(candidate: dict) -> dict:
