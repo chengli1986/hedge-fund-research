@@ -2630,12 +2630,12 @@
     "homepage_url": "https://www.gorozen.com",
     "research_url": "https://blog.gorozen.com/blog",
     "source": "manual",
-    "status": "visitable",
+    "status": "promoted",
     "strategy_tags": [
       "real_assets",
       "macro"
     ],
-    "notes": "RECOMMEND: Deep energy/commodity research; fills gap",
+    "notes": "RECOMMEND: trial passed (8/7 days with articles, quality=0.65)",
     "official_domain": "www.gorozen.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",

@@ -5608,9 +5608,7 @@
       "total_articles": 80,
       "days_with_articles": 8,
       "avg_quality_score": 0.666
-    }
-  ],
-  "active_trials": [
+    },
     {
       "id": "goehring-rozencwajg",
       "name": "Goehring & Rozencwajg",
@@ -5620,7 +5618,7 @@
       "quality": "HIGH",
       "topics": "energy, natural resources, commodities, oil",
       "start_date": "2026-06-25",
-      "end_date": null,
+      "end_date": "2026-07-02",
       "daily_checks": {
         "2026-06-25": {
           "accessible": true,
@@ -5754,10 +5752,29 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-07-02": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://blog.gorozen.com/blog/are-energy-markets-tighter-than-investors-realize",
+            "https://blog.gorozen.com/blog/adam-rozencwajg-on-money-life-why-todays-oil-shock-may-be-only-the-beginning",
+            "https://blog.gorozen.com/blog/marketwatch-why-the-current-oil-crisis-could-haunt-markets-for-years",
+            "https://blog.gorozen.com/blog/capital-cycles-and-the-next-commodity-bull-market",
+            "https://blog.gorozen.com/blog/podcast-energy-shock-oil-markets-the-new-commodity-cycle-with-adam-rozencwajg",
+            "https://blog.gorozen.com/blog/podcast-the-greatest-energy-shock-in-history-is-unfolding",
+            "https://blog.gorozen.com/blog/podcast-gold-silver-vs-energy-where-we-are-focusing-now",
+            "https://blog.gorozen.com/blog/are-we-still-in-the-early-stages-of-the-commodities-cycle",
+            "https://blog.gorozen.com/blog/podcast-macrovoices-what-comes-next-after-the-iran-crisis",
+            "https://blog.gorozen.com/blog/video-the-commodity-bull-market-and-the-capital-cycle"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -5907,8 +5924,155 @@
           "day": 7,
           "date": "2026-07-01"
         }
+      ],
+      "total_articles": 80,
+      "days_with_articles": 8,
+      "avg_quality_score": 0.645
+    }
+  ],
+  "active_trials": [
+    {
+      "id": "principal-am",
+      "name": "Principal Asset Management",
+      "research_url": "https://www.principalam.com/us/insights/equities/rethinking-diversification-ai-driven-world",
+      "homepage_url": "https://www.principalam.com/us/insights",
+      "fit_score": 0.91,
+      "quality": "MEDIUM",
+      "topics": "macro, fixed income, real estate",
+      "start_date": "2026-07-02",
+      "end_date": null,
+      "daily_checks": {
+        "2026-07-02": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.principalam.com/us/insights/real-estate-private-markets/cre-recovery-intact-increasingly-uneven",
+            "https://www.principalam.com/us/insights/real-estate-private-markets/resilient-us-transaction-volumes-15-yoy-may",
+            "https://www.principalam.com/us/insights/fixed-income/what-tranche-thickness-and-why-does-it-matter-life-insurers",
+            "https://www.principalam.com/us/insights/macro-views/june-fomc-meeting-new-era-fed",
+            "https://www.principalam.com/us/insights/macro-views/growing-role-capex-inflation-dynamics",
+            "https://www.principalam.com/us/insights/real-estate-private-markets/cres-recovery-masks-widening-divide",
+            "https://www.principalam.com/us/insights/real-estate-private-markets/2026-inside-real-estate-outlook",
+            "https://www.principalam.com/us/insights/macro-views/june-ecb-meeting-unanimous-decision-hike",
+            "https://www.principalam.com/us/insights/macro-views/five-dynamics-are-shaping-todays-investment-landscape",
+            "https://www.principalam.com/us/insights/asset-allocation/real-driver-retirement-outcomes-why-plan-design-matters"
+          ],
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.principalam.com/us/insights/real-estate-private-markets/cre-recovery-intact-increasingly-uneven",
+              "relevance": 0.95,
+              "depth": 0.75,
+              "extractable": 0.85,
+              "overall": 0.85,
+              "notes": "CRE market analysis highlighting divergence in returns across property types; argues NOI growth (not cap rate compression) will drive returns going forward, requiring disciplined selection."
+            },
+            {
+              "url": "https://www.principalam.com/us/insights/real-estate-private-markets/resilient-us-transaction-volumes-15-yoy-may",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.9,
+              "overall": 0.88,
+              "notes": "Real estate transaction volume data and analysis; May 2026 volumes +15% YoY with sector-level breakdown; discusses recovery trajectory and comparison base challenges for Q2."
+            },
+            {
+              "url": "https://www.principalam.com/us/insights/fixed-income/what-tranche-thickness-and-why-does-it-matter-life-insurers",
+              "relevance": 0.9,
+              "depth": 0.85,
+              "extractable": 0.8,
+              "overall": 0.86,
+              "notes": "Structured credit analysis on CLO tranche thickness as emerging regulatory consideration for life insurers; explains how identical ratings can mask different risk profiles based on structural position."
+            }
+          ],
+          "avg_score": 0.863,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 1,
+          "date": "2026-07-02"
+        }
+      ]
+    },
+    {
+      "id": "cohen-steers",
+      "name": "Cohen & Steers",
+      "research_url": "https://www.cohenandsteers.com/insights/",
+      "homepage_url": "https://www.cohenandsteers.com/insights/",
+      "fit_score": null,
+      "quality": "MEDIUM",
+      "topics": "real assets, REITs, infrastructure, preferred securities",
+      "start_date": "2026-07-02",
+      "end_date": null,
+      "daily_checks": {
+        "2026-07-02": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.cohenandsteers.com/insights/40-years-from-reits-to-real-assets-video/",
+            "https://www.cohenandsteers.com/insights/why-active-management-matters-in-energy-markets/",
+            "https://www.cohenandsteers.com/insights/the-energy-buildout-5-investment-themes-in-a-power-hungry-world/",
+            "https://www.cohenandsteers.com/insights/the-reality-of-energy-addition/",
+            "https://www.cohenandsteers.com/insights/era-of-scarcity-and-the-coming-super-cycle-in-natural-resources/",
+            "https://www.cohenandsteers.com/insights/seizing-the-real-assets-opportunity/",
+            "https://www.cohenandsteers.com/insights/video-data-centers-energy-and-infrastructure-powering-the-ai-surge/",
+            "https://www.cohenandsteers.com/insights/three-themes-in-preferred-securities-today/",
+            "https://www.cohenandsteers.com/insights/three-themes-in-hybrid-credit-securities-today/",
+            "https://www.cohenandsteers.com/insights/the-case-for-real-assets-fp/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.cohenandsteers.com/insights/40-years-from-reits-to-real-assets-video/",
+              "relevance": 0.4,
+              "depth": 0.2,
+              "extractable": 0.8,
+              "overall": 0.4,
+              "notes": "Promotional video summary about Cohen & Steers' 40-year history and product expansion; lacks investment analysis or portfolio strategy."
+            },
+            {
+              "url": "https://www.cohenandsteers.com/insights/why-active-management-matters-in-energy-markets/",
+              "relevance": 0.9,
+              "depth": 0.75,
+              "extractable": 0.7,
+              "overall": 0.8,
+              "notes": "Investment thesis on active energy management combining traditional and alternative sources; substantive but truncated mid-sentence; argues against binary energy investing approach."
+            },
+            {
+              "url": "https://www.cohenandsteers.com/insights/the-energy-buildout-5-investment-themes-in-a-power-hungry-world/",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.65,
+              "overall": 0.85,
+              "notes": "Detailed infrastructure investment analysis identifying 5 energy themes (natural gas, nuclear, oil sands, energy security, grid) driven by AI/population growth; substantive with data but truncated at end."
+            }
+          ],
+          "avg_score": 0.683,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 10,
+          "day": 1,
+          "date": "2026-07-02"
+        }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-06-25"
+  "last_summary_sent_date": "2026-07-02"
 }
