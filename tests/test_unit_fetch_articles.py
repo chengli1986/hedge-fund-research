@@ -1357,3 +1357,45 @@ class TestFetchVerdad:
             articles = fetch_verdad(source)
 
         assert len(articles) == 5
+
+
+class TestFetchSourceIntraRunDedup:
+    """fetch_source must not emit the same article id twice in one run.
+
+    Root cause of the 2026-07 articles.jsonl duplicates: the existing_ids
+    check skipped articles already on disk, but ids accepted earlier in the
+    SAME loop were never added to the set, so a fetcher returning the same
+    URL multiple times (wellington did) appended each occurrence.
+    """
+
+    SOURCE = {
+        "id": "dup-test-source",
+        "name": "Dup Test",
+        "short_name": "DupTest",
+        "method": "scrape",
+    }
+
+    def _run(self, raw_articles, existing_ids):
+        from fetch_articles import fetch_source, FETCHERS
+        with patch.dict(FETCHERS, {"dup-test-source": lambda s: raw_articles}):
+            return fetch_source(self.SOURCE, existing_ids)
+
+    def test_same_url_twice_in_one_fetch_yields_one_article(self):
+        art = {"title": "Same Article", "url": "https://example.com/a", "date": "2026-07-01"}
+        new = self._run([art, dict(art)], set())
+        assert len(new) == 1
+
+    def test_accepted_ids_added_to_existing_ids(self):
+        from fetch_articles import article_id
+        art = {"title": "T", "url": "https://example.com/b", "date": "2026-07-01"}
+        existing: set = set()
+        self._run([art], existing)
+        assert article_id("dup-test-source", art["url"]) in existing
+
+    def test_distinct_urls_unaffected(self):
+        arts = [
+            {"title": "A", "url": "https://example.com/1", "date": "2026-07-01"},
+            {"title": "B", "url": "https://example.com/2", "date": "2026-07-01"},
+        ]
+        new = self._run(arts, set())
+        assert len(new) == 2

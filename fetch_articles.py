@@ -2832,6 +2832,10 @@ def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False) ->
         aid = article_id(source_id, art["url"])
         if aid in existing_ids:
             continue
+        # Add immediately: a fetcher can return the same URL twice in one
+        # result list (wellington did), and the on-disk check alone lets every
+        # occurrence through — this was the source of jsonl duplicate rows.
+        existing_ids.add(aid)
         new_articles.append({
             "id": aid,
             "source_id": source_id,
