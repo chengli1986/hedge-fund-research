@@ -5960,6 +5960,25 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-07-03": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.principalam.com/us/insights/macro-views/june-jobs-report-softer-expected-still-balance",
+            "https://www.principalam.com/us/insights/macro-views/2q-recap-historic-rebound-amid-balanced-risks",
+            "https://www.principalam.com/us/insights/real-estate-private-markets/cre-recovery-intact-increasingly-uneven",
+            "https://www.principalam.com/us/insights/real-estate-private-markets/resilient-us-transaction-volumes-15-yoy-may",
+            "https://www.principalam.com/us/insights/fixed-income/what-tranche-thickness-and-why-does-it-matter-life-insurers",
+            "https://www.principalam.com/us/insights/macro-views/june-fomc-meeting-new-era-fed",
+            "https://www.principalam.com/us/insights/macro-views/growing-role-capex-inflation-dynamics",
+            "https://www.principalam.com/us/insights/real-estate-private-markets/cres-recovery-masks-widening-divide",
+            "https://www.principalam.com/us/insights/real-estate-private-markets/2026-inside-real-estate-outlook",
+            "https://www.principalam.com/us/insights/macro-views/june-ecb-meeting-unanimous-decision-hike"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -5999,6 +6018,41 @@
           "js_only_checked": 0,
           "day": 1,
           "date": "2026-07-02"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.principalam.com/us/insights/macro-views/june-jobs-report-softer-expected-still-balance",
+              "relevance": 0.95,
+              "depth": 0.75,
+              "extractable": 0.7,
+              "overall": 0.82,
+              "notes": "Detailed analysis of June 2026 jobs report showing softer hiring but balanced labor market; includes sector breakdown and unemployment/participation rate analysis."
+            },
+            {
+              "url": "https://www.principalam.com/us/insights/macro-views/2q-recap-historic-rebound-amid-balanced-risks",
+              "relevance": 0.9,
+              "depth": 0.6,
+              "extractable": 0.75,
+              "overall": 0.75,
+              "notes": "Q2 2026 market recap highlighting broad-based rally, AI capex cycle dominance, and balanced policy risks; brief strategic commentary with limited data depth."
+            },
+            {
+              "url": "https://www.principalam.com/us/insights/macro-views/june-fomc-meeting-new-era-fed",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.65,
+              "overall": 0.85,
+              "notes": "In-depth analysis of June 2026 FOMC meeting under new Chair Warsh; covers policy shift, dot plot hawkishness, SEP revisions, and structural reset initiatives with detailed economic projections."
+            }
+          ],
+          "avg_score": 0.807,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 2,
+          "date": "2026-07-03"
         }
       ]
     },
@@ -6014,6 +6068,25 @@
       "end_date": null,
       "daily_checks": {
         "2026-07-02": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.cohenandsteers.com/insights/40-years-from-reits-to-real-assets-video/",
+            "https://www.cohenandsteers.com/insights/why-active-management-matters-in-energy-markets/",
+            "https://www.cohenandsteers.com/insights/the-energy-buildout-5-investment-themes-in-a-power-hungry-world/",
+            "https://www.cohenandsteers.com/insights/the-reality-of-energy-addition/",
+            "https://www.cohenandsteers.com/insights/era-of-scarcity-and-the-coming-super-cycle-in-natural-resources/",
+            "https://www.cohenandsteers.com/insights/seizing-the-real-assets-opportunity/",
+            "https://www.cohenandsteers.com/insights/video-data-centers-energy-and-infrastructure-powering-the-ai-surge/",
+            "https://www.cohenandsteers.com/insights/three-themes-in-preferred-securities-today/",
+            "https://www.cohenandsteers.com/insights/three-themes-in-hybrid-credit-securities-today/",
+            "https://www.cohenandsteers.com/insights/the-case-for-real-assets-fp/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-07-03": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -6070,6 +6143,41 @@
           "js_only_checked": 10,
           "day": 1,
           "date": "2026-07-02"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.cohenandsteers.com/insights/the-reality-of-energy-addition/",
+              "relevance": 0.9,
+              "depth": 0.75,
+              "extractable": 0.7,
+              "overall": 0.8,
+              "notes": "Investment thesis on energy sector positioning: argues for 'energy addition' (both traditional and alternative) rather than pure transition, with demand forecasts and portfolio implications."
+            },
+            {
+              "url": "https://www.cohenandsteers.com/insights/era-of-scarcity-and-the-coming-super-cycle-in-natural-resources/",
+              "relevance": 0.7,
+              "depth": 0.3,
+              "extractable": 0.2,
+              "overall": 0.44,
+              "notes": "Conference session announcement/teaser with minimal substantive content; mostly promotional with a single quote about energy addition supercycle; requires video access for full analysis."
+            },
+            {
+              "url": "https://www.cohenandsteers.com/insights/seizing-the-real-assets-opportunity/",
+              "relevance": 0.6,
+              "depth": 0.25,
+              "extractable": 0.15,
+              "overall": 0.37,
+              "notes": "Conference session teaser on real assets opportunity; contains one brief quote on stagflation/labor markets but lacks substantive analysis; primarily promotional with video paywall."
+            }
+          ],
+          "avg_score": 0.537,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 7,
+          "day": 2,
+          "date": "2026-07-03"
         }
       ]
     }
