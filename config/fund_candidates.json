@@ -349,7 +349,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.97,
-    "notes": "RECOMMEND: PE/VC + mega-IPO analysis, monthly, semi-gated",
+    "notes": "RECOMMEND: PE/VC + endowment data, monthly, semi-gated",
     "research_links": [
       {
         "url": "https://www.cambridgeassociates.com/insights/private-investments/",
@@ -458,10 +458,10 @@
       "article_signals": 1
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-06-25T01:02:46Z",
+    "last_deep_analyzed_at": "2026-07-03T01:10:00Z",
     "quality": "HIGH",
-    "quality_score": 0.84,
-    "topics": "private equity, venture capital, private credit, macro, ESG, AI/tech",
+    "quality_score": 0.85,
+    "topics": "private equity, venture capital, endowments, macro, ESG",
     "strategy_tags": [
       "private_equity",
       "venture_capital",
@@ -486,11 +486,11 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.9,
-    "last_deep_analyzed_at": "2026-06-25T01:02:46Z",
+    "last_deep_analyzed_at": "2026-07-03T01:10:00Z",
     "quality": "MEDIUM",
     "topics": "macro, equity, fixed income, alternatives, portfolio construction",
-    "notes": "Articles by direct URL; listing gated; cross-asset 2026",
-    "quality_score": 0.63,
+    "notes": "Confirmed: article pages JS-gated, only disclaimers load",
+    "quality_score": 0.6,
     "research_links": [
       {
         "url": "https://am.gs.com/en-us/advisors/insights/list",
@@ -1989,10 +1989,10 @@
       "multi_asset"
     ],
     "quality": "MEDIUM",
-    "quality_score": 0.72,
-    "topics": "quant, ESG, emerging markets, fixed income, equity, AI",
-    "notes": "873 articles; EM/ESG/quant weekly; free Jun 2026",
-    "last_deep_analyzed_at": "2026-06-24T00:00:00Z",
+    "quality_score": 0.76,
+    "topics": "quant, ESG, emerging markets, macro, equity, fixed income",
+    "notes": "878 articles; EM/quant/ESG weekly; free Jul 2026",
+    "last_deep_analyzed_at": "2026-07-03T01:10:00Z",
     "official_domain": "www.robeco.com",
     "discovery_method": "discover_fund_sites",
     "research_links": [
@@ -2223,7 +2223,7 @@
       "emerging_markets",
       "macro"
     ],
-    "notes": "Free; Asia/EM monthly; China/India Jun 2026 active",
+    "notes": "Free; Asia/EM 2-4x/mo; ABA trade thesis Jul 2026",
     "official_domain": "www.matthewsasia.com",
     "research_links": [
       {
@@ -2316,9 +2316,9 @@
     "fit_score": 0.85,
     "last_validated_at": "2026-05-16T09:04:19.082474+08:00",
     "quality": "MEDIUM",
-    "quality_score": 0.65,
-    "topics": "Asian equities, China, India, Korea, EM innovation, macro",
-    "last_deep_analyzed_at": "2026-06-24T00:00:00Z",
+    "quality_score": 0.68,
+    "topics": "Asian equities, China, India, EM, AI, geopolitics",
+    "last_deep_analyzed_at": "2026-07-03T01:10:00Z",
     "synthesis_priority": true,
     "synthesis_priority_set_at": "2026-06-03T09:05:38.825095+08:00",
     "synthesis_attempted_at": "2026-06-03T01:08:23.985559+00:00",
