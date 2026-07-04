@@ -8,7 +8,7 @@ Playwright (Chromium) for JS/CSR sites; multi-model LLM chain for summaries.
 
 ## Develop / Test
 ```bash
-python3 -m pytest tests/ -q                       # 569 passing, 15 deselected
+python3 -m pytest tests/ -q                       # 571 passing, 15 deselected
 bash run_pipeline.sh                              # full 4-stage pipeline
 python3 fetch_articles.py --list                  # list configured sources
 python3 fetch_articles.py --source <id> --dry-run # one source, no save
@@ -45,3 +45,4 @@ Key dirs/files:
 - Prefer SSR (requests+BS4); use Playwright only for JS/CSR sites. Some funds are WAF-gated (e.g. AQR, MSCI) — nightly tests auto-skip when 0 articles return; not a fetcher bug.
 - Gitignored/not-committed-manually: `data/`, `logs/`, `content/`, `config/inspection_state.json`. Schedulers auto-commit `config/trial-state.json` + `config/fund_candidates.json` — concurrent edits happen, so always `git add <specific file>`, never `-A`.
 - Notifications (discovery / trial / synthesis / refresh summaries) are email, notification-only; failures must not break the pipeline exit code.
+- `scripts/gmia-fetcher-health.py` content-probe defaults to the top 3 most-recent articles (`CONTENT_PROBE_TOP_N`); a per-source `"content_probe_top_n"` override in `sources.json` lets feeds that regularly interleave several short teaser/video pages ahead of the next full piece probe deeper (matthews-asia=6, added 2026-07-04 after 2 consecutive daily false-positive FAILs — its top 3 are always short, article[3] is the first full-length one).
