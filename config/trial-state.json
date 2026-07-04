@@ -5979,6 +5979,25 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-07-04": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.principalam.com/us/insights/macro-views/june-jobs-report-softer-expected-still-balance",
+            "https://www.principalam.com/us/insights/macro-views/2q-recap-historic-rebound-amid-balanced-risks",
+            "https://www.principalam.com/us/insights/real-estate-private-markets/cre-recovery-intact-increasingly-uneven",
+            "https://www.principalam.com/us/insights/real-estate-private-markets/resilient-us-transaction-volumes-15-yoy-may",
+            "https://www.principalam.com/us/insights/fixed-income/what-tranche-thickness-and-why-does-it-matter-life-insurers",
+            "https://www.principalam.com/us/insights/macro-views/june-fomc-meeting-new-era-fed",
+            "https://www.principalam.com/us/insights/macro-views/growing-role-capex-inflation-dynamics",
+            "https://www.principalam.com/us/insights/real-estate-private-markets/cres-recovery-masks-widening-divide",
+            "https://www.principalam.com/us/insights/real-estate-private-markets/2026-inside-real-estate-outlook",
+            "https://www.principalam.com/us/insights/macro-views/june-ecb-meeting-unanimous-decision-hike"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -6053,6 +6072,41 @@
           "js_only_checked": 0,
           "day": 2,
           "date": "2026-07-03"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.principalam.com/us/insights/macro-views/growing-role-capex-inflation-dynamics",
+              "relevance": 0.9,
+              "depth": 0.6,
+              "extractable": 1.0,
+              "overall": 0.8,
+              "notes": "Macro analysis of capex-driven inflation dynamics and commodity demand; identifies thematic investment opportunities in industrial metals and resource-rich markets."
+            },
+            {
+              "url": "https://www.principalam.com/us/insights/real-estate-private-markets/cres-recovery-masks-widening-divide",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.9,
+              "overall": 0.9,
+              "notes": "Deep CRE research showing K-shaped recovery with significant dispersion; compares current cycle to post-S&L crisis; emphasizes alpha generation through property/market selection and NOI growth."
+            },
+            {
+              "url": "https://www.principalam.com/us/insights/real-estate-private-markets/2026-inside-real-estate-outlook",
+              "relevance": 0.9,
+              "depth": 0.65,
+              "extractable": 0.7,
+              "overall": 0.76,
+              "notes": "Mid-year CRE outlook covering macro backdrop, recovery characterization, and portfolio strategy across public/private equity/debt; text appears truncated at end."
+            }
+          ],
+          "avg_score": 0.82,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 3,
+          "date": "2026-07-04"
         }
       ]
     },
@@ -6087,6 +6141,25 @@
           "fetcher_used": true
         },
         "2026-07-03": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.cohenandsteers.com/insights/40-years-from-reits-to-real-assets-video/",
+            "https://www.cohenandsteers.com/insights/why-active-management-matters-in-energy-markets/",
+            "https://www.cohenandsteers.com/insights/the-energy-buildout-5-investment-themes-in-a-power-hungry-world/",
+            "https://www.cohenandsteers.com/insights/the-reality-of-energy-addition/",
+            "https://www.cohenandsteers.com/insights/era-of-scarcity-and-the-coming-super-cycle-in-natural-resources/",
+            "https://www.cohenandsteers.com/insights/seizing-the-real-assets-opportunity/",
+            "https://www.cohenandsteers.com/insights/video-data-centers-energy-and-infrastructure-powering-the-ai-surge/",
+            "https://www.cohenandsteers.com/insights/three-themes-in-preferred-securities-today/",
+            "https://www.cohenandsteers.com/insights/three-themes-in-hybrid-credit-securities-today/",
+            "https://www.cohenandsteers.com/insights/the-case-for-real-assets-fp/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-07-04": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -6178,6 +6251,41 @@
           "js_only_checked": 7,
           "day": 2,
           "date": "2026-07-03"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.cohenandsteers.com/insights/video-data-centers-energy-and-infrastructure-powering-the-ai-surge/",
+              "relevance": 0.9,
+              "depth": 0.3,
+              "extractable": 0.2,
+              "overall": 0.52,
+              "notes": "Video teaser for panel discussion on AI infrastructure and data centers; mostly promotional with no substantive content provided"
+            },
+            {
+              "url": "https://www.cohenandsteers.com/insights/three-themes-in-preferred-securities-today/",
+              "relevance": 0.95,
+              "depth": 0.65,
+              "extractable": 0.85,
+              "overall": 0.81,
+              "notes": "Investment thesis on preferred securities as income source amid geopolitical disruption; includes market context and credit analysis but appears truncated at end"
+            },
+            {
+              "url": "https://www.cohenandsteers.com/insights/three-themes-in-hybrid-credit-securities-today/",
+              "relevance": 0.95,
+              "depth": 0.65,
+              "extractable": 0.85,
+              "overall": 0.81,
+              "notes": "Nearly identical to Article 2 but focused on hybrid credit securities; same geopolitical narrative and income thesis with truncation at end"
+            }
+          ],
+          "avg_score": 0.713,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 4,
+          "day": 3,
+          "date": "2026-07-04"
         }
       ]
     }
