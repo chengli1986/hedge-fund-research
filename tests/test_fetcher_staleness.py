@@ -356,6 +356,57 @@ def test_probe_only_tries_top_n_articles(monkeypatch):
     assert attempt_counter["n"] == gfh.CONTENT_PROBE_TOP_N == 3
 
 
+def test_probe_respects_per_source_content_probe_top_n_override(monkeypatch):
+    """Matthews Asia case (2026-07-04): articles[0..2] are short teaser/video
+    pages every day, article[3] is the first full-length one. Default top-3
+    would FAIL forever; a source-level "content_probe_top_n" override lets
+    this specific feed probe deeper without changing the global default."""
+    today_iso = datetime.now(gfh.BJT).strftime("%Y-%m-%d")
+    sid = _install_per_article_fakes(
+        monkeypatch,
+        [
+            {"title": "p1", "url": "http://a/1", "date": today_iso},
+            {"title": "p2", "url": "http://a/2", "date": today_iso},
+            {"title": "p3", "url": "http://a/3", "date": today_iso},
+            {"title": "full", "url": "http://a/4", "date": today_iso},
+        ],
+        outcomes={
+            "http://a/1": lambda art: _write_chars(art, 50),
+            "http://a/2": lambda art: _write_chars(art, 50),
+            "http://a/3": lambda art: _write_chars(art, 50),
+            "http://a/4": lambda art: _write_chars(art, 500),
+        },
+    )
+    source = {"id": sid, "frequency": "weekly", "content_probe_top_n": 6}
+    result = gfh._probe_once(source)
+    assert result["status"] == "OK", f"expected OK, got {result}"
+    assert result.get("content_probe_index") == 3
+
+
+def test_probe_without_override_still_defaults_to_top_3(monkeypatch):
+    """Sources without a "content_probe_top_n" key keep the global default —
+    the override is opt-in per source, not a behavior change for everyone."""
+    today_iso = datetime.now(gfh.BJT).strftime("%Y-%m-%d")
+    sid = _install_per_article_fakes(
+        monkeypatch,
+        [
+            {"title": "p1", "url": "http://a/1", "date": today_iso},
+            {"title": "p2", "url": "http://a/2", "date": today_iso},
+            {"title": "p3", "url": "http://a/3", "date": today_iso},
+            {"title": "full", "url": "http://a/4", "date": today_iso},
+        ],
+        outcomes={
+            "http://a/1": lambda art: _write_chars(art, 50),
+            "http://a/2": lambda art: _write_chars(art, 50),
+            "http://a/3": lambda art: _write_chars(art, 50),
+            "http://a/4": lambda art: _write_chars(art, 500),
+        },
+    )
+    source = {"id": sid, "frequency": "weekly"}  # no override
+    result = gfh._probe_once(source)
+    assert result["status"] == "FAIL", f"expected FAIL, got {result}"
+
+
 def test_probe_staleness_uses_article_0_not_successful_one(monkeypatch):
     """Staleness check must use articles[0]'s date (the genuinely most recent
     article), not the date of whichever article happened to pass the content

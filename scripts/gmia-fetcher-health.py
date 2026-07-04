@@ -243,8 +243,14 @@ def _probe_once(source: dict) -> dict:
 
     # Step 2: content probe — write into a private tmp dir to avoid touching
     # production content/. Patch fetch_content.CONTENT_DIR for the call only.
-    # Probe up to CONTENT_PROBE_TOP_N most-recent articles, pass on the first
-    # that yields ≥MIN_CONTENT_LENGTH chars with a TERMINAL_OK status.
+    # Probe up to CONTENT_PROBE_TOP_N most-recent articles (or a per-source
+    # override via "content_probe_top_n" in sources.json, for feeds that
+    # regularly interleave several short teaser/video pages ahead of the next
+    # full-length piece — e.g. Matthews Asia, confirmed 2026-07-04 after 2
+    # consecutive daily FAILs: articles[0..2] are always short, article[3] is
+    # the first full-length one), pass on the first that yields
+    # ≥MIN_CONTENT_LENGTH chars with a TERMINAL_OK status.
+    probe_top_n = source.get("content_probe_top_n", CONTENT_PROBE_TOP_N)
     original_content_dir = fetch_content.CONTENT_DIR
     chars = 0
     content_attempts: list[dict] = []
@@ -254,7 +260,7 @@ def _probe_once(source: dict) -> dict:
     try:
         with tempfile.TemporaryDirectory(prefix="gmia-health-") as td:
             fetch_content.CONTENT_DIR = Path(td)
-            for idx, article in enumerate(articles[:CONTENT_PROBE_TOP_N]):
+            for idx, article in enumerate(articles[:probe_top_n]):
                 probe_article = dict(article)
                 probe_article["id"] = f"healthprobe_{sid}_{idx}"
                 attempt: dict = {"index": idx, "url": article.get("url", "")}
