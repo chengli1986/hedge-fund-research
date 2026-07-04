@@ -2611,18 +2611,17 @@
     "source": "manual",
     "status": "seed",
     "strategy_tags": [
-      "equity",
-      "multi_asset"
+      "equity"
     ],
     "official_domain": "www.southeasternasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-07-02T09:00:44.120185+08:00",
-    "last_deep_analyzed_at": "2026-06-26T01:00:00Z",
-    "quality": "MEDIUM",
-    "quality_score": 0.6,
-    "topics": "equity, value investing, company analysis",
-    "notes": "Quarterly fund letters + podcasts; sparse frequency"
+    "last_discovered_at": "2026-07-04T09:00:42.259014+08:00",
+    "last_deep_analyzed_at": "2026-07-04T01:10:00Z",
+    "quality": "HIGH",
+    "quality_score": 0.88,
+    "topics": "equity, value investing, concentrated stock-picking, valuation",
+    "notes": "RECOMMEND: Quarterly concentrated value stock research"
   },
   {
     "id": "goehring-rozencwajg",
@@ -2644,5 +2643,22 @@
     "quality": "HIGH",
     "quality_score": 0.88,
     "topics": "energy, commodities, macro"
+  },
+  {
+    "id": "lord-abbett",
+    "name": "Lord Abbett",
+    "homepage_url": "https://www.lordabbett.com",
+    "research_url": "https://www.lordabbett.com/en-us/financial-advisor/insights.html",
+    "source": "manual",
+    "status": "seed",
+    "strategy_tags": [
+      "fixed_income",
+      "multi_asset"
+    ],
+    "official_domain": "www.lordabbett.com",
+    "research_links": [],
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-07-04T09:03:22.878956+08:00"
   }
 ]
+
