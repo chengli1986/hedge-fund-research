@@ -596,7 +596,7 @@ def generate_html(articles: list[dict]) -> str:
     # intentional graceful degradation, not a behavior this refactor introduces.
     pool_parts: list[str] = []
     details_by_aid: dict[str, dict] = {}
-    for a in sorted_articles:
+    for seq, a in enumerate(sorted_articles):
         sid = a.get("source_id", "unknown")
         aid = a.get("id", "")
         theme_slugs = " ".join(
@@ -609,10 +609,14 @@ def generate_html(articles: list[dict]) -> str:
         # shows a bilingual "see source above" notice (handled in JS hydrate).
         if details_payload is not None and _age_of(a) != "older":
             details_by_aid[f"a-{_esc(aid)}"] = details_payload
+        # data-seq = position in the global date-descending order. The timeline
+        # view sorts by it because pool DOM order is scrambled after any
+        # themes/funds hydration (returnArticlesToPool appends in document order).
         pool_parts.append(
             f'<article id="a-{_esc(aid)}" class="pool-article" '
             f'data-source-id="{_esc(sid)}" '
             f'data-date="{_esc(a.get("date", ""))}" '
+            f'data-seq="{seq}" '
             f'data-age="{_age_of(a)}" '
             f'data-themes="{theme_slugs}">'
             f'{card_html}</article>'
@@ -1303,7 +1307,11 @@ function populateViewFromPool(viewName) {{
     const target = panel.querySelector('.timeline-wrap');
     if (!target) return;
     const initialVisible = parseInt(target.dataset.initialVisible || '20', 10);
-    Array.from(pool.querySelectorAll('article.pool-article')).forEach((a, i) => {{
+    /* Pool DOM order is scrambled after any themes/funds hydration, so sort
+       by data-seq (baked-in global date-descending rank) to restore the feed. */
+    Array.from(pool.querySelectorAll('article.pool-article'))
+      .sort((x, y) => (parseInt(x.dataset.seq, 10) || 0) - (parseInt(y.dataset.seq, 10) || 0))
+      .forEach((a, i) => {{
       a.classList.toggle('timeline-extra', i >= initialVisible);
       a.style.display = i >= initialVisible ? 'none' : '';
       target.appendChild(a);

@@ -253,6 +253,39 @@ class TestArticlePool:
             f"view switch. Found article tag inside: {inner[:200]}"
         )
 
+    def test_pool_articles_carry_data_seq_in_global_date_order(self) -> None:
+        """Each pool article carries data-seq = its position in the global
+        date-descending order, so the timeline view can restore chronological
+        order no matter how theme/fund hydration has shuffled the pool DOM."""
+        result = generate_html(SAMPLE_ARTICLES)
+        import re
+        seqs = {}
+        for m in re.finditer(
+            r'<article id="a-([^"]+)" class="pool-article"[^>]*data-seq="(\d+)"',
+            result,
+        ):
+            seqs[m.group(1)] = int(m.group(2))
+        assert set(seqs) == {a["id"] for a in SAMPLE_ARTICLES}, (
+            f"Every pool article needs a data-seq attribute — got {seqs}"
+        )
+        # Date-descending: ccc333 (03-30) < aaa111 (03-28) < bbb222 (03-25)
+        assert seqs["ccc333"] < seqs["aaa111"] < seqs["bbb222"], (
+            f"data-seq must follow global date-descending order, got {seqs}"
+        )
+
+    def test_timeline_populate_sorts_pool_by_seq(self) -> None:
+        """The timeline branch of populateViewFromPool must sort pool articles
+        by data-seq before appending — pool DOM order is scrambled after any
+        themes/funds hydration (returnArticlesToPool appends in document order),
+        so appending unsorted breaks the chronological feed."""
+        result = generate_html(SAMPLE_ARTICLES)
+        timeline_branch = result.split("if (viewName === 'timeline')")[1] \
+                                .split("else if")[0]
+        assert "dataset.seq" in timeline_branch and ".sort(" in timeline_branch, (
+            "Timeline populate must sort articles by dataset.seq — relying on "
+            "pool DOM order regresses to fund/theme-grouped output"
+        )
+
 
 class TestFundDistributionChart:
     """The Funds view opens with a compact horizontal bar chart showing how many
