@@ -2521,7 +2521,7 @@
     "screening_reason": "Login/paywall detected",
     "fit_score": 0.74,
     "last_validated_at": "2026-06-04T09:00:53.176165+08:00",
-    "last_deep_analyzed_at": "2026-06-04T01:02:11.677563+00:00",
+    "last_deep_analyzed_at": "2026-07-05T01:15:00Z",
     "quality": "HIGH",
     "quality_score": 0.72,
     "topics": "fixed income, credit, macro, real assets",
@@ -2616,7 +2616,7 @@
     "official_domain": "www.southeasternasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-07-04T09:00:42.259014+08:00",
+    "last_discovered_at": "2026-07-05T09:00:41.027572+08:00",
     "last_deep_analyzed_at": "2026-07-04T01:10:00Z",
     "quality": "HIGH",
     "quality_score": 0.88,
@@ -2653,12 +2653,18 @@
     "status": "seed",
     "strategy_tags": [
       "fixed_income",
-      "multi_asset"
+      "multi_asset",
+      "macro",
+      "equity"
     ],
     "official_domain": "www.lordabbett.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-07-04T09:03:22.878956+08:00"
+    "last_discovered_at": "2026-07-05T09:00:41.220277+08:00",
+    "last_deep_analyzed_at": "2026-07-05T01:15:00Z",
+    "quality": "MEDIUM",
+    "quality_score": 0.62,
+    "topics": "fixed income, equity, macro, multi-asset",
+    "notes": "Free FI/equity outlook pieces, overlaps existing AMs"
   }
 ]
-
