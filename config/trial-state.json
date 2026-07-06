@@ -6017,6 +6017,25 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-07-06": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.principalam.com/us/insights/macro-views/june-jobs-report-softer-expected-still-balance",
+            "https://www.principalam.com/us/insights/macro-views/2q-recap-historic-rebound-amid-balanced-risks",
+            "https://www.principalam.com/us/insights/real-estate-private-markets/cre-recovery-intact-increasingly-uneven",
+            "https://www.principalam.com/us/insights/real-estate-private-markets/resilient-us-transaction-volumes-15-yoy-may",
+            "https://www.principalam.com/us/insights/fixed-income/what-tranche-thickness-and-why-does-it-matter-life-insurers",
+            "https://www.principalam.com/us/insights/macro-views/june-fomc-meeting-new-era-fed",
+            "https://www.principalam.com/us/insights/macro-views/growing-role-capex-inflation-dynamics",
+            "https://www.principalam.com/us/insights/real-estate-private-markets/cres-recovery-masks-widening-divide",
+            "https://www.principalam.com/us/insights/real-estate-private-markets/2026-inside-real-estate-outlook",
+            "https://www.principalam.com/us/insights/macro-views/june-ecb-meeting-unanimous-decision-hike"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -6145,6 +6164,14 @@
           "js_only_checked": 0,
           "day": 4,
           "date": "2026-07-05"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 5,
+          "date": "2026-07-06"
         }
       ]
     },
@@ -6217,6 +6244,25 @@
           "fetcher_used": true
         },
         "2026-07-05": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.cohenandsteers.com/insights/40-years-from-reits-to-real-assets-video/",
+            "https://www.cohenandsteers.com/insights/why-active-management-matters-in-energy-markets/",
+            "https://www.cohenandsteers.com/insights/the-energy-buildout-5-investment-themes-in-a-power-hungry-world/",
+            "https://www.cohenandsteers.com/insights/the-reality-of-energy-addition/",
+            "https://www.cohenandsteers.com/insights/era-of-scarcity-and-the-coming-super-cycle-in-natural-resources/",
+            "https://www.cohenandsteers.com/insights/seizing-the-real-assets-opportunity/",
+            "https://www.cohenandsteers.com/insights/video-data-centers-energy-and-infrastructure-powering-the-ai-surge/",
+            "https://www.cohenandsteers.com/insights/three-themes-in-preferred-securities-today/",
+            "https://www.cohenandsteers.com/insights/three-themes-in-hybrid-credit-securities-today/",
+            "https://www.cohenandsteers.com/insights/the-case-for-real-assets-fp/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-07-06": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -6362,6 +6408,14 @@
           "js_only_checked": 1,
           "day": 4,
           "date": "2026-07-05"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 5,
+          "date": "2026-07-06"
         }
       ]
     }
