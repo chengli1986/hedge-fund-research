@@ -994,7 +994,7 @@
     "quality": "HIGH",
     "quality_score": 0.9,
     "topics": "factor investing, smart beta, fundamental indexing, AI, macro, emerging markets",
-    "last_deep_analyzed_at": "2026-06-26T01:00:00Z",
+    "last_deep_analyzed_at": "2026-07-07T01:02:24Z",
     "strategy_tags": [
       "quant",
       "equity",
@@ -1146,7 +1146,7 @@
     "rss_url": null,
     "official_domain": "www.pgim.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "Broad institutional portal; FI+alternatives depth; AU page accessible; 20 regional sub-sites (AU/HK/SG/UK/DE etc.) — US path stale, AU promoted then demoted. BLOCKED from promotion 2026-06-18 (see watchlist_reason); do not retry without human review.",
+    "notes": "Broad institutional portal; FI+alternatives depth; AU page accessible; 20 regional sub-sites (AU/HK/SG/UK/DE etc.) — US path stale, AU promoted then demoted. BLOCKED from promotion 2026-06-18 (see watchlist_reason); do not retry without human review. Rechecked 2026-07-07: AU insights page still shows newest content from Q1 2025 (stale); no change.",
     "research_links": [
       {
         "url": "https://www.pgim.com/au/en/institutional/insights",
@@ -1264,7 +1264,7 @@
       "article_signals": 0
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-06-05T01:00:00Z",
+    "last_deep_analyzed_at": "2026-07-07T01:02:24Z",
     "quality": "MEDIUM",
     "quality_score": 0.62,
     "topics": "fixed income, alternatives, private credit, emerging markets, multi-asset",
@@ -1597,7 +1597,7 @@
     "quality_score": 0.82,
     "topics": "multi-asset, macro, fixed income, equity, emerging markets",
     "notes": "RECOMMEND: Proprietary CML 17-min research, free access",
-    "last_deep_analyzed_at": "2026-06-26T01:00:00Z",
+    "last_deep_analyzed_at": "2026-07-07T01:02:24Z",
     "is_publicly_accessible": true,
     "has_article_index": true,
     "research_url": "https://www.pinebridge.com/en/all-insights",
@@ -2143,7 +2143,7 @@
     "quality_score": 0.84,
     "topics": "fixed income, equity, macro, AI/technology, REITs, CLOs, multi-asset",
     "notes": "RECOMMEND: Free, 278 articles; daily cadence; FI/eq/macro Jun 2026",
-    "last_deep_analyzed_at": "2026-06-26T01:00:00Z",
+    "last_deep_analyzed_at": "2026-07-07T01:02:24Z",
     "promoted_at": "2026-05-12T10:19:29.746916+08:00"
   },
   {
@@ -2616,7 +2616,7 @@
     "official_domain": "www.southeasternasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-07-05T09:00:41.027572+08:00",
+    "last_discovered_at": "2026-07-07T09:00:41.689447+08:00",
     "last_deep_analyzed_at": "2026-07-04T01:10:00Z",
     "quality": "HIGH",
     "quality_score": 0.88,
@@ -2660,7 +2660,7 @@
     "official_domain": "www.lordabbett.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-07-05T09:00:41.220277+08:00",
+    "last_discovered_at": "2026-07-07T09:00:42.416628+08:00",
     "last_deep_analyzed_at": "2026-07-05T01:15:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.62,
