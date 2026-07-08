@@ -6055,6 +6055,25 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-07-08": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.principalam.com/us/insights/real-estate-private-markets/stable-income-backbone-assets-institutional-investors",
+            "https://www.principalam.com/us/insights/macro-views/june-jobs-report-softer-expected-still-balance",
+            "https://www.principalam.com/us/insights/macro-views/2q-recap-historic-rebound-amid-balanced-risks",
+            "https://www.principalam.com/us/insights/real-estate-private-markets/cre-recovery-intact-increasingly-uneven",
+            "https://www.principalam.com/us/insights/real-estate-private-markets/resilient-us-transaction-volumes-15-yoy-may",
+            "https://www.principalam.com/us/insights/fixed-income/what-tranche-thickness-and-why-does-it-matter-life-insurers",
+            "https://www.principalam.com/us/insights/macro-views/june-fomc-meeting-new-era-fed",
+            "https://www.principalam.com/us/insights/macro-views/growing-role-capex-inflation-dynamics",
+            "https://www.principalam.com/us/insights/real-estate-private-markets/cres-recovery-masks-widening-divide",
+            "https://www.principalam.com/us/insights/real-estate-private-markets/2026-inside-real-estate-outlook"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -6210,6 +6229,14 @@
           "js_only_checked": 0,
           "day": 6,
           "date": "2026-07-07"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 7,
+          "date": "2026-07-08"
         }
       ]
     },
@@ -6334,6 +6361,25 @@
             "https://www.cohenandsteers.com/insights/video-data-centers-energy-and-infrastructure-powering-the-ai-surge/",
             "https://www.cohenandsteers.com/insights/three-themes-in-preferred-securities-today/",
             "https://www.cohenandsteers.com/insights/three-themes-in-hybrid-credit-securities-today/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-07-08": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.cohenandsteers.com/insights/the-real-estate-reel-rising-rents-matter-more-than-rising-rates/",
+            "https://www.cohenandsteers.com/insights/building-better-portfolios-real-estate-investing-explained/",
+            "https://www.cohenandsteers.com/insights/40-years-from-reits-to-real-assets-video/",
+            "https://www.cohenandsteers.com/insights/why-active-management-matters-in-energy-markets/",
+            "https://www.cohenandsteers.com/insights/the-energy-buildout-5-investment-themes-in-a-power-hungry-world/",
+            "https://www.cohenandsteers.com/insights/the-reality-of-energy-addition/",
+            "https://www.cohenandsteers.com/insights/era-of-scarcity-and-the-coming-super-cycle-in-natural-resources/",
+            "https://www.cohenandsteers.com/insights/seizing-the-real-assets-opportunity/",
+            "https://www.cohenandsteers.com/insights/video-data-centers-energy-and-infrastructure-powering-the-ai-surge/",
+            "https://www.cohenandsteers.com/insights/three-themes-in-preferred-securities-today/"
           ],
           "error": null,
           "fetcher_used": true
@@ -6492,6 +6538,25 @@
           "js_only_checked": 1,
           "day": 6,
           "date": "2026-07-07"
+        },
+        {
+          "sampled": 1,
+          "articles": [
+            {
+              "url": "https://www.cohenandsteers.com/insights/the-real-estate-reel-rising-rents-matter-more-than-rising-rates/",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.6,
+              "overall": 0.76,
+              "notes": "REIT investment thesis arguing that rising rents and economic fundamentals matter more than rate hikes for real estate returns; includes historical performance data but text appears truncated."
+            }
+          ],
+          "avg_score": 0.76,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 1,
+          "day": 7,
+          "date": "2026-07-08"
         }
       ]
     }
