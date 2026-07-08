@@ -59,7 +59,7 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-06-27T01:02:55Z",
+    "last_deep_analyzed_at": "2026-07-08T01:02:41Z",
     "quality": "HIGH",
     "topics": "fixed income, macro, credit, global economy",
     "strategy_tags": [
@@ -270,7 +270,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.94,
-    "notes": "403 persists; Playwright needed; PE/macro/infra",
+    "notes": "403 persists (WebFetch too); Playwright needed",
     "research_links": [
       {
         "url": "https://www.kkr.com/insights",
@@ -319,7 +319,7 @@
       "article_signals": 1
     },
     "screening_reason": "Insufficient article index signals",
-    "last_deep_analyzed_at": "2026-06-27T01:02:55Z",
+    "last_deep_analyzed_at": "2026-07-08T01:02:41Z",
     "quality": "MEDIUM",
     "topics": "private equity, macro, infrastructure, credit",
     "strategy_tags": [
@@ -1342,23 +1342,23 @@
     "is_publicly_accessible": null,
     "has_article_index": null,
     "fit_score": null,
-    "notes": "[白话] 同样被网站挡在门外，研究质量没法验证——进不去、不是研究差。 Reclassified inaccessible→rejected 2026-05-10: 403 bot protection on all paths from EC2; content quality unverifiable. fetcher-synthesis cannot solve (block is at IP/WAF layer, not browser-rendering).",
+    "notes": "[白话] 同样被网站挡在门外，研究质量没法验证——进不去、不是研究差。 Reclassified inaccessible→rejected 2026-05-10: 403 bot protection on all paths from EC2; content quality unverifiable. fetcher-synthesis cannot solve (block is at IP/WAF layer, not browser-rendering). 2026-07-08 recheck: WebFetch (non-EC2) sees rich dated content (mid-year outlook, credit, EM) -- EC2 block status unverified this session, still rejected pending EC2-side recheck.",
     "research_links": [],
     "screening_signals": {},
     "screening_reason": null,
-    "last_deep_analyzed_at": "2026-06-07T01:00:00Z",
-    "quality": "MEDIUM",
-    "topics": "macro, equity, multi-asset, private equity",
+    "last_deep_analyzed_at": "2026-07-08T01:02:41Z",
+    "quality": "HIGH",
+    "topics": "macro, equity, fixed income, multi-asset, emerging markets",
     "strategy_tags": [
       "macro",
       "equity",
-      "multi_asset",
-      "private_equity"
+      "fixed_income",
+      "multi_asset"
     ],
     "source": "manual",
     "inaccessible_reason": "403 bot protection on all paths",
     "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager",
-    "quality_score": 0.62
+    "quality_score": 0.75
   },
   {
     "id": "neuberger-berman",
@@ -1376,7 +1376,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.88,
-    "notes": "Reclassified inaccessible→rejected 2026-05-10: Vercel WAF returns 429 rate-limit to EC2 IP (HIGH quality content but unreachable). fetcher-synthesis cannot solve (rate-limit is at IP layer, not browser-rendering). Reconsider if EC2 IP changes or fund moves off Vercel. 2026-06-13 re-verify (no proxy infra): EC2 direct = 429 regardless of UA/full browser headers (pure IP-layer, ~0.085s edge reject); jina.ai reader (real-browser stack, non-EC2 datacenter IP) also hit Vercel Security Checkpoint 429; allorigins 522. Block is datacenter-IP reputation, not TLS fingerprint, so curl_cffi/playwright-stealth on EC2 IP expected to fail too. Only a residential rotating proxy could bypass. Content quality stays HIGH (0.82, confirmed via search) - rejection is reachability, not fund quality.",
+    "notes": "Reclassified inaccessible→rejected 2026-05-10: Vercel WAF returns 429 rate-limit to EC2 IP (HIGH quality content but unreachable). fetcher-synthesis cannot solve (rate-limit is at IP layer, not browser-rendering). Reconsider if EC2 IP changes or fund moves off Vercel. 2026-06-13 re-verify (no proxy infra): EC2 direct = 429 regardless of UA/full browser headers (pure IP-layer, ~0.085s edge reject); jina.ai reader (real-browser stack, non-EC2 datacenter IP) also hit Vercel Security Checkpoint 429; allorigins 522. Block is datacenter-IP reputation, not TLS fingerprint, so curl_cffi/playwright-stealth on EC2 IP expected to fail too. Only a residential rotating proxy could bypass. Content quality stays HIGH (0.82, confirmed via search) - rejection is reachability, not fund quality. 2026-07-08 recheck: WebFetch also hit 429, block persists.",
     "research_links": [
       {
         "url": "https://www.nb.com/en/global/insights",
@@ -1400,7 +1400,7 @@
       "article_signals": 0
     },
     "screening_reason": "429 rate-limited; content confirmed via search (CIO Weekly, quarterly AAC outlook)",
-    "last_deep_analyzed_at": "2026-06-07T01:00:00Z",
+    "last_deep_analyzed_at": "2026-07-08T01:02:41Z",
     "quality": "HIGH",
     "topics": "macro, multi-asset, fixed income, real assets, private equity",
     "strategy_tags": [
@@ -2616,7 +2616,7 @@
     "official_domain": "www.southeasternasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-07-07T09:00:41.689447+08:00",
+    "last_discovered_at": "2026-07-08T09:00:41.775538+08:00",
     "last_deep_analyzed_at": "2026-07-04T01:10:00Z",
     "quality": "HIGH",
     "quality_score": 0.88,
@@ -2660,7 +2660,7 @@
     "official_domain": "www.lordabbett.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-07-07T09:00:42.416628+08:00",
+    "last_discovered_at": "2026-07-08T09:00:42.559698+08:00",
     "last_deep_analyzed_at": "2026-07-05T01:15:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.62,
