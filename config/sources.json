@@ -610,6 +610,24 @@
       "notable_authors": ["Leigh Goehring", "Adam Rozencwajg"],
       "expected_hostname": "gorozen.com",
       "max_articles": 10
+    },
+    {
+      "id": "cohen-steers",
+      "strategy_tags": [
+        "real_assets",
+        "fixed_income",
+        "equity",
+        "multi_asset"
+      ],
+      "name": "Cohen & Steers",
+      "short_name": "C&S",
+      "url": "https://www.cohenandsteers.com/insights/",
+      "method": "playwright",
+      "frequency": "weekly",
+      "description": "Real assets and alternative income specialist (~$94B AUM) founded 1986 in New York by Martin Cohen and Robert Steers — the first US investment company dedicated to listed real estate. Global leader in REITs, preferred securities, listed infrastructure and natural resource equities.",
+      "notable_authors": [],
+      "expected_hostname": "cohenandsteers.com",
+      "max_articles": 10
     }
   ],
   "settings": {

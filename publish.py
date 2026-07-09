@@ -56,6 +56,7 @@ BADGE_COLORS: dict[str, str] = {
     "lazard-am": "#b07d12",                 # Lazard warm amber-gold (EM/macro heritage; distinct from #d29922 Bridgewater mustard-gold and #cd853f D.E.Shaw bronze; WCAG AA ~4.8:1 on white)
     "rothschild-co-am": "#6a1b4d",          # Rothschild deep claret/Bordeaux-wine (nods to family Bordeaux estates Lafite/Mouton; fills the sparse wine-magenta niche — nearest neighbors #80276c Natixis purple and #c2185b Research-Affiliates magenta are both far in lightness/hue; min perceptual ΔE ~65; WCAG AA 11.2:1 on white)
     "goehring-rozencwajg": "#827717",       # G&R dark yellow-olive "oilfield khaki" (energy/commodities heritage; sits between #b07d12 Lazard amber — lighter, more orange — and #556b2f KKR olive — darker, greener — with RGB dist ≥47 to both; WCAG AA 4.56:1 on white)
+    "cohen-steers": "#8d4004",              # Cohen & Steers deep burnt-sienna (real-assets earth tone; much darker than #c45000 ARK orange and #cd853f D.E.Shaw bronze, redder than #7c2d12 Verdad terracotta; WCAG AA ~7.4:1 on white)
 }
 
 INITIAL_VISIBLE = 20
@@ -292,6 +293,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "专注自然资源的逆向价值投资精品资管（管理规模 ~$1.5B），2015 年由 Leigh Goehring 与 Adam Rozencwajg 在纽约创立。深耕能源、贵金属、铀、农业与基本金属的基本面研究，以大宗商品资本周期分析框架和集中持仓的长线逆向投资著称。",
         "notable_en": "Quarterly market commentaries read by 10,000+ investment professionals. Leigh Goehring has managed natural-resources portfolios since 1991 (Prudential Jennison, then Chilton's $5B Global Natural Resources Fund).",
         "notable_zh": "季度市场评论拥有超过 1 万名专业投资者读者。Leigh Goehring 自 1991 年起管理自然资源组合（先后执掌 Prudential Jennison 与 Chilton 规模达 $5B 的全球自然资源基金）。",
+    },
+    "cohen-steers": {
+        "founded": "1986", "aum": "~$94B", "hq": "New York, USA",
+        "type_en": "Asset Manager (Real Assets Specialist)", "type_zh": "资产管理（实物资产专家）",
+        "desc_zh": "实物资产与另类收益专业资管（约 $94B AUM），1986 年由 Martin Cohen 与 Robert Steers 在纽约创立，是美国首家专注上市房地产证券的投资公司。核心领域：REITs、优先证券、上市基础设施与自然资源股票。",
+        "notable_en": "Pioneered listed real-estate investing in the US; among the world's largest REIT securities managers (third largest as of 2025). Research spans real estate, preferreds, infrastructure and resource equities.",
+        "notable_zh": "美国上市房地产投资先驱，全球第三大 REIT 证券管理机构（2025）。研究覆盖房地产、优先证券、基础设施与自然资源股票。",
     },
 }
 
