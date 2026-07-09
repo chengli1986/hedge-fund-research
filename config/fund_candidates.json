@@ -2332,7 +2332,7 @@
     "homepage_url": "https://www.cohenandsteers.com/insights/",
     "research_url": "https://www.cohenandsteers.com/insights/",
     "source": "manual",
-    "status": "visitable",
+    "status": "promoted",
     "strategy_tags": [
       "real_assets",
       "fixed_income",
@@ -2340,7 +2340,7 @@
       "multi_asset"
     ],
     "topics": "real assets, REITs, infrastructure, preferred securities",
-    "notes": "403 persists (EC2+WebFetch); real assets/REITs specialist",
+    "notes": "RECOMMEND: trial passed (8/7 days with articles, quality=0.64)",
     "last_deep_analyzed_at": "2026-07-01T01:02:05Z",
     "quality": "MEDIUM",
     "quality_score": 0.55,
@@ -2552,7 +2552,7 @@
     "homepage_url": "https://www.principalam.com/us/insights",
     "research_url": "https://www.principalam.com/us/insights/equities/rethinking-diversification-ai-driven-world",
     "source": "manual",
-    "status": "visitable",
+    "status": "promoted",
     "strategy_tags": [
       "macro",
       "multi_asset",
@@ -2583,7 +2583,7 @@
     "quality": "MEDIUM",
     "quality_score": 0.6,
     "topics": "macro, fixed income, real estate",
-    "notes": "[manual test: flipped seed->inaccessible to trial fetcher-synthesis] [guard: reverted illegal inaccessible->seed; agent may not set this status] genuine macro/equity data, but marketing-framed content",
+    "notes": "RECOMMEND: trial passed (8/7 days with articles, quality=0.83)",
     "is_publicly_accessible": false,
     "has_article_index": false,
     "last_screened_at": "2026-07-01T09:00:51.472778+08:00",
