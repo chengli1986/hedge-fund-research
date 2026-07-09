@@ -57,6 +57,7 @@ BADGE_COLORS: dict[str, str] = {
     "rothschild-co-am": "#6a1b4d",          # Rothschild deep claret/Bordeaux-wine (nods to family Bordeaux estates Lafite/Mouton; fills the sparse wine-magenta niche — nearest neighbors #80276c Natixis purple and #c2185b Research-Affiliates magenta are both far in lightness/hue; min perceptual ΔE ~65; WCAG AA 11.2:1 on white)
     "goehring-rozencwajg": "#827717",       # G&R dark yellow-olive "oilfield khaki" (energy/commodities heritage; sits between #b07d12 Lazard amber — lighter, more orange — and #556b2f KKR olive — darker, greener — with RGB dist ≥47 to both; WCAG AA 4.56:1 on white)
     "cohen-steers": "#8d4004",              # Cohen & Steers deep burnt-sienna (real-assets earth tone; much darker than #c45000 ARK orange and #cd853f D.E.Shaw bronze, redder than #7c2d12 Verdad terracotta; WCAG AA ~7.4:1 on white)
+    "principal-am": "#00568c",              # Principal deep azure (brand-adjacent corporate blue; sits between #003a70 PIMCO navy — darker — and #0066cc Wellington blue — brighter/lighter — RGB dist ≥40 to both and to #4a6fa5 GSAM steel blue; WCAG AA ~6.9:1 on white)
 }
 
 INITIAL_VISIBLE = 20
@@ -300,6 +301,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "实物资产与另类收益专业资管（约 $94B AUM），1986 年由 Martin Cohen 与 Robert Steers 在纽约创立，是美国首家专注上市房地产证券的投资公司。核心领域：REITs、优先证券、上市基础设施与自然资源股票。",
         "notable_en": "Pioneered listed real-estate investing in the US; among the world's largest REIT securities managers (third largest as of 2025). Research spans real estate, preferreds, infrastructure and resource equities.",
         "notable_zh": "美国上市房地产投资先驱，全球第三大 REIT 证券管理机构（2025）。研究覆盖房地产、优先证券、基础设施与自然资源股票。",
+    },
+    "principal-am": {
+        "founded": "1879", "aum": "$577.9B", "hq": "Des Moines, USA",
+        "type_en": "Asset Manager", "type_zh": "资产管理",
+        "desc_zh": "Principal Financial Group（1879 年创立）旗下全球资管板块（$577.9B AUM），总部位于美国 Des Moines。业务覆盖股票、固定收益、多资产配置与房地产投资，服务 80 多个市场的 1,600 余家机构客户，商业地产投资平台位居美国前列。",
+        "notable_en": "Publishes timely macro reaction notes on Fed/ECB decisions and the quarterly Global Market Perspectives outlook; its real-estate research arm covers one of the largest US commercial property portfolios.",
+        "notable_zh": "以 Fed/ECB 决议快评与季度《Global Market Perspectives》宏观展望著称；房地产研究依托美国最大商业地产投资组合之一。",
     },
 }
 

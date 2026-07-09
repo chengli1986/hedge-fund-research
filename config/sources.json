@@ -628,6 +628,24 @@
       "notable_authors": [],
       "expected_hostname": "cohenandsteers.com",
       "max_articles": 10
+    },
+    {
+      "id": "principal-am",
+      "strategy_tags": [
+        "macro",
+        "multi_asset",
+        "real_assets",
+        "fixed_income"
+      ],
+      "name": "Principal Asset Management",
+      "short_name": "Principal",
+      "url": "https://www.principalam.com/us/insights",
+      "method": "playwright",
+      "frequency": "weekly",
+      "description": "Global multi-asset manager ($577.9B AUM), the asset-management arm of Principal Financial Group (founded 1879, Des Moines). Institutional platform spanning equities, fixed income, asset allocation and one of the largest US commercial real-estate investment businesses; timely macro commentary on Fed/ECB decisions and quarterly Global Market Perspectives.",
+      "notable_authors": [],
+      "expected_hostname": "principalam.com",
+      "max_articles": 10
     }
   ],
   "settings": {
