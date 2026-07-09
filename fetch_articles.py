@@ -226,50 +226,57 @@ def fetch_cambridge_associates(source: dict) -> list[dict]:
 
     return articles[:source.get("max_articles", 10)]
 
+_MAN_GROUP_DATE_RE = re.compile(r"^[A-Z][a-z]{2,8} \d{4}$")  # "Jul 2026" / "July 2026"
+
+
 def fetch_man_group(source: dict) -> list[dict]:
     """Fetch articles from Man Group (SSR).
 
-    HTML structure: div.teaser__wrap > a.teaser contains:
-      - h2.teaser__title with optional <strong>Series Name</strong><br>Actual Title
-      - span.details__date with "March 31, 2026"
-      - span.details__category with "Market Views" etc.
-      - div.teaser__text > p with summary
+    Site redesigned ~2026-07 (old div.teaser__wrap layout is gone).
+    HTML structure: div.card > a[href*="/insights/"] contains:
+      - top chip div.text-blue with content type ("Article" / "Podcast")
+      - banner div.bg-primary with spans: optional series name
+        ("Views From the Floor" etc.) + month-granularity date ("Jul 2026")
+      - h5 with the title, sibling span.fs-6 with the summary
+    Dates have no day component; parse_date resolves them to month-end.
+    Featured carousel entries (div.render-component tabs) carry no date and
+    duplicate the card list, so only div.card entries are parsed.
     """
     resp = requests.get(source["url"], headers=HEADERS, timeout=30)
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
 
     articles = []
-    for card in soup.select("div.teaser__wrap"):
-        link = card.select_one("a.teaser")
+    seen_urls: set[str] = set()
+    for card in soup.select("div.card"):
+        link = card.select_one('a[href*="/insights/"]')
         if not link:
             continue
-        href = link.get("href", "")
-        if not href or href == "/insights":
+        url = urljoin(source["url"], link.get("href", ""))
+        if url in seen_urls:
             continue
-        url = urljoin(source["url"], href)
+        seen_urls.add(url)
 
-        # Parse title: <strong>Series</strong><br>Actual Title
-        title_el = card.select_one(".teaser__content .teaser__title")
-        if not title_el:
-            continue
-        strong = title_el.find("strong")
-        series = ""
-        if strong:
-            series = strong.get_text(strip=True)
-            for tag in title_el.find_all(["strong", "br"]):
-                tag.decompose()
-        title_text = title_el.get_text(strip=True)
+        title_el = card.select_one("h5")
+        title_text = title_el.get_text(strip=True) if title_el else ""
         if not title_text or len(title_text) < 5:
             continue
 
-        date_el = card.select_one("span.details__date")
-        date_str = date_el.get_text(strip=True) if date_el else ""
+        date_str = ""
+        series = ""
+        band = card.select_one("div.bg-primary")
+        if band:
+            for span in band.select("span"):
+                text = span.get_text(strip=True)
+                if _MAN_GROUP_DATE_RE.match(text):
+                    date_str = text
+                elif text and not series:
+                    series = text
 
-        category_el = card.select_one("span.details__category")
-        category = category_el.get_text(strip=True) if category_el else ""
+        chip_el = card.select_one("div.text-blue")
+        category = chip_el.get_text(strip=True) if chip_el else ""
 
-        summary_el = card.select_one("div.teaser__text p")
+        summary_el = card.select_one(".card-body span")
         summary = summary_el.get_text(strip=True) if summary_el else ""
 
         articles.append({
