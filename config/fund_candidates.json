@@ -86,7 +86,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.97,
-    "notes": "RECOMMEND: 30+ article free library; quant+macro, active 2026",
+    "notes": "RECOMMEND: proprietary quant research, active thru 2026",
     "research_links": [
       {
         "url": "https://www.deshaw.com/library",
@@ -105,7 +105,7 @@
       "article_signals": 1
     },
     "screening_reason": "Insufficient article index signals",
-    "last_deep_analyzed_at": "2026-06-29T01:00:00Z",
+    "last_deep_analyzed_at": "2026-07-10T01:02:08Z",
     "quality": "HIGH",
     "topics": "quant, portfolio management, equity, macro, credit, interest rates",
     "reject_reason": "no_public_research",
@@ -117,7 +117,7 @@
       "fixed_income"
     ],
     "source": "auto_discovered",
-    "quality_score": 0.9,
+    "quality_score": 0.92,
     "synthesis_attempted_at": "2026-05-17T08:30:42.494662+00:00",
     "synthesis_outcome": "success",
     "requires_playwright": true
@@ -863,8 +863,8 @@
     "rss_url": null,
     "official_domain": null,
     "discovery_method": "seed",
-    "notes": "[白话] 网站直接拦掉我们服务器的访问，内容根本没看过——是进不去、不是研究差。 Rejected: 403 anti-scraping policy; EC2 permanently blocked",
-    "last_deep_analyzed_at": "2026-06-09T01:00:00Z",
+    "notes": "Re-confirmed: still 403 EC2-blocked, permanent policy block",
+    "last_deep_analyzed_at": "2026-07-10T01:02:08Z",
     "quality": "MEDIUM",
     "topics": "private equity, credit, real assets, macro",
     "strategy_tags": [
@@ -1652,15 +1652,15 @@
       "multi_asset",
       "emerging_markets"
     ],
-    "notes": "RECOMMEND: Weekly quant-value research, free access since 2016",
+    "notes": "RECOMMEND: quant-value weekly, last seen May 2026",
     "official_domain": "verdadcap.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-04-29T09:00:09.051367+08:00",
-    "last_deep_analyzed_at": "2026-06-29T01:00:00Z",
+    "last_deep_analyzed_at": "2026-07-10T01:02:08Z",
     "quality": "HIGH",
-    "quality_score": 0.9,
-    "topics": "quant, value investing, factor investing, global equity, Japan, Europe, private equity"
+    "quality_score": 0.88,
+    "topics": "quant, value investing, factor investing, global equity, Japan, private equity"
   },
   {
     "id": "alliancebernstein",
@@ -2616,7 +2616,7 @@
     "official_domain": "www.southeasternasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-07-09T09:00:40.115010+08:00",
+    "last_discovered_at": "2026-07-10T09:00:41.977072+08:00",
     "last_deep_analyzed_at": "2026-07-04T01:10:00Z",
     "quality": "HIGH",
     "quality_score": 0.88,
@@ -2634,12 +2634,12 @@
       "real_assets",
       "macro"
     ],
-    "notes": "RECOMMEND: trial passed (8/7 days with articles, quality=0.65)",
+    "notes": "RECOMMEND: weekly energy/commodity research, active",
     "official_domain": "www.gorozen.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-06-25T09:00:40.632255+08:00",
-    "last_deep_analyzed_at": "2026-06-28T01:02:48Z",
+    "last_deep_analyzed_at": "2026-07-10T01:02:08Z",
     "quality": "HIGH",
     "quality_score": 0.88,
     "topics": "energy, commodities, macro"
@@ -2660,7 +2660,7 @@
     "official_domain": "www.lordabbett.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-07-09T09:00:40.405140+08:00",
+    "last_discovered_at": "2026-07-10T09:00:42.228478+08:00",
     "last_deep_analyzed_at": "2026-07-05T01:15:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.62,
