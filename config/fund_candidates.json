@@ -2616,12 +2616,12 @@
     "official_domain": "www.southeasternasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-07-11T09:00:41.321385+08:00",
-    "last_deep_analyzed_at": "2026-07-04T01:10:00Z",
+    "last_discovered_at": "2026-07-12T09:00:45.338495+08:00",
+    "last_deep_analyzed_at": "2026-07-12T01:10:00Z",
     "quality": "HIGH",
-    "quality_score": 0.88,
-    "topics": "equity, value investing, concentrated stock-picking, valuation",
-    "notes": "RECOMMEND: Quarterly concentrated value stock research"
+    "quality_score": 0.75,
+    "topics": "equity, value investing, concentrated stock-picking",
+    "notes": "RECOMMEND: Quarterly deep-value equity letters, no gate"
   },
   {
     "id": "goehring-rozencwajg",
@@ -2660,7 +2660,7 @@
     "official_domain": "www.lordabbett.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-07-11T09:00:41.756578+08:00",
+    "last_discovered_at": "2026-07-12T09:00:45.639027+08:00",
     "last_deep_analyzed_at": "2026-07-05T01:15:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.62,
@@ -2674,15 +2674,20 @@
     "source": "manual",
     "status": "seed",
     "strategy_tags": [
-      "fixed_income",
+      "macro",
       "multi_asset",
-      "equity",
-      "emerging_markets"
+      "fixed_income",
+      "equity"
     ],
-    "research_url": "https://www.invesco.com/us/en/insights.html",
+    "research_url": "https://www.invesco.com/us/en/insights/topic/markets-and-economy-insights.html",
     "official_domain": "www.invesco.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-07-11T09:03:05.006390+08:00"
+    "last_discovered_at": "2026-07-12T09:00:45.836729+08:00",
+    "last_deep_analyzed_at": "2026-07-12T01:10:00Z",
+    "quality": "HIGH",
+    "quality_score": 0.78,
+    "topics": "macro, rates, Fed policy, equity outlook, multi-asset",
+    "notes": "RECOMMEND: Weekly macro/multi-asset, overlaps Man Grp macro"
   }
 ]
