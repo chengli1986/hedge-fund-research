@@ -655,7 +655,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.95,
-    "notes": "Weekly macro/ESG views + working papers; active Jun 2026",
+    "notes": "Geopolitics/macro papers, free access, proprietary-tool framing",
     "research_links": [],
     "screening_signals": {
       "status_code": 200,
@@ -668,10 +668,10 @@
       "article_signals": 3
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-06-30T01:10:00Z",
+    "last_deep_analyzed_at": "2026-07-13T01:02:42Z",
     "quality": "MEDIUM",
-    "quality_score": 0.67,
-    "topics": "macro, fixed income, ESG, emerging markets, private assets, working papers",
+    "quality_score": 0.7,
+    "topics": "macro, geopolitics, fixed income, ESG, emerging markets",
     "strategy_tags": [
       "macro",
       "fixed_income",
@@ -697,7 +697,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.88,
-    "notes": "Weekly series hub (Guide to Markets); broad macro, free access",
+    "notes": "Hub links to strategist bios, not full articles - weak",
     "research_links": [],
     "screening_signals": {
       "status_code": 200,
@@ -710,10 +710,10 @@
       "article_signals": 0
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-06-30T01:10:00Z",
+    "last_deep_analyzed_at": "2026-07-13T01:02:42Z",
     "quality": "MEDIUM",
-    "quality_score": 0.63,
-    "topics": "macro, equity, fixed income, multi-asset, retirement",
+    "quality_score": 0.5,
+    "topics": "macro, equity, fixed income, multi-asset",
     "strategy_tags": [
       "macro",
       "equity",
@@ -739,7 +739,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.97,
-    "notes": "Thematic hub; brief directional insights, surface-level, free",
+    "notes": "Sampled article: substantive, free access, deeper than tagged",
     "research_links": [
       {
         "url": "https://www.troweprice.com/en/us/insights",
@@ -778,10 +778,10 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-06-30T01:10:00Z",
+    "last_deep_analyzed_at": "2026-07-13T01:02:42Z",
     "quality": "MEDIUM",
-    "quality_score": 0.6,
-    "topics": "equity, AI/tech, macro, fixed income, active management",
+    "quality_score": 0.7,
+    "topics": "equity, macro, AI/tech, fixed income",
     "strategy_tags": [
       "equity",
       "macro",
@@ -837,12 +837,12 @@
     "rss_url": null,
     "official_domain": "www.msci.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "Factor/ESG data tools; EC2-403 persistent Jun 2026",
+    "notes": "Nav-only page; no article list surfaced today, recheck",
     "research_links": [],
     "last_discovered_at": "2026-04-19T09:00:14.697222+08:00",
     "quality": "MEDIUM",
     "topics": "factor investing, ESG, climate, multi-asset, risk, fixed income",
-    "last_deep_analyzed_at": "2026-06-30T01:10:00Z",
+    "last_deep_analyzed_at": "2026-07-13T01:02:42Z",
     "strategy_tags": [
       "quant",
       "esg_climate",
@@ -852,7 +852,7 @@
     "source": "manual",
     "inaccessible_reason": null,
     "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager",
-    "quality_score": 0.6
+    "quality_score": 0.55
   },
   {
     "id": "carlyle",
@@ -2616,7 +2616,7 @@
     "official_domain": "www.southeasternasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-07-12T09:00:45.338495+08:00",
+    "last_discovered_at": "2026-07-13T09:00:44.878955+08:00",
     "last_deep_analyzed_at": "2026-07-12T01:10:00Z",
     "quality": "HIGH",
     "quality_score": 0.75,
@@ -2660,7 +2660,7 @@
     "official_domain": "www.lordabbett.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-07-12T09:00:45.639027+08:00",
+    "last_discovered_at": "2026-07-13T09:00:45.103944+08:00",
     "last_deep_analyzed_at": "2026-07-05T01:15:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.62,
@@ -2683,7 +2683,7 @@
     "official_domain": "www.invesco.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-07-12T09:00:45.836729+08:00",
+    "last_discovered_at": "2026-07-13T09:00:45.323348+08:00",
     "last_deep_analyzed_at": "2026-07-12T01:10:00Z",
     "quality": "HIGH",
     "quality_score": 0.78,
