@@ -8,7 +8,7 @@ Playwright (Chromium) for JS/CSR sites; multi-model LLM chain for summaries.
 
 ## Develop / Test
 ```bash
-python3 -m pytest tests/ -q                       # 571 passing, 15 deselected
+python3 -m pytest tests/ -q                       # 606 passing, 15 deselected
 bash run_pipeline.sh                              # full 4-stage pipeline
 python3 fetch_articles.py --list                  # list configured sources
 python3 fetch_articles.py --source <id> --dry-run # one source, no save
@@ -24,7 +24,7 @@ Daily 4-stage pipeline (`run_pipeline.sh`):
 4. `publish.py` — render bilingual HTML dashboard + fund-profile cards
 
 Source-acquisition lifecycle (status machine in `config/fund_candidates.json`):
-- Candidate discovery (daily): crawl seed funds → rule screen → entrypoint scoring → LLM quality judge → email report
+- Candidate discovery (daily): crawl seed funds → rule screen → entrypoint scoring → LLM quality judge → email report → guard (revert illegal agent status changes) → `detect_stalled_candidates.py` (auto-route candidates stuck >= 3d: seed w/ research_url → discovered; screen_failed → inaccessible+needs_playwright)
 - Trial manager (`gmia-trial-manager.py`): 3-day live trial, ≤3 concurrent (`MAX_CONCURRENT_TRIALS`); double-gate — quantity (articles on ≥2/3 days) + quality (Haiku sampling avg ≥0.5). PASS→promoted, 0 articles→inaccessible, low quality→watchlist
 - Fetcher synthesis (weekly): agent writes Playwright fetchers for `inaccessible` candidates; auto-rejects after `MAX_SYNTHESIS_FAILURES=3`
 - Auto-promote (daily): wires `promoted` candidates into production + auto-graduates their fund profile through the validation gate
@@ -46,3 +46,4 @@ Key dirs/files:
 - Gitignored/not-committed-manually: `data/`, `logs/`, `content/`, `config/inspection_state.json`. Schedulers auto-commit `config/trial-state.json` + `config/fund_candidates.json` — concurrent edits happen, so always `git add <specific file>`, never `-A`.
 - Notifications (discovery / trial / synthesis / refresh summaries) are email, notification-only; failures must not break the pipeline exit code.
 - `scripts/gmia-fetcher-health.py` content-probe defaults to the top 3 most-recent articles (`CONTENT_PROBE_TOP_N`); a per-source `"content_probe_top_n"` override in `sources.json` lets feeds that regularly interleave several short teaser/video pages ahead of the next full piece probe deeper (matthews-asia=6, added 2026-07-04 after 2 consecutive daily false-positive FAILs — its top 3 are always short, article[3] is the first full-length one).
+- Every candidate status write must go through `status_util.set_status()` (not direct `c["status"] = X`) — it only stamps `status_since` on an actual change, which `detect_stalled_candidates.py` and the discovery email's ⚠️ Nd badge both rely on to tell "just added" apart from "stuck for weeks". The discovery agent bypasses this (edits `fund_candidates.json` directly), so `guard_candidate_status.py` backfills the stamp for the agent's legal edits using its own before/after snapshot.
