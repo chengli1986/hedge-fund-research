@@ -134,6 +134,23 @@ except Exception as e:
     rm -f "$GUARD_BEFORE"
 fi
 
+# --- Stall detection: auto-route candidates stuck without progress ---
+# Runs after guard (so status_since is accurate for the agent's own legal
+# edits too) and before trial-manager. Self-heals the 2026-07-14 Nuveen/
+# Longleaf/Lord Abbett/Invesco class of bug (seed candidates stuck forever
+# because stage1's httpx crawl has no JS-render fallback) instead of relying
+# on a manual audit to notice.
+cd "$REPO_DIR"
+STALL_OUT=$(python3 detect_stalled_candidates.py 2>&1)
+echo "$STALL_OUT"
+STALL_N=$(printf '%s\n' "$STALL_OUT" | sed -n 's/^stall: \([0-9]*\) .*/\1/p')
+if [ "${STALL_N:-0}" -gt 0 ]; then
+    echo "$LOG_PREFIX Auto-routed $STALL_N stalled candidate(s)"
+    git add config/fund_candidates.json
+    git diff --cached --quiet || git commit -m "stall: auto-route $STALL_N stalled candidate(s) (auto)"
+    git push 2>&1 || echo "$LOG_PREFIX WARNING: git push (stall) failed"
+fi
+
 # --- Trial manager (runs regardless of discovery exit code) ---
 # Re-export the API key for Haiku quality sampling
 export ANTHROPIC_API_KEY="$SAVED_ANTHROPIC_API_KEY"
@@ -192,12 +209,16 @@ source ~/.stock-monitor.env 2>/dev/null || true
 
 export REPO_DIR EXIT_CODE SMTP_USER SMTP_PASS
 python3 << 'PYEOF'
-import json, os, smtplib
+import json, os, smtplib, sys
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.utils import make_msgid
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
+
+sys.path.insert(0, os.environ.get("REPO_DIR", "."))
+from status_util import days_since
+from detect_stalled_candidates import DEFAULT_THRESHOLD_DAYS as STALL_THRESHOLD_DAYS
 
 BJT = timezone(timedelta(hours=8))
 now_dt = datetime.now(BJT)
@@ -272,7 +293,17 @@ def notes_short(notes_full: str) -> str:
     n = (notes_full or "")
     return n[:90] + ("…" if len(n) > 90 else "")
 
-def group_table(items: list, show_fit: bool = True, show_trial: bool = False) -> str:
+def stall_badge(c: dict) -> str:
+    """Days stuck in the current status, once >= the auto-stall threshold.
+    Mirrors detect_stalled_candidates.py's own threshold so the email warns
+    before the next cron run would auto-route the candidate."""
+    days = days_since(c)
+    if days is None or days < STALL_THRESHOLD_DAYS:
+        return ""
+    color = "#cf222e" if days >= STALL_THRESHOLD_DAYS * 2 else "#9a6700"
+    return f' <span style="color:{color};font-weight:bold;font-size:10px">⚠️ {days}d</span>'
+
+def group_table(items: list, show_fit: bool = True, show_trial: bool = False, show_stall: bool = False) -> str:
     if not items:
         return '<p style="color:#959da5;font-size:12px;padding:6px 0;margin:0">（空）</p>'
     rows = ""
@@ -283,13 +314,14 @@ def group_table(items: list, show_fit: bool = True, show_trial: bool = False) ->
             start = datetime.fromisoformat(t["start_date"]).replace(tzinfo=timezone.utc)
             day = (now_dt.replace(tzinfo=None) - start.replace(tzinfo=None)).days + 1
             trial_day = f' <span style="color:#0969da;font-size:10px">Day {day}/7</span>'
+        stall = stall_badge(c) if show_stall else ""
         fit_cell = fit_pct(c.get("fit_score")) if show_fit else "—"
         notes_full = c.get("notes") or ""
         is_rec = notes_full.startswith("RECOMMEND")
         bg = " style=\"background:#f0fff4\"" if is_rec else ""
         rows += (
             f'<tr{bg}>'
-            f'<td style="padding:5px 8px;border-bottom:1px solid #eee;font-weight:500">{c["name"]}{trial_day}</td>'
+            f'<td style="padding:5px 8px;border-bottom:1px solid #eee;font-weight:500">{c["name"]}{trial_day}{stall}</td>'
             f'<td style="padding:5px 8px;border-bottom:1px solid #eee">{fit_cell}</td>'
             f'<td style="padding:5px 8px;border-bottom:1px solid #eee">{q_badge(c.get("quality","—"))}</td>'
             f'<td style="padding:5px 8px;border-bottom:1px solid #eee;font-size:11px;color:#586069">{c.get("topics","—")}</td>'
@@ -310,7 +342,7 @@ def group_table(items: list, show_fit: bool = True, show_trial: bool = False) ->
     return f'<table style="width:100%;border-collapse:collapse;font-size:13px">{header}{rows}</table>'
 
 def section(emoji: str, title: str, subtitle: str, items: list, color: str,
-            show_fit: bool = True, show_trial: bool = False) -> str:
+            show_fit: bool = True, show_trial: bool = False, show_stall: bool = False) -> str:
     count = len(items)
     return f"""
 <div style="margin:0 0 20px">
@@ -319,7 +351,7 @@ def section(emoji: str, title: str, subtitle: str, items: list, color: str,
     <span style="background:{color};color:#fff;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:600">{count}</span>
     <span style="color:#959da5;font-size:12px">{subtitle}</span>
   </div>
-  {group_table(items, show_fit=show_fit, show_trial=show_trial)}
+  {group_table(items, show_fit=show_fit, show_trial=show_trial, show_stall=show_stall)}
 </div>"""
 
 def pass_pending_table(items: list) -> str:
@@ -406,8 +438,8 @@ body_sections = (
     + section("🔵", "Active Trials", "7天窗口·每日质量采样", active_trial_candidates, "#0969da", show_trial=True)
     + pass_pending_section(pass_pending)
     + section("🟡", "Queue", "已验证·等待进入 Trial", queue, "#9a6700")
-    + section("🟠", "Inaccessible", "JS渲染/403阻断·Fetcher Synthesis 目标", inaccessible, "#cf222e")
-    + section("🌱", "Seed / Discovery", "待评估候选池", seeds, "#57606a")
+    + section("🟠", "Inaccessible", "JS渲染/403阻断·Fetcher Synthesis 目标", inaccessible, "#cf222e", show_stall=True)
+    + section("🌱", "Seed / Discovery", "待评估候选池", seeds, "#57606a", show_stall=True)
     + section("🔴", "Rejected", "不适合纳入 pipeline", rejected, "#57606a")
 )
 
@@ -434,6 +466,7 @@ html = f"""<html><body style="font-family:-apple-system,BlinkMacSystemFont,'Sego
   🔴 Rejected — 不适合（付费墙/零研究内容）<br>
   <strong>Fit（适配分）</strong>：规则引擎评分（域名可信度+路径结构+页面可访问性），反映「门好不好开」。≥70% 较高，50–70% 一般，&lt;50% 存在阻断。<br>
   <strong>Quality（内容质量）</strong>：LLM 深度分析评估研究价值，反映「门里有没有宝」。HIGH = 原创机构观点；MEDIUM = 一般资讯；LOW = 营销内容为主。<br>
+  <strong>⚠️ Nd 标记</strong>：候选卡在当前状态已 N 天（Seed/Discovery、Inaccessible 分组）。达到 {STALL_THRESHOLD_DAYS} 天会被下次运行自动分流（seed→discovered 重新尝试 / screen_failed→inaccessible+needs_playwright 转交 fetcher-synthesis），≥{STALL_THRESHOLD_DAYS * 2} 天标红提示已分流多轮仍未解决。<br>
   <em>💡 简单记忆：Fit 是「门好不好开」，Quality 是「门里有没有宝」。两者都高才是理想的 Production 候选。</em>
 </div>
 
