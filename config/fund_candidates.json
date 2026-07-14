@@ -68,7 +68,8 @@
       "multi_asset"
     ],
     "source": "manual",
-    "quality_score": 0.78
+    "quality_score": 0.78,
+    "status_since": "2026-04-19T09:01:01.176798+08:00"
   },
   {
     "id": "de-shaw",
@@ -120,7 +121,8 @@
     "quality_score": 0.92,
     "synthesis_attempted_at": "2026-05-17T08:30:42.494662+00:00",
     "synthesis_outcome": "success",
-    "requires_playwright": true
+    "requires_playwright": true,
+    "status_since": "2026-04-12T02:31:01.392250+08:00"
   },
   {
     "id": "blackstone",
@@ -201,7 +203,8 @@
       "private_credit"
     ],
     "source": "manual",
-    "quality_score": 0.55
+    "quality_score": 0.55,
+    "status_since": "2026-04-19T09:01:02.962237+08:00"
   },
   {
     "id": "two-sigma",
@@ -252,7 +255,8 @@
       "quant"
     ],
     "source": "auto_discovered",
-    "quality_score": 0.2
+    "quality_score": 0.2,
+    "status_since": "2026-04-12T02:31:04.953038+08:00"
   },
   {
     "id": "kkr",
@@ -331,7 +335,8 @@
     "source": "manual",
     "inaccessible_reason": null,
     "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager",
-    "quality_score": 0.68
+    "quality_score": 0.68,
+    "status_since": "2026-04-19T09:01:04.025696+08:00"
   },
   {
     "id": "cambridge-associates",
@@ -468,7 +473,8 @@
       "private_credit",
       "multi_asset"
     ],
-    "source": "manual"
+    "source": "manual",
+    "status_since": "2026-04-19T09:01:06.895069+08:00"
   },
   {
     "id": "gsam",
@@ -530,7 +536,8 @@
       "fixed_income",
       "multi_asset"
     ],
-    "source": "manual"
+    "source": "manual",
+    "status_since": "2026-04-19T09:01:12.817041+08:00"
   },
   {
     "id": "wellington",
@@ -637,7 +644,8 @@
       "multi_asset"
     ],
     "source": "manual",
-    "quality_score": 0.82
+    "quality_score": 0.82,
+    "status_since": "2026-04-19T09:01:46.368072+08:00"
   },
   {
     "id": "amundi",
@@ -679,7 +687,8 @@
       "multi_asset",
       "esg_climate"
     ],
-    "source": "manual"
+    "source": "manual",
+    "status_since": "2026-04-07T18:33:00.000000+08:00"
   },
   {
     "id": "jpmam",
@@ -721,7 +730,8 @@
       "multi_asset"
     ],
     "source": "manual",
-    "promoted_at": "2026-05-01T14:46:29Z"
+    "promoted_at": "2026-05-01T14:46:29Z",
+    "status_since": "2026-04-11T20:10:41.483426+08:00"
   },
   {
     "id": "troweprice",
@@ -788,7 +798,8 @@
       "fixed_income",
       "multi_asset"
     ],
-    "source": "manual"
+    "source": "manual",
+    "status_since": "2026-04-19T09:01:47.537259+08:00"
   },
   {
     "id": "fidelity",
@@ -826,7 +837,8 @@
       "equity"
     ],
     "source": "manual",
-    "quality_score": 0.1
+    "quality_score": 0.1,
+    "status_since": "2026-04-16T09:01:28.399090+08:00"
   },
   {
     "id": "msci-research",
@@ -852,7 +864,8 @@
     "source": "manual",
     "inaccessible_reason": null,
     "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager",
-    "quality_score": 0.55
+    "quality_score": 0.55,
+    "status_since": "2026-04-19T09:00:14.697222+08:00"
   },
   {
     "id": "carlyle",
@@ -875,7 +888,8 @@
     "source": "manual",
     "inaccessible_reason": "Policy block (not fingerprint): robots.txt allow-lists only Googlebot/Bingbot (User-agent:* Disallow:/); /insights returns 403 + redirect to /global-insights-0 Access-denied page even in headless Playwright with stealth UA. Would need residential-IP proxy — out of scope.",
     "last_probed": "2026-04-24",
-    "quality_score": 0.35
+    "quality_score": 0.35,
+    "status_since": "2026-07-10T01:02:08Z"
   },
   {
     "id": "research-affiliates",
@@ -1001,7 +1015,8 @@
       "multi_asset",
       "emerging_markets"
     ],
-    "source": "manual"
+    "source": "manual",
+    "status_since": "2026-04-19T09:01:48.873166+08:00"
   },
   {
     "id": "blackrock-institute",
@@ -1109,7 +1124,8 @@
     ],
     "source": "manual",
     "inaccessible_reason": null,
-    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager"
+    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager",
+    "status_since": "2026-04-19T09:01:56.296708+08:00"
   },
   {
     "id": "schroders",
@@ -1135,7 +1151,8 @@
     "source": "manual",
     "inaccessible_reason": null,
     "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager",
-    "quality_score": 0.55
+    "quality_score": 0.55,
+    "status_since": "2026-04-19T09:00:14.174535+08:00"
   },
   {
     "id": "pgim",
@@ -1278,7 +1295,8 @@
     ],
     "source": "manual",
     "watchlist_reason": "trial-pass blocked 2026-06-18: FI/EM/private_credit already covered by 24/30 production sources; MEDIUM quality (0.66) adds no differentiation; previously demoted 2026-06-12 when lazard-am joined",
-    "watchlist_at": "2026-06-18T05:15:48.566569+00:00"
+    "watchlist_at": "2026-06-18T05:15:48.566569+00:00",
+    "status_since": "2026-04-19T09:02:19.020103+08:00"
   },
   {
     "id": "aberdeen",
@@ -1324,7 +1342,8 @@
       "emerging_markets"
     ],
     "last_validated_at": "2026-04-19T09:02:22.948295+08:00",
-    "source": "manual"
+    "source": "manual",
+    "status_since": "2026-04-19T09:02:22.948295+08:00"
   },
   {
     "id": "morganstanley-im",
@@ -1358,7 +1377,8 @@
     "source": "manual",
     "inaccessible_reason": "403 bot protection on all paths",
     "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager",
-    "quality_score": 0.75
+    "quality_score": 0.75,
+    "status_since": "2026-07-08T01:02:41Z"
   },
   {
     "id": "neuberger-berman",
@@ -1412,7 +1432,8 @@
     "source": "manual",
     "inaccessible_reason": "Vercel Security Checkpoint blocks EC2 IP. Would need playwright-stealth/curl_cffi.",
     "last_probed": "2026-05-06",
-    "quality_score": 0.82
+    "quality_score": 0.82,
+    "status_since": "2026-07-08T01:02:41Z"
   },
   {
     "id": "apollo-global-management",
@@ -1510,7 +1531,8 @@
       "h2_tags": 1,
       "article_signals": 1
     },
-    "screening_reason": "Manually validated: 12 research links, 1-2 articles/week, Apr 2026"
+    "screening_reason": "Manually validated: 12 research links, 1-2 articles/week, Apr 2026",
+    "status_since": "2026-04-20T02:43:07.237476+08:00"
   },
   {
     "id": "brookfield",
@@ -1553,7 +1575,8 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.88,
-    "promoted_at": "2026-05-01T14:46:29Z"
+    "promoted_at": "2026-05-01T14:46:29Z",
+    "status_since": "2026-04-20T09:01:24.288350+08:00"
   },
   {
     "id": "capital-group",
@@ -1579,7 +1602,8 @@
     "quality_score": 0.5,
     "topics": "macro, geopolitics, advisor practice (mixed: ~3/7 investment, ~4/7 advisor mgmt)",
     "inaccessible_reason": null,
-    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager"
+    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager",
+    "status_since": "2026-04-23T09:00:12.674329+08:00"
   },
   {
     "id": "pinebridge",
@@ -1637,7 +1661,8 @@
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-04-24T09:03:34.493346+08:00",
     "synthesis_attempted_at": "2026-05-17T08:32:58.639690+00:00",
-    "synthesis_outcome": "success"
+    "synthesis_outcome": "success",
+    "status_since": "2026-04-24T09:03:34.493346+08:00"
   },
   {
     "id": "verdad-capital",
@@ -1660,7 +1685,8 @@
     "last_deep_analyzed_at": "2026-07-10T01:02:08Z",
     "quality": "HIGH",
     "quality_score": 0.88,
-    "topics": "quant, value investing, factor investing, global equity, Japan, private equity"
+    "topics": "quant, value investing, factor investing, global equity, Japan, private equity",
+    "status_since": "2026-04-29T09:00:09.051367+08:00"
   },
   {
     "id": "alliancebernstein",
@@ -1683,7 +1709,8 @@
     "quality_score": 0.15,
     "topics": "equity, fixed income, macro, municipal bonds",
     "notes": "Still gated/advisor-only; static fetch empty, confirms 0.00 trial",
-    "last_deep_analyzed_at": "2026-07-06T01:02:45Z"
+    "last_deep_analyzed_at": "2026-07-06T01:02:45Z",
+    "status_since": "2026-04-26T09:00:19.191409+08:00"
   },
   {
     "id": "franklin-templeton",
@@ -1706,7 +1733,8 @@
     "last_deep_analyzed_at": "2026-07-14T01:15:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.55,
-    "topics": "macro, equity, fixed income, emerging markets, multi-asset"
+    "topics": "macro, equity, fixed income, emerging markets, multi-asset",
+    "status_since": "2026-05-07T09:00:18.005906+08:00"
   },
   {
     "id": "ares-management",
@@ -1732,7 +1760,8 @@
     "quality_score": 0.7,
     "fit_score": 0.88,
     "synthesis_attempted_at": "2026-05-17T09:39:29.474699+00:00",
-    "synthesis_outcome": "success"
+    "synthesis_outcome": "success",
+    "status_since": "2026-05-01T01:03:53Z"
   },
   {
     "id": "natixis-im",
@@ -1862,7 +1891,8 @@
     "last_deep_analyzed_at": "2026-07-06T01:02:45Z",
     "quality": "MEDIUM",
     "quality_score": 0.62,
-    "topics": "macro, equity, fixed income, energy, portfolio construction"
+    "topics": "macro, equity, fixed income, energy, portfolio construction",
+    "status_since": "2026-05-03T09:00:33.191261+08:00"
   },
   {
     "id": "lazard-am",
@@ -1973,7 +2003,8 @@
     "synthesis_attempted_at": "2026-06-12T01:06:44.191476+00:00",
     "synthesis_outcome": "success",
     "promoted_at": "2026-06-12T01:06:44.191476+00:00",
-    "promoted_reason": "fetcher_synthesis_success (trial-PASS shortcut)"
+    "promoted_reason": "fetcher_synthesis_success (trial-PASS shortcut)",
+    "status_since": "2026-05-04T09:00:19.804656+08:00"
   },
   {
     "id": "robeco",
@@ -2119,7 +2150,8 @@
     "synthesis_attempted_at": "2026-05-17T09:42:42.347082+00:00",
     "synthesis_outcome": "success",
     "promoted_at": "2026-05-18T08:15:50.343378+00:00",
-    "promoted_reason": "fetcher_synthesis_success"
+    "promoted_reason": "fetcher_synthesis_success",
+    "status_since": "2026-05-09T09:00:21.194397+08:00"
   },
   {
     "id": "janus-henderson",
@@ -2144,7 +2176,8 @@
     "topics": "fixed income, equity, macro, AI/technology, REITs, CLOs, multi-asset",
     "notes": "RECOMMEND: Free, 278 articles; daily cadence; FI/eq/macro Jun 2026",
     "last_deep_analyzed_at": "2026-07-07T01:02:24Z",
-    "promoted_at": "2026-05-12T10:19:29.746916+08:00"
+    "promoted_at": "2026-05-12T10:19:29.746916+08:00",
+    "status_since": "2026-05-11T09:00:09.554318+08:00"
   },
   {
     "id": "dimensional",
@@ -2189,7 +2222,8 @@
     "quality_score": 0.3,
     "topics": "factor investing, equity, multi-asset",
     "notes": "Watchlist: JS-heavy, podcast-only, no research index",
-    "last_deep_analyzed_at": "2026-06-13T01:00:00Z"
+    "last_deep_analyzed_at": "2026-06-13T01:00:00Z",
+    "status_since": "2026-05-12T09:00:20.241489+08:00"
   },
   {
     "id": "a16z",
@@ -2209,7 +2243,8 @@
     "last_deep_analyzed_at": "2026-06-16T01:07:36Z",
     "quality": "LOW",
     "quality_score": 0.1,
-    "topics": "venture capital, AI, enterprise tech, founder commentary"
+    "topics": "venture capital, AI, enterprise tech, founder commentary",
+    "status_since": "2026-05-15T09:00:10.435535+08:00"
   },
   {
     "id": "matthews-asia",
@@ -2324,7 +2359,8 @@
     "synthesis_attempted_at": "2026-06-03T01:08:23.985559+00:00",
     "synthesis_outcome": "success",
     "promoted_at": "2026-06-03T01:08:23.985559+00:00",
-    "promoted_reason": "fetcher_synthesis_success (trial-PASS shortcut)"
+    "promoted_reason": "fetcher_synthesis_success (trial-PASS shortcut)",
+    "status_since": "2026-05-16T09:04:19.082474+08:00"
   },
   {
     "id": "cohen-steers",
@@ -2345,7 +2381,8 @@
     "quality": "MEDIUM",
     "quality_score": 0.55,
     "synthesis_attempted_at": "2026-07-01T11:05:50.804223+00:00",
-    "synthesis_outcome": "success"
+    "synthesis_outcome": "success",
+    "status_since": "2026-07-14T01:15:00Z"
   },
   {
     "id": "generation-investment-management",
@@ -2386,7 +2423,8 @@
     "screening_reason": "Research index detected",
     "last_deep_analyzed_at": "2026-06-23T01:00:00Z",
     "quality": "LOW",
-    "quality_score": 0.28
+    "quality_score": 0.28,
+    "status_since": "2026-05-22T09:00:31.952742+08:00"
   },
   {
     "id": "rothschild-co-am",
@@ -2410,7 +2448,8 @@
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-05-24T01:02:30Z",
     "synthesis_attempted_at": "2026-06-12T01:08:13.034245+00:00",
-    "synthesis_outcome": "success"
+    "synthesis_outcome": "success",
+    "status_since": "2026-05-24T01:02:30Z"
   },
   {
     "id": "acadian-asset",
@@ -2455,7 +2494,8 @@
     "inaccessible_reason": null,
     "promotion_notes": "JS-rendered homepage; article URLs directly accessible via WebFetch. Needs Playwright fetcher for full index scraping.",
     "synthesis_attempted_at": "2026-06-03T01:10:11.791298+00:00",
-    "synthesis_outcome": "success"
+    "synthesis_outcome": "success",
+    "status_since": "2026-05-25T09:02:19.494150+08:00"
   },
   {
     "id": "guggenheim-investments",
@@ -2525,7 +2565,8 @@
     "quality": "HIGH",
     "quality_score": 0.72,
     "topics": "fixed income, credit, macro, real assets",
-    "notes": "[白话] 研究质量其实不错，但公开页要登录/付费、抓不到文章；之前还因流程 bug 被误自动上线、6-10 已降级——公开渠道用不了。 Demoted 2026-06-10 from 'promoted': discovery auto-promoted it 2026-06-04 without a trial -> orphaned (synthesis_priority never set, no fetcher, never queued). Site is login/paywall (is_publicly_accessible=false, 0 article signals) - not a usable public source."
+    "notes": "[白话] 研究质量其实不错，但公开页要登录/付费、抓不到文章；之前还因流程 bug 被误自动上线、6-10 已降级——公开渠道用不了。 Demoted 2026-06-10 from 'promoted': discovery auto-promoted it 2026-06-04 without a trial -> orphaned (synthesis_priority never set, no fetcher, never queued). Site is login/paywall (is_publicly_accessible=false, 0 article signals) - not a usable public source.",
+    "status_since": "2026-06-04T09:00:53.176165+08:00"
   },
   {
     "id": "nuveen",
@@ -2546,7 +2587,8 @@
     "topics": "fixed income, munis, private credit, macro, real assets",
     "notes": "Landing pg marketing-heavy; sampled articles real (munis/macro) [2026-07-14 manual] httpx GET to research_url times out consistently (verified twice, 25s+30s); bypassed stage1/2, routed straight to inaccessible for fetcher-synthesis Playwright attempt.",
     "needs_playwright": true,
-    "last_validated_at": "2026-07-14T16:57:13.709170+08:00"
+    "last_validated_at": "2026-07-14T16:57:13.709170+08:00",
+    "status_since": "2026-07-14T16:57:13.709170+08:00"
   },
   {
     "id": "principal-am",
@@ -2603,7 +2645,8 @@
     "fit_score": 0.91,
     "last_validated_at": "2026-07-01T09:00:56.605017+08:00",
     "synthesis_attempted_at": "2026-07-01T11:14:55.259326+00:00",
-    "synthesis_outcome": "success"
+    "synthesis_outcome": "success",
+    "status_since": "2026-07-01T09:00:56.605017+08:00"
   },
   {
     "id": "longleaf-partners",
@@ -2623,7 +2666,8 @@
     "quality": "HIGH",
     "quality_score": 0.75,
     "topics": "equity, value investing, concentrated stock-picking",
-    "notes": "RECOMMEND: Quarterly deep-value equity letters, no gate [2026-07-14 manual] stage1 link-crawl found 0 research_links (JS-rendered nav/insufficient static signals, verified live); research_url already human-confirmed valid, flipped seed->discovered to unblock pipeline."
+    "notes": "RECOMMEND: Quarterly deep-value equity letters, no gate [2026-07-14 manual] stage1 link-crawl found 0 research_links (JS-rendered nav/insufficient static signals, verified live); research_url already human-confirmed valid, flipped seed->discovered to unblock pipeline.",
+    "status_since": "2026-07-14T09:00:45.165660+08:00"
   },
   {
     "id": "goehring-rozencwajg",
@@ -2644,7 +2688,8 @@
     "last_deep_analyzed_at": "2026-07-10T01:02:08Z",
     "quality": "HIGH",
     "quality_score": 0.88,
-    "topics": "energy, commodities, macro"
+    "topics": "energy, commodities, macro",
+    "status_since": "2026-06-25T09:00:40.632255+08:00"
   },
   {
     "id": "lord-abbett",
@@ -2667,7 +2712,8 @@
     "quality": "MEDIUM",
     "quality_score": 0.62,
     "topics": "fixed income, equity, macro, multi-asset",
-    "notes": "Free FI/equity outlook pieces, overlaps existing AMs [2026-07-14 manual] stage1 link-crawl found 0 research_links (JS-rendered nav/insufficient static signals, verified live); research_url already human-confirmed valid, flipped seed->discovered to unblock pipeline."
+    "notes": "Free FI/equity outlook pieces, overlaps existing AMs [2026-07-14 manual] stage1 link-crawl found 0 research_links (JS-rendered nav/insufficient static signals, verified live); research_url already human-confirmed valid, flipped seed->discovered to unblock pipeline.",
+    "status_since": "2026-07-14T09:00:45.503268+08:00"
   },
   {
     "id": "invesco",
@@ -2690,6 +2736,7 @@
     "quality": "HIGH",
     "quality_score": 0.78,
     "topics": "macro, rates, Fed policy, equity outlook, multi-asset",
-    "notes": "RECOMMEND: Weekly macro/multi-asset, overlaps Man Grp macro [2026-07-14 manual] stage1 link-crawl found 0 research_links (JS-rendered nav/insufficient static signals, verified live); research_url already human-confirmed valid, flipped seed->discovered to unblock pipeline."
+    "notes": "RECOMMEND: Weekly macro/multi-asset, overlaps Man Grp macro [2026-07-14 manual] stage1 link-crawl found 0 research_links (JS-rendered nav/insufficient static signals, verified live); research_url already human-confirmed valid, flipped seed->discovered to unblock pipeline.",
+    "status_since": "2026-07-14T09:00:45.705091+08:00"
   }
 ]
