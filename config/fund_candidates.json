@@ -2533,7 +2533,7 @@
     "homepage_url": "https://www.nuveen.com",
     "research_url": "https://www.nuveen.com/en-us/insights",
     "source": "manual",
-    "status": "seed",
+    "status": "inaccessible",
     "strategy_tags": [
       "fixed_income",
       "private_credit",
@@ -2544,7 +2544,9 @@
     "quality": "MEDIUM",
     "quality_score": 0.55,
     "topics": "fixed income, munis, private credit, macro, real assets",
-    "notes": "Landing pg marketing-heavy; sampled articles real (munis/macro)"
+    "notes": "Landing pg marketing-heavy; sampled articles real (munis/macro) [2026-07-14 manual] httpx GET to research_url times out consistently (verified twice, 25s+30s); bypassed stage1/2, routed straight to inaccessible for fetcher-synthesis Playwright attempt.",
+    "needs_playwright": true,
+    "last_validated_at": "2026-07-14T16:57:13.709170+08:00"
   },
   {
     "id": "principal-am",
@@ -2609,7 +2611,7 @@
     "homepage_url": "https://www.southeasternasset.com",
     "research_url": "https://www.southeasternasset.com",
     "source": "manual",
-    "status": "seed",
+    "status": "discovered",
     "strategy_tags": [
       "equity"
     ],
@@ -2621,7 +2623,7 @@
     "quality": "HIGH",
     "quality_score": 0.75,
     "topics": "equity, value investing, concentrated stock-picking",
-    "notes": "RECOMMEND: Quarterly deep-value equity letters, no gate"
+    "notes": "RECOMMEND: Quarterly deep-value equity letters, no gate [2026-07-14 manual] stage1 link-crawl found 0 research_links (JS-rendered nav/insufficient static signals, verified live); research_url already human-confirmed valid, flipped seed->discovered to unblock pipeline."
   },
   {
     "id": "goehring-rozencwajg",
@@ -2650,7 +2652,7 @@
     "homepage_url": "https://www.lordabbett.com",
     "research_url": "https://www.lordabbett.com/en-us/financial-advisor/insights.html",
     "source": "manual",
-    "status": "seed",
+    "status": "discovered",
     "strategy_tags": [
       "fixed_income",
       "multi_asset",
@@ -2665,14 +2667,14 @@
     "quality": "MEDIUM",
     "quality_score": 0.62,
     "topics": "fixed income, equity, macro, multi-asset",
-    "notes": "Free FI/equity outlook pieces, overlaps existing AMs"
+    "notes": "Free FI/equity outlook pieces, overlaps existing AMs [2026-07-14 manual] stage1 link-crawl found 0 research_links (JS-rendered nav/insufficient static signals, verified live); research_url already human-confirmed valid, flipped seed->discovered to unblock pipeline."
   },
   {
     "id": "invesco",
     "name": "Invesco",
     "homepage_url": "https://www.invesco.com",
     "source": "manual",
-    "status": "seed",
+    "status": "discovered",
     "strategy_tags": [
       "macro",
       "multi_asset",
@@ -2688,6 +2690,6 @@
     "quality": "HIGH",
     "quality_score": 0.78,
     "topics": "macro, rates, Fed policy, equity outlook, multi-asset",
-    "notes": "RECOMMEND: Weekly macro/multi-asset, overlaps Man Grp macro"
+    "notes": "RECOMMEND: Weekly macro/multi-asset, overlaps Man Grp macro [2026-07-14 manual] stage1 link-crawl found 0 research_links (JS-rendered nav/insufficient static signals, verified live); research_url already human-confirmed valid, flipped seed->discovered to unblock pipeline."
   }
 ]
