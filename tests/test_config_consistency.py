@@ -31,10 +31,11 @@ Classes of bugs these guard against:
 from __future__ import annotations
 
 import json
+import re
 import statistics
 import sys
 from collections import defaultdict
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -59,9 +60,16 @@ FREQ_TO_STALE_DAYS = {
 # Minimum articles a source needs before we trust its observed cadence
 MIN_SAMPLES_FOR_CADENCE_CHECK = 5
 
+# Some sites (e.g. troweprice, kkr) only expose month/year precision on most
+# articles ("Jun 2026"). Measuring day-gaps between such dates manufactures
+# fake 14-60 day gaps purely from calendar-boundary rounding, not real
+# slowdowns — detect this and fall back to month-granularity gap math.
+MONTH_ONLY_DATE_RE = re.compile(r"^[A-Za-z]+\.?\s+\d{4}$")
+MONTH_ONLY_FRACTION_THRESHOLD = 0.8
+
 
 def _load_articles_by_source() -> dict[str, list]:
-    """Return {source_id: [parsed_date, ...]} from articles.jsonl."""
+    """Return {source_id: [(parsed_date, date_raw), ...]} from articles.jsonl."""
     by_source: dict[str, list] = defaultdict(list)
     if not ARTICLES_FILE.exists():
         return by_source
@@ -72,14 +80,15 @@ def _load_articles_by_source() -> dict[str, list]:
             except Exception:
                 continue
             sid = a.get("source_id")
-            raw = a.get("date") or a.get("date_raw")
+            date_raw = a.get("date_raw")
+            raw = a.get("date") or date_raw
             if not sid or not raw:
                 continue
             try:
                 parsed = datetime.fromisoformat(str(raw).replace("Z", "+00:00")).date()
             except Exception:
                 continue
-            by_source[sid].append(parsed)
+            by_source[sid].append((parsed, date_raw))
     return by_source
 
 
@@ -90,6 +99,60 @@ def _median_gap_days(dates: list) -> float | None:
         return None
     gaps = [(unique[i] - unique[i + 1]).days for i in range(len(unique) - 1)]
     return statistics.median(gaps)
+
+
+def _is_month_only_precision(date_raws: list) -> bool:
+    """True if most date_raw strings carry only month/year precision.
+
+    Below this fraction, a few coarse dates shouldn't distort an otherwise
+    day-precise source's gap measurement.
+    """
+    raws = [r for r in date_raws if r]
+    if not raws:
+        return False
+    month_only = sum(1 for r in raws if MONTH_ONLY_DATE_RE.match(r.strip()))
+    return month_only / len(raws) >= MONTH_ONLY_FRACTION_THRESHOLD
+
+
+def _median_gap_months(dates: list) -> float | None:
+    """Median gap, in whole calendar months, between consecutive (year, month)
+    buckets present in `dates` (descending order)."""
+    months = sorted({(d.year, d.month) for d in dates}, reverse=True)
+    if len(months) < 2:
+        return None
+    gaps = [
+        (months[i][0] - months[i + 1][0]) * 12 + (months[i][1] - months[i + 1][1])
+        for i in range(len(months) - 1)
+    ]
+    return statistics.median(gaps)
+
+
+def test_is_month_only_precision_detects_month_year_strings():
+    assert _is_month_only_precision(["Jun 2026", "May 2026", "July 2026"]) is True
+
+
+def test_is_month_only_precision_false_for_full_dates():
+    assert _is_month_only_precision(["April 17, 2026", "March 3, 2026"]) is False
+
+
+def test_is_month_only_precision_false_for_empty():
+    assert _is_month_only_precision([]) is False
+
+
+def test_is_month_only_precision_majority_rule():
+    mostly_month_only = ["Jun 2026", "May 2026", "Apr 2026", "Mar 2026", "April 17, 2026"]
+    assert _is_month_only_precision(mostly_month_only) is True
+    mostly_precise = ["April 17, 2026", "March 3, 2026", "May 2026"]
+    assert _is_month_only_precision(mostly_precise) is False
+
+
+def test_median_gap_months_computes_calendar_month_distance():
+    dates = [date(2026, 3, 1), date(2026, 4, 1), date(2026, 6, 30), date(2026, 5, 1)]
+    assert _median_gap_months(dates) == 1
+
+
+def test_median_gap_months_none_when_insufficient_data():
+    assert _median_gap_months([date(2026, 3, 1)]) is None
 
 
 # ───────────────────────── Gap 1: cadence vs declared frequency ──────────────
@@ -118,9 +181,25 @@ def test_declared_frequency_matches_observed_cadence():
         threshold = FREQ_TO_STALE_DAYS.get(freq)
         if threshold is None:
             continue  # unknown frequency, skip (staleness check uses DEFAULT)
-        dates = by_source.get(sid, [])
+        records = by_source.get(sid, [])
+        dates = [d for d, _ in records]
         if len(set(dates)) < MIN_SAMPLES_FOR_CADENCE_CHECK:
             continue  # not enough data to judge
+
+        if _is_month_only_precision([r for _, r in records]):
+            # Day-level gaps are meaningless at month precision — judge
+            # staleness in whole calendar months instead.
+            gap_months = _median_gap_months(dates)
+            if gap_months is None:
+                continue
+            threshold_months = max(1, round(threshold / 30))
+            if gap_months > threshold_months:
+                failures.append(
+                    f"{sid}: declared {freq} (tolerates {threshold_months}mo gap at "
+                    f"month-only date precision) but median gap is "
+                    f"{gap_months:.0f}mo — publisher may have gone stale"
+                )
+            continue
 
         gap = _median_gap_days(dates)
         if gap is None:
