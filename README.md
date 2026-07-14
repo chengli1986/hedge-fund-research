@@ -2,7 +2,7 @@
 
 Tracks and aggregates research insights, market commentary, and papers from top hedge funds. Summarizes via LLM and publishes a bilingual (CN/EN) dashboard.
 
-## Sources (32)
+## Sources (34)
 
 | Fund | Method | Frequency | Notable |
 |------|--------|-----------|---------|
@@ -38,6 +38,8 @@ Tracks and aggregates research insights, market commentary, and papers from top 
 | **Lazard Asset Management** | SSR (requests/AEM) | Weekly | EM equity specialist + macro fixed-income; founded 1848, New York, ~$260B; Lazard Perspective research on geopolitics, EM fundamentals, global monetary policy |
 | **Rothschild & Co Asset Management** | SSR (requests) | Weekly | Active boutique within the 200-year-old Rothschild & Co group; Paris, ~€38B; conviction-driven European/thematic equity, multi-asset/macro, credit/fixed income |
 | **Goehring & Rozencwajg** | SSR (requests/sitemap) | Weekly | Contrarian natural-resources boutique; energy, precious metals, uranium, agriculture; quarterly commentaries read by 10,000+ professionals; New York, 2015, ~$1.5B |
+| **Cohen & Steers** | Playwright | Weekly | Real assets & alternative income specialist; listed REITs/infrastructure pioneer, preferred securities; New York, 1986, ~$94B |
+| **Principal Asset Management** | Playwright | Weekly | Global multi-asset manager, asset-management arm of Principal Financial Group; macro, multi-asset, real assets, fixed income; Des Moines, 1879, ~$578B |
 
 ## Pipeline
 
