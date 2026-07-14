@@ -33,7 +33,7 @@ def days_since(candidate: dict) -> int | None:
     since = candidate.get("status_since")
     if not since:
         return None
-    parsed = datetime.fromisoformat(since)
+    parsed = datetime.fromisoformat(since.replace("Z", "+00:00"))
     return (datetime.now(BJT) - parsed).days
 
 
