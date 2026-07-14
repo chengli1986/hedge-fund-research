@@ -1,14 +1,14 @@
 # Hedge Fund Research (GMIA)
 
 ## Overview
-GMIA (Global Market Insight Aggregator) tracks research/commentary from 31 top
+GMIA (Global Market Insight Aggregator) tracks research/commentary from 34 top
 hedge funds, summarizes each article via LLM, and publishes a bilingual (CN/EN)
 HTML dashboard. Stack: Python 3.12; requests + BeautifulSoup for SSR sites,
 Playwright (Chromium) for JS/CSR sites; multi-model LLM chain for summaries.
 
 ## Develop / Test
 ```bash
-python3 -m pytest tests/ -q                       # 606 passing, 15 deselected
+python3 -m pytest tests/ -q                       # 613 passing, 15 deselected
 bash run_pipeline.sh                              # full 4-stage pipeline
 python3 fetch_articles.py --list                  # list configured sources
 python3 fetch_articles.py --source <id> --dry-run # one source, no save
