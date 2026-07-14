@@ -71,3 +71,46 @@ class TestApplyCorrections:
         illegal = g.find_illegal_changes(before, after)
         corrected = g.apply_corrections(after, illegal)
         assert [c["status"] for c in corrected] == ["watchlist", "promoted"]
+
+
+class TestStampLegalStatusChanges:
+    """The agent edits fund_candidates.json directly (bypassing status_util),
+    so its legal changes (watchlist/rejected downgrade, brand-new seed) never
+    get a status_since stamp on their own. Guard already has the before/after
+    snapshot, so it's the natural place to backfill it — otherwise stall
+    detection would think these candidates have been stuck forever."""
+
+    def test_legal_downgrade_gets_stamped(self):
+        before = [_c("a", "discovered")]
+        after = [_c("a", "watchlist")]
+        illegal = g.find_illegal_changes(before, after)
+        stamped = g.stamp_legal_status_changes(before, after, illegal)
+        assert stamped == ["a"]
+        assert after[0]["status_since"] is not None
+
+    def test_new_seed_candidate_gets_stamped(self):
+        before = []
+        after = [_c("new", "seed")]
+        illegal = g.find_illegal_changes(before, after)
+        stamped = g.stamp_legal_status_changes(before, after, illegal)
+        assert stamped == ["new"]
+        assert after[0]["status_since"] is not None
+
+    def test_unchanged_status_not_stamped(self):
+        before = [_c("a", "promoted")]
+        after = [_c("a", "promoted")]
+        illegal = g.find_illegal_changes(before, after)
+        stamped = g.stamp_legal_status_changes(before, after, illegal)
+        assert stamped == []
+        assert "status_since" not in after[0]
+
+    def test_illegal_change_not_stamped_here(self):
+        # Reverted separately by apply_corrections — stamping happens on the
+        # corrected (reverted) list, where this candidate's status is back to
+        # unchanged, so it must not be double-counted as a legal change.
+        before = [_c("a", "discovered")]
+        after = [_c("a", "promoted")]
+        illegal = g.find_illegal_changes(before, after)
+        corrected = g.apply_corrections(after, illegal)
+        stamped = g.stamp_legal_status_changes(before, corrected, illegal)
+        assert stamped == []

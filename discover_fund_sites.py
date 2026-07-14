@@ -28,6 +28,8 @@ from urllib.parse import urljoin, urlparse
 import httpx
 from bs4 import BeautifulSoup
 
+from status_util import set_status
+
 BJT = timezone(timedelta(hours=8))
 BASE_DIR = Path(__file__).resolve().parent
 CANDIDATES_FILE = BASE_DIR / "config" / "fund_candidates.json"
@@ -230,7 +232,7 @@ def update_candidate(
         if research_links is not None:
             c["research_links"] = research_links
         if status is not None:
-            c["status"] = status
+            set_status(c, status)
         c["discovery_method"] = "discover_fund_sites"
         c["last_discovered_at"] = now
         break

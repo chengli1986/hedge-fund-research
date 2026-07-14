@@ -24,6 +24,8 @@ from typing import Optional
 import httpx
 from bs4 import BeautifulSoup
 
+from status_util import set_status
+
 BJT = timezone(timedelta(hours=8))
 BASE_DIR = Path(__file__).resolve().parent
 CANDIDATES_FILE = BASE_DIR / "config" / "fund_candidates.json"
@@ -278,14 +280,14 @@ def main() -> None:
             log.warning("Screening failed for %s: %s", c["id"], result["error"])
             if not args.dry_run:
                 # Record failure so it's visible; auto-retried next run
-                c["status"] = "screen_failed"
+                set_status(c, "screen_failed")
                 c["last_screened_at"] = now
                 c["screening_reason"] = result.get("reason", result["error"])
                 updated_count += 1
             continue
 
         if not args.dry_run:
-            c["status"] = "screened"
+            set_status(c, "screened")
             c["is_publicly_accessible"] = result["passed"]
             c["has_article_index"] = result["passed"]
             c["last_screened_at"] = now

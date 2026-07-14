@@ -26,6 +26,8 @@ import argparse
 import json
 import sys
 
+from status_util import now_iso
+
 # Statuses the discovery agent is allowed to set on an EXISTING candidate
 # (besides leaving it unchanged).
 ALLOWED_AGENT_STATUSES = {"watchlist", "rejected"}
@@ -72,6 +74,32 @@ def apply_corrections(after: list[dict], illegal: list[dict]) -> list[dict]:
     return out
 
 
+def stamp_legal_status_changes(before: list[dict], after: list[dict], illegal: list[dict]) -> list[str]:
+    """Stamp status_since on candidates whose status legally changed (agent
+    downgrade to watchlist/rejected, or a brand-new seed candidate).
+
+    The agent edits fund_candidates.json directly, bypassing status_util's
+    set_status(), so these changes never get a status_since stamp on their
+    own — stall detection would then see a missing/stale status_since and
+    either skip the candidate or misjudge how long it's been stuck. Guard
+    already holds the before/after snapshot needed to tell "just changed"
+    apart from "unchanged since before this run", so it's the natural place
+    to backfill it. Mutates `after` in place; returns the stamped ids.
+    """
+    illegal_ids = {x["id"] for x in illegal}
+    before_by_id = {c.get("id"): c for c in before}
+    stamped: list[str] = []
+    for c in after:
+        cid = c.get("id")
+        if cid in illegal_ids:
+            continue
+        prev = before_by_id.get(cid)
+        if prev is None or prev.get("status") != c.get("status"):
+            c["status_since"] = now_iso()
+            stamped.append(cid)
+    return stamped
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--before", required=True, help="status snapshot taken before the agent ran")
@@ -84,14 +112,18 @@ def main() -> int:
         after = json.load(f)
 
     illegal = find_illegal_changes(before, after)
-    if illegal:
-        corrected = apply_corrections(after, illegal)
+    corrected = apply_corrections(after, illegal) if illegal else after
+    stamped = stamp_legal_status_changes(before, corrected, illegal)
+
+    if illegal or stamped:
         # Match the on-disk format written by the rest of the pipeline:
         # json.dumps(indent=2) (ensure_ascii=True default), no trailing newline.
         with open(args.after, "w") as f:
             f.write(json.dumps(corrected, indent=2))
         for x in illegal:
             print(f"REVERTED {x['id']}: {x['from']} -> {x['to']} (reverted)")
+        if stamped:
+            print(f"STAMPED status_since for {len(stamped)} legal change(s): {', '.join(stamped)}")
     print(f"guard: {len(illegal)} illegal status change(s)")
     return 0
 

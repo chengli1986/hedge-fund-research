@@ -40,6 +40,8 @@ from urllib.parse import urlparse
 import httpx
 from bs4 import BeautifulSoup
 
+from status_util import set_status
+
 BJT = timezone(timedelta(hours=8))
 BASE_DIR = Path(__file__).resolve().parent
 CANDIDATES_FILE = BASE_DIR / "config" / "fund_candidates.json"
@@ -1352,7 +1354,7 @@ def cmd_run() -> None:
                                 # Route to fetcher-synthesis (which only picks up
                                 # status="inaccessible") so a Playwright fetcher
                                 # can be auto-synthesized next Sunday.
-                                c["status"] = "inaccessible"
+                                set_status(c, "inaccessible")
                                 c["notes"] = (
                                     f"Trial failed: 0 articles detected across "
                                     f"{TRIAL_DAYS} days — site likely requires JS "
@@ -1362,19 +1364,19 @@ def cmd_run() -> None:
                             else:
                                 # Some articles present but not on enough days —
                                 # genuine slow-publication pattern, not access issue.
-                                c["status"] = "watchlist"
+                                set_status(c, "watchlist")
                                 c["notes"] = (
                                     f"Trial failed: articles on only "
                                     f"{days_with_articles}/{TRIAL_DAYS} days"
                                 )
                         elif not all_scores:
-                            c["status"] = "watchlist"
+                            set_status(c, "watchlist")
                             c["notes"] = "Trial inconclusive: no quality samples obtained"
                         else:
-                            c["status"] = "watchlist"
+                            set_status(c, "watchlist")
                             c["notes"] = f"Trial failed: low quality ({avg_quality:.2f})"
                     else:
-                        c["status"] = "promoted"
+                        set_status(c, "promoted")
                         c["notes"] = (f"RECOMMEND: trial passed "
                                       f"({days_with_articles}/{TRIAL_DAYS} days with articles, quality={avg_quality:.2f})")
                         # Aggregate js_only stats from quality_samples
@@ -1469,7 +1471,7 @@ def cmd_run() -> None:
                 candidates = load_candidates()
                 for c in candidates:
                     if c["id"] == new_trial["id"]:
-                        c["status"] = "inaccessible"
+                        set_status(c, "inaccessible")
                         c["notes"] = ("Trial aborted on day 1: index reachable but "
                                       "no article links in static HTML — needs a "
                                       "fetcher. Routed to fetcher-synthesis queue.")

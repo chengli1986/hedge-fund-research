@@ -13,6 +13,8 @@ import sys
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
+from status_util import set_status
+
 BASE_DIR = Path(__file__).parent
 CANDIDATES_FILE = BASE_DIR / "config" / "fund_candidates.json"
 FETCH_ARTICLES = BASE_DIR / "fetch_articles.py"
@@ -170,7 +172,7 @@ def auto_reject_exhausted_candidates(
         if n < max_failures:
             continue
         original_notes = c.get("notes", "")
-        c["status"] = "rejected"
+        set_status(c, "rejected")
         c["notes"] = (
             f"Auto-rejected {today}: fetcher-synthesis failed {n} times "
             f"(>= {max_failures} threshold). Original notes: "
