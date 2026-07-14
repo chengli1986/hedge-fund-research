@@ -480,7 +480,7 @@
       "short_name": "PineBridge",
       "url": "https://www.pinebridge.com/en/our-insights",
       "method": "playwright",
-      "frequency": "weekly",
+      "frequency": "biweekly",
       "description": "Global asset manager (~$100B AUM) headquartered in New York with deep Asia-Pacific roots; originated as AIG Investments (1996), spun out under Pacific Century Group in 2010 and acquired by MetLife Investment Management (completed Dec 2025). Specializes in fixed income (EM debt, leveraged finance, IG bonds), multi-asset and active equities; widely followed publications include Capital Market Line (5-year capital-market assumptions) and Investment Strategy Insights (weekly macro/positioning).",
       "notable_authors": [],
       "expected_hostname": "pinebridge.com",
