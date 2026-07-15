@@ -8,11 +8,18 @@ to record its analysis. It is ONLY permitted to:
   - downgrade an unsuitable candidate to "watchlist" or "rejected", OR
   - add a brand-new candidate as "seed".
 
-It must NEVER set "promoted" (or any other pipeline-owned status like
-visitable/inaccessible/screened). Promotion is gmia-trial-manager's job, and only
-after a trial PASS — that path also sets synthesis_priority so the fetcher gets
-synthesized. An agent that promotes directly orphans the candidate (no trial, no
-synthesis_priority, never queued). See 2026-06-10 Guggenheim incident.
+It must NEVER hand-edit a candidate straight to "promoted" (or any other
+pipeline-owned status like visitable/inaccessible/screened). Promotion is
+gmia-trial-manager's job, and only after a trial PASS — that path also sets
+synthesis_priority so the fetcher gets synthesized. An agent that promotes
+directly orphans the candidate (no trial, no synthesis_priority, never
+queued). See 2026-06-10 Guggenheim incident.
+
+Phase 1 of the same session runs the real pipeline scripts (discover_fund_sites.py
+/ screen_fund_candidates.py / discover_candidate_entrypoints.py) via Bash, and
+those legitimately set these same statuses through status_util.set_status().
+PIPELINE_STATUS_TRANSITIONS lets the guard tell that apart from a hand-edit by
+checking whether the script's own freshness field actually advanced.
 
 Usage (run after the discovery agent, before trial-manager):
     python3 guard_candidate_status.py --before <snapshot.json> --after config/fund_candidates.json
@@ -34,6 +41,27 @@ ALLOWED_AGENT_STATUSES = {"watchlist", "rejected"}
 # Status the agent is allowed to give a brand-new candidate.
 ALLOWED_NEW_STATUS = "seed"
 
+# Status transitions owned by program.md's Phase 1 pipeline scripts
+# (discover_fund_sites.py / screen_fund_candidates.py /
+# discover_candidate_entrypoints.py), which the agent runs via Bash in the
+# same session this guard's before/after snapshot spans. Each script calls
+# status_util.set_status() itself and stamps its own freshness field at the
+# same time, so a transition is only treated as legitimate when that field
+# actually advanced in this session — proof the real script ran, not the
+# agent hand-editing the status field via Edit/Write to match. Without this,
+# every ordinary Phase 1 pipeline run gets reverted as if it were the agent
+# illegally promoting/rejecting via direct edit (2026-07-15 longleaf-partners/
+# lord-abbett/invesco false-positive: screen_fund_candidates.py legitimately
+# screened all 3, discover_candidate_entrypoints.py legitimately marked 2
+# inaccessible, guard reverted all of it back to "discovered").
+PIPELINE_STATUS_TRANSITIONS = {
+    "screened": "last_screened_at",
+    "screen_failed": "last_screened_at",
+    "visitable": "last_validated_at",
+    "inaccessible": "last_validated_at",
+    "discovered": "last_discovered_at",
+}
+
 
 def find_illegal_changes(before: list[dict], after: list[dict]) -> list[dict]:
     """Return [{id, from, to}] for candidates whose status the agent set illegally.
@@ -50,10 +78,14 @@ def find_illegal_changes(before: list[dict], after: list[dict]) -> list[dict]:
         if prev is None:
             if to != ALLOWED_NEW_STATUS:
                 illegal.append({"id": cid, "from": None, "to": to})
-        else:
-            frm = prev.get("status")
-            if to != frm and to not in ALLOWED_AGENT_STATUSES:
-                illegal.append({"id": cid, "from": frm, "to": to})
+            continue
+        frm = prev.get("status")
+        if to == frm or to in ALLOWED_AGENT_STATUSES:
+            continue
+        stamp_field = PIPELINE_STATUS_TRANSITIONS.get(to)
+        if stamp_field and c.get(stamp_field) != prev.get(stamp_field):
+            continue  # legitimate: proven by a fresh script-owned timestamp
+        illegal.append({"id": cid, "from": frm, "to": to})
     return illegal
 
 

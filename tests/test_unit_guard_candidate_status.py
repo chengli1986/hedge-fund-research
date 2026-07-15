@@ -37,11 +37,55 @@ class TestFindIllegalChanges:
         assert g.find_illegal_changes(before, after) == []
 
     def test_agent_setting_pipeline_owned_status_is_illegal(self):
-        # visitable/inaccessible/screened are owned by specific scripts, not the agent
+        # visitable/inaccessible/screened are owned by specific scripts, not the
+        # agent — a bare hand-edit with no supporting fresh timestamp is still
+        # flagged (no last_validated_at present at all here).
         before = [_c("a", "discovered")]
         after = [_c("a", "visitable")]
         assert g.find_illegal_changes(before, after) == [
             {"id": "a", "from": "discovered", "to": "visitable"}
+        ]
+
+    def test_legitimate_screen_script_transition_is_not_flagged(self):
+        # screen_fund_candidates.py legitimately moves discovered -> screened
+        # (or screen_failed) via status_util.set_status() and stamps
+        # last_screened_at in the same call — proof it's a real script run,
+        # not the agent hand-editing status to match (2026-07-15 regression:
+        # longleaf-partners/lord-abbett/invesco got reverted despite this).
+        before = [{"id": "a", "status": "discovered", "notes": "x"}]
+        after = [{"id": "a", "status": "screened", "notes": "x",
+                  "last_screened_at": "2026-07-15T09:00:01+08:00"}]
+        assert g.find_illegal_changes(before, after) == []
+
+    def test_legitimate_entrypoints_script_transition_is_not_flagged(self):
+        # discover_candidate_entrypoints.py legitimately moves
+        # discovered/screened -> visitable/inaccessible, stamping
+        # last_validated_at in the same call.
+        before = [{"id": "a", "status": "screened", "notes": "x"}]
+        after = [{"id": "a", "status": "inaccessible", "notes": "x",
+                  "last_validated_at": "2026-07-15T09:00:01+08:00"}]
+        assert g.find_illegal_changes(before, after) == []
+
+    def test_status_matching_pipeline_transition_without_fresh_stamp_is_illegal(self):
+        # The target status matches a pipeline-owned transition, but the
+        # script-owned freshness field never advanced — this is a hand-edit
+        # forging the status without actually running the script, still illegal.
+        before = [{"id": "a", "status": "discovered", "notes": "x",
+                   "last_screened_at": "2026-07-01T00:00:00+08:00"}]
+        after = [{"id": "a", "status": "screened", "notes": "x",
+                  "last_screened_at": "2026-07-01T00:00:00+08:00"}]
+        assert g.find_illegal_changes(before, after) == [
+            {"id": "a", "from": "discovered", "to": "screened"}
+        ]
+
+    def test_agent_promoting_directly_stays_illegal_even_with_stale_fields(self):
+        # "promoted" is never a pipeline-script transition (only
+        # gmia-trial-manager.py sets it, in a separate process after guard
+        # runs) so it's always flagged regardless of other fields.
+        before = [_c("a", "discovered")]
+        after = [_c("a", "promoted")]
+        assert g.find_illegal_changes(before, after) == [
+            {"id": "a", "from": "discovered", "to": "promoted"}
         ]
 
     def test_new_candidate_as_seed_is_allowed(self):
