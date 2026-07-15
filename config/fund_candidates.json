@@ -222,7 +222,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.97,
-    "notes": "[白话] 网站进得去，但发的多是公司文化/招聘内容，真正的量化研究又少又旧——内容本身不合格。 Rejected: HR/culture majority, quant research sparse/dated",
+    "notes": "Rejected: some quant research but culture content dominates",
     "research_links": [
       {
         "url": "https://www.twosigma.com/insights/",
@@ -246,16 +246,16 @@
       "article_signals": 2
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-06-13T01:00:00Z",
+    "last_deep_analyzed_at": "2026-07-15T01:01:14Z",
     "quality": "LOW",
-    "topics": "quant, data science, HR/culture",
+    "topics": "quant, features research, HR/culture (culture-heavy)",
     "reject_reason": "content_not_research",
     "rejected_at": "2026-04-12T19:21:09.876510+08:00",
     "strategy_tags": [
       "quant"
     ],
     "source": "auto_discovered",
-    "quality_score": 0.2,
+    "quality_score": 0.25,
     "status_since": "2026-04-12T02:31:04.953038+08:00"
   },
   {
@@ -811,7 +811,7 @@
     "official_domain": "www.fidelity.com",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-04-19T09:00:12.375997+08:00",
-    "notes": "[白话] 面向散户的理财教育网站、还得登录，不是机构研究——定位不对。 Rejected: retail education portal, not institutional",
+    "notes": "Rejected: retail education portal, not institutional",
     "research_links": [],
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -829,7 +829,7 @@
     "screening_reason": "Login/paywall detected",
     "fit_score": 0.82,
     "last_validated_at": "2026-04-16T09:01:28.399090+08:00",
-    "last_deep_analyzed_at": "2026-06-13T01:00:00Z",
+    "last_deep_analyzed_at": "2026-07-15T01:01:14Z",
     "quality": "LOW",
     "topics": "retail education, personal finance",
     "strategy_tags": [
@@ -1592,15 +1592,15 @@
       "multi_asset"
     ],
     "discovery_method": "discover_fund_sites",
-    "notes": "JS-SPA still blocks WebFetch; mixed investment/advisor",
+    "notes": "Still JS-SPA blocked; unable to verify content again",
     "no_publish_dates": true,
     "official_domain": "www.capitalgroup.com",
     "research_links": [],
     "last_discovered_at": "2026-04-23T09:00:12.674329+08:00",
-    "last_deep_analyzed_at": "2026-07-02T01:02:50Z",
+    "last_deep_analyzed_at": "2026-07-15T01:01:14Z",
     "quality": "MEDIUM",
     "quality_score": 0.5,
-    "topics": "macro, geopolitics, advisor practice (mixed: ~3/7 investment, ~4/7 advisor mgmt)",
+    "topics": "macro, geopolitics, advisor practice (mixed)",
     "inaccessible_reason": null,
     "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager",
     "status_since": "2026-04-23T09:00:12.674329+08:00"
@@ -2220,9 +2220,9 @@
     "last_validated_at": "2026-05-12T09:00:20.241489+08:00",
     "quality": "LOW",
     "quality_score": 0.3,
-    "topics": "factor investing, equity, multi-asset",
-    "notes": "Watchlist: JS-heavy, podcast-only, no research index",
-    "last_deep_analyzed_at": "2026-06-13T01:00:00Z",
+    "topics": "factor investing, equity, multi-asset (podcast-heavy)",
+    "notes": "Watchlist: podcast-only, no dated research index found",
+    "last_deep_analyzed_at": "2026-07-15T01:01:14Z",
     "status_since": "2026-05-12T09:00:20.241489+08:00"
   },
   {
@@ -2654,7 +2654,7 @@
     "homepage_url": "https://www.southeasternasset.com",
     "research_url": "https://www.southeasternasset.com",
     "source": "manual",
-    "status": "discovered",
+    "status": "screened",
     "strategy_tags": [
       "equity"
     ],
@@ -2667,7 +2667,21 @@
     "quality_score": 0.75,
     "topics": "equity, value investing, concentrated stock-picking",
     "notes": "RECOMMEND: Quarterly deep-value equity letters, no gate [2026-07-14 manual] stage1 link-crawl found 0 research_links (JS-rendered nav/insufficient static signals, verified live); research_url already human-confirmed valid, flipped seed->discovered to unblock pipeline.",
-    "status_since": "2026-07-14T09:00:45.165660+08:00"
+    "status_since": "2026-07-15T09:00:10.989885+08:00",
+    "is_publicly_accessible": false,
+    "has_article_index": false,
+    "last_screened_at": "2026-07-15T09:00:10.989862+08:00",
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 1,
+      "article_tags": 0,
+      "time_tags": 0,
+      "date_patterns": 0,
+      "h2_tags": 1,
+      "article_signals": 0
+    },
+    "screening_reason": "Insufficient article index signals"
   },
   {
     "id": "goehring-rozencwajg",
@@ -2697,7 +2711,7 @@
     "homepage_url": "https://www.lordabbett.com",
     "research_url": "https://www.lordabbett.com/en-us/financial-advisor/insights.html",
     "source": "manual",
-    "status": "discovered",
+    "status": "inaccessible",
     "strategy_tags": [
       "fixed_income",
       "multi_asset",
@@ -2713,14 +2727,30 @@
     "quality_score": 0.62,
     "topics": "fixed income, equity, macro, multi-asset",
     "notes": "Free FI/equity outlook pieces, overlaps existing AMs [2026-07-14 manual] stage1 link-crawl found 0 research_links (JS-rendered nav/insufficient static signals, verified live); research_url already human-confirmed valid, flipped seed->discovered to unblock pipeline.",
-    "status_since": "2026-07-14T09:00:45.503268+08:00"
+    "status_since": "2026-07-15T09:00:18.733834+08:00",
+    "is_publicly_accessible": false,
+    "has_article_index": false,
+    "last_screened_at": "2026-07-15T09:00:11.133642+08:00",
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 0,
+      "article_tags": 0,
+      "time_tags": 0,
+      "date_patterns": 0,
+      "h2_tags": 0,
+      "article_signals": 0
+    },
+    "screening_reason": "Insufficient article index signals",
+    "fit_score": 0.79,
+    "last_validated_at": "2026-07-15T09:00:18.733812+08:00"
   },
   {
     "id": "invesco",
     "name": "Invesco",
     "homepage_url": "https://www.invesco.com",
     "source": "manual",
-    "status": "discovered",
+    "status": "inaccessible",
     "strategy_tags": [
       "macro",
       "multi_asset",
@@ -2737,6 +2767,22 @@
     "quality_score": 0.78,
     "topics": "macro, rates, Fed policy, equity outlook, multi-asset",
     "notes": "RECOMMEND: Weekly macro/multi-asset, overlaps Man Grp macro [2026-07-14 manual] stage1 link-crawl found 0 research_links (JS-rendered nav/insufficient static signals, verified live); research_url already human-confirmed valid, flipped seed->discovered to unblock pipeline.",
-    "status_since": "2026-07-14T09:00:45.705091+08:00"
+    "status_since": "2026-07-15T09:00:20.582196+08:00",
+    "is_publicly_accessible": false,
+    "has_article_index": false,
+    "last_screened_at": "2026-07-15T09:00:11.502649+08:00",
+    "screening_signals": {
+      "status_code": 406,
+      "has_password_input": false,
+      "login_marker_count": 0,
+      "article_tags": 0,
+      "time_tags": 0,
+      "date_patterns": 0,
+      "h2_tags": 0,
+      "article_signals": 0
+    },
+    "screening_reason": "Not publicly accessible (HTTP 406)",
+    "fit_score": 0.64,
+    "last_validated_at": "2026-07-15T09:00:20.582175+08:00"
   }
 ]
