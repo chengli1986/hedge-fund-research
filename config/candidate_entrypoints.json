@@ -983,7 +983,7 @@
       "rejected_pages": []
     },
     "lord-abbett": {
-      "last_discovered_at": "2026-07-15T09:00:18.733812+08:00",
+      "last_discovered_at": "2026-07-15T13:19:23.450593+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -1099,7 +1099,7 @@
       ]
     },
     "invesco": {
-      "last_discovered_at": "2026-07-15T09:00:20.582175+08:00",
+      "last_discovered_at": "2026-07-15T13:19:24.985498+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -1141,7 +1141,7 @@
           "label": "bad"
         },
         {
-          "url": "https://www.invesco.com/ca/en/country-splash.html",
+          "url": "https://www.invesco.com/education-savings/en/country-splash.html",
           "final_score": 0.49,
           "domain_score": 1.0,
           "path_score": 0.5,
@@ -1150,7 +1150,7 @@
           "label": "bad"
         },
         {
-          "url": "https://www.invesco.com/apac/en/country-splash.html",
+          "url": "https://www.invesco.com/ca/en/country-splash.html",
           "final_score": 0.49,
           "domain_score": 1.0,
           "path_score": 0.5,

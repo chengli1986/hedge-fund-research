@@ -2654,7 +2654,7 @@
     "homepage_url": "https://www.southeasternasset.com",
     "research_url": "https://www.southeasternasset.com",
     "source": "manual",
-    "status": "discovered",
+    "status": "screened",
     "strategy_tags": [
       "equity"
     ],
@@ -2666,11 +2666,11 @@
     "quality": "HIGH",
     "quality_score": 0.75,
     "topics": "equity, value investing, concentrated stock-picking",
-    "notes": "[guard: reverted illegal screened->discovered; agent may not set this status] RECOMMEND: Quarterly deep-value equity letters, no gate [2026-07-14 manual] stage1 link-crawl found 0 research_links (JS-rendered nav/insufficient static signals, verified live); research_url already human-confirmed valid,",
-    "status_since": "2026-07-15T09:00:10.989885+08:00",
+    "notes": "RECOMMEND: Quarterly deep-value equity letters, no gate [2026-07-14 manual] stage1 link-crawl found 0 research_links (JS-rendered nav/insufficient static signals, verified live); research_url already human-confirmed valid,",
+    "status_since": "2026-07-15T13:19:07.753094+08:00",
     "is_publicly_accessible": false,
     "has_article_index": false,
-    "last_screened_at": "2026-07-15T09:00:10.989862+08:00",
+    "last_screened_at": "2026-07-15T13:19:07.753073+08:00",
     "screening_signals": {
       "status_code": 200,
       "has_password_input": false,
@@ -2711,7 +2711,7 @@
     "homepage_url": "https://www.lordabbett.com",
     "research_url": "https://www.lordabbett.com/en-us/financial-advisor/insights.html",
     "source": "manual",
-    "status": "discovered",
+    "status": "inaccessible",
     "strategy_tags": [
       "fixed_income",
       "multi_asset",
@@ -2726,11 +2726,11 @@
     "quality": "MEDIUM",
     "quality_score": 0.62,
     "topics": "fixed income, equity, macro, multi-asset",
-    "notes": "[guard: reverted illegal inaccessible->discovered; agent may not set this status] Free FI/equity outlook pieces, overlaps existing AMs [2026-07-14 manual] stage1 link-crawl found 0 research_links (JS-rendered nav/insufficient static signals, verified live); research_url already human-confirmed valid",
-    "status_since": "2026-07-15T09:00:18.733834+08:00",
+    "notes": "Free FI/equity outlook pieces, overlaps existing AMs [2026-07-14 manual] stage1 link-crawl found 0 research_links (JS-rendered nav/insufficient static signals, verified live); research_url already human-confirmed valid",
+    "status_since": "2026-07-15T13:19:23.450612+08:00",
     "is_publicly_accessible": false,
     "has_article_index": false,
-    "last_screened_at": "2026-07-15T09:00:11.133642+08:00",
+    "last_screened_at": "2026-07-15T13:19:08.171167+08:00",
     "screening_signals": {
       "status_code": 200,
       "has_password_input": false,
@@ -2743,14 +2743,14 @@
     },
     "screening_reason": "Insufficient article index signals",
     "fit_score": 0.79,
-    "last_validated_at": "2026-07-15T09:00:18.733812+08:00"
+    "last_validated_at": "2026-07-15T13:19:23.450593+08:00"
   },
   {
     "id": "invesco",
     "name": "Invesco",
     "homepage_url": "https://www.invesco.com",
     "source": "manual",
-    "status": "discovered",
+    "status": "inaccessible",
     "strategy_tags": [
       "macro",
       "multi_asset",
@@ -2766,11 +2766,11 @@
     "quality": "HIGH",
     "quality_score": 0.78,
     "topics": "macro, rates, Fed policy, equity outlook, multi-asset",
-    "notes": "[guard: reverted illegal inaccessible->discovered; agent may not set this status] RECOMMEND: Weekly macro/multi-asset, overlaps Man Grp macro [2026-07-14 manual] stage1 link-crawl found 0 research_links (JS-rendered nav/insufficient static signals, verified live); research_url already human-confirme",
-    "status_since": "2026-07-15T09:00:20.582196+08:00",
+    "notes": "RECOMMEND: Weekly macro/multi-asset, overlaps Man Grp macro [2026-07-14 manual] stage1 link-crawl found 0 research_links (JS-rendered nav/insufficient static signals, verified live); research_url already human-confirme",
+    "status_since": "2026-07-15T13:19:24.985519+08:00",
     "is_publicly_accessible": false,
     "has_article_index": false,
-    "last_screened_at": "2026-07-15T09:00:11.502649+08:00",
+    "last_screened_at": "2026-07-15T13:19:08.707004+08:00",
     "screening_signals": {
       "status_code": 406,
       "has_password_input": false,
@@ -2783,6 +2783,6 @@
     },
     "screening_reason": "Not publicly accessible (HTTP 406)",
     "fit_score": 0.64,
-    "last_validated_at": "2026-07-15T09:00:20.582175+08:00"
+    "last_validated_at": "2026-07-15T13:19:24.985498+08:00"
   }
 ]
