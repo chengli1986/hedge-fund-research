@@ -354,7 +354,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.97,
-    "notes": "RECOMMEND: PE/VC + endowment data, monthly, semi-gated",
+    "notes": "RECOMMEND: PE/VC+endowment, some pieces PDF-gated",
     "research_links": [
       {
         "url": "https://www.cambridgeassociates.com/insights/private-investments/",
@@ -463,9 +463,9 @@
       "article_signals": 1
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-07-03T01:10:00Z",
+    "last_deep_analyzed_at": "2026-07-16T01:02:00Z",
     "quality": "HIGH",
-    "quality_score": 0.85,
+    "quality_score": 0.78,
     "topics": "private equity, venture capital, endowments, macro, ESG",
     "strategy_tags": [
       "private_equity",
@@ -492,11 +492,11 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.9,
-    "last_deep_analyzed_at": "2026-07-03T01:10:00Z",
+    "last_deep_analyzed_at": "2026-07-16T01:02:00Z",
     "quality": "MEDIUM",
-    "topics": "macro, equity, fixed income, alternatives, portfolio construction",
-    "notes": "Confirmed: article pages JS-gated, only disclaimers load",
-    "quality_score": 0.6,
+    "topics": "macro, equity, fixed income, alternatives, geopolitics",
+    "notes": "Index is subscribe-wall; sampled article pages solid",
+    "quality_score": 0.68,
     "research_links": [
       {
         "url": "https://am.gs.com/en-us/advisors/insights/list",
@@ -1906,7 +1906,7 @@
       "macro",
       "fixed_income"
     ],
-    "notes": "RECOMMEND: Weekly EM/equity, active thru May 2026",
+    "notes": "RECOMMEND: Weekly EM/equity research, fresh thru Jun'26",
     "research_url": "https://www.lazardassetmanagement.com/us/en_us/research-insights",
     "official_domain": "www.lazardassetmanagement.com",
     "research_links": [
@@ -1994,7 +1994,7 @@
     "screening_reason": "Research index detected",
     "fit_score": 0.94,
     "last_validated_at": "2026-05-04T09:00:19.804656+08:00",
-    "last_deep_analyzed_at": "2026-07-02T01:02:50Z",
+    "last_deep_analyzed_at": "2026-07-16T01:02:00Z",
     "quality": "HIGH",
     "quality_score": 0.8,
     "topics": "emerging markets, equity, macro, AI/tech, fixed income, geopolitics",
@@ -2487,10 +2487,10 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "quality": "HIGH",
-    "quality_score": 0.85,
+    "quality_score": 0.88,
     "topics": "quant, equity, global allocation, ESG, credit, behavioral finance",
-    "notes": "RECOMMEND: Confirmed data-backed quant research, Jul 2026",
-    "last_deep_analyzed_at": "2026-07-02T01:02:50Z",
+    "notes": "RECOMMEND: Rigorous quant research w/ data & citations",
+    "last_deep_analyzed_at": "2026-07-16T01:02:00Z",
     "inaccessible_reason": null,
     "promotion_notes": "JS-rendered homepage; article URLs directly accessible via WebFetch. Needs Playwright fetcher for full index scraping.",
     "synthesis_attempted_at": "2026-06-03T01:10:11.791298+00:00",
