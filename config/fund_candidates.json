@@ -1007,8 +1007,8 @@
     "last_validated_at": "2026-04-19T09:01:48.873166+08:00",
     "quality": "HIGH",
     "quality_score": 0.9,
-    "topics": "factor investing, smart beta, fundamental indexing, AI, macro, emerging markets",
-    "last_deep_analyzed_at": "2026-07-07T01:02:24Z",
+    "topics": "quant, factor investing, equity, index research",
+    "last_deep_analyzed_at": "2026-07-18T01:01:24Z",
     "strategy_tags": [
       "quant",
       "equity",
@@ -1307,7 +1307,7 @@
     "rss_url": null,
     "official_domain": "www.aberdeeninvestments.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "Still 0 articles on static fetch; Playwright fetcher already in prod",
+    "notes": "Still 0 articles static; needs JS; Playwright fetcher in prod",
     "research_links": [
       {
         "url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/insights",
@@ -1332,8 +1332,8 @@
     "screening_reason": "Insufficient article index signals",
     "quality": "LOW",
     "quality_score": 0.32,
-    "topics": "macro, fixed income, multi-asset, emerging markets",
-    "last_deep_analyzed_at": "2026-07-06T01:02:45Z",
+    "topics": "multi_asset, institutional insights",
+    "last_deep_analyzed_at": "2026-07-18T01:01:24Z",
     "fit_score": 0.82,
     "strategy_tags": [
       "macro",
@@ -1619,9 +1619,9 @@
     ],
     "quality": "HIGH",
     "quality_score": 0.82,
-    "topics": "multi-asset, macro, fixed income, equity, emerging markets",
-    "notes": "RECOMMEND: Proprietary CML 17-min research, free access",
-    "last_deep_analyzed_at": "2026-07-07T01:02:24Z",
+    "topics": "fixed income, credit, emerging markets, macro",
+    "notes": "RECOMMEND: Proprietary CML research; listing is JS-rendered",
+    "last_deep_analyzed_at": "2026-07-18T01:01:24Z",
     "is_publicly_accessible": true,
     "has_article_index": true,
     "research_url": "https://www.pinebridge.com/en/all-insights",
@@ -1870,7 +1870,7 @@
       }
     ],
     "discovery_method": "discover_fund_sites",
-    "notes": "Sampled article confirms substantive, qualitative analysis",
+    "notes": "Weekly Tactical Take video/macro commentary, no gate",
     "last_discovered_at": "2026-05-02T09:03:53.598499+08:00",
     "is_publicly_accessible": true,
     "has_article_index": true,
@@ -1888,10 +1888,10 @@
     "screening_reason": "Research index detected",
     "fit_score": 0.85,
     "last_validated_at": "2026-05-03T09:00:33.191261+08:00",
-    "last_deep_analyzed_at": "2026-07-06T01:02:45Z",
+    "last_deep_analyzed_at": "2026-07-18T01:01:24Z",
     "quality": "MEDIUM",
     "quality_score": 0.62,
-    "topics": "macro, equity, fixed income, energy, portfolio construction",
+    "topics": "macro, multi_asset, tactical positioning",
     "status_since": "2026-05-03T09:00:33.191261+08:00"
   },
   {
