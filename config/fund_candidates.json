@@ -2808,20 +2808,6 @@
     ],
     "status_since": "2026-07-19T09:02:59.517547+08:00",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-07-19T09:02:46.012161+08:00",
-    "is_publicly_accessible": false,
-    "has_article_index": false,
-    "last_screened_at": "2026-07-19T09:02:59.517524+08:00",
-    "screening_signals": {
-      "status_code": 200,
-      "has_password_input": false,
-      "login_marker_count": 2,
-      "article_tags": 0,
-      "time_tags": 0,
-      "date_patterns": 0,
-      "h2_tags": 0,
-      "article_signals": 0
-    },
-    "screening_reason": "Login/paywall detected"
+    "last_discovered_at": "2026-07-19T09:02:46.012161+08:00"
   }
 ]
