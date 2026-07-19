@@ -82,9 +82,10 @@ Use WebSearch to find additional hedge funds with public research:
 
 For any promising new fund NOT already in fund_candidates.json:
 1. Verify it has an official website with a research/insights section
-2. Add it to `config/fund_candidates.json` with `"source": "manual"` and `"status": "seed"`
+2. Add it to `config/fund_candidates.json` with `"source": "manual"` and `"status": "seed"` — **and nothing else**
    - Required fields: `id`, `name`, `homepage_url`, `source`, `status`, `strategy_tags`
    - Example: `{ "id": "new-fund-123", "name": "New Fund", "homepage_url": "https://...", "source": "manual", "status": "seed", "strategy_tags": ["macro", "equity"] }`
+   - **Do NOT screen it yourself.** Even if you already looked at the site and can tell it's gated/paywalled/thin, do NOT set `status` to anything but `seed`, and do NOT write `screening_signals`, `screening_reason`, `is_publicly_accessible`, `has_article_index`, or `fit_score` — those fields belong exclusively to `screen_fund_candidates.py` (Phase 1) and get filled in automatically next run. Writing them yourself is the same forbidden-status violation as promoting a candidate directly (see Phase 2 step 5) and will be auto-reverted by the guard. Add the bare seed and stop — the pipeline takes it from there. (2026-07-19: this exact mistake happened with `angelo-gordon` — agent added a new seed but self-screened it to `screened` with a full `screening_reason`, guard reverted it.)
 3. Run `python3 discover_fund_sites.py --fund <new-id>` to discover it
 4. **Maximum 1 new seed per session** (slow deliberate growth)
 
@@ -105,6 +106,7 @@ Output a brief summary:
 
 ## Rules
 
+- **NEVER** set `status` to `promoted`, `visitable`, `inaccessible`, or `screened` — not on existing candidates, and not on new seeds you just added yourself. Even for a brand-new seed you're confident is gated/thin, write `status: "seed"` and stop; do not also write `screening_reason`/`screening_signals`/`is_publicly_accessible`/`has_article_index`/`fit_score`. Those are Phase 1's job. Violations get silently auto-reverted by the guard, so getting this wrong wastes a whole session's work.
 - **NEVER** modify `config/sources.json` or `config/entrypoints.json` (production files)
 - **Maximum 1 new seed per session** (deliberate growth, not bulk expansion)
 - Maximum 3 WebSearch queries per session
