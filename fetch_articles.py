@@ -828,8 +828,17 @@ def fetch_pimco(source: dict) -> list[dict]:
     Structure: div.coveo-list-layout.CoveoResult cards containing:
       a.CoveoResultLink (title + href),
       div.result-date   ("4/16/2026" format, parsed as %m/%d/%Y)
+
+    Page never reaches networkidle (Coveo's analytics/tracking beacons keep
+    firing), so wait_until='domcontentloaded' is required — same fix as
+    BlackRock. Verified 2026-07-19: networkidle times out at the full 30s;
+    domcontentloaded loads in ~1.3s with the target selector present.
     """
-    html = _get_playwright_page(source["url"], wait_selector="div.coveo-list-layout.CoveoResult")
+    html = _get_playwright_page(
+        source["url"],
+        wait_selector="div.coveo-list-layout.CoveoResult",
+        wait_until="domcontentloaded",
+    )
     soup = BeautifulSoup(html, "html.parser")
     expected_host = source.get("expected_hostname", "pimco.com")
 
