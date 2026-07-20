@@ -434,6 +434,25 @@ class TestWellingtonFetcher:
         assert 'wait_until="networkidle"' not in src
 
 
+class TestPimcoContentFetcher:
+    def test_uses_domcontentloaded_not_networkidle(self):
+        # PIMCO's Coveo search engine keeps firing analytics/tracking beacons,
+        # so the page never reaches networkidle (same root cause as the
+        # fetch_articles.fetch_pimco listing fetcher fix, 2026-07-19); the
+        # content-page fetcher has the identical bug and must use
+        # wait_until="domcontentloaded" too.
+        import inspect
+        import fetch_content
+        src = inspect.getsource(fetch_content._fetch_content_pimco)
+        assert 'wait_until="domcontentloaded"' in src, (
+            "_fetch_content_pimco must use wait_until='domcontentloaded', not "
+            "'networkidle'; PIMCO pages have persistent Coveo analytics beacons "
+            "that never idle out (2026-07-21 health-check failure: all 3 probed "
+            "articles timed out at 30s)."
+        )
+        assert 'wait_until="networkidle"' not in src
+
+
 class TestCohenSteersPlaywrightFetcher:
     def test_fetch_content_cohen_steers_saves_body(self, tmp_path, monkeypatch):
         import fetch_content as fc

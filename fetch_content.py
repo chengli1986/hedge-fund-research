@@ -697,7 +697,12 @@ def _fetch_content_troweprice(article: dict) -> Optional[tuple[Path, str]]:
 
 
 def _fetch_content_pimco(article: dict) -> Optional[tuple[Path, str]]:
-    """Fetch PIMCO article content via Playwright (CSR — Coveo-backed site)."""
+    """Fetch PIMCO article content via Playwright (CSR — Coveo-backed site).
+
+    Coveo's analytics/tracking beacons keep firing, so the page never reaches
+    networkidle (same root cause as the fetch_pimco listing fetcher fix,
+    2026-07-19); wait_until="domcontentloaded" is required here too.
+    """
     from playwright.sync_api import sync_playwright
 
     url = article["url"]
@@ -711,7 +716,7 @@ def _fetch_content_pimco(article: dict) -> Optional[tuple[Path, str]]:
                 viewport={"width": 1440, "height": 900},
             )
             page = context.new_page()
-            page.goto(url, wait_until="networkidle", timeout=30000)
+            page.goto(url, wait_until="domcontentloaded", timeout=30000)
             page.wait_for_timeout(2000)
             html = page.content()
             browser.close()
