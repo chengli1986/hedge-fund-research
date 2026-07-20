@@ -384,7 +384,7 @@
       "url": "https://www.janushenderson.com/en-us/investor/insights/",
       "method": "requests",
       "frequency": "weekly",
-      "description": "Active asset manager (~$480B AUM; take-private pending). Equity, fixed income, multi-asset and alternatives. Insights covers macro, geopolitics, AI and sector-level equity/credit analysis.",
+      "description": "Active asset manager (~$480B AUM; take-private completed 2026-06-30, delisted from NYSE). Equity, fixed income, multi-asset and alternatives. Insights covers macro, geopolitics, AI and sector-level equity/credit analysis.",
       "notable_authors": [
         "Ali Dibadj",
         "Matthew Bullock"
@@ -404,7 +404,7 @@
       "url": "https://www.researchaffiliates.com/insights/publications",
       "method": "playwright",
       "frequency": "monthly",
-      "description": "Quantitative investment firm founded by Rob Arnott (2002). Pioneered RAFI Fundamental Indexation — weights stocks by economic size (sales/cash flow/book/dividends) rather than market cap. Smart beta, factor investing, capital-market assumptions licensed to ~$159B of strategies.",
+      "description": "Quantitative investment firm founded by Rob Arnott (2002). Pioneered RAFI Fundamental Indexation — weights stocks by economic size (sales/cash flow/book/dividends) rather than market cap. Smart beta, factor investing, capital-market assumptions licensed to ~$188B of strategies.",
       "notable_authors": [
         "Rob Arnott",
         "Chris Brightman",
@@ -427,7 +427,7 @@
       "url": "https://am.gs.com/en-us/advisors/insights/list",
       "method": "api",
       "frequency": "weekly",
-      "description": "One of the world's largest asset managers (~$3.3T AUM) across public and private markets. Multi-asset, equity, fixed income, alternatives and liquidity solutions for institutions and advisors; Insights publishes macro outlooks, market commentary and strategy notes.",
+      "description": "One of the world's largest asset managers (~$4.0T AUM) across public and private markets. Multi-asset, equity, fixed income, alternatives and liquidity solutions for institutions and advisors; Insights publishes macro outlooks, market commentary and strategy notes.",
       "notable_authors": [],
       "expected_hostname": "am.gs.com",
       "max_articles": 10
@@ -463,7 +463,7 @@
       "url": "https://www.deshaw.com/library",
       "method": "playwright",
       "frequency": "annual",
-      "description": "Quantitative multi-strategy hedge fund (~$65B AUM) founded 1988 by David E. Shaw. Pioneer of systematic/statistical-arbitrage investing with strong technology and computational-science DNA; trades across global equities, macro, credit, convertibles and private capital. Library publishes long-form research on portfolio construction, market microstructure and applied quant techniques.",
+      "description": "Quantitative multi-strategy hedge fund (~$85B AUM) founded 1988 by David E. Shaw. Pioneer of systematic/statistical-arbitrage investing with strong technology and computational-science DNA; trades across global equities, macro, credit, convertibles and private capital. Library publishes long-form research on portfolio construction, market microstructure and applied quant techniques.",
       "notable_authors": [],
       "expected_hostname": "deshaw.com",
       "max_articles": 10
@@ -554,7 +554,7 @@
       "url": "https://www.acadian-asset.com/investment-insights",
       "method": "playwright",
       "frequency": "monthly",
-      "description": "Quantitative, systematic investment manager (~$120B AUM), founded 1986 and headquartered in Boston. Pioneered factor-based, bottom-up equity investing — systematically scoring thousands of stocks worldwide on valuation, quality, growth and sentiment signals — across global, international, emerging- and frontier-markets mandates, and extends the same model-driven process to systematic credit and multi-asset strategies.",
+      "description": "Quantitative, systematic investment manager (~$178B AUM), founded 1986 and headquartered in Boston. Pioneered factor-based, bottom-up equity investing — systematically scoring thousands of stocks worldwide on valuation, quality, growth and sentiment signals — across global, international, emerging- and frontier-markets mandates, and extends the same model-driven process to systematic credit and multi-asset strategies.",
       "notable_authors": [],
       "expected_hostname": "acadian-asset.com",
       "max_articles": 10
@@ -590,7 +590,7 @@
       "url": "https://www.rothschildandco.com/en/newsroom/insights/",
       "method": "ssr",
       "frequency": "weekly",
-      "description": "Active boutique asset manager within the 200-year-old Rothschild & Co group (~€38B AUM), based in Paris with ~170 professionals across 9 countries. Conviction-driven, research-led investing across multi-asset/macro allocation, European and thematic equities, and credit/fixed income, with a wealth-management lens spanning geopolitics, alternatives and ESG.",
+      "description": "Active boutique asset manager within the 200-year-old Rothschild & Co group (~€47B AUM), based in Paris with ~170 professionals across 9 countries. Conviction-driven, research-led investing across multi-asset/macro allocation, European and thematic equities, and credit/fixed income, with a wealth-management lens spanning geopolitics, alternatives and ESG.",
       "notable_authors": [],
       "expected_hostname": "rothschildandco.com",
       "max_articles": 10
