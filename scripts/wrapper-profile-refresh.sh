@@ -36,7 +36,16 @@ trap cleanup EXIT
 
 cd "$REPO" || exit 1
 mkdir -p logs
-PROMPT="$(cat auto-promote/refresh-program.md)"
+# IMPORTANT preamble: headless agents load ~/.claude/CLAUDE.md, whose "session
+# start = daily log recap" ritual derails this run — the agent tries to read the
+# out-of-repo daily-log dir, gets sandbox-blocked, and stalls asking the user a
+# question that headless --print can never answer (observed 2026-07-01: zero AUM
+# verification, applied=0 not because nothing changed but because the agent never
+# did the work). wrapper-candidate-discovery.sh already prevents this with the
+# same preamble; mirror it here.
+PROMPT="IMPORTANT: Skip daily log recap and session start routines. Go straight to the task below.
+
+$(cat auto-promote/refresh-program.md)"
 
 # 1) agent generates pending_profiles/*.refresh.json (only for funds that changed)
 timeout --kill-after=30 3000 "$CLAUDE_BIN" --print --max-turns 120 "$PROMPT" \
