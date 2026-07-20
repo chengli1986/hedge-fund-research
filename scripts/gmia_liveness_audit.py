@@ -296,6 +296,21 @@ def render_html(verdicts: list[dict]) -> str:
     )
 
 
+def _load_env_file(path: Path) -> None:
+    """Load KEY=VALUE lines from an env file into os.environ (self-contained
+    email, same pattern as gmia-fetcher-health.py — no reliance on the cron
+    sourcing creds first)."""
+    import os
+    if not path.exists():
+        return
+    for line in path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, val = line.partition("=")
+        os.environ.setdefault(key.strip(), val.strip().strip('"').strip("'"))
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="GMIA pipeline liveness audit")
     ap.add_argument("--email", action="store_true",
@@ -310,6 +325,7 @@ def main(argv=None) -> int:
 
     if (args.always_email or (args.email and problems)):
         try:
+            _load_env_file(Path.home() / ".stock-monitor.env")
             sys.path.insert(0, str(REPO / "scripts"))
             from send_synthesis_summary import send_email  # type: ignore
             subject = (
