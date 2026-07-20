@@ -20,6 +20,7 @@ import re
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Optional
+from urllib.parse import urlparse
 
 import httpx
 from bs4 import BeautifulSoup
@@ -63,6 +64,40 @@ logging.basicConfig(
     ],
 )
 log = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Defunct-source (cross-domain redirect) detection
+# ---------------------------------------------------------------------------
+
+def _registrable_domain(host: str) -> str:
+    """Best-effort registrable domain (last two labels, www stripped).
+
+    Adequate for the .com fund sites we track; a two-part ccTLD (.co.uk) would
+    over-truncate, but a cross-brand redirect still differs at this level."""
+    host = (host or "").lower().strip().lstrip(".")
+    if host.startswith("www."):
+        host = host[4:]
+    labels = [l for l in host.split(".") if l]
+    return ".".join(labels[-2:]) if len(labels) >= 2 else host
+
+
+def detect_defunct_redirect(original_url: str, final_url: str, history) -> Optional[str]:
+    """Return a reason string if a candidate's research_url PERMANENTLY redirects
+    to a DIFFERENT registrable domain — the signature of a source that has been
+    absorbed or shut down (e.g. angelogordon.com 301→tpg.com after the TPG
+    acquisition, 2026-07 discovery let it in as a dead seed). Same-domain
+    canonicalisation (www / https / trailing-slash) and temporary (302/307)
+    redirects are deliberately NOT flagged, to avoid tripping on login/geo hops."""
+    orig = _registrable_domain(urlparse(original_url).hostname or "")
+    final = _registrable_domain(urlparse(final_url).hostname or "")
+    if not orig or not final or orig == final:
+        return None
+    permanent = any(getattr(r, "status_code", None) in (301, 308) for r in (history or []))
+    if not permanent:
+        return None
+    return (f"defunct: {orig} permanently redirects to {final} "
+            "(source absorbed/shut down)")
 
 
 # ---------------------------------------------------------------------------
@@ -229,6 +264,8 @@ def screen_one(candidate: dict) -> dict:
     result = screen_page(url, status_code, html)
     result["id"] = fund_id
     result["error"] = None
+    # A permanent off-domain redirect means the source was absorbed/shut down.
+    result["defunct"] = detect_defunct_redirect(url, str(resp.url), resp.history)
     return result
 
 
@@ -284,6 +321,19 @@ def main() -> None:
                 c["last_screened_at"] = now
                 c["screening_reason"] = result.get("reason", result["error"])
                 updated_count += 1
+            continue
+
+        if result.get("defunct"):
+            log.warning("Defunct source %s: %s", c["id"], result["defunct"])
+            if not args.dry_run:
+                set_status(c, "rejected")
+                c["last_screened_at"] = now
+                c["is_publicly_accessible"] = False
+                c["screening_reason"] = "Rejected — " + result["defunct"]
+                updated_count += 1
+            else:
+                log.info("[DRY RUN] Would REJECT %s (defunct): %s",
+                         c["id"], result["defunct"])
             continue
 
         if not args.dry_run:
