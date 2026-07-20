@@ -2772,6 +2772,50 @@ def fetch_goehring_rozencwajg(source: dict) -> list[dict]:
     return articles
 
 
+def fetch_franklin_templeton(source: dict) -> list[dict]:
+    """Fetch articles from Franklin Templeton (Playwright — Angular JS-SPA).
+
+    /articles is an Angular single-page app: `requests` returns a ~2KB shell with
+    zero article links, so a headless Chromium render is required. There is no WAF
+    (the page just hydrates client-side), and the app never reaches networkidle, so
+    wait_until='domcontentloaded' is enough. The listing renders `div.card-article`
+    cards carrying title (`h4.title--h4`), link (`a[href*="/articles/"]`) and publish
+    date (`.card-article__date`, e.g. "JULY 20, 2026") — dates are on the listing, so
+    no per-article fetch is needed. Hub/collection tiles (/articles/hubs/,
+    /articles/collections/) are sub-brand landing pages, not posts, and carry no
+    card-article date, so requiring all three fields drops them naturally.
+    Verified live 2026-07-20: renders 8 dated posts.
+    """
+    base = "https://www.franklintempletonglobal.com"
+    max_articles = source.get("max_articles", 10)
+    html = _get_playwright_page(
+        source["url"], wait_selector="div.card-article",
+        wait_until="domcontentloaded", timeout=45000,
+    )
+    soup = BeautifulSoup(html, "html.parser")
+    articles: list[dict] = []
+    seen: set[str] = set()
+    for card in soup.select("div.card-article"):
+        a = card.select_one('a[href*="/articles/"]')
+        h = card.select_one("h4.title--h4") or card.select_one("h4")
+        d = card.select_one(".card-article__date")
+        if not (a and h and d):
+            continue
+        url = urljoin(base, a.get("href", ""))
+        if url in seen:
+            continue
+        seen.add(url)
+        date_raw = d.get_text(strip=True)
+        articles.append({
+            "title": h.get_text(strip=True),
+            "url": url,
+            "date": parse_date(date_raw) if date_raw else None,
+            "date_raw": date_raw,
+        })
+    articles.sort(key=lambda a: a["date"] or "", reverse=True)
+    return articles[:max_articles]
+
+
 FETCHERS = {
     "cambridge-associates": fetch_cambridge_associates,
     "man-group": fetch_man_group,
@@ -2813,6 +2857,7 @@ FETCHERS = {
     "alliancebernstein": fetch_alliancebernstein,
     "janus-henderson": fetch_janus_henderson,
     "goehring-rozencwajg": fetch_goehring_rozencwajg,
+    "franklin-templeton": fetch_franklin_templeton,
 }
 
 

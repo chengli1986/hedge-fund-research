@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fetch_articles import (
     article_id, parse_date, _validate_hostname, load_existing_ids, fetch_oaktree, fetch_wellington,
+    fetch_franklin_templeton,
     fetch_troweprice, fetch_researchaffiliates, fetch_pimco, _is_date_eyebrow, DATA_FILE,
     load_entrypoints, get_source_url, record_quality_metrics, check_anomalies,
     fetch_blackstone, fetch_gsam, _fetch_article_date_jsonld,
@@ -189,6 +190,61 @@ class TestFetchOaktree:
         assert len(articles) == 2
         assert [a["title"] for a in articles] == ["Memo One", "Memo Two"]
         assert all("oaktreecapital.com" in a["url"] for a in articles)
+
+
+class TestFetchFranklinTempleton:
+    def test_parses_cards_drops_hubs_and_sorts(self):
+        # Two real posts + one hub tile (no date, /articles/hubs/) that must drop.
+        html = """
+        <div class="card-article">
+          <a class="card-article__inner" href="/articles/2026/equity/older-post">
+            <p class="card-article__date">JULY 14, 2026</p>
+            <h4 class="title--h4">Older Post</h4>
+          </a>
+        </div>
+        <div class="card-article">
+          <a class="card-article__inner" href="/articles/2026/multi-asset/newer-post">
+            <p class="card-article__date">JULY 20, 2026</p>
+            <h4 class="title--h4">Newer Post</h4>
+          </a>
+        </div>
+        <div class="card-article">
+          <a class="card-article__inner" href="/articles/hubs/clarion">
+            <h4 class="title--h4">Clarion Partners Insights</h4>
+          </a>
+        </div>
+        """
+        source = {
+            "id": "franklin-templeton",
+            "url": "https://www.franklintempletonglobal.com/articles",
+            "max_articles": 10,
+        }
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_franklin_templeton(source)
+
+        # Hub tile (no date) is dropped; posts sorted newest-first.
+        assert [a["title"] for a in articles] == ["Newer Post", "Older Post"]
+        assert articles[0]["date"] == "2026-07-20"
+        assert articles[1]["date"] == "2026-07-14"
+        assert all(
+            a["url"].startswith("https://www.franklintempletonglobal.com/articles/")
+            for a in articles
+        )
+        assert not any("/hubs/" in a["url"] for a in articles)
+
+    def test_respects_max_articles(self):
+        cards = "".join(
+            f'<div class="card-article"><a href="/articles/2026/x/post-{i}">'
+            f'<p class="card-article__date">JULY {i:02d}, 2026</p>'
+            f'<h4 class="title--h4">Post {i}</h4></a></div>'
+            for i in range(1, 6)
+        )
+        source = {"id": "franklin-templeton",
+                  "url": "https://www.franklintempletonglobal.com/articles",
+                  "max_articles": 2}
+        with patch("fetch_articles._get_playwright_page", return_value=cards):
+            articles = fetch_franklin_templeton(source)
+        assert len(articles) == 2
 
 
 # ---------------------------------------------------------------------------

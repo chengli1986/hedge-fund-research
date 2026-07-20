@@ -1718,15 +1718,15 @@
     "homepage_url": "https://www.franklintempleton.com",
     "research_url": "https://www.franklintempletonglobal.com/articles",
     "source": "manual",
-    "status": "inaccessible",
+    "status": "visitable",
     "strategy_tags": [
       "macro",
       "equity",
       "fixed_income",
       "emerging_markets"
     ],
-    "notes": "Still JS-SPA empty via WebFetch; keep inaccessible",
-    "official_domain": "www.franklintempleton.com",
+    "notes": "Manual Playwright fetcher added 2026-07-20 (#2 audit): Angular JS-SPA, div.card-article cards, live-verified 8 dated posts. inaccessible→visitable for re-trial.",
+    "official_domain": "www.franklintempletonglobal.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-05-07T09:00:18.005906+08:00",
@@ -1734,7 +1734,7 @@
     "quality": "MEDIUM",
     "quality_score": 0.55,
     "topics": "macro, equity, fixed income, emerging markets, multi-asset",
-    "status_since": "2026-05-07T09:00:18.005906+08:00"
+    "status_since": "2026-07-20T11:38:01.808730+08:00"
   },
   {
     "id": "ares-management",
