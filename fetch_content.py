@@ -40,6 +40,17 @@ LOG_FILE = BASE_DIR / "logs" / "fetch_content.log"
 
 MIN_CONTENT_LENGTH = 100
 
+# Content-fetch dead-letter cap: an article that fails content fetch this many
+# times is retired to the terminal "permafail" status and stops being retried
+# every day. Without this, the ~20 permanently-gated articles (WAF/JS bodies that
+# never resolve — AQR/MSCI/Bridgewater/…) are retried forever, wasting work and
+# pinning the daily "failed" count to a constant floor that drowns out any real
+# new failure. Per-article, NOT per-source: a source that recovers still fetches
+# its new articles normally.
+MAX_CONTENT_ATTEMPTS = 5
+# content_status values that mean "done, never pending again".
+TERMINAL_CONTENT_STATUSES = {"ok", "metadata_only", "permafail"}
+
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
                   "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
@@ -1540,6 +1551,36 @@ def save_articles(articles: list[dict]) -> None:
         raise
 
 
+def is_content_pending(article: dict, source_filter: Optional[str] = None) -> bool:
+    """True if an article still needs a content fetch this run.
+
+    Excludes already-summarized articles, terminal content_status values
+    (ok / metadata_only / permafail — see MAX_CONTENT_ATTEMPTS), and sources with
+    no registered content fetcher."""
+    return (
+        not article.get("summarized")
+        and article.get("content_status") not in TERMINAL_CONTENT_STATUSES
+        and article.get("source_id") in CONTENT_FETCHERS
+        and (not source_filter or article.get("source_id") == source_filter)
+    )
+
+
+def mark_content_failure(article: dict, max_attempts: int = MAX_CONTENT_ATTEMPTS) -> str:
+    """Record one content-fetch failure and return the new content_status.
+
+    Increments content_attempts; once it reaches max_attempts the article is
+    retired to the terminal "permafail" status (stamped with when) so it drops
+    out of the pending set permanently instead of being retried every day."""
+    attempts = int(article.get("content_attempts", 0)) + 1
+    article["content_attempts"] = attempts
+    if attempts >= max_attempts:
+        article["content_status"] = "permafail"
+        article["content_permafailed_at"] = datetime.now(BJT).isoformat()
+    else:
+        article["content_status"] = "failed"
+    return article["content_status"]
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Hedge Fund Research — Content Fetcher")
     parser.add_argument("--source", help="Fetch content for this source ID only")
@@ -1549,15 +1590,8 @@ def main() -> None:
     CONTENT_DIR.mkdir(parents=True, exist_ok=True)
 
     articles = load_articles()
-    # Skip articles that already have content or have been classified as metadata-only/restricted
-    terminal_statuses = {"ok", "metadata_only"}
-    pending = [
-        a for a in articles
-        if not a.get("summarized")
-        and a.get("content_status") not in terminal_statuses
-        and a.get("source_id") in CONTENT_FETCHERS
-        and (not args.source or a.get("source_id") == args.source)
-    ]
+    # Skip articles already fetched, classified terminal, or retired to permafail.
+    pending = [a for a in articles if is_content_pending(a, args.source)]
 
     log.info("Found %d articles pending content fetch (of %d total)", len(pending), len(articles))
 
@@ -1568,6 +1602,7 @@ def main() -> None:
 
     success_count = 0
     fail_count = 0
+    permafail_count = 0  # articles retired to permafail THIS run
 
     for a in pending:
         fetcher = CONTENT_FETCHERS[a["source_id"]]
@@ -1581,20 +1616,27 @@ def main() -> None:
             content_path, status = result
             a["content_path"] = str(content_path.relative_to(BASE_DIR))
             a["content_status"] = status
+            a.pop("content_attempts", None)  # clear the failure counter on success
             success_count += 1
         else:
-            a["content_status"] = "failed"
+            status = mark_content_failure(a)
             fail_count += 1
+            if status == "permafail":
+                permafail_count += 1
+                log.warning("  Retired to permafail after %d attempts: %s (%s)",
+                            a.get("content_attempts"), a["id"], a["title"])
 
     # Save all articles back (full rewrite)
     save_articles(articles)
-    log.info("Content fetch complete: %d ok, %d failed", success_count, fail_count)
+    log.info("Content fetch complete: %d ok, %d failed (%d newly retired to permafail)",
+             success_count, fail_count, permafail_count)
 
     # Summary
     print(f"\n{'='*60}")
     print(f"Content Fetch — {datetime.now(BJT).strftime('%Y-%m-%d %H:%M BJT')}")
     print(f"{'='*60}")
-    print(f"Pending: {len(pending)} | Success: {success_count} | Failed: {fail_count}")
+    print(f"Pending: {len(pending)} | Success: {success_count} | Failed: {fail_count}"
+          f" | Retired(permafail): {permafail_count}")
     print()
 
 

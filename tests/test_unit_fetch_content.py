@@ -18,6 +18,9 @@ from fetch_content import (
     _fetch_content_bridgewater,
     _extract_bridgewater_text,
     _fetch_content_principal_am,
+    mark_content_failure,
+    is_content_pending,
+    MAX_CONTENT_ATTEMPTS,
 )
 
 
@@ -198,6 +201,42 @@ class TestContentStatusOnFailure:
 
         assert article["content_status"] == "failed"
         assert "content_path" not in article
+
+
+class TestContentDeadLetterCap:
+    def test_failure_increments_attempts_and_stays_failed_below_cap(self):
+        a = {"id": "x", "title": "t"}
+        for i in range(1, MAX_CONTENT_ATTEMPTS):
+            status = mark_content_failure(a)
+            assert a["content_attempts"] == i
+            assert status == "failed"
+            assert "content_permafailed_at" not in a
+
+    def test_reaches_cap_retires_to_permafail(self):
+        a = {"id": "x", "title": "t", "content_attempts": MAX_CONTENT_ATTEMPTS - 1}
+        status = mark_content_failure(a)
+        assert status == "permafail"
+        assert a["content_status"] == "permafail"
+        assert a["content_attempts"] == MAX_CONTENT_ATTEMPTS
+        assert a.get("content_permafailed_at")  # stamped
+
+    def test_permafail_and_terminal_statuses_drop_out_of_pending(self):
+        src = next(iter(CONTENT_FETCHERS))  # a source that HAS a fetcher
+        base = {"source_id": src, "summarized": False}
+        # permafail / ok / metadata_only are terminal -> not pending
+        for terminal in ("permafail", "ok", "metadata_only"):
+            assert not is_content_pending({**base, "content_status": terminal})
+        # a plain failure (below cap) is still pending -> gets retried
+        assert is_content_pending({**base, "content_status": "failed"})
+        # summarized or no-fetcher-source are not pending
+        assert not is_content_pending({**base, "summarized": True})
+        assert not is_content_pending({"source_id": "no-such-source", "summarized": False})
+
+    def test_source_filter_limits_pending(self):
+        src = next(iter(CONTENT_FETCHERS))
+        a = {"source_id": src, "summarized": False}
+        assert is_content_pending(a, source_filter=src)
+        assert not is_content_pending(a, source_filter="other-source")
 
 
 # ---------------------------------------------------------------------------
