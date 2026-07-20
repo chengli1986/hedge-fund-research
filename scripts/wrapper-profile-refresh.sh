@@ -47,8 +47,17 @@ PROMPT="IMPORTANT: Skip daily log recap and session start routines. Go straight 
 
 $(cat auto-promote/refresh-program.md)"
 
-# 1) agent generates pending_profiles/*.refresh.json (only for funds that changed)
-timeout --kill-after=30 3000 "$CLAUDE_BIN" --print --max-turns 120 "$PROMPT" \
+# 1) agent generates pending_profiles/*.refresh.json (only for funds that changed).
+#    --dangerously-skip-permissions is REQUIRED: this repo is not trust-accepted
+#    (hasTrustDialogAccepted:false), so without the flag Claude ignores the
+#    settings.json allow-list and DENIES WebSearch/WebFetch/Bash(curl) — the exact
+#    tools a web-verification task lives on. Confirmed 2026-07-20 dry-run: with the
+#    preamble but no flag the agent reached the task correctly but every network
+#    tool returned "Permission denied", so it produced zero drafts. Same fix
+#    synthesis got in 9776a45. apply_refresh.py still gates every write, and the
+#    monthly cron runs ALERT_ONLY-gated, so auto-approving tool use here is bounded.
+timeout --kill-after=30 3000 "$CLAUDE_BIN" --print --dangerously-skip-permissions \
+  --max-turns 120 "$PROMPT" \
   > logs/profile-refresh-agent.log 2>&1 || echo "[profile-refresh] agent exit $? (max-turns ok)"
 
 # 2) apply each draft. apply_refresh.py gates internally via validate_refresh:
