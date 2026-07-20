@@ -372,3 +372,29 @@ def test_pending_profiles_pass_validator():
         "pending profiles with hard validation issues:\n  "
         + "\n  ".join(failures)
     )
+
+
+def test_synthesis_inner_lock_differs_from_cron_wrapper_lock():
+    """wrapper-fetcher-synthesis.sh must NOT flock the same file cron-wrapper.sh
+    --lock uses for this job.
+
+    The weekly cron runs `cron-wrapper.sh --name gmia-fetcher-synthesis --lock
+    -- bash wrapper-fetcher-synthesis.sh`. cron-wrapper grabs an flock on
+    /tmp/cron-locks/gmia-fetcher-synthesis.lock and holds it for the whole run.
+    If the wrapper's own guard locks that identical path, the child can never
+    acquire it and every weekly run bails with "Another instance is running"
+    (regression fixed 2026-07-20 — silently killed the weekly synthesis for
+    ~5 weeks). The inner guard must use a distinct file so it still serialises
+    the trial-pass immediate trigger vs the weekly run without colliding with
+    the parent's outer lock.
+    """
+    wrapper = (SCRIPTS_DIR / "wrapper-fetcher-synthesis.sh").read_text()
+    m = re.search(r'^\s*LOCK_FILE="([^"]+)"', wrapper, re.MULTILINE)
+    assert m, "LOCK_FILE not found in wrapper-fetcher-synthesis.sh"
+    inner_lock = m.group(1)
+    cron_wrapper_lock = "/tmp/cron-locks/gmia-fetcher-synthesis.lock"
+    assert inner_lock != cron_wrapper_lock, (
+        f"wrapper-fetcher-synthesis.sh inner lock ({inner_lock}) collides with "
+        f"the cron-wrapper --lock path ({cron_wrapper_lock}); the weekly cron "
+        "run will self-deadlock. Use a distinct inner lock file."
+    )

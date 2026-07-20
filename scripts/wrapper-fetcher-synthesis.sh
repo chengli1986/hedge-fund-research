@@ -9,8 +9,14 @@ SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
 LOG_PREFIX="[$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')]"
 
-# Prevent concurrent synthesis runs (trial-pass immediate trigger + weekly cron)
-LOCK_FILE="/tmp/cron-locks/gmia-fetcher-synthesis.lock"
+# Prevent concurrent synthesis runs (trial-pass immediate trigger + weekly cron).
+# NOTE: must NOT be the same file the weekly cron's cron-wrapper.sh --lock uses
+# (/tmp/cron-locks/gmia-fetcher-synthesis.lock). The parent cron-wrapper grabs
+# that flock first, so a child locking the identical path here self-deadlocks and
+# the weekly run always bails with "Another instance is running". Use a distinct
+# inner lock: it still serialises the immediate trigger vs the weekly run (both
+# invoke THIS script) without colliding with the parent's outer lock.
+LOCK_FILE="/tmp/cron-locks/gmia-fetcher-synthesis-inner.lock"
 mkdir -p /tmp/cron-locks
 exec 9>"$LOCK_FILE"
 if ! flock -n 9; then
