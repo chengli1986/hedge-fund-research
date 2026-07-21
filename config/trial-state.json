@@ -6603,6 +6603,76 @@
       "avg_quality_score": 0.639
     }
   ],
-  "active_trials": [],
-  "last_summary_sent_date": "2026-07-02"
+  "active_trials": [
+    {
+      "id": "franklin-templeton",
+      "name": "Franklin Templeton",
+      "research_url": "https://www.franklintempletonglobal.com/articles",
+      "homepage_url": "https://www.franklintempleton.com",
+      "fit_score": null,
+      "quality": "MEDIUM",
+      "topics": "macro, equity, fixed income, emerging markets, multi-asset",
+      "start_date": "2026-07-21",
+      "end_date": null,
+      "daily_checks": {
+        "2026-07-21": {
+          "accessible": true,
+          "article_count": 8,
+          "date_count": 8,
+          "article_urls": [
+            "https://www.franklintempletonglobal.com/articles/2026/equity/saudi-arabia-vision-2030-10-years-of-progress",
+            "https://www.franklintempletonglobal.com/articles/series/from-the-market-desk",
+            "https://www.franklintempletonglobal.com/articles/2026/multi-asset/2026-mid-year-income-investor-outlook-staying-nimble-and-focused-on-income-as-uncertainty-persists",
+            "https://www.franklintempletonglobal.com/articles/series/central-bank-watch",
+            "https://www.franklintempletonglobal.com/articles/2026/fixed-income/beyond-the-chips-hyperscalers-and-the-financing-of-ai",
+            "https://www.franklintempletonglobal.com/articles/series/hedge-fund-strategy-outlook",
+            "https://www.franklintempletonglobal.com/articles/2026/etf/opening-the-aperture-on-global-investing",
+            "https://www.franklintempletonglobal.com/articles/2026/clearbridge-investments/aor-update-podcast-two-macro-economic-risks-fading"
+          ],
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.franklintempletonglobal.com/articles/2026/equity/saudi-arabia-vision-2030-10-years-of-progress",
+              "relevance": 0.9,
+              "depth": 0.8,
+              "extractable": 0.7,
+              "overall": 0.82,
+              "notes": "Deep emerging market investment research on Saudi Arabia's Vision 2030 transformation, analyzing macro progress, structural shifts, and portfolio implications; text truncated mid-sentence."
+            },
+            {
+              "url": "https://www.franklintempletonglobal.com/articles/series/from-the-market-desk",
+              "relevance": 0.85,
+              "depth": 0.7,
+              "extractable": 0.6,
+              "overall": 0.74,
+              "notes": "US macro and equity market commentary with GDP forecasts, inflation analysis, and currency outlook; substantive but truncated mid-section on equities."
+            },
+            {
+              "url": "https://www.franklintempletonglobal.com/articles/2026/multi-asset/2026-mid-year-income-investor-outlook-staying-nimble-and-focused-on-income-as-uncertainty-persists",
+              "relevance": 0.9,
+              "depth": 0.75,
+              "extractable": 0.65,
+              "overall": 0.79,
+              "notes": "Mid-year income investor outlook analyzing policy uncertainty, fixed income opportunities, and equity leadership; text cuts off at end without conclusion."
+            }
+          ],
+          "avg_score": 0.783,
+          "error": null,
+          "js_only_count": 8,
+          "js_only_checked": 8,
+          "day": 1,
+          "date": "2026-07-21"
+        }
+      ]
+    }
+  ],
+  "last_summary_sent_date": "2026-07-21"
 }
