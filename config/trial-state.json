@@ -6631,6 +6631,23 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-07-22": {
+          "accessible": true,
+          "article_count": 8,
+          "date_count": 8,
+          "article_urls": [
+            "https://www.franklintempletonglobal.com/articles/2026/alternatives/avoiding-saaspocalypse-is-about-underwriting-skill-for-lenders",
+            "https://www.franklintempletonglobal.com/articles/2026/putnam/the-price-of-admission-further-equity-upside-comes-with-a-cost-volatility",
+            "https://www.franklintempletonglobal.com/articles/2026/clearbridge-investments/beyond-us-border-the-case-for-international-equities",
+            "https://www.franklintempletonglobal.com/articles/2026/digital-assets/agentic-ai-the-killer-use-case-for-blockchain-and-crypto",
+            "https://www.franklintempletonglobal.com/articles/2026/western-asset/us-iran-update-the-map-is-expanding",
+            "https://www.franklintempletonglobal.com/articles/2026/clearbridge-investments/still-early-innings-for-artificial-intelligence",
+            "https://www.franklintempletonglobal.com/articles/2026/equity/saudi-arabia-vision-2030-10-years-of-progress",
+            "https://www.franklintempletonglobal.com/articles/series/from-the-market-desk"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -6670,6 +6687,41 @@
           "js_only_checked": 8,
           "day": 1,
           "date": "2026-07-21"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.franklintempletonglobal.com/articles/2026/alternatives/avoiding-saaspocalypse-is-about-underwriting-skill-for-lenders",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.65,
+              "overall": 0.85,
+              "notes": "Private credit underwriting analysis of SaaS sector AI disruption risk; distinguishes between narrow single-purpose tools vs. system-of-record software with durable moats."
+            },
+            {
+              "url": "https://www.franklintempletonglobal.com/articles/2026/putnam/the-price-of-admission-further-equity-upside-comes-with-a-cost-volatility",
+              "relevance": 0.9,
+              "depth": 0.75,
+              "extractable": 0.6,
+              "overall": 0.78,
+              "notes": "Equity market commentary on earnings-driven rally, AI investment cycle, and emerging valuation uncertainty; argues higher volatility ahead despite constructive fundamentals."
+            },
+            {
+              "url": "https://www.franklintempletonglobal.com/articles/2026/clearbridge-investments/beyond-us-border-the-case-for-international-equities",
+              "relevance": 0.7,
+              "depth": 0.35,
+              "extractable": 0.2,
+              "overall": 0.46,
+              "notes": "Video-based portfolio manager commentary on international equities and AI opportunities; mostly video player markup with minimal extractable text content."
+            }
+          ],
+          "avg_score": 0.697,
+          "error": null,
+          "js_only_count": 6,
+          "js_only_checked": 6,
+          "day": 2,
+          "date": "2026-07-22"
         }
       ]
     }
