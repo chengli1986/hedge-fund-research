@@ -605,7 +605,7 @@
       "short_name": "G&R",
       "url": "https://blog.gorozen.com/blog",
       "method": "ssr",
-      "frequency": "weekly",
+      "frequency": "biweekly",
       "description": "Contrarian natural-resources investment boutique founded 2015 in New York by Leigh Goehring and Adam Rozencwajg. Deep fundamental research on energy, precious metals, uranium, agriculture and base metals, anchored by widely-read quarterly commentaries on commodity capital cycles.",
       "notable_authors": ["Leigh Goehring", "Adam Rozencwajg"],
       "expected_hostname": "gorozen.com",
