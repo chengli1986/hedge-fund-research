@@ -31,6 +31,15 @@ from typing import Callable, Iterable, Optional
 
 REPO = Path(__file__).resolve().parent.parent
 LOG_DIR = Path.home() / "logs"
+# The synthesis session heartbeat is written to <repo>/logs/ by write_session_heartbeat.py
+# (BASE_DIR/logs, shared by every synthesis script), NOT repo config/ and NOT ~/logs/ —
+# reading the wrong dir made check_synthesis blind to healthy sessions (2026-07-23
+# false-BAIL bug).
+SYNTHESIS_HISTORY = REPO / "logs" / "fetcher-synthesis-history.jsonl"
+# This audit's own cron job. It must exclude itself from the ops-status scan:
+# it exits 1 on any problem, cron-wrapper logs that exit=1, and re-reading its own
+# failure would create a self-perpetuating loop it could never recover from.
+SELF_JOB = "gmia-liveness-audit"
 
 OK, STALE, BAIL = "OK", "STALE", "BAIL"
 
@@ -93,13 +102,17 @@ def scan_markers(text: str, markers: dict[str, str]) -> list[str]:
 
 
 def ops_problems(rows: Iterable[dict], jobs_prefix: str, now: datetime,
-                 window_days: float) -> list[dict]:
+                 window_days: float, exclude: Optional[set[str]] = None) -> list[dict]:
     """From cron-wrapper ops-status rows, return recent runs that locked out,
-    timed out, or exited non-zero for jobs whose name starts with jobs_prefix."""
+    timed out, or exited non-zero for jobs whose name starts with jobs_prefix.
+
+    Jobs in `exclude` are skipped — used to keep the auditor from counting its
+    own past exit=1 rows (which would be a self-perpetuating failure loop)."""
+    exclude = exclude or set()
     out = []
     for r in rows:
         job = str(r.get("job", ""))
-        if not job.startswith(jobs_prefix):
+        if not job.startswith(jobs_prefix) or job in exclude:
             continue
         dt = parse_iso(str(r.get("ts", "")))
         if dt is None or (now - dt).total_seconds() / 86400.0 > window_days:
@@ -172,19 +185,29 @@ def check_fetch(now: datetime) -> dict:
     return _verdict("daily-fetch", STALE, f"metadata fetch may be stalled: {where}", age)
 
 
+def decide_synthesis(now: datetime, last: Optional[datetime],
+                     bail_labels: list[str],
+                     threshold_days: float = 9) -> tuple[str, Optional[float], str]:
+    """Pure synthesis verdict. A fresh heartbeat WINS: a lock-bail marker only
+    matters when the heartbeat is genuinely stale (it then explains *why*). This
+    stops a pre-fix lock-bail line lingering in a rotated log from masking a
+    healthy recent session. Returns (status, age_days, detail)."""
+    status, age = classify_staleness(now, last, threshold_days)
+    if status == OK:
+        return OK, age, f"last session {age:.1f}d ago"
+    if bail_labels:
+        return BAIL, age, ("weekly run bailed without working ("
+                           + ", ".join(bail_labels) + ")")
+    d = "never ran" if age is None else f"no session in {age:.0f}d (>{threshold_days:.0f}d)"
+    return STALE, age, d
+
+
 def check_synthesis(now: datetime) -> dict:
-    hist = _read_jsonl(REPO / "config" / "fetcher-synthesis-history.jsonl")
+    hist = _read_jsonl(SYNTHESIS_HISTORY)
     last = newest_dt(hist, "timestamp")
-    status, age = classify_staleness(now, last, threshold_days=9)
     bail = scan_markers(_read_log_tail("gmia-fetcher-synthesis"), LOCK_BAIL_MARKERS)
-    if bail:
-        return _verdict("fetcher-synthesis", BAIL,
-                        "weekly run bailed without working ("
-                        + ", ".join(bail) + ")", age)
-    if status == STALE:
-        d = "never ran" if age is None else f"no session in {age:.0f}d (>9d)"
-        return _verdict("fetcher-synthesis", STALE, d, age)
-    return _verdict("fetcher-synthesis", OK, f"last session {age:.1f}d ago", age)
+    status, age, detail = decide_synthesis(now, last, bail, threshold_days=9)
+    return _verdict("fetcher-synthesis", status, detail, age)
 
 
 def check_profile_refresh(now: datetime) -> dict:
@@ -244,7 +267,7 @@ def check_discovery(now: datetime) -> dict:
 
 def check_ops(now: datetime) -> list[dict]:
     rows = _read_jsonl(LOG_DIR / "ops-status.jsonl")
-    probs = ops_problems(rows, "gmia", now, window_days=3)
+    probs = ops_problems(rows, "gmia", now, window_days=3, exclude={SELF_JOB})
     return [
         _verdict(f"cron:{p['job']}", BAIL,
                  f"{', '.join(p['reasons'])} at {p['ts']}")

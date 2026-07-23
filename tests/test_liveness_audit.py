@@ -1,4 +1,5 @@
 """Unit tests for the GMIA pipeline liveness audit (pure logic only — no I/O)."""
+import json
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -96,3 +97,66 @@ def test_ops_ignores_other_prefixes_and_old_runs():
         {"job": "gmia-daily", "ts": "2026-07-01T01:00:00+00:00", "exit": 1},   # too old
     ]
     assert la.ops_problems(rows, "gmia", NOW, window_days=3) == []
+
+
+def test_ops_excludes_self_job():
+    # Bug A (self-reference feedback loop): the auditor's OWN exit=1 must not be
+    # counted as a new problem. It exits 1 on any problem, and cron-wrapper logs
+    # that exit=1 to ops-status; if it then re-reads its own failure the next day
+    # it can never recover to exit 0 and the problem count grows without bound.
+    rows = [
+        {"job": "gmia-liveness-audit", "ts": "2026-07-19T21:00:00+00:00", "exit": 1},
+        {"job": "gmia-daily", "ts": "2026-07-19T20:00:00+00:00", "exit": 1},
+    ]
+    probs = la.ops_problems(rows, "gmia", NOW, window_days=3,
+                            exclude={"gmia-liveness-audit"})
+    jobs = [p["job"] for p in probs]
+    assert "gmia-liveness-audit" not in jobs   # never counts itself
+    assert "gmia-daily" in jobs                # genuine failures still surface
+
+
+# --- decide_synthesis (Bug B: fresh heartbeat beats stale log markers) -------
+def test_synthesis_fresh_heartbeat_beats_stale_lockbail():
+    # A pre-fix lock-bail line lingering in the rotated log must NOT override a
+    # healthy recent session heartbeat (the 2026-07-23 false-BAIL root cause).
+    last = NOW - timedelta(days=2)  # within 9d threshold
+    status, age, detail = la.decide_synthesis(
+        NOW, last, ["lock-bail"], threshold_days=9)
+    assert status == la.OK
+
+
+def test_synthesis_stale_lockbail_explains_genuine_stall():
+    # When the heartbeat IS genuinely stale, a lock-bail marker still explains why.
+    last = NOW - timedelta(days=12)
+    status, age, detail = la.decide_synthesis(
+        NOW, last, ["lock-bail"], threshold_days=9)
+    assert status == la.BAIL and "lock-bail" in detail
+
+
+def test_synthesis_stale_without_marker_is_plain_stale():
+    last = NOW - timedelta(days=12)
+    status, age, detail = la.decide_synthesis(NOW, last, [], threshold_days=9)
+    assert status == la.STALE
+
+
+def test_check_synthesis_reads_logs_heartbeat(tmp_path, monkeypatch):
+    # Bug B (path): the heartbeat is written to ~/logs/, but check_synthesis read
+    # repo config/ (which does not exist) → blind to healthy sessions → fell
+    # through to grepping a stale lock-bail line and reported a false BAIL.
+    hb = tmp_path / "fetcher-synthesis-history.jsonl"
+    recent = (NOW - timedelta(days=1)).isoformat()
+    hb.write_text(json.dumps({"id": "_heartbeat", "timestamp": recent}) + "\n")
+    monkeypatch.setattr(la, "SYNTHESIS_HISTORY", hb)
+    # Even with a stale lock-bail line in the log, the fresh heartbeat wins:
+    monkeypatch.setattr(la, "_read_log_tail",
+                        lambda *a, **k: "Another instance is running. Exiting.")
+    v = la.check_synthesis(NOW)
+    assert v["status"] == la.OK
+
+
+def test_synthesis_history_path_matches_writer():
+    # Reader must point at the exact file the heartbeat writer writes to. This
+    # couples the two independently-defined paths so any future drift (the
+    # 2026-07-23 config/ and ~/logs/ mismatches) fails fast.
+    import write_session_heartbeat as wsh  # noqa: E402
+    assert la.SYNTHESIS_HISTORY == wsh.HISTORY_FILE
