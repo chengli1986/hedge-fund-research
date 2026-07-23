@@ -6648,6 +6648,23 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-07-23": {
+          "accessible": true,
+          "article_count": 8,
+          "date_count": 8,
+          "article_urls": [
+            "https://www.franklintempletonglobal.com/articles/2026/equity/climate-change-and-ai-from-power-demand-to-productivity",
+            "https://www.franklintempletonglobal.com/articles/2026/equity/innovation-insights-quarterly-q3-2026",
+            "https://www.franklintempletonglobal.com/articles/2026/institute/quick-thoughts-mega-ipos-from-private-to-public-markets",
+            "https://www.franklintempletonglobal.com/articles/2026/alternatives/avoiding-saaspocalypse-is-about-underwriting-skill-for-lenders",
+            "https://www.franklintempletonglobal.com/articles/2026/putnam/the-price-of-admission-further-equity-upside-comes-with-a-cost-volatility",
+            "https://www.franklintempletonglobal.com/articles/2026/institute/still-early-innings-for-artificial-intelligence",
+            "https://www.franklintempletonglobal.com/articles/2026/digital-assets/agentic-ai-the-killer-use-case-for-blockchain-and-crypto",
+            "https://www.franklintempletonglobal.com/articles/2026/clearbridge-investments/beyond-us-border-the-case-for-international-equities"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -6722,6 +6739,41 @@
           "js_only_checked": 6,
           "day": 2,
           "date": "2026-07-22"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.franklintempletonglobal.com/articles/2026/equity/climate-change-and-ai-from-power-demand-to-productivity",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.85,
+              "overall": 0.89,
+              "notes": "Deep investment research on AI-driven infrastructure demand across energy, grids, and supply chains with IEA data and capital allocation implications."
+            },
+            {
+              "url": "https://www.franklintempletonglobal.com/articles/2026/equity/innovation-insights-quarterly-q3-2026",
+              "relevance": 0.65,
+              "depth": 0.55,
+              "extractable": 0.8,
+              "overall": 0.64,
+              "notes": "Innovation trends newsletter covering emerging technologies (artificial photosynthesis, gene therapy, 3D printing) with limited investment thesis or portfolio implications."
+            },
+            {
+              "url": "https://www.franklintempletonglobal.com/articles/2026/institute/quick-thoughts-mega-ipos-from-private-to-public-markets",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.75,
+              "overall": 0.79,
+              "notes": "Portfolio strategy commentary on mega-IPO cycle, AI capital flows, and market structure implications; somewhat truncated but substantive takeaways on rotation risk and sector diversification."
+            }
+          ],
+          "avg_score": 0.773,
+          "error": null,
+          "js_only_count": 5,
+          "js_only_checked": 5,
+          "day": 3,
+          "date": "2026-07-23"
         }
       ]
     }
