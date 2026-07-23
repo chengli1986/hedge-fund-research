@@ -749,7 +749,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.97,
-    "notes": "Sampled article: substantive, free access, deeper than tagged",
+    "notes": "Substantive sampled article, free access, deep hub",
     "research_links": [
       {
         "url": "https://www.troweprice.com/en/us/insights",
@@ -788,7 +788,7 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-07-13T01:02:42Z",
+    "last_deep_analyzed_at": "2026-07-23T01:01:19Z",
     "quality": "MEDIUM",
     "quality_score": 0.7,
     "topics": "equity, macro, AI/tech, fixed income",
@@ -849,12 +849,12 @@
     "rss_url": null,
     "official_domain": "www.msci.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "Nav-only page; no article list surfaced today, recheck",
+    "notes": "Nav-only page again; no article list surfaced, recheck",
     "research_links": [],
     "last_discovered_at": "2026-04-19T09:00:14.697222+08:00",
     "quality": "MEDIUM",
     "topics": "factor investing, ESG, climate, multi-asset, risk, fixed income",
-    "last_deep_analyzed_at": "2026-07-13T01:02:42Z",
+    "last_deep_analyzed_at": "2026-07-23T01:01:19Z",
     "strategy_tags": [
       "quant",
       "esg_climate",
@@ -2396,7 +2396,7 @@
       "equity"
     ],
     "topics": "ESG, climate, sustainability, long-term equity",
-    "notes": "Watchlist: annual sustainability reports only; too sparse",
+    "notes": "Watchlist: sparse, no dated index, still too thin",
     "official_domain": "www.generationim.com",
     "research_links": [
       {
@@ -2421,7 +2421,7 @@
       "article_signals": 0
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-06-23T01:00:00Z",
+    "last_deep_analyzed_at": "2026-07-23T01:01:19Z",
     "quality": "LOW",
     "quality_score": 0.28,
     "status_since": "2026-05-22T09:00:31.952742+08:00"
@@ -2661,11 +2661,11 @@
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-07-14T09:00:45.165660+08:00",
-    "last_deep_analyzed_at": "2026-07-12T01:10:00Z",
+    "last_deep_analyzed_at": "2026-07-23T01:01:19Z",
     "quality": "HIGH",
     "quality_score": 0.75,
     "topics": "equity, value investing, concentrated stock-picking",
-    "notes": "RECOMMEND: Quarterly deep-value equity letters, no gate [2026-07-14 manual] stage1 link-crawl found 0 research_links (JS-rendered nav/insufficient static signals, verified live); research_url already human-confirmed valid,",
+    "notes": "RECOMMEND: Value equity letters; nav needs Playwright",
     "status_since": "2026-07-15T13:19:07.753094+08:00",
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -2844,7 +2844,7 @@
     "official_domain": "www.partnersgroup.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-07-22T09:00:10.435554+08:00",
+    "last_discovered_at": "2026-07-23T09:00:10.297920+08:00",
     "status_since": "2026-07-20T09:03:44.818078+08:00",
     "last_deep_analyzed_at": "2026-07-21T01:02:58Z",
     "quality": "MEDIUM",
