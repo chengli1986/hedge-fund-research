@@ -663,7 +663,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.95,
-    "notes": "Geopolitics/macro papers, free access, proprietary-tool framing",
+    "notes": "Hedge fund + macro research, dated index confirmed",
     "research_links": [],
     "screening_signals": {
       "status_code": 200,
@@ -676,10 +676,10 @@
       "article_signals": 3
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-07-13T01:02:42Z",
+    "last_deep_analyzed_at": "2026-07-24T01:02:18Z",
     "quality": "MEDIUM",
-    "quality_score": 0.7,
-    "topics": "macro, geopolitics, fixed income, ESG, emerging markets",
+    "quality_score": 0.72,
+    "topics": "macro, fixed income, equity, alternatives, ESG, emerging markets",
     "strategy_tags": [
       "macro",
       "fixed_income",
@@ -706,7 +706,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.88,
-    "notes": "Hub links to strategist bios, not full articles - weak",
+    "notes": "Weekly commentary hub, no dated index - confirmed weak",
     "research_links": [],
     "screening_signals": {
       "status_code": 200,
@@ -719,10 +719,10 @@
       "article_signals": 0
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-07-13T01:02:42Z",
+    "last_deep_analyzed_at": "2026-07-24T01:02:18Z",
     "quality": "MEDIUM",
     "quality_score": 0.5,
-    "topics": "macro, equity, fixed income, multi-asset",
+    "topics": "macro, equity, fixed income, alternatives, multi-asset",
     "strategy_tags": [
       "macro",
       "equity",
@@ -1725,15 +1725,15 @@
       "fixed_income",
       "emerging_markets"
     ],
-    "notes": "Manual Playwright fetcher added 2026-07-20 (#2 audit): Angular JS-SPA, div.card-article cards, live-verified 8 dated posts. inaccessible→visitable for re-trial.",
+    "notes": "SPA blank via fetch; search confirms dated EM/macro",
     "official_domain": "www.franklintempletonglobal.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-05-07T09:00:18.005906+08:00",
-    "last_deep_analyzed_at": "2026-07-14T01:15:00Z",
+    "last_deep_analyzed_at": "2026-07-24T01:02:18Z",
     "quality": "MEDIUM",
-    "quality_score": 0.55,
-    "topics": "macro, equity, fixed income, emerging markets, multi-asset",
+    "quality_score": 0.62,
+    "topics": "equity, fixed income, macro, emerging markets, multi-asset",
     "status_since": "2026-07-20T11:38:01.808730+08:00"
   },
   {
@@ -2440,11 +2440,11 @@
       "equity",
       "fixed_income"
     ],
-    "topics": "macro, wealth management, geopolitics, gold, quarterly letters",
+    "topics": "macro, wealth management, equity, real assets, ESG, geopolitics",
     "quality": "MEDIUM",
     "quality_score": 0.5,
-    "notes": "2/2 sampled articles gated behind PDF/magazine request",
-    "last_deep_analyzed_at": "2026-07-14T01:15:00Z",
+    "notes": "Index dated 2015-2026 confirmed; articles EC2-403",
+    "last_deep_analyzed_at": "2026-07-24T01:02:18Z",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-05-24T01:02:30Z",
     "synthesis_attempted_at": "2026-06-12T01:08:13.034245+00:00",
@@ -2844,7 +2844,7 @@
     "official_domain": "www.partnersgroup.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-07-23T09:00:10.297920+08:00",
+    "last_discovered_at": "2026-07-24T09:00:10.565296+08:00",
     "status_since": "2026-07-20T09:03:44.818078+08:00",
     "last_deep_analyzed_at": "2026-07-21T01:02:58Z",
     "quality": "MEDIUM",
