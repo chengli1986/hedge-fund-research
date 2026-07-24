@@ -15,3 +15,4 @@ tests/fixtures/*.html
 tests/fixtures/*.json
 # Runtime state files (updated by pipeline, not manually)
 config/inspection_state.json
+pending_profiles/
