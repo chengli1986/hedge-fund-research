@@ -6665,6 +6665,23 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-07-24": {
+          "accessible": true,
+          "article_count": 8,
+          "date_count": 8,
+          "article_urls": [
+            "https://www.franklintempletonglobal.com/articles/2026/fixed-income/capital-preservation-matters-why-stable-value-is-critical-in-retirement-plan-menus",
+            "https://www.franklintempletonglobal.com/articles/2026/equity/climate-change-and-ai-from-power-demand-to-productivity",
+            "https://www.franklintempletonglobal.com/articles/2026/equity/innovation-insights-quarterly-q3-2026",
+            "https://www.franklintempletonglobal.com/articles/2026/institute/quick-thoughts-mega-ipos-from-private-to-public-markets",
+            "https://www.franklintempletonglobal.com/articles/2026/alternatives/avoiding-saaspocalypse-is-about-underwriting-skill-for-lenders",
+            "https://www.franklintempletonglobal.com/articles/2026/putnam/the-price-of-admission-further-equity-upside-comes-with-a-cost-volatility",
+            "https://www.franklintempletonglobal.com/articles/2026/institute/still-early-innings-for-artificial-intelligence",
+            "https://www.franklintempletonglobal.com/articles/2026/digital-assets/agentic-ai-the-killer-use-case-for-blockchain-and-crypto"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -6774,6 +6791,41 @@
           "js_only_checked": 5,
           "day": 3,
           "date": "2026-07-23"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.franklintempletonglobal.com/articles/2026/fixed-income/capital-preservation-matters-why-stable-value-is-critical-in-retirement-plan-menus",
+              "relevance": 0.1,
+              "depth": 0.0,
+              "extractable": 0.0,
+              "overall": 0.04,
+              "notes": "Cookie consent/privacy policy boilerplate with no investment content"
+            },
+            {
+              "url": "https://www.franklintempletonglobal.com/articles/2026/institute/still-early-innings-for-artificial-intelligence",
+              "relevance": 0.85,
+              "depth": 0.6,
+              "extractable": 0.7,
+              "overall": 0.72,
+              "notes": "Podcast transcript on AI investing with institutional perspectives; substantive but conversational format, truncated mid-sentence"
+            },
+            {
+              "url": "https://www.franklintempletonglobal.com/articles/2026/digital-assets/agentic-ai-the-killer-use-case-for-blockchain-and-crypto",
+              "relevance": 0.9,
+              "depth": 0.75,
+              "extractable": 0.65,
+              "overall": 0.79,
+              "notes": "Investment thesis on agentic AI and crypto/blockchain opportunities with data and market analysis; truncated at end"
+            }
+          ],
+          "avg_score": 0.517,
+          "error": null,
+          "js_only_count": 3,
+          "js_only_checked": 3,
+          "day": 4,
+          "date": "2026-07-24"
         }
       ]
     }
