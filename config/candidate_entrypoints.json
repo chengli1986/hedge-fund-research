@@ -1202,6 +1202,40 @@
         }
       ],
       "rejected_pages": []
+    },
+    "partners-group": {
+      "last_discovered_at": "2026-07-25T09:00:16.738503+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://www.partnersgroup.com/en/news-and-views/perspective",
+          "final_score": 0.85,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 1.0,
+          "gate_penalty": 0.0,
+          "active": true
+        },
+        {
+          "url": "https://www.partnersgroup.com/en",
+          "final_score": 0.85,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 1.0,
+          "gate_penalty": 0.0,
+          "active": false
+        },
+        {
+          "url": "https://www.partnersgroup.com/en/our-investments/private-equity",
+          "final_score": 0.85,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 1.0,
+          "gate_penalty": 0.0,
+          "active": false
+        }
+      ],
+      "rejected_pages": []
     }
   }
 }
