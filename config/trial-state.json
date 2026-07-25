@@ -6682,6 +6682,23 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-07-25": {
+          "accessible": true,
+          "article_count": 8,
+          "date_count": 8,
+          "article_urls": [
+            "https://www.franklintempletonglobal.com/articles/2026/equity/why-now-emerging-markets",
+            "https://www.franklintempletonglobal.com/articles/2026/equity/climate-change-and-ai-from-power-demand-to-productivity",
+            "https://www.franklintempletonglobal.com/articles/2026/equity/innovation-insights-quarterly-q3-2026",
+            "https://www.franklintempletonglobal.com/articles/2026/institute/quick-thoughts-mega-ipos-from-private-to-public-markets",
+            "https://www.franklintempletonglobal.com/articles/2026/alternatives/avoiding-saaspocalypse-is-about-underwriting-skill-for-lenders",
+            "https://www.franklintempletonglobal.com/articles/2026/putnam/the-price-of-admission-further-equity-upside-comes-with-a-cost-volatility",
+            "https://www.franklintempletonglobal.com/articles/2026/institute/still-early-innings-for-artificial-intelligence",
+            "https://www.franklintempletonglobal.com/articles/2026/digital-assets/agentic-ai-the-killer-use-case-for-blockchain-and-crypto"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -6826,9 +6843,95 @@
           "js_only_checked": 3,
           "day": 4,
           "date": "2026-07-24"
+        },
+        {
+          "sampled": 1,
+          "articles": [
+            {
+              "url": "https://www.franklintempletonglobal.com/articles/2026/equity/why-now-emerging-markets",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.6,
+              "overall": 0.76,
+              "notes": "Investment thesis on emerging markets structural shift from commodities to high-value tech/healthcare sectors; includes data on sector composition changes and quality metrics, but text appears truncated mid-sentence."
+            }
+          ],
+          "avg_score": 0.76,
+          "error": null,
+          "js_only_count": 1,
+          "js_only_checked": 1,
+          "day": 5,
+          "date": "2026-07-25"
+        }
+      ]
+    },
+    {
+      "id": "partners-group",
+      "name": "Partners Group",
+      "research_url": "https://www.partnersgroup.com/en/news-and-views/perspective",
+      "homepage_url": "https://www.partnersgroup.com",
+      "fit_score": 0.85,
+      "quality": "MEDIUM",
+      "topics": "private equity, private credit, macro, infrastructure",
+      "start_date": "2026-07-25",
+      "end_date": null,
+      "daily_checks": {
+        "2026-07-25": {
+          "accessible": true,
+          "article_count": 8,
+          "date_count": 0,
+          "article_urls": [
+            "https://www.partnersgroup.com/en/news-and-views/perspective/midyear-outlook-2026",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/macro-insights-privatecredit-2026",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/market-update2-march2026",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/apex-case-study",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/market-update-march2026",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/private-markets-outlook-2026"
+          ],
+          "error": null,
+          "fetcher_used": false
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.partnersgroup.com/en/news-and-views/perspective/midyear-outlook-2026",
+              "relevance": 0.95,
+              "depth": 0.75,
+              "extractable": 0.6,
+              "overall": 0.8,
+              "notes": "Mid-year 2026 outlook covering macro trends, private markets implications, and AI-driven productivity thesis; substantive but truncated mid-sentence."
+            },
+            {
+              "url": "https://www.partnersgroup.com/en/news-and-views/perspective/macro-insights-privatecredit-2026",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.55,
+              "overall": 0.81,
+              "notes": "Private credit market analysis examining bifurcation, AI disruption, and shift toward active selection; detailed framework but truncated at fundamentals section."
+            },
+            {
+              "url": "https://www.partnersgroup.com/en/news-and-views/perspective/market-update2-march2026",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.5,
+              "overall": 0.74,
+              "notes": "Portfolio impact assessment of Middle East geopolitical volatility on energy markets and private equity holdings; data-driven but significantly truncated."
+            }
+          ],
+          "avg_score": 0.783,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 1,
+          "date": "2026-07-25"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-07-21"
+  "last_summary_sent_date": "2026-07-25"
 }
