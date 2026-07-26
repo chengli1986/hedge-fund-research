@@ -48,7 +48,7 @@ BADGE_COLORS: dict[str, str] = {
     "gsam": "#4a6fa5",                      # Goldman steel blue (muted vs man/wellington/msci, lighter than pimco navy)
     "robeco": "#2d6a4f",                    # Robeco pine/forest green (ESG heritage; distinct from #3fb950 bright lime and #1e7f3e Brookfield mid-green)
     "de-shaw": "#cd853f",                   # D. E. Shaw bronze/peru (warm earth; distinct from #c45000 ARK deep-orange and #e8601c Amundi red-orange)
-    "pinebridge": "#00838f",                # PineBridge deep cyan (matches "pinebridgeblue" site palette; distinct from #006d75 Janus emerald-teal and #2ba397 Cambridge teal)
+    "metlife-im": "#00838f",                # MetLife IM deep cyan — inherits the slot freed by pinebridge on 2026-07-27 (MIM acquired PineBridge and the research moved to its site); already vetted as distinct from #006d75 Janus emerald-teal and #2ba397 Cambridge teal, and the crowded corporate-blue cluster (#003a70 PIMCO / #00568c Principal / #0066cc Wellington) leaves no room for a brand-literal MetLife azure
     "ares-management": "#b85450",           # Ares dark coral (distinct from #f85149 Oaktree bright red, #9d2235 Aberdeen burgundy, #7c2d12 Verdad terracotta, and warm-orange ARK/Amundi)
     "matthews-asia": "#3949ab",             # Matthews Asia indigo (fills blue↔violet gap; muted vs #1f49e0 MSCI electric cobalt, deeper/bluer than #7a4cb1 JPMAM violet, WCAG AA ~5.9:1 on white)
     "capital-group": "#37474f",             # Capital Group slate blue-grey (fills the empty neutral-slate niche — only desaturated gray in palette; WCAG AA 9.65:1; avoids the crowded saturated-blue cluster)
@@ -239,12 +239,12 @@ _FUND_PROFILES: dict[str, dict] = {
         "notable_en": "Pioneer of computational/statistical-arbitrage investing; its alumni network spawned Two Sigma and other quant firms, and Jeff Bezos conceived Amazon while a vice-president at the firm. The Library publishes long-form quant research papers (often only 1-3 per year) with academic-style rigor.",
         "notable_zh": "计算/统计套利量化投资的先驱；前员工创立了 Two Sigma 等量化机构，Jeff Bezos 亦在 D.E. Shaw 任副总裁期间萌生并创立 Amazon。Library 每年只发布 1-3 篇长篇量化研究论文，学术级别的严谨性。",
     },
-    "pinebridge": {
-        "founded": "2010", "aum": "~$100B", "hq": "New York, USA",
-        "type_en": "Global Asset Manager / Multi-Strategy", "type_zh": "全球资产管理 / 多策略",
-        "desc_zh": "全球资产管理公司（约 $100B AUM），总部纽约，亚太业务渊源深厚；前身为 AIG Investments（1996），2010 年从 AIG 剥离独立，2025 年 12 月被 MetLife Investment Management 完成收购。专长固定收益（新兴市场债、杠杆融资、投资级债券）、多资产与主动股票；服务全球机构与高净值客户。",
-        "notable_en": "Originated as AIG Investments (1996); spun out under Pacific Century Group (Richard Li) in 2010 and acquired by MetLife Investment Management (completed Dec 2025). Widely followed publications: 'Capital Market Line' (5-year capital-market assumptions framework) and 'Investment Strategy Insights' (weekly multi-asset positioning).",
-        "notable_zh": "前身为 AIG Investments（1996），2010 年由李泽楷的 Pacific Century Group 分拆独立，2025 年 12 月被 MetLife Investment Management 完成收购。代表研究：'Capital Market Line'（5 年期资本市场假设框架）和 'Investment Strategy Insights'（每周多资产配置策略）。",
+    "metlife-im": {
+        "founded": "1868", "aum": "~$700B", "hq": "Whippany, New Jersey, USA",
+        "type_en": "Institutional Asset Manager (MetLife investment arm)", "type_zh": "机构资产管理（MetLife 投资部门）",
+        "desc_zh": "MetLife 旗下机构资产管理平台（约 $700B AUM，截至 2026 年 3 月 31 日），总部位于新泽西州 Whippany。2025 年 12 月 30 日完成对 PineBridge Investments 的收购（不含其中国合资公司与私募股权基金业务），PineBridge 研究团队自此改在 MIM 平台发布。业务覆盖公开市场固定收益、私募信贷、不动产、农业金融、基础设施与多资产宏观策略。",
+        "notable_en": "Investment arm of MetLife (founded 1868). Completed the $1.2B acquisition of PineBridge Investments on 30 December 2025; article bylines still read 'PineBridge Investments, a MetLife Investment Management company'. Recurring research: Global Risks Update, Relative Value & Tactical Asset Allocation, and the quarterly Leveraged Finance Asset Allocation Insights inherited from PineBridge.",
+        "notable_zh": "MetLife（1868 年创立）的投资管理部门。2025 年 12 月 30 日以 12 亿美元完成对 PineBridge Investments 的收购，文章署名仍标注 'PineBridge Investments, a MetLife Investment Management company'。代表研究：Global Risks Update、Relative Value & Tactical Asset Allocation，以及承自 PineBridge 的季度 Leveraged Finance Asset Allocation Insights。",
     },
     "ares-management": {
         "founded": "1997", "aum": "~$644B", "hq": "Los Angeles, USA",

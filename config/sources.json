@@ -469,21 +469,23 @@
       "max_articles": 10
     },
     {
-      "id": "pinebridge",
+      "id": "metlife-im",
       "strategy_tags": [
         "fixed_income",
-        "emerging_markets",
         "macro",
-        "multi_asset"
+        "multi_asset",
+        "equity",
+        "private_credit",
+        "real_assets"
       ],
-      "name": "PineBridge Investments",
-      "short_name": "PineBridge",
-      "url": "https://www.pinebridge.com/en/our-insights",
-      "method": "playwright",
-      "frequency": "biweekly",
-      "description": "Global asset manager (~$100B AUM) headquartered in New York with deep Asia-Pacific roots; originated as AIG Investments (1996), spun out under Pacific Century Group in 2010 and acquired by MetLife Investment Management (completed Dec 2025). Specializes in fixed income (EM debt, leveraged finance, IG bonds), multi-asset and active equities; widely followed publications include Capital Market Line (5-year capital-market assumptions) and Investment Strategy Insights (weekly macro/positioning).",
+      "name": "MetLife Investment Management",
+      "short_name": "MetLife IM",
+      "url": "https://investments.metlife.com/insights/",
+      "method": "requests",
+      "frequency": "weekly",
+      "description": "Institutional asset manager (~$700B AUM as of 31 March 2026) and the investment arm of MetLife, headquartered in Whippany, New Jersey. Completed its acquisition of PineBridge Investments on 30 December 2025 (excluding PineBridge's China JV and private equity funds group); the PineBridge research teams now publish here, with bylines reading 'PineBridge Investments, a MetLife Investment Management company'. Coverage spans public fixed income, private credit, real estate, agricultural finance, infrastructure and multi-asset macro strategy; recurring series include Global Risks Update, Relative Value & Tactical Asset Allocation, and the quarterly Leveraged Finance Asset Allocation Insights inherited from PineBridge.",
       "notable_authors": [],
-      "expected_hostname": "pinebridge.com",
+      "expected_hostname": "investments.metlife.com",
       "max_articles": 10
     },
     {
@@ -607,7 +609,10 @@
       "method": "ssr",
       "frequency": "biweekly",
       "description": "Contrarian natural-resources investment boutique founded 2015 in New York by Leigh Goehring and Adam Rozencwajg. Deep fundamental research on energy, precious metals, uranium, agriculture and base metals, anchored by widely-read quarterly commentaries on commodity capital cycles.",
-      "notable_authors": ["Leigh Goehring", "Adam Rozencwajg"],
+      "notable_authors": [
+        "Leigh Goehring",
+        "Adam Rozencwajg"
+      ],
       "expected_hostname": "gorozen.com",
       "max_articles": 10
     },

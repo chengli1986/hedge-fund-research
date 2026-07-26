@@ -11,6 +11,7 @@ from fetch_articles import (
     fetch_blackstone, fetch_gsam, _fetch_article_date_jsonld,
     fetch_amundi, fetch_jpmam, fetch_pgim, fetch_aberdeen,
     fetch_cambridge_associates, fetch_verdad,
+    fetch_metlife_im,
 )
 
 
@@ -1455,3 +1456,137 @@ class TestFetchSourceIntraRunDedup:
         ]
         new = self._run(arts, set())
         assert len(new) == 2
+
+
+# ---------------------------------------------------------------------------
+# fetch_metlife_im — sitemap-driven (MetLife Investment Management insights)
+#
+# Context (2026-07-27): PineBridge stopped publishing on pinebridge.com after
+# 2026-06-09 — MetLife IM completed its acquisition 2025-12-30 and the research
+# (same teams, e.g. "PineBridge Investments, a MetLife Investment Management
+# company") now ships on investments.metlife.com/insights. The listing page is
+# JS-rendered and shows month-only dates ("JUL 2026"), so we drive off
+# sitemap.xml (209 insight URLs, all with <lastmod>) and read the day-precise
+# datePublished out of each article's JSON-LD.
+# ---------------------------------------------------------------------------
+
+class TestFetchMetlifeIm:
+    SOURCE = {
+        "url": "https://investments.metlife.com/insights/",
+        "max_articles": 3,
+        "expected_hostname": "investments.metlife.com",
+    }
+
+    SITEMAP_URL = "https://investments.metlife.com/sitemap.xml"
+
+    def _sitemap(self, entries) -> str:
+        body = "".join(
+            f"<url><loc>{loc}</loc><lastmod>{lastmod}</lastmod></url>"
+            for loc, lastmod in entries
+        )
+        return f'<?xml version="1.0" encoding="UTF-8"?><urlset>{body}</urlset>'
+
+    def _page(self, title: str, published: str | None = None) -> str:
+        ld = ""
+        if published:
+            ld = (
+                '<script type="application/ld+json">'
+                f'[{{"@type":"Article","datePublished":"{published}T18:56:00.00Z"}}]'
+                "</script>"
+            )
+        return f"<html><head><title>{title}</title>{ld}</head><body></body></html>"
+
+    def _mock_get(self, sitemap: str, pages: dict):
+        def _get(url, **kwargs):
+            resp = MagicMock()
+            resp.raise_for_status.return_value = None
+            if url == self.SITEMAP_URL:
+                resp.status_code = 200
+                resp.text = sitemap
+            elif url in pages:
+                resp.status_code = 200
+                resp.text = pages[url]
+            else:
+                resp.status_code = 404
+                resp.text = "<html><body>Not found</body></html>"
+            return resp
+        return _get
+
+    def test_skips_section_index_pages(self):
+        """/insights/ and /insights/<topic>/ are listing pages, not articles."""
+        art = "https://investments.metlife.com/insights/macro-strategy/summer-heat/"
+        sitemap = self._sitemap([
+            ("https://investments.metlife.com/insights/", "2026-07-16"),
+            ("https://investments.metlife.com/insights/fixed-income/", "2026-07-14"),
+            ("https://investments.metlife.com/about/", "2026-07-22"),
+            (art, "2026-07-20"),
+        ])
+        pages = {art: self._page("Global Risks Mid-Year Update", "2026-07-20")}
+        with patch("fetch_articles.requests.get", side_effect=self._mock_get(sitemap, pages)):
+            articles = fetch_metlife_im(self.SOURCE)
+
+        assert [a["url"] for a in articles] == [art]
+        assert articles[0]["title"] == "Global Risks Mid-Year Update"
+
+    def test_prefers_jsonld_date_over_lastmod(self):
+        """lastmod tracks re-renders; datePublished is the real publish date."""
+        art = "https://investments.metlife.com/insights/fixed-income/clo-primer/"
+        sitemap = self._sitemap([(art, "2026-07-23")])
+        pages = {art: self._page("An Introduction to CLOs", "2026-07-20")}
+        with patch("fetch_articles.requests.get", side_effect=self._mock_get(sitemap, pages)):
+            articles = fetch_metlife_im(self.SOURCE)
+
+        assert articles[0]["date"] == "2026-07-20"
+
+    def test_falls_back_to_lastmod_when_jsonld_missing(self):
+        art = "https://investments.metlife.com/insights/equity/asia-outlook/"
+        sitemap = self._sitemap([(art, "2026-07-14")])
+        pages = {art: self._page("2026 Midyear Asia Equity Outlook")}
+        with patch("fetch_articles.requests.get", side_effect=self._mock_get(sitemap, pages)):
+            articles = fetch_metlife_im(self.SOURCE)
+
+        assert articles[0]["date"] == "2026-07-14"
+        assert articles[0]["date_raw"] == "2026-07-14"
+
+    def test_orders_newest_first_and_caps_at_max_articles(self):
+        urls = [
+            f"https://investments.metlife.com/insights/macro-strategy/piece-{i}/"
+            for i in range(5)
+        ]
+        lastmods = ["2026-07-01", "2026-07-23", "2026-06-15", "2026-07-20", "2026-05-02"]
+        sitemap = self._sitemap(list(zip(urls, lastmods)))
+        pages = {u: self._page(f"Piece {i}", lastmods[i]) for i, u in enumerate(urls)}
+        with patch("fetch_articles.requests.get", side_effect=self._mock_get(sitemap, pages)):
+            articles = fetch_metlife_im(self.SOURCE)
+
+        assert len(articles) == 3
+        assert [a["date"] for a in articles] == ["2026-07-23", "2026-07-20", "2026-07-01"]
+
+    def test_skips_foreign_hostname(self):
+        """A sitemap entry pointing off-host must never become an article."""
+        art = "https://evil.example.com/insights/macro-strategy/spoofed/"
+        sitemap = self._sitemap([(art, "2026-07-20")])
+        pages = {art: self._page("Spoofed", "2026-07-20")}
+        with patch("fetch_articles.requests.get", side_effect=self._mock_get(sitemap, pages)):
+            articles = fetch_metlife_im(self.SOURCE)
+
+        assert articles == []
+
+    def test_skips_articles_that_error_without_failing_the_run(self):
+        good = "https://investments.metlife.com/insights/equity/good/"
+        dead = "https://investments.metlife.com/insights/equity/dead/"
+        sitemap = self._sitemap([(dead, "2026-07-23"), (good, "2026-07-20")])
+        pages = {good: self._page("Good One", "2026-07-20")}
+        with patch("fetch_articles.requests.get", side_effect=self._mock_get(sitemap, pages)):
+            articles = fetch_metlife_im(self.SOURCE)
+
+        assert [a["url"] for a in articles] == [good]
+
+    def test_skips_article_without_title(self):
+        art = "https://investments.metlife.com/insights/equity/untitled/"
+        sitemap = self._sitemap([(art, "2026-07-20")])
+        pages = {art: "<html><head></head><body><p>no title</p></body></html>"}
+        with patch("fetch_articles.requests.get", side_effect=self._mock_get(sitemap, pages)):
+            articles = fetch_metlife_im(self.SOURCE)
+
+        assert articles == []

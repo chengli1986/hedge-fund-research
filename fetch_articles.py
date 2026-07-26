@@ -27,7 +27,7 @@ import time
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Optional
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 import xml.etree.ElementTree as ET
 from email.utils import parsedate_to_datetime
@@ -920,23 +920,28 @@ def fetch_blackstone(source: dict) -> list[dict]:
     return articles[:source.get("max_articles", 10)]
 
 
+def _jsonld_published_date(soup: BeautifulSoup) -> Optional[str]:
+    """Extract datePublished from a parsed page's JSON-LD blocks."""
+    for script in soup.select('script[type="application/ld+json"]'):
+        try:
+            data = json.loads(script.string or "")
+            if isinstance(data, list):
+                for item in data:
+                    if isinstance(item, dict) and item.get("datePublished"):
+                        return parse_date(item["datePublished"][:10])
+            elif isinstance(data, dict) and data.get("datePublished"):
+                return parse_date(data["datePublished"][:10])
+        except (json.JSONDecodeError, ValueError):
+            continue
+    return None
+
+
 def _fetch_article_date_jsonld(url: str) -> Optional[str]:
     """Fetch a single article page and extract datePublished from JSON-LD script."""
     try:
         resp = requests.get(url, headers=HEADERS, timeout=15)
         resp.raise_for_status()
-        soup = BeautifulSoup(resp.text, "html.parser")
-        for script in soup.select('script[type="application/ld+json"]'):
-            try:
-                data = json.loads(script.string or "")
-                if isinstance(data, list):
-                    for item in data:
-                        if isinstance(item, dict) and item.get("datePublished"):
-                            return parse_date(item["datePublished"][:10])
-                elif isinstance(data, dict) and data.get("datePublished"):
-                    return parse_date(data["datePublished"][:10])
-            except (json.JSONDecodeError, ValueError):
-                continue
+        return _jsonld_published_date(BeautifulSoup(resp.text, "html.parser"))
     except Exception:
         pass
     return None
@@ -1918,61 +1923,78 @@ def fetch_de_shaw(source: dict) -> list[dict]:
     return articles[:source.get("max_articles", 10)]
 
 
-def fetch_pinebridge(source: dict) -> list[dict]:
-    """Fetch articles from PineBridge Investments (Playwright — Next.js SPA).
+def fetch_metlife_im(source: dict) -> list[dict]:
+    """Fetch articles from MetLife Investment Management Insights (sitemap + page scrape).
 
-    The GMIA `our-insights` URL is a hub page; the real listing lives at
-    `/en/all-insights`, so we always load the full listing.
+    Replaced the `pinebridge` source on 2026-07-27. MetLife IM completed its
+    acquisition of PineBridge on 2025-12-30; pinebridge.com published nothing
+    after 2026-06-09 (its own RSS rebuilds daily but stays empty, and press
+    releases stopped in April) because the research moved here — bylines still
+    read "the Leveraged Finance Team at PineBridge Investments, a MetLife
+    Investment Management company".
+
+    The /insights listing is JS-rendered and shows month-only dates
+    ("JUL 2026"), so we drive off sitemap.xml instead: ~200 insight URLs each
+    carry a <lastmod>, and article pages are SSR with a day-precise JSON-LD
+    `datePublished`. Section index pages (/insights/, /insights/<topic>/) share
+    the URL prefix and are filtered out by path depth — an article is always
+    /insights/<topic>/<slug>/.
     """
-    base_url = "https://www.pinebridge.com"
-    listing_url = "https://www.pinebridge.com/en/all-insights"
-    html = _get_playwright_page(
-        listing_url,
-        wait_selector="a[href*='/en/insights/']",
-        wait_ms=6000,
+    sitemap_url = "https://investments.metlife.com/sitemap.xml"
+    expected_host = source.get("expected_hostname", "investments.metlife.com")
+    max_articles = source.get("max_articles", 10)
+
+    resp = requests.get(sitemap_url, headers=HEADERS, timeout=20)
+    resp.raise_for_status()
+
+    pattern = re.compile(
+        r"<loc>([^<]*/insights/[^<]+)</loc>\s*<lastmod>([^<]+)</lastmod>",
+        re.IGNORECASE,
     )
-    soup = BeautifulSoup(html, "html.parser")
-    expected_host = source.get("expected_hostname", "pinebridge.com")
-
-    articles = []
-    seen = set()
-    for link in soup.select("a[href*='/en/insights/']"):
-        href = link.get("href", "")
-        if not href or href in seen:
+    entries: list[tuple[str, str]] = []
+    for url, lastmod in pattern.findall(resp.text):
+        url = url.strip()
+        if len([p for p in urlparse(url).path.split("/") if p]) != 3:
             continue
-        seen.add(href)
+        if not _validate_hostname(url, expected_host):
+            continue
+        entries.append((url, lastmod.strip()[:10]))
+    entries.sort(key=lambda x: x[1], reverse=True)
 
-        url_target = urljoin(base_url, href)
-        if not _validate_hostname(url_target, expected_host):
+    articles: list[dict] = []
+    for url, lastmod in entries[: max_articles * 2]:
+        try:
+            art_resp = requests.get(url, headers=HEADERS, timeout=15)
+            if art_resp.status_code != 200:
+                continue
+            art_soup = BeautifulSoup(art_resp.text, "html.parser")
+
+            title = ""
+            og = art_soup.find("meta", property="og:title")
+            if og:
+                title = (og.get("content") or "").strip()
+            if not title and art_soup.title:
+                title = art_soup.title.get_text(strip=True)
+            if not title:
+                continue
+
+            parsed_date = _jsonld_published_date(art_soup)
+            date_raw = parsed_date or lastmod
+            if not parsed_date:
+                parsed_date = parse_date(lastmod)
+
+            articles.append({
+                "title": title,
+                "url": url,
+                "date": parsed_date,
+                "date_raw": date_raw,
+            })
+            if len(articles) >= max_articles:
+                break
+        except Exception:
             continue
 
-        title_el = link.select_one("div.text-pinebridgeblue-50") or link.find("img")
-        title = ""
-        if title_el is not None:
-            if title_el.name == "img":
-                title = (title_el.get("alt") or "").strip()
-            else:
-                title = title_el.get_text(strip=True)
-        if not title:
-            continue
-
-        date_el = link.select_one("div.text-pinebridgegrey-200")
-        date_raw = ""
-        parsed_date = None
-        if date_el:
-            for sp in date_el.find_all("span"):
-                sp.extract()
-            date_raw = date_el.get_text(strip=True)
-            parsed_date = parse_date(date_raw)
-
-        articles.append({
-            "title": title,
-            "url": url_target,
-            "date": parsed_date,
-            "date_raw": date_raw,
-        })
-
-    return articles[:source.get("max_articles", 10)]
+    return articles[:max_articles]
 
 
 def fetch_ares_management(source: dict) -> list[dict]:
@@ -2843,7 +2865,7 @@ FETCHERS = {
     "matthews-asia": fetch_matthews_asia,
     "acadian-asset": fetch_acadian_asset,
     "de-shaw": fetch_de_shaw,
-    "pinebridge": fetch_pinebridge,
+    "metlife-im": fetch_metlife_im,
     "kkr": fetch_kkr,
     "msci-research": fetch_msci_research,
     "schroders": fetch_schroders,

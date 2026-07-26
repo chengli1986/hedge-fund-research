@@ -1150,43 +1150,53 @@ def _fetch_content_de_shaw(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
-def _fetch_content_pinebridge(article: dict) -> Optional[tuple[Path, str]]:
-    """Fetch PineBridge Investments article content via requests (SSR — Next.js).
+def _fetch_content_metlife_im(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch MetLife Investment Management article content via requests (SSR).
 
-    Listing page is Next.js CSR (fetch_articles uses Playwright), but article
-    body is SSR-rendered in the initial HTML. Body paragraphs live inside
-    `div[class*='rich-content-module__']` containers (CSS-modules hashed
-    prefix). A sibling `rich-content-module__*__disclaimer` div carries the
-    legal disclaimer and must be stripped first. Note: a minority of
-    "report-style" insight pages are PDF-only landing pages with no inline
-    body paragraphs — those will fall under _check_min_content_length and be
-    silently skipped by the GMIA pipeline.
+    Replaced `_fetch_content_pinebridge` on 2026-07-27 when the source moved to
+    investments.metlife.com (see fetch_articles.fetch_metlife_im). Body
+    paragraphs are SSR-rendered inside `div.richtext.richtext-wysiwyg`. Every
+    article also carries a ~11k-char `terms-of-use-legalText` block plus a
+    `terms-of-use-staticText` block — identical boilerplate on all pages, so
+    they are stripped before extraction to keep the summariser from drowning
+    in disclaimer text.
     """
     url = article["url"]
-    log.info("  PineBridge: fetching article page %s", url)
+    log.info("  MetLife IM: fetching article page %s", url)
 
     try:
         resp = requests.get(url, headers=HEADERS, timeout=30)
         resp.raise_for_status()
     except Exception as e:
-        log.error("  PineBridge: fetch failed: %s", e)
+        log.error("  MetLife IM: fetch failed: %s", e)
         return None
 
     soup = BeautifulSoup(resp.text, "html.parser")
     for tag in soup.select("nav, footer, header, script, style, aside, "
-                            "div[class*='disclaimer']"):
+                            "div[class*='terms-of-use'], div[class*='disclaimer']"):
         tag.decompose()
 
-    paragraphs = soup.select("div[class*='rich-content-module__'] p")
-    text = "\n".join(p.get_text(strip=True) for p in paragraphs if p.get_text(strip=True))
+    paragraphs = soup.select("div.richtext p")
+    kept = []
+    for p in paragraphs:
+        para = p.get_text(strip=True)
+        if not para:
+            continue
+        # Same disclaimer, sometimes inlined in the body under a "Disclosure"
+        # heading run together with the text (9.3k of 30.5k chars on the
+        # 2026-07-20 Global Risks piece).
+        if para.lower().startswith("disclosure"):
+            continue
+        kept.append(para)
+    text = "\n".join(kept)
 
     if not _check_min_content_length(text):
-        log.warning("  PineBridge: extracted text too short (%d chars)", len(text))
+        log.warning("  MetLife IM: extracted text too short (%d chars)", len(text))
         return None
 
     content_path = CONTENT_DIR / f"{article['id']}.txt"
     _atomic_write(content_path, text.encode("utf-8"))
-    log.info("  PineBridge: saved %d chars to %s", len(text), content_path.name)
+    log.info("  MetLife IM: saved %d chars to %s", len(text), content_path.name)
     return (content_path, "ok")
 
 
@@ -1512,7 +1522,7 @@ CONTENT_FETCHERS = {
     "gsam": _fetch_content_gsam,
     "robeco": _fetch_content_robeco,
     "de-shaw": _fetch_content_de_shaw,
-    "pinebridge": _fetch_content_pinebridge,
+    "metlife-im": _fetch_content_metlife_im,
     "ares-management": _fetch_content_ares,
     "matthews-asia": _fetch_content_matthews_asia,
     "capital-group": _fetch_content_capital_group,

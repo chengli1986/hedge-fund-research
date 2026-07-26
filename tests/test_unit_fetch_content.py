@@ -475,3 +475,82 @@ class TestCohenSteersPlaywrightFetcher:
     def test_cohen_steers_registered(self):
         from fetch_content import CONTENT_FETCHERS
         assert "cohen-steers" in CONTENT_FETCHERS
+
+
+class TestMetLifeIMFetcher:
+    """MetLife IM article bodies are SSR inside div.richtext.richtext-wysiwyg.
+
+    The same page also carries a long `terms-of-use-legalText` block (~11k chars
+    of boilerplate on every article) — extracting it would swamp the summariser
+    with identical legal text, so it must be stripped before the body is read.
+    """
+
+    BODY = "MIM sees a recovery scenario as inflation impulses persist. " * 12
+
+    LEGAL = "This material is intended solely for informational purposes. " * 20
+    # Some articles append the same block INSIDE the body container, marked only
+    # by a leading "Disclosure" — 9.3k of 30.5k chars on the 2026-07-20 Global
+    # Risks piece, i.e. a third of what the summariser would have read.
+    INLINE_DISCLOSURE = (
+        "DisclosureThis material is intended solely for Institutional Investors. " * 15
+    )
+
+    def _html(self) -> str:
+        return (
+            "<html><body>"
+            "<nav><p>Insights</p></nav>"
+            f'<div class="richtext richtext-wysiwyg"><p>{self.BODY}</p>'
+            f"<p>{self.INLINE_DISCLOSURE}</p></div>"
+            f'<div class="terms-of-use-legalText font-body-2"><p>{self.LEGAL}</p></div>'
+            "</body></html>"
+        )
+
+    def test_saves_body_without_legal_boilerplate(self, tmp_path, monkeypatch):
+        import fetch_content as fc
+        monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
+        resp = MagicMock(status_code=200, text=self._html())
+        resp.raise_for_status = lambda: None
+        monkeypatch.setattr(fc.requests, "get", lambda *a, **k: resp)
+
+        out = fc._fetch_content_metlife_im({
+            "id": "metlife-im-001",
+            "url": "https://investments.metlife.com/insights/macro-strategy/summer-heat/",
+        })
+
+        assert out is not None
+        path, status = out
+        assert status == "ok" and path.exists()
+        text = path.read_text()
+        assert "MIM sees a recovery scenario" in text
+        assert "informational purposes" not in text
+        assert "Institutional Investors" not in text
+
+    def test_none_on_http_error(self, tmp_path, monkeypatch):
+        import fetch_content as fc
+        monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
+
+        def boom(*a, **k):
+            raise fc.requests.RequestException("500")
+
+        monkeypatch.setattr(fc.requests, "get", boom)
+        assert fc._fetch_content_metlife_im({
+            "id": "metlife-im-002",
+            "url": "https://investments.metlife.com/insights/equity/x/",
+        }) is None
+
+    def test_none_when_body_too_short(self, tmp_path, monkeypatch):
+        import fetch_content as fc
+        monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
+        html = '<html><body><div class="richtext richtext-wysiwyg"><p>Too short.</p></div></body></html>'
+        resp = MagicMock(status_code=200, text=html)
+        resp.raise_for_status = lambda: None
+        monkeypatch.setattr(fc.requests, "get", lambda *a, **k: resp)
+
+        assert fc._fetch_content_metlife_im({
+            "id": "metlife-im-003",
+            "url": "https://investments.metlife.com/insights/equity/y/",
+        }) is None
+
+    def test_metlife_im_registered(self):
+        from fetch_content import CONTENT_FETCHERS
+        assert "metlife-im" in CONTENT_FETCHERS
