@@ -492,11 +492,11 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.9,
-    "last_deep_analyzed_at": "2026-07-16T01:02:00Z",
+    "last_deep_analyzed_at": "2026-07-26T01:01:55Z",
     "quality": "MEDIUM",
     "topics": "macro, equity, fixed income, alternatives, geopolitics",
-    "notes": "Index is subscribe-wall; sampled article pages solid",
-    "quality_score": 0.68,
+    "notes": "Index gated/subscribe-wall; article URLs still fetchable",
+    "quality_score": 0.65,
     "research_links": [
       {
         "url": "https://am.gs.com/en-us/advisors/insights/list",
@@ -1906,7 +1906,7 @@
       "macro",
       "fixed_income"
     ],
-    "notes": "RECOMMEND: Weekly EM/equity research, fresh thru Jun'26",
+    "notes": "RECOMMEND: Free weekly EM/macro research, fresh thru May'26",
     "research_url": "https://www.lazardassetmanagement.com/us/en_us/research-insights",
     "official_domain": "www.lazardassetmanagement.com",
     "research_links": [
@@ -1994,10 +1994,10 @@
     "screening_reason": "Research index detected",
     "fit_score": 0.94,
     "last_validated_at": "2026-05-04T09:00:19.804656+08:00",
-    "last_deep_analyzed_at": "2026-07-16T01:02:00Z",
+    "last_deep_analyzed_at": "2026-07-26T01:01:55Z",
     "quality": "HIGH",
-    "quality_score": 0.8,
-    "topics": "emerging markets, equity, macro, AI/tech, fixed income, geopolitics",
+    "quality_score": 0.82,
+    "topics": "emerging markets, equity, macro, fixed income, ETFs, geopolitics",
     "synthesis_priority": true,
     "synthesis_priority_set_at": "2026-06-12T09:03:52.684367+08:00",
     "synthesis_attempted_at": "2026-06-12T01:06:44.191476+00:00",
@@ -2020,10 +2020,10 @@
       "multi_asset"
     ],
     "quality": "MEDIUM",
-    "quality_score": 0.76,
+    "quality_score": 0.78,
     "topics": "quant, ESG, emerging markets, macro, equity, fixed income",
-    "notes": "878 articles; EM/quant/ESG weekly; free Jul 2026",
-    "last_deep_analyzed_at": "2026-07-17T01:15:00Z",
+    "notes": "885 articles; EM/quant/ESG weekly; free thru Jul 2026",
+    "last_deep_analyzed_at": "2026-07-26T01:01:55Z",
     "official_domain": "www.robeco.com",
     "discovery_method": "discover_fund_sites",
     "research_links": [
@@ -2486,11 +2486,11 @@
     "last_discovered_at": "2026-05-25T09:02:19.494150+08:00",
     "is_publicly_accessible": true,
     "has_article_index": true,
-    "quality": "HIGH",
-    "quality_score": 0.88,
+    "quality": "MEDIUM",
+    "quality_score": 0.68,
     "topics": "quant, equity, global allocation, ESG, credit, behavioral finance",
-    "notes": "RECOMMEND: Rigorous quant research w/ data & citations",
-    "last_deep_analyzed_at": "2026-07-16T01:02:00Z",
+    "notes": "Landing now gates for accredited/institutional investors",
+    "last_deep_analyzed_at": "2026-07-26T01:01:55Z",
     "inaccessible_reason": null,
     "promotion_notes": "JS-rendered homepage; article URLs directly accessible via WebFetch. Needs Playwright fetcher for full index scraping.",
     "synthesis_attempted_at": "2026-06-03T01:10:11.791298+00:00",
@@ -2868,5 +2868,18 @@
     "screening_reason": "Research index detected",
     "fit_score": 0.85,
     "last_validated_at": "2026-07-25T09:00:16.738503+08:00"
+  },
+  {
+    "id": "eaton-vance",
+    "name": "Eaton Vance",
+    "homepage_url": "https://www.eatonvance.com/insights",
+    "source": "manual",
+    "status": "seed",
+    "strategy_tags": [
+      "fixed_income",
+      "private_credit",
+      "macro",
+      "equity"
+    ]
   }
 ]
