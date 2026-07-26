@@ -6699,6 +6699,23 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-07-26": {
+          "accessible": true,
+          "article_count": 8,
+          "date_count": 8,
+          "article_urls": [
+            "https://www.franklintempletonglobal.com/articles/2026/equity/why-now-emerging-markets",
+            "https://www.franklintempletonglobal.com/articles/2026/equity/climate-change-and-ai-from-power-demand-to-productivity",
+            "https://www.franklintempletonglobal.com/articles/2026/equity/innovation-insights-quarterly-q3-2026",
+            "https://www.franklintempletonglobal.com/articles/2026/institute/quick-thoughts-mega-ipos-from-private-to-public-markets",
+            "https://www.franklintempletonglobal.com/articles/2026/alternatives/avoiding-saaspocalypse-is-about-underwriting-skill-for-lenders",
+            "https://www.franklintempletonglobal.com/articles/2026/putnam/the-price-of-admission-further-equity-upside-comes-with-a-cost-volatility",
+            "https://www.franklintempletonglobal.com/articles/2026/institute/still-early-innings-for-artificial-intelligence",
+            "https://www.franklintempletonglobal.com/articles/2026/digital-assets/agentic-ai-the-killer-use-case-for-blockchain-and-crypto"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -6862,6 +6879,14 @@
           "js_only_checked": 1,
           "day": 5,
           "date": "2026-07-25"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 6,
+          "date": "2026-07-26"
         }
       ]
     },
@@ -6877,6 +6902,21 @@
       "end_date": null,
       "daily_checks": {
         "2026-07-25": {
+          "accessible": true,
+          "article_count": 8,
+          "date_count": 0,
+          "article_urls": [
+            "https://www.partnersgroup.com/en/news-and-views/perspective/midyear-outlook-2026",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/macro-insights-privatecredit-2026",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/market-update2-march2026",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/apex-case-study",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/market-update-march2026",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/private-markets-outlook-2026"
+          ],
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-07-26": {
           "accessible": true,
           "article_count": 8,
           "date_count": 0,
@@ -6929,6 +6969,41 @@
           "js_only_checked": 0,
           "day": 1,
           "date": "2026-07-25"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.partnersgroup.com/en/news-and-views/perspective/apex-case-study",
+              "relevance": 0.7,
+              "depth": 0.6,
+              "extractable": 0.5,
+              "overall": 0.62,
+              "notes": "Private equity case study on Apex Logistics acquisition and dual-brand strategy; text truncated mid-sentence, limiting extractability"
+            },
+            {
+              "url": "https://www.partnersgroup.com/en/news-and-views/perspective/market-update-march2026",
+              "relevance": 0.95,
+              "depth": 0.75,
+              "extractable": 0.5,
+              "overall": 0.78,
+              "notes": "Macro analysis of Middle East geopolitical risk impact on private markets and portfolio; substantive but text truncated, limiting full extraction"
+            },
+            {
+              "url": "https://www.partnersgroup.com/en/news-and-views/perspective/private-markets-outlook-2026",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.5,
+              "overall": 0.8,
+              "notes": "Comprehensive 2026 private markets outlook covering PE, credit, infrastructure, and real estate with strategic recommendations; text truncated at end"
+            }
+          ],
+          "avg_score": 0.733,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 2,
+          "date": "2026-07-26"
         }
       ]
     }
