@@ -900,7 +900,7 @@
     "rss_url": null,
     "official_domain": "www.researchaffiliates.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "RECOMMEND: NLP+factor research, 335 articles, 40-50/yr, free",
+    "notes": "RECOMMEND: NLP+factor research, active Jul 2026",
     "research_links": [
       {
         "url": "https://www.researchaffiliates.com/insights/publications",
@@ -1008,7 +1008,7 @@
     "quality": "HIGH",
     "quality_score": 0.9,
     "topics": "quant, factor investing, equity, index research",
-    "last_deep_analyzed_at": "2026-07-18T01:01:24Z",
+    "last_deep_analyzed_at": "2026-07-27T01:05:00Z",
     "strategy_tags": [
       "quant",
       "equity",
@@ -1610,18 +1610,18 @@
     "name": "PineBridge Investments",
     "homepage_url": "https://www.pinebridge.com",
     "source": "manual",
-    "status": "promoted",
+    "status": "rejected",
     "strategy_tags": [
       "fixed_income",
       "emerging_markets",
       "macro",
       "multi_asset"
     ],
-    "quality": "HIGH",
-    "quality_score": 0.82,
-    "topics": "fixed income, credit, emerging markets, macro",
-    "notes": "RECOMMEND: Proprietary CML research; listing is JS-rendered",
-    "last_deep_analyzed_at": "2026-07-18T01:01:24Z",
+    "quality": "LOW",
+    "quality_score": 0.2,
+    "topics": "fixed income, credit (site inactive since Apr 2026)",
+    "notes": "rejected: site stopped Apr26, moved to metlife-im",
+    "last_deep_analyzed_at": "2026-07-27T01:05:00Z",
     "is_publicly_accessible": true,
     "has_article_index": true,
     "research_url": "https://www.pinebridge.com/en/all-insights",
@@ -1662,7 +1662,7 @@
     "last_discovered_at": "2026-04-24T09:03:34.493346+08:00",
     "synthesis_attempted_at": "2026-05-17T08:32:58.639690+00:00",
     "synthesis_outcome": "success",
-    "status_since": "2026-04-24T09:03:34.493346+08:00"
+    "status_since": "2026-07-27T09:03:14.352335+08:00"
   },
   {
     "id": "verdad-capital",
@@ -2258,7 +2258,7 @@
       "emerging_markets",
       "macro"
     ],
-    "notes": "Free; Asia/EM 2-4x/mo; ABA trade thesis Jul 2026",
+    "notes": "Free; Asia/EM 2-4x/mo; China Innovators Jul 2026",
     "official_domain": "www.matthewsasia.com",
     "research_links": [
       {
@@ -2353,7 +2353,7 @@
     "quality": "MEDIUM",
     "quality_score": 0.68,
     "topics": "Asian equities, China, India, EM, AI, geopolitics",
-    "last_deep_analyzed_at": "2026-07-17T01:15:00Z",
+    "last_deep_analyzed_at": "2026-07-27T01:05:00Z",
     "synthesis_priority": true,
     "synthesis_priority_set_at": "2026-06-03T09:05:38.825095+08:00",
     "synthesis_attempted_at": "2026-06-03T01:08:23.985559+00:00",
@@ -2879,8 +2879,13 @@
       "fixed_income",
       "private_credit",
       "macro",
-      "equity"
+      "esg_climate"
     ],
-    "status_since": "2026-07-26T09:03:39.378481+08:00"
+    "status_since": "2026-07-26T09:03:39.378481+08:00",
+    "quality": "HIGH",
+    "quality_score": 0.82,
+    "topics": "macro, credit, alternatives, fixed income, ESG",
+    "notes": "RECOMMEND: Ungated multi-asset/alts research, active",
+    "last_deep_analyzed_at": "2026-07-27T01:05:00Z"
   }
 ]
