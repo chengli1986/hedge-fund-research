@@ -6601,9 +6601,7 @@
       "total_articles": 80,
       "days_with_articles": 8,
       "avg_quality_score": 0.639
-    }
-  ],
-  "active_trials": [
+    },
     {
       "id": "franklin-templeton",
       "name": "Franklin Templeton",
@@ -6613,7 +6611,7 @@
       "quality": "MEDIUM",
       "topics": "macro, equity, fixed income, emerging markets, multi-asset",
       "start_date": "2026-07-21",
-      "end_date": null,
+      "end_date": "2026-07-28",
       "daily_checks": {
         "2026-07-21": {
           "accessible": true,
@@ -6733,10 +6731,27 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-07-28": {
+          "accessible": true,
+          "article_count": 8,
+          "date_count": 8,
+          "article_urls": [
+            "https://www.franklintempletonglobal.com/articles/series/from-the-market-desk",
+            "https://www.franklintempletonglobal.com/articles/2026/equity/why-now-emerging-markets",
+            "https://www.franklintempletonglobal.com/articles/2026/equity/climate-change-and-ai-from-power-demand-to-productivity",
+            "https://www.franklintempletonglobal.com/articles/2026/equity/innovation-insights-quarterly-q3-2026",
+            "https://www.franklintempletonglobal.com/articles/2026/institute/quick-thoughts-mega-ipos-from-private-to-public-markets",
+            "https://www.franklintempletonglobal.com/articles/2026/alternatives/avoiding-saaspocalypse-is-about-underwriting-skill-for-lenders",
+            "https://www.franklintempletonglobal.com/articles/2026/putnam/the-price-of-admission-further-equity-upside-comes-with-a-cost-volatility",
+            "https://www.franklintempletonglobal.com/articles/2026/institute/still-early-innings-for-artificial-intelligence"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -6913,8 +6928,13 @@
           "day": 7,
           "date": "2026-07-27"
         }
-      ]
-    },
+      ],
+      "total_articles": 64,
+      "days_with_articles": 8,
+      "avg_quality_score": 0.698
+    }
+  ],
+  "active_trials": [
     {
       "id": "partners-group",
       "name": "Partners Group",
@@ -6957,6 +6977,21 @@
           "fetcher_used": false
         },
         "2026-07-27": {
+          "accessible": true,
+          "article_count": 8,
+          "date_count": 0,
+          "article_urls": [
+            "https://www.partnersgroup.com/en/news-and-views/perspective/midyear-outlook-2026",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/macro-insights-privatecredit-2026",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/market-update2-march2026",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/apex-case-study",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/market-update-march2026",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/private-markets-outlook-2026"
+          ],
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-07-28": {
           "accessible": true,
           "article_count": 8,
           "date_count": 0,
@@ -7052,6 +7087,14 @@
           "error": "No new (un-sampled) article links available",
           "day": 3,
           "date": "2026-07-27"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 4,
+          "date": "2026-07-28"
         }
       ]
     }
