@@ -59,7 +59,7 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-07-20T01:16:00Z",
+    "last_deep_analyzed_at": "2026-07-28T01:01:26Z",
     "quality": "HIGH",
     "topics": "fixed income, macro, credit, global economy",
     "strategy_tags": [
@@ -140,7 +140,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.88,
-    "notes": "Monthly articles, quantitative content, promotional tone",
+    "notes": "Monthly private credit/RE commentary; WAF blocks fetch (403)",
     "research_links": [
       {
         "url": "https://www.blackstone.com/insights/",
@@ -194,7 +194,7 @@
       "article_signals": 3
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-06-27T01:02:55Z",
+    "last_deep_analyzed_at": "2026-07-28T01:01:26Z",
     "quality": "MEDIUM",
     "topics": "private credit, private equity, real assets",
     "strategy_tags": [
@@ -1333,7 +1333,7 @@
     "quality": "LOW",
     "quality_score": 0.32,
     "topics": "multi_asset, institutional insights",
-    "last_deep_analyzed_at": "2026-07-18T01:01:24Z",
+    "last_deep_analyzed_at": "2026-07-28T01:01:26Z",
     "fit_score": 0.82,
     "strategy_tags": [
       "macro",
@@ -1888,7 +1888,7 @@
     "screening_reason": "Research index detected",
     "fit_score": 0.85,
     "last_validated_at": "2026-05-03T09:00:33.191261+08:00",
-    "last_deep_analyzed_at": "2026-07-18T01:01:24Z",
+    "last_deep_analyzed_at": "2026-07-28T01:01:26Z",
     "quality": "MEDIUM",
     "quality_score": 0.62,
     "topics": "macro, multi_asset, tactical positioning",
