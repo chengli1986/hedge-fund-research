@@ -651,6 +651,24 @@
       "notable_authors": [],
       "expected_hostname": "principalam.com",
       "max_articles": 10
+    },
+    {
+      "id": "franklin-templeton",
+      "strategy_tags": [
+        "macro",
+        "equity",
+        "fixed_income",
+        "emerging_markets"
+      ],
+      "name": "Franklin Templeton",
+      "short_name": "Franklin",
+      "url": "https://www.franklintempletonglobal.com/articles",
+      "method": "playwright",
+      "frequency": "weekly",
+      "description": "One of the world's largest independent asset managers (~$1.66T AUM), founded 1947 in New York by Rupert H. Johnson Sr. and headquartered in San Mateo, California. Runs a multi-boutique model — Templeton emerging-market value, Western Asset and Brandywine fixed income, Clarion real estate, plus the Legg Mason and Putnam franchises — spanning equity, fixed income, EM and multi-asset strategies.",
+      "notable_authors": [],
+      "expected_hostname": "franklintempletonglobal.com",
+      "max_articles": 10
     }
   ],
   "settings": {

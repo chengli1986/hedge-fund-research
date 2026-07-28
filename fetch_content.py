@@ -1497,6 +1497,38 @@ def _fetch_content_cohen_steers(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+def _fetch_content_franklin_templeton(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Franklin Templeton article content via Playwright (Angular JS-SPA).
+
+    Like the listing, article pages are client-rendered: `requests` returns the same
+    ~2.7KB Angular shell (HTTP 200, zero paragraphs), so a headless browser is
+    required for the body. There is no WAF and the app never reaches networkidle, so
+    wait_until='domcontentloaded' plus a short settle is enough. The body renders
+    into `main` (no `<article>` element exists on these pages), hence the `main p`
+    selector. Verified live 2026-07-28: 11.8K chars from a research post.
+    """
+    url = article["url"]
+    log.info("  Franklin Templeton: fetching article page %s", url)
+    try:
+        from fetch_articles import _get_playwright_page
+        html = _get_playwright_page(url, wait_until="domcontentloaded", wait_ms=4000)
+    except Exception as e:
+        log.error("  Franklin Templeton: fetch failed: %s", e)
+        return None
+    if not html:
+        return None
+
+    text = _normalize_html(html, "main p")
+    if not _check_min_content_length(text):
+        log.warning("  Franklin Templeton: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Franklin Templeton: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -1532,6 +1564,7 @@ CONTENT_FETCHERS = {
     "goehring-rozencwajg": _fetch_content_goehring_rozencwajg,
     "principal-am": _fetch_content_principal_am,
     "cohen-steers": _fetch_content_cohen_steers,
+    "franklin-templeton": _fetch_content_franklin_templeton,
 }
 
 

@@ -58,6 +58,7 @@ BADGE_COLORS: dict[str, str] = {
     "goehring-rozencwajg": "#827717",       # G&R dark yellow-olive "oilfield khaki" (energy/commodities heritage; sits between #b07d12 Lazard amber — lighter, more orange — and #556b2f KKR olive — darker, greener — with RGB dist ≥47 to both; WCAG AA 4.56:1 on white)
     "cohen-steers": "#8d4004",              # Cohen & Steers deep burnt-sienna (real-assets earth tone; much darker than #c45000 ARK orange and #cd853f D.E.Shaw bronze, redder than #7c2d12 Verdad terracotta; WCAG AA ~7.4:1 on white)
     "principal-am": "#00568c",              # Principal deep azure (brand-adjacent corporate blue; sits between #003a70 PIMCO navy — darker — and #0066cc Wellington blue — brighter/lighter — RGB dist ≥40 to both and to #4a6fa5 GSAM steel blue; WCAG AA ~6.9:1 on white)
+    "franklin-templeton": "#004d40",        # Franklin Templeton deep pine-teal (the corporate-blue cluster is full, so the brand navy is unusable; this is the darkest, greenest point of the teal family — RGB dist ≥61 to #00607a T.Rowe teal-navy, #006d75 Janus and #00838f MetLife cyan, and 51.6 to its nearest neighbour overall, the highest min-distance of any candidate tested; WCAG AAA 9.8:1 on white)
 }
 
 INITIAL_VISIBLE = 20
@@ -308,6 +309,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "Principal Financial Group（1879 年创立）旗下全球资管板块（$577.9B AUM），总部位于美国 Des Moines。业务覆盖股票、固定收益、多资产配置与房地产投资，服务 80 多个市场的 1,600 余家机构客户，商业地产投资平台位居美国前列。",
         "notable_en": "Publishes timely macro reaction notes on Fed/ECB decisions and the quarterly Global Market Perspectives outlook; its real-estate research arm covers one of the largest US commercial property portfolios.",
         "notable_zh": "以 Fed/ECB 决议快评与季度《Global Market Perspectives》宏观展望著称；房地产研究依托美国最大商业地产投资组合之一。",
+    },
+    "franklin-templeton": {
+        "founded": "1947", "aum": "~$1.66T", "hq": "San Mateo, California, USA",
+        "type_en": "Global Asset Manager (multi-boutique)", "type_zh": "全球资产管理（多精品店模式）",
+        "desc_zh": "全球最大的独立资产管理公司之一，管理规模约 1.66 万亿美元。1947 年由 Rupert H. Johnson Sr. 创立于纽约，总部现设加州圣马特奥。采用多精品店模式运营：Templeton 主打新兴市场价值股，Western Asset 与 Brandywine 负责固定收益，Clarion 做地产，另有 Legg Mason、Putnam 等品牌，覆盖股票、债券、新兴市场与多资产策略。",
+        "notable_en": "Home of Sir John Templeton, the pioneer of global contrarian value investing whose Templeton Growth Fund set the template for cross-border equity investing. Scaled into a top-tier multi-boutique platform through the Legg Mason (2020) and Putnam (2024) acquisitions.",
+        "notable_zh": "旗下 Templeton 系出自全球逆向价值投资先驱约翰·邓普顿爵士，其 Templeton Growth Fund 奠定了跨国股票投资的范式。通过收购 Legg Mason（2020）与 Putnam（2024）扩张为顶级多精品店平台。",
     },
 }
 
