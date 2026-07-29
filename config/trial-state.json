@@ -7005,6 +7005,21 @@
           ],
           "error": null,
           "fetcher_used": false
+        },
+        "2026-07-29": {
+          "accessible": true,
+          "article_count": 8,
+          "date_count": 0,
+          "article_urls": [
+            "https://www.partnersgroup.com/en/news-and-views/perspective/midyear-outlook-2026",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/macro-insights-privatecredit-2026",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/market-update2-march2026",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/apex-case-study",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/market-update-march2026",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/private-markets-outlook-2026"
+          ],
+          "error": null,
+          "fetcher_used": false
         }
       },
       "auto_decided": false,
@@ -7095,6 +7110,14 @@
           "error": "No new (un-sampled) article links available",
           "day": 4,
           "date": "2026-07-28"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 5,
+          "date": "2026-07-29"
         }
       ]
     }
