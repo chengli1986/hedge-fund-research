@@ -323,7 +323,7 @@
       "article_signals": 1
     },
     "screening_reason": "Insufficient article index signals",
-    "last_deep_analyzed_at": "2026-07-20T01:16:00Z",
+    "last_deep_analyzed_at": "2026-07-29T01:10:00Z",
     "quality": "MEDIUM",
     "topics": "private equity, macro, infrastructure, credit",
     "strategy_tags": [
@@ -1027,7 +1027,7 @@
     "rss_url": null,
     "official_domain": "www.blackrock.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "Archives 403 again; WAF-blocked; trial score 0.34",
+    "notes": "Weekly commentary open now; trial score 0.34 conflicts",
     "research_links": [
       {
         "url": "https://www.blackrock.com/us/individual/insights/blackrock-investment-institute/weekly-commentary",
@@ -1113,9 +1113,9 @@
     "fit_score": 0.91,
     "last_validated_at": "2026-04-19T09:01:56.296708+08:00",
     "quality": "MEDIUM",
-    "quality_score": 0.35,
+    "quality_score": 0.45,
     "topics": "macro, fixed income, equity",
-    "last_deep_analyzed_at": "2026-06-28T01:02:48Z",
+    "last_deep_analyzed_at": "2026-07-29T01:10:00Z",
     "strategy_tags": [
       "macro",
       "multi_asset",
@@ -2176,7 +2176,7 @@
     "quality_score": 0.84,
     "topics": "fixed income, equity, macro, technology, healthcare",
     "notes": "RECOMMEND: Free, weekly cadence; FI/macro/tech Jul 2026",
-    "last_deep_analyzed_at": "2026-07-20T01:16:00Z",
+    "last_deep_analyzed_at": "2026-07-29T01:10:00Z",
     "promoted_at": "2026-05-12T10:19:29.746916+08:00",
     "status_since": "2026-05-11T09:00:09.554318+08:00"
   },
@@ -2888,5 +2888,33 @@
     "topics": "macro, credit, alternatives, fixed income, ESG",
     "notes": "RECOMMEND: Ungated multi-asset/alts research, active",
     "last_deep_analyzed_at": "2026-07-27T01:05:00Z"
+  },
+  {
+    "id": "blue-owl-capital",
+    "name": "Blue Owl Capital",
+    "homepage_url": "https://www.blueowl.com",
+    "source": "manual",
+    "status": "discovered",
+    "strategy_tags": [
+      "private_credit",
+      "real_assets"
+    ],
+    "research_url": "https://www.blueowl.com/insights",
+    "official_domain": "www.blueowl.com",
+    "research_links": [
+      {
+        "url": "https://www.blueowl.com/insights",
+        "label": "Insights",
+        "path": "insights"
+      },
+      {
+        "url": "https://www.blueowl.com/insights/2026-mid-year-focus",
+        "label": "Learn more",
+        "path": "insights/2026-mid-year-focus"
+      }
+    ],
+    "status_since": "2026-07-29T09:03:05.416868+08:00",
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-07-29T09:03:05.416834+08:00"
   }
 ]
