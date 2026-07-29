@@ -76,8 +76,19 @@ def find_illegal_changes(before: list[dict], after: list[dict]) -> list[dict]:
         to = c.get("status")
         prev = before_by_id.get(cid)
         if prev is None:
-            if to != ALLOWED_NEW_STATUS:
-                illegal.append({"id": cid, "from": None, "to": to})
+            if to == ALLOWED_NEW_STATUS:
+                continue
+            # Phase 3 has the agent add a bare "seed" candidate, then run
+            # discover_fund_sites.py --fund <new-id> in the same session —
+            # that script legitimately advances seed -> discovered (or
+            # further) and stamps its own freshness field, same proof used
+            # below for pre-existing candidates. A brand-new id has no
+            # "before" value for that field, so its mere presence is the
+            # proof (2026-07-29 blue-owl-capital false positive).
+            stamp_field = PIPELINE_STATUS_TRANSITIONS.get(to)
+            if stamp_field and c.get(stamp_field):
+                continue
+            illegal.append({"id": cid, "from": None, "to": to})
             continue
         frm = prev.get("status")
         if to == frm or to in ALLOWED_AGENT_STATUSES:

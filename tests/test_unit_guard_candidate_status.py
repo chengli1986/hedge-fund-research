@@ -100,6 +100,28 @@ class TestFindIllegalChanges:
             {"id": "new", "from": None, "to": "promoted"}
         ]
 
+    def test_new_candidate_legitimately_discovered_in_same_session_is_not_flagged(self):
+        # Phase 3 of program.md tells the agent to add a bare "seed" candidate,
+        # then run `discover_fund_sites.py --fund <new-id>` in the same session.
+        # That script legitimately advances seed -> discovered and stamps
+        # last_discovered_at, same as it does for pre-existing candidates. The
+        # before-snapshot has no entry at all for a brand-new id, so this must
+        # be checked against PIPELINE_STATUS_TRANSITIONS too, not just rejected
+        # outright (2026-07-29 blue-owl-capital false positive).
+        before = []
+        after = [{"id": "new", "status": "discovered", "notes": "x",
+                  "last_discovered_at": "2026-07-29T09:03:05+08:00"}]
+        assert g.find_illegal_changes(before, after) == []
+
+    def test_new_candidate_with_pipeline_status_but_no_stamp_is_illegal(self):
+        # Same target status as above, but no freshness stamp present at all
+        # — no proof the real script ran, so still a hand-edit forgery.
+        before = []
+        after = [_c("new", "discovered")]
+        assert g.find_illegal_changes(before, after) == [
+            {"id": "new", "from": None, "to": "discovered"}
+        ]
+
 
 class TestApplyCorrections:
     def test_reverts_illegal_change_to_prior_status(self):
