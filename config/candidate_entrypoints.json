@@ -1236,6 +1236,40 @@
         }
       ],
       "rejected_pages": []
+    },
+    "blue-owl-capital": {
+      "last_discovered_at": "2026-07-30T09:00:18.054065+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://www.blueowl.com/insights",
+          "final_score": 0.925,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.75,
+          "gate_penalty": 0.0,
+          "active": true
+        },
+        {
+          "url": "https://www.blueowl.com/our-products",
+          "final_score": 0.8071,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.8571,
+          "gate_penalty": 0.0,
+          "active": false
+        },
+        {
+          "url": "https://www.blueowl.com/real-assets",
+          "final_score": 0.79,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.8,
+          "gate_penalty": 0.0,
+          "active": false
+        }
+      ],
+      "rejected_pages": []
     }
   }
 }
