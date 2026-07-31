@@ -7035,6 +7035,21 @@
           ],
           "error": null,
           "fetcher_used": false
+        },
+        "2026-07-31": {
+          "accessible": true,
+          "article_count": 8,
+          "date_count": 0,
+          "article_urls": [
+            "https://www.partnersgroup.com/en/news-and-views/perspective/midyear-outlook-2026",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/macro-insights-privatecredit-2026",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/market-update2-march2026",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/apex-case-study",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/market-update-march2026",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/private-markets-outlook-2026"
+          ],
+          "error": null,
+          "fetcher_used": false
         }
       },
       "auto_decided": false,
@@ -7141,6 +7156,14 @@
           "error": "No new (un-sampled) article links available",
           "day": 6,
           "date": "2026-07-30"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 7,
+          "date": "2026-07-31"
         }
       ]
     },
@@ -7156,6 +7179,24 @@
       "end_date": null,
       "daily_checks": {
         "2026-07-30": {
+          "accessible": true,
+          "article_count": 13,
+          "date_count": 12,
+          "article_urls": [
+            "https://www.blueowl.com/insights/2026-mid-year-focus",
+            "https://www.blueowl.com/insights/rethinking-exits-private-equity-why-continuation-vehicles-are-redefining-playbook",
+            "https://www.blueowl.com/insights/blue-owl-executive-perspectives-todays-software-landscape-vista-equity-partners",
+            "https://www.blueowl.com/insights/built-compute-inside-data-center",
+            "https://www.blueowl.com/insights/focus-our-lens-private-markets",
+            "https://www.blueowl.com/insights/investing-ongoing-revolution-life-sciences",
+            "https://www.blueowl.com/insights/growth-and-durability-software-lending",
+            "https://www.blueowl.com/insights/investing-real-assets-volatile-market",
+            "https://www.blueowl.com/insights/private-markets-and-value-stability"
+          ],
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-07-31": {
           "accessible": true,
           "article_count": 13,
           "date_count": 12,
@@ -7211,6 +7252,41 @@
           "js_only_checked": 0,
           "day": 1,
           "date": "2026-07-30"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.blueowl.com/insights/built-compute-inside-data-center",
+              "relevance": 0.7,
+              "depth": 0.3,
+              "extractable": 0.8,
+              "overall": 0.56,
+              "notes": "Marketing-focused piece on data center infrastructure investing with minimal substantive analysis; mostly promotional for Blue Owl's 3D tour and digital infrastructure platform."
+            },
+            {
+              "url": "https://www.blueowl.com/insights/focus-our-lens-private-markets",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.7,
+              "overall": 0.78,
+              "notes": "Substantive private credit market commentary with data on yield premiums (250bps), LBO financing trends (85% private), and thematic analysis of direct lending durability; text appears truncated at end."
+            },
+            {
+              "url": "https://www.blueowl.com/insights/investing-ongoing-revolution-life-sciences",
+              "relevance": 0.85,
+              "depth": 0.6,
+              "extractable": 0.65,
+              "overall": 0.71,
+              "notes": "Q&A on life sciences investing trends covering capital scarcity, IPO windows, and tariff/pricing policy impacts; moderate depth with expert perspective but conversational format and truncated ending limit extractability."
+            }
+          ],
+          "avg_score": 0.683,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 2,
+          "date": "2026-07-31"
         }
       ]
     }
