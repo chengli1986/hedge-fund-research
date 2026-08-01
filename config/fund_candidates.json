@@ -2835,7 +2835,7 @@
     "name": "Partners Group",
     "homepage_url": "https://www.partnersgroup.com",
     "source": "manual",
-    "status": "visitable",
+    "status": "promoted",
     "strategy_tags": [
       "private_equity",
       "private_credit",
@@ -2846,12 +2846,12 @@
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-07-24T09:00:10.565296+08:00",
-    "status_since": "2026-07-25T09:01:41.656493+08:00",
+    "status_since": "2026-08-01T09:02:36.013543+08:00",
     "last_deep_analyzed_at": "2026-07-30T01:01:44Z",
     "quality": "MEDIUM",
     "quality_score": 0.6,
     "topics": "private equity, private credit, macro, infrastructure",
-    "notes": "Monthly PE/credit/macro outlooks, freely accessible",
+    "notes": "RECOMMEND: trial passed (8/7 days with articles, quality=0.76)",
     "research_url": "https://www.partnersgroup.com/en/news-and-views/perspective",
     "is_publicly_accessible": true,
     "has_article_index": true,
@@ -2868,7 +2868,9 @@
     },
     "screening_reason": "Research index detected",
     "fit_score": 0.85,
-    "last_validated_at": "2026-07-25T09:00:16.738503+08:00"
+    "last_validated_at": "2026-07-25T09:00:16.738503+08:00",
+    "synthesis_priority": true,
+    "synthesis_priority_set_at": "2026-08-01T09:02:36.013568+08:00"
   },
   {
     "id": "eaton-vance",
@@ -3034,7 +3036,7 @@
         "path": "insights/municipal-marketplace-can-single-state-portfolios-be-advantageous"
       }
     ],
-    "status_since": "2026-08-01T09:00:15.612297+08:00",
+    "status_since": "2026-08-01T09:02:34.899901+08:00",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-07-30T09:02:50.327072+08:00",
     "last_deep_analyzed_at": "2026-07-31T02:15:00Z",
@@ -3115,7 +3117,7 @@
         "path": "insights/crowding-isnt-one-trade.-march-proved-it"
       }
     ],
-    "status_since": "2026-08-01T09:00:17.073371+08:00",
+    "status_since": "2026-08-01T09:02:34.899916+08:00",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-07-31T09:03:45.309839+08:00",
     "is_publicly_accessible": false,

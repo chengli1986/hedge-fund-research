@@ -6932,9 +6932,7 @@
       "total_articles": 64,
       "days_with_articles": 8,
       "avg_quality_score": 0.698
-    }
-  ],
-  "active_trials": [
+    },
     {
       "id": "partners-group",
       "name": "Partners Group",
@@ -6944,7 +6942,7 @@
       "quality": "MEDIUM",
       "topics": "private equity, private credit, macro, infrastructure",
       "start_date": "2026-07-25",
-      "end_date": null,
+      "end_date": "2026-08-01",
       "daily_checks": {
         "2026-07-25": {
           "accessible": true,
@@ -7050,10 +7048,25 @@
           ],
           "error": null,
           "fetcher_used": false
+        },
+        "2026-08-01": {
+          "accessible": true,
+          "article_count": 8,
+          "date_count": 0,
+          "article_urls": [
+            "https://www.partnersgroup.com/en/news-and-views/perspective/midyear-outlook-2026",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/macro-insights-privatecredit-2026",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/market-update2-march2026",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/apex-case-study",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/market-update-march2026",
+            "https://www.partnersgroup.com/en/news-and-views/perspective/private-markets-outlook-2026"
+          ],
+          "error": null,
+          "fetcher_used": false
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -7165,8 +7178,13 @@
           "day": 7,
           "date": "2026-07-31"
         }
-      ]
-    },
+      ],
+      "total_articles": 60,
+      "days_with_articles": 8,
+      "avg_quality_score": 0.758
+    }
+  ],
+  "active_trials": [
     {
       "id": "blue-owl-capital",
       "name": "Blue Owl Capital",
@@ -7199,6 +7217,24 @@
         "2026-07-31": {
           "accessible": true,
           "article_count": 9,
+          "date_count": 12,
+          "article_urls": [
+            "https://www.blueowl.com/insights/2026-mid-year-focus",
+            "https://www.blueowl.com/insights/rethinking-exits-private-equity-why-continuation-vehicles-are-redefining-playbook",
+            "https://www.blueowl.com/insights/blue-owl-executive-perspectives-todays-software-landscape-vista-equity-partners",
+            "https://www.blueowl.com/insights/built-compute-inside-data-center",
+            "https://www.blueowl.com/insights/focus-our-lens-private-markets",
+            "https://www.blueowl.com/insights/investing-ongoing-revolution-life-sciences",
+            "https://www.blueowl.com/insights/growth-and-durability-software-lending",
+            "https://www.blueowl.com/insights/investing-real-assets-volatile-market",
+            "https://www.blueowl.com/insights/private-markets-and-value-stability"
+          ],
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-08-01": {
+          "accessible": true,
+          "article_count": 13,
           "date_count": 12,
           "article_urls": [
             "https://www.blueowl.com/insights/2026-mid-year-focus",
@@ -7287,9 +7323,114 @@
           "js_only_checked": 0,
           "day": 2,
           "date": "2026-07-31"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.blueowl.com/insights/growth-and-durability-software-lending",
+              "relevance": 0.9,
+              "depth": 0.6,
+              "extractable": 0.7,
+              "overall": 0.74,
+              "notes": "Investment thesis on B2B software lending; focuses on mission-critical SaaS companies with recurring revenue and high retention as attractive lending opportunities."
+            },
+            {
+              "url": "https://www.blueowl.com/insights/investing-real-assets-volatile-market",
+              "relevance": 0.85,
+              "depth": 0.6,
+              "extractable": 0.6,
+              "overall": 0.7,
+              "notes": "Real assets strategy commentary on tariff-driven volatility; discusses CRE opportunities and reshoring tailwinds but article appears truncated mid-sentence."
+            },
+            {
+              "url": "https://www.blueowl.com/insights/private-markets-and-value-stability",
+              "relevance": 0.9,
+              "depth": 0.5,
+              "extractable": 0.6,
+              "overall": 0.68,
+              "notes": "Portfolio strategy piece on private markets as volatility hedge; argues for diversification benefits of private equity, real estate, and direct lending with historical performance data, but lacks depth and is truncated."
+            }
+          ],
+          "avg_score": 0.707,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 3,
+          "date": "2026-08-01"
+        }
+      ]
+    },
+    {
+      "id": "loomis-sayles",
+      "name": "Loomis Sayles",
+      "research_url": "https://www.loomissayles.com/insights/",
+      "homepage_url": "https://www.loomissayles.com",
+      "fit_score": 0.76,
+      "quality": "MEDIUM",
+      "topics": "fixed income, credit, macro, municipal bonds",
+      "start_date": "2026-08-01",
+      "end_date": null,
+      "daily_checks": {
+        "2026-08-01": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 15,
+          "article_urls": [
+            "https://www.loomissayles.com/insights/fixed-income-unscripted-challenging-consensus-thinking/",
+            "https://www.loomissayles.com/insights/meet-the-municipal-bond-investment-research-teams/",
+            "https://www.loomissayles.com/insights/driven-to-give-back-with-community-investments/",
+            "https://www.loomissayles.com/insights/municipal-marketplace-can-single-state-portfolios-be-advantageous/",
+            "https://www.loomissayles.com/insights/global-fixed-income-outlook-strategy/",
+            "https://www.loomissayles.com/insights/global-fixed-income-team-views/",
+            "https://www.loomissayles.com/insights/the-next-generation-of-core-fixed-income-for-insurers/",
+            "https://www.loomissayles.com/insights/extra-credit-june-2026/",
+            "https://www.loomissayles.com/insights/emerging-markets-debt-blended-total-return-monthly-strategy-update/"
+          ],
+          "error": null,
+          "fetcher_used": false
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.loomissayles.com/insights/fixed-income-unscripted-challenging-consensus-thinking/",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.75,
+              "overall": 0.87,
+              "notes": "Fixed income investment research with multi-portfolio manager perspectives on inflation, geopolitical risks, consumer resilience, and Fed policy; substantive but text appears truncated mid-sentence."
+            },
+            {
+              "url": "https://www.loomissayles.com/insights/meet-the-municipal-bond-investment-research-teams/",
+              "relevance": 0.55,
+              "depth": 0.25,
+              "extractable": 0.4,
+              "overall": 0.4,
+              "notes": "Video introduction to municipal bond team; primarily marketing/HR content with minimal investment analysis; mostly boilerplate disclaimers and team bios."
+            },
+            {
+              "url": "https://www.loomissayles.com/insights/driven-to-give-back-with-community-investments/",
+              "relevance": 0.1,
+              "depth": 0.05,
+              "extractable": 0.3,
+              "overall": 0.12,
+              "notes": "Corporate social responsibility/volunteering video; not investment research; purely HR/marketing content with no analytical value."
+            }
+          ],
+          "avg_score": 0.463,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 1,
+          "date": "2026-08-01"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-07-30"
+  "last_summary_sent_date": "2026-08-01"
 }
