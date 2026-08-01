@@ -1529,6 +1529,39 @@ def _fetch_content_franklin_templeton(article: dict) -> Optional[tuple[Path, str
     return (content_path, "ok")
 
 
+def _fetch_content_partners_group(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Partners Group Perspectives article content via requests (SSR).
+
+    Article pages are plain server-rendered HTML (same as the listing), so no
+    browser is needed. There is no `<article>` element; the body lives in
+    `div.rte` blocks. `.rte p` rather than `main p` matters: `main` also carries
+    the boilerplate legal/risk disclaimer that trails every piece (~5K chars of
+    "principal loss is possible; leverage risk; ..."), which would dilute the LLM
+    summaries. A comma-joined fallback would not help — `_normalize_html` unions
+    both selectors and would pull the disclaimer back in — so we rely on its
+    generic article/main fallback if a page ever skips the rich-text component.
+    Verified live 2026-08-01: 13.7K chars from the 2026 Mid-Year Outlook.
+    """
+    url = article["url"]
+    log.info("  Partners Group: fetching article page %s", url)
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Partners Group: fetch failed: %s", e)
+        return None
+
+    text = _normalize_html(resp.text, ".rte p")
+    if not _check_min_content_length(text):
+        log.warning("  Partners Group: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Partners Group: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -1565,6 +1598,7 @@ CONTENT_FETCHERS = {
     "principal-am": _fetch_content_principal_am,
     "cohen-steers": _fetch_content_cohen_steers,
     "franklin-templeton": _fetch_content_franklin_templeton,
+    "partners-group": _fetch_content_partners_group,
 }
 
 

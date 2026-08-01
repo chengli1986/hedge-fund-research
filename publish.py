@@ -59,6 +59,7 @@ BADGE_COLORS: dict[str, str] = {
     "cohen-steers": "#8d4004",              # Cohen & Steers deep burnt-sienna (real-assets earth tone; much darker than #c45000 ARK orange and #cd853f D.E.Shaw bronze, redder than #7c2d12 Verdad terracotta; WCAG AA ~7.4:1 on white)
     "principal-am": "#00568c",              # Principal deep azure (brand-adjacent corporate blue; sits between #003a70 PIMCO navy — darker — and #0066cc Wellington blue — brighter/lighter — RGB dist ≥40 to both and to #4a6fa5 GSAM steel blue; WCAG AA ~6.9:1 on white)
     "franklin-templeton": "#004d40",        # Franklin Templeton deep pine-teal (the corporate-blue cluster is full, so the brand navy is unusable; this is the darkest, greenest point of the teal family — RGB dist ≥61 to #00607a T.Rowe teal-navy, #006d75 Janus and #00838f MetLife cyan, and 51.6 to its nearest neighbour overall, the highest min-distance of any candidate tested; WCAG AAA 9.8:1 on white)
+    "partners-group": "#7b3f00",            # Partners Group dark chocolate-brown (the warm-earth band is the only one with room left: darker and far less red than #8d4004 Cohen & Steers burnt-sienna and #7c2d12 Verdad terracotta, warmer/redder than #5d4037 Acadian umber — min RGB dist 36 to any existing color; WCAG AAA 8.9:1 on white)
 }
 
 INITIAL_VISIBLE = 20
@@ -316,6 +317,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "全球最大的独立资产管理公司之一，管理规模约 1.66 万亿美元。1947 年由 Rupert H. Johnson Sr. 创立于纽约，总部现设加州圣马特奥。采用多精品店模式运营：Templeton 主打新兴市场价值股，Western Asset 与 Brandywine 负责固定收益，Clarion 做地产，另有 Legg Mason、Putnam 等品牌，覆盖股票、债券、新兴市场与多资产策略。",
         "notable_en": "Home of Sir John Templeton, the pioneer of global contrarian value investing whose Templeton Growth Fund set the template for cross-border equity investing. Scaled into a top-tier multi-boutique platform through the Legg Mason (2020) and Putnam (2024) acquisitions.",
         "notable_zh": "旗下 Templeton 系出自全球逆向价值投资先驱约翰·邓普顿爵士，其 Templeton Growth Fund 奠定了跨国股票投资的范式。通过收购 Legg Mason（2020）与 Putnam（2024）扩张为顶级多精品店平台。",
+    },
+    "partners-group": {
+        "founded": "1996", "aum": "~$186B", "hq": "Baar-Zug, Switzerland",
+        "type_en": "Private Markets Asset Manager", "type_zh": "私募市场资产管理",
+        "desc_zh": "瑞士上市的私募市场专家，1996 年创立于楚格州 Baar，管理规模约 $186B。以「转型式投资」为核心：在私募股权、私募信贷、基础设施与房地产中取得控股权，靠运营改造而非杠杆创造回报，并按主题（去碳化、供应链重构等）自上而下选赛道。区别于同业之处在于很早就把常青半流动基金做成主力产品线，把私募市场开放给财富管理渠道。",
+        "notable_en": "A pioneer of evergreen semi-liquid private-markets vehicles, which now sit alongside traditional closed-ended programs and mandates as one of its three AuM pillars. Targets USD 450 billion of AuM by 2033.",
+        "notable_zh": "常青型半流动私募基金的开创者之一，该产品线已与传统封闭式基金、专户并列为其三大 AuM 支柱。公司公开目标是 2033 年把管理规模做到 $450B。",
     },
 }
 

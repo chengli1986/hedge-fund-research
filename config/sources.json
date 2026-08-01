@@ -669,6 +669,24 @@
       "notable_authors": [],
       "expected_hostname": "franklintempletonglobal.com",
       "max_articles": 10
+    },
+    {
+      "id": "partners-group",
+      "strategy_tags": [
+        "private_equity",
+        "private_credit",
+        "real_assets",
+        "macro"
+      ],
+      "name": "Partners Group",
+      "short_name": "Partners Group",
+      "url": "https://www.partnersgroup.com/en/news-and-views/perspective",
+      "method": "ssr",
+      "frequency": "monthly",
+      "description": "Swiss-listed private-markets specialist (~$186B AUM) founded 1996 in Baar-Zug. Runs a thematic, transformational-investing model — buying control positions in private equity, private credit, infrastructure and real estate and driving value through operational change — and pioneered evergreen semi-liquid vehicles that opened private markets to wealth clients.",
+      "notable_authors": [],
+      "expected_hostname": "partnersgroup.com",
+      "max_articles": 10
     }
   ],
   "settings": {
