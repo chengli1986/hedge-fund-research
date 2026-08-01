@@ -519,7 +519,7 @@
       "method": "ssr",
       "frequency": "monthly",
       "content_probe_top_n": 6,
-      "description": "Asia- and emerging-markets equity specialist (~$6.6B AUM), founded 1991 and privately owned, with offices in San Francisco and Hong Kong. Active, bottom-up fundamental investing across Asian and EM equities — China, India, Japan and broader emerging markets — spanning all-cap growth, dividend, small-cap and innovation strategies plus a more recent active-ETF lineup.",
+      "description": "Asia- and emerging-markets equity specialist (~$7.6B AUM), founded 1991 and privately owned, with offices in San Francisco and Hong Kong. Active, bottom-up fundamental investing across Asian and EM equities — China, India, Japan and broader emerging markets — spanning all-cap growth, dividend, small-cap and innovation strategies plus a more recent active-ETF lineup.",
       "notable_authors": [],
       "expected_hostname": "matthewsasia.com",
       "max_articles": 10
@@ -556,7 +556,7 @@
       "url": "https://www.acadian-asset.com/investment-insights",
       "method": "playwright",
       "frequency": "monthly",
-      "description": "Quantitative, systematic investment manager (~$178B AUM), founded 1986 and headquartered in Boston. Pioneered factor-based, bottom-up equity investing — systematically scoring thousands of stocks worldwide on valuation, quality, growth and sentiment signals — across global, international, emerging- and frontier-markets mandates, and extends the same model-driven process to systematic credit and multi-asset strategies.",
+      "description": "Quantitative, systematic investment manager (~$233B AUM), founded 1986 and headquartered in Boston. Pioneered factor-based, bottom-up equity investing — systematically scoring thousands of stocks worldwide on valuation, quality, growth and sentiment signals — across global, international, emerging- and frontier-markets mandates, and extends the same model-driven process to systematic credit and multi-asset strategies.",
       "notable_authors": [],
       "expected_hostname": "acadian-asset.com",
       "max_articles": 10

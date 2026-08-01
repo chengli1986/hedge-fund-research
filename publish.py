@@ -124,7 +124,7 @@ _FUND_PROFILES: dict[str, dict] = {
     "wellington": {
         "founded": "1928", "aum": "~$1.3T", "hq": "Boston, MA",
         "type_en": "Private Partnership", "type_zh": "私营合伙制",
-        "desc_zh": "全球历史最悠久、规模最大的私营投资管理公司之一。为 60+ 国 2,200+ 个机构客户管理资产。非上市合伙制架构，无外部股东压力。以深度基本面研究文化著称，分析师平均任期超 10 年。",
+        "desc_zh": "全球历史最悠久、规模最大的私营投资管理公司之一。为 60+ 国 2,200+ 个机构客户管理资产。非上市合伙制架构，无外部股东压力。以深度基本面研究文化著称，分析师平均任期超 10 年。2026 年 6 月宣布收购 The Hartford 旗下 Hartford Funds（Wellington 此前已为其约 83% 的资产担任投资顾问），交易净现值约 19 亿美元，预计 2027 年一季度交割后并入 Wellington 品牌。",
         "notable_en": "Advisor to Vanguard Wellington Fund (1929, oldest US balanced fund); analysts average 10+ year tenure; serves Harvard endowment and major sovereign wealth funds.",
         "notable_zh": "美国最古老平衡基金 Vanguard Wellington Fund（1929 年）的投资顾问；分析师平均任期逾 10 年；服务哈佛捐赠基金及多家主权财富基金。",
     },
@@ -143,7 +143,7 @@ _FUND_PROFILES: dict[str, dict] = {
         "notable_zh": "创始人被誉为「成长股投资之父」；连续 30+ 年无年度净亏损（截至 2020 年）；目标日期基金系列规模全球前三。",
     },
     "pimco": {
-        "founded": "1971", "aum": "~$2T", "hq": "Newport Beach, CA",
+        "founded": "1971", "aum": "~$2.33T", "hq": "Newport Beach, CA",
         "type_en": "Fixed-Income Manager", "type_zh": "固收管理人 (Allianz 子公司)",
         "desc_zh": "全球最大固定收益管理人，1971 年由 Bill Gross 等人于 Pacific Mutual Life（1997 年更名 Pacific Life）子公司创立。Total Return Fund 曾长期为全球最大共同基金。Mohamed El-Erian 提出的「新常态」框架影响深远。2000 年被 Allianz 收购后保持独立投资团队，年度「Secular Outlook」是机构固收圈必读。",
         "notable_en": "Total Return Fund was world's largest mutual fund 2008–14; Bill Gross dubbed 'the bond king'; 'new normal' framework reshaped post-2008 macro thinking.",
@@ -215,9 +215,9 @@ _FUND_PROFILES: dict[str, dict] = {
     "research-affiliates": {
         "founded": "2002", "aum": "~$188B", "hq": "Newport Beach, CA",
         "type_en": "Quantitative Research / Index Licensor", "type_zh": "量化研究 / 指数授权机构",
-        "desc_zh": "Newport Beach 量化投资研究机构，2002 年由 Rob Arnott 创立。开创 RAFI 基本面指数（Fundamental Indexation）——按销售/现金流/账面/分红等经济体量加权，作为市值加权基准的替代方案。本身不直接管钱，授权 Smart Beta、因子投资、Capital Market Assumptions（CMA）等策略至约 1590 亿美元资产规模。Insights 系列以学术风格的资产配置与长期回报预期分析见长。",
-        "notable_en": "Founded by Rob Arnott (2002); pioneered fundamental indexation (RAFI) as alternative to cap-weighted benchmarks; widely-cited Capital Market Assumptions and smart-beta research; licensed strategies on ~$159B of assets.",
-        "notable_zh": "Rob Arnott 2002 年创立；首创基本面指数（RAFI）作为市值加权基准的替代方案；Capital Market Assumptions 与 Smart Beta 研究为机构广泛引用；授权策略覆盖约 1590 亿美元资产规模。",
+        "desc_zh": "Newport Beach 量化投资研究机构，2002 年由 Rob Arnott 创立。开创 RAFI 基本面指数（Fundamental Indexation）——按销售/现金流/账面/分红等经济体量加权，作为市值加权基准的替代方案。本身不直接管钱，授权 Smart Beta、因子投资、Capital Market Assumptions（CMA）等策略至约 1880 亿美元资产规模。Insights 系列以学术风格的资产配置与长期回报预期分析见长。",
+        "notable_en": "Founded by Rob Arnott (2002); pioneered fundamental indexation (RAFI) as alternative to cap-weighted benchmarks; widely-cited Capital Market Assumptions and smart-beta research; licensed strategies on ~$188B of assets.",
+        "notable_zh": "Rob Arnott 2002 年创立；首创基本面指数（RAFI）作为市值加权基准的替代方案；Capital Market Assumptions 与 Smart Beta 研究为机构广泛引用；授权策略覆盖约 1880 亿美元资产规模。",
     },
     "gsam": {
         "founded": "1988", "aum": "~$4.0T", "hq": "New York, USA",
@@ -255,9 +255,9 @@ _FUND_PROFILES: dict[str, dict] = {
         "notable_zh": "美国中端市场直接借贷开创者；旗下 Ares Capital Corporation（NASDAQ: ARCC）是规模最大的上市 BDC。先后并购 Landmark Partners（2021）、AMP Capital 基础设施业务（2022）与 GLP Capital Partners 国际平台（2025），大幅扩展实物资产规模。",
     },
     "matthews-asia": {
-        "founded": "1991", "aum": "~$6.6B", "hq": "San Francisco, CA",
+        "founded": "1991", "aum": "~$7.6B", "hq": "San Francisco, CA",
         "type_en": "Asia/EM Equity Specialist", "type_zh": "亚洲/新兴市场股票专家",
-        "desc_zh": "专注亚洲与新兴市场股票的资产管理公司，1991 年创立、私人持股，办公室设于旧金山与香港，管理规模约 66 亿美元。坚持主动、自下而上的基本面投资，覆盖中国、印度、日本及更广泛的新兴市场，产品线涵盖全市值成长、股息、小盘与创新主题，并新增主动型 ETF。",
+        "desc_zh": "专注亚洲与新兴市场股票的资产管理公司，1991 年创立、私人持股，办公室设于旧金山与香港，管理规模约 76 亿美元。坚持主动、自下而上的基本面投资，覆盖中国、印度、日本及更广泛的新兴市场，产品线涵盖全市值成长、股息、小盘与创新主题，并新增主动型 ETF。",
         "notable_en": "One of the longest-established US-based Asia and emerging-markets equity specialists (privately owned since 1991); expanded from mutual funds into active ETFs in 2022, with CIO Sean Taylor leading a San Francisco- and Hong Kong-based investment team.",
         "notable_zh": "美国历史最悠久的专注亚洲及新兴市场股票的投资机构之一（1991 年成立、私人持股）；2022 年从共同基金扩展至主动型 ETF，由首席投资官 Sean Taylor 领导旧金山与香港两地的投研团队。",
     },
@@ -269,9 +269,9 @@ _FUND_PROFILES: dict[str, dict] = {
         "notable_zh": "American Funds 的母公司；首创「Capital System」多经理人结构——一只基金由多位经理人各自管理独立份额，在巨大规模下追求稳定的长期主动回报。",
     },
     "acadian-asset": {
-        "founded": "1986", "aum": "~$178B", "hq": "Boston, MA",
+        "founded": "1986", "aum": "~$233B", "hq": "Boston, MA",
         "type_en": "Quant Asset Manager", "type_zh": "量化资产管理公司",
-        "desc_zh": "全球领先的量化、系统化投资管理公司（管理规模约 ~$178B），1986 年创立，总部位于波士顿。以因子驱动的自下而上选股著称：用模型对全球数千只股票按估值、质量、成长与市场情绪等信号系统化打分，覆盖全球、国际、新兴及前沿市场股票，并将同一套量化流程延伸至系统化信用与多资产策略。",
+        "desc_zh": "全球领先的量化、系统化投资管理公司（管理规模约 ~$233B），1986 年创立，总部位于波士顿。以因子驱动的自下而上选股著称：用模型对全球数千只股票按估值、质量、成长与市场情绪等信号系统化打分，覆盖全球、国际、新兴及前沿市场股票，并将同一套量化流程延伸至系统化信用与多资产策略。",
         "notable_en": "One of the oldest and largest systematic equity managers; its factor-based process spans global, international, emerging- and frontier-market equities and has been extended to systematic fixed income. Publicly traded on the NYSE as AAMI (formerly BrightSphere Investment Group).",
         "notable_zh": "业界历史最悠久、规模最大的系统化股票管理人之一；因子化流程覆盖全球、国际、新兴及前沿市场股票，并已延伸至系统化固定收益。以 NYSE 代码 AAMI 上市（前身为 BrightSphere Investment Group）。",
     },
