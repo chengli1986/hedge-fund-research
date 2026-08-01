@@ -2870,7 +2870,11 @@
     "fit_score": 0.85,
     "last_validated_at": "2026-07-25T09:00:16.738503+08:00",
     "synthesis_priority": true,
-    "synthesis_priority_set_at": "2026-08-01T09:02:36.013568+08:00"
+    "synthesis_priority_set_at": "2026-08-01T09:02:36.013568+08:00",
+    "synthesis_attempted_at": "2026-08-01T01:05:46.233161+00:00",
+    "synthesis_outcome": "success",
+    "promoted_at": "2026-08-01T01:05:46.233161+00:00",
+    "promoted_reason": "fetcher_synthesis_success (trial-PASS shortcut)"
   },
   {
     "id": "eaton-vance",
@@ -3066,7 +3070,7 @@
     "name": "Resonanz Capital",
     "homepage_url": "https://resonanzcapital.com",
     "source": "manual",
-    "status": "inaccessible",
+    "status": "visitable",
     "strategy_tags": [
       "quant",
       "private_credit",
@@ -3117,7 +3121,7 @@
         "path": "insights/crowding-isnt-one-trade.-march-proved-it"
       }
     ],
-    "status_since": "2026-08-01T09:02:34.899916+08:00",
+    "status_since": "2026-08-01T09:05:46.233196+08:00",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-07-31T09:03:45.309839+08:00",
     "is_publicly_accessible": false,
@@ -3140,6 +3144,8 @@
     "quality": "HIGH",
     "quality_score": 0.78,
     "topics": "quant, private credit, macro, portfolio construction",
-    "notes": "RECOMMEND: Quant DD framework + credit/repo research"
+    "notes": "RECOMMEND: Quant DD framework + credit/repo research",
+    "synthesis_attempted_at": "2026-08-01T01:05:46.233161+00:00",
+    "synthesis_outcome": "success"
   }
 ]

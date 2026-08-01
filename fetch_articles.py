@@ -2542,6 +2542,134 @@ def fetch_principal_am(source: dict) -> list[dict]:
     return articles[:max_articles]
 
 
+def fetch_partners_group(source: dict) -> list[dict]:
+    """Fetch articles from Partners Group Perspectives (SSR).
+
+    Card: div.per-card containing
+            span.tag-lg-text  ("16.07.2026" — DD.MM.YYYY, plus hidden topic tags),
+            h2.per-card__title (title),
+            div.per-card__cta-wrapper > a (href).
+
+    Two kinds of cards share the same markup: article pages under
+    ``/news-and-views/perspective/<slug>`` and PDF downloads pointing at
+    ``/pdf-viewer.aspx``. Only the former have extractable body text, so we
+    filter on the path. A couple of cards also link back to section indexes
+    (e.g. ``/news-and-views/videos``) — the same path filter drops those.
+
+    ``strptime("%d.%m.%Y")`` rather than ``parse_date()``: the dotted format
+    isn't in parse_date's list, and normalising to slashes would let the
+    ``%m/%d/%Y`` entry (tried first) mis-read "08.06.2026" as Aug 6.
+
+    The listing paginates via ``?page=N`` and each page carries a couple of
+    PDF-only cards, so we walk up to 3 pages to reach max_articles.
+    """
+    expected_host = source.get("expected_hostname", "partnersgroup.com")
+    base = "https://www.partnersgroup.com"
+    max_articles = source.get("max_articles", 10)
+
+    seen_urls: set[str] = set()
+    articles = []
+    for page in (1, 2, 3):
+        page_url = source["url"] if page == 1 else f"{source['url']}?page={page}"
+        resp = requests.get(page_url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, "html.parser")
+
+        for card in soup.select("div.per-card"):
+            link = card.select_one("div.per-card__cta-wrapper a[href]")
+            if not link:
+                continue
+            href = link.get("href", "")
+            if "/news-and-views/perspective/" not in href:
+                continue
+            url = urljoin(base, href)
+            if not _validate_hostname(url, expected_host):
+                continue
+            if url in seen_urls:
+                continue
+
+            title_el = card.select_one("h2.per-card__title")
+            title = title_el.get_text(strip=True) if title_el else ""
+            if not title:
+                continue
+            seen_urls.add(url)
+
+            date_el = card.select_one("span.tag-lg-text")
+            date_raw = ""
+            parsed_date = None
+            if date_el:
+                match = re.search(
+                    r"\b(\d{2}\.\d{2}\.\d{4})\b", date_el.get_text(" ", strip=True)
+                )
+                if match:
+                    date_raw = match.group(1)
+                    try:
+                        parsed_date = datetime.strptime(
+                            date_raw, "%d.%m.%Y"
+                        ).strftime("%Y-%m-%d")
+                    except ValueError:
+                        parsed_date = None
+
+            articles.append({
+                "title": title,
+                "url": url,
+                "date": parsed_date,
+                "date_raw": date_raw,
+            })
+
+        if len(articles) >= max_articles:
+            break
+
+    articles.sort(key=lambda a: a["date"] or "", reverse=True)
+    return articles[:max_articles]
+
+
+def fetch_resonanz_capital(source: dict) -> list[dict]:
+    """Fetch articles from Resonanz Capital Insights via RSS (HubSpot blog).
+
+    The HTML listing (article.__blogArticle cards) carries titles and links but
+    no publication date — only a "5 min read" marker — so we drive off the
+    HubSpot feed at /insights/rss.xml instead, which has RFC 2822 pubDate.
+    """
+    rss_url = source.get("rss_url", "https://resonanzcapital.com/insights/rss.xml")
+    expected_host = source.get("expected_hostname", "resonanzcapital.com")
+
+    resp = requests.get(rss_url, headers=HEADERS, timeout=30)
+    resp.raise_for_status()
+
+    root = ET.fromstring(resp.text.lstrip("﻿"))
+    articles = []
+    for item in root.findall(".//item"):
+        title_el = item.find("title")
+        link_el = item.find("link")
+        pub_el = item.find("pubDate")
+
+        title = (title_el.text or "").strip() if title_el is not None else ""
+        link = (link_el.text or "").strip() if link_el is not None else ""
+        if not title or not link:
+            continue
+        if not _validate_hostname(link, expected_host):
+            continue
+
+        date_raw = (pub_el.text or "").strip() if pub_el is not None else ""
+        parsed_date = None
+        if date_raw:
+            try:
+                parsed_date = parsedate_to_datetime(date_raw).strftime("%Y-%m-%d")
+            except (ValueError, TypeError):
+                parsed_date = parse_date(date_raw)
+
+        articles.append({
+            "title": title,
+            "url": link,
+            "date": parsed_date,
+            "date_raw": date_raw,
+        })
+
+    articles.sort(key=lambda a: a["date"] or "", reverse=True)
+    return articles[:source.get("max_articles", 10)]
+
+
 # FETCHER_SYNTHESIS_INSERTION_POINT — auto-generated fetchers inserted above this line
 
 
@@ -2858,6 +2986,8 @@ FETCHERS = {
     "aberdeen": fetch_aberdeen,
     "research-affiliates": fetch_researchaffiliates,
     "pimco": fetch_pimco,
+    "partners-group": fetch_partners_group,
+    "resonanz-capital": fetch_resonanz_capital,
     "cohen-steers": fetch_cohen_steers,
     "principal-am": fetch_principal_am,
     "lazard-am": fetch_lazard_am,
