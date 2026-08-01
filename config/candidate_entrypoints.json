@@ -1272,7 +1272,7 @@
       "rejected_pages": []
     },
     "loomis-sayles": {
-      "last_discovered_at": "2026-07-31T09:00:15.754229+08:00",
+      "last_discovered_at": "2026-08-01T09:00:15.612274+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -1323,6 +1323,40 @@
           "label": "bad"
         }
       ]
+    },
+    "resonanz-capital": {
+      "last_discovered_at": "2026-08-01T09:00:17.073355+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://resonanzcapital.com/insights?hsLang=en",
+          "final_score": 1.0,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 1.0,
+          "gate_penalty": 0.0,
+          "active": true
+        },
+        {
+          "url": "https://resonanzcapital.com/insights",
+          "final_score": 1.0,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 1.0,
+          "gate_penalty": 0.0,
+          "active": false
+        },
+        {
+          "url": "https://resonanzcapital.com/insights/swap-spread-arbitrage-and-the-quiet-reason-it-keeps-coming-back",
+          "final_score": 1.0,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 1.0,
+          "gate_penalty": 0.0,
+          "active": false
+        }
+      ],
+      "rejected_pages": []
     }
   }
 }
