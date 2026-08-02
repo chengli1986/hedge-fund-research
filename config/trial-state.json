@@ -7249,6 +7249,24 @@
           ],
           "error": null,
           "fetcher_used": false
+        },
+        "2026-08-02": {
+          "accessible": true,
+          "article_count": 13,
+          "date_count": 12,
+          "article_urls": [
+            "https://www.blueowl.com/insights/2026-mid-year-focus",
+            "https://www.blueowl.com/insights/rethinking-exits-private-equity-why-continuation-vehicles-are-redefining-playbook",
+            "https://www.blueowl.com/insights/blue-owl-executive-perspectives-todays-software-landscape-vista-equity-partners",
+            "https://www.blueowl.com/insights/built-compute-inside-data-center",
+            "https://www.blueowl.com/index%2ephp/insights/focus-our-lens-private-markets",
+            "https://www.blueowl.com/index%2ephp/insights/investing-ongoing-revolution-life-sciences",
+            "https://www.blueowl.com/index%2ephp/insights/growth-and-durability-software-lending",
+            "https://www.blueowl.com/index%2ephp/insights/investing-real-assets-volatile-market",
+            "https://www.blueowl.com/index%2ephp/insights/private-markets-and-value-stability"
+          ],
+          "error": null,
+          "fetcher_used": false
         }
       },
       "auto_decided": false,
@@ -7358,6 +7376,41 @@
           "js_only_checked": 0,
           "day": 3,
           "date": "2026-08-01"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.blueowl.com/index%2ephp/insights/focus-our-lens-private-markets",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.6,
+              "overall": 0.76,
+              "notes": "Private credit market analysis covering direct lending durability, yield premiums, and credit quality in 2026; substantive but truncated mid-sentence"
+            },
+            {
+              "url": "https://www.blueowl.com/index%2ephp/insights/investing-ongoing-revolution-life-sciences",
+              "relevance": 0.9,
+              "depth": 0.75,
+              "extractable": 0.6,
+              "overall": 0.78,
+              "notes": "Life sciences investing Q&A discussing capital scarcity, IPO windows, tariffs, and pricing policy impacts; good insight but truncated at end"
+            },
+            {
+              "url": "https://www.blueowl.com/index%2ephp/insights/growth-and-durability-software-lending",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.6,
+              "overall": 0.82,
+              "notes": "Software lending strategy focused on mission-critical B2B applications; discusses market sizing, portfolio performance, and risk-adjusted returns; truncated mid-sentence"
+            }
+          ],
+          "avg_score": 0.787,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 4,
+          "date": "2026-08-02"
         }
       ]
     },
@@ -7373,6 +7426,24 @@
       "end_date": null,
       "daily_checks": {
         "2026-08-01": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 15,
+          "article_urls": [
+            "https://www.loomissayles.com/insights/fixed-income-unscripted-challenging-consensus-thinking/",
+            "https://www.loomissayles.com/insights/meet-the-municipal-bond-investment-research-teams/",
+            "https://www.loomissayles.com/insights/driven-to-give-back-with-community-investments/",
+            "https://www.loomissayles.com/insights/municipal-marketplace-can-single-state-portfolios-be-advantageous/",
+            "https://www.loomissayles.com/insights/global-fixed-income-outlook-strategy/",
+            "https://www.loomissayles.com/insights/global-fixed-income-team-views/",
+            "https://www.loomissayles.com/insights/the-next-generation-of-core-fixed-income-for-insurers/",
+            "https://www.loomissayles.com/insights/extra-credit-june-2026/",
+            "https://www.loomissayles.com/insights/emerging-markets-debt-blended-total-return-monthly-strategy-update/"
+          ],
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-08-02": {
           "accessible": true,
           "article_count": 20,
           "date_count": 15,
@@ -7428,9 +7499,115 @@
           "js_only_checked": 0,
           "day": 1,
           "date": "2026-08-01"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.loomissayles.com/insights/municipal-marketplace-can-single-state-portfolios-be-advantageous/",
+              "relevance": 0.9,
+              "depth": 0.75,
+              "extractable": 0.7,
+              "overall": 0.8,
+              "notes": "Municipal bond portfolio strategy analysis comparing single-state vs. diversified approaches with tax and performance considerations"
+            },
+            {
+              "url": "https://www.loomissayles.com/insights/global-fixed-income-outlook-strategy/",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.65,
+              "overall": 0.83,
+              "notes": "Global fixed income outlook with USD/JPY currency analysis, AI equity flows, and JGB valuation strategy"
+            },
+            {
+              "url": "https://www.loomissayles.com/insights/global-fixed-income-team-views/",
+              "relevance": 0.95,
+              "depth": 0.7,
+              "extractable": 0.6,
+              "overall": 0.78,
+              "notes": "Extended global fixed income team views covering USD strength, yen positioning, and corporate credit valuations; appears truncated"
+            }
+          ],
+          "avg_score": 0.803,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 2,
+          "date": "2026-08-02"
+        }
+      ]
+    },
+    {
+      "id": "resonanz-capital",
+      "name": "Resonanz Capital",
+      "research_url": "https://resonanzcapital.com/insights?hsLang=en",
+      "homepage_url": "https://resonanzcapital.com",
+      "fit_score": 1.0,
+      "quality": "HIGH",
+      "topics": "quant, private credit, macro, portfolio construction",
+      "start_date": "2026-08-02",
+      "end_date": null,
+      "daily_checks": {
+        "2026-08-02": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://resonanzcapital.com/insights/swap-spread-arbitrage-and-the-quiet-reason-it-keeps-coming-back",
+            "https://resonanzcapital.com/insights/the-metric-every-pitch-deck-gets-backwards",
+            "https://resonanzcapital.com/insights/crowding-isnt-one-trade.-march-proved-it",
+            "https://resonanzcapital.com/insights/june-2026-qis-update-carry-paid-again.-convexity-still-didnt",
+            "https://resonanzcapital.com/insights/i-was-wrong-about-ai.-twice",
+            "https://resonanzcapital.com/insights/the-hidden-cost-of-static-qis-why-a-vast-toolbox-demands-active-hands",
+            "https://resonanzcapital.com/insights/the-ecb-is-asking-the-right-question-about-ucits-leverage.-but-looking-in-the-wrong-place",
+            "https://resonanzcapital.com/insights/qis-in-may-carry-works-hedges-dont-and-the-month-was-all-path-dependence",
+            "https://resonanzcapital.com/insights/the-momentum-signal-works.-the-momentum-trade-is-crowded",
+            "https://resonanzcapital.com/insights/prepayment-risk-strategies-an-allocators-field-guide-to-mortgage-optionality"
+          ],
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://resonanzcapital.com/insights/swap-spread-arbitrage-and-the-quiet-reason-it-keeps-coming-back",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.75,
+              "overall": 0.87,
+              "notes": "Deep analysis of swap spread arbitrage as regulatory arbitrage, distinguishing it from basis trades with Fed data on hedge fund Treasury positions and balance-sheet constraints."
+            },
+            {
+              "url": "https://resonanzcapital.com/insights/the-metric-every-pitch-deck-gets-backwards",
+              "relevance": 0.9,
+              "depth": 0.8,
+              "extractable": 0.7,
+              "overall": 0.82,
+              "notes": "Investment due diligence research on hedge fund capacity constraints, citing academic studies on alpha degradation with AUM growth and real examples of capacity closures."
+            },
+            {
+              "url": "https://resonanzcapital.com/insights/crowding-isnt-one-trade.-march-proved-it",
+              "relevance": 0.92,
+              "depth": 0.75,
+              "extractable": 0.65,
+              "overall": 0.798,
+              "notes": "Portfolio strategy analysis of systematic fund crowding dynamics across 18 months, examining five drawdown episodes with different triggers but common deleveraging mechanism."
+            }
+          ],
+          "avg_score": 0.829,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 1,
+          "date": "2026-08-02"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-08-01"
+  "last_summary_sent_date": "2026-08-02"
 }
