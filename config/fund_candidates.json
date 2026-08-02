@@ -106,7 +106,7 @@
       "article_signals": 1
     },
     "screening_reason": "Insufficient article index signals",
-    "last_deep_analyzed_at": "2026-07-21T17:15:00Z",
+    "last_deep_analyzed_at": "2026-08-02T01:05:00Z",
     "quality": "HIGH",
     "topics": "quant, portfolio management, equity, macro, credit, interest rates",
     "reject_reason": "no_public_research",
@@ -118,7 +118,7 @@
       "fixed_income"
     ],
     "source": "auto_discovered",
-    "quality_score": 0.92,
+    "quality_score": 0.9,
     "synthesis_attempted_at": "2026-05-17T08:30:42.494662+00:00",
     "synthesis_outcome": "success",
     "requires_playwright": true,
@@ -555,7 +555,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.8843,
-    "notes": "RECOMMEND: Multi-asset, deep macro analysis, free access",
+    "notes": "RECOMMEND: multi-asset macro; titles free, some gated",
     "research_links": [
       {
         "url": "https://www.wellington.com/en/insights",
@@ -634,7 +634,7 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-07-21T01:02:58Z",
+    "last_deep_analyzed_at": "2026-08-02T01:05:00Z",
     "quality": "HIGH",
     "topics": "macro, fixed income, equity, multi-asset, alternatives, emerging markets",
     "strategy_tags": [
@@ -644,7 +644,7 @@
       "multi_asset"
     ],
     "source": "manual",
-    "quality_score": 0.82,
+    "quality_score": 0.8,
     "status_since": "2026-04-19T09:01:46.368072+08:00"
   },
   {
@@ -1448,10 +1448,10 @@
       "multi_asset"
     ],
     "quality": "MEDIUM",
-    "quality_score": 0.58,
+    "quality_score": 0.55,
     "topics": "private credit, private equity, real assets, real estate, macro",
     "notes": "Mixed: some pieces are partner-product marketing, not indep",
-    "last_deep_analyzed_at": "2026-07-21T01:02:58Z",
+    "last_deep_analyzed_at": "2026-08-02T01:05:00Z",
     "research_url": "https://www.apollo.com/insights-news/insights",
     "official_domain": "www.apollo.com",
     "research_links": [
@@ -1567,9 +1567,9 @@
     ],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-04-20T09:01:24.288350+08:00",
-    "last_deep_analyzed_at": "2026-07-21T01:02:58Z",
+    "last_deep_analyzed_at": "2026-08-02T01:05:00Z",
     "quality": "MEDIUM",
-    "quality_score": 0.55,
+    "quality_score": 0.5,
     "topics": "infrastructure, real assets, private credit, energy, private equity",
     "notes": "Advocacy/marketing lean confirmed; infra/nuclear angle",
     "is_publicly_accessible": true,
@@ -3147,5 +3147,79 @@
     "notes": "RECOMMEND: Quant DD framework + credit/repo research",
     "synthesis_attempted_at": "2026-08-01T01:05:46.233161+00:00",
     "synthesis_outcome": "success"
+  },
+  {
+    "id": "baillie-gifford",
+    "name": "Baillie Gifford",
+    "homepage_url": "https://www.bailliegifford.com",
+    "source": "manual",
+    "status": "discovered",
+    "strategy_tags": [
+      "equity",
+      "venture_capital",
+      "emerging_markets"
+    ],
+    "research_url": "https://www.bailliegifford.com/en/usa/institutional-investor/insights/",
+    "official_domain": "www.bailliegifford.com",
+    "research_links": [
+      {
+        "url": "https://www.bailliegifford.com/en/usa/institutional-investor/insights/",
+        "label": "Insights",
+        "path": "en/usa/institutional-investor/insights"
+      },
+      {
+        "url": "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2025-q2-lets-talk-about-actual-investing-some-more-10055374/",
+        "label": "Read more",
+        "path": "en/usa/institutional-investor/insights/ic-article/2025-q2-lets-talk-about-actual-investing-some-more-10055374"
+      },
+      {
+        "url": "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-emerging-markets-quarterly-insights-10064670/",
+        "label": "Emerging Markets Q2 investor letter",
+        "path": "en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-emerging-markets-quarterly-insights-10064670"
+      },
+      {
+        "url": "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-charting-the-trends-beyond-ai-10064845/",
+        "label": "Charting the trends beyond AI",
+        "path": "en/usa/institutional-investor/insights/ic-article/2026-q3-charting-the-trends-beyond-ai-10064845"
+      },
+      {
+        "url": "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-global-alpha-quarterly-insights-10064662/",
+        "label": "Global Alpha Q2 investor letter",
+        "path": "en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-global-alpha-quarterly-insights-10064662"
+      },
+      {
+        "url": "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-international-growth-quarterly-insights-10064671/",
+        "label": "International Growth Q2 investor letter",
+        "path": "en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-international-growth-quarterly-insights-10064671"
+      },
+      {
+        "url": "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-international-alpha-quarterly-insights-10064117/",
+        "label": "International Alpha Q2 investor letter",
+        "path": "en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-international-alpha-quarterly-insights-10064117"
+      },
+      {
+        "url": "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-us-equity-growth-quarterly-insights-10064118/",
+        "label": "US Equity Growth Q2 investor letter",
+        "path": "en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-us-equity-growth-quarterly-insights-10064118"
+      },
+      {
+        "url": "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-global-alpha-insights-medpace-10064166/",
+        "label": "Medpace: easing the bottleneck in drug development",
+        "path": "en/usa/institutional-investor/insights/ic-article/2026-q3-global-alpha-insights-medpace-10064166"
+      },
+      {
+        "url": "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-international-viewpoints-energy-transition-10064154/",
+        "label": "International viewpoints: energy transition",
+        "path": "en/usa/institutional-investor/insights/ic-article/2026-q3-international-viewpoints-energy-transition-10064154"
+      },
+      {
+        "url": "https://www.bailliegifford.com/en/usa/professional-investor/insights/?format=Video&page=1&search-term=Q1+update",
+        "label": "Watch the Q1 strategy videos",
+        "path": "en/usa/professional-investor/insights"
+      }
+    ],
+    "status_since": "2026-08-02T09:02:45.013009+08:00",
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-08-02T09:02:45.012964+08:00"
   }
 ]
