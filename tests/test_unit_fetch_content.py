@@ -478,11 +478,16 @@ class TestCohenSteersPlaywrightFetcher:
 
 
 class TestMetLifeIMFetcher:
-    """MetLife IM article bodies are SSR inside div.richtext.richtext-wysiwyg.
+    """MetLife IM article bodies are SSR inside div.read-more-section.richtext.
 
     The same page also carries a long `terms-of-use-legalText` block (~11k chars
     of boilerplate on every article) — extracting it would swamp the summariser
     with identical legal text, so it must be stripped before the body is read.
+
+    2026-08-03: the site moved to www.metlife.com/investments/en-us/ behind a
+    disclaimer cookie gate, and the body container narrowed — a bare
+    `div.richtext` also matches the page's empty search widget ("Sorry, we
+    couldn't find any results matching"), which would otherwise lead the text.
     """
 
     BODY = "MIM sees a recovery scenario as inflation impulses persist. " * 12
@@ -494,28 +499,32 @@ class TestMetLifeIMFetcher:
     INLINE_DISCLOSURE = (
         "DisclosureThis material is intended solely for Institutional Investors. " * 15
     )
+    # The site-search widget renders empty on every article page, inside its own
+    # div.richtext. It sorts before the body in document order.
+    SEARCH_WIDGET = "Sorry, we couldn't find any results matching your search."
+
+    URL = ("https://www.metlife.com/investments/en-us/insights/"
+           "macro-strategy/summer-heat/")
 
     def _html(self) -> str:
         return (
             "<html><body>"
             "<nav><p>Insights</p></nav>"
-            f'<div class="richtext richtext-wysiwyg"><p>{self.BODY}</p>'
-            f"<p>{self.INLINE_DISCLOSURE}</p></div>"
+            f'<div class="richtext body-b1"><p>{self.SEARCH_WIDGET}</p></div>'
+            f'<div class="d-none read-more-section richtext body-b1">'
+            f"<p>{self.BODY}</p><p>{self.INLINE_DISCLOSURE}</p></div>"
             f'<div class="terms-of-use-legalText font-body-2"><p>{self.LEGAL}</p></div>'
             "</body></html>"
         )
 
-    def test_saves_body_without_legal_boilerplate(self, tmp_path, monkeypatch):
+    def test_saves_body_without_legal_boilerplate_or_search_widget(self, tmp_path, monkeypatch):
         import fetch_content as fc
         monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
         resp = MagicMock(status_code=200, text=self._html())
         resp.raise_for_status = lambda: None
         monkeypatch.setattr(fc.requests, "get", lambda *a, **k: resp)
 
-        out = fc._fetch_content_metlife_im({
-            "id": "metlife-im-001",
-            "url": "https://investments.metlife.com/insights/macro-strategy/summer-heat/",
-        })
+        out = fc._fetch_content_metlife_im({"id": "metlife-im-001", "url": self.URL})
 
         assert out is not None
         path, status = out
@@ -524,6 +533,26 @@ class TestMetLifeIMFetcher:
         assert "MIM sees a recovery scenario" in text
         assert "informational purposes" not in text
         assert "Institutional Investors" not in text
+        assert "couldn't find any results" not in text
+
+    def test_sends_disclaimer_cookies(self, tmp_path, monkeypatch):
+        """Regression guard for the 2026-08-03 outage — without both cookies
+        the article URL 302s to the disclaimer interstitial."""
+        import fetch_content as fc
+        monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
+        capture: dict = {}
+        resp = MagicMock(status_code=200, text=self._html())
+        resp.raise_for_status = lambda: None
+
+        def _get(url, **kwargs):
+            capture.update(kwargs)
+            return resp
+
+        monkeypatch.setattr(fc.requests, "get", _get)
+        fc._fetch_content_metlife_im({"id": "metlife-im-004", "url": self.URL})
+
+        assert capture["cookies"] == {"culture": "en-us",
+                                      "disclaimer": "en-us/Institution"}
 
     def test_none_on_http_error(self, tmp_path, monkeypatch):
         import fetch_content as fc
@@ -535,20 +564,42 @@ class TestMetLifeIMFetcher:
         monkeypatch.setattr(fc.requests, "get", boom)
         assert fc._fetch_content_metlife_im({
             "id": "metlife-im-002",
-            "url": "https://investments.metlife.com/insights/equity/x/",
+            "url": self.URL,
         }) is None
 
     def test_none_when_body_too_short(self, tmp_path, monkeypatch):
         import fetch_content as fc
         monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
-        html = '<html><body><div class="richtext richtext-wysiwyg"><p>Too short.</p></div></body></html>'
+        html = ('<html><body><div class="d-none read-more-section richtext">'
+                "<p>Too short.</p></div></body></html>")
         resp = MagicMock(status_code=200, text=html)
         resp.raise_for_status = lambda: None
         monkeypatch.setattr(fc.requests, "get", lambda *a, **k: resp)
 
         assert fc._fetch_content_metlife_im({
             "id": "metlife-im-003",
-            "url": "https://investments.metlife.com/insights/equity/y/",
+            "url": self.URL,
+        }) is None
+
+    def test_none_for_pdf_teaser_pages(self, tmp_path, monkeypatch):
+        """The monthly Pension Funding Status pages have no read-more section —
+        only a ~300-char blurb in <main> above a link to the real PDF. That is
+        over MIN_CONTENT_LENGTH, so falling back to `main p` would store a
+        teaser as if it were the research. It must return None instead.
+        """
+        import fetch_content as fc
+        monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
+        blurb = "U.S. corporate pension funded status declined in June 2026. " * 6
+        assert len(blurb) > fc.MIN_CONTENT_LENGTH
+        html = f"<html><body><main><p>{blurb}</p></main></body></html>"
+        resp = MagicMock(status_code=200, text=html)
+        resp.raise_for_status = lambda: None
+        monkeypatch.setattr(fc.requests, "get", lambda *a, **k: resp)
+
+        assert fc._fetch_content_metlife_im({
+            "id": "metlife-im-005",
+            "url": ("https://www.metlife.com/investments/en-us/insights/"
+                    "outlooks-and-market-updates/june-2026-pension-funding-status/"),
         }) is None
 
     def test_metlife_im_registered(self):

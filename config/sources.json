@@ -480,12 +480,12 @@
       ],
       "name": "MetLife Investment Management",
       "short_name": "MetLife IM",
-      "url": "https://investments.metlife.com/insights/",
+      "url": "https://www.metlife.com/investments/en-us/insights/",
       "method": "requests",
       "frequency": "weekly",
       "description": "Institutional asset manager (~$700B AUM as of 31 March 2026) and the investment arm of MetLife, headquartered in Whippany, New Jersey. Completed its acquisition of PineBridge Investments on 30 December 2025 (excluding PineBridge's China JV and private equity funds group); the PineBridge research teams now publish here, with bylines reading 'PineBridge Investments, a MetLife Investment Management company'. Coverage spans public fixed income, private credit, real estate, agricultural finance, infrastructure and multi-asset macro strategy; recurring series include Global Risks Update, Relative Value & Tactical Asset Allocation, and the quarterly Leveraged Finance Asset Allocation Insights inherited from PineBridge.",
       "notable_authors": [],
-      "expected_hostname": "investments.metlife.com",
+      "expected_hostname": "www.metlife.com",
       "max_articles": 10
     },
     {

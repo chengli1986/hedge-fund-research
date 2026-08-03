@@ -58,6 +58,12 @@ HEADERS = {
     "Accept-Language": "en-US,en;q=0.9",
 }
 
+# Mirrors fetch_articles.METLIFE_COOKIES (kept local for the same reason HEADERS
+# is duplicated — fetch_content does not import fetch_articles). MetLife IM
+# enforces a country+role disclaimer interstitial server-side on this cookie
+# pair; without it every /investments/ URL 302s to the disclaimer page.
+METLIFE_COOKIES = {"culture": "en-us", "disclaimer": "en-us/Institution"}
+
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 logging.basicConfig(
     level=logging.INFO,
@@ -1154,18 +1160,30 @@ def _fetch_content_metlife_im(article: dict) -> Optional[tuple[Path, str]]:
     """Fetch MetLife Investment Management article content via requests (SSR).
 
     Replaced `_fetch_content_pinebridge` on 2026-07-27 when the source moved to
-    investments.metlife.com (see fetch_articles.fetch_metlife_im). Body
-    paragraphs are SSR-rendered inside `div.richtext.richtext-wysiwyg`. Every
-    article also carries a ~11k-char `terms-of-use-legalText` block plus a
+    MetLife IM (see fetch_articles.fetch_metlife_im). Every article also
+    carries a ~11k-char `terms-of-use-legalText` block plus a
     `terms-of-use-staticText` block — identical boilerplate on all pages, so
     they are stripped before extraction to keep the summariser from drowning
     in disclaimer text.
+
+    Updated 2026-08-03 for the move to www.metlife.com/investments/en-us/:
+    pages are now behind the disclaimer cookie gate (see METLIFE_COOKIES), and
+    the body container narrowed to `div.read-more-section.richtext` — the bare
+    `div.richtext` selector also matches the page's empty search widget, whose
+    "Sorry, we couldn't find any results matching" placeholder would otherwise
+    lead the extracted text.
+
+    Deliberately no `main p` fallback: the pages that lack a read-more section
+    are PDF-teaser stubs (e.g. the monthly Pension Funding Status), where
+    `main p` yields a 260-400 char blurb — over MIN_CONTENT_LENGTH, so it would
+    be stored and summarised as if it were the research itself. Returning None
+    for those is the correct outcome; the real content is in a linked PDF.
     """
     url = article["url"]
     log.info("  MetLife IM: fetching article page %s", url)
 
     try:
-        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp = requests.get(url, headers=HEADERS, cookies=METLIFE_COOKIES, timeout=30)
         resp.raise_for_status()
     except Exception as e:
         log.error("  MetLife IM: fetch failed: %s", e)
@@ -1176,7 +1194,7 @@ def _fetch_content_metlife_im(article: dict) -> Optional[tuple[Path, str]]:
                             "div[class*='terms-of-use'], div[class*='disclaimer']"):
         tag.decompose()
 
-    paragraphs = soup.select("div.richtext p")
+    paragraphs = soup.select("div.read-more-section.richtext p")
     kept = []
     for p in paragraphs:
         para = p.get_text(strip=True)

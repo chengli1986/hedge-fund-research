@@ -1923,8 +1923,22 @@ def fetch_de_shaw(source: dict) -> list[dict]:
     return articles[:source.get("max_articles", 10)]
 
 
+# MetLife IM serves every /investments/ page behind a country+role disclaimer
+# interstitial that is enforced server-side on these two cookies. Clicking
+# "Accept" as a US institutional investor sets exactly this pair; both are
+# required (sending only `disclaimer` still redirects). Verified 2026-08-03.
+METLIFE_COOKIES = {"culture": "en-us", "disclaimer": "en-us/Institution"}
+_METLIFE_LISTING_ENDPOINT = (
+    "https://www.metlife.com/bin/MLApp/globalMarketingPlatform/"
+    "fetchContentColumnGridContentListing"
+)
+_METLIFE_INSIGHTS_ROOT = "/content/metlife/mim/investments/en-us/homepage/insights"
+_METLIFE_CONTENT_PREFIX = "/content/metlife/mim/investments/en-us/homepage/"
+_METLIFE_PUBLIC_PREFIX = "https://www.metlife.com/investments/en-us/"
+
+
 def fetch_metlife_im(source: dict) -> list[dict]:
-    """Fetch articles from MetLife Investment Management Insights (sitemap + page scrape).
+    """Fetch articles from MetLife Investment Management Insights (AEM listing JSON).
 
     Replaced the `pinebridge` source on 2026-07-27. MetLife IM completed its
     acquisition of PineBridge on 2025-12-30; pinebridge.com published nothing
@@ -1933,66 +1947,71 @@ def fetch_metlife_im(source: dict) -> list[dict]:
     read "the Leveraged Finance Team at PineBridge Investments, a MetLife
     Investment Management company".
 
-    The /insights listing is JS-rendered and shows month-only dates
-    ("JUL 2026"), so we drive off sitemap.xml instead: ~200 insight URLs each
-    carry a <lastmod>, and article pages are SSR with a day-precise JSON-LD
-    `datePublished`. Section index pages (/insights/, /insights/<topic>/) share
-    the URL prefix and are filtered out by path depth — an article is always
-    /insights/<topic>/<slug>/.
+    Rewritten 2026-08-03: MIM retired the `investments.metlife.com` subdomain
+    and folded the site into `www.metlife.com/investments/en-us/`. Every old
+    path now 301s to the new host and then 302s to a country/role disclaimer
+    interstitial, so the previous sitemap+JSON-LD approach returned 0 articles
+    for three consecutive runs. Two things changed:
+
+    1. The disclaimer gate is cookie-checked server-side. Accepting it in a
+       real browser sets exactly `culture` + `disclaimer` (both required —
+       either one alone still redirects), and replaying that static pair on
+       plain `requests` is enough. No Playwright needed.
+    2. The new sitemap's <lastmod> is a migration crawl stamp (38 of 46
+       insight URLs share 2026-07-29), and article pages lost their JSON-LD,
+       so neither can supply a publication date any more. The CSR listing is
+       backed by an AEM servlet that returns title + day-precise
+       `publishedDate` + repository path as JSON, already sorted newest-first,
+       which is strictly better than what the sitemap ever gave us.
+
+    Paths come back as AEM repository paths under `/content/metlife/mim/...`;
+    the public URL is the same tail under `/investments/en-us/`.
     """
-    sitemap_url = "https://investments.metlife.com/sitemap.xml"
-    expected_host = source.get("expected_hostname", "investments.metlife.com")
+    expected_host = source.get("expected_hostname", "www.metlife.com")
     max_articles = source.get("max_articles", 10)
 
-    resp = requests.get(sitemap_url, headers=HEADERS, timeout=20)
+    params = {
+        "allowedPaths": _METLIFE_INSIGHTS_ROOT,
+        "enableArticles": "true",
+        "enableVideo": "false",
+        "enablePDF": "false",
+        "enableImageContent": "false",
+        "startArticleNum": "0",
+        # Ask for a healthy margin over max_articles: entries without a usable
+        # title/date/path are dropped below.
+        "endArticleNum": str(max(max_articles * 3, 30)),
+        "articleDataConfig": "taxonomy",
+        "publishedDateFormat": "MMM dd, yyyy",
+        "sortby": "date",
+        "dateSort": "desc",
+    }
+    resp = requests.get(_METLIFE_LISTING_ENDPOINT, params=params, headers=HEADERS,
+                        cookies=METLIFE_COOKIES, timeout=30)
     resp.raise_for_status()
-
-    pattern = re.compile(
-        r"<loc>([^<]*/insights/[^<]+)</loc>\s*<lastmod>([^<]+)</lastmod>",
-        re.IGNORECASE,
-    )
-    entries: list[tuple[str, str]] = []
-    for url, lastmod in pattern.findall(resp.text):
-        url = url.strip()
-        if len([p for p in urlparse(url).path.split("/") if p]) != 3:
-            continue
-        if not _validate_hostname(url, expected_host):
-            continue
-        entries.append((url, lastmod.strip()[:10]))
-    entries.sort(key=lambda x: x[1], reverse=True)
+    entries = resp.json().get("articles", [])
 
     articles: list[dict] = []
-    for url, lastmod in entries[: max_articles * 2]:
-        try:
-            art_resp = requests.get(url, headers=HEADERS, timeout=15)
-            if art_resp.status_code != 200:
-                continue
-            art_soup = BeautifulSoup(art_resp.text, "html.parser")
-
-            title = ""
-            og = art_soup.find("meta", property="og:title")
-            if og:
-                title = (og.get("content") or "").strip()
-            if not title and art_soup.title:
-                title = art_soup.title.get_text(strip=True)
-            if not title:
-                continue
-
-            parsed_date = _jsonld_published_date(art_soup)
-            date_raw = parsed_date or lastmod
-            if not parsed_date:
-                parsed_date = parse_date(lastmod)
-
-            articles.append({
-                "title": title,
-                "url": url,
-                "date": parsed_date,
-                "date_raw": date_raw,
-            })
-            if len(articles) >= max_articles:
-                break
-        except Exception:
+    for entry in entries:
+        path = (entry.get("path") or "").strip()
+        # The servlet returns HTML-escaped headlines ("Relative Value &amp;
+        # Tactical Asset Allocation", "Fixed Income Outlook:&nbsp; Stay").
+        title = " ".join(html.unescape(entry.get("headlineTitle") or "").split())
+        date_raw = (entry.get("publishedDate") or "").strip()
+        if not path.startswith(_METLIFE_CONTENT_PREFIX) or not title:
             continue
+
+        url = _METLIFE_PUBLIC_PREFIX + path[len(_METLIFE_CONTENT_PREFIX):]
+        if not _validate_hostname(url, expected_host):
+            continue
+
+        articles.append({
+            "title": title,
+            "url": url,
+            "date": parse_date(date_raw),
+            "date_raw": date_raw,
+        })
+        if len(articles) >= max_articles:
+            break
 
     return articles[:max_articles]
 

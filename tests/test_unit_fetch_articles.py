@@ -1459,134 +1459,136 @@ class TestFetchSourceIntraRunDedup:
 
 
 # ---------------------------------------------------------------------------
-# fetch_metlife_im — sitemap-driven (MetLife Investment Management insights)
+# fetch_metlife_im — AEM listing servlet (MetLife Investment Management insights)
 #
 # Context (2026-07-27): PineBridge stopped publishing on pinebridge.com after
 # 2026-06-09 — MetLife IM completed its acquisition 2025-12-30 and the research
 # (same teams, e.g. "PineBridge Investments, a MetLife Investment Management
-# company") now ships on investments.metlife.com/insights. The listing page is
-# JS-rendered and shows month-only dates ("JUL 2026"), so we drive off
-# sitemap.xml (209 insight URLs, all with <lastmod>) and read the day-precise
-# datePublished out of each article's JSON-LD.
+# company") moved to MIM's own site.
+#
+# Rewritten 2026-08-03: MIM retired `investments.metlife.com` and folded the
+# site into `www.metlife.com/investments/en-us/` behind a country+role
+# disclaimer interstitial, which returned 0 articles for 3 consecutive runs.
+# The sitemap survived the move but its <lastmod> is now a migration crawl
+# stamp (38 of 46 URLs share one date) and article pages lost their JSON-LD, so
+# neither can date an article. We drive off the CSR listing's backing servlet
+# instead: title + day-precise publishedDate + repository path, newest-first.
 # ---------------------------------------------------------------------------
 
 class TestFetchMetlifeIm:
     SOURCE = {
-        "url": "https://investments.metlife.com/insights/",
+        "url": "https://www.metlife.com/investments/en-us/insights/",
         "max_articles": 3,
-        "expected_hostname": "investments.metlife.com",
+        "expected_hostname": "www.metlife.com",
     }
 
-    SITEMAP_URL = "https://investments.metlife.com/sitemap.xml"
+    ROOT = "/content/metlife/mim/investments/en-us/homepage/"
 
-    def _sitemap(self, entries) -> str:
-        body = "".join(
-            f"<url><loc>{loc}</loc><lastmod>{lastmod}</lastmod></url>"
-            for loc, lastmod in entries
-        )
-        return f'<?xml version="1.0" encoding="UTF-8"?><urlset>{body}</urlset>'
+    def _entry(self, slug: str, title: str, published: str,
+               topic: str = "outlooks-and-market-updates") -> dict:
+        return {
+            "headlineTitle": title,
+            "publishedDate": published,
+            "path": f"{self.ROOT}insights/{topic}/{slug}/",
+            "type": "article",
+        }
 
-    def _page(self, title: str, published: str | None = None) -> str:
-        ld = ""
-        if published:
-            ld = (
-                '<script type="application/ld+json">'
-                f'[{{"@type":"Article","datePublished":"{published}T18:56:00.00Z"}}]'
-                "</script>"
-            )
-        return f"<html><head><title>{title}</title>{ld}</head><body></body></html>"
-
-    def _mock_get(self, sitemap: str, pages: dict):
+    def _mock_get(self, entries, capture: dict | None = None):
         def _get(url, **kwargs):
-            resp = MagicMock()
+            if capture is not None:
+                capture["url"] = url
+                capture.update(kwargs)
+            resp = MagicMock(status_code=200)
             resp.raise_for_status.return_value = None
-            if url == self.SITEMAP_URL:
-                resp.status_code = 200
-                resp.text = sitemap
-            elif url in pages:
-                resp.status_code = 200
-                resp.text = pages[url]
-            else:
-                resp.status_code = 404
-                resp.text = "<html><body>Not found</body></html>"
+            resp.json.return_value = {"articles": entries,
+                                      "totalResults": len(entries),
+                                      "articleSize": len(entries)}
             return resp
         return _get
 
-    def test_skips_section_index_pages(self):
-        """/insights/ and /insights/<topic>/ are listing pages, not articles."""
-        art = "https://investments.metlife.com/insights/macro-strategy/summer-heat/"
-        sitemap = self._sitemap([
-            ("https://investments.metlife.com/insights/", "2026-07-16"),
-            ("https://investments.metlife.com/insights/fixed-income/", "2026-07-14"),
-            ("https://investments.metlife.com/about/", "2026-07-22"),
-            (art, "2026-07-20"),
-        ])
-        pages = {art: self._page("Global Risks Mid-Year Update", "2026-07-20")}
-        with patch("fetch_articles.requests.get", side_effect=self._mock_get(sitemap, pages)):
+    def test_maps_repository_path_to_public_url_and_parses_date(self):
+        entries = [self._entry("summer-heat", "Global Risks Mid-Year Update",
+                               "JUL 16, 2026", topic="macro-strategy")]
+        with patch("fetch_articles.requests.get", side_effect=self._mock_get(entries)):
             articles = fetch_metlife_im(self.SOURCE)
 
-        assert [a["url"] for a in articles] == [art]
+        assert len(articles) == 1
+        assert articles[0]["url"] == (
+            "https://www.metlife.com/investments/en-us/insights/"
+            "macro-strategy/summer-heat/"
+        )
         assert articles[0]["title"] == "Global Risks Mid-Year Update"
+        assert articles[0]["date"] == "2026-07-16"
+        assert articles[0]["date_raw"] == "JUL 16, 2026"
 
-    def test_prefers_jsonld_date_over_lastmod(self):
-        """lastmod tracks re-renders; datePublished is the real publish date."""
-        art = "https://investments.metlife.com/insights/fixed-income/clo-primer/"
-        sitemap = self._sitemap([(art, "2026-07-23")])
-        pages = {art: self._page("An Introduction to CLOs", "2026-07-20")}
-        with patch("fetch_articles.requests.get", side_effect=self._mock_get(sitemap, pages)):
-            articles = fetch_metlife_im(self.SOURCE)
+    def test_sends_disclaimer_cookies(self):
+        """Regression guard for the 2026-08-03 outage.
 
-        assert articles[0]["date"] == "2026-07-20"
+        Without BOTH cookies every /investments/ URL 302s to the disclaimer
+        interstitial and the fetcher silently returns 0 articles.
+        """
+        capture: dict = {}
+        entries = [self._entry("x", "X", "JUL 16, 2026")]
+        with patch("fetch_articles.requests.get",
+                   side_effect=self._mock_get(entries, capture)):
+            fetch_metlife_im(self.SOURCE)
 
-    def test_falls_back_to_lastmod_when_jsonld_missing(self):
-        art = "https://investments.metlife.com/insights/equity/asia-outlook/"
-        sitemap = self._sitemap([(art, "2026-07-14")])
-        pages = {art: self._page("2026 Midyear Asia Equity Outlook")}
-        with patch("fetch_articles.requests.get", side_effect=self._mock_get(sitemap, pages)):
-            articles = fetch_metlife_im(self.SOURCE)
+        assert capture["cookies"] == {"culture": "en-us",
+                                      "disclaimer": "en-us/Institution"}
+        assert capture["url"].startswith(
+            "https://www.metlife.com/bin/MLApp/globalMarketingPlatform/")
 
-        assert articles[0]["date"] == "2026-07-14"
-        assert articles[0]["date_raw"] == "2026-07-14"
+    def test_requests_newest_first_from_the_servlet(self):
+        capture: dict = {}
+        with patch("fetch_articles.requests.get",
+                   side_effect=self._mock_get([], capture)):
+            fetch_metlife_im(self.SOURCE)
 
-    def test_orders_newest_first_and_caps_at_max_articles(self):
-        urls = [
-            f"https://investments.metlife.com/insights/macro-strategy/piece-{i}/"
-            for i in range(5)
+        assert capture["params"]["sortby"] == "date"
+        assert capture["params"]["dateSort"] == "desc"
+        assert capture["params"]["enableArticles"] == "true"
+
+    def test_preserves_servlet_order_and_caps_at_max_articles(self):
+        entries = [
+            self._entry(f"piece-{i}", f"Piece {i}", d)
+            for i, d in enumerate(["JUL 23, 2026", "JUL 20, 2026", "JUL 01, 2026",
+                                   "JUN 15, 2026", "MAY 02, 2026"])
         ]
-        lastmods = ["2026-07-01", "2026-07-23", "2026-06-15", "2026-07-20", "2026-05-02"]
-        sitemap = self._sitemap(list(zip(urls, lastmods)))
-        pages = {u: self._page(f"Piece {i}", lastmods[i]) for i, u in enumerate(urls)}
-        with patch("fetch_articles.requests.get", side_effect=self._mock_get(sitemap, pages)):
+        with patch("fetch_articles.requests.get", side_effect=self._mock_get(entries)):
             articles = fetch_metlife_im(self.SOURCE)
 
         assert len(articles) == 3
         assert [a["date"] for a in articles] == ["2026-07-23", "2026-07-20", "2026-07-01"]
 
-    def test_skips_foreign_hostname(self):
-        """A sitemap entry pointing off-host must never become an article."""
-        art = "https://evil.example.com/insights/macro-strategy/spoofed/"
-        sitemap = self._sitemap([(art, "2026-07-20")])
-        pages = {art: self._page("Spoofed", "2026-07-20")}
-        with patch("fetch_articles.requests.get", side_effect=self._mock_get(sitemap, pages)):
+    def test_unescapes_html_entities_in_titles(self):
+        """The servlet returns escaped headlines — &amp; and &nbsp; reach the UI raw."""
+        entries = [self._entry("rvtaa", "Relative Value &amp; Tactical&nbsp; Allocation",
+                               "JUN 30, 2026")]
+        with patch("fetch_articles.requests.get", side_effect=self._mock_get(entries)):
             articles = fetch_metlife_im(self.SOURCE)
 
-        assert articles == []
+        assert articles[0]["title"] == "Relative Value & Tactical Allocation"
 
-    def test_skips_articles_that_error_without_failing_the_run(self):
-        good = "https://investments.metlife.com/insights/equity/good/"
-        dead = "https://investments.metlife.com/insights/equity/dead/"
-        sitemap = self._sitemap([(dead, "2026-07-23"), (good, "2026-07-20")])
-        pages = {good: self._page("Good One", "2026-07-20")}
-        with patch("fetch_articles.requests.get", side_effect=self._mock_get(sitemap, pages)):
+    def test_skips_entries_outside_the_mim_content_tree(self):
+        """A path outside /content/metlife/mim/... must never become an article."""
+        entries = [
+            {"headlineTitle": "Spoofed", "publishedDate": "JUL 20, 2026",
+             "path": "/content/evil/insights/spoofed/"},
+            self._entry("good", "Good One", "JUL 16, 2026"),
+        ]
+        with patch("fetch_articles.requests.get", side_effect=self._mock_get(entries)):
             articles = fetch_metlife_im(self.SOURCE)
 
-        assert [a["url"] for a in articles] == [good]
+        assert [a["title"] for a in articles] == ["Good One"]
 
-    def test_skips_article_without_title(self):
-        art = "https://investments.metlife.com/insights/equity/untitled/"
-        sitemap = self._sitemap([(art, "2026-07-20")])
-        pages = {art: "<html><head></head><body><p>no title</p></body></html>"}
-        with patch("fetch_articles.requests.get", side_effect=self._mock_get(sitemap, pages)):
-            articles = fetch_metlife_im(self.SOURCE)
+    def test_skips_entry_without_title(self):
+        entries = [
+            {"headlineTitle": "", "publishedDate": "JUL 20, 2026",
+             "path": f"{self.ROOT}insights/equity/untitled/"},
+        ]
+        with patch("fetch_articles.requests.get", side_effect=self._mock_get(entries)):
+            assert fetch_metlife_im(self.SOURCE) == []
 
-        assert articles == []
+    def test_empty_listing_returns_empty_list(self):
+        with patch("fetch_articles.requests.get", side_effect=self._mock_get([])):
+            assert fetch_metlife_im(self.SOURCE) == []
