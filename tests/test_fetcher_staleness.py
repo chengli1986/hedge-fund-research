@@ -522,3 +522,101 @@ def test_ok_result_has_no_cadence_note(monkeypatch):
     result = gfh._probe_once(source)
     assert result["status"] == "OK"
     assert "observed cadence" not in (result["reason"] or "").lower()
+
+
+# ── zero-article diagnosis (MetLife IM 2026-08-03 incident) ───────────────────
+#
+# metlife-im returned 0 articles for 3 consecutive runs and the WARN said only
+# "fetch_articles returned 0 articles" — nothing about WHY. The actual cause was
+# visible in a single request: MIM had retired investments.metlife.com, so the
+# configured URL 301'd to a new host and then 302'd to a country/role disclaimer
+# interstitial. Distinguishing "site moved" / "content-gated" from "genuinely
+# empty" is what turns a 20-minute investigation into a glance at the email.
+
+
+class _FakeResp:
+    def __init__(self, url):
+        self.url = url
+
+
+def _install_requests(monkeypatch, final_url=None, raises=None):
+    """Swap in a fake `requests` module for the lazy import inside the helper."""
+    import types
+
+    fake = types.ModuleType("requests")
+
+    class RequestException(Exception):
+        pass
+
+    def _get(url, **kwargs):
+        if raises is not None:
+            raise raises
+        return _FakeResp(final_url if final_url is not None else url)
+
+    fake.get = _get
+    fake.RequestException = RequestException
+    monkeypatch.setitem(sys.modules, "requests", fake)
+    return fake
+
+
+def test_diagnose_reports_off_host_redirect(monkeypatch):
+    """The MetLife case: configured URL now lands on a different hostname."""
+    _install_requests(
+        monkeypatch,
+        final_url="https://www.metlife.com/investments/en-us/disclaimer/",
+    )
+    note = gfh._diagnose_zero_articles(
+        {"url": "https://investments.metlife.com/insights/"}
+    )
+    assert "www.metlife.com/investments/en-us/disclaimer/" in note
+    assert "host" in note.lower()
+
+
+def test_diagnose_reports_gate_page_on_same_host(monkeypatch):
+    """Same host but the final path is an attestation/consent interstitial."""
+    _install_requests(
+        monkeypatch,
+        final_url="https://example.com/insights/disclaimer?redirect=insights",
+    )
+    note = gfh._diagnose_zero_articles({"url": "https://example.com/insights/"})
+    assert "gate" in note.lower()
+    assert "disclaimer" in note
+
+
+def test_diagnose_silent_when_url_unchanged(monkeypatch):
+    """No redirect, no gate — the page really is empty. Add nothing."""
+    _install_requests(monkeypatch)
+    assert gfh._diagnose_zero_articles({"url": "https://example.com/insights/"}) == ""
+
+
+def test_diagnose_reports_plain_redirect_same_host(monkeypatch):
+    _install_requests(monkeypatch, final_url="https://example.com/research/")
+    note = gfh._diagnose_zero_articles({"url": "https://example.com/insights/"})
+    assert "https://example.com/research/" in note
+
+
+def test_diagnose_never_raises_when_probe_fails(monkeypatch):
+    """A diagnostic must never turn a WARN into a crashed health run."""
+    _install_requests(monkeypatch, raises=OSError("connection reset"))
+    note = gfh._diagnose_zero_articles({"url": "https://example.com/insights/"})
+    assert "OSError" in note or note == ""
+
+
+def test_diagnose_returns_empty_without_configured_url(monkeypatch):
+    _install_requests(monkeypatch)
+    assert gfh._diagnose_zero_articles({}) == ""
+
+
+def test_probe_zero_articles_reason_carries_the_diagnosis(monkeypatch):
+    """End to end: the WARN a human reads must name the redirect target."""
+    sid = _install_fakes(monkeypatch, [])
+    _install_requests(
+        monkeypatch,
+        final_url="https://www.metlife.com/investments/en-us/disclaimer/",
+    )
+    result = gfh._probe_once(
+        {"id": sid, "url": "https://investments.metlife.com/insights/"}
+    )
+    assert result["status"] == "WARN"
+    assert "0 articles" in result["reason"]
+    assert "www.metlife.com/investments/en-us/disclaimer/" in result["reason"]

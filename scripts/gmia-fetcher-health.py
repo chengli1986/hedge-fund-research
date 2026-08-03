@@ -189,6 +189,65 @@ def _is_transient(exc: Exception) -> bool:
     return "timeout" in msg or "temporarily unavailable" in msg
 
 
+# Path fragments that mark a country/role/eligibility interstitial rather than
+# the content itself. MetLife IM's is /disclaimer/; the same pattern shows up as
+# consent walls, investor-type attestations and terms gates across the fleet.
+_GATE_PATH_MARKERS = (
+    "disclaimer", "consent", "attestation", "eligibility",
+    "investor-type", "terms-of-use", "accept-terms",
+)
+
+
+def _diagnose_zero_articles(source: dict) -> str:
+    """Explain a 0-article result by reporting where the configured URL lands.
+
+    Added 2026-08-03 after the metlife-im outage: the fetcher returned 0
+    articles for 3 consecutive runs and the WARN said only "returned 0
+    articles", so the root cause (MIM retired investments.metlife.com — the URL
+    301s to a new host, then 302s to a country/role disclaimer) took a full
+    investigation to find, when one request would have shown it.
+
+    Returns a short suffix for the WARN reason, or "" when the URL resolves to
+    itself (i.e. the listing genuinely is empty and the redirect angle is a dead
+    end). Never raises: a diagnostic must not turn a WARN into a failed run.
+    """
+    url = (source.get("url") or "").strip()
+    if not url:
+        return ""
+
+    import requests
+    from urllib.parse import urlparse
+
+    try:
+        final = requests.get(url, headers=_DIAGNOSTIC_HEADERS, timeout=20,
+                             allow_redirects=True).url
+    except Exception as exc:
+        # Worth reporting: a hard failure on the configured URL is itself the
+        # explanation (DNS gone, TLS broken, connection refused).
+        return f" — probing {url} raised {type(exc).__name__}: {str(exc)[:80]}"
+
+    if final == url:
+        return ""
+
+    src_host = urlparse(url).netloc.lower()
+    final_host = urlparse(final).netloc.lower()
+    final_path = urlparse(final).path.lower()
+
+    if final_host and final_host != src_host:
+        return (f" — configured URL now redirects off-host to {final} "
+                f"(site moved? expected host {src_host})")
+    if any(marker in final_path for marker in _GATE_PATH_MARKERS):
+        return f" — configured URL now lands on a gate page: {final}"
+    return f" — configured URL now redirects to {final}"
+
+
+_DIAGNOSTIC_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                  "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+}
+
+
 def _probe_once(source: dict) -> dict:
     """Single attempt of all 3 probes (no retry)."""
     import sys as _sys
@@ -231,7 +290,7 @@ def _probe_once(source: dict) -> dict:
     result["articles_count"] = len(articles)
     if not articles:
         result["status"] = "WARN"
-        result["reason"] = "fetch_articles returned 0 articles"
+        result["reason"] = "fetch_articles returned 0 articles" + _diagnose_zero_articles(source)
         return result
 
     # Staleness is reported relative to the most-recent date across ALL returned
