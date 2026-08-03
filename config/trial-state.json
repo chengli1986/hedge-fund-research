@@ -7267,6 +7267,24 @@
           ],
           "error": null,
           "fetcher_used": false
+        },
+        "2026-08-03": {
+          "accessible": true,
+          "article_count": 13,
+          "date_count": 12,
+          "article_urls": [
+            "https://www.blueowl.com/insights/2026-mid-year-focus",
+            "https://www.blueowl.com/insights/rethinking-exits-private-equity-why-continuation-vehicles-are-redefining-playbook",
+            "https://www.blueowl.com/insights/blue-owl-executive-perspectives-todays-software-landscape-vista-equity-partners",
+            "https://www.blueowl.com/insights/built-compute-inside-data-center",
+            "https://www.blueowl.com/index%2ephp/insights/focus-our-lens-private-markets",
+            "https://www.blueowl.com/index%2ephp/insights/investing-ongoing-revolution-life-sciences",
+            "https://www.blueowl.com/index%2ephp/insights/growth-and-durability-software-lending",
+            "https://www.blueowl.com/index%2ephp/insights/investing-real-assets-volatile-market",
+            "https://www.blueowl.com/index%2ephp/insights/private-markets-and-value-stability"
+          ],
+          "error": null,
+          "fetcher_used": false
         }
       },
       "auto_decided": false,
@@ -7411,6 +7429,33 @@
           "js_only_checked": 0,
           "day": 4,
           "date": "2026-08-02"
+        },
+        {
+          "sampled": 2,
+          "articles": [
+            {
+              "url": "https://www.blueowl.com/index%2ephp/insights/investing-real-assets-volatile-market",
+              "relevance": 0.85,
+              "depth": 0.55,
+              "extractable": 0.65,
+              "overall": 0.69,
+              "notes": "Interview on real assets opportunities in volatile markets; discusses tariffs, CRE, and reshoring but text appears truncated mid-sentence"
+            },
+            {
+              "url": "https://www.blueowl.com/index%2ephp/insights/private-markets-and-value-stability",
+              "relevance": 0.9,
+              "depth": 0.6,
+              "extractable": 0.6,
+              "overall": 0.72,
+              "notes": "Portfolio strategy piece on private markets as volatility hedge with historical performance data; truncated at end with incomplete section"
+            }
+          ],
+          "avg_score": 0.705,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 5,
+          "date": "2026-08-03"
         }
       ]
     },
@@ -7444,6 +7489,24 @@
           "fetcher_used": false
         },
         "2026-08-02": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 15,
+          "article_urls": [
+            "https://www.loomissayles.com/insights/fixed-income-unscripted-challenging-consensus-thinking/",
+            "https://www.loomissayles.com/insights/meet-the-municipal-bond-investment-research-teams/",
+            "https://www.loomissayles.com/insights/driven-to-give-back-with-community-investments/",
+            "https://www.loomissayles.com/insights/municipal-marketplace-can-single-state-portfolios-be-advantageous/",
+            "https://www.loomissayles.com/insights/global-fixed-income-outlook-strategy/",
+            "https://www.loomissayles.com/insights/global-fixed-income-team-views/",
+            "https://www.loomissayles.com/insights/the-next-generation-of-core-fixed-income-for-insurers/",
+            "https://www.loomissayles.com/insights/extra-credit-june-2026/",
+            "https://www.loomissayles.com/insights/emerging-markets-debt-blended-total-return-monthly-strategy-update/"
+          ],
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-08-03": {
           "accessible": true,
           "article_count": 20,
           "date_count": 15,
@@ -7534,6 +7597,41 @@
           "js_only_checked": 0,
           "day": 2,
           "date": "2026-08-02"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.loomissayles.com/insights/the-next-generation-of-core-fixed-income-for-insurers/",
+              "relevance": 0.7,
+              "depth": 0.3,
+              "extractable": 0.4,
+              "overall": 0.48,
+              "notes": "Podcast interview announcement on core fixed income for insurers; mostly promotional with minimal substantive content extracted."
+            },
+            {
+              "url": "https://www.loomissayles.com/insights/extra-credit-june-2026/",
+              "relevance": 0.9,
+              "depth": 0.8,
+              "extractable": 0.7,
+              "overall": 0.82,
+              "notes": "Q2 2026 macro and credit market analysis with economic backdrop, inflation outlook, and credit cycle positioning; substantive but truncated mid-sentence."
+            },
+            {
+              "url": "https://www.loomissayles.com/insights/emerging-markets-debt-blended-total-return-monthly-strategy-update/",
+              "relevance": 0.8,
+              "depth": 0.2,
+              "extractable": 0.3,
+              "overall": 0.46,
+              "notes": "Monthly EM debt strategy update; mostly a PDF download link with minimal text content visible; low extractability."
+            }
+          ],
+          "avg_score": 0.587,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 3,
+          "date": "2026-08-03"
         }
       ]
     },
@@ -7549,6 +7647,25 @@
       "end_date": null,
       "daily_checks": {
         "2026-08-02": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://resonanzcapital.com/insights/swap-spread-arbitrage-and-the-quiet-reason-it-keeps-coming-back",
+            "https://resonanzcapital.com/insights/the-metric-every-pitch-deck-gets-backwards",
+            "https://resonanzcapital.com/insights/crowding-isnt-one-trade.-march-proved-it",
+            "https://resonanzcapital.com/insights/june-2026-qis-update-carry-paid-again.-convexity-still-didnt",
+            "https://resonanzcapital.com/insights/i-was-wrong-about-ai.-twice",
+            "https://resonanzcapital.com/insights/the-hidden-cost-of-static-qis-why-a-vast-toolbox-demands-active-hands",
+            "https://resonanzcapital.com/insights/the-ecb-is-asking-the-right-question-about-ucits-leverage.-but-looking-in-the-wrong-place",
+            "https://resonanzcapital.com/insights/qis-in-may-carry-works-hedges-dont-and-the-month-was-all-path-dependence",
+            "https://resonanzcapital.com/insights/the-momentum-signal-works.-the-momentum-trade-is-crowded",
+            "https://resonanzcapital.com/insights/prepayment-risk-strategies-an-allocators-field-guide-to-mortgage-optionality"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-08-03": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -7605,9 +7722,44 @@
           "js_only_checked": 0,
           "day": 1,
           "date": "2026-08-02"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://resonanzcapital.com/insights/june-2026-qis-update-carry-paid-again.-convexity-still-didnt",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.95,
+              "overall": 0.91,
+              "notes": "Detailed quantitative investment strategy performance analysis for June 2026, breaking down which QIS composites won/lost and why (carry, credit, repricing vs. convexity)."
+            },
+            {
+              "url": "https://resonanzcapital.com/insights/i-was-wrong-about-ai.-twice",
+              "relevance": 0.75,
+              "depth": 0.8,
+              "extractable": 0.85,
+              "overall": 0.79,
+              "notes": "Personal reflection on missing AI as an investment theme and lessons about underestimation bias; substantive but more memoir than systematic research."
+            },
+            {
+              "url": "https://resonanzcapital.com/insights/the-hidden-cost-of-static-qis-why-a-vast-toolbox-demands-active-hands",
+              "relevance": 0.95,
+              "depth": 0.9,
+              "extractable": 0.9,
+              "overall": 0.92,
+              "notes": "Regime-conditional analysis of static QIS portfolio failures with specific data on strategy performance across market regimes and two distinct failure modes."
+            }
+          ],
+          "avg_score": 0.873,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 2,
+          "date": "2026-08-03"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-08-02"
+  "last_summary_sent_date": "2026-08-03"
 }
