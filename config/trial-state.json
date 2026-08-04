@@ -7285,6 +7285,14 @@
           ],
           "error": null,
           "fetcher_used": false
+        },
+        "2026-08-04": {
+          "accessible": false,
+          "article_count": 0,
+          "date_count": 0,
+          "article_urls": [],
+          "error": "[Errno -3] Temporary failure in name resolution",
+          "fetcher_used": false
         }
       },
       "auto_decided": false,
@@ -7456,6 +7464,14 @@
           "js_only_checked": 0,
           "day": 5,
           "date": "2026-08-03"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No article links found on index page",
+          "day": 6,
+          "date": "2026-08-04"
         }
       ]
     },
@@ -7522,6 +7538,14 @@
             "https://www.loomissayles.com/insights/emerging-markets-debt-blended-total-return-monthly-strategy-update/"
           ],
           "error": null,
+          "fetcher_used": false
+        },
+        "2026-08-04": {
+          "accessible": false,
+          "article_count": 0,
+          "date_count": 0,
+          "article_urls": [],
+          "error": "[Errno -3] Temporary failure in name resolution",
           "fetcher_used": false
         }
       },
@@ -7632,6 +7656,14 @@
           "js_only_checked": 0,
           "day": 3,
           "date": "2026-08-03"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No article links found on index page",
+          "day": 4,
+          "date": "2026-08-04"
         }
       ]
     },
@@ -7682,6 +7714,14 @@
             "https://resonanzcapital.com/insights/prepayment-risk-strategies-an-allocators-field-guide-to-mortgage-optionality"
           ],
           "error": null,
+          "fetcher_used": true
+        },
+        "2026-08-04": {
+          "accessible": false,
+          "article_count": 0,
+          "date_count": 0,
+          "article_urls": [],
+          "error": "HTTPSConnectionPool(host='resonanzcapital.com', port=443): Max retries exceeded with url: /insights/rss.xml (Caused by N",
           "fetcher_used": true
         }
       },
@@ -7757,6 +7797,14 @@
           "js_only_checked": 0,
           "day": 2,
           "date": "2026-08-03"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No article links found on index page",
+          "day": 3,
+          "date": "2026-08-04"
         }
       ]
     }
