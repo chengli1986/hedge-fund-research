@@ -11,7 +11,7 @@ from fetch_articles import (
     fetch_blackstone, fetch_gsam, _fetch_article_date_jsonld,
     fetch_amundi, fetch_jpmam, fetch_pgim, fetch_aberdeen,
     fetch_cambridge_associates, fetch_verdad,
-    fetch_metlife_im,
+    fetch_metlife_im, fetch_rothschild_co_am,
 )
 
 
@@ -61,6 +61,9 @@ class TestParseDate:
 
     def test_iso_format(self):
         assert parse_date("2026-03-18") == "2026-03-18"
+
+    def test_iso_format_with_time_and_z(self):
+        assert parse_date("2026-07-09T23:00:00Z") == "2026-07-09"
 
     def test_month_year_only(self):
         # Month-only dates use last day of month so staleness checks don't
@@ -1592,3 +1595,100 @@ class TestFetchMetlifeIm:
     def test_empty_listing_returns_empty_list(self):
         with patch("fetch_articles.requests.get", side_effect=self._mock_get([])):
             assert fetch_metlife_im(self.SOURCE) == []
+
+
+# ---------------------------------------------------------------------------
+# fetch_rothschild_co_am
+# ---------------------------------------------------------------------------
+
+class TestFetchRothschildCoAm:
+    """Site redesign observed 2026-08-05: old li.filterFormListingItem markup
+    replaced by li.listing-item.article-listing-item / roths-article-card-*.
+    Regression guard — this exact structure caused 3 consecutive 0-article
+    health-check runs before the fetcher was updated."""
+
+    SOURCE = {
+        "url": "https://www.rothschildandco.com/en/newsroom/insights/",
+        "max_articles": 10,
+        "expected_hostname": "rothschildandco.com",
+    }
+
+    def _card(self, title: str, href: str, iso_datetime: str, compact: bool = False) -> str:
+        cls = "listing-item article-listing-item listing-item--compact" if compact else "listing-item article-listing-item"
+        return f"""
+        <li class="{cls}">
+          <article class="roths-article-card">
+            <div class="roths-article-card-content">
+              <h3 class="roths-article-card-title">
+                <a class="uid-clickable btn-text roths-article-card-title-link" href="{href}">
+                  <span class="roths-article-card-title-text">{title}</span>
+                </a>
+              </h3>
+              <div class="roths-article-card-meta">
+                <div class="roths-article-card-details">
+                  <span class="roths-article-card-date">
+                    <time datetime="{iso_datetime}">{iso_datetime[8:10]}/{iso_datetime[5:7]}/{iso_datetime[:4]}</time>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </article>
+        </li>
+        """
+
+    def _mock_response(self, html: str):
+        resp = MagicMock(status_code=200)
+        resp.text = html
+        resp.raise_for_status.return_value = None
+        return resp
+
+    def test_parses_articles(self):
+        html = "<html><body><ul>" + self._card(
+            "Asset Management: Fixed Income Quarterly Strategy July 2026",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/07/fixed-income-q3/",
+            "2026-07-15T22:00:00Z",
+        ) + "</ul></body></html>"
+        with patch("fetch_articles.requests.get", return_value=self._mock_response(html)):
+            articles = fetch_rothschild_co_am(self.SOURCE)
+
+        assert len(articles) == 1
+        assert articles[0]["title"] == "Asset Management: Fixed Income Quarterly Strategy July 2026"
+        assert articles[0]["url"] == (
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/07/fixed-income-q3/"
+        )
+        assert articles[0]["date"] == "2026-07-15"
+
+    def test_parses_compact_variant(self):
+        """listing-item--compact cards use the same inner markup."""
+        html = "<html><body><ul>" + self._card(
+            "Global Advisory: Geopolitical Signals",
+            "https://www.rothschildandco.com/en/newsroom/insights/2026/07/geopolitical-signals/",
+            "2026-07-09T23:00:00Z",
+            compact=True,
+        ) + "</ul></body></html>"
+        with patch("fetch_articles.requests.get", return_value=self._mock_response(html)):
+            articles = fetch_rothschild_co_am(self.SOURCE)
+
+        assert len(articles) == 1
+        # Regression guard: the visible text is DD/MM (10/07/2026) which
+        # parse_date's %m/%d/%Y-first ordering would misread as Oct 7 — the
+        # ISO datetime attribute must be used, not the ambiguous display text.
+        assert articles[0]["date"] == "2026-07-09"
+
+    def test_respects_max_articles(self):
+        cards = "".join(
+            self._card(f"Article {i}", f"https://www.rothschildandco.com/en/insights/a{i}/",
+                       f"2026-07-{i:02d}T00:00:00Z")
+            for i in range(1, 8)
+        )
+        html = f"<html><body><ul>{cards}</ul></body></html>"
+        source = {**self.SOURCE, "max_articles": 4}
+        with patch("fetch_articles.requests.get", return_value=self._mock_response(html)):
+            articles = fetch_rothschild_co_am(source)
+
+        assert len(articles) == 4
+
+    def test_empty_listing_returns_empty_list(self):
+        html = "<html><body><ul></ul></body></html>"
+        with patch("fetch_articles.requests.get", return_value=self._mock_response(html)):
+            assert fetch_rothschild_co_am(self.SOURCE) == []

@@ -155,6 +155,16 @@ def parse_date(date_str: str) -> Optional[str]:
     """
     import calendar as _cal
     date_str = date_str.strip()
+
+    # ISO 8601 with a time component (e.g. "2026-07-09T23:00:00Z") — parse the
+    # date part directly rather than falling through to the ambiguous
+    # %m/%d/%Y vs %d/%m/%Y ordering below (Rothschild & Co redesign, 2026-08).
+    if "T" in date_str:
+        try:
+            return datetime.strptime(date_str.split("T", 1)[0], "%Y-%m-%d").strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+
     _MONTH_ONLY_FMTS = {"%B %Y", "%b %Y"}
     for fmt in [
         "%B %d, %Y",      # March 18, 2026
@@ -2313,9 +2323,11 @@ def fetch_lazard_am(source: dict) -> list[dict]:
 def fetch_rothschild_co_am(source: dict) -> list[dict]:
     """Fetch articles from Rothschild & Co Asset Management (SSR — insights listing).
 
-    Structure: li.filterFormListingItem containing:
-      time.filterFormListingItemDate[datetime="2026-06-09"] (ISO date attr),
-      span.filterFormListingItemTitle > a (title + absolute href).
+    Structure (site redesign observed 2026-08, replacing the old
+    li.filterFormListingItem markup): li.listing-item.article-listing-item
+    (variants: plain and ".listing-item--compact") containing:
+      h3.roths-article-card-title > a.roths-article-card-title-link (title + absolute href),
+      time[datetime="2026-07-15T22:00:00Z"] inside .roths-article-card-details (ISO date attr).
     The insights *index* is server-rendered and accessible from EC2; only the
     individual article pages return 403, which doesn't affect listing scrape.
     """
@@ -2327,8 +2339,8 @@ def fetch_rothschild_co_am(source: dict) -> list[dict]:
 
     seen_urls: set[str] = set()
     articles = []
-    for card in soup.select("li.filterFormListingItem"):
-        link_el = card.select_one("span.filterFormListingItemTitle a") or card.select_one("a[href]")
+    for card in soup.select("li.listing-item.article-listing-item"):
+        link_el = card.select_one("h3.roths-article-card-title a[href]") or card.select_one("a[href]")
         if not link_el:
             continue
         href = link_el.get("href", "")
@@ -2345,7 +2357,7 @@ def fetch_rothschild_co_am(source: dict) -> list[dict]:
         if not title:
             continue
 
-        time_el = card.select_one("time.filterFormListingItemDate") or card.select_one("time[datetime]")
+        time_el = card.select_one("time[datetime]")
         date_raw = ""
         parsed_date = None
         if time_el:
