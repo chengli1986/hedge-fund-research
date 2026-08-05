@@ -7293,6 +7293,24 @@
           "article_urls": [],
           "error": "[Errno -3] Temporary failure in name resolution",
           "fetcher_used": false
+        },
+        "2026-08-05": {
+          "accessible": true,
+          "article_count": 13,
+          "date_count": 12,
+          "article_urls": [
+            "https://www.blueowl.com/insights/2026-mid-year-focus",
+            "https://www.blueowl.com/insights/rethinking-exits-private-equity-why-continuation-vehicles-are-redefining-playbook",
+            "https://www.blueowl.com/insights/blue-owl-executive-perspectives-todays-software-landscape-vista-equity-partners",
+            "https://www.blueowl.com/insights/built-compute-inside-data-center",
+            "https://www.blueowl.com/insights/focus-our-lens-private-markets",
+            "https://www.blueowl.com/insights/investing-ongoing-revolution-life-sciences",
+            "https://www.blueowl.com/insights/growth-and-durability-software-lending",
+            "https://www.blueowl.com/insights/investing-real-assets-volatile-market",
+            "https://www.blueowl.com/insights/private-markets-and-value-stability"
+          ],
+          "error": null,
+          "fetcher_used": false
         }
       },
       "auto_decided": false,
@@ -7472,6 +7490,14 @@
           "error": "No article links found on index page",
           "day": 6,
           "date": "2026-08-04"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 7,
+          "date": "2026-08-05"
         }
       ]
     },
@@ -7546,6 +7572,24 @@
           "date_count": 0,
           "article_urls": [],
           "error": "[Errno -3] Temporary failure in name resolution",
+          "fetcher_used": false
+        },
+        "2026-08-05": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 15,
+          "article_urls": [
+            "https://www.loomissayles.com/insights/municipal-sector-outlook/",
+            "https://www.loomissayles.com/insights/fixed-income-unscripted-challenging-consensus-thinking/",
+            "https://www.loomissayles.com/insights/meet-the-municipal-bond-investment-research-teams/",
+            "https://www.loomissayles.com/insights/municipal-marketplace-can-single-state-portfolios-be-advantageous/",
+            "https://www.loomissayles.com/insights/driven-to-give-back-with-community-investments/",
+            "https://www.loomissayles.com/insights/global-fixed-income-outlook-strategy/",
+            "https://www.loomissayles.com/insights/global-fixed-income-team-views/",
+            "https://www.loomissayles.com/insights/the-next-generation-of-core-fixed-income-for-insurers/",
+            "https://www.loomissayles.com/insights/extra-credit-june-2026/"
+          ],
+          "error": null,
           "fetcher_used": false
         }
       },
@@ -7664,6 +7708,25 @@
           "error": "No article links found on index page",
           "day": 4,
           "date": "2026-08-04"
+        },
+        {
+          "sampled": 1,
+          "articles": [
+            {
+              "url": "https://www.loomissayles.com/insights/municipal-sector-outlook/",
+              "relevance": 0.9,
+              "depth": 0.8,
+              "extractable": 0.6,
+              "overall": 0.8,
+              "notes": "Mid-year 2026 municipal bond sector outlook analyzing credit implications of federal policy changes (Medicaid cuts, work requirements) across hospitals, higher education, transportation, and utilities with differentiated sector views."
+            }
+          ],
+          "avg_score": 0.8,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 5,
+          "date": "2026-08-05"
         }
       ]
     },
@@ -7722,6 +7785,25 @@
           "date_count": 0,
           "article_urls": [],
           "error": "HTTPSConnectionPool(host='resonanzcapital.com', port=443): Max retries exceeded with url: /insights/rss.xml (Caused by N",
+          "fetcher_used": true
+        },
+        "2026-08-05": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://resonanzcapital.com/insights/july-2026-qis-update-crowding-broke.-rates-convexity-paid.-fx-fractured",
+            "https://resonanzcapital.com/insights/swap-spread-arbitrage-and-the-quiet-reason-it-keeps-coming-back",
+            "https://resonanzcapital.com/insights/the-metric-every-pitch-deck-gets-backwards",
+            "https://resonanzcapital.com/insights/crowding-isnt-one-trade.-march-proved-it",
+            "https://resonanzcapital.com/insights/june-2026-qis-update-carry-paid-again.-convexity-still-didnt",
+            "https://resonanzcapital.com/insights/i-was-wrong-about-ai.-twice",
+            "https://resonanzcapital.com/insights/the-hidden-cost-of-static-qis-why-a-vast-toolbox-demands-active-hands",
+            "https://resonanzcapital.com/insights/the-ecb-is-asking-the-right-question-about-ucits-leverage.-but-looking-in-the-wrong-place",
+            "https://resonanzcapital.com/insights/qis-in-may-carry-works-hedges-dont-and-the-month-was-all-path-dependence",
+            "https://resonanzcapital.com/insights/the-momentum-signal-works.-the-momentum-trade-is-crowded"
+          ],
+          "error": null,
           "fetcher_used": true
         }
       },
@@ -7805,9 +7887,44 @@
           "error": "No article links found on index page",
           "day": 3,
           "date": "2026-08-04"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://resonanzcapital.com/insights/july-2026-qis-update-crowding-broke.-rates-convexity-paid.-fx-fractured",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.95,
+              "overall": 0.91,
+              "notes": "Detailed quantitative analysis of systematic trading strategy performance in July 2026, with specific composite returns, asset class breakdowns, and factor attribution across 40 strategies."
+            },
+            {
+              "url": "https://resonanzcapital.com/insights/the-ecb-is-asking-the-right-question-about-ucits-leverage.-but-looking-in-the-wrong-place",
+              "relevance": 0.9,
+              "depth": 0.9,
+              "extractable": 0.85,
+              "overall": 0.89,
+              "notes": "In-depth regulatory analysis critiquing ECB's leverage framework for UCITS hedge funds, arguing gross notional metrics conflate different risk types and misidentify systemic threats."
+            },
+            {
+              "url": "https://resonanzcapital.com/insights/qis-in-may-carry-works-hedges-dont-and-the-month-was-all-path-dependence",
+              "relevance": 0.95,
+              "depth": 0.75,
+              "extractable": 0.9,
+              "overall": 0.86,
+              "notes": "Quantitative performance review of QIS composites in May 2026, highlighting carry dominance, volatility hedge underperformance, and path-dependent market dynamics across asset classes."
+            }
+          ],
+          "avg_score": 0.887,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 4,
+          "date": "2026-08-05"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-08-03"
+  "last_summary_sent_date": "2026-08-05"
 }
