@@ -2945,7 +2945,11 @@
     "quality_score": 0.68,
     "topics": "private credit, real assets, private equity, GP strategic capital",
     "synthesis_priority": true,
-    "synthesis_priority_set_at": "2026-08-06T09:03:11.081305+08:00"
+    "synthesis_priority_set_at": "2026-08-06T09:03:11.081305+08:00",
+    "synthesis_attempted_at": "2026-08-06T01:05:19.362016+00:00",
+    "synthesis_outcome": "success",
+    "promoted_at": "2026-08-06T01:05:19.362016+00:00",
+    "promoted_reason": "fetcher_synthesis_success (trial-PASS shortcut)"
   },
   {
     "id": "loomis-sayles",

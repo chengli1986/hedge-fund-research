@@ -2701,6 +2701,61 @@ def fetch_resonanz_capital(source: dict) -> list[dict]:
     return articles[:source.get("max_articles", 10)]
 
 
+def fetch_blue_owl_capital(source: dict) -> list[dict]:
+    """Fetch articles from Blue Owl Capital (requests — SSR).
+
+    Structure: a.article-listing__card (wraps the whole card) containing:
+      h3.article-listing__copy (title), time[datetime] (ISO date).
+    A couple of cards link to docs.blueowl.com PDF viewers (no extractable
+    body text) — only /insights/ paths on the main host are kept.
+    """
+    base_url = "https://www.blueowl.com"
+    resp = requests.get(source["url"], headers=HEADERS, timeout=20)
+    resp.raise_for_status()
+    soup = BeautifulSoup(resp.text, "html.parser")
+    expected_host = source.get("expected_hostname", "blueowl.com")
+
+    articles = []
+    seen = set()
+    for card in soup.select("a.article-listing__card"):
+        href = card.get("href", "")
+        if not href:
+            continue
+        url = urljoin(base_url, href)
+        if not _validate_hostname(url, expected_host):
+            continue
+        if not urlparse(url).path.startswith("/insights/"):
+            continue
+        if url in seen:
+            continue
+
+        title_el = card.select_one("h3.article-listing__copy") or card.select_one("h3")
+        if not title_el:
+            continue
+        title = title_el.get_text(" ", strip=True)
+        if not title:
+            continue
+
+        time_el = card.select_one("time")
+        date_raw = ""
+        parsed_date = None
+        if time_el:
+            dt_attr = time_el.get("datetime", "")
+            date_raw = time_el.get_text(strip=True) or dt_attr
+            parsed_date = parse_date(dt_attr) or parse_date(date_raw)
+
+        seen.add(url)
+        articles.append({
+            "title": title,
+            "url": url,
+            "date": parsed_date,
+            "date_raw": date_raw,
+        })
+
+    articles.sort(key=lambda a: a["date"] or "", reverse=True)
+    return articles[:source.get("max_articles", 10)]
+
+
 # FETCHER_SYNTHESIS_INSERTION_POINT — auto-generated fetchers inserted above this line
 
 
@@ -3041,6 +3096,7 @@ FETCHERS = {
     "janus-henderson": fetch_janus_henderson,
     "goehring-rozencwajg": fetch_goehring_rozencwajg,
     "franklin-templeton": fetch_franklin_templeton,
+    "blue-owl-capital": fetch_blue_owl_capital,
 }
 
 
