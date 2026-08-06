@@ -60,6 +60,7 @@ BADGE_COLORS: dict[str, str] = {
     "principal-am": "#00568c",              # Principal deep azure (brand-adjacent corporate blue; sits between #003a70 PIMCO navy — darker — and #0066cc Wellington blue — brighter/lighter — RGB dist ≥40 to both and to #4a6fa5 GSAM steel blue; WCAG AA ~6.9:1 on white)
     "franklin-templeton": "#004d40",        # Franklin Templeton deep pine-teal (the corporate-blue cluster is full, so the brand navy is unusable; this is the darkest, greenest point of the teal family — RGB dist ≥61 to #00607a T.Rowe teal-navy, #006d75 Janus and #00838f MetLife cyan, and 51.6 to its nearest neighbour overall, the highest min-distance of any candidate tested; WCAG AAA 9.8:1 on white)
     "partners-group": "#7b3f00",            # Partners Group dark chocolate-brown (the warm-earth band is the only one with room left: darker and far less red than #8d4004 Cohen & Steers burnt-sienna and #7c2d12 Verdad terracotta, warmer/redder than #5d4037 Acadian umber — min RGB dist 36 to any existing color; WCAG AAA 8.9:1 on white)
+    "blue-owl-capital": "#301070",          # Blue Owl midnight indigo-violet ("night owl"; the deep blue-violet slot between the navy and violet clusters was empty — min RGB dist 63.8 to any of the 36 existing colors, the highest of any palette-consistent candidate: 63.8 to #003a70 PIMCO navy, 82 to #3949ab Matthews indigo, 66 to #5e3a82 Apollo plum; WCAG AAA 14.6:1 on white)
 }
 
 INITIAL_VISIBLE = 20
@@ -324,6 +325,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "瑞士上市的私募市场专家，1996 年创立于楚格州 Baar，管理规模约 $186B。以「转型式投资」为核心：在私募股权、私募信贷、基础设施与房地产中取得控股权，靠运营改造而非杠杆创造回报，并按主题（去碳化、供应链重构等）自上而下选赛道。区别于同业之处在于很早就把常青半流动基金做成主力产品线，把私募市场开放给财富管理渠道。",
         "notable_en": "A pioneer of evergreen semi-liquid private-markets vehicles, which now sit alongside traditional closed-ended programs and mandates as one of its three AuM pillars. Targets USD 450 billion of AuM by 2033.",
         "notable_zh": "常青型半流动私募基金的开创者之一，该产品线已与传统封闭式基金、专户并列为其三大 AuM 支柱。公司公开目标是 2033 年把管理规模做到 $450B。",
+    },
+    "blue-owl-capital": {
+        "founded": "2021", "aum": "~$319B", "hq": "New York, USA",
+        "type_en": "Alternative Asset Manager", "type_zh": "另类资产管理",
+        "desc_zh": "美国另类资产管理公司，2021 年由 Owl Rock 与 Dyal Capital 合并而成并登陆纽交所（NYSE: OWL），管理规模约 $319B。三大平台：面向中高端市场赞助商的直接借贷、含数据中心的净租赁实物资产、以及 GP 战略资本——收购其他另类管理人的少数股权，这条赛道由前身 Dyal 开创。逾 $225B 属永久资本，无被迫抛售压力。",
+        "notable_en": "Its GP Strategic Capital arm (formerly Dyal) effectively created the GP-stakes niche and set a record with the $12.9B close of GP Stakes V in 2023. The credit platform runs Blue Owl Capital Corporation, the second-largest publicly traded BDC, and the firm has bought its way into new asset classes almost yearly — Oak Street, Wellfleet, Prima, Kuvare, Atalaya, IPI Partners.",
+        "notable_zh": "GP 战略资本平台（前身 Dyal）开创了 GP 少数股权这一细分赛道，2023 年 GP Stakes V 以 $12.9B 创下该品类募集纪录。信贷平台旗下的 Blue Owl Capital Corporation 是美国第二大上市 BDC。公司几乎每年靠收购进入新资产类别：Oak Street、Wellfleet、Prima、Kuvare、Atalaya、IPI Partners。",
     },
 }
 

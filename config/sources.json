@@ -687,6 +687,23 @@
       "notable_authors": [],
       "expected_hostname": "partnersgroup.com",
       "max_articles": 10
+    },
+    {
+      "id": "blue-owl-capital",
+      "strategy_tags": [
+        "private_credit",
+        "real_assets",
+        "private_equity"
+      ],
+      "name": "Blue Owl Capital",
+      "short_name": "Blue Owl",
+      "url": "https://www.blueowl.com/insights",
+      "method": "ssr",
+      "frequency": "monthly",
+      "description": "US alternative asset manager (~$319B AUM) formed by the 2021 merger of Owl Rock and Dyal Capital. Three-platform model: direct lending to upper-middle-market sponsors ($158B), net-lease real assets including data centers ($89B), and GP strategic capital ($72B) — buying minority stakes in other alternative managers, a niche Dyal effectively created. Permanent-capital heavy, with over $225B in vehicles that never have to sell.",
+      "notable_authors": [],
+      "expected_hostname": "blueowl.com",
+      "max_articles": 10
     }
   ],
   "settings": {

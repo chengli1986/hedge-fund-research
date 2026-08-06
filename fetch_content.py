@@ -1580,6 +1580,39 @@ def _fetch_content_partners_group(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+def _fetch_content_blue_owl_capital(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Blue Owl Capital Insights article content via requests (SSR).
+
+    Insight pages are plain server-rendered HTML. The body lives in
+    `.insights-content-wysiwyg` paragraph blocks; `.article__content p` /
+    `article p` would also match, but those wrappers additionally carry the
+    boilerplate legal disclaimer that trails every piece (~6K chars of "not a
+    recommendation or solicitation ... Copyright(c) Blue Owl Capital Inc.")
+    plus the "July 14, 2026|1min read" byline row, which would dilute the LLM
+    summaries. `_normalize_html`'s generic article/main fallback covers any
+    page that skips the wysiwyg component.
+    Verified live 2026-08-06: 10.1K chars from the continuation-vehicles piece.
+    """
+    url = article["url"]
+    log.info("  Blue Owl: fetching article page %s", url)
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Blue Owl: fetch failed: %s", e)
+        return None
+
+    text = _normalize_html(resp.text, ".insights-content-wysiwyg p")
+    if not _check_min_content_length(text):
+        log.warning("  Blue Owl: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Blue Owl: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -1617,6 +1650,7 @@ CONTENT_FETCHERS = {
     "cohen-steers": _fetch_content_cohen_steers,
     "franklin-templeton": _fetch_content_franklin_templeton,
     "partners-group": _fetch_content_partners_group,
+    "blue-owl-capital": _fetch_content_blue_owl_capital,
 }
 
 
