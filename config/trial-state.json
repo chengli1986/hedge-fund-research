@@ -7182,9 +7182,7 @@
       "total_articles": 60,
       "days_with_articles": 8,
       "avg_quality_score": 0.758
-    }
-  ],
-  "active_trials": [
+    },
     {
       "id": "blue-owl-capital",
       "name": "Blue Owl Capital",
@@ -7194,7 +7192,7 @@
       "quality": "MEDIUM",
       "topics": "private credit, real assets, private equity, GP strategic capital",
       "start_date": "2026-07-30",
-      "end_date": null,
+      "end_date": "2026-08-06",
       "daily_checks": {
         "2026-07-30": {
           "accessible": true,
@@ -7311,10 +7309,28 @@
           ],
           "error": null,
           "fetcher_used": false
+        },
+        "2026-08-06": {
+          "accessible": true,
+          "article_count": 13,
+          "date_count": 12,
+          "article_urls": [
+            "https://www.blueowl.com/insights/2026-mid-year-focus",
+            "https://www.blueowl.com/insights/rethinking-exits-private-equity-why-continuation-vehicles-are-redefining-playbook",
+            "https://www.blueowl.com/insights/blue-owl-executive-perspectives-todays-software-landscape-vista-equity-partners",
+            "https://www.blueowl.com/insights/built-compute-inside-data-center",
+            "https://www.blueowl.com/insights/focus-our-lens-private-markets",
+            "https://www.blueowl.com/insights/investing-ongoing-revolution-life-sciences",
+            "https://www.blueowl.com/insights/growth-and-durability-software-lending",
+            "https://www.blueowl.com/insights/investing-real-assets-volatile-market",
+            "https://www.blueowl.com/insights/private-markets-and-value-stability"
+          ],
+          "error": null,
+          "fetcher_used": false
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -7499,8 +7515,13 @@
           "day": 7,
           "date": "2026-08-05"
         }
-      ]
-    },
+      ],
+      "total_articles": 87,
+      "days_with_articles": 7,
+      "avg_quality_score": 0.719
+    }
+  ],
+  "active_trials": [
     {
       "id": "loomis-sayles",
       "name": "Loomis Sayles",
@@ -7575,6 +7596,24 @@
           "fetcher_used": false
         },
         "2026-08-05": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 15,
+          "article_urls": [
+            "https://www.loomissayles.com/insights/municipal-sector-outlook/",
+            "https://www.loomissayles.com/insights/fixed-income-unscripted-challenging-consensus-thinking/",
+            "https://www.loomissayles.com/insights/meet-the-municipal-bond-investment-research-teams/",
+            "https://www.loomissayles.com/insights/municipal-marketplace-can-single-state-portfolios-be-advantageous/",
+            "https://www.loomissayles.com/insights/driven-to-give-back-with-community-investments/",
+            "https://www.loomissayles.com/insights/global-fixed-income-outlook-strategy/",
+            "https://www.loomissayles.com/insights/global-fixed-income-team-views/",
+            "https://www.loomissayles.com/insights/the-next-generation-of-core-fixed-income-for-insurers/",
+            "https://www.loomissayles.com/insights/extra-credit-june-2026/"
+          ],
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-08-06": {
           "accessible": true,
           "article_count": 20,
           "date_count": 15,
@@ -7727,6 +7766,14 @@
           "js_only_checked": 0,
           "day": 5,
           "date": "2026-08-05"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 6,
+          "date": "2026-08-06"
         }
       ]
     },
@@ -7788,6 +7835,25 @@
           "fetcher_used": true
         },
         "2026-08-05": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://resonanzcapital.com/insights/july-2026-qis-update-crowding-broke.-rates-convexity-paid.-fx-fractured",
+            "https://resonanzcapital.com/insights/swap-spread-arbitrage-and-the-quiet-reason-it-keeps-coming-back",
+            "https://resonanzcapital.com/insights/the-metric-every-pitch-deck-gets-backwards",
+            "https://resonanzcapital.com/insights/crowding-isnt-one-trade.-march-proved-it",
+            "https://resonanzcapital.com/insights/june-2026-qis-update-carry-paid-again.-convexity-still-didnt",
+            "https://resonanzcapital.com/insights/i-was-wrong-about-ai.-twice",
+            "https://resonanzcapital.com/insights/the-hidden-cost-of-static-qis-why-a-vast-toolbox-demands-active-hands",
+            "https://resonanzcapital.com/insights/the-ecb-is-asking-the-right-question-about-ucits-leverage.-but-looking-in-the-wrong-place",
+            "https://resonanzcapital.com/insights/qis-in-may-carry-works-hedges-dont-and-the-month-was-all-path-dependence",
+            "https://resonanzcapital.com/insights/the-momentum-signal-works.-the-momentum-trade-is-crowded"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-08-06": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -7922,9 +7988,98 @@
           "js_only_checked": 0,
           "day": 4,
           "date": "2026-08-05"
+        },
+        {
+          "sampled": 1,
+          "articles": [
+            {
+              "url": "https://resonanzcapital.com/insights/the-momentum-signal-works.-the-momentum-trade-is-crowded",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.65,
+              "overall": 0.85,
+              "notes": "Deep analysis of momentum strategy risk, arguing that systematic implementation scale—not the signal itself—has changed crash dynamics and tail risk characteristics."
+            }
+          ],
+          "avg_score": 0.85,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 5,
+          "date": "2026-08-06"
+        }
+      ]
+    },
+    {
+      "id": "baillie-gifford",
+      "name": "Baillie Gifford",
+      "research_url": "https://www.bailliegifford.com/en/usa/institutional-investor/insights/",
+      "homepage_url": "https://www.bailliegifford.com",
+      "fit_score": 0.82,
+      "quality": "HIGH",
+      "topics": "equity, emerging markets, growth investing, thematic research",
+      "start_date": "2026-08-06",
+      "end_date": null,
+      "daily_checks": {
+        "2026-08-06": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 0,
+          "article_urls": [
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-emerging-markets-quarterly-insights-10064670/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-podcast-62-spacex-10064666/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-charting-the-trends-beyond-ai-10064845/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-global-alpha-quarterly-insights-10064662/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-international-growth-quarterly-insights-10064671/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-international-alpha-quarterly-insights-10064117/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-us-equity-growth-quarterly-insights-10064118/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-global-alpha-insights-medpace-10064166/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-international-viewpoints-energy-transition-10064154/"
+          ],
+          "error": null,
+          "fetcher_used": false
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-emerging-markets-quarterly-insights-10064670/",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.6,
+              "overall": 0.76,
+              "notes": "Emerging markets quarterly letter discussing semiconductor concentration risk (TSMC, Samsung, SK Hynix at 40% of portfolio) and portfolio rebalancing strategy; substantive but truncated mid-sentence."
+            },
+            {
+              "url": "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-podcast-62-spacex-10064666/",
+              "relevance": 0.85,
+              "depth": 0.8,
+              "extractable": 0.9,
+              "overall": 0.84,
+              "notes": "Podcast transcript on SpaceX investment thesis (held since 2018 pre-IPO), reusable rocket economics, and Starlink/orbital datacentre opportunities; well-structured with clear investment rationale."
+            },
+            {
+              "url": "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-charting-the-trends-beyond-ai-10064845/",
+              "relevance": 0.9,
+              "depth": 0.75,
+              "extractable": 0.65,
+              "overall": 0.79,
+              "notes": "Emerging markets strategy piece on secular demand trends beyond AI (population growth, Asian middle class, Vietnam retail case study); substantive thesis but truncated at end."
+            }
+          ],
+          "avg_score": 0.797,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 1,
+          "date": "2026-08-06"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-08-05"
+  "last_summary_sent_date": "2026-08-06"
 }
