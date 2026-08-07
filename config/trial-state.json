@@ -7630,6 +7630,24 @@
           ],
           "error": null,
           "fetcher_used": false
+        },
+        "2026-08-07": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 15,
+          "article_urls": [
+            "https://www.loomissayles.com/insights/municipal-sector-outlook/",
+            "https://www.loomissayles.com/insights/fixed-income-unscripted-challenging-consensus-thinking/",
+            "https://www.loomissayles.com/insights/meet-the-municipal-bond-investment-research-teams/",
+            "https://www.loomissayles.com/insights/municipal-marketplace-can-single-state-portfolios-be-advantageous/",
+            "https://www.loomissayles.com/insights/driven-to-give-back-with-community-investments/",
+            "https://www.loomissayles.com/insights/global-fixed-income-outlook-strategy/",
+            "https://www.loomissayles.com/insights/global-fixed-income-team-views/",
+            "https://www.loomissayles.com/insights/the-next-generation-of-core-fixed-income-for-insurers/",
+            "https://www.loomissayles.com/insights/extra-credit-june-2026/"
+          ],
+          "error": null,
+          "fetcher_used": false
         }
       },
       "auto_decided": false,
@@ -7774,6 +7792,14 @@
           "error": "No new (un-sampled) article links available",
           "day": 6,
           "date": "2026-08-06"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 7,
+          "date": "2026-08-07"
         }
       ]
     },
@@ -7854,6 +7880,25 @@
           "fetcher_used": true
         },
         "2026-08-06": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://resonanzcapital.com/insights/july-2026-qis-update-crowding-broke.-rates-convexity-paid.-fx-fractured",
+            "https://resonanzcapital.com/insights/swap-spread-arbitrage-and-the-quiet-reason-it-keeps-coming-back",
+            "https://resonanzcapital.com/insights/the-metric-every-pitch-deck-gets-backwards",
+            "https://resonanzcapital.com/insights/crowding-isnt-one-trade.-march-proved-it",
+            "https://resonanzcapital.com/insights/june-2026-qis-update-carry-paid-again.-convexity-still-didnt",
+            "https://resonanzcapital.com/insights/i-was-wrong-about-ai.-twice",
+            "https://resonanzcapital.com/insights/the-hidden-cost-of-static-qis-why-a-vast-toolbox-demands-active-hands",
+            "https://resonanzcapital.com/insights/the-ecb-is-asking-the-right-question-about-ucits-leverage.-but-looking-in-the-wrong-place",
+            "https://resonanzcapital.com/insights/qis-in-may-carry-works-hedges-dont-and-the-month-was-all-path-dependence",
+            "https://resonanzcapital.com/insights/the-momentum-signal-works.-the-momentum-trade-is-crowded"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-08-07": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -8007,6 +8052,14 @@
           "js_only_checked": 0,
           "day": 5,
           "date": "2026-08-06"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 6,
+          "date": "2026-08-07"
         }
       ]
     },
@@ -8035,6 +8088,24 @@
             "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-us-equity-growth-quarterly-insights-10064118/",
             "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-global-alpha-insights-medpace-10064166/",
             "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-international-viewpoints-energy-transition-10064154/"
+          ],
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-08-07": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 0,
+          "article_urls": [
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-international-viewpoints-fast-follower-to-global-leader-10064930/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-charting-the-trends-beyond-ai-10064845/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-podcast-62-spacex-10064666/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-global-alpha-quarterly-insights-10064662/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-emerging-markets-quarterly-insights-10064670/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-international-growth-quarterly-insights-10064671/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-international-alpha-quarterly-insights-10064117/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-us-equity-growth-quarterly-insights-10064118/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-global-alpha-insights-medpace-10064166/"
           ],
           "error": null,
           "fetcher_used": false
@@ -8077,9 +8148,44 @@
           "js_only_checked": 0,
           "day": 1,
           "date": "2026-08-06"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-international-viewpoints-fast-follower-to-global-leader-10064930/",
+              "relevance": 0.9,
+              "depth": 0.75,
+              "extractable": 0.6,
+              "overall": 0.78,
+              "notes": "Investment thesis on China's transformation from fast follower to global technology leader; implications for global equity portfolios with data on EV, AI, and pharma sectors."
+            },
+            {
+              "url": "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-global-alpha-quarterly-insights-10064662/",
+              "relevance": 0.95,
+              "depth": 0.7,
+              "extractable": 0.5,
+              "overall": 0.76,
+              "notes": "Quarterly portfolio letter discussing Global Alpha strategy performance, AI market concentration vs. fundamentals-driven growth, and positioning for long-term outperformance."
+            },
+            {
+              "url": "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-international-growth-quarterly-insights-10064671/",
+              "relevance": 0.9,
+              "depth": 0.65,
+              "extractable": 0.5,
+              "overall": 0.72,
+              "notes": "Quarterly letter on International Growth strategy addressing macro volatility, geopolitical fragmentation, AI disruption, and active management opportunities in dislocated markets."
+            }
+          ],
+          "avg_score": 0.753,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 2,
+          "date": "2026-08-07"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-08-06"
+  "last_summary_sent_date": "2026-08-07"
 }
