@@ -3071,7 +3071,11 @@
     "fit_score": 0.76,
     "last_validated_at": "2026-08-01T09:00:15.612274+08:00",
     "synthesis_priority": true,
-    "synthesis_priority_set_at": "2026-08-08T09:02:21.621004+08:00"
+    "synthesis_priority_set_at": "2026-08-08T09:02:21.621004+08:00",
+    "synthesis_attempted_at": "2026-08-08T01:04:28.598035+00:00",
+    "synthesis_outcome": "success",
+    "promoted_at": "2026-08-08T01:04:28.598035+00:00",
+    "promoted_reason": "fetcher_synthesis_success (trial-PASS shortcut)"
   },
   {
     "id": "resonanz-capital",

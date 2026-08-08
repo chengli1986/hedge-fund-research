@@ -2756,6 +2756,60 @@ def fetch_blue_owl_capital(source: dict) -> list[dict]:
     return articles[:source.get("max_articles", 10)]
 
 
+def fetch_loomis_sayles(source: dict) -> list[dict]:
+    """Fetch articles from Loomis Sayles Insights via the WordPress RSS feed.
+
+    The /insights/ listing renders its archive grid client-side (the SSR HTML
+    only carries a few hero cards with "Read Article" anchor text and no
+    machine-readable dates), and the WP REST API returns 403 for anonymous
+    users. The site's WordPress feed at /feed/ carries the same posts with
+    clean titles and RFC 2822 pubDate, so we drive off that instead.
+    """
+    rss_url = source.get("rss_url", "https://www.loomissayles.com/feed/")
+    expected_host = source.get("expected_hostname", "www.loomissayles.com")
+
+    resp = requests.get(rss_url, headers=HEADERS, timeout=30)
+    resp.raise_for_status()
+
+    root = ET.fromstring(resp.text.lstrip("﻿"))
+    articles = []
+    seen = set()
+    for item in root.findall(".//item"):
+        title_el = item.find("title")
+        link_el = item.find("link")
+        pub_el = item.find("pubDate")
+
+        title = (title_el.text or "").strip() if title_el is not None else ""
+        link = (link_el.text or "").strip() if link_el is not None else ""
+        if not title or not link:
+            continue
+        if not _validate_hostname(link, expected_host):
+            continue
+        if not urlparse(link).path.startswith("/insights/"):
+            continue
+        if link in seen:
+            continue
+
+        date_raw = (pub_el.text or "").strip() if pub_el is not None else ""
+        parsed_date = None
+        if date_raw:
+            try:
+                parsed_date = parsedate_to_datetime(date_raw).strftime("%Y-%m-%d")
+            except (ValueError, TypeError):
+                parsed_date = parse_date(date_raw)
+
+        seen.add(link)
+        articles.append({
+            "title": title,
+            "url": link,
+            "date": parsed_date,
+            "date_raw": date_raw,
+        })
+
+    articles.sort(key=lambda a: a["date"] or "", reverse=True)
+    return articles[:source.get("max_articles", 10)]
+
+
 # FETCHER_SYNTHESIS_INSERTION_POINT — auto-generated fetchers inserted above this line
 
 
@@ -3097,6 +3151,7 @@ FETCHERS = {
     "goehring-rozencwajg": fetch_goehring_rozencwajg,
     "franklin-templeton": fetch_franklin_templeton,
     "blue-owl-capital": fetch_blue_owl_capital,
+    "loomis-sayles": fetch_loomis_sayles,
 }
 
 
