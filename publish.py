@@ -60,6 +60,7 @@ BADGE_COLORS: dict[str, str] = {
     "principal-am": "#00568c",              # Principal deep azure (brand-adjacent corporate blue; sits between #003a70 PIMCO navy — darker — and #0066cc Wellington blue — brighter/lighter — RGB dist ≥40 to both and to #4a6fa5 GSAM steel blue; WCAG AA ~6.9:1 on white)
     "franklin-templeton": "#004d40",        # Franklin Templeton deep pine-teal (the corporate-blue cluster is full, so the brand navy is unusable; this is the darkest, greenest point of the teal family — RGB dist ≥61 to #00607a T.Rowe teal-navy, #006d75 Janus and #00838f MetLife cyan, and 51.6 to its nearest neighbour overall, the highest min-distance of any candidate tested; WCAG AAA 9.8:1 on white)
     "partners-group": "#7b3f00",            # Partners Group dark chocolate-brown (the warm-earth band is the only one with room left: darker and far less red than #8d4004 Cohen & Steers burnt-sienna and #7c2d12 Verdad terracotta, warmer/redder than #5d4037 Acadian umber — min RGB dist 36 to any existing color; WCAG AAA 8.9:1 on white)
+    "loomis-sayles": "#a31fa3",             # Loomis Sayles magenta-orchid — the brand navy is unusable (the corporate-blue cluster #003a70/#00568c/#0066cc/#1f49e0/#4a6fa5 is full), and the magenta-violet gap between #9b6be0 GMO lavender (much lighter) and #80276c Natixis plum-purple (much darker/redder) was the widest hole left in the wheel: min ΔE 26.0 (to #7a4cb1 JPMAM violet), min RGB dist 62.5; WCAG AA 6.4:1 on white
     "blue-owl-capital": "#301070",          # Blue Owl midnight indigo-violet ("night owl"; the deep blue-violet slot between the navy and violet clusters was empty — min RGB dist 63.8 to any of the 36 existing colors, the highest of any palette-consistent candidate: 63.8 to #003a70 PIMCO navy, 82 to #3949ab Matthews indigo, 66 to #5e3a82 Apollo plum; WCAG AAA 14.6:1 on white)
 }
 
@@ -332,6 +333,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "美国另类资产管理公司，2021 年由 Owl Rock 与 Dyal Capital 合并而成并登陆纽交所（NYSE: OWL），管理规模约 $319B。三大平台：面向中高端市场赞助商的直接借贷、含数据中心的净租赁实物资产、以及 GP 战略资本——收购其他另类管理人的少数股权，这条赛道由前身 Dyal 开创。逾 $225B 属永久资本，无被迫抛售压力。",
         "notable_en": "Its GP Strategic Capital arm (formerly Dyal) effectively created the GP-stakes niche and set a record with the $12.9B close of GP Stakes V in 2023. The credit platform runs Blue Owl Capital Corporation, the second-largest publicly traded BDC, and the firm has bought its way into new asset classes almost yearly — Oak Street, Wellfleet, Prima, Kuvare, Atalaya, IPI Partners.",
         "notable_zh": "GP 战略资本平台（前身 Dyal）开创了 GP 少数股权这一细分赛道，2023 年 GP Stakes V 以 $12.9B 创下该品类募集纪录。信贷平台旗下的 Blue Owl Capital Corporation 是美国第二大上市 BDC。公司几乎每年靠收购进入新资产类别：Oak Street、Wellfleet、Prima、Kuvare、Atalaya、IPI Partners。",
+    },
+    "loomis-sayles": {
+        "founded": "1926", "aum": "~$435B", "hq": "Boston, USA",
+        "type_en": "Asset Manager (Fixed Income)", "type_zh": "资产管理（固定收益）",
+        "desc_zh": "1926 年创立于波士顿的老牌固定收益管理人，管理规模 ~$435B。以自下而上的信用研究立身：中央研究团队覆盖企业债、证券化产品、市政债与主权债，之上是一批被称为 Alpha Engine 的自治专才团队，各有独立投资哲学。强项在多部门与全球固定收益、新兴市场债和市政债，另设一支长期集中持股的成长股团队。",
+        "notable_en": "Runs an \"Alpha Engine\" model — specialist teams with distinct philosophies drawing on one shared central research bench rather than a single house view, which is why its municipal, global fixed income and EM debt desks publish independent monthly outlooks. Its growth-equity arm was founded and is still led by CIO Aziz Hamzaogullari.",
+        "notable_zh": "招牌是 \"Alpha Engine\" 模式：各投资团队保有独立投资哲学，共用同一套中央研究平台，而非统一的公司观点——所以市政债、全球固定收益、新兴市场债三条线各自发布月度展望。成长股团队由 CIO Aziz Hamzaogullari 创立并领导至今。",
     },
 }
 

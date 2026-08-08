@@ -1613,6 +1613,39 @@ def _fetch_content_blue_owl_capital(article: dict) -> Optional[tuple[Path, str]]
     return (content_path, "ok")
 
 
+def _fetch_content_loomis_sayles(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Loomis Sayles Insights article content via requests (SSR WordPress).
+
+    Insight pages are server-rendered WordPress; the body is the standard
+    `div.entry-content`. `main p` also works but additionally picks up the
+    trailing "Subscribe to our 'In Short' research notes" CTA row, so we scope
+    to the post container. The compliance disclaimer and the numeric tracking
+    code that end every piece do live inside `.entry-content`, but they run a
+    few hundred chars at most against multi-thousand-char bodies, so they are
+    not worth a second pass. `_normalize_html`'s generic article/main fallback
+    covers any page that skips the WordPress theme wrapper.
+    Verified live 2026-08-08: 3.3K-8.1K chars across 4 recent insights.
+    """
+    url = article["url"]
+    log.info("  Loomis Sayles: fetching article page %s", url)
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Loomis Sayles: fetch failed: %s", e)
+        return None
+
+    text = _normalize_html(resp.text, ".entry-content p")
+    if not _check_min_content_length(text):
+        log.warning("  Loomis Sayles: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Loomis Sayles: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -1651,6 +1684,7 @@ CONTENT_FETCHERS = {
     "franklin-templeton": _fetch_content_franklin_templeton,
     "partners-group": _fetch_content_partners_group,
     "blue-owl-capital": _fetch_content_blue_owl_capital,
+    "loomis-sayles": _fetch_content_loomis_sayles,
 }
 
 
