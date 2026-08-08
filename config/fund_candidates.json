@@ -2956,7 +2956,7 @@
     "name": "Loomis Sayles",
     "homepage_url": "https://www.loomissayles.com",
     "source": "manual",
-    "status": "visitable",
+    "status": "promoted",
     "strategy_tags": [
       "fixed_income",
       "macro"
@@ -3046,14 +3046,14 @@
         "path": "insights/municipal-marketplace-can-single-state-portfolios-be-advantageous"
       }
     ],
-    "status_since": "2026-08-01T09:02:34.899901+08:00",
+    "status_since": "2026-08-08T09:02:21.620976+08:00",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-07-30T09:02:50.327072+08:00",
     "last_deep_analyzed_at": "2026-08-08T01:10:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.6,
     "topics": "fixed income, credit, macro, municipal bonds",
-    "notes": "Confirmed: substantive FI roundtable, ungated",
+    "notes": "RECOMMEND: trial passed (7/7 days with articles, quality=0.64)",
     "is_publicly_accessible": true,
     "has_article_index": true,
     "last_screened_at": "2026-08-01T09:00:11.611862+08:00",
@@ -3069,7 +3069,9 @@
     },
     "screening_reason": "Research index detected",
     "fit_score": 0.76,
-    "last_validated_at": "2026-08-01T09:00:15.612274+08:00"
+    "last_validated_at": "2026-08-01T09:00:15.612274+08:00",
+    "synthesis_priority": true,
+    "synthesis_priority_set_at": "2026-08-08T09:02:21.621004+08:00"
   },
   {
     "id": "resonanz-capital",
