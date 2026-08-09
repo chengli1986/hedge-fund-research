@@ -3082,7 +3082,7 @@
     "name": "Resonanz Capital",
     "homepage_url": "https://resonanzcapital.com",
     "source": "manual",
-    "status": "visitable",
+    "status": "promoted",
     "strategy_tags": [
       "quant",
       "private_credit",
@@ -3133,7 +3133,7 @@
         "path": "insights/crowding-isnt-one-trade.-march-proved-it"
       }
     ],
-    "status_since": "2026-08-01T09:05:46.233196+08:00",
+    "status_since": "2026-08-09T09:02:40.339169+08:00",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-07-31T09:03:45.309839+08:00",
     "is_publicly_accessible": false,
@@ -3156,7 +3156,7 @@
     "quality": "HIGH",
     "quality_score": 0.78,
     "topics": "quant, private credit, macro, portfolio construction",
-    "notes": "RECOMMEND: Quant DD framework + credit/repo research",
+    "notes": "RECOMMEND: trial passed (7/7 days with articles, quality=0.86)",
     "synthesis_attempted_at": "2026-08-01T01:05:46.233161+00:00",
     "synthesis_outcome": "success"
   },

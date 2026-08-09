@@ -7821,9 +7821,7 @@
       "total_articles": 140,
       "days_with_articles": 7,
       "avg_quality_score": 0.636
-    }
-  ],
-  "active_trials": [
+    },
     {
       "id": "resonanz-capital",
       "name": "Resonanz Capital",
@@ -7833,7 +7831,7 @@
       "quality": "HIGH",
       "topics": "quant, private credit, macro, portfolio construction",
       "start_date": "2026-08-02",
-      "end_date": null,
+      "end_date": "2026-08-09",
       "daily_checks": {
         "2026-08-02": {
           "accessible": true,
@@ -7956,10 +7954,29 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-08-09": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://resonanzcapital.com/insights/july-2026-qis-update-crowding-broke.-rates-convexity-paid.-fx-fractured",
+            "https://resonanzcapital.com/insights/swap-spread-arbitrage-and-the-quiet-reason-it-keeps-coming-back",
+            "https://resonanzcapital.com/insights/the-metric-every-pitch-deck-gets-backwards",
+            "https://resonanzcapital.com/insights/crowding-isnt-one-trade.-march-proved-it",
+            "https://resonanzcapital.com/insights/june-2026-qis-update-carry-paid-again.-convexity-still-didnt",
+            "https://resonanzcapital.com/insights/i-was-wrong-about-ai.-twice",
+            "https://resonanzcapital.com/insights/the-hidden-cost-of-static-qis-why-a-vast-toolbox-demands-active-hands",
+            "https://resonanzcapital.com/insights/the-ecb-is-asking-the-right-question-about-ucits-leverage.-but-looking-in-the-wrong-place",
+            "https://resonanzcapital.com/insights/qis-in-may-carry-works-hedges-dont-and-the-month-was-all-path-dependence",
+            "https://resonanzcapital.com/insights/the-momentum-signal-works.-the-momentum-trade-is-crowded"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -8109,8 +8126,13 @@
           "day": 7,
           "date": "2026-08-08"
         }
-      ]
-    },
+      ],
+      "total_articles": 70,
+      "days_with_articles": 7,
+      "avg_quality_score": 0.862
+    }
+  ],
+  "active_trials": [
     {
       "id": "baillie-gifford",
       "name": "Baillie Gifford",
@@ -8159,6 +8181,24 @@
           "fetcher_used": false
         },
         "2026-08-08": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 0,
+          "article_urls": [
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-international-viewpoints-fast-follower-to-global-leader-10064930/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-charting-the-trends-beyond-ai-10064845/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-podcast-62-spacex-10064666/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-global-alpha-quarterly-insights-10064662/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-emerging-markets-quarterly-insights-10064670/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-international-growth-quarterly-insights-10064671/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-international-alpha-quarterly-insights-10064117/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-us-equity-growth-quarterly-insights-10064118/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-global-alpha-insights-medpace-10064166/"
+          ],
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-08-09": {
           "accessible": true,
           "article_count": 20,
           "date_count": 0,
@@ -8284,6 +8324,14 @@
           "js_only_checked": 0,
           "day": 3,
           "date": "2026-08-08"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 4,
+          "date": "2026-08-09"
         }
       ]
     }
