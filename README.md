@@ -2,7 +2,7 @@
 
 Tracks and aggregates research insights, market commentary, and papers from top hedge funds. Summarizes via LLM and publishes a bilingual (CN/EN) dashboard.
 
-## Sources (36)
+## Sources (38)
 
 | Fund | Method | Frequency | Notable |
 |------|--------|-----------|---------|
@@ -42,6 +42,8 @@ Tracks and aggregates research insights, market commentary, and papers from top 
 | **Principal Asset Management** | Playwright | Weekly | Global multi-asset manager, asset-management arm of Principal Financial Group; macro, multi-asset, real assets, fixed income; Des Moines, 1879, ~$578B |
 | **Franklin Templeton** | Playwright | Weekly | One of the largest independent asset managers (~$1.66T); multi-boutique model — Templeton EM value, Western Asset / Brandywine fixed income, Clarion real estate, Legg Mason + Putnam franchises; San Mateo, 1947 |
 | **Partners Group** | SSR (requests) | Monthly | Swiss-listed private-markets specialist (~$186B); thematic transformational investing across private equity, private credit, infrastructure and real estate; pioneered evergreen semi-liquid vehicles; Baar-Zug, 1996 |
+| **Blue Owl Capital** | SSR (requests) | Monthly | US alternative asset manager (~$319B) from the 2021 Owl Rock / Dyal Capital merger; three platforms — direct lending ($158B), net-lease real assets incl. data centers ($89B), GP strategic capital ($72B); permanent-capital heavy (>$225B) |
+| **Loomis Sayles** | RSS feed | Weekly | Boston fixed-income house, founded 1926 (~$435B as of 6/30/2026); "Alpha Engines" model — autonomous specialist teams over a shared bottom-up credit research bench; multisector/global fixed income, EM debt, munis, plus a concentrated long-horizon growth-equity team |
 
 ## Pipeline
 
