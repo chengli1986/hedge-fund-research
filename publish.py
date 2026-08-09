@@ -61,6 +61,7 @@ BADGE_COLORS: dict[str, str] = {
     "franklin-templeton": "#004d40",        # Franklin Templeton deep pine-teal (the corporate-blue cluster is full, so the brand navy is unusable; this is the darkest, greenest point of the teal family — RGB dist ≥61 to #00607a T.Rowe teal-navy, #006d75 Janus and #00838f MetLife cyan, and 51.6 to its nearest neighbour overall, the highest min-distance of any candidate tested; WCAG AAA 9.8:1 on white)
     "partners-group": "#7b3f00",            # Partners Group dark chocolate-brown (the warm-earth band is the only one with room left: darker and far less red than #8d4004 Cohen & Steers burnt-sienna and #7c2d12 Verdad terracotta, warmer/redder than #5d4037 Acadian umber — min RGB dist 36 to any existing color; WCAG AAA 8.9:1 on white)
     "loomis-sayles": "#a31fa3",             # Loomis Sayles magenta-orchid — the brand navy is unusable (the corporate-blue cluster #003a70/#00568c/#0066cc/#1f49e0/#4a6fa5 is full), and the magenta-violet gap between #9b6be0 GMO lavender (much lighter) and #80276c Natixis plum-purple (much darker/redder) was the widest hole left in the wheel: min ΔE 26.0 (to #7a4cb1 JPMAM violet), min RGB dist 62.5; WCAG AA 6.4:1 on white
+    "resonanz-capital": "#3c1518",          # Resonanz deep oxblood (near-black maroon) — the palette had no very-dark neutral-red point at all, so this candidate scores the highest separation of any tested: min RGB dist 62.4 across all 38 existing colors (nearest #5d4037 Acadian umber, which is far lighter and browner; 68 to #6b0f1a-family wine tones and 78 to #9d2235 Aberdeen burgundy); WCAG AAA 16.0:1 on white
     "blue-owl-capital": "#301070",          # Blue Owl midnight indigo-violet ("night owl"; the deep blue-violet slot between the navy and violet clusters was empty — min RGB dist 63.8 to any of the 36 existing colors, the highest of any palette-consistent candidate: 63.8 to #003a70 PIMCO navy, 82 to #3949ab Matthews indigo, 66 to #5e3a82 Apollo plum; WCAG AAA 14.6:1 on white)
 }
 
@@ -340,6 +341,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "1926 年创立于波士顿的老牌固定收益管理人，管理规模 ~$435B。以自下而上的信用研究立身：中央研究团队覆盖企业债、证券化产品、市政债与主权债，之上是一批被称为 Alpha Engine 的自治专才团队，各有独立投资哲学。强项在多部门与全球固定收益、新兴市场债和市政债，另设一支长期集中持股的成长股团队。",
         "notable_en": "Runs an \"Alpha Engine\" model — specialist teams with distinct philosophies drawing on one shared central research bench rather than a single house view, which is why its municipal, global fixed income and EM debt desks publish independent monthly outlooks. Its growth-equity arm was founded and is still led by CIO Aziz Hamzaogullari.",
         "notable_zh": "招牌是 \"Alpha Engine\" 模式：各投资团队保有独立投资哲学，共用同一套中央研究平台，而非统一的公司观点——所以市政债、全球固定收益、新兴市场债三条线各自发布月度展望。成长股团队由 CIO Aziz Hamzaogullari 创立并领导至今。",
+    },
+    "resonanz-capital": {
+        "founded": "2019", "aum": "~$6B", "hq": "Frankfurt, Germany",
+        "type_en": "Alternatives Multi-Strategy Manager", "type_zh": "另类多策略资管",
+        "desc_zh": "德国法兰克福的另类投资专家，2019 年创立、受 BaFin 监管，顾问与管理规模约 ~$6B。特色是不做单一管理人推荐，而把对冲基金、流动性另类策略与开放架构 QIS（量化投资策略）拼装成多策略组合：旗舰产品 Jazz 是可日度申赎的多策略 UCITS，另有为机构定制的叠加与防御性委托。",
+        "notable_en": "Runs Jazz, billed as the first daily-liquid UCITS to combine open-architecture QIS with multi-strategy portfolio design. Its research desk publishes a monthly QIS performance review plus a public QIS dashboard, drawing on a database of 10,000+ tracked investment products.",
+        "notable_zh": "旗舰产品 Jazz 号称首只把开放架构 QIS 与多策略组合设计结合起来的日度流动性 UCITS。研究团队每月发布 QIS 表现回顾并维护公开的 QIS dashboard，背后是覆盖一万余只投资产品的数据库。",
     },
 }
 

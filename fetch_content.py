@@ -1646,6 +1646,36 @@ def _fetch_content_loomis_sayles(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+def _fetch_content_resonanz_capital(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Resonanz Capital Insights article content via requests (SSR HubSpot).
+
+    Insight pages are server-rendered HubSpot blog posts; the body lives in the
+    `#hs_cos_wrapper_post_body` rich-text span. `main p` also works but adds the
+    listing summary line and the "5 min read |Jul 23, 2026" meta row above the
+    body, so we scope to the post-body wrapper. `_normalize_html`'s generic
+    article/main fallback covers any page that skips the HubSpot wrapper.
+    Verified live 2026-08-09: 4.6K-6.8K chars across 4 recent insights.
+    """
+    url = article["url"]
+    log.info("  Resonanz: fetching article page %s", url)
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Resonanz: fetch failed: %s", e)
+        return None
+
+    text = _normalize_html(resp.text, "#hs_cos_wrapper_post_body p")
+    if not _check_min_content_length(text):
+        log.warning("  Resonanz: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Resonanz: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -1685,6 +1715,7 @@ CONTENT_FETCHERS = {
     "partners-group": _fetch_content_partners_group,
     "blue-owl-capital": _fetch_content_blue_owl_capital,
     "loomis-sayles": _fetch_content_loomis_sayles,
+    "resonanz-capital": _fetch_content_resonanz_capital,
 }
 
 

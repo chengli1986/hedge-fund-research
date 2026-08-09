@@ -722,6 +722,25 @@
       "notable_authors": [],
       "expected_hostname": "loomissayles.com",
       "max_articles": 10
+    },
+    {
+      "id": "resonanz-capital",
+      "strategy_tags": [
+        "quant",
+        "private_credit",
+        "macro",
+        "multi_asset"
+      ],
+      "name": "Resonanz Capital",
+      "short_name": "Resonanz",
+      "url": "https://resonanzcapital.com/insights?hsLang=en",
+      "rss_url": "https://resonanzcapital.com/insights/rss.xml",
+      "method": "rss",
+      "frequency": "weekly",
+      "description": "Frankfurt-based, BaFin-regulated alternatives specialist founded in 2019 (~$6B assets under advisory). Designs and runs multi-strategy portfolios out of hedge funds, liquid alternatives and open-architecture QIS (quantitative investment strategies) rather than selecting single managers in isolation — flagship is the Jazz daily-liquid multi-strategy UCITS, alongside bespoke overlay and defensive mandates for institutional allocators.",
+      "notable_authors": [],
+      "expected_hostname": "resonanzcapital.com",
+      "max_articles": 10
     }
   ],
   "settings": {
