@@ -688,6 +688,7 @@ def generate_html(articles: list[dict]) -> str:
     # container ever references it, so it stays hidden in the pool). This is
     # intentional graceful degradation, not a behavior this refactor introduces.
     pool_parts: list[str] = []
+    older_parts: list[str] = []
     details_by_aid: dict[str, dict] = {}
     for seq, a in enumerate(sorted_articles):
         sid = a.get("source_id", "unknown")
@@ -705,7 +706,7 @@ def generate_html(articles: list[dict]) -> str:
         # data-seq = position in the global date-descending order. The timeline
         # view sorts by it because pool DOM order is scrambled after any
         # themes/funds hydration (returnArticlesToPool appends in document order).
-        pool_parts.append(
+        article_markup = (
             f'<article id="a-{_esc(aid)}" class="pool-article" '
             f'data-source-id="{_esc(sid)}" '
             f'data-date="{_esc(a.get("date", ""))}" '
@@ -714,7 +715,22 @@ def generate_html(articles: list[dict]) -> str:
             f'data-themes="{theme_slugs}">'
             f'{card_html}</article>'
         )
+        # Older articles ship as strings in a JSON island rather than as DOM.
+        # Hiding them with CSS still cost a full parse and node construction for
+        # content nobody asked to see (409 of 1074 articles, ~17k nodes).
+        if _age_of(a) == "older":
+            older_parts.append(article_markup)
+        else:
+            pool_parts.append(article_markup)
     article_pool_html = "\n".join(pool_parts)
+
+    older_island = ""
+    if older_parts:
+        older_json = json.dumps(older_parts, ensure_ascii=False).replace("</", "<\\/")
+        older_island = (
+            f'<script type="application/json" id="older-articles-data">'
+            f'{older_json}</script>'
+        )
 
     # JSON data island for lazy <details> hydration. Escape </ to <\/ so the
     # HTML parser does not prematurely close the script tag if any analysis
@@ -1372,6 +1388,7 @@ body.hide-older article.pool-article[data-age="older"] {{ display: none !importa
 </div>
 
 {details_island}
+{older_island}
 
 <script>
 let langZh = false;
@@ -1444,9 +1461,39 @@ function toggleLang() {{
   document.querySelectorAll('.lang-zh').forEach(el => el.style.display = langZh ? '' : 'none');
 }}
 
+/* Older articles are not in the initial DOM — they arrive as HTML strings in
+   #older-articles-data and are injected the first time the reader asks for
+   them. Injecting into the pool is enough: populateViewFromPool re-sorts the
+   pool by data-seq on every view switch, so they land in the right places. */
+let __olderLoaded = false;
+function ensureOlderLoaded() {{
+  if (__olderLoaded) return;
+  const island = document.getElementById('older-articles-data');
+  const pool = document.getElementById('article-pool');
+  if (!island || !pool) {{ __olderLoaded = true; return; }}
+  let parts;
+  try {{
+    parts = JSON.parse(island.textContent);
+  }} catch (e) {{
+    console.error('older-articles-data parse failed', e);
+    __olderLoaded = true;
+    return;
+  }}
+  const holder = document.createElement('div');
+  holder.innerHTML = parts.join('');
+  while (holder.firstChild) pool.appendChild(holder.firstChild);
+  __olderLoaded = true;
+  /* There is no `currentView` global — the active view is recorded on the
+     toolbar button. switchView() rebuilds the view from the pool and rebinds
+     row toggles, which is exactly what the freshly injected nodes need. */
+  const activeBtn = document.querySelector('.view-btn.active');
+  switchView(activeBtn ? activeBtn.dataset.view : 'themes');
+}}
+
 function toggleOlder() {{
   const body = document.body;
   const btn = document.getElementById('btn-show-older');
+  if (body.classList.contains('hide-older')) ensureOlderLoaded();
   body.classList.toggle('hide-older');
   if (btn) {{
     const showing = !body.classList.contains('hide-older');

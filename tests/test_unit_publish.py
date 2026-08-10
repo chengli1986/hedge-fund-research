@@ -15,6 +15,9 @@ def _date_str(days_ago: int) -> str:
 
 # --- Sample data ---
 
+# Dates are relative, not literal: fixed dates silently cross the RECENT_DAYS
+# boundary as the calendar advances, which is exactly what broke these tests on
+# 2026-08-10 when older articles stopped being rendered into the initial DOM.
 SAMPLE_ARTICLES = [
     {
         "id": "aaa111",
@@ -22,7 +25,7 @@ SAMPLE_ARTICLES = [
         "source_name": "Man",
         "title": "AI Boom or Bust?",
         "url": "https://man.com/ai-boom",
-        "date": "2026-03-28",
+        "date": _date_str(8),
         "summarized": True,
         "summary_en": "Man Group analyzes AI investment cycle risks.",
         "summary_zh": "Man Group分析了AI投资周期的风险。",
@@ -36,7 +39,7 @@ SAMPLE_ARTICLES = [
         "source_name": "Bridgewater",
         "title": "Global Macro Outlook Q2",
         "url": "https://bridgewater.com/macro-q2",
-        "date": "2026-03-25",
+        "date": _date_str(12),
         "summarized": False,
     },
     {
@@ -45,7 +48,7 @@ SAMPLE_ARTICLES = [
         "source_name": "GMO",
         "title": "Value in Emerging Markets",
         "url": "https://gmo.com/em-value",
-        "date": "2026-03-30",
+        "date": _date_str(5),
         "summarized": True,
         "summary_en": "GMO makes the case for EM value stocks.",
         "summary_zh": "GMO论证了新兴市场价值股的投资理由。",
@@ -193,7 +196,7 @@ class TestArticlePool:
         assert tag is not None, "Pool article aaa111 missing"
         tag_str = tag.group(0)
         assert 'data-source-id="man-group"' in tag_str
-        assert 'data-date="2026-03-28"' in tag_str
+        assert f'data-date="{_date_str(8)}"' in tag_str
         assert 'data-themes="ai-tech equities-value"' in tag_str or \
                'data-themes="equities-value ai-tech"' in tag_str
 
@@ -292,13 +295,13 @@ class TestFundDistributionChart:
     articles each fund has — pure CSS, no JS dependency."""
 
     SKEWED_ARTICLES = [
-        {"id": "m1", "source_id": "man-group", "source_name": "Man", "title": "A", "url": "u", "date": "2026-03-01", "summarized": False},
-        {"id": "m2", "source_id": "man-group", "source_name": "Man", "title": "B", "url": "u", "date": "2026-03-02", "summarized": False},
-        {"id": "m3", "source_id": "man-group", "source_name": "Man", "title": "C", "url": "u", "date": "2026-03-03", "summarized": False},
-        {"id": "m4", "source_id": "man-group", "source_name": "Man", "title": "D", "url": "u", "date": "2026-03-04", "summarized": False},
-        {"id": "b1", "source_id": "bridgewater", "source_name": "Bridgewater", "title": "E", "url": "u", "date": "2026-03-01", "summarized": False},
-        {"id": "b2", "source_id": "bridgewater", "source_name": "Bridgewater", "title": "F", "url": "u", "date": "2026-03-02", "summarized": False},
-        {"id": "g1", "source_id": "gmo", "source_name": "GMO", "title": "G", "url": "u", "date": "2026-03-01", "summarized": False},
+        {"id": "m1", "source_id": "man-group", "source_name": "Man", "title": "A", "url": "u", "date": _date_str(23), "summarized": False},
+        {"id": "m2", "source_id": "man-group", "source_name": "Man", "title": "B", "url": "u", "date": _date_str(22), "summarized": False},
+        {"id": "m3", "source_id": "man-group", "source_name": "Man", "title": "C", "url": "u", "date": _date_str(21), "summarized": False},
+        {"id": "m4", "source_id": "man-group", "source_name": "Man", "title": "D", "url": "u", "date": _date_str(20), "summarized": False},
+        {"id": "b1", "source_id": "bridgewater", "source_name": "Bridgewater", "title": "E", "url": "u", "date": _date_str(23), "summarized": False},
+        {"id": "b2", "source_id": "bridgewater", "source_name": "Bridgewater", "title": "F", "url": "u", "date": _date_str(22), "summarized": False},
+        {"id": "g1", "source_id": "gmo", "source_name": "GMO", "title": "G", "url": "u", "date": _date_str(23), "summarized": False},
     ]
 
     def test_distribution_container_present(self) -> None:
@@ -414,13 +417,21 @@ class TestOlderArticleFolding:
             )
 
     def test_older_article_has_data_age_older(self) -> None:
+        """Older articles keep data-age="older", but since 2026-08-10 they live
+        in the #older-articles-data island rather than the initial DOM, so the
+        markup is asserted there."""
         result = generate_html(self.MIXED_ARTICLES)
         import re
+        island = result.split('id="older-articles-data">', 1)[1].split("</script>", 1)[0]
         for aid in ("old1", "old2"):
-            tag = re.search(rf'<article[^>]*id="a-{aid}"[^>]*>', result)
-            assert tag is not None, f"pool article {aid} missing"
-            assert 'data-age="older"' in tag.group(0), (
-                f"{aid} should be tagged data-age=older (it's >90d), got: {tag.group(0)}"
+            assert re.search(rf'<article[^>]*id=\\"a-{aid}\\"[^>]*>', island) \
+                or re.search(rf'<article[^>]*id="a-{aid}"[^>]*>', island), \
+                f"{aid} missing from the deferred-articles island"
+            assert 'data-age=' in island and 'older' in island, (
+                f"{aid} should still carry data-age=older inside the island"
+            )
+            assert f'id="a-{aid}"' not in result.split('id="older-articles-data"')[0], (
+                f"{aid} must not be in the initial DOM any more"
             )
 
     def test_90d_boundary_inclusive(self) -> None:
@@ -464,8 +475,12 @@ class TestOlderArticleFolding:
         assert "Older but still relevant." not in result, (
             "Older article body should be entirely absent from HTML"
         )
-        # But old1's <article> shell must still be present (so Show older works)
-        assert 'id="a-old1"' in result
+        # But old1's <article> shell must still ship — since 2026-08-10 inside the
+        # deferred island (JSON-escaped), which "Show older" injects on demand.
+        older_island = result.split('id="older-articles-data">', 1)[1].split("</script>", 1)[0]
+        assert "a-old1" in older_island, (
+            "older article shell must ship in the deferred island so Show older can inject it"
+        )
 
     def test_js_renders_older_notice_when_details_missing(self) -> None:
         """JS hydrate function falls back to a bilingual 'see source above' notice
@@ -611,3 +626,50 @@ class TestUnregisteredSourcesFiltered:
         html = generate_html(arts)
         assert "Known" in html
         assert "Retired Source" not in html, "demoted source must not appear on the page"
+
+
+class TestOlderArticlesLazyLoaded:
+    """Articles past RECENT_DAYS must not be in the initial DOM.
+
+    They were rendered in full and merely hidden with `display:none`, so the
+    browser still parsed and built every node — 409 of 1074 articles (~17k DOM
+    nodes) for content nobody had asked to see. They now ship as HTML strings in
+    a JSON island and are injected on first "Show older" click.
+    """
+
+    def _arts(self):
+        return [
+            {"id": "recent1", "source_id": "man-group", "source_name": "Man",
+             "title": "Recent Piece", "url": "https://man.com/r",
+             "date": _date_str(5), "summarized": False},
+            {"id": "old1", "source_id": "man-group", "source_name": "Man",
+             "title": "Ancient Piece", "url": "https://man.com/o",
+             "date": _date_str(400), "summarized": False},
+        ]
+
+    def test_older_article_not_in_initial_pool(self):
+        html = generate_html(self._arts())
+        import re
+        # Only the <article> cards matter here; the compact table and fund list
+        # still render every article server-side (deliberately out of scope).
+        initial = html.split('id="older-articles-data"')[0]
+        cards = "".join(re.findall(r"<article\b.*?</article>", initial, re.S))
+        assert "Recent Piece" in cards
+        assert "Ancient Piece" not in cards, "older article must not be an <article> in the initial DOM"
+
+    def test_older_article_present_in_data_island(self):
+        html = generate_html(self._arts())
+        assert 'id="older-articles-data"' in html, "island holding deferred articles must exist"
+        island = html.split('id="older-articles-data">', 1)[1].split("</script>", 1)[0]
+        assert "Ancient Piece" in island
+        assert "Recent Piece" not in island
+
+    def test_no_island_when_nothing_is_old(self):
+        html = generate_html([self._arts()[0]])
+        assert 'id="older-articles-data"' not in html
+
+    def test_toggle_injects_before_revealing(self):
+        html = generate_html(self._arts())
+        assert "older-articles-data" in html
+        # the toggle must consult the island, not just flip a CSS class
+        assert "ensureOlderLoaded" in html
