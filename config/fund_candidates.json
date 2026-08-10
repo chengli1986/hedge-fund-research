@@ -2890,10 +2890,10 @@
     ],
     "status_since": "2026-07-26T09:03:39.378481+08:00",
     "quality": "HIGH",
-    "quality_score": 0.82,
-    "topics": "macro, credit, alternatives, fixed income, ESG",
-    "notes": "RECOMMEND: Ungated multi-asset/alts research, active",
-    "last_deep_analyzed_at": "2026-07-27T01:05:00Z"
+    "quality_score": 0.85,
+    "topics": "macro, credit, real estate, fixed income, ESG, digital assets",
+    "notes": "RECOMMEND: Ungated, data-rich multi-asset research",
+    "last_deep_analyzed_at": "2026-08-10T01:01:29Z"
   },
   {
     "id": "blue-owl-capital",
@@ -3276,5 +3276,13 @@
     "quality_score": 0.15,
     "topics": "institutional insights (empty index)",
     "notes": "Rejected: gated, 0 articles in JS results index"
+  },
+  {
+    "id": "golub-capital",
+    "name": "Golub Capital",
+    "homepage_url": "https://golubcapital.com/news-insights/latest-news-insights/",
+    "source": "manual",
+    "status": "seed",
+    "strategy_tags": ["private_credit", "fixed_income"]
   }
 ]
