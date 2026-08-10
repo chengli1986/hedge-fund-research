@@ -11,6 +11,7 @@ Dark GitHub-style theme matching docs.sinostor.com.cn.
 import html
 import gzip
 import json
+import re
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -18,6 +19,10 @@ import argparse
 import os
 
 BJT = timezone(timedelta(hours=8))
+
+# Matches a month-granularity label such as "Aug 2026" / "August 2026" — and
+# deliberately NOT "August 4, 2026", which carries a real day.
+_MONTH_ONLY_RAW = re.compile(r"^[A-Za-z]{3,9}\.?\s+\d{4}$")
 BASE_DIR = Path(__file__).resolve().parent
 DATA_FILE = BASE_DIR / "data" / "articles.jsonl"
 SOURCES_FILE = BASE_DIR / "config" / "sources.json"
@@ -513,6 +518,20 @@ def _esc(text: str) -> str:
     return html.escape(str(text)) if text else ""
 
 
+def _display_date(a: dict) -> str:
+    """Date as it should be shown to a reader.
+
+    Month-granularity dates are normalised upstream to the month's LAST day
+    (fetch_articles.parse_date) so staleness checks don't fire ~30 days early.
+    Rendering that verbatim dates an article into the future — on 2026-08-10 the
+    page led with "2026-08-31". Prefer the original label when it has no day.
+    """
+    raw = (a.get("date_raw") or "").strip()
+    if _MONTH_ONLY_RAW.match(raw):
+        return raw
+    return a.get("date") or ""
+
+
 def _slugify_theme(theme: str) -> str:
     """Convert a theme label into a stable DOM-safe slug."""
     slug = "".join(ch.lower() if ch.isalnum() else "-" for ch in theme)
@@ -570,9 +589,15 @@ def _article_card(a: dict, show_takeaway: bool = False) -> tuple[str, dict | Non
         summary_html = ""
         inline_takeaway = ""
 
+    # Month-granularity dates are normalised to the month's LAST day upstream
+    # (fetch_articles.parse_date, so staleness checks don't fire ~30 days early).
+    # Showing that verbatim puts "2026-08-31" at the top of the page on 08-10, so
+    # prefer the original label when it carries no day.
+    display_date = _display_date(a)
+
     html = f"""<div class="row-main">
     <span class="badge" style="background:{color}">{source_name}</span>
-    <span class="date">{date}</span>
+    <span class="date">{_esc(display_date)}</span>
     <a class="headline" href="{url}" target="_blank" rel="noopener">{title}</a>
     <span class="row-spacer"></span>
     {toggle}
@@ -594,11 +619,23 @@ def generate_html(articles: list[dict]) -> str:
         reverse=True,
     )
 
+    # Drop articles whose source has left sources.json (demoted/retired, e.g.
+    # pgim on 2026-07). Their history stays in articles.jsonl; showing them made
+    # the page render 40 funds while the header counted the 39 registered ones.
+    if sources:
+        sorted_articles = [a for a in sorted_articles if a.get("source_id") in sources]
+
     # Stats
     total = len(sorted_articles)
     week_ago = (datetime.now(BJT) - timedelta(days=7)).strftime("%Y-%m-%d")
-    new_this_week = sum(1 for a in sorted_articles if (a.get("date") or "") >= week_ago)
-    fund_count = len(set(a.get("source_id", "") for a in sorted_articles)) or len(sources) or 5
+    # Upper bound matters: month-granularity dates normalise to the month end,
+    # so without it the current month's articles all counted as "new this week"
+    # (46 shown vs 41 real, 2026-08-10 audit).
+    today_str = datetime.now(BJT).strftime("%Y-%m-%d")
+    new_this_week = sum(
+        1 for a in sorted_articles
+        if week_ago <= (a.get("date") or "") <= today_str
+    )
     production_source_count = len(sources)
 
     # Recency split: articles older than RECENT_DAYS days are tagged data-age="older"
@@ -711,7 +748,7 @@ def generate_html(articles: list[dict]) -> str:
                 takeaway_zh = _esc(a.get("key_takeaway_zh", ""))
                 tooltip = f' title="{takeaway_en}"' if takeaway_en else ""
                 table_rows.append(
-                    f'<tr><td class="ct-date">{_esc(a.get("date", ""))}</td>'
+                    f'<tr><td class="ct-date">{_esc(_display_date(a))}</td>'
                     f'<td><span class="badge" style="background:{color}">{_esc(a.get("source_name", ""))}</span></td>'
                     f'<td><a href="{_esc(a.get("url", "#"))}" target="_blank" rel="noopener"{tooltip}>{_esc(a.get("title", ""))}</a></td></tr>'
                 )
@@ -838,7 +875,7 @@ def generate_html(articles: list[dict]) -> str:
         latest_date = arts[0].get("date", "n/a") if arts else "n/a"
         analyzed_count = sum(1 for a in arts if a.get("summarized"))
         art_list = "\n".join(
-            f'<li><span class="mini-date">{_esc(a.get("date", "n/a"))}</span>'
+            f'<li><span class="mini-date">{_esc(_display_date(a) or "n/a")}</span>'
             f'<a href="{_esc(a.get("url", "#"))}" target="_blank" rel="noopener">{_esc(a.get("title", ""))}</a></li>'
             for a in arts
         )

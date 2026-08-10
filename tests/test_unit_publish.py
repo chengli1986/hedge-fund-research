@@ -541,3 +541,73 @@ class TestOlderArticleFolding:
         assert 'toggleOlder' in result, (
             "publish.py must emit a toggleOlder() JS handler for the button"
         )
+
+
+# --- Audit fixes 2026-08-10 (docs page audit) ---------------------------------
+
+class TestMonthOnlyDates:
+    """Month-granularity dates must not be rendered as a specific future day.
+
+    fetch_articles.parse_date deliberately normalises "Aug 2026" to the LAST day
+    of the month so staleness checks don't penalise month-granularity publishers
+    ~30 days early. That is right for the backend, but the dashboard was showing
+    the normalised value verbatim, so on 2026-08-10 the top of the page read
+    "2026-08-31" — three weeks in the future. date_raw carries the original.
+    """
+
+    def _article(self, **over):
+        a = {
+            "id": "m1", "source_id": "man-group", "source_name": "Man",
+            "title": "Portable Alpha", "url": "https://man.com/pa",
+            "date": "2026-08-31", "date_raw": "Aug 2026", "summarized": False,
+        }
+        a.update(over)
+        return a
+
+    def test_month_only_date_shows_raw_not_normalised_day(self):
+        html = generate_html([self._article()])
+        assert "Aug 2026" in html, "should surface the original month-granularity label"
+        assert ">2026-08-31<" not in html, "must not render the month-end normalised day"
+
+    def test_day_precision_date_still_renders_iso(self):
+        html = generate_html([self._article(date="2026-08-04", date_raw="August 4, 2026")])
+        assert "2026-08-04" in html
+
+    def test_missing_date_raw_falls_back_to_iso(self):
+        a = self._article()
+        del a["date_raw"]
+        html = generate_html([a])
+        assert "2026-08-31" in html, "without date_raw there is nothing better to show"
+
+
+class TestNewThisWeekBounds:
+    """`new this week` counted `date >= week_ago` with no upper bound, so the
+    month-end normalised articles above inflated it (46 shown vs 41 real)."""
+
+    def test_future_dated_articles_are_not_counted_as_new(self):
+        future = (datetime.now(BJT) + timedelta(days=21)).strftime("%Y-%m-%d")
+        arts = [
+            {"id": "f1", "source_id": "man-group", "source_name": "Man", "title": "Future",
+             "url": "https://man.com/f", "date": future, "date_raw": "Aug 2026", "summarized": False},
+            {"id": "r1", "source_id": "man-group", "source_name": "Man", "title": "Recent",
+             "url": "https://man.com/r", "date": _date_str(2), "summarized": False},
+        ]
+        html = generate_html(arts)
+        assert "1 new this week" in html, "only the genuinely recent article counts"
+
+
+class TestUnregisteredSourcesFiltered:
+    """Sources dropped from sources.json (e.g. pgim, demoted 2026-07) kept their
+    historical articles on the page, so the header said 39 funds while 40 were
+    actually displayed."""
+
+    def test_article_from_unknown_source_is_not_rendered(self):
+        arts = [
+            {"id": "k1", "source_id": "man-group", "source_name": "Man", "title": "Known",
+             "url": "https://man.com/k", "date": _date_str(1), "summarized": False},
+            {"id": "u1", "source_id": "pgim", "source_name": "PGIM", "title": "Retired Source",
+             "url": "https://pgim.com/u", "date": _date_str(1), "summarized": False},
+        ]
+        html = generate_html(arts)
+        assert "Known" in html
+        assert "Retired Source" not in html, "demoted source must not appear on the page"
