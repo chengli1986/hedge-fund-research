@@ -8233,6 +8233,24 @@
           ],
           "error": null,
           "fetcher_used": false
+        },
+        "2026-08-11": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 0,
+          "article_urls": [
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-international-viewpoints-fast-follower-to-global-leader-10064930/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-charting-the-trends-beyond-ai-10064845/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-podcast-62-spacex-10064666/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-global-alpha-quarterly-insights-10064662/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-emerging-markets-quarterly-insights-10064670/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-international-growth-quarterly-insights-10064671/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-international-alpha-quarterly-insights-10064117/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-us-equity-growth-quarterly-insights-10064118/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-global-alpha-insights-medpace-10064166/"
+          ],
+          "error": null,
+          "fetcher_used": false
         }
       },
       "auto_decided": false,
@@ -8358,6 +8376,14 @@
           "error": "No new (un-sampled) article links available",
           "day": 5,
           "date": "2026-08-10"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 6,
+          "date": "2026-08-11"
         }
       ]
     }
