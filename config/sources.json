@@ -741,6 +741,23 @@
       "notable_authors": [],
       "expected_hostname": "resonanzcapital.com",
       "max_articles": 10
+    },
+    {
+      "id": "baillie-gifford",
+      "strategy_tags": [
+        "equity",
+        "venture_capital",
+        "emerging_markets"
+      ],
+      "name": "Baillie Gifford",
+      "short_name": "Baillie Gifford",
+      "url": "https://www.bailliegifford.com/en/usa/institutional-investor/insights/",
+      "method": "ssr",
+      "frequency": "weekly",
+      "description": "Edinburgh-based growth-equity house founded in 1908 (~£197B AUM as of 30 June 2026), and the UK's only large-scale independent unlimited-liability investment partnership — no outside shareholders, so the partners carry the firm's risk personally. Runs long-horizon, low-turnover, high-conviction portfolios hunting the small minority of companies that drive index returns, across global/international growth, US equity growth and emerging markets, plus private-company positions held inside the same listed vehicles (its trusts have backed SpaceX since 2018, and the firm was once Tesla's largest institutional shareholder).",
+      "notable_authors": [],
+      "expected_hostname": "bailliegifford.com",
+      "max_articles": 10
     }
   ],
   "settings": {

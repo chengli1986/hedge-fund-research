@@ -67,6 +67,7 @@ BADGE_COLORS: dict[str, str] = {
     "partners-group": "#7b3f00",            # Partners Group dark chocolate-brown (the warm-earth band is the only one with room left: darker and far less red than #8d4004 Cohen & Steers burnt-sienna and #7c2d12 Verdad terracotta, warmer/redder than #5d4037 Acadian umber — min RGB dist 36 to any existing color; WCAG AAA 8.9:1 on white)
     "loomis-sayles": "#a31fa3",             # Loomis Sayles magenta-orchid — the brand navy is unusable (the corporate-blue cluster #003a70/#00568c/#0066cc/#1f49e0/#4a6fa5 is full), and the magenta-violet gap between #9b6be0 GMO lavender (much lighter) and #80276c Natixis plum-purple (much darker/redder) was the widest hole left in the wheel: min ΔE 26.0 (to #7a4cb1 JPMAM violet), min RGB dist 62.5; WCAG AA 6.4:1 on white
     "resonanz-capital": "#3c1518",          # Resonanz deep oxblood (near-black maroon) — the palette had no very-dark neutral-red point at all, so this candidate scores the highest separation of any tested: min RGB dist 62.4 across all 38 existing colors (nearest #5d4037 Acadian umber, which is far lighter and browner; 68 to #6b0f1a-family wine tones and 78 to #9d2235 Aberdeen burgundy); WCAG AAA 16.0:1 on white
+    "baillie-gifford": "#046307",           # Baillie Gifford deep emerald (pure saturated dark green; the green band held only desaturated/olive-leaning tones, so a fully-saturated green was the widest hole left: min RGB dist 61.2 across all 39 existing colors — 61.2 to #004d40 Franklin pine-teal, 67 to #1e7f3e Brookfield, 83 to #2d6a4f Robeco, 127 to #3fb950 AQR lime; WCAG AAA 7.5:1 on white)
     "blue-owl-capital": "#301070",          # Blue Owl midnight indigo-violet ("night owl"; the deep blue-violet slot between the navy and violet clusters was empty — min RGB dist 63.8 to any of the 36 existing colors, the highest of any palette-consistent candidate: 63.8 to #003a70 PIMCO navy, 82 to #3949ab Matthews indigo, 66 to #5e3a82 Apollo plum; WCAG AAA 14.6:1 on white)
 }
 
@@ -353,6 +354,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "德国法兰克福的另类投资专家，2019 年创立、受 BaFin 监管，顾问与管理规模约 ~$6B。特色是不做单一管理人推荐，而把对冲基金、流动性另类策略与开放架构 QIS（量化投资策略）拼装成多策略组合：旗舰产品 Jazz 是可日度申赎的多策略 UCITS，另有为机构定制的叠加与防御性委托。",
         "notable_en": "Runs Jazz, billed as the first daily-liquid UCITS to combine open-architecture QIS with multi-strategy portfolio design. Its research desk publishes a monthly QIS performance review plus a public QIS dashboard, drawing on a database of 10,000+ tracked investment products.",
         "notable_zh": "旗舰产品 Jazz 号称首只把开放架构 QIS 与多策略组合设计结合起来的日度流动性 UCITS。研究团队每月发布 QIS 表现回顾并维护公开的 QIS dashboard，背后是覆盖一万余只投资产品的数据库。",
+    },
+    "baillie-gifford": {
+        "founded": "1908", "aum": "~£197B", "hq": "Edinburgh, United Kingdom",
+        "type_en": "Asset Manager (Growth Equity)", "type_zh": "资产管理（成长股）",
+        "desc_zh": "爱丁堡的成长股投资机构，1908 年由 Augustus Baillie 与 T J Carlyle Gifford 从橡胶产业投资起家，现管理约 £197B 资产，是英国唯一大规模独立无限责任投资合伙制公司（无外部股东，合伙人自担风险）。风格为长周期、低换手、高集中度，专注寻找少数驱动指数回报的高成长公司，覆盖全球/国际成长、美股成长与新兴市场。",
+        "notable_en": "Its listed vehicles hold private companies alongside public equities — the trusts took SpaceX stakes from 2018, and the firm was once Tesla's largest institutional shareholder. Flagship Scottish Mortgage dates back to a 1913 renaming and remains its best-known long-horizon growth trust.",
+        "notable_zh": "旗下上市信托在公开股票之外直接持有未上市公司：2018 年起买入 SpaceX，并曾是特斯拉最大的机构股东。招牌产品 Scottish Mortgage 信托可追溯至 1913 年更名，至今仍是其最知名的长周期成长载体。",
     },
 }
 

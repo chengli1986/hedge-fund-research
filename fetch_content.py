@@ -1676,6 +1676,38 @@ def _fetch_content_resonanz_capital(article: dict) -> Optional[tuple[Path, str]]
     return (content_path, "ok")
 
 
+def _fetch_content_baillie_gifford(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Baillie Gifford insights article content via requests (SSR — Next.js).
+
+    ic-article pages are server-rendered; the body paragraphs live under `main`
+    inside CSS-module-hashed wrappers (`ArticleBody_body__XXXXX`), so any
+    class-based selector would break on the next site rebuild — `main p` is the
+    only stable handle. It picks up the standard "your capital is at risk"
+    lead-in and the FinSA/regulatory disclaimer tail alongside the body, which
+    is acceptable noise relative to the 5-10K chars of actual commentary.
+    Verified live 2026-08-13: 9.3K chars on the Q3 "Charting the trends beyond
+    AI" piece.
+    """
+    url = article["url"]
+    log.info("  Baillie Gifford: fetching article page %s", url)
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Baillie Gifford: fetch failed: %s", e)
+        return None
+
+    text = _normalize_html(resp.text, "main p")
+    if not _check_min_content_length(text):
+        log.warning("  Baillie Gifford: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Baillie Gifford: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -1716,6 +1748,7 @@ CONTENT_FETCHERS = {
     "blue-owl-capital": _fetch_content_blue_owl_capital,
     "loomis-sayles": _fetch_content_loomis_sayles,
     "resonanz-capital": _fetch_content_resonanz_capital,
+    "baillie-gifford": _fetch_content_baillie_gifford,
 }
 
 
