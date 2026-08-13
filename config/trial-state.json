@@ -8130,9 +8130,7 @@
       "total_articles": 70,
       "days_with_articles": 7,
       "avg_quality_score": 0.862
-    }
-  ],
-  "active_trials": [
+    },
     {
       "id": "baillie-gifford",
       "name": "Baillie Gifford",
@@ -8142,7 +8140,7 @@
       "quality": "HIGH",
       "topics": "equity, emerging markets, growth investing, thematic research",
       "start_date": "2026-08-06",
-      "end_date": null,
+      "end_date": "2026-08-13",
       "daily_checks": {
         "2026-08-06": {
           "accessible": true,
@@ -8269,10 +8267,28 @@
           ],
           "error": null,
           "fetcher_used": false
+        },
+        "2026-08-13": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 0,
+          "article_urls": [
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-international-viewpoints-fast-follower-to-global-leader-10064930/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-charting-the-trends-beyond-ai-10064845/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-podcast-62-spacex-10064666/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-global-alpha-quarterly-insights-10064662/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-emerging-markets-quarterly-insights-10064670/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-international-growth-quarterly-insights-10064671/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-international-alpha-quarterly-insights-10064117/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q2-quarterly-letters-us-equity-growth-quarterly-insights-10064118/",
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/ic-article/2026-q3-global-alpha-insights-medpace-10064166/"
+          ],
+          "error": null,
+          "fetcher_used": false
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -8411,8 +8427,12 @@
           "day": 7,
           "date": "2026-08-12"
         }
-      ]
+      ],
+      "total_articles": 160,
+      "days_with_articles": 8,
+      "avg_quality_score": 0.772
     }
   ],
+  "active_trials": [],
   "last_summary_sent_date": "2026-08-07"
 }
