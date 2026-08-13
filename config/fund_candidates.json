@@ -3255,7 +3255,11 @@
     "topics": "equity, emerging markets, growth investing, thematic research",
     "notes": "RECOMMEND: trial passed (8/7 days with articles, quality=0.77)",
     "synthesis_priority": true,
-    "synthesis_priority_set_at": "2026-08-13T09:02:43.123779+08:00"
+    "synthesis_priority_set_at": "2026-08-13T09:02:43.123779+08:00",
+    "synthesis_attempted_at": "2026-08-13T01:04:18.069282+00:00",
+    "synthesis_outcome": "success",
+    "promoted_at": "2026-08-13T01:04:18.069282+00:00",
+    "promoted_reason": "fetcher_synthesis_success (trial-PASS shortcut)"
   },
   {
     "id": "state-street-im",

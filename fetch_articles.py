@@ -2810,6 +2810,64 @@ def fetch_loomis_sayles(source: dict) -> list[dict]:
     return articles[:source.get("max_articles", 10)]
 
 
+def fetch_baillie_gifford(source: dict) -> list[dict]:
+    """Fetch articles from Baillie Gifford (SSR — Next.js server-rendered listing).
+
+    The US institutional-investor insights index server-renders the *entire*
+    back catalogue (~440 cards) in one response, so no pagination/Playwright is
+    needed. Each card is a bare ``<a class="text CardSmall_card__…">`` with:
+      - ``title``/``aria-label`` attribute carrying the headline (also in ``h3``)
+      - a metabar whose FIRST ``metaItem`` span is the date (``"August 2026"``);
+        the remaining metaItems are the content type and read time.
+
+    CSS-module class hashes (``CardSmall_card__XJ9yU``) change on every site
+    rebuild, so selection keys off the stable ``/ic-article/`` URL segment and
+    matches the metabar with substring class selectors. Dates are month
+    granularity, and the listing is newest-first, so the stable sort keeps the
+    page's intra-month ordering.
+    """
+    resp = requests.get(source["url"], headers=HEADERS, timeout=20)
+    resp.raise_for_status()
+    soup = BeautifulSoup(resp.text, "html.parser")
+    expected_host = source.get("expected_hostname", "bailliegifford.com")
+
+    seen_urls: set[str] = set()
+    articles = []
+    for card in soup.find_all("a", href=True):
+        href = card["href"]
+        if "/ic-article/" not in href:
+            continue
+        url = urljoin("https://www.bailliegifford.com", href)
+        if not _validate_hostname(url, expected_host):
+            continue
+        if url in seen_urls:
+            continue
+        seen_urls.add(url)
+
+        title = (card.get("title") or "").strip()
+        if not title:
+            heading = card.find(["h2", "h3", "h4"])
+            title = heading.get_text(strip=True) if heading else ""
+        if not title:
+            continue
+
+        date_raw = ""
+        meta = card.select_one('[class*="metabar"] [class*="metaItem"]')
+        if meta:
+            date_raw = meta.get_text(strip=True)
+        parsed_date = parse_date(date_raw) if date_raw else None
+
+        articles.append({
+            "title": title,
+            "url": url,
+            "date": parsed_date,
+            "date_raw": date_raw,
+        })
+
+    articles.sort(key=lambda a: a["date"] or "", reverse=True)
+    return articles[:source.get("max_articles", 10)]
+
+
 # FETCHER_SYNTHESIS_INSERTION_POINT — auto-generated fetchers inserted above this line
 
 
@@ -3126,6 +3184,7 @@ FETCHERS = {
     "aberdeen": fetch_aberdeen,
     "research-affiliates": fetch_researchaffiliates,
     "pimco": fetch_pimco,
+    "baillie-gifford": fetch_baillie_gifford,
     "partners-group": fetch_partners_group,
     "resonanz-capital": fetch_resonanz_capital,
     "cohen-steers": fetch_cohen_steers,
