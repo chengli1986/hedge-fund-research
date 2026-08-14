@@ -11,7 +11,7 @@ from fetch_articles import (
     fetch_blackstone, fetch_gsam, _fetch_article_date_jsonld,
     fetch_amundi, fetch_jpmam, fetch_pgim, fetch_aberdeen,
     fetch_cambridge_associates, fetch_verdad,
-    fetch_metlife_im, fetch_rothschild_co_am,
+    fetch_metlife_im, fetch_rothschild_co_am, fetch_baillie_gifford,
 )
 
 
@@ -1692,3 +1692,118 @@ class TestFetchRothschildCoAm:
         html = "<html><body><ul></ul></body></html>"
         with patch("fetch_articles.requests.get", return_value=self._mock_response(html)):
             assert fetch_rothschild_co_am(self.SOURCE) == []
+
+
+class TestFetchBaillieGifford:
+    """CRA flagged fetch_articles.py's `a["date"] or ""` sort key as a possible
+    type-confusion crash when some cards parse a date and others don't.
+    parse_date() always returns str|None so `or ""` normalizes everything to
+    str — not reproducible — but there was no regression test pinning that
+    down, so this locks in the mixed-dated/undated case explicitly."""
+
+    SOURCE = {
+        "url": "https://www.bailliegifford.com/en/usa/institutional-investor/insights/",
+        "max_articles": 10,
+        "expected_hostname": "bailliegifford.com",
+    }
+
+    def _card(self, title: str, href: str, date_text: str = "August 2026", title_attr: bool = True) -> str:
+        title_html = f'title="{title}"' if title_attr else ""
+        heading = "" if title_attr else f"<h3>{title}</h3>"
+        meta = f'<div class="metabar_x"><span class="metaItem_x">{date_text}</span></div>' if date_text else ""
+        return f"""
+        <a class="text CardSmall_card__x1" {title_html} href="{href}">
+          {heading}
+          {meta}
+        </a>
+        """
+
+    def _mock_response(self, html: str):
+        resp = MagicMock(status_code=200)
+        resp.text = html
+        resp.raise_for_status.return_value = None
+        return resp
+
+    def test_parses_articles(self):
+        html = "<html><body>" + self._card(
+            "Charting the Trends Beyond AI",
+            "/en/usa/institutional-investor/insights/ic-article/charting-the-trends-10064845/",
+            "August 2026",
+        ) + "</body></html>"
+        with patch("fetch_articles.requests.get", return_value=self._mock_response(html)):
+            articles = fetch_baillie_gifford(self.SOURCE)
+
+        assert len(articles) == 1
+        assert articles[0]["title"] == "Charting the Trends Beyond AI"
+        assert articles[0]["url"] == (
+            "https://www.bailliegifford.com/en/usa/institutional-investor/insights/"
+            "ic-article/charting-the-trends-10064845/"
+        )
+        # Month-only dates resolve to the last day of the month.
+        assert articles[0]["date"] == "2026-08-31"
+
+    def test_falls_back_to_heading_when_title_attr_missing(self):
+        html = "<html><body>" + self._card(
+            "SpaceX: Past, Present, Future",
+            "/en/usa/institutional-investor/insights/ic-article/spacex-10064666/",
+            "July 2026",
+            title_attr=False,
+        ) + "</body></html>"
+        with patch("fetch_articles.requests.get", return_value=self._mock_response(html)):
+            articles = fetch_baillie_gifford(self.SOURCE)
+
+        assert len(articles) == 1
+        assert articles[0]["title"] == "SpaceX: Past, Present, Future"
+
+    def test_mixed_dated_and_undated_cards_do_not_crash(self):
+        """Regression guard for the CRA-reported (unreproduced) sort type-confusion:
+        one card with a parseable date, one with unparseable garbage, one with no
+        metabar at all. The sort must not raise, and dated articles must rank
+        ahead of undated ones (empty-string keys sort last under reverse=True)."""
+        cards = (
+            self._card("Dated Article", "/en/usa/institutional-investor/insights/ic-article/a1/", "August 2026")
+            + self._card("Garbled Date Article", "/en/usa/institutional-investor/insights/ic-article/a2/", "not-a-date")
+            + self._card("No Metabar Article", "/en/usa/institutional-investor/insights/ic-article/a3/", date_text="")
+        )
+        html = f"<html><body>{cards}</body></html>"
+        with patch("fetch_articles.requests.get", return_value=self._mock_response(html)):
+            articles = fetch_baillie_gifford(self.SOURCE)
+
+        assert len(articles) == 3
+        assert all(isinstance(a["date"], str) or a["date"] is None for a in articles)
+        assert articles[0]["title"] == "Dated Article"
+        assert articles[0]["date"] == "2026-08-31"
+        assert {a["title"] for a in articles[1:]} == {"Garbled Date Article", "No Metabar Article"}
+        assert all(a["date"] is None for a in articles[1:])
+
+    def test_deduplicates_repeated_urls(self):
+        href = "/en/usa/institutional-investor/insights/ic-article/dup-1/"
+        html = "<html><body>" + self._card("Dup A", href, "August 2026") + self._card("Dup B", href, "August 2026") + "</body></html>"
+        with patch("fetch_articles.requests.get", return_value=self._mock_response(html)):
+            articles = fetch_baillie_gifford(self.SOURCE)
+
+        assert len(articles) == 1
+
+    def test_skips_non_matching_hrefs(self):
+        html = "<html><body>" + self._card(
+            "Not An Insight", "/en/usa/institutional-investor/careers/", "August 2026"
+        ) + "</body></html>"
+        with patch("fetch_articles.requests.get", return_value=self._mock_response(html)):
+            assert fetch_baillie_gifford(self.SOURCE) == []
+
+    def test_respects_max_articles(self):
+        cards = "".join(
+            self._card(f"Article {i}", f"/en/usa/institutional-investor/insights/ic-article/a{i}/", "August 2026")
+            for i in range(1, 8)
+        )
+        html = f"<html><body>{cards}</body></html>"
+        source = {**self.SOURCE, "max_articles": 4}
+        with patch("fetch_articles.requests.get", return_value=self._mock_response(html)):
+            articles = fetch_baillie_gifford(source)
+
+        assert len(articles) == 4
+
+    def test_empty_listing_returns_empty_list(self):
+        html = "<html><body></body></html>"
+        with patch("fetch_articles.requests.get", return_value=self._mock_response(html)):
+            assert fetch_baillie_gifford(self.SOURCE) == []
