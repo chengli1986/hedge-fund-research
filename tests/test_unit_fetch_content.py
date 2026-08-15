@@ -605,3 +605,65 @@ class TestMetLifeIMFetcher:
     def test_metlife_im_registered(self):
         from fetch_content import CONTENT_FETCHERS
         assert "metlife-im" in CONTENT_FETCHERS
+
+
+class TestVerdadFetcher:
+    """Verdad articles now land on mailchi.mp — table-based email HTML.
+
+    Those pages carry no <p> tags at all, so the old "article p" selector fell
+    through _normalize_html's fallbacks to whole-page get_text() and dragged in
+    the Mailchimp chrome (language picker, "Past Issues", unsubscribe footer).
+    The body lives in <td class="mcnTextContent">.
+    """
+
+    BODY = "High yield spreads have compressed structurally. " * 12
+    CHROME = "Translate English العربية Afrikaans Subscribe Past Issues RSS"
+
+    def _page(self) -> str:
+        return (
+            "<html><body>"
+            f"<div id='awesomewrap'><a>{self.CHROME}</a></div>"
+            "<table><tr>"
+            f"<td class='mcnTextContent'>{self.BODY}</td>"
+            "</tr></table>"
+            "</body></html>"
+        )
+
+    def test_extracts_email_body(self, tmp_path, monkeypatch):
+        import fetch_content as fc
+        monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
+        resp = MagicMock(status_code=200, text=self._page()); resp.raise_for_status = lambda: None
+        monkeypatch.setattr(fc.requests, "get", lambda *a, **k: resp)
+
+        out = fc._fetch_content_verdad({
+            "id": "verdad-capital-001",
+            "url": "https://mailchi.mp/verdadcap/the-maturation-of-high-yield",
+        })
+
+        assert out is not None
+        path, status = out
+        assert status == "ok" and path.exists()
+        text = path.read_text()
+        assert "High yield spreads have compressed structurally." in text
+        # Regression guard: Mailchimp chrome must stay out of the body.
+        assert "Past Issues" not in text
+        assert "Afrikaans" not in text
+
+    def test_none_on_http_error(self, tmp_path, monkeypatch):
+        import fetch_content as fc
+        monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
+        def boom(*a, **k): raise fc.requests.RequestException("500")
+        monkeypatch.setattr(fc.requests, "get", boom)
+        assert fc._fetch_content_verdad({"id": "verdad-capital-002", "url": "https://x"}) is None
+
+    def test_none_when_body_too_short(self, tmp_path, monkeypatch):
+        import fetch_content as fc
+        monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
+        html = "<html><body><td class='mcnTextContent'>Too short.</td></body></html>"
+        resp = MagicMock(status_code=200, text=html); resp.raise_for_status = lambda: None
+        monkeypatch.setattr(fc.requests, "get", lambda *a, **k: resp)
+        assert fc._fetch_content_verdad({"id": "verdad-capital-003", "url": "https://x"}) is None
+
+    def test_verdad_registered(self):
+        from fetch_content import CONTENT_FETCHERS
+        assert "verdad-capital" in CONTENT_FETCHERS

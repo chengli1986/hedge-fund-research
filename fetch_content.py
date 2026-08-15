@@ -832,7 +832,13 @@ def _fetch_content_brookfield(article: dict) -> Optional[tuple[Path, str]]:
 
 
 def _fetch_content_verdad(article: dict) -> Optional[tuple[Path, str]]:
-    """Fetch Verdad Capital article content via requests (SSR — Squarespace)."""
+    """Fetch Verdad Weekly Research content from its Mailchimp campaign page.
+
+    Verdad froze its Squarespace archive after 2026-05-04 and now publishes
+    only via the newsletter, so articles land on mailchi.mp. Those pages are
+    table-based email HTML with no <p> tags — the body lives in
+    <td class="mcnTextContent"> blocks.
+    """
     url = article["url"]
     log.info("  Verdad: fetching article page %s", url)
 
@@ -843,7 +849,7 @@ def _fetch_content_verdad(article: dict) -> Optional[tuple[Path, str]]:
         log.error("  Verdad: fetch failed: %s", e)
         return None
 
-    text = _normalize_html(resp.text, "article p")
+    text = _normalize_html(resp.text, ".mcnTextContent")
 
     if not _check_min_content_length(text):
         log.warning("  Verdad: extracted text too short (%d chars)", len(text))

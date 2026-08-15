@@ -1326,94 +1326,125 @@ class TestFetchCambridgeAssociates:
 # ---------------------------------------------------------------------------
 
 class TestFetchVerdad:
+    """Verdad is read from its Mailchimp campaign archive feed, not its website.
+
+    The Squarespace site froze after 2026-05-04 while the newsletter kept
+    shipping every Monday (2026-08-15 audit), so the feed is the live pipeline.
+    """
+
     SOURCE = {
-        "url": "https://verdadcap.com/weekly-research",
+        "url": "https://us13.campaign-archive.com/home/?u=USER&id=LIST",
+        "rss_url": "https://us13.campaign-archive.com/feed?u=USER&id=LIST",
         "max_articles": 10,
-        "expected_hostname": "verdadcap.com",
+        "expected_hostname": "mailchi.mp",
     }
 
-    def _mock_resp(self, html: str) -> MagicMock:
+    def _mock_resp(self, xml: str) -> MagicMock:
         m = MagicMock()
-        m.text = html
+        m.text = xml
         m.raise_for_status.return_value = None
         return m
 
-    def _archive_item(self, slug: str, title: str, date_str: str) -> str:
+    def _item(self, slug: str, title: str, pub_date: str) -> str:
         return (
-            f'<li class="archive-item archive-item--show-date">'
-            f'<span class="archive-item-date-before">{date_str}</span>'
-            f'<a class="archive-item-link" href="/archive/{slug}">{title}</a>'
-            f'<span class="archive-item-date-after">{date_str}</span>'
-            f'</li>'
+            "<item>"
+            f"<title>{title}</title>"
+            f"<link>https://mailchi.mp/verdadcap/{slug}</link>"
+            f"<pubDate>{pub_date}</pubDate>"
+            f"<guid>https://mailchi.mp/verdadcap/{slug}</guid>"
+            "</item>"
+        )
+
+    def _feed(self, items: str) -> str:
+        return (
+            '<?xml version="1.0" encoding="utf-8"?>'
+            '<rss xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0">'
+            f"<channel><title>Verdad Weekly Research Archive Feed</title>{items}</channel>"
+            "</rss>"
         )
 
     def test_parses_articles(self):
-        items = (
-            self._archive_item("the-challenge-of-diversification",
-                               "The Challenge of Diversification",
-                               "Oct 20, 2025") +
-            self._archive_item("total-concentration",
-                               "Total Concentration",
-                               "Sep 15, 2025")
+        xml = self._feed(
+            self._item("the-maturation-of-high-yield",
+                       "The Maturation of High Yield",
+                       "Mon, 10 Aug 2026 13:00:00 +0000") +
+            self._item("too-small-to-matter",
+                       "Too Small to Matter?",
+                       "Mon, 20 Jul 2026 13:00:00 +0000")
         )
-        html = f'<html><body><ul class="archive-item-list">{items}</ul></body></html>'
-        with patch("fetch_articles.requests.get", return_value=self._mock_resp(html)):
+        with patch("fetch_articles.requests.get", return_value=self._mock_resp(xml)):
             articles = fetch_verdad(self.SOURCE)
 
         assert len(articles) == 2
-        assert articles[0]["title"] == "The Challenge of Diversification"
-        assert articles[0]["url"] == "https://verdadcap.com/archive/the-challenge-of-diversification"
-        assert articles[0]["date"] == "2025-10-20"
-        assert articles[0]["date_raw"] == "Oct 20, 2025"
-        assert articles[1]["date"] == "2025-09-15"
+        assert articles[0]["title"] == "The Maturation of High Yield"
+        assert articles[0]["url"] == "https://mailchi.mp/verdadcap/the-maturation-of-high-yield"
+        assert articles[0]["date"] == "2026-08-10"
+        assert articles[0]["date_raw"] == "Mon, 10 Aug 2026 13:00:00 +0000"
+        assert articles[1]["date"] == "2026-07-20"
 
-    def test_skips_items_without_date(self):
-        # Item missing date_span — should be skipped (defensive)
-        bad_item = (
-            '<li class="archive-item">'
-            '<a class="archive-item-link" href="/archive/no-date-slug">No Date</a>'
-            '</li>'
+    def test_reads_rss_url_not_page_url(self):
+        # Regression: the website is frozen, so we must hit rss_url, never url.
+        xml = self._feed(self._item("volatility-inversion", "Volatility Inversion",
+                                    "Mon, 15 Jun 2026 13:00:00 +0000"))
+        with patch("fetch_articles.requests.get",
+                   return_value=self._mock_resp(xml)) as mock_get:
+            fetch_verdad(self.SOURCE)
+
+        assert mock_get.call_args[0][0] == self.SOURCE["rss_url"]
+
+    def test_skips_items_from_other_hosts(self):
+        # A link off mailchi.mp (e.g. a tracking or partner domain) is dropped.
+        bad = (
+            "<item><title>Off Host</title>"
+            "<link>https://example.com/verdadcap/not-ours</link>"
+            "<pubDate>Mon, 01 Jun 2026 13:00:00 +0000</pubDate></item>"
         )
-        good_item = self._archive_item("real-article", "Real Article", "Jul 9, 2025")
-        html = f'<html><body><ul>{bad_item}{good_item}</ul></body></html>'
-        with patch("fetch_articles.requests.get", return_value=self._mock_resp(html)):
-            articles = fetch_verdad(self.SOURCE)
-
-        assert len(articles) == 1
-        assert articles[0]["title"] == "Real Article"
-
-    def test_skips_items_without_archive_prefix(self):
-        # Non-/archive/ links must be skipped (e.g. /about, /team)
-        items = (
-            '<li class="archive-item">'
-            '<span class="archive-item-date-before">Mar 1, 2026</span>'
-            '<a class="archive-item-link" href="/about">About Us</a></li>' +
-            self._archive_item("good", "Good Article", "Mar 2, 2026")
-        )
-        html = f'<html><body><ul>{items}</ul></body></html>'
-        with patch("fetch_articles.requests.get", return_value=self._mock_resp(html)):
+        xml = self._feed(bad + self._item("good", "Good Article",
+                                          "Mon, 08 Jun 2026 13:00:00 +0000"))
+        with patch("fetch_articles.requests.get", return_value=self._mock_resp(xml)):
             articles = fetch_verdad(self.SOURCE)
 
         assert len(articles) == 1
         assert articles[0]["title"] == "Good Article"
 
+    def test_skips_items_without_link_or_title(self):
+        bad = ("<item><title>No Link</title>"
+               "<pubDate>Mon, 01 Jun 2026 13:00:00 +0000</pubDate></item>")
+        xml = self._feed(bad + self._item("real", "Real Article",
+                                          "Mon, 08 Jun 2026 13:00:00 +0000"))
+        with patch("fetch_articles.requests.get", return_value=self._mock_resp(xml)):
+            articles = fetch_verdad(self.SOURCE)
+
+        assert len(articles) == 1
+        assert articles[0]["title"] == "Real Article"
+
+    def test_keeps_item_with_unparseable_date(self):
+        # Date is metadata, not a gate — a broken pubDate must not drop the piece.
+        xml = self._feed(self._item("odd-date", "Odd Date", "not-a-date"))
+        with patch("fetch_articles.requests.get", return_value=self._mock_resp(xml)):
+            articles = fetch_verdad(self.SOURCE)
+
+        assert len(articles) == 1
+        assert articles[0]["date"] is None
+        assert articles[0]["date_raw"] == "not-a-date"
+
     def test_dedupes_same_url(self):
-        # Same href appearing twice should be deduped
-        item = self._archive_item("dup-slug", "Duplicate", "Feb 1, 2026")
-        html = f'<html><body><ul>{item}{item}</ul></body></html>'
-        with patch("fetch_articles.requests.get", return_value=self._mock_resp(html)):
+        item = self._item("dup-slug", "Duplicate", "Mon, 02 Feb 2026 13:00:00 +0000")
+        xml = self._feed(item + item)
+        with patch("fetch_articles.requests.get", return_value=self._mock_resp(xml)):
             articles = fetch_verdad(self.SOURCE)
 
         assert len(articles) == 1
 
     def test_respects_max_articles(self):
         items = "".join(
-            self._archive_item(f"slug-{i}", f"Article {i}", f"Apr {i}, 2026")
+            self._item(f"slug-{i}", f"Article {i}",
+                       f"Mon, {i:02d} Apr 2026 13:00:00 +0000")
             for i in range(1, 16)
         )
         source = {**self.SOURCE, "max_articles": 5}
-        html = f'<html><body><ul>{items}</ul></body></html>'
-        with patch("fetch_articles.requests.get", return_value=self._mock_resp(html)):
+        with patch("fetch_articles.requests.get",
+                   return_value=self._mock_resp(self._feed(items))):
             articles = fetch_verdad(source)
 
         assert len(articles) == 5

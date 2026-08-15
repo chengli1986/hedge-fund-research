@@ -280,12 +280,13 @@
       ],
       "name": "Verdad Capital",
       "short_name": "Verdad",
-      "url": "https://verdadcap.com/weekly-research",
-      "method": "requests",
-      "frequency": "monthly",
+      "url": "https://us13.campaign-archive.com/home/?u=6dc62f307511d466ff78a94fe&id=6d62717de8",
+      "rss_url": "https://us13.campaign-archive.com/feed?u=6dc62f307511d466ff78a94fe&id=6d62717de8",
+      "method": "rss",
+      "frequency": "weekly",
       "description": "Boston-based quantitative value investor. Empirical research on private equity, leveraged microcaps, factor investing, and capital efficiency.",
       "notable_authors": [],
-      "expected_hostname": "verdadcap.com",
+      "expected_hostname": "mailchi.mp",
       "max_articles": 10
     },
     {

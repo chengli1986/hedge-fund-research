@@ -1119,50 +1119,59 @@ def fetch_brookfield(source: dict) -> list[dict]:
 
 
 def fetch_verdad(source: dict) -> list[dict]:
-    """Fetch articles from Verdad Capital weekly research (SSR — Squarespace archive).
+    """Fetch Verdad Weekly Research from its Mailchimp campaign archive feed.
 
-    Index renders <li class="archive-item"> with sibling
-    <span class="archive-item-date-before"> holding 'MMM D, YYYY'.
+    Verdad stopped mirroring the weekly to its Squarespace site after
+    2026-05-04 ("Japan's Big Equity Bet") — the site's /archive and
+    /weekly-research have been frozen since, while the newsletter itself never
+    missed a Monday. The Mailchimp archive is the live pipeline, so we read it
+    instead of the website (see 2026-08-15 audit).
+
+    Feed at /feed?u=<user>&id=<list> — 10 items, RFC 2822 pubDate, article
+    links on mailchi.mp. Items carry the full body in content:encoded, but we
+    only take metadata here; fetch_content downloads the page.
     """
-    resp = requests.get(source["url"], headers=HEADERS, timeout=30)
-    resp.raise_for_status()
-    soup = BeautifulSoup(resp.text, "html.parser")
-    expected_host = source.get("expected_hostname", "verdadcap.com")
-    base_url = "https://verdadcap.com"
+    rss_url = source.get(
+        "rss_url",
+        "https://us13.campaign-archive.com/feed"
+        "?u=6dc62f307511d466ff78a94fe&id=6d62717de8",
+    )
+    expected_host = source.get("expected_hostname", "mailchi.mp")
 
+    resp = requests.get(rss_url, headers=HEADERS, timeout=30)
+    resp.raise_for_status()
+
+    root = ET.fromstring(resp.text.lstrip("\ufeff"))
     articles: list[dict] = []
     seen_urls: set[str] = set()
 
-    for li in soup.select("li.archive-item"):
-        link = li.select_one("a.archive-item-link[href]")
-        if not link:
-            continue
-        href = link["href"]
-        if not href.startswith("/archive/"):
-            continue
+    for item in root.findall(".//item"):
+        title_el = item.find("title")
+        link_el = item.find("link")
+        pub_el = item.find("pubDate")
 
-        url = base_url + href
+        title = html.unescape((title_el.text or "").strip()) if title_el is not None else ""
+        url = (link_el.text or "").strip() if link_el is not None else ""
+        if not title or not url:
+            continue
         if url in seen_urls:
             continue
         seen_urls.add(url)
         if not _validate_hostname(url, expected_host):
             continue
 
-        title = html.unescape(link.get_text(strip=True))
-        if not title:
-            continue
-
-        date_span = li.select_one("span.archive-item-date-before")
-        if not date_span:
-            continue
-        date_raw = date_span.get_text(strip=True)
-        if not date_raw:
-            continue
+        date_raw = (pub_el.text or "").strip() if pub_el is not None else ""
+        parsed_date = None
+        if date_raw:
+            try:
+                parsed_date = parsedate_to_datetime(date_raw).strftime("%Y-%m-%d")
+            except (ValueError, TypeError):
+                parsed_date = parse_date(date_raw)
 
         articles.append({
             "title": title,
             "url": url,
-            "date": parse_date(date_raw),
+            "date": parsed_date,
             "date_raw": date_raw,
         })
 
