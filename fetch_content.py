@@ -849,7 +849,10 @@ def _fetch_content_verdad(article: dict) -> Optional[tuple[Path, str]]:
         log.error("  Verdad: fetch failed: %s", e)
         return None
 
-    text = _normalize_html(resp.text, ".mcnTextContent")
+    _soup = BeautifulSoup(resp.text, "html.parser")
+    for _boilerplate in _soup.select("#templatePreheader, #templateHeader, #templateFooter"):
+        _boilerplate.decompose()
+    text = _normalize_html(str(_soup), ".mcnTextContent")
 
     if not _check_min_content_length(text):
         log.warning("  Verdad: extracted text too short (%d chars)", len(text))
