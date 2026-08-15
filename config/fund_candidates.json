@@ -222,7 +222,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.97,
-    "notes": "Rejected: some quant research but culture content dominates",
+    "notes": "Rejected: culture/HR dominates, minor stale research",
     "research_links": [
       {
         "url": "https://www.twosigma.com/insights/",
@@ -246,7 +246,7 @@
       "article_signals": 2
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-07-15T01:01:14Z",
+    "last_deep_analyzed_at": "2026-08-15T01:01:21Z",
     "quality": "LOW",
     "topics": "quant, features research, HR/culture (culture-heavy)",
     "reject_reason": "content_not_research",
@@ -829,7 +829,7 @@
     "screening_reason": "Login/paywall detected",
     "fit_score": 0.82,
     "last_validated_at": "2026-04-16T09:01:28.399090+08:00",
-    "last_deep_analyzed_at": "2026-07-15T01:01:14Z",
+    "last_deep_analyzed_at": "2026-08-15T01:01:21Z",
     "quality": "LOW",
     "topics": "retail education, personal finance",
     "strategy_tags": [
@@ -2222,8 +2222,8 @@
     "quality": "LOW",
     "quality_score": 0.3,
     "topics": "factor investing, equity, multi-asset (podcast-heavy)",
-    "notes": "Watchlist: podcast-only, no dated research index found",
-    "last_deep_analyzed_at": "2026-07-15T01:01:14Z",
+    "notes": "Watchlist: still no dated research index found",
+    "last_deep_analyzed_at": "2026-08-15T01:01:21Z",
     "status_since": "2026-05-12T09:00:20.241489+08:00"
   },
   {
