@@ -146,6 +146,14 @@ def check_anomalies(metrics: dict) -> list[str]:
     return alerts
 
 
+# Leading abbreviated month followed by a period, e.g. "Aug. 14, 2026" or
+# "Sept. 2026". Anchored so a period elsewhere in the string is left alone.
+_AP_MONTH_RE = re.compile(
+    r"^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sept|Sep|Oct|Nov|Dec)\.\s+",
+    re.IGNORECASE,
+)
+
+
 def parse_date(date_str: str) -> Optional[str]:
     """Try to parse various date formats into ISO format.
 
@@ -155,6 +163,13 @@ def parse_date(date_str: str) -> Optional[str]:
     """
     import calendar as _cal
     date_str = date_str.strip()
+
+    # AP house style writes abbreviated months with a trailing period
+    # ("Aug. 14, 2026") and spells September with four letters ("Sept."), and
+    # strptime's %b accepts neither — MSCI switched to this style in 2026-08
+    # and every date on the source silently became None. Normalise to the
+    # three-letter form the format table below already understands.
+    date_str = _AP_MONTH_RE.sub(lambda m: m.group(1)[:3] + " ", date_str)
 
     # ISO 8601 with a time component (e.g. "2026-07-09T23:00:00Z") — parse the
     # date part directly rather than falling through to the ambiguous

@@ -12,6 +12,7 @@ from fetch_articles import (
     fetch_amundi, fetch_jpmam, fetch_pgim, fetch_aberdeen,
     fetch_cambridge_associates, fetch_verdad,
     fetch_metlife_im, fetch_rothschild_co_am, fetch_baillie_gifford,
+    fetch_msci_research,
 )
 
 
@@ -81,6 +82,28 @@ class TestParseDate:
 
     def test_month_year_only_feb_nonleap(self):
         assert parse_date("Feb 2025") == "2025-02-28"
+
+    # AP-style abbreviations carry a trailing period ("Aug. 14, 2026"). MSCI
+    # switched to this house style in 2026-08 and every date silently became
+    # None — %b matches "Aug" but not "Aug.". Note AP abbreviates September as
+    # the four-letter "Sept.", which %b never accepts, so stripping the period
+    # alone is not enough.
+    def test_ap_style_abbrev_with_period(self):
+        assert parse_date("Aug. 14, 2026") == "2026-08-14"
+
+    def test_ap_style_sept_four_letters(self):
+        assert parse_date("Sept. 3, 2026") == "2026-09-03"
+
+    def test_ap_style_month_year_only(self):
+        assert parse_date("Sept. 2026") == "2026-09-30"
+
+    def test_abbrev_with_period_all_months(self):
+        # AP itself never abbreviates May/June/July, but other house styles do;
+        # covering all twelve avoids a second silent outage on a month we left out.
+        assert parse_date("Jul. 3, 2026") == "2026-07-03"
+
+    def test_period_after_non_month_still_none(self):
+        assert parse_date("Foo. 3, 2026") is None
 
     def test_invalid_returns_none(self):
         assert parse_date("not a date") is None
@@ -194,6 +217,55 @@ class TestFetchOaktree:
         assert len(articles) == 2
         assert [a["title"] for a in articles] == ["Memo One", "Memo Two"]
         assert all("oaktreecapital.com" in a["url"] for a in articles)
+
+
+class TestFetchMsciResearch:
+    # Card markup copied from the live page 2026-08-16. The eyebrow <p> holds
+    # "Category | Date" and MSCI writes the date AP-style with a trailing
+    # period, which is what broke date parsing for the whole source.
+    HTML = """
+    <div class="ms-pb-10" data-test="search-result-item">
+      <div><div><div>
+        <div><p class="ms-body-s-sm">Blog post | Aug. 14, 2026</p></div>
+        <a href="https://www.msci.com/research-and-insights/blog-post/markets-in-focus">
+          <h3 class="ms-headline3-sm">Markets in Focus: A Crowded Trade Unwinds</h3>
+        </a>
+      </div></div></div>
+    </div>
+    <div class="ms-pb-10" data-test="search-result-item">
+      <div><div><div>
+        <div><p class="ms-body-s-sm">Paper | Sept. 2, 2026</p></div>
+        <a href="https://www.msci.com/research-and-insights/paper/carbon-footprint">
+          <h3 class="ms-headline3-sm">Materiality-Weighted Portfolio Carbon Footprint</h3>
+        </a>
+      </div></div></div>
+    </div>
+    """
+
+    SOURCE = {
+        "id": "msci-research",
+        "url": "https://www.msci.com/research-and-insights",
+        "max_articles": 10,
+        "expected_hostname": "msci.com",
+    }
+
+    def test_parses_cards(self):
+        with patch("fetch_articles._get_playwright_page", return_value=self.HTML):
+            articles = fetch_msci_research(self.SOURCE)
+
+        assert [a["title"] for a in articles] == [
+            "Markets in Focus: A Crowded Trade Unwinds",
+            "Materiality-Weighted Portfolio Carbon Footprint",
+        ]
+        assert [a["category"] for a in articles] == ["Blog post", "Paper"]
+
+    def test_parses_ap_style_dates(self):
+        # Guards the 2026-08 regression: every date came back None because the
+        # site moved from "August 14, 2026" to "Aug. 14, 2026".
+        with patch("fetch_articles._get_playwright_page", return_value=self.HTML):
+            articles = fetch_msci_research(self.SOURCE)
+
+        assert [a["date"] for a in articles] == ["2026-08-14", "2026-09-02"]
 
 
 class TestFetchFranklinTempleton:
