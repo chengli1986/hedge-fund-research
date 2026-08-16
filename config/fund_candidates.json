@@ -59,7 +59,7 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-07-28T01:01:26Z",
+    "last_deep_analyzed_at": "2026-08-16T01:01:33Z",
     "quality": "HIGH",
     "topics": "fixed income, macro, credit, global economy",
     "strategy_tags": [
@@ -1008,7 +1008,7 @@
     "quality": "HIGH",
     "quality_score": 0.9,
     "topics": "quant, factor investing, equity, index research",
-    "last_deep_analyzed_at": "2026-07-27T01:05:00Z",
+    "last_deep_analyzed_at": "2026-08-16T01:01:33Z",
     "strategy_tags": [
       "quant",
       "equity",
@@ -1333,7 +1333,7 @@
     "quality": "LOW",
     "quality_score": 0.32,
     "topics": "multi_asset, institutional insights",
-    "last_deep_analyzed_at": "2026-07-28T01:01:26Z",
+    "last_deep_analyzed_at": "2026-08-16T01:01:33Z",
     "fit_score": 0.82,
     "strategy_tags": [
       "macro",
@@ -2259,7 +2259,7 @@
       "emerging_markets",
       "macro"
     ],
-    "notes": "Free; Asia/EM 2-4x/mo; China Innovators Jul 2026",
+    "notes": "Free; Asia/EM 2-4x/mo; China Innovators Aug 2026",
     "official_domain": "www.matthewsasia.com",
     "research_links": [
       {
@@ -2354,7 +2354,7 @@
     "quality": "MEDIUM",
     "quality_score": 0.68,
     "topics": "Asian equities, China, India, EM, AI, geopolitics",
-    "last_deep_analyzed_at": "2026-07-27T01:05:00Z",
+    "last_deep_analyzed_at": "2026-08-16T01:01:33Z",
     "synthesis_priority": true,
     "synthesis_priority_set_at": "2026-06-03T09:05:38.825095+08:00",
     "synthesis_attempted_at": "2026-06-03T01:08:23.985559+00:00",
