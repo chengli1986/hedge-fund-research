@@ -101,15 +101,29 @@ def scan_markers(text: str, markers: dict[str, str]) -> list[str]:
     return [label for label, pat in markers.items() if re.search(pat, text)]
 
 
-def ops_problems(rows: Iterable[dict], jobs_prefix: str, now: datetime,
-                 window_days: float, exclude: Optional[set[str]] = None) -> list[dict]:
-    """From cron-wrapper ops-status rows, return recent runs that locked out,
-    timed out, or exited non-zero for jobs whose name starts with jobs_prefix.
+def run_reasons(r: dict) -> list[str]:
+    """Why a single cron-wrapper run counts as bad (empty list = clean run)."""
+    reasons = []
+    if r.get("locked"):
+        reasons.append("locked-out")
+    if r.get("timeout"):
+        reasons.append("timed-out")
+    exit_code = r.get("exit")
+    if exit_code not in (0, None):
+        reasons.append(f"exit={exit_code}")
+    return reasons
 
-    Jobs in `exclude` are skipped — used to keep the auditor from counting its
+
+def runs_by_job(rows: Iterable[dict], jobs_prefix: str, now: datetime,
+                window_days: float,
+                exclude: Optional[set[str]] = None) -> dict[str, list[dict]]:
+    """In-window ops-status rows grouped by job, each list sorted oldest-first
+    BY TIMESTAMP (never by file order — a merged/restored log may interleave).
+
+    Jobs in `exclude` are dropped — used to keep the auditor from reading its
     own past exit=1 rows (which would be a self-perpetuating failure loop)."""
     exclude = exclude or set()
-    out = []
+    grouped: dict[str, list[tuple[datetime, dict]]] = {}
     for r in rows:
         job = str(r.get("job", ""))
         if not job.startswith(jobs_prefix) or job in exclude:
@@ -117,16 +131,45 @@ def ops_problems(rows: Iterable[dict], jobs_prefix: str, now: datetime,
         dt = parse_iso(str(r.get("ts", "")))
         if dt is None or (now - dt).total_seconds() / 86400.0 > window_days:
             continue
-        reasons = []
-        if r.get("locked"):
-            reasons.append("locked-out")
-        if r.get("timeout"):
-            reasons.append("timed-out")
-        exit_code = r.get("exit")
-        if exit_code not in (0, None):
-            reasons.append(f"exit={exit_code}")
+        grouped.setdefault(job, []).append((dt, r))
+    return {job: [r for _, r in sorted(pairs, key=lambda p: p[0])]
+            for job, pairs in grouped.items()}
+
+
+def ops_problems(rows: Iterable[dict], jobs_prefix: str, now: datetime,
+                 window_days: float, exclude: Optional[set[str]] = None) -> list[dict]:
+    """Jobs whose LATEST in-window run locked out, timed out, or exited non-zero.
+
+    Only the latest run decides. Judging every row independently (the pre
+    2026-08-18 behaviour) replayed an already-fixed failure for the whole
+    window: the 8-17 playwright incident kept BAILing gmia-nightly-test and
+    gmia-fetcher-health on 8-18 although both were green again hours later —
+    a daily false alarm that stops only when the row ages out. Recoveries are
+    reported separately by ops_recovered()."""
+    out = []
+    for job, runs in runs_by_job(rows, jobs_prefix, now, window_days, exclude).items():
+        latest = runs[-1]
+        reasons = run_reasons(latest)
         if reasons:
-            out.append({"job": job, "ts": r.get("ts"), "reasons": reasons})
+            out.append({"job": job, "ts": latest.get("ts"), "reasons": reasons})
+    return out
+
+
+def ops_recovered(rows: Iterable[dict], jobs_prefix: str, now: datetime,
+                  window_days: float, exclude: Optional[set[str]] = None) -> list[dict]:
+    """Jobs that failed inside the window but whose latest run came back clean.
+
+    Informational only (never a problem, never an alert) — it keeps a fixed
+    failure visible in the digest without re-raising it."""
+    out = []
+    for job, runs in runs_by_job(rows, jobs_prefix, now, window_days, exclude).items():
+        if run_reasons(runs[-1]):
+            continue
+        failures = [r for r in runs[:-1] if run_reasons(r)]
+        if failures:
+            last = failures[-1]
+            out.append({"job": job, "last_failure_ts": last.get("ts"),
+                        "reasons": run_reasons(last), "recovered_ts": runs[-1].get("ts")})
     return out
 
 
@@ -267,12 +310,19 @@ def check_discovery(now: datetime) -> dict:
 
 def check_ops(now: datetime) -> list[dict]:
     rows = _read_jsonl(LOG_DIR / "ops-status.jsonl")
-    probs = ops_problems(rows, "gmia", now, window_days=3, exclude={SELF_JOB})
-    return [
+    kwargs = dict(window_days=3, exclude={SELF_JOB})
+    verdicts = [
         _verdict(f"cron:{p['job']}", BAIL,
                  f"{', '.join(p['reasons'])} at {p['ts']}")
-        for p in probs
+        for p in ops_problems(rows, "gmia", now, **kwargs)
     ]
+    verdicts.extend(
+        _verdict(f"cron:{r['job']}", OK,
+                 f"recovered — last failure {', '.join(r['reasons'])} "
+                 f"at {r['last_failure_ts']}, clean since {r['recovered_ts']}")
+        for r in ops_recovered(rows, "gmia", now, **kwargs)
+    )
+    return verdicts
 
 
 CHECKS: list[Callable[[datetime], dict]] = [

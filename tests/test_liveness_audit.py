@@ -82,13 +82,14 @@ def test_ops_flags_locked_timeout_and_bad_exit():
         {"job": "gmia-fetcher-synthesis", "ts": "2026-07-19T18:00:00+00:00", "locked": True},
         {"job": "gmia-daily", "ts": "2026-07-20T01:00:00+00:00", "timeout": True},
         {"job": "gmia-nightly-test", "ts": "2026-07-20T01:30:00+00:00", "exit": 1},
-        {"job": "gmia-daily", "ts": "2026-07-20T01:45:00+00:00", "exit": 0},  # clean
+        {"job": "gmia-auto-promote", "ts": "2026-07-20T01:45:00+00:00", "exit": 0},  # clean
     ]
     probs = la.ops_problems(rows, "gmia", NOW, window_days=3)
     jobs = {p["job"]: p["reasons"] for p in probs}
     assert jobs["gmia-fetcher-synthesis"] == ["locked-out"]
-    assert jobs["gmia-daily"] == ["timed-out"]  # the exit=0 gmia-daily row is excluded
+    assert jobs["gmia-daily"] == ["timed-out"]
     assert jobs["gmia-nightly-test"] == ["exit=1"]
+    assert "gmia-auto-promote" not in jobs  # a clean run produces no problem row
 
 
 def test_ops_ignores_other_prefixes_and_old_runs():
@@ -113,6 +114,70 @@ def test_ops_excludes_self_job():
     jobs = [p["job"] for p in probs]
     assert "gmia-liveness-audit" not in jobs   # never counts itself
     assert "gmia-daily" in jobs                # genuine failures still surface
+
+
+# --- ops_problems: only the LATEST run of a job decides (2026-08-18) ---------
+def test_ops_ignores_failure_superseded_by_later_success():
+    # 2026-08-18 false-alarm root cause: every row in the window was judged
+    # independently, so a failure already fixed hours later kept emitting BAIL
+    # for the full 3 days (gmia-nightly-test / gmia-fetcher-health, 8-17
+    # playwright incident, both green again on 8-18 yet still reported).
+    rows = [
+        {"job": "gmia-nightly-test", "ts": "2026-07-18T03:30:00+00:00", "exit": 1},
+        {"job": "gmia-nightly-test", "ts": "2026-07-19T03:33:00+00:00", "exit": 0},
+    ]
+    assert la.ops_problems(rows, "gmia", NOW, window_days=3) == []
+
+
+def test_ops_flags_job_whose_latest_run_failed():
+    # Guard the other direction: an older success must never silence a fresh
+    # failure.
+    rows = [
+        {"job": "gmia-daily", "ts": "2026-07-18T01:00:00+00:00", "exit": 0},
+        {"job": "gmia-daily", "ts": "2026-07-19T01:00:00+00:00", "exit": 1},
+    ]
+    probs = la.ops_problems(rows, "gmia", NOW, window_days=3)
+    assert [p["job"] for p in probs] == ["gmia-daily"]
+    assert probs[0]["reasons"] == ["exit=1"]
+
+
+def test_ops_latest_run_is_by_timestamp_not_file_order():
+    # ops-status.jsonl is append-ordered in practice, but the verdict must not
+    # depend on that (concurrent wrappers, a restored/merged log).
+    rows = [
+        {"job": "gmia-daily", "ts": "2026-07-19T01:00:00+00:00", "exit": 0},
+        {"job": "gmia-daily", "ts": "2026-07-18T01:00:00+00:00", "exit": 1},
+    ]
+    assert la.ops_problems(rows, "gmia", NOW, window_days=3) == []
+
+
+# --- ops_recovered ----------------------------------------------------------
+def test_ops_recovered_names_jobs_that_failed_then_succeeded():
+    rows = [
+        {"job": "gmia-nightly-test", "ts": "2026-07-18T03:30:00+00:00", "exit": 1},
+        {"job": "gmia-nightly-test", "ts": "2026-07-19T03:33:00+00:00", "exit": 0},
+    ]
+    rec = la.ops_recovered(rows, "gmia", NOW, window_days=3)
+    assert [r["job"] for r in rec] == ["gmia-nightly-test"]
+    assert rec[0]["last_failure_ts"] == "2026-07-18T03:30:00+00:00"
+    assert rec[0]["reasons"] == ["exit=1"]
+
+
+def test_ops_recovered_silent_while_job_is_still_failing():
+    rows = [
+        {"job": "gmia-daily", "ts": "2026-07-18T01:00:00+00:00", "exit": 0},
+        {"job": "gmia-daily", "ts": "2026-07-19T01:00:00+00:00", "exit": 1},
+    ]
+    assert la.ops_recovered(rows, "gmia", NOW, window_days=3) == []
+
+
+def test_ops_recovered_excludes_self_job():
+    rows = [
+        {"job": "gmia-liveness-audit", "ts": "2026-07-18T21:00:00+00:00", "exit": 1},
+        {"job": "gmia-liveness-audit", "ts": "2026-07-19T21:00:00+00:00", "exit": 0},
+    ]
+    assert la.ops_recovered(rows, "gmia", NOW, window_days=3,
+                            exclude={"gmia-liveness-audit"}) == []
 
 
 # --- decide_synthesis (Bug B: fresh heartbeat beats stale log markers) -------
