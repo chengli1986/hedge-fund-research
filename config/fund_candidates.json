@@ -2241,7 +2241,7 @@
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-05-15T09:00:10.435535+08:00",
-    "last_deep_analyzed_at": "2026-07-17T01:15:00Z",
+    "last_deep_analyzed_at": "2026-08-16T17:15:00Z",
     "quality": "LOW",
     "quality_score": 0.1,
     "topics": "venture capital, AI, enterprise tech, founder commentary",
@@ -2654,7 +2654,7 @@
     "homepage_url": "https://www.southeasternasset.com",
     "research_url": "https://www.southeasternasset.com",
     "source": "manual",
-    "status": "screened",
+    "status": "rejected",
     "strategy_tags": [
       "equity"
     ],
@@ -2662,11 +2662,11 @@
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-07-14T09:00:45.165660+08:00",
-    "last_deep_analyzed_at": "2026-08-08T01:10:00Z",
-    "quality": "MEDIUM",
-    "quality_score": 0.5,
-    "topics": "value equity, podcasts, fund commentary",
-    "notes": "Sample: mostly bios/podcasts, thin on analysis",
+    "last_deep_analyzed_at": "2026-08-16T17:15:00Z",
+    "quality": "LOW",
+    "quality_score": 0.3,
+    "topics": "value equity, podcasts, ESG",
+    "notes": "No dated article index; podcasts/bios only, thin research",
     "status_since": "2026-07-15T13:19:07.753094+08:00",
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -2722,7 +2722,7 @@
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-07-14T09:00:45.503268+08:00",
-    "last_deep_analyzed_at": "2026-07-17T01:15:00Z",
+    "last_deep_analyzed_at": "2026-08-16T17:15:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.62,
     "topics": "fixed income, equity, macro, multi-asset",
@@ -3299,5 +3299,104 @@
     "quality_score": 0.3,
     "topics": "private credit, middle market lending",
     "notes": "Mostly PR/deal news, thin research (LOW)"
+  },
+  {
+    "id": "hartford-funds",
+    "name": "Hartford Funds",
+    "homepage_url": "https://www.hartfordfunds.com/insights.html",
+    "source": "manual",
+    "status": "discovered",
+    "strategy_tags": [
+      "equity",
+      "fixed_income",
+      "macro"
+    ],
+    "research_url": "https://www.hartfordfunds.com/insights/investor-insight/future-of-advice.html",
+    "official_domain": "www.hartfordfunds.com",
+    "research_links": [
+      {
+        "url": "https://www.hartfordfunds.com/insights/investor-insight/future-of-advice.html",
+        "label": "The Future of Advice",
+        "path": "insights/investor-insight/future-of-advice.html"
+      },
+      {
+        "url": "https://www.hartfordfunds.com/insights/investor-insight/navigating-longevity.html",
+        "label": "Navigating Longevity",
+        "path": "insights/investor-insight/navigating-longevity.html"
+      },
+      {
+        "url": "https://www.hartfordfunds.com/insights/investor-insight/investor-behavior.html",
+        "label": "Investor Behavior",
+        "path": "insights/investor-insight/investor-behavior.html"
+      },
+      {
+        "url": "https://www.hartfordfunds.com/insights/market-perspectives/global-macro-analysis/informed-investor.html",
+        "label": "Informed Investor",
+        "path": "insights/market-perspectives/global-macro-analysis/informed-investor.html"
+      },
+      {
+        "url": "https://www.hartfordfunds.com/insights/investor-insight/mit/human-centric-investing-podcast.html",
+        "label": "Human-Centric Investing Podcast",
+        "path": "insights/investor-insight/mit/human-centric-investing-podcast.html"
+      },
+      {
+        "url": "https://www.hartfordfunds.com/insights/investor-insight/navigating-longevity/social-security/social-security-resource-center.html",
+        "label": "Social Security",
+        "path": "insights/investor-insight/navigating-longevity/social-security/social-security-resource-center.html"
+      },
+      {
+        "url": "https://www.hartfordfunds.com/insights/market-perspectives/global-macro-analysis/market-view-snapshot.html",
+        "label": "MarketView—Our best charts on the opportunities in today's markets Get the Charts",
+        "path": "insights/market-perspectives/global-macro-analysis/market-view-snapshot.html"
+      },
+      {
+        "url": "https://www.hartfordfunds.com/insights/investor-insight/waking-up-to-the-future.html",
+        "label": "Teaser Image link",
+        "path": "insights/investor-insight/waking-up-to-the-future.html"
+      },
+      {
+        "url": "https://www.hartfordfunds.com/insights/market-perspectives/global-macro-analysis/2026-midyear-outlooks.html",
+        "label": "2026 Midyear Outlooks",
+        "path": "insights/market-perspectives/global-macro-analysis/2026-midyear-outlooks.html"
+      },
+      {
+        "url": "https://www.hartfordfunds.com/insights/market-perspectives/global-macro-analysis/how-is-ai-transforming-the-macro-outlook.html",
+        "label": "How is AI Transforming the Macro Outlook?",
+        "path": "insights/market-perspectives/global-macro-analysis/how-is-ai-transforming-the-macro-outlook.html"
+      },
+      {
+        "url": "https://www.hartfordfunds.com/insights/market-perspectives/fixed-income/the-yield-reset-is-real.html",
+        "label": "The Yield Reset is Real",
+        "path": "insights/market-perspectives/fixed-income/the-yield-reset-is-real.html"
+      },
+      {
+        "url": "https://www.hartfordfunds.com/insights/market-perspectives/strategic-beta-etfs/hemi-rethinking-equity-income.html",
+        "label": "HEMI: Rethinking Equity Income Equity HEMI: Rethinking Equity Income For income-seeking investors, H",
+        "path": "insights/market-perspectives/strategic-beta-etfs/hemi-rethinking-equity-income.html"
+      },
+      {
+        "url": "https://www.hartfordfunds.com/insights/investor-insight/mit/human-centric-investing-podcast/episode-176-practical-tools-to-work-with-the-monkey-mind.html",
+        "label": "176: Practical Tools to Work With the Monkey Mind Human-Centric Investing Podcast 176: Practical Too",
+        "path": "insights/investor-insight/mit/human-centric-investing-podcast/episode-176-practical-tools-to-work-with-the-monkey-mind.html"
+      },
+      {
+        "url": "https://www.hartfordfunds.com/insights/market-perspectives/fixed-income/when-credit-spreads-leave-little-room-for-error.html",
+        "label": "When Credit Spreads Leave Little Room for Error Fixed Income When Credit Spreads Leave Little Room f",
+        "path": "insights/market-perspectives/fixed-income/when-credit-spreads-leave-little-room-for-error.html"
+      },
+      {
+        "url": "https://www.hartfordfunds.com/insights/market-perspectives/fixed-income/do-bond-yields-matter-more-than-predictions.html",
+        "label": "Do Bond Yields Matter More Than Predictions? Fixed Income Do Bond Yields Matter More Than Prediction",
+        "path": "insights/market-perspectives/fixed-income/do-bond-yields-matter-more-than-predictions.html"
+      },
+      {
+        "url": "https://www.hartfordfunds.com/insights/market-perspectives/fixed-income/how-volatility-is-reshaping-bond-returns.html",
+        "label": "How Volatility Is Reshaping Bond Returns Fixed Income How Volatility Is Reshaping Bond Returns Volat",
+        "path": "insights/market-perspectives/fixed-income/how-volatility-is-reshaping-bond-returns.html"
+      }
+    ],
+    "status_since": "2026-08-17T09:02:59.426537+08:00",
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-08-17T09:02:59.426503+08:00"
   }
 ]
