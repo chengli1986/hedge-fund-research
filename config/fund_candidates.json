@@ -323,7 +323,7 @@
       "article_signals": 1
     },
     "screening_reason": "Insufficient article index signals",
-    "last_deep_analyzed_at": "2026-07-29T01:10:00Z",
+    "last_deep_analyzed_at": "2026-08-18T01:01:49Z",
     "quality": "MEDIUM",
     "topics": "private equity, macro, infrastructure, credit",
     "strategy_tags": [
@@ -1889,7 +1889,7 @@
     "screening_reason": "Research index detected",
     "fit_score": 0.85,
     "last_validated_at": "2026-05-03T09:00:33.191261+08:00",
-    "last_deep_analyzed_at": "2026-07-28T01:01:26Z",
+    "last_deep_analyzed_at": "2026-08-18T01:01:49Z",
     "quality": "MEDIUM",
     "quality_score": 0.62,
     "topics": "macro, multi_asset, tactical positioning",
@@ -2173,10 +2173,10 @@
     "last_discovered_at": "2026-05-11T09:00:09.554318+08:00",
     "research_url": "https://www.janushenderson.com/en-us/investor/insights/",
     "quality": "HIGH",
-    "quality_score": 0.84,
-    "topics": "fixed income, equity, macro, technology, healthcare",
-    "notes": "RECOMMEND: Free, weekly cadence; FI/macro/tech Jul 2026",
-    "last_deep_analyzed_at": "2026-07-29T01:10:00Z",
+    "quality_score": 0.85,
+    "topics": "fixed income, equity, macro, AI, healthcare",
+    "notes": "RECOMMEND: Free weekly; FI/macro/AI/health Aug 2026",
+    "last_deep_analyzed_at": "2026-08-18T01:01:49Z",
     "promoted_at": "2026-05-12T10:19:29.746916+08:00",
     "status_since": "2026-05-11T09:00:09.554318+08:00"
   },
@@ -3305,10 +3305,10 @@
     "name": "Hartford Funds",
     "homepage_url": "https://www.hartfordfunds.com/insights.html",
     "source": "manual",
-    "status": "discovered",
+    "status": "inaccessible",
     "strategy_tags": [
-      "equity",
       "fixed_income",
+      "equity",
       "macro"
     ],
     "research_url": "https://www.hartfordfunds.com/insights/investor-insight/future-of-advice.html",
@@ -3395,8 +3395,29 @@
         "path": "insights/market-perspectives/fixed-income/how-volatility-is-reshaping-bond-returns.html"
       }
     ],
-    "status_since": "2026-08-17T09:03:21.177634+08:00",
+    "status_since": "2026-08-18T09:00:19.754494+08:00",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-08-17T09:02:59.426503+08:00"
+    "last_discovered_at": "2026-08-17T09:02:59.426503+08:00",
+    "is_publicly_accessible": false,
+    "has_article_index": false,
+    "last_screened_at": "2026-08-18T09:00:14.181888+08:00",
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 2,
+      "article_tags": 0,
+      "time_tags": 0,
+      "date_patterns": 0,
+      "h2_tags": 0,
+      "article_signals": 0
+    },
+    "screening_reason": "Login/paywall detected",
+    "fit_score": 0.97,
+    "last_validated_at": "2026-08-18T09:00:19.754475+08:00",
+    "quality": "MEDIUM",
+    "quality_score": 0.58,
+    "topics": "fixed income, equity, macro, behavioral finance",
+    "notes": "Accessible content; screener flagged gate falsely",
+    "last_deep_analyzed_at": "2026-08-18T01:01:49Z"
   }
 ]

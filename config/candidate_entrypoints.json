@@ -1446,6 +1446,40 @@
           "label": "bad"
         }
       ]
+    },
+    "hartford-funds": {
+      "last_discovered_at": "2026-08-18T09:00:19.754475+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://www.hartfordfunds.com/insights/investor-insight/future-of-advice.html",
+          "final_score": 0.97,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 1.0,
+          "gate_penalty": 0.15,
+          "active": true
+        },
+        {
+          "url": "https://www.hartfordfunds.com/",
+          "final_score": 0.82,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 1.0,
+          "gate_penalty": 0.15,
+          "active": false
+        },
+        {
+          "url": "https://www.hartfordfunds.com/account-access.html",
+          "final_score": 0.82,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 1.0,
+          "gate_penalty": 0.15,
+          "active": false
+        }
+      ],
+      "rejected_pages": []
     }
   }
 }
