@@ -3305,7 +3305,7 @@
     "name": "Hartford Funds",
     "homepage_url": "https://www.hartfordfunds.com/insights.html",
     "source": "manual",
-    "status": "inaccessible",
+    "status": "watchlist",
     "strategy_tags": [
       "fixed_income",
       "equity",
@@ -3398,7 +3398,7 @@
     "status_since": "2026-08-18T09:02:37.045227+08:00",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-08-17T09:02:59.426503+08:00",
-    "is_publicly_accessible": false,
+    "is_publicly_accessible": true,
     "has_article_index": false,
     "last_screened_at": "2026-08-18T09:00:14.181888+08:00",
     "screening_signals": {
