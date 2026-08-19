@@ -2881,19 +2881,19 @@
     "name": "Eaton Vance",
     "homepage_url": "https://www.eatonvance.com/insights",
     "source": "manual",
-    "status": "seed",
+    "status": "watchlist",
     "strategy_tags": [
       "fixed_income",
       "private_credit",
       "macro",
       "esg_climate"
     ],
-    "status_since": "2026-07-26T09:03:39.378481+08:00",
+    "status_since": "2026-08-19T09:01:17.284812+08:00",
     "quality": "HIGH",
     "quality_score": 0.85,
     "topics": "macro, credit, real estate, fixed income, ESG, digital assets",
-    "notes": "RECOMMEND: Ungated, data-rich multi-asset research",
-    "last_deep_analyzed_at": "2026-08-10T01:01:29Z"
+    "notes": "WAF blocks EC2 IP+WebFetch (403); HIGH content",
+    "last_deep_analyzed_at": "2026-08-19T01:01:17Z"
   },
   {
     "id": "blue-owl-capital",
