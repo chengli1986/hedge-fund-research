@@ -1025,7 +1025,12 @@ def _fetch_content_janus_henderson(article: dict) -> Optional[tuple[Path, str]]:
 
 
 def _fetch_content_researchaffiliates(article: dict) -> Optional[tuple[Path, str]]:
-    """Fetch Research Affiliates article content via requests (SSR).
+    """Fetch Syzygy Asset Management (ex-Research Affiliates) content via requests (SSR).
+
+    2026-08 rename: article bodies moved to syzygyassetmanagement.com with the
+    same markup. No code change was needed — requests follows the 302 and
+    ``div.rendered-html`` still matches (verified 2026-08-21: old and new URL
+    both yield the identical 2737-char body for article 1122).
 
     Listing page is Next.js CSR (fetch_articles uses Playwright), but article
     body is SSR-rendered into div.rendered-html (also tagged

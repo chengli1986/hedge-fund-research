@@ -400,19 +400,19 @@
         "equity",
         "multi_asset"
       ],
-      "name": "Research Affiliates",
-      "short_name": "Research Affiliates",
-      "url": "https://www.researchaffiliates.com/insights/publications",
+      "name": "Syzygy Asset Management",
+      "short_name": "Syzygy",
+      "url": "https://www.syzygyassetmanagement.com/insights",
       "method": "playwright",
       "frequency": "monthly",
-      "description": "Quantitative investment firm founded by Rob Arnott (2002). Pioneered RAFI Fundamental Indexation — weights stocks by economic size (sales/cash flow/book/dividends) rather than market cap. Smart beta, factor investing, capital-market assumptions licensed to ~$188B of strategies.",
+      "description": "Quantitative investment firm founded by Rob Arnott (2002) as Research Affiliates; renamed Syzygy Asset Management in 2026 (researchaffiliates.com now redirects to syzygyassetmanagement.com). Pioneered RAFI Fundamental Indexation — weights stocks by economic size (sales/cash flow/book/dividends) rather than market cap. Smart beta, factor investing, capital-market assumptions licensed to ~$188B of strategies.",
       "notable_authors": [
         "Rob Arnott",
         "Chris Brightman",
         "Jim Masturzo",
         "Ari Polychronopoulos"
       ],
-      "expected_hostname": "researchaffiliates.com",
+      "expected_hostname": "syzygyassetmanagement.com",
       "max_articles": 10
     },
     {

@@ -782,7 +782,16 @@ def fetch_troweprice(source: dict) -> list[dict]:
 
 
 def fetch_researchaffiliates(source: dict) -> list[dict]:
-    """Fetch articles from Research Affiliates (Playwright — Next.js CSR).
+    """Fetch articles from Syzygy Asset Management, formerly Research Affiliates.
+
+    2026-08 rename: researchaffiliates.com now 302s every listing path
+    (/insights, /insights/publications, /publications, /research) to its own
+    homepage via a CloudFront Function, while *article* URLs 302 to
+    ``www.syzygyassetmanagement.com/insights/publications/articles/<slug>``.
+    The new site carries the same Next.js markup and the full archive, so only
+    the host changed. The source id stays ``research-affiliates`` (stable key);
+    the base URL is derived from ``source["url"]`` instead of being hardcoded,
+    so a future host move needs a config edit only.
 
     Site was rewritten to Next.js + Tailwind utility classes (~Apr 2026), so the
     legacy ``a.listing__item`` / ``.item__date`` / ``.item__title`` selectors no
@@ -805,7 +814,9 @@ def fetch_researchaffiliates(source: dict) -> list[dict]:
         timeout=30000,
     )
     soup = BeautifulSoup(html, "html.parser")
-    expected_host = source.get("expected_hostname", "researchaffiliates.com")
+    expected_host = source.get("expected_hostname", "syzygyassetmanagement.com")
+    parsed_base = urlparse(source["url"])
+    base_url = f"{parsed_base.scheme}://{parsed_base.netloc}"
 
     seen_urls: set[str] = set()
     articles = []
@@ -813,7 +824,7 @@ def fetch_researchaffiliates(source: dict) -> list[dict]:
         href = item.get("href", "")
         if not href:
             continue
-        url = urljoin("https://www.researchaffiliates.com", href)
+        url = urljoin(base_url, href)
         if not _validate_hostname(url, expected_host):
             continue
         if url in seen_urls:

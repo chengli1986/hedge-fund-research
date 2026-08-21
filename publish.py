@@ -225,8 +225,8 @@ _FUND_PROFILES: dict[str, dict] = {
     "research-affiliates": {
         "founded": "2002", "aum": "~$188B", "hq": "Newport Beach, CA",
         "type_en": "Quantitative Research / Index Licensor", "type_zh": "量化研究 / 指数授权机构",
-        "desc_zh": "Newport Beach 量化投资研究机构，2002 年由 Rob Arnott 创立。开创 RAFI 基本面指数（Fundamental Indexation）——按销售/现金流/账面/分红等经济体量加权，作为市值加权基准的替代方案。本身不直接管钱，授权 Smart Beta、因子投资、Capital Market Assumptions（CMA）等策略至约 1880 亿美元资产规模。Insights 系列以学术风格的资产配置与长期回报预期分析见长。",
-        "notable_en": "Founded by Rob Arnott (2002); pioneered fundamental indexation (RAFI) as alternative to cap-weighted benchmarks; widely-cited Capital Market Assumptions and smart-beta research; licensed strategies on ~$188B of assets.",
+        "desc_zh": "Newport Beach 量化投资研究机构，2002 年由 Rob Arnott 创立，2026 年 8 月更名为 Syzygy Asset Management（原 Research Affiliates，researchaffiliates.com 已整站跳转至 syzygyassetmanagement.com）。开创 RAFI 基本面指数（Fundamental Indexation）——按销售/现金流/账面/分红等经济体量加权，作为市值加权基准的替代方案。本身不直接管钱，授权 Smart Beta、因子投资、Capital Market Assumptions（CMA）等策略至约 1880 亿美元资产规模。Insights 系列以学术风格的资产配置与长期回报预期分析见长。",
+        "notable_en": "Founded by Rob Arnott (2002) as Research Affiliates, renamed Syzygy Asset Management in 2026; pioneered fundamental indexation (RAFI) as alternative to cap-weighted benchmarks; widely-cited Capital Market Assumptions and smart-beta research; licensed strategies on ~$188B of assets.",
         "notable_zh": "Rob Arnott 2002 年创立；首创基本面指数（RAFI）作为市值加权基准的替代方案；Capital Market Assumptions 与 Smart Beta 研究为机构广泛引用；授权策略覆盖约 1880 亿美元资产规模。",
     },
     "gsam": {

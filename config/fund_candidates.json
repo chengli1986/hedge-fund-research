@@ -893,14 +893,14 @@
   },
   {
     "id": "research-affiliates",
-    "name": "Research Affiliates",
+    "name": "Syzygy Asset Management",
     "status": "promoted",
-    "homepage_url": "https://www.researchaffiliates.com",
-    "research_url": "https://www.researchaffiliates.com/insights/publications",
+    "homepage_url": "https://www.syzygyassetmanagement.com",
+    "research_url": "https://www.syzygyassetmanagement.com/insights",
     "rss_url": null,
-    "official_domain": "www.researchaffiliates.com",
+    "official_domain": "www.syzygyassetmanagement.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "RECOMMEND: NLP+factor research, active Jul 2026",
+    "notes": "RECOMMEND: NLP+factor research, active Jul 2026. 2026-08: Research Affiliates renamed to Syzygy Asset Management; old researchaffiliates.com listing paths 302 to its homepage, article URLs 302 to the new host. research_links below are pre-rename discovery artifacts (they still resolve via redirect).",
     "research_links": [
       {
         "url": "https://www.researchaffiliates.com/insights/publications",

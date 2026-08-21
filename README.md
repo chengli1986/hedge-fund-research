@@ -26,7 +26,7 @@ Tracks and aggregates research insights, market commentary, and papers from top 
 | **Apollo Global Management** | SSR (AEM) | Weekly | Private credit ABF, secondaries, View from Apollo, Apollo Academy |
 | **KKR** | Playwright (Next.js) | Weekly | Private equity / infrastructure / private credit / Global Atlantic insurance; NYC, 1976, ~$758B |
 | **Janus Henderson Investors** | SSR (requests) | Weekly | Equities / fixed income / multi-asset; global rates + geopolitics frame; London/Denver, 2017 merger, ~$480B (take-private pending) |
-| **Research Affiliates** | Playwright (Next.js) | Monthly | Quantitative research / index licensor; RAFI fundamental indices + Smart Beta; Newport Beach, 2002, ~$159B licensed (Rob Arnott) |
+| **Syzygy Asset Management** (ex-Research Affiliates) | Playwright (Next.js) | Monthly | Quantitative research / index licensor; RAFI fundamental indices + Smart Beta; Newport Beach, 2002, ~$159B licensed (Rob Arnott). Renamed 2026-08; researchaffiliates.com redirects to syzygyassetmanagement.com |
 | **Goldman Sachs Asset Management** | JSON API | Weekly | Multi-asset, equity, fixed income, alternatives, liquidity; macro outlooks + market commentary; ~$3.3T |
 | **Robeco** | Playwright | Weekly | Quant equity pioneer, sustainability/ESG integration, EM equity & global credit; Rotterdam, 1929, ~€228B |
 | **D. E. Shaw** | Playwright | Annual | Quant multi-strategy; computational/statistical-arbitrage; Library publishes 1-3 long-form papers/year; 1988, ~$65B |

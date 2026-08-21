@@ -652,11 +652,13 @@ class TestFetchTroweprice:
 # ---------------------------------------------------------------------------
 
 class TestFetchResearchAffiliates:
+    # 2026-08: Research Affiliates renamed to Syzygy Asset Management; the source
+    # id stays "research-affiliates" as the stable key.
     SOURCE = {
         "id": "research-affiliates",
-        "url": "https://www.researchaffiliates.com/insights/publications",
+        "url": "https://www.syzygyassetmanagement.com/insights",
         "max_articles": 10,
-        "expected_hostname": "researchaffiliates.com",
+        "expected_hostname": "syzygyassetmanagement.com",
     }
 
     def test_parses_articles(self):
@@ -687,7 +689,7 @@ class TestFetchResearchAffiliates:
 
         assert len(articles) == 2
         assert articles[0]["title"] == "When Will AI Be Both Powerful and Profitable?"
-        assert articles[0]["url"] == "https://www.researchaffiliates.com/insights/publications/articles/1111-when-will-ai-be-profitable"
+        assert articles[0]["url"] == "https://www.syzygyassetmanagement.com/insights/publications/articles/1111-when-will-ai-be-profitable"
         assert articles[0]["date"] == "2026-04-30"
         assert articles[0]["date_raw"] == "APR 2026"
         assert articles[1]["title"] == "Winning the Long Game with RAFI"
@@ -747,6 +749,35 @@ class TestFetchResearchAffiliates:
             articles = fetch_researchaffiliates(source)
 
         assert len(articles) == 4
+
+    def test_base_url_follows_config_host_not_hardcoded(self):
+        """Relative hrefs must resolve against source["url"]'s host.
+
+        Regression guard for the 2026-08 rename: the fetcher used to hardcode
+        urljoin("https://www.researchaffiliates.com", href), so pointing the
+        config at the new host silently yielded 0 articles — every URL was
+        rebuilt on the old host and then dropped by _validate_hostname.
+        """
+        html = """
+        <html><body>
+        <a href="/insights/publications/articles/9001-example">
+          <div class="flex flex-col flex-1"><div>AUG 2026</div><div>Example</div></div>
+        </a>
+        </body></html>
+        """
+        moved = {
+            "id": "research-affiliates",
+            "url": "https://research.example.org/insights",
+            "max_articles": 10,
+            "expected_hostname": "research.example.org",
+        }
+        with patch("fetch_articles._get_playwright_page", return_value=html):
+            articles = fetch_researchaffiliates(moved)
+
+        assert len(articles) == 1
+        assert articles[0]["url"] == (
+            "https://research.example.org/insights/publications/articles/9001-example"
+        )
 
 
 # ---------------------------------------------------------------------------
