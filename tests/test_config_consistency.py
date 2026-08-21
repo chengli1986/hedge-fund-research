@@ -398,3 +398,63 @@ def test_synthesis_inner_lock_differs_from_cron_wrapper_lock():
         f"the cron-wrapper --lock path ({cron_wrapper_lock}); the weekly cron "
         "run will self-deadlock. Use a distinct inner lock file."
     )
+
+
+# ───────── Gap 5: stored article URLs vs the source's declared hosts ─────────
+
+
+def test_stored_article_hosts_are_declared():
+    """Every stored article URL must sit on a host the source declares.
+
+    The 2026-08-21 research-affiliates rename made this gap visible: the source
+    moved to syzygyassetmanagement.com and nothing in the default test run
+    noticed that 18 stored articles still pointed at the old host.
+    ``test_no_cross_source_contamination`` looks like it covers this, but it is
+    ``nightly``-marked and inspects a *live fetch*, not what is on disk — so it
+    is deselected by default and never sees stored rows at all.
+
+    A source legitimately accumulates more than one host over its life (a
+    rename, an acquisition, a move to a newsletter). Those go in
+    ``historical_hostnames`` in sources.json, which is exactly the list this
+    test reads — so declaring one is a deliberate, reviewable act, while an
+    undeclared host is a bug: either the fetcher drifted or a config edit was
+    left half-done.
+
+    Articles whose source_id is no longer in sources.json (demoted sources keep
+    their rows in articles.jsonl) are skipped — there is nothing to compare to.
+    """
+    if not ARTICLES_FILE.exists():
+        pytest.skip("data/articles.jsonl not present (gitignored)")
+
+    sources = {s["id"]: s for s in json.loads(SOURCES_FILE.read_text())["sources"]}
+    offenders: dict[tuple[str, str], int] = defaultdict(int)
+
+    with open(ARTICLES_FILE) as f:
+        for line in f:
+            if not line.strip():
+                continue
+            try:
+                a = json.loads(line)
+            except Exception:
+                continue
+            src = sources.get(a.get("source_id"))
+            if not src:
+                continue
+            declared = [src.get("expected_hostname", "")]
+            declared += src.get("historical_hostnames", [])
+            declared = [d for d in declared if d]
+            if not declared:
+                continue
+            host = _hostname(a.get("url", ""))
+            if not any(host == d or host.endswith("." + d) for d in declared):
+                offenders[(a["source_id"], host)] += 1
+
+    assert not offenders, (
+        "stored articles on undeclared hosts (add to the source's "
+        "historical_hostnames if the move is intentional):\n  "
+        + "\n  ".join(
+            f"{sid}: {n} article(s) on {host!r} (declared: "
+            f"{[sources[sid].get('expected_hostname')] + sources[sid].get('historical_hostnames', [])})"
+            for (sid, host), n in sorted(offenders.items(), key=lambda kv: -kv[1])
+        )
+    )
