@@ -106,7 +106,7 @@
       "article_signals": 1
     },
     "screening_reason": "Insufficient article index signals",
-    "last_deep_analyzed_at": "2026-08-02T01:05:00Z",
+    "last_deep_analyzed_at": "2026-08-21T01:15:00Z",
     "quality": "HIGH",
     "topics": "quant, portfolio management, equity, macro, credit, interest rates",
     "reject_reason": "no_public_research",
@@ -555,7 +555,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.8843,
-    "notes": "RECOMMEND: multi-asset macro; titles free, some gated",
+    "notes": "RECOMMEND: multi-asset macro; monthly review active Jul 2026",
     "research_links": [
       {
         "url": "https://www.wellington.com/en/insights",
@@ -634,7 +634,7 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-08-02T01:05:00Z",
+    "last_deep_analyzed_at": "2026-08-21T01:15:00Z",
     "quality": "HIGH",
     "topics": "macro, fixed income, equity, multi-asset, alternatives, emerging markets",
     "strategy_tags": [
@@ -1677,14 +1677,14 @@
       "multi_asset",
       "emerging_markets"
     ],
-    "notes": "RECOMMEND: quant-value research; recheck 08-05 shows latest visible article May 2026 (possible cadence drop, unverified)",
+    "notes": "RECOMMEND: quant-value; STALLED - no new article since May 2026",
     "official_domain": "verdadcap.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-04-29T09:00:09.051367+08:00",
-    "last_deep_analyzed_at": "2026-08-05T01:02:17Z",
+    "last_deep_analyzed_at": "2026-08-21T01:15:00Z",
     "quality": "HIGH",
-    "quality_score": 0.88,
+    "quality_score": 0.7,
     "topics": "quant, value investing, factor investing, global equity, Japan, private equity",
     "status_since": "2026-04-29T09:00:09.051367+08:00"
   },
@@ -2694,12 +2694,12 @@
       "real_assets",
       "macro"
     ],
-    "notes": "RECOMMEND: weekly energy/commodity research, active",
+    "notes": "RECOMMEND: weekly energy/commodity research, active Aug 2026",
     "official_domain": "www.gorozen.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-06-25T09:00:40.632255+08:00",
-    "last_deep_analyzed_at": "2026-08-05T01:02:17Z",
+    "last_deep_analyzed_at": "2026-08-21T01:15:00Z",
     "quality": "HIGH",
     "quality_score": 0.88,
     "topics": "energy, commodities, macro",
