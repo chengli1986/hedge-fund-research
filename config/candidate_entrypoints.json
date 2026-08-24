@@ -1480,6 +1480,50 @@
         }
       ],
       "rejected_pages": []
+    },
+    "mfs-investment-management": {
+      "last_discovered_at": "2026-08-24T09:00:24.862886+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://www.mfs.com/en-us/investment-professional/product-strategies/exchange-traded-funds.html",
+          "final_score": 0.85,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 1.0,
+          "gate_penalty": 0.0,
+          "active": true
+        },
+        {
+          "url": "https://www.mfs.com/reset",
+          "final_score": 0.82,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 1.0,
+          "gate_penalty": 0.15,
+          "active": false
+        },
+        {
+          "url": "https://www.mfs.com/en-us/investment-professional/insights/fixed-income.html",
+          "final_score": 0.8,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.3333,
+          "gate_penalty": 0.0,
+          "active": false
+        }
+      ],
+      "rejected_pages": [
+        {
+          "url": "https://www.mfs.com/en-us/investment-professional/about-mfs/contact-us.html",
+          "final_score": 0.4,
+          "domain_score": 1.0,
+          "path_score": 0.0,
+          "structure_score": 0.0,
+          "gate_penalty": 0.0,
+          "label": "bad"
+        }
+      ]
     }
   }
 }
