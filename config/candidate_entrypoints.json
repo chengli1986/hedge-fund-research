@@ -1482,7 +1482,7 @@
       "rejected_pages": []
     },
     "mfs-investment-management": {
-      "last_discovered_at": "2026-08-24T09:00:24.862886+08:00",
+      "last_discovered_at": "2026-08-25T09:03:03.435060+08:00",
       "discovered_by": "discover_candidate_entrypoints",
       "entrypoints": [
         {
@@ -1492,7 +1492,7 @@
           "path_score": 0.5,
           "structure_score": 1.0,
           "gate_penalty": 0.0,
-          "active": false
+          "active": true
         },
         {
           "url": "https://www.mfs.com/reset",
@@ -1510,7 +1510,7 @@
           "path_score": 1.0,
           "structure_score": 0.3333,
           "gate_penalty": 0.0,
-          "active": true
+          "active": false
         }
       ],
       "rejected_pages": [
