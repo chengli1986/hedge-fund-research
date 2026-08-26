@@ -78,9 +78,15 @@ def test_scan_does_not_flag_bare_trust_warning():
 
 # --- ops_problems ----------------------------------------------------------
 def test_ops_flags_locked_timeout_and_bad_exit():
+    # ⚠ 这里的 exit:0 不是凑数：cron-wrapper 的 log_result() **总是**写 exit 字段，
+    #   locked/timeout 的真实记录形如
+    #     {"job":…,"exit":0,"duration":0,"timeout":false,"locked":true,"error":"locked by…"}
+    #   （2026-08-26 从 ~/logs/ops-status.jsonl 实测确认）。
+    #   原来的构造数据漏了 exit，与真实格式不符 —— 而 runs_by_job 现在正是用
+    #   「没有 exit 就不是一次运行」来挡掉 alert 事件，所以构造数据必须照真实的来。
     rows = [
-        {"job": "gmia-fetcher-synthesis", "ts": "2026-07-19T18:00:00+00:00", "locked": True},
-        {"job": "gmia-daily", "ts": "2026-07-20T01:00:00+00:00", "timeout": True},
+        {"job": "gmia-fetcher-synthesis", "ts": "2026-07-19T18:00:00+00:00", "exit": 0, "locked": True},
+        {"job": "gmia-daily", "ts": "2026-07-20T01:00:00+00:00", "exit": 0, "timeout": True},
         {"job": "gmia-nightly-test", "ts": "2026-07-20T01:30:00+00:00", "exit": 1},
         {"job": "gmia-auto-promote", "ts": "2026-07-20T01:45:00+00:00", "exit": 0},  # clean
     ]
@@ -90,6 +96,33 @@ def test_ops_flags_locked_timeout_and_bad_exit():
     assert jobs["gmia-daily"] == ["timed-out"]
     assert jobs["gmia-nightly-test"] == ["exit=1"]
     assert "gmia-auto-promote" not in jobs  # a clean run produces no problem row
+
+
+def test_ops_ignores_alert_events_new_and_old_format():
+    """★ 回归（2026-08-26，真实生产日志中已发生）：cron-wrapper 除了「一次运行」的
+    记录，还会往同一个 ops-status.jsonl 里写「那次告警发出去没有」的事件。那种记录
+    **没有 exit 字段**，而 run_reasons() 把 exit=None 当成正常、runs_by_job 又按
+    时间取最新一条 —— 于是一条紧随失败之后的 alert 记录会把失败**盖成 recovered**。
+
+    真实反例：gmia-fetcher-health 04:35:34 exit=1 → 04:35:36 alert_sent=true →
+    05:02 的巡检输出「recovered … clean since 04:35:36 / 0 problems」。
+
+    ⚠ 两种格式都要挡：带 event 标记的新格式，以及本次修复之前已经写进历史的旧格式
+      （只有 alert_sent、没有 event）。判据以「没有 exit 就不是一次运行」为准。
+    """
+    rows = [
+        {"job": "gmia-fetcher-health", "ts": "2026-07-20T01:00:00+00:00", "exit": 1},
+        # 新格式：带 event 标记
+        {"job": "gmia-fetcher-health", "ts": "2026-07-20T01:00:02+00:00",
+         "event": "alert", "alert_sent": True},
+        # 旧格式：修复前写进历史的，没有 event 标记
+        {"job": "gmia-fetcher-health", "ts": "2026-07-20T01:00:03+00:00",
+         "alert_sent": True},
+    ]
+    probs = la.ops_problems(rows, "gmia", NOW, window_days=3)
+    jobs = {p["job"]: p["reasons"] for p in probs}
+    assert "gmia-fetcher-health" in jobs, "失败被 alert 记录盖掉了"
+    assert jobs["gmia-fetcher-health"] == ["exit=1"]
 
 
 def test_ops_ignores_other_prefixes_and_old_runs():

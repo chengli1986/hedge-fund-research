@@ -125,6 +125,16 @@ def runs_by_job(rows: Iterable[dict], jobs_prefix: str, now: datetime,
     exclude = exclude or set()
     grouped: dict[str, list[tuple[datetime, dict]]] = {}
     for r in rows:
+        # ⚠ ops-status.jsonl 不只装「一次运行」的记录：cron-wrapper 还会写
+        #   「那次告警发出去没有」的事件。那种记录**没有 exit 字段**，而
+        #   run_reasons() 把 exit=None 当成正常、下面又按时间取最新一条 ——
+        #   于是紧随失败之后的一条 alert 记录会把失败**盖成 recovered**。
+        #   2026-08-26 真实发生：gmia-fetcher-health exit=1 → 2 秒后 alert_sent
+        #   → 巡检输出「recovered … 0 problems」。
+        #   ⚠ 两个条件都留着：`event` 标记是约定（新格式），`没有 exit` 是硬事实
+        #     （挡住修复前已写进历史的旧格式）。别只依赖上游守规矩。
+        if r.get("event") == "alert" or "exit" not in r:
+            continue
         job = str(r.get("job", ""))
         if not job.startswith(jobs_prefix) or job in exclude:
             continue
