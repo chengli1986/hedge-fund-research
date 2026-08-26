@@ -494,7 +494,8 @@
         "www.pinebridge.com",
         "investments.metlife.com"
       ],
-      "max_articles": 10
+      "max_articles": 10,
+      "content_probe_top_n": 8
     },
     {
       "id": "ares-management",
