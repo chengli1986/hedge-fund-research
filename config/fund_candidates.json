@@ -194,7 +194,7 @@
       "article_signals": 3
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-07-28T01:01:26Z",
+    "last_deep_analyzed_at": "2026-08-28T01:00:39Z",
     "quality": "MEDIUM",
     "topics": "private credit, private equity, real assets",
     "strategy_tags": [
@@ -3435,7 +3435,7 @@
     "official_domain": "www.fulcrumasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-08-27T09:00:14.632046+08:00",
+    "last_discovered_at": "2026-08-28T09:00:11.485314+08:00",
     "status_since": "2026-08-22T09:03:32.572404+08:00",
     "last_deep_analyzed_at": "2026-08-23T01:10:00Z",
     "quality": "MEDIUM",
@@ -3548,12 +3548,23 @@
     "official_domain": "www.muzinich.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-08-27T09:00:15.104884+08:00",
+    "last_discovered_at": "2026-08-28T09:00:12.071235+08:00",
     "status_since": "2026-08-25T09:03:39.585223+08:00",
     "quality": "MEDIUM",
     "quality_score": 0.5,
     "topics": "credit, fixed income, emerging markets, private credit",
     "notes": "Weekly credit/EM research, gated behind terms wall",
     "last_deep_analyzed_at": "2026-08-26T01:15:00Z"
+  },
+  {
+    "id": "capital-fund-management",
+    "name": "Capital Fund Management (CFM)",
+    "homepage_url": "https://www.cfm.com",
+    "source": "manual",
+    "status": "seed",
+    "strategy_tags": [
+      "quant",
+      "macro"
+    ]
   }
 ]
