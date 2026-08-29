@@ -2903,6 +2903,78 @@ def fetch_baillie_gifford(source: dict) -> list[dict]:
     return articles[:source.get("max_articles", 10)]
 
 
+_MFS_SEARCH_PATH = "/MFSServices/services/search/v1/queryresults"
+
+
+def fetch_mfs_investment_management(source: dict) -> list[dict]:
+    """Fetch MFS Investment Management insights via its Solr search API.
+
+    The public listing pages are AEM-rendered and only expose a handful of
+    hand-curated "related insights" tiles per topic (fixed-income.html carries
+    7, equity.html carries 1), while the /insights.html hub renders its full
+    index client-side. That hub calls a Solr-backed endpoint,
+    ``/MFSServices/services/search/v1/queryresults``, which returns the whole
+    archive as JSON with clean absolute URLs and ``publisheddate`` strings — so
+    we query it directly with requests instead of driving Playwright.
+
+    ``data_type`` is pinned to ``insights``: the hub's own filter also admits
+    ``video`` and ``podcast``, but those docs point at ``/content/dam/...mp4``
+    assets that have no fetchable article text.
+
+    ``title`` occasionally arrives wrapped in markup (``<p>Market Pulse</p>``)
+    because the CMS field is rich text, so titles are run through BeautifulSoup
+    to recover plain text.
+    """
+    parsed_base = urlparse(source["url"])
+    base_url = f"{parsed_base.scheme}://{parsed_base.netloc}"
+    expected_host = source.get("expected_hostname", "mfs.com")
+    max_articles = source.get("max_articles", 10)
+
+    params = {
+        "q": "*",
+        "wt": "json",
+        "rows": str(max(max_articles * 3, 30)),
+        "sort": "sorteddate desc",
+        "roleCode": "iprof,usiprof",
+        "fq": (
+            "locale:(en or en_us) AND region:us AND is_insight:true "
+            "AND data_type:(insights)"
+        ),
+    }
+    resp = requests.get(base_url + _MFS_SEARCH_PATH, params=params,
+                        headers=HEADERS, timeout=20)
+    resp.raise_for_status()
+    docs = resp.json().get("response", {}).get("docs", [])
+
+    seen_urls: set[str] = set()
+    articles = []
+    for doc in docs:
+        url = (doc.get("url") or "").strip()
+        if not url or not _validate_hostname(url, expected_host):
+            continue
+        if url in seen_urls:
+            continue
+        raw_title = (doc.get("title") or "").strip()
+        title = (
+            BeautifulSoup(raw_title, "html.parser").get_text(" ", strip=True)
+            if "<" in raw_title else raw_title
+        )
+        if not title:
+            continue
+        seen_urls.add(url)
+        date_raw = (doc.get("publisheddate") or "").strip()
+        articles.append({
+            "title": title,
+            "category": (doc.get("series") or [""])[0],
+            "url": url,
+            "date": parse_date(date_raw) if date_raw else None,
+            "date_raw": date_raw,
+        })
+
+    articles.sort(key=lambda a: a["date"] or "", reverse=True)
+    return articles[:max_articles]
+
+
 # FETCHER_SYNTHESIS_INSERTION_POINT — auto-generated fetchers inserted above this line
 
 
@@ -3219,6 +3291,7 @@ FETCHERS = {
     "aberdeen": fetch_aberdeen,
     "research-affiliates": fetch_researchaffiliates,
     "pimco": fetch_pimco,
+    "mfs-investment-management": fetch_mfs_investment_management,
     "baillie-gifford": fetch_baillie_gifford,
     "partners-group": fetch_partners_group,
     "resonanz-capital": fetch_resonanz_capital,

@@ -3448,7 +3448,7 @@
     "name": "MFS Investment Management",
     "homepage_url": "https://www.mfs.com/en-us/insights.html",
     "source": "manual",
-    "status": "inaccessible",
+    "status": "visitable",
     "strategy_tags": [
       "fixed_income",
       "equity",
@@ -3509,7 +3509,7 @@
         "path": "content/mfs-enterprise/mfscom/us/en/investment-professional/insights/market-insights/market-pulse.html"
       }
     ],
-    "status_since": "2026-08-25T09:03:39.585208+08:00",
+    "status_since": "2026-08-30T02:02:24.320159+08:00",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-08-23T09:02:42.105412+08:00",
     "last_deep_analyzed_at": "2026-08-24T01:00:00Z",
@@ -3517,8 +3517,8 @@
     "quality_score": 0.55,
     "topics": "fixed income, credit, equity, multi-asset, macro",
     "notes": "Real content but tiered login gate; overlaps macro/credit",
-    "is_publicly_accessible": false,
-    "has_article_index": false,
+    "is_publicly_accessible": true,
+    "has_article_index": true,
     "last_screened_at": "2026-08-25T09:02:59.326225+08:00",
     "screening_signals": {
       "status_code": 200,
@@ -3532,7 +3532,9 @@
     },
     "screening_reason": "Login/paywall detected",
     "fit_score": 0.85,
-    "last_validated_at": "2026-08-25T09:03:03.435060+08:00"
+    "last_validated_at": "2026-08-25T09:03:03.435060+08:00",
+    "synthesis_attempted_at": "2026-08-29T18:02:24.320129+00:00",
+    "synthesis_outcome": "success"
   },
   {
     "id": "muzinich",
