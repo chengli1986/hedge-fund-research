@@ -95,6 +95,12 @@ def rolling_success_rate(entries: list[dict], window_days: int, now: datetime) -
     return succ, total
 
 
+def _clip(text: str, limit: int) -> str:
+    """Truncate with a visible marker — a silently-cut reason reads as a
+    complete sentence that says something other than what was recorded."""
+    return text if len(text) <= limit else text[:limit - 1] + "…"
+
+
 def _candidate_index(candidates: list[dict]) -> dict[str, dict]:
     return {c["id"]: c for c in candidates}
 
@@ -120,6 +126,11 @@ def build_html(results: list[dict], targets_count: int, candidates: list[dict],
     date_str = now.astimezone(BJT).strftime("%Y-%m-%d %H:%M BJT")
     r30s, r30t = rolling_success_rate(entries, 30, now)
     rate30 = f"{r30s}/{r30t} ({100 * r30s / r30t:.0f}%)" if r30t else "n/a"
+    # A rate computed from a history that has never recorded a single failure is
+    # not evidence the synthesis works — it is indistinguishable from a failure
+    # path that never writes a row. Say which one we cannot rule out.
+    no_failures_ever = bool(entries) and all(
+        e.get("outcome") == "success" for e in entries)
 
     chip = ("display:inline-block;padding:4px 10px;margin:2px;"
             "border-radius:12px;font-size:12px")
@@ -130,6 +141,21 @@ def build_html(results: list[dict], targets_count: int, candidates: list[dict],
         f"<span style='{chip};background:#f6f8fa;color:#57606a'>30d {html.escape(rate30)}</span>"
     )
 
+    caveats = []
+    if no_failures_ever:
+        caveats.append(
+            f"该成功率取自 {len(entries)} 条全历史记录，其中<b>从未记录到失败</b>——"
+            "无法与「失败路径不写记录」区分，暂不作为可靠性证据。")
+    missing = targets_count - len(results)
+    if results and missing > 0:
+        caveats.append(
+            f"本次 {targets_count} 个目标中有 <b>{missing} 个目标无结果记录</b>"
+            "（既未成功也未记失败），请查 <code>~/logs/gmia-fetcher-synthesis.log</code>。")
+    caveat_html = "".join(
+        f"<p style='margin:8px 0;padding:8px 10px;background:#fff8c5;"
+        f"border-left:3px solid #d4a72c;font-size:12px;color:#57606a'>⚠️ {c}</p>"
+        for c in caveats)
+
     def row(r: dict, ok: bool) -> str:
         cand = idx.get(r.get("id", ""), {})
         name = html.escape(r.get("name") or cand.get("name") or r.get("id", "?"))
@@ -139,8 +165,18 @@ def build_html(results: list[dict], targets_count: int, candidates: list[dict],
             detail = html.escape(_next_step(cand))
             third = f"<code>{commit}</code> · {detail}"
         else:
-            reason = html.escape((cand.get("notes") or "原因未记录")[:90])
-            third = reason
+            # The jsonl entry's own failure_reason is the only field written by
+            # this synthesis run. `notes` is shared (trial-manager / guard /
+            # discovery all write it), so it may describe something else
+            # entirely — show it only as a labeled fallback, never as the cause.
+            recorded = (r.get("failure_reason") or "").strip()
+            if recorded:
+                third = html.escape(_clip(recorded, 120))
+            elif cand.get("notes"):
+                third = ("<span style='color:#8b949e'>候选备注（非本次失败原因）：</span>"
+                         + html.escape(_clip(cand["notes"], 90)))
+            else:
+                third = "原因未记录"
         return (
             f"<tr>"
             f"<td style='padding:6px 10px'>{name}</td>"
@@ -180,6 +216,7 @@ def build_html(results: list[dict], targets_count: int, candidates: list[dict],
         "<html><body style='font-family:-apple-system,sans-serif;padding:20px;max-width:720px'>"
         f"<h2 style='margin:0'>🔧 GMIA Fetcher Synthesis — {date_str}</h2>"
         f"<p style='color:#586069;margin:8px 0 16px'>{chips}</p>"
+        f"{caveat_html}"
         f"{body}"
         "<p style='color:#8b949e;font-size:11px;margin-top:24px'>"
         "Fetcher synthesis 为 inaccessible 候选基金自动生成抓取器。成功后："

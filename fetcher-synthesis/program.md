@@ -180,6 +180,12 @@ for c in candidates:
         # 失败路径（注释掉成功路径，用这段）：
         # c["synthesis_attempted_at"] = now
         # c["synthesis_outcome"] = "failed"
+        # ↓ 必填。这是 digest 邮件里「失败原因」列的唯一来源。
+        #   写你实际观察到的现象（HTTP 状态码 / selector 匹配 0 条 /
+        #   Playwright 超时 / 内容长度不足），不要写推测。
+        #   ⚠ 绝不要把 c["notes"] 当失败原因 —— 那个字段由 trial-manager、
+        #   guard_candidate_status、discovery 共写，描述的是候选本身。
+        # c["synthesis_failure_reason"] = "……实际观察到的现象……"
         break
 
 out = candidates if isinstance(data, list) else {**data, "candidates": candidates}

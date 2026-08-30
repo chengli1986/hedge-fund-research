@@ -89,6 +89,14 @@ def backfill(planned_ids: list[str], run_start: str,
         # Otherwise the agent skipped / silently failed this target → mark failed.
         c["synthesis_attempted_at"] = now
         c["synthesis_outcome"] = "failed"
+        # This is the one thing we actually verified above, so it is safe to
+        # state as the cause. Anything more specific (403 / selector / timeout)
+        # would be a guess — the agent left no record to read.
+        # run_start trimmed to seconds: the digest cell budgets 120 chars and a
+        # cut reason loses the log pointer that makes it actionable.
+        c["synthesis_failure_reason"] = (
+            f"agent 未在本次 session 记录尝试（run_start={run_start[:19]}），"
+            "由 backfill 判失败；详见 gmia-fetcher-synthesis.log")
         backfilled.append(c["id"])
 
     if backfilled:

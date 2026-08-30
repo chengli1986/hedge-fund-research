@@ -33,11 +33,41 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 CANDIDATES_FILE = BASE_DIR / "config" / "fund_candidates.json"
 HISTORY_FILE = BASE_DIR / "logs" / "fetcher-synthesis-history.jsonl"
 DEFAULT_LOOKBACK = 7  # days to scan in fund_candidates for un-logged outcomes
+# Rows are dated in BJT so the log lines up with the digest email and the cron
+# schedule ("Sunday 02:00 BJT"), which in UTC is Saturday 18:00 — dating in UTC
+# labelled that run Saturday and made the email's date ungreppable in the log.
+BJT = timezone(timedelta(hours=8))
 
 
 def load_candidates() -> list[dict]:
     data = json.loads(CANDIDATES_FILE.read_text())
     return data if isinstance(data, list) else data.get("candidates", [])
+
+
+def _date_keys(entry: dict) -> set[str]:
+    """Every date string an existing row could plausibly be keyed under.
+
+    Rows written before the BJT switch carry the UTC date; rows written after
+    carry the BJT date. Registering both (plus whatever the literal ``date``
+    field says) keeps reconcile idempotent across the switch — the failure mode
+    we must avoid is a duplicate row, which would silently inflate the rate.
+    """
+    keys = set()
+    literal = entry.get("date")
+    if literal:
+        keys.add(literal)
+    raw = entry.get("attempted_at", "")
+    try:
+        dt = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except (ValueError, TypeError, AttributeError):
+        if raw:
+            keys.add(raw[:10])
+        return keys
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    keys.add(dt.astimezone(timezone.utc).date().isoformat())
+    keys.add(dt.astimezone(BJT).date().isoformat())
+    return keys
 
 
 def load_history_ids_by_date(history_path: Path) -> set[tuple[str, str]]:
@@ -51,10 +81,11 @@ def load_history_ids_by_date(history_path: Path) -> set[tuple[str, str]]:
             continue
         try:
             e = json.loads(line)
-            date_str = e.get("date") or e.get("attempted_at", "")[:10]
-            seen.add((date_str, e.get("id", "")))
         except json.JSONDecodeError:
             continue
+        fund_id = e.get("id", "")
+        for key in _date_keys(e):
+            seen.add((key, fund_id))
     return seen
 
 
@@ -114,7 +145,7 @@ def reconcile(lookback_days: int = DEFAULT_LOOKBACK) -> dict:
         if attempted_dt < cutoff:
             continue
 
-        date_str = attempted_dt.date().isoformat()
+        date_str = attempted_dt.astimezone(BJT).date().isoformat()
         if (date_str, c["id"]) in seen:
             continue
 
@@ -133,6 +164,13 @@ def reconcile(lookback_days: int = DEFAULT_LOOKBACK) -> dict:
             # candidates fetcher-synthesis should prioritize.
             "needs_playwright": bool(c.get("needs_playwright")),
         }
+        # Only the synthesis run writes synthesis_failure_reason. `notes` is
+        # shared with trial-manager / guard / discovery, so it must never be
+        # substituted here — a wrong cause label is worse than none.
+        if outcome != "success":
+            reason = (c.get("synthesis_failure_reason") or "").strip()
+            if reason:
+                entry["failure_reason"] = reason
         appended.append(entry)
         seen.add((date_str, c["id"]))
 

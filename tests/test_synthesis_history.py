@@ -252,3 +252,94 @@ def test_stats_breakdown_handles_empty_cohort_gracefully():
     # needs_playwright=False cohort empty → rate is None (not a crash)
     assert r["needs_playwright_breakdown"]["no_playwright_flag"]["total"] == 0
     assert r["needs_playwright_breakdown"]["no_playwright_flag"]["rate"] is None
+
+
+# ── date field: BJT, so the log lines up with the digest email and the cron ──
+
+def test_reconcile_dates_entry_in_bjt_not_utc(monkeypatch, tmp_path):
+    """The Sunday 02:00 BJT run happens at 18:00 UTC Saturday. Dating the row
+    in UTC labels it Saturday, so the date in the digest email (BJT) can't be
+    grepped in the log. Date rows in BJT to match email + cron schedule."""
+    cand_file = tmp_path / "fund_candidates.json"
+    history_file = tmp_path / "logs" / "history.jsonl"
+    attempted = (datetime.now(timezone.utc) - timedelta(hours=1)).replace(
+        hour=18, minute=2, second=24, microsecond=0).isoformat()
+    _make_candidates_file(cand_file, [
+        {"id": "fund-a", "name": "Fund A", "status": "visitable",
+         "synthesis_attempted_at": attempted,
+         "synthesis_outcome": "success", "quality": "MEDIUM"},
+    ])
+    monkeypatch.setattr(sync_mod, "CANDIDATES_FILE", cand_file)
+    monkeypatch.setattr(sync_mod, "HISTORY_FILE", history_file)
+    monkeypatch.setattr(sync_mod, "_commit_sha_for_candidate", lambda *a, **k: "")
+
+    sync_mod.reconcile(lookback_days=7)
+    entry = json.loads(history_file.read_text().splitlines()[0])
+    expected = datetime.fromisoformat(attempted).astimezone(
+        timezone(timedelta(hours=8))).date().isoformat()
+    assert entry["date"] == expected
+
+
+def test_reconcile_does_not_duplicate_row_already_logged_under_utc_date(
+        monkeypatch, tmp_path):
+    """Rows written before the BJT switch carry the UTC date. Re-running
+    reconcile must recognise them, not append a second row under the BJT date."""
+    cand_file = tmp_path / "fund_candidates.json"
+    history_file = tmp_path / "logs" / "history.jsonl"
+    attempted = (datetime.now(timezone.utc) - timedelta(hours=1)).replace(
+        hour=18, minute=2, second=24, microsecond=0).isoformat()
+    utc_date = datetime.fromisoformat(attempted).date().isoformat()
+    history_file.parent.mkdir(parents=True, exist_ok=True)
+    history_file.write_text(json.dumps({
+        "date": utc_date, "attempted_at": attempted, "id": "fund-a",
+        "name": "Fund A", "outcome": "success"}) + "\n")
+    _make_candidates_file(cand_file, [
+        {"id": "fund-a", "name": "Fund A", "status": "visitable",
+         "synthesis_attempted_at": attempted,
+         "synthesis_outcome": "success", "quality": "MEDIUM"},
+    ])
+    monkeypatch.setattr(sync_mod, "CANDIDATES_FILE", cand_file)
+    monkeypatch.setattr(sync_mod, "HISTORY_FILE", history_file)
+    monkeypatch.setattr(sync_mod, "_commit_sha_for_candidate", lambda *a, **k: "")
+
+    result = sync_mod.reconcile(lookback_days=7)
+    assert result["appended_count"] == 0
+    assert len(history_file.read_text().splitlines()) == 1
+
+
+# ── failure reason travels from the candidate into the log row ───────────────
+
+def test_reconcile_carries_synthesis_failure_reason(monkeypatch, tmp_path):
+    cand_file = tmp_path / "fund_candidates.json"
+    history_file = tmp_path / "logs" / "history.jsonl"
+    _make_candidates_file(cand_file, [
+        {"id": "fund-b", "name": "Fund B", "status": "inaccessible",
+         "synthesis_attempted_at": _utc_iso(0), "synthesis_outcome": "failed",
+         "synthesis_failure_reason": "index selector matched 0 links",
+         "notes": "discovery-time note that is NOT the failure cause",
+         "quality": "MEDIUM"},
+    ])
+    monkeypatch.setattr(sync_mod, "CANDIDATES_FILE", cand_file)
+    monkeypatch.setattr(sync_mod, "HISTORY_FILE", history_file)
+    monkeypatch.setattr(sync_mod, "_commit_sha_for_candidate", lambda *a, **k: "")
+
+    sync_mod.reconcile(lookback_days=7)
+    entry = json.loads(history_file.read_text().splitlines()[0])
+    assert entry["failure_reason"] == "index selector matched 0 links"
+
+
+def test_reconcile_omits_failure_reason_on_success(monkeypatch, tmp_path):
+    cand_file = tmp_path / "fund_candidates.json"
+    history_file = tmp_path / "logs" / "history.jsonl"
+    _make_candidates_file(cand_file, [
+        {"id": "fund-a", "name": "Fund A", "status": "visitable",
+         "synthesis_attempted_at": _utc_iso(0), "synthesis_outcome": "success",
+         "quality": "HIGH"},
+    ])
+    monkeypatch.setattr(sync_mod, "CANDIDATES_FILE", cand_file)
+    monkeypatch.setattr(sync_mod, "HISTORY_FILE", history_file)
+    monkeypatch.setattr(sync_mod, "_commit_sha_for_candidate", lambda *a, **k: "")
+
+    sync_mod.reconcile(lookback_days=7)
+    entry = json.loads(history_file.read_text().splitlines()[0])
+    assert "failure_reason" not in entry

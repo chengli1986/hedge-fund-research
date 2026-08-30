@@ -102,3 +102,39 @@ def test_ignores_non_planned_candidates(monkeypatch, tmp_path):
     monkeypatch.setattr(bf, "CANDIDATES_FILE", cand_file)
     result = bf.backfill(planned_ids=["franklin-templeton"], run_start=run_start)
     assert result["backfilled_count"] == 0
+
+
+def test_backfill_records_the_verified_failure_reason(monkeypatch, tmp_path):
+    """Backfill knows exactly why it marked the target failed — the agent never
+    recorded an attempt this session. Record that, so the digest email has a
+    real cause instead of falling back to the shared `notes` field."""
+    cand_file = tmp_path / "fund_candidates.json"
+    run_start = _utc_iso(30)
+    _make_candidates(cand_file, [
+        {"id": "fund-x", "name": "Fund X", "status": "inaccessible",
+         "notes": "discovery-time note that is NOT the failure cause"},
+    ])
+    monkeypatch.setattr(bf, "CANDIDATES_FILE", cand_file)
+
+    bf.backfill(["fund-x"], run_start, candidates_path=cand_file)
+    c = json.loads(cand_file.read_text())[0]
+    assert c["synthesis_outcome"] == "failed"
+    reason = c["synthesis_failure_reason"]
+    assert "记录尝试" in reason and "backfill" in reason  # names what was verified
+    assert "discovery-time note" not in reason           # never the shared notes field
+    assert c["notes"] == "discovery-time note that is NOT the failure cause"
+
+
+def test_backfill_reason_fits_the_digest_cell_without_truncation(monkeypatch, tmp_path):
+    """The digest shows at most 120 chars of a failure reason. A reason longer
+    than that gets cut mid-path and loses the log pointer that makes it
+    actionable — keep it inside the budget."""
+    cand_file = tmp_path / "fund_candidates.json"
+    _make_candidates(cand_file, [
+        {"id": "fund-x", "name": "Fund X", "status": "inaccessible"}])
+    monkeypatch.setattr(bf, "CANDIDATES_FILE", cand_file)
+
+    bf.backfill(["fund-x"], _utc_iso(30), candidates_path=cand_file)
+    reason = json.loads(cand_file.read_text())[0]["synthesis_failure_reason"]
+    assert reason.endswith("gmia-fetcher-synthesis.log")
+    assert len(reason) <= 120, f"reason is {len(reason)} chars, will be truncated"

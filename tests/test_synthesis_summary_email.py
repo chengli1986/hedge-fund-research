@@ -206,3 +206,81 @@ def test_main_dry_run_prints_html(tmp_path, monkeypatch, capsys):
     assert rc == 0
     assert "Acadian Asset Management" in out
     assert "GMIA Fetcher Synthesis" in out
+
+
+# ── failure reason: dedicated field, not the shared notes field ───────────────
+
+def test_failure_row_uses_dedicated_failure_reason_over_notes():
+    """The jsonl entry's own failure_reason wins over the candidate's notes.
+
+    notes is a shared field written by trial-manager / guard / discovery, so it
+    describes the candidate, not this synthesis failure.
+    """
+    results = [_attempt("cohen-steers", "Cohen & Steers", "failed",
+                        "2026-06-07T10:00:00Z",
+                        )]
+    results[0]["failure_reason"] = "Playwright timeout after 3 retries"
+    htm = sss.build_html(results, 1, _candidates(), results, NOW)
+    assert "Playwright timeout after 3 retries" in htm
+    assert "403 Forbidden" not in htm  # the candidate note must not be shown as the cause
+
+
+def test_failure_row_labels_notes_fallback_as_candidate_note():
+    """With no failure_reason recorded, notes may still be shown — but never
+    presented as this run's cause."""
+    results = [_attempt("cohen-steers", "Cohen & Steers", "failed",
+                        "2026-06-07T10:00:00Z")]
+    htm = sss.build_html(results, 1, _candidates(), results, NOW)
+    assert "403 Forbidden" in htm
+    assert "候选备注" in htm       # explicitly labeled as the candidate note
+    assert "非本次失败原因" in htm  # and disclaimed
+
+
+# ── rolling rate honesty ─────────────────────────────────────────────────────
+
+def test_rate_chip_flags_history_with_zero_recorded_failures():
+    """A 100% rate over a history that never recorded ANY failure is not
+    evidence the synthesis works — it cannot be told apart from a failure path
+    that never writes. Say so instead of showing a bare 100%."""
+    entries = [_attempt(f"f{i}", f"F{i}", "success", "2026-06-0%dT10:00:00Z" % (i + 1))
+               for i in range(5)]
+    htm = sss.build_html(entries[-1:], 1, _candidates(), entries, NOW)
+    assert "从未记录到失败" in htm
+
+
+def test_rate_chip_no_caveat_once_a_failure_has_been_recorded():
+    entries = [
+        _attempt("a", "A", "success", "2026-06-01T10:00:00Z"),
+        _attempt("b", "B", "failed", "2026-06-02T10:00:00Z"),
+    ]
+    htm = sss.build_html(entries[:1], 1, _candidates(), entries, NOW)
+    assert "从未记录到失败" not in htm
+
+
+# ── targets vs results reconciliation ────────────────────────────────────────
+
+def test_build_html_flags_targets_with_no_recorded_result():
+    """3 targets but only 1 result → the 2 silent targets must be called out."""
+    results = [_attempt("acadian-asset", "Acadian Asset Management", "success",
+                        "2026-06-07T10:00:00Z", commit="64c89297")]
+    htm = sss.build_html(results, targets_count=3, candidates=_candidates(),
+                         entries=results, now=NOW)
+    assert "2 个目标无结果记录" in htm
+
+
+def test_build_html_no_shortfall_warning_when_all_targets_reported():
+    results = [_attempt("acadian-asset", "Acadian Asset Management", "success",
+                        "2026-06-07T10:00:00Z", commit="64c89297")]
+    htm = sss.build_html(results, targets_count=1, candidates=_candidates(),
+                         entries=results, now=NOW)
+    assert "无结果记录" not in htm
+
+
+def test_long_failure_reason_is_marked_when_truncated():
+    """A silently-cut reason reads as a complete sentence that says something
+    different. Mark the cut."""
+    results = [_attempt("cohen-steers", "Cohen & Steers", "failed",
+                        "2026-06-07T10:00:00Z")]
+    results[0]["failure_reason"] = "x" * 300
+    htm = sss.build_html(results, 1, _candidates(), results, NOW)
+    assert "…" in htm
