@@ -87,7 +87,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.97,
-    "notes": "RECOMMEND: proprietary quant research, active thru 2026",
+    "notes": "RECOMMEND: proprietary quant research, active Aug 2026",
     "research_links": [
       {
         "url": "https://www.deshaw.com/library",
@@ -106,7 +106,7 @@
       "article_signals": 1
     },
     "screening_reason": "Insufficient article index signals",
-    "last_deep_analyzed_at": "2026-08-21T01:15:00Z",
+    "last_deep_analyzed_at": "2026-08-30T01:01:39Z",
     "quality": "HIGH",
     "topics": "quant, portfolio management, equity, macro, credit, interest rates",
     "reject_reason": "no_public_research",
@@ -634,7 +634,7 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-08-21T01:15:00Z",
+    "last_deep_analyzed_at": "2026-08-30T01:01:39Z",
     "quality": "HIGH",
     "topics": "macro, fixed income, equity, multi-asset, alternatives, emerging markets",
     "strategy_tags": [
@@ -1677,14 +1677,14 @@
       "multi_asset",
       "emerging_markets"
     ],
-    "notes": "RECOMMEND: quant-value; STALLED - no new article since May 2026",
+    "notes": "Quant/PE research stalled 4mo, no article since May 2026",
     "official_domain": "verdadcap.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-04-29T09:00:09.051367+08:00",
-    "last_deep_analyzed_at": "2026-08-21T01:15:00Z",
-    "quality": "HIGH",
-    "quality_score": 0.7,
+    "last_deep_analyzed_at": "2026-08-30T01:01:39Z",
+    "quality": "MEDIUM",
+    "quality_score": 0.55,
     "topics": "quant, value investing, factor investing, global equity, Japan, private equity",
     "status_since": "2026-04-29T09:00:09.051367+08:00"
   },
@@ -3435,7 +3435,7 @@
     "official_domain": "www.fulcrumasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-08-29T09:00:11.367585+08:00",
+    "last_discovered_at": "2026-08-30T09:00:13.892584+08:00",
     "status_since": "2026-08-22T09:03:32.572404+08:00",
     "last_deep_analyzed_at": "2026-08-23T01:10:00Z",
     "quality": "MEDIUM",
@@ -3550,7 +3550,7 @@
     "official_domain": "www.muzinich.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-08-29T09:00:11.776137+08:00",
+    "last_discovered_at": "2026-08-30T09:00:14.301710+08:00",
     "status_since": "2026-08-25T09:03:39.585223+08:00",
     "quality": "MEDIUM",
     "quality_score": 0.5,
@@ -3568,6 +3568,11 @@
       "quant",
       "macro"
     ],
-    "status_since": "2026-08-28T09:02:28.706616+08:00"
+    "status_since": "2026-08-28T09:02:28.706616+08:00",
+    "last_deep_analyzed_at": "2026-08-30T01:01:39Z",
+    "quality": "HIGH",
+    "quality_score": 0.85,
+    "topics": "quant, market microstructure, systematic trading",
+    "notes": "RECOMMEND: quant trading research, overlaps AQR/Man"
   }
 ]
