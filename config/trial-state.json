@@ -8433,6 +8433,78 @@
       "avg_quality_score": 0.772
     }
   ],
-  "active_trials": [],
-  "last_summary_sent_date": "2026-08-07"
+  "active_trials": [
+    {
+      "id": "mfs-investment-management",
+      "name": "MFS Investment Management",
+      "research_url": "https://www.mfs.com/en-us/investment-professional/insights/fixed-income.html",
+      "homepage_url": "https://www.mfs.com/en-us/insights.html",
+      "fit_score": 0.85,
+      "quality": "MEDIUM",
+      "topics": "fixed income, credit, equity, multi-asset, macro",
+      "start_date": "2026-08-30",
+      "end_date": null,
+      "daily_checks": {
+        "2026-08-30": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.mfs.com/en-us/investment-professional/insights/market-insights/week-in-review.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/market-insights/why-index-concentration-will-end.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/market-insights/previous-week-in-review.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/sustainability/emd-navigating-esg-risk-and-uncertainty.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/multi-asset/rethinking-private-assets-in-tdfs-case-for-public-market-solutions.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/market-insights/straight-talk-replay.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/market-insights/previous-straight-talk-replay.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/market-insights/straight-talk.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/retirement-insights/retirement-at-a-glance.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/portfolio-insights/webcast-resilience-us-credit.html"
+          ],
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.mfs.com/en-us/investment-professional/insights/market-insights/week-in-review.html",
+              "relevance": 0.9,
+              "depth": 0.6,
+              "extractable": 0.7,
+              "overall": 0.74,
+              "notes": "Weekly market review covering Fed policy signals, macro news (Iran sanctions), and equity/bond market movements; substantive but brief commentary format"
+            },
+            {
+              "url": "https://www.mfs.com/en-us/investment-professional/insights/market-insights/why-index-concentration-will-end.html",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.6,
+              "overall": 0.84,
+              "notes": "Strategic analysis of S&P 500 index concentration, profit cycles, and competitive dynamics; well-reasoned with historical examples but appears truncated mid-sentence"
+            },
+            {
+              "url": "https://www.mfs.com/en-us/investment-professional/insights/market-insights/previous-week-in-review.html",
+              "relevance": 0.9,
+              "depth": 0.6,
+              "extractable": 0.65,
+              "overall": 0.73,
+              "notes": "Weekly market review covering Treasury buyback operations, fiscal policy, Iran strategy, and macro conditions; substantive but truncated at end"
+            }
+          ],
+          "avg_score": 0.77,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 1,
+          "date": "2026-08-30"
+        }
+      ]
+    }
+  ],
+  "last_summary_sent_date": "2026-08-30"
 }
