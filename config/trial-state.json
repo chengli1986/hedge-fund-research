@@ -8463,6 +8463,25 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-08-31": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.mfs.com/en-us/investment-professional/insights/market-insights/week-in-review.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/market-insights/why-index-concentration-will-end.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/market-insights/previous-week-in-review.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/sustainability/emd-navigating-esg-risk-and-uncertainty.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/multi-asset/rethinking-private-assets-in-tdfs-case-for-public-market-solutions.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/market-insights/straight-talk-replay.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/market-insights/previous-straight-talk-replay.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/market-insights/straight-talk.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/retirement-insights/retirement-at-a-glance.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/portfolio-insights/webcast-resilience-us-credit.html"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -8502,6 +8521,41 @@
           "js_only_checked": 0,
           "day": 1,
           "date": "2026-08-30"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.mfs.com/en-us/investment-professional/insights/sustainability/emd-navigating-esg-risk-and-uncertainty.html",
+              "relevance": 0.9,
+              "depth": 0.8,
+              "extractable": 0.7,
+              "overall": 0.82,
+              "notes": "Deep investment research on ESG risk assessment in emerging market debt, including methodology for modeling material risk factors and energy transition dynamics."
+            },
+            {
+              "url": "https://www.mfs.com/en-us/investment-professional/insights/multi-asset/rethinking-private-assets-in-tdfs-case-for-public-market-solutions.html",
+              "relevance": 0.85,
+              "depth": 0.75,
+              "extractable": 0.6,
+              "overall": 0.76,
+              "notes": "Portfolio strategy analysis comparing private vs. public market solutions for target date funds, with survey data on plan sponsor adoption likelihood."
+            },
+            {
+              "url": "https://www.mfs.com/en-us/investment-professional/insights/market-insights/straight-talk-replay.html",
+              "relevance": 0.5,
+              "depth": 0.3,
+              "extractable": 0.4,
+              "overall": 0.4,
+              "notes": "Marketing/promotional content for a video series on tax strategy and active management; minimal substantive analysis, mostly promotional links."
+            }
+          ],
+          "avg_score": 0.66,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 2,
+          "date": "2026-08-31"
         }
       ]
     }
