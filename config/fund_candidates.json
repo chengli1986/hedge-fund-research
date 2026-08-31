@@ -3435,13 +3435,13 @@
     "official_domain": "www.fulcrumasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-08-30T09:00:13.892584+08:00",
+    "last_discovered_at": "2026-08-31T09:00:11.156139+08:00",
     "status_since": "2026-08-22T09:03:32.572404+08:00",
-    "last_deep_analyzed_at": "2026-08-23T01:10:00Z",
+    "last_deep_analyzed_at": "2026-08-31T01:15:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.68,
     "topics": "macro, quant, multi-asset, central bank analysis",
-    "notes": "Real macro/quant research; full text PDF-gated, LLM CB analysis"
+    "notes": "Real macro/quant research; teasers only, full text PDF-gated"
   },
   {
     "id": "mfs-investment-management",
@@ -3550,7 +3550,7 @@
     "official_domain": "www.muzinich.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-08-30T09:00:14.301710+08:00",
+    "last_discovered_at": "2026-08-31T09:00:11.566494+08:00",
     "status_since": "2026-08-25T09:03:39.585223+08:00",
     "quality": "MEDIUM",
     "quality_score": 0.5,
@@ -3574,5 +3574,29 @@
     "quality_score": 0.85,
     "topics": "quant, market microstructure, systematic trading",
     "notes": "RECOMMEND: quant trading research, overlaps AQR/Man"
+  },
+  {
+    "id": "northleaf-capital",
+    "name": "Northleaf Capital Group",
+    "homepage_url": "https://www.northleafcapital.com",
+    "source": "manual",
+    "status": "discovered",
+    "strategy_tags": [
+      "private_credit",
+      "private_equity",
+      "real_assets"
+    ],
+    "research_url": "https://www.northleafcapital.com/insights",
+    "official_domain": "www.northleafcapital.com",
+    "research_links": [
+      {
+        "url": "https://www.northleafcapital.com/insights",
+        "label": "Insights",
+        "path": "insights"
+      }
+    ],
+    "status_since": "2026-08-31T09:02:19.247200+08:00",
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-08-31T09:02:19.247166+08:00"
   }
 ]
