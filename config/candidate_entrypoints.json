@@ -1524,6 +1524,113 @@
           "label": "bad"
         }
       ]
+    },
+    "northleaf-capital": {
+      "last_discovered_at": "2026-09-01T09:01:49.976965+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://www.northleafcapital.com/insights",
+          "final_score": 0.64,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.0,
+          "gate_penalty": 0.3,
+          "active": true
+        }
+      ],
+      "rejected_pages": [
+        {
+          "url": "https://www.northleafcapital.com/",
+          "final_score": 0.49,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.0,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        },
+        {
+          "url": "https://www.northleafcapital.com/about-us",
+          "final_score": 0.34,
+          "domain_score": 1.0,
+          "path_score": 0.0,
+          "structure_score": 0.0,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        },
+        {
+          "url": "https://www.northleafcapital.com/history-key-milestones",
+          "final_score": 0.49,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.0,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        },
+        {
+          "url": "https://www.northleafcapital.com/sustainability",
+          "final_score": 0.49,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.0,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        },
+        {
+          "url": "https://www.northleafcapital.com/team",
+          "final_score": 0.34,
+          "domain_score": 1.0,
+          "path_score": 0.0,
+          "structure_score": 0.0,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        },
+        {
+          "url": "https://www.northleafcapital.com/careers",
+          "final_score": 0.34,
+          "domain_score": 1.0,
+          "path_score": 0.0,
+          "structure_score": 0.0,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        },
+        {
+          "url": "https://www.northleafcapital.com/contact",
+          "final_score": 0.34,
+          "domain_score": 1.0,
+          "path_score": 0.0,
+          "structure_score": 0.0,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        },
+        {
+          "url": "https://www.northleafcapital.com/what-we-do",
+          "final_score": 0.49,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.0,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        },
+        {
+          "url": "https://www.northleafcapital.com/private-equity",
+          "final_score": 0.49,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.0,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        },
+        {
+          "url": "https://www.northleafcapital.com/secondary-investments",
+          "final_score": 0.49,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.0,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        }
+      ]
     }
   }
 }
