@@ -113,7 +113,7 @@ _FUND_PROFILES: dict[str, dict] = {
     "oaktree": {
         "founded": "1995", "aum": "~$220B", "hq": "Los Angeles, CA",
         "type_en": "Alt. Credit Leader", "type_zh": "另类信贷领军",
-        "desc_zh": "全球最大困境债（distressed debt）投资人之一，由 Howard Marks、Bruce Karsh 等前 TCW 固收团队创立。Marks 自 1990 年起撰写的投资备忘录是机构信贷圈的必读材料。2019 年 Brookfield 收购多数股权。",
+        "desc_zh": "全球最大困境债（distressed debt）投资人之一，由 Howard Marks、Bruce Karsh 等前 TCW 固收团队创立。Marks 自 1990 年起撰写的投资备忘录是机构信贷圈的必读材料。2019 年 Brookfield 收购多数股权，2026 年 7 月完成剩余 26% 权益收购，Oaktree 成为 Brookfield 全资子公司。",
         "notable_en": "30 consecutive years without a loss in distressed debt; Opportunities Fund VIII returned 30%+ during the 2008-09 crisis; Warren Buffett calls Marks' memos 'must-reads.'",
         "notable_zh": "困境债连续 30 年无亏损年度；Opportunities Fund VIII 2008-09 危机期间回报超 30%；Warren Buffett 称 Marks 备忘录「每次必读」。",
     },
@@ -169,9 +169,9 @@ _FUND_PROFILES: dict[str, dict] = {
     "brookfield": {
         "founded": "1899", "aum": "~$1T+", "hq": "New York, NY",
         "type_en": "Listed Alt Manager (NYSE)", "type_zh": "上市另类资管 (纽交所)",
-        "desc_zh": "全球最大基础设施和实物资产投资人之一，1899 年创立于加拿大（前身 Brascan）。可再生能源基础设施先驱。2019 年收购 Oaktree 多数股权后业务扩展至另类信贷。2022 年从母公司 Brookfield Corporation 拆分独立 IPO。",
-        "notable_en": "World's largest infrastructure investor; pioneered renewable infrastructure as institutional asset class; majority owner of Oaktree since 2019.",
-        "notable_zh": "全球最大基础设施投资人；首创可再生能源基础设施作为机构投资类别；2019 年起为 Oaktree 多数股东。",
+        "desc_zh": "全球最大基础设施和实物资产投资人之一，1899 年创立于加拿大（前身 Brascan）。可再生能源基础设施先驱。2019 年收购 Oaktree 多数股权后业务扩展至另类信贷，2026 年 7 月完成剩余 26% 权益收购、实现对 Oaktree 全资持有。2022 年从母公司 Brookfield Corporation 拆分独立 IPO。",
+        "notable_en": "World's largest infrastructure investor; pioneered renewable infrastructure as institutional asset class; sole owner of Oaktree since acquiring the remaining 26% stake in July 2026, forming a ~$365B combined credit platform.",
+        "notable_zh": "全球最大基础设施投资人；首创可再生能源基础设施作为机构投资类别；2019 年起为 Oaktree 多数股东，2026 年 7 月完成剩余 26% 权益收购、实现全资持有，合并信贷平台规模约 $365B。",
     },
     "jpmam": {
         "founded": "1984", "aum": "~$4.0T", "hq": "New York, NY",
@@ -181,7 +181,7 @@ _FUND_PROFILES: dict[str, dict] = {
         "notable_zh": "全球前 5 大资产管理公司；《Guide to the Markets》季度报告是机构投资行业基准；David Kelly 市场策略团队全球被广泛引用。",
     },
     "verdad-capital": {
-        "founded": "2014", "aum": "~$1B", "hq": "Boston, MA",
+        "founded": "2014", "aum": "~$1.5B", "hq": "Boston, MA",
         "type_en": "Quantitative Boutique", "type_zh": "量化精品店",
         "desc_zh": "Boston 量化价值投资机构，2014 年由 Dan Rasmussen 创立（前 Bain Capital）。Weekly Research 系列以学术风格的实证研究闻名，主题涵盖私募股权真实回报、杠杆微盘股因子、日本资本效率等小众但深入的领域。研究内容自由开放，不设付费墙。",
         "notable_en": "Founded by Dan Rasmussen (ex-Bain Capital); empirical research dismantling private equity return claims; pioneered leveraged microcap factor research.",
