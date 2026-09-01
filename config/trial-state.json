@@ -8482,6 +8482,25 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-09-01": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.mfs.com/en-us/investment-professional/insights/market-insights/week-in-review.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/market-insights/why-index-concentration-will-end.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/market-insights/previous-week-in-review.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/sustainability/emd-navigating-esg-risk-and-uncertainty.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/multi-asset/rethinking-private-assets-in-tdfs-case-for-public-market-solutions.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/market-insights/straight-talk-replay.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/market-insights/previous-straight-talk-replay.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/market-insights/straight-talk.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/retirement-insights/retirement-at-a-glance.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/portfolio-insights/webcast-resilience-us-credit.html"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -8556,9 +8575,114 @@
           "js_only_checked": 0,
           "day": 2,
           "date": "2026-08-31"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.mfs.com/en-us/investment-professional/insights/market-insights/previous-straight-talk-replay.html",
+              "relevance": 0.7,
+              "depth": 0.3,
+              "extractable": 0.6,
+              "overall": 0.52,
+              "notes": "Promotional webinar landing page for MFS Straight Talk series on active ETFs vs SMAs; minimal substantive content, mostly speaker bios and topic teasers."
+            },
+            {
+              "url": "https://www.mfs.com/en-us/investment-professional/insights/market-insights/straight-talk.html",
+              "relevance": 0.7,
+              "depth": 0.3,
+              "extractable": 0.6,
+              "overall": 0.52,
+              "notes": "Promotional webinar registration page on retirement plan benchmarks and fiduciary governance; similar to Article 1—topic-relevant but lacks actual analysis or data."
+            },
+            {
+              "url": "https://www.mfs.com/en-us/investment-professional/insights/retirement-insights/retirement-at-a-glance.html",
+              "relevance": 0.8,
+              "depth": 0.6,
+              "extractable": 0.9,
+              "overall": 0.74,
+              "notes": "Curated retirement industry data snapshot with 7 key statistics from multiple sources (NFP, JP Morgan, BNY, Visa, etc.); useful for macro retirement trends but limited original analysis."
+            }
+          ],
+          "avg_score": 0.593,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 3,
+          "date": "2026-09-01"
+        }
+      ]
+    },
+    {
+      "id": "northleaf-capital",
+      "name": "Northleaf Capital Group",
+      "research_url": "https://www.northleafcapital.com/insights",
+      "homepage_url": "https://www.northleafcapital.com",
+      "fit_score": 0.64,
+      "quality": "HIGH",
+      "topics": "private equity, private credit, infrastructure, secondaries",
+      "start_date": "2026-09-01",
+      "end_date": null,
+      "daily_checks": {
+        "2026-09-01": {
+          "accessible": true,
+          "article_count": 11,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.northleafcapital.com/news/private-equity-market-update-q2-2026",
+            "https://www.northleafcapital.com/news/private-credit-market-update-q2-2026",
+            "https://www.northleafcapital.com/news/keynote-interview-assessing-mid-market-secondaries",
+            "https://www.northleafcapital.com/news/private-equity-market-update-q1-2026",
+            "https://www.northleafcapital.com/news/why-now-case-secondaries-2026",
+            "https://www.northleafcapital.com/news/private-credit-market-update-q1-2026",
+            "https://www.northleafcapital.com/news/private-equity-market-update-q4-2025",
+            "https://www.northleafcapital.com/news/private-credit-market-update-q4-2025",
+            "https://www.northleafcapital.com/news/2026-market-outlook"
+          ],
+          "error": null,
+          "fetcher_used": false
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.northleafcapital.com/news/private-equity-market-update-q2-2026",
+              "relevance": 0.95,
+              "depth": 0.75,
+              "extractable": 0.65,
+              "overall": 0.81,
+              "notes": "Q2 2026 PE market analysis covering valuation pressures, exit selectivity, and shift toward operational value creation with sector-level data."
+            },
+            {
+              "url": "https://www.northleafcapital.com/news/private-credit-market-update-q2-2026",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.6,
+              "overall": 0.82,
+              "notes": "Q2 2026 private credit market update analyzing Fed policy, credit spreads, borrower performance, and attractive risk-adjusted returns in lending."
+            },
+            {
+              "url": "https://www.northleafcapital.com/news/keynote-interview-assessing-mid-market-secondaries",
+              "relevance": 0.85,
+              "depth": 0.45,
+              "extractable": 0.4,
+              "overall": 0.6,
+              "notes": "Brief interview teaser on mid-market secondaries trends; mostly promotional with link to external publication, limited substantive content."
+            }
+          ],
+          "avg_score": 0.743,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 1,
+          "date": "2026-09-01"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-08-30"
+  "last_summary_sent_date": "2026-09-01"
 }
