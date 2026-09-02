@@ -174,7 +174,7 @@
       },
       {
         "url": "https://www.blackstone.com/insights/article/market-views-dealmaking-disruption-and-real-estates-recovery/",
-        "label": "Market Views: Dealmaking, Disruption, and Real Estate’s Recovery",
+        "label": "Market Views: Dealmaking, Disruption, and Real Estate\u2019s Recovery",
         "path": "insights/article/market-views-dealmaking-disruption-and-real-estates-recovery"
       },
       {
@@ -303,7 +303,7 @@
       },
       {
         "url": "https://www.kkr.com/insights/naic-spring-update-2026",
-        "label": "Investment Insights Highlights from the NAIC’s 2026 Spring National Meeting: CLOs, Collateral Loans,",
+        "label": "Investment Insights Highlights from the NAIC\u2019s 2026 Spring National Meeting: CLOs, Collateral Loans,",
         "path": "insights/naic-spring-update-2026"
       },
       {
@@ -334,7 +334,7 @@
     ],
     "source": "manual",
     "inaccessible_reason": null,
-    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager",
+    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 \u2014 ready for trial manager",
     "quality_score": 0.68,
     "status_since": "2026-04-19T09:01:04.025696+08:00"
   },
@@ -408,7 +408,7 @@
       },
       {
         "url": "https://www.cambridgeassociates.com/insight/germanys-fiscal-boost/",
-        "label": "Germany’s Fiscal Boost Remains a Tailwind Despite Near-Term Risks",
+        "label": "Germany\u2019s Fiscal Boost Remains a Tailwind Despite Near-Term Risks",
         "path": "insight/germanys-fiscal-boost"
       },
       {
@@ -863,7 +863,7 @@
     ],
     "source": "manual",
     "inaccessible_reason": null,
-    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager",
+    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 \u2014 ready for trial manager",
     "quality_score": 0.55,
     "status_since": "2026-04-19T09:00:14.697222+08:00"
   },
@@ -886,7 +886,7 @@
       "fixed_income"
     ],
     "source": "manual",
-    "inaccessible_reason": "Policy block (not fingerprint): robots.txt allow-lists only Googlebot/Bingbot (User-agent:* Disallow:/); /insights returns 403 + redirect to /global-insights-0 Access-denied page even in headless Playwright with stealth UA. Would need residential-IP proxy — out of scope. 2026-08-11 recheck: WebFetch also hit 403, block persists.",
+    "inaccessible_reason": "Policy block (not fingerprint): robots.txt allow-lists only Googlebot/Bingbot (User-agent:* Disallow:/); /insights returns 403 + redirect to /global-insights-0 Access-denied page even in headless Playwright with stealth UA. Would need residential-IP proxy \u2014 out of scope. 2026-08-11 recheck: WebFetch also hit 403, block persists.",
     "last_probed": "2026-04-24",
     "quality_score": 0.35,
     "status_since": "2026-07-10T01:02:08Z"
@@ -969,7 +969,7 @@
       },
       {
         "url": "https://www.researchaffiliates.com/publications/articles/1103-2025-implications-for-the-future-some-like-it-hot",
-        "label": "2025’s Implications for the Future: “Some Like it Hot\"? By Jim Masturzo January 2026 A review of maj",
+        "label": "2025\u2019s Implications for the Future: \u201cSome Like it Hot\"? By Jim Masturzo January 2026 A review of maj",
         "path": "publications/articles/1103-2025-implications-for-the-future-some-like-it-hot"
       },
       {
@@ -1124,7 +1124,7 @@
     ],
     "source": "manual",
     "inaccessible_reason": null,
-    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager",
+    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 \u2014 ready for trial manager",
     "status_since": "2026-04-19T09:01:56.296708+08:00"
   },
   {
@@ -1150,7 +1150,7 @@
     ],
     "source": "manual",
     "inaccessible_reason": null,
-    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager",
+    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 \u2014 ready for trial manager",
     "quality_score": 0.55,
     "status_since": "2026-04-19T09:00:14.174535+08:00"
   },
@@ -1376,7 +1376,7 @@
     ],
     "source": "manual",
     "inaccessible_reason": "403 bot protection on all paths",
-    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager",
+    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 \u2014 ready for trial manager",
     "quality_score": 0.75,
     "status_since": "2026-07-08T01:02:41Z"
   },
@@ -1396,7 +1396,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.88,
-    "notes": "Reclassified inaccessible→rejected 2026-05-10: Vercel WAF returns 429 rate-limit to EC2 IP (HIGH quality content but unreachable). fetcher-synthesis cannot solve (rate-limit is at IP layer, not browser-rendering). Reconsider if EC2 IP changes or fund moves off Vercel. 2026-06-13 re-verify (no proxy infra): EC2 direct = 429 regardless of UA/full browser headers (pure IP-layer, ~0.085s edge reject); jina.ai reader (real-browser stack, non-EC2 datacenter IP) also hit Vercel Security Checkpoint 429; allorigins 522. Block is datacenter-IP reputation, not TLS fingerprint, so curl_cffi/playwright-stealth on EC2 IP expected to fail too. Only a residential rotating proxy could bypass. Content quality stays HIGH (0.82, confirmed via search) - rejection is reachability, not fund quality. 2026-07-08 recheck: WebFetch also hit 429, block persists. 2026-08-11 recheck: WebFetch also hit 429, block persists.",
+    "notes": "Reclassified inaccessible\u2192rejected 2026-05-10: Vercel WAF returns 429 rate-limit to EC2 IP (HIGH quality content but unreachable). fetcher-synthesis cannot solve (rate-limit is at IP layer, not browser-rendering). Reconsider if EC2 IP changes or fund moves off Vercel. 2026-06-13 re-verify (no proxy infra): EC2 direct = 429 regardless of UA/full browser headers (pure IP-layer, ~0.085s edge reject); jina.ai reader (real-browser stack, non-EC2 datacenter IP) also hit Vercel Security Checkpoint 429; allorigins 522. Block is datacenter-IP reputation, not TLS fingerprint, so curl_cffi/playwright-stealth on EC2 IP expected to fail too. Only a residential rotating proxy could bypass. Content quality stays HIGH (0.82, confirmed via search) - rejection is reachability, not fund quality. 2026-07-08 recheck: WebFetch also hit 429, block persists. 2026-08-11 recheck: WebFetch also hit 429, block persists.",
     "research_links": [
       {
         "url": "https://www.nb.com/en/global/insights",
@@ -1602,7 +1602,7 @@
     "quality_score": 0.5,
     "topics": "macro, geopolitics, advisor practice (mixed)",
     "inaccessible_reason": null,
-    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager",
+    "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 \u2014 ready for trial manager",
     "status_since": "2026-04-23T09:00:12.674329+08:00"
   },
   {
@@ -1639,7 +1639,7 @@
       },
       {
         "url": "https://www.pinebridge.com/en/insights/japan-equities-a-reinflation-powered-rebound-thats-set-to-last",
-        "label": "1 April 2026 | 6 - minute read Equities Japan Equities: A Reinflation-Powered Rebound That’s Set to ",
+        "label": "1 April 2026 | 6 - minute read Equities Japan Equities: A Reinflation-Powered Rebound That\u2019s Set to ",
         "path": "en/insights/japan-equities-a-reinflation-powered-rebound-thats-set-to-last"
       },
       {
@@ -1649,7 +1649,7 @@
       },
       {
         "url": "https://www.pinebridge.com/en/insights/japans-reflation-experiment-boj-hikes-weak-technicals-and-yen-upside",
-        "label": "11 March 2026 | 2 - minute read Fixed Income Multi-Asset Japan’s Reflation Experiment: BoJ Hikes, We",
+        "label": "11 March 2026 | 2 - minute read Fixed Income Multi-Asset Japan\u2019s Reflation Experiment: BoJ Hikes, We",
         "path": "en/insights/japans-reflation-experiment-boj-hikes-weak-technicals-and-yen-upside"
       },
       {
@@ -1928,7 +1928,7 @@
       },
       {
         "url": "https://www.lazardassetmanagement.com/us/en_us/research-insights/investment-insights/viewpoints/march-2024",
-        "label": "Déjà Vu",
+        "label": "D\u00e9j\u00e0 Vu",
         "path": "us/en_us/research-insights/investment-insights/viewpoints/march-2024"
       },
       {
@@ -2070,12 +2070,12 @@
       },
       {
         "url": "https://www.robeco.com/en-int/insights/2026/05/em-to-the-core-episode-3-the-emerging-markets-consumer",
-        "label": "EM to the core, Episode 3 – The emerging markets consumer",
+        "label": "EM to the core, Episode 3 \u2013 The emerging markets consumer",
         "path": "en-int/insights/2026/05/em-to-the-core-episode-3-the-emerging-markets-consumer"
       },
       {
         "url": "https://www.robeco.com/en-int/insights/2026/05/a-value-investing-approach-that-doesn-t-need-typical-value-markets",
-        "label": "A value investing approach that doesn’t need typical value markets",
+        "label": "A value investing approach that doesn\u2019t need typical value markets",
         "path": "en-int/insights/2026/05/a-value-investing-approach-that-doesn-t-need-typical-value-markets"
       },
       {
@@ -2095,17 +2095,17 @@
       },
       {
         "url": "https://www.robeco.com/en-int/insights/2026/04/em-to-the-core-episode-2-emerging-markets-competitive-edge",
-        "label": "EM to the core, Episode 2 – Emerging markets’ competitive edge",
+        "label": "EM to the core, Episode 2 \u2013 Emerging markets\u2019 competitive edge",
         "path": "en-int/insights/2026/04/em-to-the-core-episode-2-emerging-markets-competitive-edge"
       },
       {
         "url": "https://www.robeco.com/en-int/insights/2026/04/podcast-in-tune-with-the-markets-to-the-moon",
-        "label": "Podcast: In tune with the markets – To the moon",
+        "label": "Podcast: In tune with the markets \u2013 To the moon",
         "path": "en-int/insights/2026/04/podcast-in-tune-with-the-markets-to-the-moon"
       },
       {
         "url": "https://www.robeco.com/en-int/insights/2026/04/em-to-the-core-episode-1-six-tailwinds-for-emerging-markets",
-        "label": "EM to the core, Episode 1 – Six tailwinds for emerging markets",
+        "label": "EM to the core, Episode 1 \u2013 Six tailwinds for emerging markets",
         "path": "en-int/insights/2026/04/em-to-the-core-episode-1-six-tailwinds-for-emerging-markets"
       },
       {
@@ -2115,12 +2115,12 @@
       },
       {
         "url": "https://www.robeco.com/en-int/insights/2026/03/podcast-in-tune-with-the-markets-how-soon-is-now",
-        "label": "Podcast: In tune with the markets – How soon is now?",
+        "label": "Podcast: In tune with the markets \u2013 How soon is now?",
         "path": "en-int/insights/2026/03/podcast-in-tune-with-the-markets-how-soon-is-now"
       },
       {
         "url": "https://www.robeco.com/en-int/insights/2026/02/podcast-in-tune-with-the-markets-the-beat-goes-on",
-        "label": "Podcast: In tune with the markets – The beat goes on",
+        "label": "Podcast: In tune with the markets \u2013 The beat goes on",
         "path": "en-int/insights/2026/02/podcast-in-tune-with-the-markets-the-beat-goes-on"
       },
       {
@@ -2566,7 +2566,7 @@
     "quality": "HIGH",
     "quality_score": 0.72,
     "topics": "fixed income, credit, macro, real assets",
-    "notes": "[白话] 研究质量其实不错，但公开页要登录/付费、抓不到文章；之前还因流程 bug 被误自动上线、6-10 已降级——公开渠道用不了。 Demoted 2026-06-10 from 'promoted': discovery auto-promoted it 2026-06-04 without a trial -> orphaned (synthesis_priority never set, no fetcher, never queued). Site is login/paywall (is_publicly_accessible=false, 0 article signals) - not a usable public source. 2026-08-05 recheck: login/subscribe gate persists, still rejected.",
+    "notes": "[\u767d\u8bdd] \u7814\u7a76\u8d28\u91cf\u5176\u5b9e\u4e0d\u9519\uff0c\u4f46\u516c\u5f00\u9875\u8981\u767b\u5f55/\u4ed8\u8d39\u3001\u6293\u4e0d\u5230\u6587\u7ae0\uff1b\u4e4b\u524d\u8fd8\u56e0\u6d41\u7a0b bug \u88ab\u8bef\u81ea\u52a8\u4e0a\u7ebf\u30016-10 \u5df2\u964d\u7ea7\u2014\u2014\u516c\u5f00\u6e20\u9053\u7528\u4e0d\u4e86\u3002 Demoted 2026-06-10 from 'promoted': discovery auto-promoted it 2026-06-04 without a trial -> orphaned (synthesis_priority never set, no fetcher, never queued). Site is login/paywall (is_publicly_accessible=false, 0 article signals) - not a usable public source. 2026-08-05 recheck: login/subscribe gate persists, still rejected.",
     "status_since": "2026-06-04T09:00:53.176165+08:00"
   },
   {
@@ -2612,12 +2612,12 @@
       },
       {
         "url": "https://www.principalam.com/us/insights/macro-views/five-dynamics-shaping-todays-investment-landscape",
-        "label": "2 Macro views Five dynamics shaping today’s investment landscape May 29, 2026",
+        "label": "2 Macro views Five dynamics shaping today\u2019s investment landscape May 29, 2026",
         "path": "us/insights/macro-views/five-dynamics-shaping-todays-investment-landscape"
       },
       {
         "url": "https://www.principalam.com/us/insights/macro-views/five-dynamics-are-shaping-todays-investment-landscape",
-        "label": "3 Macro views The five dynamics that are shaping today’s investment landscape June 12, 2026",
+        "label": "3 Macro views The five dynamics that are shaping today\u2019s investment landscape June 12, 2026",
         "path": "us/insights/macro-views/five-dynamics-are-shaping-todays-investment-landscape"
       }
     ],
@@ -2726,7 +2726,7 @@
     "quality": "MEDIUM",
     "quality_score": 0.62,
     "topics": "fixed income, equity, macro, multi-asset",
-    "notes": "Rejected 2026-07-20 (#2 audit): 又难又低价值——列表页无日期需逐篇抓(cohen-steers式,成本高)+内容与现有 AM 源重叠(低边际价值)。Playwright 可渲染但不值得投入。",
+    "notes": "Rejected 2026-07-20 (#2 audit): \u53c8\u96be\u53c8\u4f4e\u4ef7\u503c\u2014\u2014\u5217\u8868\u9875\u65e0\u65e5\u671f\u9700\u9010\u7bc7\u6293(cohen-steers\u5f0f,\u6210\u672c\u9ad8)+\u5185\u5bb9\u4e0e\u73b0\u6709 AM \u6e90\u91cd\u53e0(\u4f4e\u8fb9\u9645\u4ef7\u503c)\u3002Playwright \u53ef\u6e32\u67d3\u4f46\u4e0d\u503c\u5f97\u6295\u5165\u3002",
     "status_since": "2026-07-21T00:03:03.326083+08:00",
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -2797,7 +2797,7 @@
       "real_assets",
       "event_driven"
     ],
-    "notes": "Rejected 2026-07-20: 独立源已不存在——angelogordon.com 301 永久重定向到 tpg.com(被 TPG 收购吞并),tpg.com/insights 亦 404。无独立 insights 页可抓。实测确认(#2 审计)。",
+    "notes": "Rejected 2026-07-20: \u72ec\u7acb\u6e90\u5df2\u4e0d\u5b58\u5728\u2014\u2014angelogordon.com 301 \u6c38\u4e45\u91cd\u5b9a\u5411\u5230 tpg.com(\u88ab TPG \u6536\u8d2d\u541e\u5e76),tpg.com/insights \u4ea6 404\u3002\u65e0\u72ec\u7acb insights \u9875\u53ef\u6293\u3002\u5b9e\u6d4b\u786e\u8ba4(#2 \u5ba1\u8ba1)\u3002",
     "official_domain": "www.angelogordon.com",
     "research_links": [
       {
@@ -3022,27 +3022,27 @@
       },
       {
         "url": "https://www.loomissayles.com/insights/fixed-income-unscripted-challenging-consensus-thinking/",
-        "label": "Alpha Engine Perspectives July 28, 2026 • 16 min read Fixed Income Unscripted: Challenging Consensus",
+        "label": "Alpha Engine Perspectives July 28, 2026 \u2022 16 min read Fixed Income Unscripted: Challenging Consensus",
         "path": "insights/fixed-income-unscripted-challenging-consensus-thinking"
       },
       {
         "url": "https://www.loomissayles.com/insights/loomis-sayles-centennial-hub-new-artifacts/",
-        "label": "Alpha Engine Perspectives April 16, 2026 • 2 min read Loomis Sayles Centennial Hub – New Artifacts",
+        "label": "Alpha Engine Perspectives April 16, 2026 \u2022 2 min read Loomis Sayles Centennial Hub \u2013 New Artifacts",
         "path": "insights/loomis-sayles-centennial-hub-new-artifacts"
       },
       {
         "url": "https://www.loomissayles.com/insights/meet-the-municipal-bond-investment-research-teams/",
-        "label": "Alpha Engine Perspectives July 28, 2026 • 3:46 min Meet the Municipal Bond Investment & Research Tea",
+        "label": "Alpha Engine Perspectives July 28, 2026 \u2022 3:46 min Meet the Municipal Bond Investment & Research Tea",
         "path": "insights/meet-the-municipal-bond-investment-research-teams"
       },
       {
         "url": "https://www.loomissayles.com/insights/its-not-just-what-we-own-its-how-weve-owned-it/",
-        "label": "Alpha Engine Perspectives March 12, 2026 • 2:04 min It’s not just what we own – it’s how we’ve owned",
+        "label": "Alpha Engine Perspectives March 12, 2026 \u2022 2:04 min It\u2019s not just what we own \u2013 it\u2019s how we\u2019ve owned",
         "path": "insights/its-not-just-what-we-own-its-how-weve-owned-it"
       },
       {
         "url": "https://www.loomissayles.com/insights/municipal-marketplace-can-single-state-portfolios-be-advantageous/",
-        "label": "Alpha Engine Perspectives July 29, 2026 • 5 min read Municipal Marketplace: Can single state portfol",
+        "label": "Alpha Engine Perspectives July 29, 2026 \u2022 5 min read Municipal Marketplace: Can single state portfol",
         "path": "insights/municipal-marketplace-can-single-state-portfolios-be-advantageous"
       }
     ],
@@ -3346,7 +3346,7 @@
       },
       {
         "url": "https://www.hartfordfunds.com/insights/market-perspectives/global-macro-analysis/market-view-snapshot.html",
-        "label": "MarketView—Our best charts on the opportunities in today's markets Get the Charts",
+        "label": "MarketView\u2014Our best charts on the opportunities in today's markets Get the Charts",
         "path": "insights/market-perspectives/global-macro-analysis/market-view-snapshot.html"
       },
       {
@@ -3500,7 +3500,7 @@
       },
       {
         "url": "https://www.mfs.com/content/mfs-enterprise/mfscom/us/en/investment-professional/insights/market-insights/week-in-review.html",
-        "label": "Treasury’s Buyback Plan Unsettles Investors",
+        "label": "Treasury\u2019s Buyback Plan Unsettles Investors",
         "path": "content/mfs-enterprise/mfscom/us/en/investment-professional/insights/market-insights/week-in-review.html"
       },
       {
@@ -3640,7 +3640,7 @@
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-09-02T09:00:15.201191+08:00",
-    "status_since": "2026-09-02T09:02:29.498865+08:00",
+    "status_since": "2026-09-02T09:04:08.773409+08:00",
     "last_deep_analyzed_at": "2026-09-02T01:02:13Z",
     "quality": "LOW",
     "quality_score": 0.35,
