@@ -458,3 +458,25 @@ def test_stored_article_hosts_are_declared():
             for (sid, host), n in sorted(offenders.items(), key=lambda kv: -kv[1])
         )
     )
+
+
+def test_every_source_declares_expected_hostname():
+    """Every source in sources.json must declare a non-empty expected_hostname.
+
+    ``tests/test_sanity.py`` already asserted this, but that module is
+    ``pytest.mark.live`` and therefore deselected in the default run — the
+    invariant was effectively unenforced. It became load-bearing on 2026-09-03
+    when the fetchers stopped carrying a hardcoded fallback host
+    (``source.get("expected_hostname", "www.example.com")`` → ``source[...]``):
+    the fallback used to paper over a missing field with a host baked into the
+    code, which is exactly what made the research-affiliates rename return 0
+    articles silently. Reading the field directly fails loudly instead — but
+    only if this test keeps a missing field from ever reaching production.
+    """
+    sources = json.loads(SOURCES_FILE.read_text())["sources"]
+    missing = [s["id"] for s in sources if not (s.get("expected_hostname") or "").strip()]
+    assert not missing, (
+        f"sources without expected_hostname: {missing}. "
+        "The fetchers read source['expected_hostname'] directly and will "
+        "KeyError; add the field rather than restoring a default in code."
+    )

@@ -1624,6 +1624,9 @@ class TestFetchSourceIntraRunDedup:
         "name": "Dup Test",
         "short_name": "DupTest",
         "method": "scrape",
+        # fetch_source reads this directly since 2026-09-03 — an empty default
+        # used to switch the host check off silently.
+        "expected_hostname": "example.com",
     }
 
     def _run(self, raw_articles, existing_ids):

@@ -224,7 +224,7 @@ def fetch_cambridge_associates(source: dict) -> list[dict]:
     resp = requests.get(source["url"], headers=HEADERS, timeout=30)
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
-    expected_host = source.get("expected_hostname", "cambridgeassociates.com")
+    expected_host = source["expected_hostname"]
 
     articles = []
     for card in soup.select("article.c-list-article"):
@@ -600,7 +600,7 @@ def fetch_oaktree(source: dict) -> list[dict]:
     soup = BeautifulSoup(html, "html.parser")
 
     articles = []
-    expected_host = source.get("expected_hostname", "oaktreecapital.com")
+    expected_host = source["expected_hostname"]
     for item in soup.select("div.insight-item"):
         link = item.select_one("a[href]")
         if not link:
@@ -683,7 +683,7 @@ def fetch_wellington(source: dict) -> list[dict]:
     base_url = _site_base(source["url"])
     html = _get_playwright_page(source["url"], wait_selector="section.insight.article")
     soup = BeautifulSoup(html, "html.parser")
-    expected_host = source.get("expected_hostname", "wellington.com")
+    expected_host = source["expected_hostname"]
 
     articles = []
     for item in soup.select("section.insight.article"):
@@ -772,7 +772,7 @@ def fetch_troweprice(source: dict) -> list[dict]:
         wait_selector="div.b-grid-item--12-col",
     )
     soup = BeautifulSoup(html, "html.parser")
-    expected_host = source.get("expected_hostname", "troweprice.com")
+    expected_host = source["expected_hostname"]
 
     articles = []
     for item in soup.select("div.b-grid-item--12-col"):
@@ -844,7 +844,7 @@ def fetch_researchaffiliates(source: dict) -> list[dict]:
         timeout=30000,
     )
     soup = BeautifulSoup(html, "html.parser")
-    expected_host = source.get("expected_hostname", "syzygyassetmanagement.com")
+    expected_host = source["expected_hostname"]
     parsed_base = urlparse(source["url"])
     base_url = f"{parsed_base.scheme}://{parsed_base.netloc}"
 
@@ -906,7 +906,7 @@ def fetch_pimco(source: dict) -> list[dict]:
         wait_until="domcontentloaded",
     )
     soup = BeautifulSoup(html, "html.parser")
-    expected_host = source.get("expected_hostname", "pimco.com")
+    expected_host = source["expected_hostname"]
 
     articles = []
     for card in soup.select("div.coveo-list-layout.CoveoResult"):
@@ -945,7 +945,7 @@ def fetch_blackstone(source: dict) -> list[dict]:
     base_url = _site_base(source["url"])
     html = _get_playwright_page(source["url"], wait_selector="article.bx-article-card")
     soup = BeautifulSoup(html, "html.parser")
-    expected_host = source.get("expected_hostname", "blackstone.com")
+    expected_host = source["expected_hostname"]
 
     articles = []
     for card in soup.select("article.bx-article-card"):
@@ -1026,7 +1026,7 @@ def fetch_gsam(source: dict) -> list[dict]:
         f"{base_url}/services/search-engine/en-us/advisors/search/insights"
         f"?q=&hitsPerPage={source.get('max_articles', 10)}&sortBy=created&sort=desc"
     )
-    expected_host = source.get("expected_hostname", "am.gs.com")
+    expected_host = source["expected_hostname"]
 
     api_headers = {**HEADERS, "Accept": "application/json",
                    "Referer": source["url"]}
@@ -1077,7 +1077,7 @@ def fetch_amundi(source: dict) -> list[dict]:
     Lazy-loading on the HTML page means RSS is simpler and more reliable.
     """
     rss_url = source["rss_url"]
-    expected_host = source.get("expected_hostname", "amundi.com")
+    expected_host = source["expected_hostname"]
 
     resp = requests.get(rss_url, headers=HEADERS, timeout=30)
     resp.raise_for_status()
@@ -1128,7 +1128,7 @@ def fetch_brookfield(source: dict) -> list[dict]:
     resp = requests.get(source["url"], headers=HEADERS, timeout=30)
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
-    expected_host = source.get("expected_hostname", "brookfield.com")
+    expected_host = source["expected_hostname"]
     base_url = _site_base(source["url"])
 
     articles: list[dict] = []
@@ -1188,7 +1188,7 @@ def fetch_verdad(source: dict) -> list[dict]:
     only take metadata here; fetch_content downloads the page.
     """
     rss_url = source["rss_url"]
-    expected_host = source.get("expected_hostname", "mailchi.mp")
+    expected_host = source["expected_hostname"]
 
     resp = requests.get(rss_url, headers=HEADERS, timeout=30)
     resp.raise_for_status()
@@ -1242,7 +1242,7 @@ def fetch_jpmam(source: dict) -> list[dict]:
         "/market-insights/market-updates/on-the-minds-of-investors"
         "/_jcr_content/root/responsivegrid/jpm_am_editorial_lan.model.json"
     )
-    expected_host = source.get("expected_hostname", "am.jpmorgan.com")
+    expected_host = source["expected_hostname"]
 
     resp = requests.get(api_url, headers=HEADERS, timeout=30)
     resp.raise_for_status()
@@ -1288,7 +1288,7 @@ def fetch_pgim(source: dict) -> list[dict]:
         "/us/en/institutional/insights/asset-class/equity",
         "/us/en/institutional/insights/asset-class/multi-asset",
     ]
-    expected_host = source.get("expected_hostname", "pgim.com")
+    expected_host = source["expected_hostname"]
     seen_urls: set[str] = set()
     articles = []
 
@@ -1354,7 +1354,7 @@ def fetch_aberdeen(source: dict) -> list[dict]:
     base_url = _site_base(source["url"])
     html = _get_playwright_page(source["url"], wait_selector="time.ms-auto")
     soup = BeautifulSoup(html, "html.parser")
-    expected_host = source.get("expected_hostname", "aberdeeninvestments.com")
+    expected_host = source["expected_hostname"]
 
     articles = []
     seen_urls: set[str] = set()
@@ -1471,7 +1471,7 @@ def fetch_kkr(source: dict) -> list[dict]:
     base_url = _site_base(source["url"])
     html = _get_playwright_page(source["url"], wait_selector=".article-teaser")
     soup = BeautifulSoup(html, "html.parser")
-    expected_host = source.get("expected_hostname", "kkr.com")
+    expected_host = source["expected_hostname"]
 
     seen: set[str] = set()
     articles: list[dict] = []
@@ -1554,7 +1554,7 @@ def fetch_msci_research(source: dict) -> list[dict]:
         wait_ms=5000,
     )
     soup = BeautifulSoup(html, "html.parser")
-    expected_host = source.get("expected_hostname", "msci.com")
+    expected_host = source["expected_hostname"]
     articles = []
 
     for item in soup.select('div[data-test="search-result-item"]'):
@@ -1611,7 +1611,7 @@ def fetch_schroders(source: dict) -> list[dict]:
     and synthesize titles from the URL slug.
     """
     base_url = _site_base(source["url"])
-    expected_host = source.get("expected_hostname", "schroders.com")
+    expected_host = source["expected_hostname"]
     articles: list[dict] = []
     seen_urls: set[str] = set()
 
@@ -1712,7 +1712,7 @@ def fetch_blackrock_institute(source: dict) -> list[dict]:
         wait_ms=3000,
     )
     soup = BeautifulSoup(html, "html.parser")
-    expected_host = source.get("expected_hostname", "blackrock.com")
+    expected_host = source["expected_hostname"]
 
     articles = []
     seen_urls: set[str] = set()
@@ -1777,7 +1777,7 @@ def fetch_morganstanley_im(source: dict) -> list[dict]:
     resp = requests.get(source["url"], headers=headers, timeout=30)
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
-    expected_host = source.get("expected_hostname", "morganstanley.com")
+    expected_host = source["expected_hostname"]
 
     articles = []
     for tile in soup.select("div.insights-index-main-tile"):
@@ -1822,7 +1822,7 @@ def fetch_capital_group(source: dict) -> list[dict]:
     Hub does not expose publish dates — date=None is intentional.
     """
     base_url = _site_base(source["url"])
-    expected_host = source.get("expected_hostname", "capitalgroup.com")
+    expected_host = source["expected_hostname"]
 
     html = _get_playwright_page(
         source["url"],
@@ -1911,7 +1911,7 @@ def fetch_alliancebernstein(source: dict) -> list[dict]:
         wait_ms=5000,
     )
     soup = BeautifulSoup(page_html, "html.parser")
-    expected_host = source.get("expected_hostname", "alliancebernstein.com")
+    expected_host = source["expected_hostname"]
 
     articles: list[dict] = []
     seen_urls: set[str] = set()
@@ -1968,7 +1968,7 @@ def fetch_de_shaw(source: dict) -> list[dict]:
         wait_ms=5000,
     )
     soup = BeautifulSoup(html, "html.parser")
-    expected_host = source.get("expected_hostname", "deshaw.com")
+    expected_host = source["expected_hostname"]
 
     articles = []
     for card in soup.select("article.library-item"):
@@ -2047,7 +2047,7 @@ def fetch_metlife_im(source: dict) -> list[dict]:
     Paths come back as AEM repository paths under `/content/metlife/mim/...`;
     the public URL is the same tail under `/investments/en-us/`.
     """
-    expected_host = source.get("expected_hostname", "www.metlife.com")
+    expected_host = source["expected_hostname"]
     max_articles = source.get("max_articles", 10)
 
     params = {
@@ -2107,7 +2107,7 @@ def fetch_ares_management(source: dict) -> list[dict]:
     """
     base_url = _site_base(source["url"])
     sitemap_url = f"{base_url}/sitemap.xml"
-    expected_host = source.get("expected_hostname", "ares.com")
+    expected_host = source["expected_hostname"]
     max_articles = source.get("max_articles", 10)
 
     resp = requests.get(sitemap_url, headers=HEADERS, timeout=20)
@@ -2175,7 +2175,7 @@ def fetch_robeco(source: dict) -> list[dict]:
         wait_ms=4000,
     )
     soup = BeautifulSoup(html, "html.parser")
-    expected_host = source.get("expected_hostname", "robeco.com")
+    expected_host = source["expected_hostname"]
 
     article_url_pattern = re.compile(r"/insights/\d{4}/\d{2}/")
     date_pattern = re.compile(r"^(\d{2})-(\d{2})-(\d{4})$")
@@ -2255,7 +2255,7 @@ def fetch_matthews_asia(source: dict) -> list[dict]:
     resp = requests.get(source["url"], headers=HEADERS, timeout=30)
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
-    expected_host = source.get("expected_hostname", "matthewsasia.com")
+    expected_host = source["expected_hostname"]
 
     seen_urls: set[str] = set()
     articles = []
@@ -2301,7 +2301,7 @@ def fetch_acadian_asset(source: dict) -> list[dict]:
     base_url = _site_base(source["url"])
     html = _get_playwright_page(source["url"], wait_selector="article.news-insights-card")
     soup = BeautifulSoup(html, "html.parser")
-    expected_host = source.get("expected_hostname", "acadian-asset.com")
+    expected_host = source["expected_hostname"]
 
     seen_urls: set[str] = set()
     articles = []
@@ -2347,7 +2347,7 @@ def fetch_lazard_am(source: dict) -> list[dict]:
     "Apr 07, 2025" so parse_date's "%b %d, %Y" format matches.
     """
     base_url = _site_base(source["url"])
-    expected_host = source.get("expected_hostname", "lazardassetmanagement.com")
+    expected_host = source["expected_hostname"]
     resp = requests.get(source["url"], headers=HEADERS, timeout=20)
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
@@ -2403,7 +2403,7 @@ def fetch_rothschild_co_am(source: dict) -> list[dict]:
     individual article pages return 403, which doesn't affect listing scrape.
     """
     base_url = _site_base(source["url"])
-    expected_host = source.get("expected_hostname", "rothschildandco.com")
+    expected_host = source["expected_hostname"]
     resp = requests.get(source["url"], headers=HEADERS, timeout=20)
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
@@ -2460,7 +2460,7 @@ def fetch_cohen_steers(source: dict) -> list[dict]:
     """
     from playwright.sync_api import sync_playwright
 
-    expected_host = source.get("expected_hostname", "cohenandsteers.com")
+    expected_host = source["expected_hostname"]
     max_articles = source.get("max_articles", 10)
 
     with sync_playwright() as p:
@@ -2553,7 +2553,7 @@ def fetch_principal_am(source: dict) -> list[dict]:
     """
     from playwright.sync_api import sync_playwright
 
-    expected_host = source.get("expected_hostname", "principalam.com")
+    expected_host = source["expected_hostname"]
     max_articles = source.get("max_articles", 10)
     org = "principalfinancialgroupqpnzn1vj"
     token = {"v": None}
@@ -2665,7 +2665,7 @@ def fetch_partners_group(source: dict) -> list[dict]:
     The listing paginates via ``?page=N`` and each page carries a couple of
     PDF-only cards, so we walk up to 3 pages to reach max_articles.
     """
-    expected_host = source.get("expected_hostname", "partnersgroup.com")
+    expected_host = source["expected_hostname"]
     base = _site_base(source["url"])
     max_articles = source.get("max_articles", 10)
 
@@ -2734,7 +2734,7 @@ def fetch_resonanz_capital(source: dict) -> list[dict]:
     HubSpot feed at /insights/rss.xml instead, which has RFC 2822 pubDate.
     """
     rss_url = source["rss_url"]
-    expected_host = source.get("expected_hostname", "resonanzcapital.com")
+    expected_host = source["expected_hostname"]
 
     resp = requests.get(rss_url, headers=HEADERS, timeout=30)
     resp.raise_for_status()
@@ -2784,7 +2784,7 @@ def fetch_blue_owl_capital(source: dict) -> list[dict]:
     resp = requests.get(source["url"], headers=HEADERS, timeout=20)
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
-    expected_host = source.get("expected_hostname", "blueowl.com")
+    expected_host = source["expected_hostname"]
 
     articles = []
     seen = set()
@@ -2837,7 +2837,7 @@ def fetch_loomis_sayles(source: dict) -> list[dict]:
     clean titles and RFC 2822 pubDate, so we drive off that instead.
     """
     rss_url = source["rss_url"]
-    expected_host = source.get("expected_hostname", "www.loomissayles.com")
+    expected_host = source["expected_hostname"]
 
     resp = requests.get(rss_url, headers=HEADERS, timeout=30)
     resp.raise_for_status()
@@ -2900,7 +2900,7 @@ def fetch_baillie_gifford(source: dict) -> list[dict]:
     resp = requests.get(source["url"], headers=HEADERS, timeout=20)
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
-    expected_host = source.get("expected_hostname", "bailliegifford.com")
+    expected_host = source["expected_hostname"]
 
     seen_urls: set[str] = set()
     articles = []
@@ -2963,7 +2963,7 @@ def fetch_mfs_investment_management(source: dict) -> list[dict]:
     """
     parsed_base = urlparse(source["url"])
     base_url = f"{parsed_base.scheme}://{parsed_base.netloc}"
-    expected_host = source.get("expected_hostname", "mfs.com")
+    expected_host = source["expected_hostname"]
     max_articles = source.get("max_articles", 10)
 
     params = {
@@ -3031,7 +3031,7 @@ def fetch_apollo_global_management(source: dict) -> list[dict]:
     """
     base_url = _site_base(source["url"])
     url = source["url"]
-    expected_host = source.get("expected_hostname", "apollo.com")
+    expected_host = source["expected_hostname"]
 
     resp = requests.get(url, headers=HEADERS, timeout=30)
     resp.raise_for_status()
@@ -3090,7 +3090,7 @@ def fetch_natixis_im(source: dict) -> list[dict]:
     """
     base_url = _site_base(source["url"])
     url = source["url"]
-    expected_host = source.get("expected_hostname", "im.natixis.com")
+    expected_host = source["expected_hostname"]
 
     resp = requests.get(url, headers=HEADERS, timeout=30)
     resp.raise_for_status()
@@ -3143,7 +3143,7 @@ def fetch_janus_henderson(source: dict) -> list[dict]:
     class*='date' container as "Month DD, YYYY".
     """
     BASE = _site_base(source["url"])
-    expected_host = source.get("expected_hostname", "janushenderson.com")
+    expected_host = source["expected_hostname"]
     max_articles = source.get("max_articles", 10)
 
     resp = requests.get(source["url"], headers=HEADERS, timeout=30)
@@ -3373,7 +3373,13 @@ def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False) ->
         log.error("Failed to fetch %s: %s", source_id, e)
         return []
 
-    expected_host = source.get("expected_hostname", "")
+    # Required, not source.get(..., ""): an empty default silently DISABLES the
+    # host check (`if expected_host and ...` below), so a source that lost the
+    # field would keep ingesting articles from any host and look healthy.
+    # test_config_consistency.test_every_source_declares_expected_hostname keeps
+    # the field present for every source, so reading it directly is safe and a
+    # missing one fails loudly instead of failing open.
+    expected_host = source["expected_hostname"]
 
     new_articles = []
     mismatch_count = 0

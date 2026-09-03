@@ -104,6 +104,69 @@ def test_fetcher_does_not_hardcode_a_host(module, source_id, fn):
     )
 
 
+def _config_defaults(fn) -> list[tuple[str, str]]:
+    """``(field, literal)`` for every ``source.get("<field>", "<literal>")``.
+
+    A literal default for a config field bakes site identity into the code the
+    same way a hardcoded base URL does: it silently papers over a config change
+    instead of failing.  ``max_articles`` is excluded — an int cap is a real
+    behavioural default, not an identity.
+    """
+    tree = ast.parse(textwrap.dedent(inspect.getsource(fn)))
+    out = []
+    for node in ast.walk(tree):
+        if (isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute) and node.func.attr == "get"
+                and isinstance(node.func.value, ast.Name)
+                and node.func.value.id in {"source", "src"}
+                and len(node.args) == 2
+                and isinstance(node.args[0], ast.Constant)
+                and isinstance(node.args[1], ast.Constant)
+                and isinstance(node.args[1].value, str)):
+            out.append((node.args[0].value, node.args[1].value))
+    return out
+
+
+@pytest.mark.parametrize(
+    "module,source_id,fn",
+    [pytest.param(m, s, f, id=f"{m}:{s}") for m, s, f in _targets()],
+)
+def test_fetcher_does_not_default_a_config_field_to_a_literal(module, source_id, fn):
+    """No fetcher may fall back to a literal for an identity-bearing config field.
+
+    ``source.get("expected_hostname", "www.oldname.com")`` is the same bug as a
+    hardcoded base URL wearing a different hat: after a rename it keeps
+    validating against the host baked into the code.  Every source declares
+    ``expected_hostname`` in config, and
+    ``test_config_consistency.test_every_source_declares_expected_hostname``
+    (unlike the live-marked one in test_sanity.py) keeps it that way, so the
+    fetchers can read it directly and fail loudly if it ever goes missing.
+    """
+    offenders = _config_defaults(fn)
+    assert not offenders, (
+        f"{module}.{fn.__name__} (source {source_id!r}) falls back to literals "
+        f"for config fields: {offenders}.\n"
+        "Read the field directly — source[\"expected_hostname\"] — so a config "
+        "change cannot be silently overridden by a stale value in the code."
+    )
+
+
+def test_config_default_guard_actually_detects_one():
+    """The config-default guard must fail on a real offender, not vacuously pass."""
+    def _bad(source):
+        return source.get("expected_hostname", "www.stale-example.com")
+
+    def _good(source):
+        return source["expected_hostname"]
+
+    def _ok_int_default(source):
+        return source.get("max_articles", 10)
+
+    assert _config_defaults(_bad) == [("expected_hostname", "www.stale-example.com")]
+    assert _config_defaults(_good) == []
+    assert _config_defaults(_ok_int_default) == []
+
+
 def test_guard_actually_detects_a_hardcoded_host():
     """The guard must fail on a fetcher that hardcodes — not just pass vacuously.
 
