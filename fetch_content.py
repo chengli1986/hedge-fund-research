@@ -659,7 +659,13 @@ def _fetch_content_amundi(article: dict) -> Optional[tuple[Path, str]]:
 
 
 def _fetch_content_troweprice(article: dict) -> Optional[tuple[Path, str]]:
-    """Fetch T. Rowe Price article content via Playwright (CSR site)."""
+    """Fetch T. Rowe Price article content via Playwright (CSR site).
+
+    wait_until="domcontentloaded": troweprice.com fires ~75 CSP-violation
+    reports per load and some never settle, so networkidle is a coin flip
+    (same root cause as the fetch_articles.fetch_troweprice fix, 2026-09-03).
+    Observed here on 2026-08-30: attempt 1 timed out at 30s, attempt 2 recovered.
+    """
     from playwright.sync_api import sync_playwright
 
     url = article["url"]
@@ -675,7 +681,7 @@ def _fetch_content_troweprice(article: dict) -> Optional[tuple[Path, str]]:
                     viewport={"width": 1440, "height": 900},
                 )
                 page = context.new_page()
-                page.goto(url, wait_until="networkidle", timeout=30000)
+                page.goto(url, wait_until="domcontentloaded", timeout=30000)
                 page.wait_for_timeout(2000)
                 html = page.content()
                 browser.close()

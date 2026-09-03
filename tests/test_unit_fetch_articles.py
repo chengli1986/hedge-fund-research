@@ -646,6 +646,36 @@ class TestFetchTroweprice:
         assert len(articles) == 3
         assert articles[0]["title"] == "Article 1"
 
+    def test_uses_domcontentloaded_not_networkidle(self):
+        # troweprice.com fires ~75 CSP-violation report beacons to
+        # api.public.troweprice.com per page load, and a few of them never
+        # settle, so the page reaches networkidle only about half the time
+        # (measured 2026-09-03: 3 of 6 loads never idled within 35s while the
+        # article cards were present after ~3s).  Under the default
+        # wait_until="networkidle" both health-probe attempts timed out on
+        # 2026-09-03 and the source was reported FAIL.  Same root cause class
+        # as the fetch_pimco fix (2026-07-19).
+        source = {
+            "id": "troweprice",
+            "url": "https://www.troweprice.com/en/us/insights",
+            "max_articles": 10,
+            "expected_hostname": "troweprice.com",
+        }
+        with patch("fetch_articles._get_playwright_page",
+                   return_value="<html><body></body></html>") as spy:
+            fetch_troweprice(source)
+
+        kwargs = spy.call_args.kwargs
+        assert kwargs.get("wait_until") == "domcontentloaded", (
+            "fetch_troweprice must pass wait_until='domcontentloaded'; the "
+            "default 'networkidle' is never reached reliably because of the "
+            "site's hanging CSP-violation report beacons."
+        )
+        assert kwargs.get("wait_selector") == "div.b-grid-item--12-col", (
+            "dropping networkidle removes the only readiness guarantee unless "
+            "the card selector is still waited for."
+        )
+
 
 # ---------------------------------------------------------------------------
 # fetch_researchaffiliates

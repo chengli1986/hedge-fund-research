@@ -453,6 +453,24 @@ class TestPimcoContentFetcher:
         assert 'wait_until="networkidle"' not in src
 
 
+class TestTrowepriceContentFetcher:
+    def test_uses_domcontentloaded_not_networkidle(self):
+        # Same root cause as the fetch_articles.fetch_troweprice listing fix
+        # (2026-09-03): every troweprice.com page load fires ~75 CSP-violation
+        # report beacons to api.public.troweprice.com and some never settle, so
+        # networkidle is a coin flip.  The article page already hit this on
+        # 2026-08-30 (attempt 1 timed out at 30s, attempt 2 recovered).
+        import inspect
+        import fetch_content
+        src = inspect.getsource(fetch_content._fetch_content_troweprice)
+        assert 'wait_until="domcontentloaded"' in src, (
+            "_fetch_content_troweprice must use wait_until='domcontentloaded', "
+            "not 'networkidle'; troweprice.com pages have hanging CSP-violation "
+            "report beacons that never idle out."
+        )
+        assert 'wait_until="networkidle"' not in src
+
+
 class TestCohenSteersPlaywrightFetcher:
     def test_fetch_content_cohen_steers_saves_body(self, tmp_path, monkeypatch):
         import fetch_content as fc

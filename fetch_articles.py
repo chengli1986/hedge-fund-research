@@ -738,9 +738,21 @@ def fetch_troweprice(source: dict) -> list[dict]:
     Structure: div.b-grid-item--12-col cards containing:
       h2.beacon-article-tile__title > a (link + title),
       span.beacon-article-tile__eyebrow ("Date · Category" combined)
+
+    wait_until="domcontentloaded" (not the default "networkidle"): every page
+    load fires ~75 CSP-violation reports to api.public.troweprice.com and a few
+    of them never settle, so networkidle is reached only about half the time
+    (measured 2026-09-03: 3 of 6 loads never idled within 35s, while the cards
+    were already in the DOM after ~3s).  Under networkidle both health-probe
+    attempts timed out on 2026-09-03 and the source was reported FAIL.  The
+    wait_selector below is what actually guarantees readiness.
     """
     base_url = "https://www.troweprice.com"
-    html = _get_playwright_page(source["url"], wait_selector="div.b-grid-item--12-col")
+    html = _get_playwright_page(
+        source["url"],
+        wait_until="domcontentloaded",
+        wait_selector="div.b-grid-item--12-col",
+    )
     soup = BeautifulSoup(html, "html.parser")
     expected_host = source.get("expected_hostname", "troweprice.com")
 
