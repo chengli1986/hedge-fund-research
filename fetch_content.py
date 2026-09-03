@@ -274,7 +274,8 @@ def _fetch_content_gmo(article: dict) -> Optional[tuple[Path, str]]:
 
     pdf_url = pdf_match.group(1)
     if not pdf_url.startswith("http"):
-        pdf_url = "https://www.gmo.com" + pdf_url
+        from fetch_articles import _site_base
+        pdf_url = _site_base(url) + pdf_url
 
     log.info("  GMO: downloading PDF %s", pdf_url)
     try:
@@ -360,7 +361,8 @@ def _fetch_content_oaktree(article: dict) -> Optional[tuple[Path, str]]:
         return None
 
     if not pdf_url.startswith("http"):
-        pdf_url = "https://www.oaktreecapital.com" + pdf_url
+        from fetch_articles import _site_base
+        pdf_url = _site_base(url) + pdf_url
 
     log.info("  Oaktree: downloading PDF %s", pdf_url)
     try:

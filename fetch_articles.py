@@ -333,7 +333,7 @@ def fetch_bridgewater(source: dict) -> list[dict]:
 
     for link in soup.select("a.Link[href*='/research-and-insights/']"):
         href = link.get("href", "")
-        if not href or href.rstrip("/") == "https://www.bridgewater.com/research-and-insights":
+        if not href or href.rstrip("/") == source["url"].rstrip("/"):
             continue
         url = urljoin(source["url"], href)
         if url in seen_urls:
@@ -374,6 +374,24 @@ def fetch_bridgewater(source: dict) -> list[dict]:
 # ---------------------------------------------------------------------------
 # Playwright Fetchers (for CSR / JS-rendered sites)
 # ---------------------------------------------------------------------------
+
+def _site_base(url: str) -> str:
+    """``scheme://host`` of ``url`` — the base every relative href resolves against.
+
+    Always derive the base from the URL the fetcher was handed (``source["url"]``
+    for listing fetchers, ``article["url"]`` for content fetchers) rather than
+    writing the host in the code.  When Research Affiliates became Syzygy Asset
+    Management (2026-08-21), ``config/sources.json`` was pointed at the new host
+    and the fetcher still returned **0 articles with no error**: every href was
+    rebuilt on the hardcoded old host and then dropped by ``_validate_hostname``.
+    A rename is supposed to cost one config edit.
+
+    ``tests/test_no_hardcoded_hosts.py`` fails the build if a fetcher goes back
+    to a literal.
+    """
+    parsed = urlparse(url)
+    return f"{parsed.scheme}://{parsed.netloc}"
+
 
 def _get_playwright_page(
     url: str,
@@ -440,7 +458,7 @@ def fetch_aqr(source: dict) -> list[dict]:
         # Chrome/124 is required — AQR's Sitecore returns totalpages=0 with Chrome/131+
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Referer": "https://www.aqr.com/",
+        "Referer": f'{_site_base(source["url"])}/',
     }
     _AQR_COOKIES = {"shell#lang": "en"}
 
@@ -475,7 +493,7 @@ def fetch_aqr(source: dict) -> list[dict]:
                 "title": title,
                 "category": category,
                 "summary": summary,
-                "url": urljoin("https://www.aqr.com", href),
+                "url": urljoin(_site_base(source["url"]), href),
                 "date": parse_date(date_str) if date_str else None,
                 "date_raw": date_str,
             })
@@ -503,7 +521,7 @@ def fetch_aqr(source: dict) -> list[dict]:
             "title": title,
             "category": category,
             "summary": summary,
-            "url": urljoin("https://www.aqr.com", href),
+            "url": urljoin(_site_base(source["url"]), href),
             "date": parse_date(date_str) if date_str else None,
             "date_raw": date_str,
         })
@@ -529,7 +547,7 @@ def fetch_gmo(source: dict) -> list[dict]:
     if not grid:
         log.warning("GMO: could not find article-grid data-endpoint")
         return []
-    api_url = "https://www.gmo.com" + grid["data-endpoint"] + "&currentPage=1"
+    api_url = _site_base(source["url"]) + grid["data-endpoint"] + "&currentPage=1"
 
     # Fetch the JSON API. Referer is required — without it the EPiServer
     # backend returns a 500 "Something Went Wrong" page (started 2026-04-16).
@@ -544,7 +562,7 @@ def fetch_gmo(source: dict) -> list[dict]:
         if not title:
             continue
         url_path = item.get("URL", "")
-        url = urljoin("https://www.gmo.com", url_path) if url_path else ""
+        url = urljoin(_site_base(source["url"]), url_path) if url_path else ""
         date_raw = item.get("Date", "")
         date_data = item.get("dateData", "")  # MM-DD-YYYY format
 
@@ -601,7 +619,7 @@ def fetch_oaktree(source: dict) -> list[dict]:
             href = link.get("data-link", "")
         if not href:
             continue
-        url = urljoin("https://www.oaktreecapital.com", href)
+        url = urljoin(_site_base(source["url"]), href)
         if not _validate_hostname(url, expected_host):
             log.warning("Oaktree: skipping external URL %s", url)
             continue
@@ -662,7 +680,7 @@ def fetch_wellington(source: dict) -> list[dict]:
       a.insight__title (title + href), a.insight__link (href fallback),
       date[datetime] (ISO date attr), div.insight__contentType > span (category)
     """
-    base_url = "https://www.wellington.com"
+    base_url = _site_base(source["url"])
     html = _get_playwright_page(source["url"], wait_selector="section.insight.article")
     soup = BeautifulSoup(html, "html.parser")
     expected_host = source.get("expected_hostname", "wellington.com")
@@ -747,7 +765,7 @@ def fetch_troweprice(source: dict) -> list[dict]:
     attempts timed out on 2026-09-03 and the source was reported FAIL.  The
     wait_selector below is what actually guarantees readiness.
     """
-    base_url = "https://www.troweprice.com"
+    base_url = _site_base(source["url"])
     html = _get_playwright_page(
         source["url"],
         wait_until="domcontentloaded",
@@ -924,7 +942,7 @@ def fetch_blackstone(source: dict) -> list[dict]:
       h4.bx-article-title > a (title + href),
       time[datetime] or p.bx-article-post_date (date "April 16, 2026")
     """
-    base_url = "https://www.blackstone.com"
+    base_url = _site_base(source["url"])
     html = _get_playwright_page(source["url"], wait_selector="article.bx-article-card")
     soup = BeautifulSoup(html, "html.parser")
     expected_host = source.get("expected_hostname", "blackstone.com")
@@ -1003,15 +1021,15 @@ def fetch_gsam(source: dict) -> list[dict]:
     No auth required. Avoids Playwright timeout caused by background analytics
     scripts preventing networkidle.
     """
+    base_url = _site_base(source["url"])
     api_url = (
-        "https://am.gs.com/services/search-engine/en-us/advisors/search/insights"
-        "?q=&hitsPerPage={n}&sortBy=created&sort=desc"
-    ).format(n=source.get("max_articles", 10))
-    base_url = "https://am.gs.com"
+        f"{base_url}/services/search-engine/en-us/advisors/search/insights"
+        f"?q=&hitsPerPage={source.get('max_articles', 10)}&sortBy=created&sort=desc"
+    )
     expected_host = source.get("expected_hostname", "am.gs.com")
 
     api_headers = {**HEADERS, "Accept": "application/json",
-                   "Referer": "https://am.gs.com/en-us/advisors/insights/list"}
+                   "Referer": source["url"]}
     resp = requests.get(api_url, headers=api_headers, timeout=30)
     resp.raise_for_status()
     data = resp.json()
@@ -1058,7 +1076,7 @@ def fetch_amundi(source: dict) -> list[dict]:
     RSS at /rss.xml — 10 items, RFC 2822 pubDate, full article URLs.
     Lazy-loading on the HTML page means RSS is simpler and more reliable.
     """
-    rss_url = source.get("rss_url", "https://research-center.amundi.com/rss.xml")
+    rss_url = source["rss_url"]
     expected_host = source.get("expected_hostname", "amundi.com")
 
     resp = requests.get(rss_url, headers=HEADERS, timeout=30)
@@ -1111,12 +1129,12 @@ def fetch_brookfield(source: dict) -> list[dict]:
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
     expected_host = source.get("expected_hostname", "brookfield.com")
-    base_url = "https://www.brookfield.com"
+    base_url = _site_base(source["url"])
 
     articles: list[dict] = []
     seen_urls: set[str] = set()
     leaf_path_re = re.compile(
-        r"^(?:https://www\.brookfield\.com)?(/views-news/insights/[^?#/]+)/?$"
+        rf"^(?:{re.escape(base_url)})?(/views-news/insights/[^?#/]+)/?$"
     )
     date_re = re.compile(
         r"\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+20\d{2}\b"
@@ -1169,11 +1187,7 @@ def fetch_verdad(source: dict) -> list[dict]:
     links on mailchi.mp. Items carry the full body in content:encoded, but we
     only take metadata here; fetch_content downloads the page.
     """
-    rss_url = source.get(
-        "rss_url",
-        "https://us13.campaign-archive.com/feed"
-        "?u=6dc62f307511d466ff78a94fe&id=6d62717de8",
-    )
+    rss_url = source["rss_url"]
     expected_host = source.get("expected_hostname", "mailchi.mp")
 
     resp = requests.get(rss_url, headers=HEADERS, timeout=30)
@@ -1222,12 +1236,12 @@ def fetch_jpmam(source: dict) -> list[dict]:
     API: /_jcr_content/root/responsivegrid/jpm_am_editorial_lan.model.json
     Returns pages[].{title, url (relative), displayDate ("MM/DD/YYYY")}
     """
+    base_url = _site_base(source["url"])
     api_url = (
-        "https://am.jpmorgan.com/content/jpm-am-aem/americas/us/en/adv/insights"
+        f"{base_url}/content/jpm-am-aem/americas/us/en/adv/insights"
         "/market-insights/market-updates/on-the-minds-of-investors"
         "/_jcr_content/root/responsivegrid/jpm_am_editorial_lan.model.json"
     )
-    base_url = "https://am.jpmorgan.com"
     expected_host = source.get("expected_hostname", "am.jpmorgan.com")
 
     resp = requests.get(api_url, headers=HEADERS, timeout=30)
@@ -1267,7 +1281,7 @@ def fetch_pgim(source: dict) -> list[dict]:
     with data-cmp-data-layer JSON (same structure as newsroom but actual research).
     We scrape 4 asset-class pages and merge/deduplicate by URL.
     """
-    base_url = "https://www.pgim.com"
+    base_url = _site_base(source["url"])
     asset_class_paths = [
         "/us/en/institutional/insights/asset-class/fixed-income",
         "/us/en/institutional/insights/asset-class/alternatives",
@@ -1337,7 +1351,7 @@ def fetch_aberdeen(source: dict) -> list[dict]:
       time.ms-auto ("Apr 15, 2026" → %b %d, %Y)
     Locate card by finding parent <a> of each time.ms-auto element.
     """
-    base_url = "https://www.aberdeeninvestments.com"
+    base_url = _site_base(source["url"])
     html = _get_playwright_page(source["url"], wait_selector="time.ms-auto")
     soup = BeautifulSoup(html, "html.parser")
     expected_host = source.get("expected_hostname", "aberdeeninvestments.com")
@@ -1454,7 +1468,7 @@ def fetch_kkr(source: dict) -> list[dict]:
     4 cards in a 'related insights' rail, so URLs are deduped.
     """
     import json as _json
-    base_url = "https://www.kkr.com"
+    base_url = _site_base(source["url"])
     html = _get_playwright_page(source["url"], wait_selector=".article-teaser")
     soup = BeautifulSoup(html, "html.parser")
     expected_host = source.get("expected_hostname", "kkr.com")
@@ -1532,7 +1546,7 @@ def fetch_msci_research(source: dict) -> list[dict]:
     from the failure troweprice actually hit.  Five live runs on
     domcontentloaded returned byte-identical (url, date) pairs in ~14s.
     """
-    base_url = "https://www.msci.com"
+    base_url = _site_base(source["url"])
     html = _get_playwright_page(
         source["url"],
         wait_until="domcontentloaded",
@@ -1596,7 +1610,7 @@ def fetch_schroders(source: dict) -> list[dict]:
     `<lastmod>`, so when the listing path yields nothing we fall back to it
     and synthesize titles from the URL slug.
     """
-    base_url = "https://www.schroders.com"
+    base_url = _site_base(source["url"])
     expected_host = source.get("expected_hostname", "schroders.com")
     articles: list[dict] = []
     seen_urls: set[str] = set()
@@ -1648,7 +1662,7 @@ def fetch_schroders(source: dict) -> list[dict]:
         })
 
     if not articles:
-        sitemap_url = "https://www.schroders.com/en/global/individual/sitemap.xml"
+        sitemap_url = f"{base_url}/en/global/individual/sitemap.xml"
         try:
             resp = requests.get(sitemap_url, headers=HEADERS, timeout=20)
             resp.raise_for_status()
@@ -1657,7 +1671,7 @@ def fetch_schroders(source: dict) -> list[dict]:
             return []
 
         rx = re.compile(
-            r"<url>\s*<loc>(https://www\.schroders\.com/en/global/individual/insights/[^<]+)</loc>"
+            rf"<url>\s*<loc>({re.escape(base_url)}/en/global/individual/insights/[^<]+)</loc>"
             r"\s*<lastmod>([^<]+)</lastmod>"
         )
         rows = sorted(rx.findall(resp.text), key=lambda x: x[1], reverse=True)
@@ -1689,7 +1703,7 @@ def fetch_blackrock_institute(source: dict) -> list[dict]:
     tracking beacons, so wait_until='domcontentloaded' is required. Article
     URLs are PDFs; filter to weekly commentary via filename pattern.
     """
-    base_url = "https://www.blackrock.com"
+    base_url = _site_base(source["url"])
     html = _get_playwright_page(
         source["url"],
         wait_selector="div.gls-related-literature div.item",
@@ -1751,10 +1765,10 @@ def fetch_morganstanley_im(source: dict) -> list[dict]:
     Playwright is actually blocked here (Akamai flags headless Chromium) —
     plain requests with proper headers is the correct path.
     """
-    base_url = "https://www.morganstanley.com"
+    base_url = _site_base(source["url"])
     headers = {
         **HEADERS,
-        "Referer": "https://www.morganstanley.com/im/en-us/institutional-investor/insights",
+        "Referer": source["url"],
         "Upgrade-Insecure-Requests": "1",
         "Sec-Fetch-Dest": "document",
         "Sec-Fetch-Mode": "navigate",
@@ -1807,7 +1821,7 @@ def fetch_capital_group(source: dict) -> list[dict]:
     Same networkidle issue as BlackRock (DataDog / mPulse / Evidon beacons).
     Hub does not expose publish dates — date=None is intentional.
     """
-    base_url = "https://www.capitalgroup.com"
+    base_url = _site_base(source["url"])
     expected_host = source.get("expected_hostname", "capitalgroup.com")
 
     html = _get_playwright_page(
@@ -1886,9 +1900,9 @@ def fetch_alliancebernstein(source: dict) -> list[dict]:
     inline as `Mon DD YYYY` (e.g. "May 07 2026") — not parseable by
     `parse_date`, so they're matched with a regex and parsed via strptime.
     """
-    base_url = "https://www.alliancebernstein.com"
+    base_url = _site_base(source["url"])
     listing_url = (
-        "https://www.alliancebernstein.com/us/en-us/investments/insights-landing/"
+        f"{base_url}/us/en-us/investments/insights-landing/"
         "search-results.html?category=investment-insights"
     )
     page_html = _get_playwright_page(
@@ -1947,7 +1961,7 @@ def fetch_de_shaw(source: dict) -> list[dict]:
     (body param formatted as "TITLE - URL"); the site exposes only the
     year, so date is normalized to YYYY-01-01.
     """
-    base_url = "https://www.deshaw.com"
+    base_url = _site_base(source["url"])
     html = _get_playwright_page(
         source["url"],
         wait_selector="article.library-item",
@@ -2091,8 +2105,8 @@ def fetch_ares_management(source: dict) -> list[dict]:
     lastmod desc, then fetch each article HTML to extract real title and the
     publish date from <span class="share-print-date">.
     """
-    base_url = "https://www.ares.com"
-    sitemap_url = "https://www.ares.com/sitemap.xml"
+    base_url = _site_base(source["url"])
+    sitemap_url = f"{base_url}/sitemap.xml"
     expected_host = source.get("expected_hostname", "ares.com")
     max_articles = source.get("max_articles", 10)
 
@@ -2100,7 +2114,8 @@ def fetch_ares_management(source: dict) -> list[dict]:
     resp.raise_for_status()
 
     pattern = re.compile(
-        r"<loc>(https://www\.ares\.com/us/news-and-insights/perspectives/[^<]+)</loc>\s*<lastmod>([^<]+)</lastmod>",
+        rf"<loc>({re.escape(base_url)}/us/news-and-insights/perspectives/[^<]+)</loc>"
+        r"\s*<lastmod>([^<]+)</lastmod>",
         re.IGNORECASE,
     )
     entries = pattern.findall(resp.text)
@@ -2153,7 +2168,7 @@ def fetch_robeco(source: dict) -> list[dict]:
       a[href*='/insights/YYYY/MM/<slug>'] (URL + title via h2/h3 or link text),
       <time> element with date in DD-MM-YYYY format (European).
     """
-    base_url = "https://www.robeco.com"
+    base_url = _site_base(source["url"])
     html = _get_playwright_page(
         source["url"],
         wait_selector="div.clickable-wrapper.card",
@@ -2236,7 +2251,7 @@ def fetch_matthews_asia(source: dict) -> list[dict]:
       small.date ("03/27/2026" → %m/%d/%Y)
     Filter/topic nav links share no h4.title, so requiring it skips them.
     """
-    base_url = "https://www.matthewsasia.com"
+    base_url = _site_base(source["url"])
     resp = requests.get(source["url"], headers=HEADERS, timeout=30)
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
@@ -2283,7 +2298,7 @@ def fetch_acadian_asset(source: dict) -> list[dict]:
       h3 > a.news-insights-card__title (title + href),
       span.news-insights-card__theme-date ("May 2026" → %B %Y)
     """
-    base_url = "https://www.acadian-asset.com"
+    base_url = _site_base(source["url"])
     html = _get_playwright_page(source["url"], wait_selector="article.news-insights-card")
     soup = BeautifulSoup(html, "html.parser")
     expected_host = source.get("expected_hostname", "acadian-asset.com")
@@ -2331,7 +2346,7 @@ def fetch_lazard_am(source: dict) -> list[dict]:
     Playwright needed. data-date ("Apr 07 2025", no comma) is normalised to
     "Apr 07, 2025" so parse_date's "%b %d, %Y" format matches.
     """
-    base_url = "https://www.lazardassetmanagement.com"
+    base_url = _site_base(source["url"])
     expected_host = source.get("expected_hostname", "lazardassetmanagement.com")
     resp = requests.get(source["url"], headers=HEADERS, timeout=20)
     resp.raise_for_status()
@@ -2387,7 +2402,7 @@ def fetch_rothschild_co_am(source: dict) -> list[dict]:
     The insights *index* is server-rendered and accessible from EC2; only the
     individual article pages return 403, which doesn't affect listing scrape.
     """
-    base_url = "https://www.rothschildandco.com"
+    base_url = _site_base(source["url"])
     expected_host = source.get("expected_hostname", "rothschildandco.com")
     resp = requests.get(source["url"], headers=HEADERS, timeout=20)
     resp.raise_for_status()
@@ -2470,7 +2485,7 @@ def fetch_cohen_steers(source: dict) -> list[dict]:
             a = card.select_one("h4.card-title a[href]")
             if not a:
                 continue
-            href = urljoin("https://www.cohenandsteers.com", a.get("href", ""))
+            href = urljoin(_site_base(source["url"]), a.get("href", ""))
             if not _validate_hostname(href, expected_host):
                 continue
             # only real article slugs: /insights/<slug>/  (skip filter/nav links)
@@ -2651,7 +2666,7 @@ def fetch_partners_group(source: dict) -> list[dict]:
     PDF-only cards, so we walk up to 3 pages to reach max_articles.
     """
     expected_host = source.get("expected_hostname", "partnersgroup.com")
-    base = "https://www.partnersgroup.com"
+    base = _site_base(source["url"])
     max_articles = source.get("max_articles", 10)
 
     seen_urls: set[str] = set()
@@ -2718,7 +2733,7 @@ def fetch_resonanz_capital(source: dict) -> list[dict]:
     no publication date — only a "5 min read" marker — so we drive off the
     HubSpot feed at /insights/rss.xml instead, which has RFC 2822 pubDate.
     """
-    rss_url = source.get("rss_url", "https://resonanzcapital.com/insights/rss.xml")
+    rss_url = source["rss_url"]
     expected_host = source.get("expected_hostname", "resonanzcapital.com")
 
     resp = requests.get(rss_url, headers=HEADERS, timeout=30)
@@ -2765,7 +2780,7 @@ def fetch_blue_owl_capital(source: dict) -> list[dict]:
     A couple of cards link to docs.blueowl.com PDF viewers (no extractable
     body text) — only /insights/ paths on the main host are kept.
     """
-    base_url = "https://www.blueowl.com"
+    base_url = _site_base(source["url"])
     resp = requests.get(source["url"], headers=HEADERS, timeout=20)
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
@@ -2821,7 +2836,7 @@ def fetch_loomis_sayles(source: dict) -> list[dict]:
     users. The site's WordPress feed at /feed/ carries the same posts with
     clean titles and RFC 2822 pubDate, so we drive off that instead.
     """
-    rss_url = source.get("rss_url", "https://www.loomissayles.com/feed/")
+    rss_url = source["rss_url"]
     expected_host = source.get("expected_hostname", "www.loomissayles.com")
 
     resp = requests.get(rss_url, headers=HEADERS, timeout=30)
@@ -2893,7 +2908,7 @@ def fetch_baillie_gifford(source: dict) -> list[dict]:
         href = card["href"]
         if "/ic-article/" not in href:
             continue
-        url = urljoin("https://www.bailliegifford.com", href)
+        url = urljoin(_site_base(source["url"]), href)
         if not _validate_hostname(url, expected_host):
             continue
         if url in seen_urls:
@@ -3014,7 +3029,7 @@ def fetch_apollo_global_management(source: dict) -> list[dict]:
 
     Plain requests works (no Akamai/Cloudflare gate observed).
     """
-    base_url = "https://www.apollo.com"
+    base_url = _site_base(source["url"])
     url = source["url"]
     expected_host = source.get("expected_hostname", "apollo.com")
 
@@ -3073,7 +3088,7 @@ def fetch_natixis_im(source: dict) -> list[dict]:
 
     The site is fully SSR (no Akamai/Cloudflare gate), plain requests works.
     """
-    base_url = "https://www.im.natixis.com"
+    base_url = _site_base(source["url"])
     url = source["url"]
     expected_host = source.get("expected_hostname", "im.natixis.com")
 
@@ -3127,7 +3142,7 @@ def fetch_janus_henderson(source: dict) -> list[dict]:
     Dates are absent from the index — each article page exposes them in a
     class*='date' container as "Month DD, YYYY".
     """
-    BASE = "https://www.janushenderson.com"
+    BASE = _site_base(source["url"])
     expected_host = source.get("expected_hostname", "janushenderson.com")
     max_articles = source.get("max_articles", 10)
 
@@ -3199,7 +3214,7 @@ def fetch_goehring_rozencwajg(source: dict) -> list[dict]:
     Uses sitemap.xml for URLs + dates (lastmod), then fetches each article page
     for the title (og:title). Blog is SSR (HubSpot CMS); ~weekly publish cadence.
     """
-    sitemap_url = "https://blog.gorozen.com/sitemap.xml"
+    sitemap_url = f'{_site_base(source["url"])}/sitemap.xml'
     resp = requests.get(sitemap_url, headers=HEADERS, timeout=30)
     resp.raise_for_status()
 
@@ -3210,7 +3225,7 @@ def fetch_goehring_rozencwajg(source: dict) -> list[dict]:
     for url_el in root.findall("s:url", ns):
         loc = url_el.findtext("s:loc", "", ns)
         lastmod = url_el.findtext("s:lastmod", "", ns)
-        if "/blog/" in loc and loc != "https://blog.gorozen.com/blog" and lastmod:
+        if "/blog/" in loc and loc.rstrip("/") != source["url"].rstrip("/") and lastmod:
             entries.append((lastmod, loc))
 
     entries.sort(reverse=True)
@@ -3262,7 +3277,7 @@ def fetch_franklin_templeton(source: dict) -> list[dict]:
     card-article date, so requiring all three fields drops them naturally.
     Verified live 2026-07-20: renders 8 dated posts.
     """
-    base = "https://www.franklintempletonglobal.com"
+    base = _site_base(source["url"])
     max_articles = source.get("max_articles", 10)
     html = _get_playwright_page(
         source["url"], wait_selector="div.card-article",
