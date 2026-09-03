@@ -267,6 +267,33 @@ class TestFetchMsciResearch:
 
         assert [a["date"] for a in articles] == ["2026-08-14", "2026-09-02"]
 
+    def test_uses_domcontentloaded_not_networkidle(self):
+        # msci.com does reach networkidle, but only after a consistent ~19s
+        # (9 loads measured 2026-09-03: 18.7-19.5s, no outliers), while the
+        # result cards are in the DOM at ~8-9s.  With the helper's 5s settle
+        # that put a healthy run at ~25s against a 30s goto timeout — the
+        # thinnest margin in the fleet, and the same shape troweprice failed
+        # in.  domcontentloaded returns byte-identical (url, date) pairs over
+        # 5 live runs at ~14s, so the wait buys nothing but risk.
+        source = {
+            "id": "msci-research",
+            "url": "https://www.msci.com/research-and-insights",
+            "max_articles": 10,
+            "expected_hostname": "msci.com",
+        }
+        with patch("fetch_articles._get_playwright_page",
+                   return_value="<html><body></body></html>") as spy:
+            fetch_msci_research(source)
+
+        kwargs = spy.call_args.kwargs
+        assert kwargs.get("wait_until") == "domcontentloaded", (
+            "fetch_msci_research must pass wait_until='domcontentloaded'; the "
+            "default 'networkidle' costs ~11s of extra wait for no extra data."
+        )
+        assert kwargs.get("wait_selector") == 'div[data-test="search-result-item"]', (
+            "the card selector is the readiness guarantee once networkidle is gone."
+        )
+
 
 class TestFetchFranklinTempleton:
     def test_parses_cards_drops_hubs_and_sorts(self):

@@ -1523,10 +1523,19 @@ def fetch_msci_research(source: dict) -> list[dict]:
 
     Card: div[data-test="search-result-item"]:
       <p> "Category | Month DD, YYYY", <a><h3>Title</h3></a>, trailing text = summary.
+
+    wait_until="domcontentloaded" (not the default "networkidle"): msci.com does
+    reach networkidle, but only after a very consistent ~19s (9 loads measured
+    2026-09-03 spanned 18.7-19.5s), while the cards are in the DOM at ~8-9s.
+    Plus the helper's 5s settle that left a healthy run at ~25s against a 30s
+    goto timeout — the thinnest margin of any source, one site slowdown away
+    from the failure troweprice actually hit.  Five live runs on
+    domcontentloaded returned byte-identical (url, date) pairs in ~14s.
     """
     base_url = "https://www.msci.com"
     html = _get_playwright_page(
         source["url"],
+        wait_until="domcontentloaded",
         wait_selector='div[data-test="search-result-item"]',
         wait_ms=5000,
     )
