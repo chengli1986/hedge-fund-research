@@ -8520,6 +8520,25 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-09-03": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.mfs.com/en-us/investment-professional/insights/market-insights/week-in-review.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/market-insights/why-index-concentration-will-end.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/market-insights/previous-week-in-review.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/sustainability/emd-navigating-esg-risk-and-uncertainty.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/multi-asset/rethinking-private-assets-in-tdfs-case-for-public-market-solutions.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/market-insights/straight-talk-replay.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/market-insights/previous-straight-talk-replay.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/market-insights/straight-talk.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/retirement-insights/retirement-at-a-glance.html",
+            "https://www.mfs.com/en-us/investment-professional/insights/portfolio-insights/webcast-resilience-us-credit.html"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -8648,6 +8667,14 @@
           "js_only_checked": 0,
           "day": 4,
           "date": "2026-09-02"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 5,
+          "date": "2026-09-03"
         }
       ]
     },
@@ -8683,6 +8710,24 @@
         "2026-09-02": {
           "accessible": true,
           "article_count": 9,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.northleafcapital.com/news/keynote-interview-new-blueprint-infrastructure",
+            "https://www.northleafcapital.com/news/private-equity-market-update-q2-2026",
+            "https://www.northleafcapital.com/news/private-credit-market-update-q2-2026",
+            "https://www.northleafcapital.com/news/keynote-interview-assessing-mid-market-secondaries",
+            "https://www.northleafcapital.com/news/private-equity-market-update-q1-2026",
+            "https://www.northleafcapital.com/news/why-now-case-secondaries-2026",
+            "https://www.northleafcapital.com/news/private-credit-market-update-q1-2026",
+            "https://www.northleafcapital.com/news/private-equity-market-update-q4-2025",
+            "https://www.northleafcapital.com/news/private-credit-market-update-q4-2025"
+          ],
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-09-03": {
+          "accessible": true,
+          "article_count": 11,
           "date_count": 10,
           "article_urls": [
             "https://www.northleafcapital.com/news/keynote-interview-new-blueprint-infrastructure",
@@ -8771,6 +8816,41 @@
           "js_only_checked": 0,
           "day": 2,
           "date": "2026-09-02"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.northleafcapital.com/news/private-credit-market-update-q1-2026",
+              "relevance": 0.95,
+              "depth": 0.75,
+              "extractable": 0.65,
+              "overall": 0.81,
+              "notes": "Q1-2026 private credit market analysis covering rate expectations, spread dynamics, supply/demand shifts, and borrower resilience with AI disruption concerns."
+            },
+            {
+              "url": "https://www.northleafcapital.com/news/private-equity-market-update-q4-2025",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.7,
+              "overall": 0.84,
+              "notes": "Q4-2025 private equity market update emphasizing mid-market operational alpha, AI integration in value creation, and secondary market growth to $226B record volume."
+            },
+            {
+              "url": "https://www.northleafcapital.com/news/private-credit-market-update-q4-2025",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.65,
+              "overall": 0.83,
+              "notes": "Q4-2025 private credit market analysis covering Fed rate cuts, yield stability, M&A momentum recovery, and sector bifurcation with resilient borrower performance."
+            }
+          ],
+          "avg_score": 0.827,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 3,
+          "date": "2026-09-03"
         }
       ]
     }
