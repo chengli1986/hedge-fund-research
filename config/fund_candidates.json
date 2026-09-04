@@ -3435,7 +3435,7 @@
     "official_domain": "www.fulcrumasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-03T09:00:09.492291+08:00",
+    "last_discovered_at": "2026-09-04T09:00:10.067713+08:00",
     "status_since": "2026-08-22T09:03:32.572404+08:00",
     "last_deep_analyzed_at": "2026-08-31T01:15:00Z",
     "quality": "MEDIUM",
@@ -3550,13 +3550,13 @@
     "official_domain": "www.muzinich.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-03T09:00:10.047335+08:00",
+    "last_discovered_at": "2026-09-04T09:00:10.561174+08:00",
     "status_since": "2026-08-25T09:03:39.585223+08:00",
-    "quality": "MEDIUM",
-    "quality_score": 0.5,
-    "topics": "credit, fixed income, emerging markets, private credit",
-    "notes": "Weekly credit/EM research, gated behind terms wall",
-    "last_deep_analyzed_at": "2026-08-26T01:15:00Z"
+    "quality": "HIGH",
+    "quality_score": 0.75,
+    "topics": "high yield, credit, fixed income, emerging markets, private credit",
+    "notes": "RECOMMEND: weekly HY/credit/EM, ungated, overlaps credit",
+    "last_deep_analyzed_at": "2026-09-04T01:01:36Z"
   },
   {
     "id": "capital-fund-management",
@@ -3577,7 +3577,7 @@
     "official_domain": "www.cfm.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-03T09:00:10.348710+08:00"
+    "last_discovered_at": "2026-09-04T09:00:10.895655+08:00"
   },
   {
     "id": "northleaf-capital",
@@ -3646,5 +3646,29 @@
     "quality_score": 0.35,
     "topics": "macro, multi-strategy, manager selection, blockchain venture capital",
     "notes": "Mixed podcasts/PR; sampled articles thin marketing"
+  },
+  {
+    "id": "carmignac",
+    "name": "Carmignac",
+    "homepage_url": "https://www.carmignac.com/en",
+    "source": "manual",
+    "status": "discovered",
+    "strategy_tags": [
+      "macro",
+      "multi_asset",
+      "event_driven"
+    ],
+    "research_url": "https://www.carmignac.com/en/sustainable-investment/insights",
+    "official_domain": "www.carmignac.com",
+    "research_links": [
+      {
+        "url": "https://www.carmignac.com/en/sustainable-investment/insights",
+        "label": "Insights",
+        "path": "en/sustainable-investment/insights"
+      }
+    ],
+    "status_since": "2026-09-04T09:02:36.805231+08:00",
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-09-04T09:02:36.805191+08:00"
   }
 ]
