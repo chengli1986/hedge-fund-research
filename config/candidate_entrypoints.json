@@ -1631,6 +1631,40 @@
           "label": "bad"
         }
       ]
+    },
+    "carmignac": {
+      "last_discovered_at": "2026-09-05T09:00:30.624474+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://www.carmignac.com/en/sustainable-investment/insights",
+          "final_score": 0.97,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 1.0,
+          "gate_penalty": 0.15,
+          "active": true
+        },
+        {
+          "url": "https://www.carmignac.com/en/markets-and-outlook",
+          "final_score": 0.97,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 1.0,
+          "gate_penalty": 0.15,
+          "active": false
+        },
+        {
+          "url": "https://www.carmignac.com/en/markets-and-outlook/our-views",
+          "final_score": 0.97,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 1.0,
+          "gate_penalty": 0.15,
+          "active": false
+        }
+      ],
+      "rejected_pages": []
     }
   }
 }
