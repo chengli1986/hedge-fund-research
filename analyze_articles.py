@@ -115,27 +115,47 @@ USAGE_LOG_FILE = BASE_DIR / "logs" / "analyze-usage.jsonl"
 # spelling with a `or 0` fallback would book an unrecognised payload as a free
 # call, which is exactly the failure this table exists to prevent: unknown must
 # stay unknown so an aggregate can say "incomplete" instead of "cheap".
+# Each provider names the same numbers differently, and not all of them are
+# obvious.  gemini-2.5-pro is a reasoning model: a live probe (2026-09-06) came
+# back promptTokenCount 43 / candidatesTokenCount 34 / thoughtsTokenCount 305 /
+# totalTokenCount 382 -- the thinking tokens are billed as output and are 90% of
+# it, so mapping output to candidatesTokenCount alone understates spend ~9x.
+# Layout: (input_key, output_keys, total_key).  Output keys after the first are
+# optional (a non-reasoning reply carries no thoughtsTokenCount).
 _USAGE_FIELDS = {
-    "gemini-2.5-pro": ("promptTokenCount", "candidatesTokenCount"),
-    "gpt-4.1-mini": ("prompt_tokens", "completion_tokens"),
-    "claude-sonnet-4-6": ("input_tokens", "output_tokens"),
+    "gemini-2.5-pro": ("promptTokenCount",
+                       ("candidatesTokenCount", "thoughtsTokenCount"),
+                       "totalTokenCount"),
+    "gpt-4.1-mini": ("prompt_tokens", ("completion_tokens",), "total_tokens"),
+    "claude-sonnet-4-6": ("input_tokens", ("output_tokens",), None),
 }
+
+_UNKNOWN_USAGE = {"input_tokens": None, "output_tokens": None,
+                  "provider_total_tokens": None}
 
 
 def _normalize_usage(model: str, usage: dict) -> dict:
-    """Map a provider's usage payload onto {input_tokens, output_tokens}.
+    """Map a provider's usage payload onto input/output/provider total.
 
-    Returns None for both when the model is unknown or the payload does not
-    carry the fields we expect -- never 0.  A model added to MODEL_CHAIN
-    without a matching entry here shows up as unmeasured, not as free.
+    Returns None for every field when the model is unknown or the payload does
+    not carry what we expect -- never 0.  A model added to MODEL_CHAIN without a
+    matching entry here shows up as unmeasured, not as free.
+
+    provider_total_tokens is the provider's own total, recorded so a field we
+    failed to map surfaces as a reconciliation gap (input + output != total) in
+    the data itself instead of waiting to be spotted by eye.
     """
     fields = _USAGE_FIELDS.get(model)
     if not fields:
-        return {"input_tokens": None, "output_tokens": None}
-    in_key, out_key = fields
-    if in_key not in usage or out_key not in usage:
-        return {"input_tokens": None, "output_tokens": None}
-    return {"input_tokens": usage[in_key], "output_tokens": usage[out_key]}
+        return dict(_UNKNOWN_USAGE)
+    in_key, out_keys, total_key = fields
+    if in_key not in usage or out_keys[0] not in usage:
+        return dict(_UNKNOWN_USAGE)
+    return {
+        "input_tokens": usage[in_key],
+        "output_tokens": sum(usage[k] for k in out_keys if k in usage),
+        "provider_total_tokens": usage.get(total_key) if total_key else None,
+    }
 
 
 def _append_usage_log(article_id_: str, model: str, usage: dict, path=None,

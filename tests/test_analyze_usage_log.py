@@ -29,32 +29,35 @@ class TestNormalizeUsage:
         u = aa._normalize_usage("gemini-2.5-pro", {
             "promptTokenCount": 4321, "candidatesTokenCount": 890,
             "totalTokenCount": 5211})
-        assert u == {"input_tokens": 4321, "output_tokens": 890}
+        assert u["input_tokens"] == 4321 and u["output_tokens"] == 890
 
     def test_openai_shape(self):
         u = aa._normalize_usage("gpt-4.1-mini", {
             "prompt_tokens": 4321, "completion_tokens": 890, "total_tokens": 5211})
-        assert u == {"input_tokens": 4321, "output_tokens": 890}
+        assert u["input_tokens"] == 4321 and u["output_tokens"] == 890
 
     def test_anthropic_shape(self):
         u = aa._normalize_usage("claude-sonnet-4-6", {
             "input_tokens": 4321, "output_tokens": 890})
-        assert u == {"input_tokens": 4321, "output_tokens": 890}
+        assert u["input_tokens"] == 4321 and u["output_tokens"] == 890
 
     def test_unknown_payload_is_none_not_zero(self):
         # A provider that renames its fields must surface as unknown, not free.
         u = aa._normalize_usage("gemini-2.5-pro", {"inputTokens": 4321})
-        assert u == {"input_tokens": None, "output_tokens": None}
+        assert u == {"input_tokens": None, "output_tokens": None,
+                     "provider_total_tokens": None}
 
     def test_empty_payload_is_none_not_zero(self):
         u = aa._normalize_usage("gpt-4.1-mini", {})
-        assert u == {"input_tokens": None, "output_tokens": None}
+        assert u == {"input_tokens": None, "output_tokens": None,
+                     "provider_total_tokens": None}
 
     def test_unknown_model_is_none_not_zero(self):
         # Adding a model to MODEL_CHAIN without teaching the normaliser its
         # shape must not silently book it as costing nothing.
         u = aa._normalize_usage("some-future-model", {"input_tokens": 10})
-        assert u == {"input_tokens": None, "output_tokens": None}
+        assert u == {"input_tokens": None, "output_tokens": None,
+                     "provider_total_tokens": None}
 
 
 class TestUsageLog:
@@ -179,3 +182,52 @@ class TestMainWiresArticleId:
             assert any(kw.arg == "article_id" for kw in call.keywords), (
                 "main() calls _analyze_with_fallback without article_id -- "
                 "usage rows would be anonymous")
+
+
+class TestGeminiThinkingTokens:
+    """Reasoning tokens are billed as output and must not be dropped.
+
+    Caught by probing the live API instead of trusting the field list in the
+    code's comment (2026-09-06).  A real gemini-2.5-pro reply came back as
+
+        promptTokenCount 43 / candidatesTokenCount 34 /
+        thoughtsTokenCount 305 / totalTokenCount 382
+
+    -- 43 + 34 + 305 = 382.  Booking only candidatesTokenCount as output
+    understated this call's output by 9x, and every summarisation this pipeline
+    runs is a reasoning call.  The provider's own total is recorded alongside so
+    that any future field we fail to map shows up as a reconciliation gap in the
+    data itself, rather than waiting to be noticed by eye.
+    """
+
+    def test_thinking_tokens_count_as_output(self):
+        u = aa._normalize_usage("gemini-2.5-pro", {
+            "promptTokenCount": 43, "candidatesTokenCount": 34,
+            "thoughtsTokenCount": 305, "totalTokenCount": 382})
+        assert u["input_tokens"] == 43
+        assert u["output_tokens"] == 339          # 34 + 305, both billed output
+
+    def test_reconciles_against_provider_total(self):
+        u = aa._normalize_usage("gemini-2.5-pro", {
+            "promptTokenCount": 43, "candidatesTokenCount": 34,
+            "thoughtsTokenCount": 305, "totalTokenCount": 382})
+        assert u["provider_total_tokens"] == 382
+        assert u["input_tokens"] + u["output_tokens"] == u["provider_total_tokens"]
+
+    def test_absent_thinking_tokens_are_not_required(self):
+        u = aa._normalize_usage("gemini-2.5-pro", {
+            "promptTokenCount": 43, "candidatesTokenCount": 34,
+            "totalTokenCount": 77})
+        assert u["output_tokens"] == 34
+        assert u["provider_total_tokens"] == 77
+
+    def test_openai_total_is_recorded_too(self):
+        u = aa._normalize_usage("gpt-4.1-mini", {
+            "prompt_tokens": 100, "completion_tokens": 20, "total_tokens": 120})
+        assert u["provider_total_tokens"] == 120
+
+    def test_missing_provider_total_is_none(self):
+        # Anthropic sends no total; absence must not read as zero.
+        u = aa._normalize_usage("claude-sonnet-4-6", {
+            "input_tokens": 100, "output_tokens": 20})
+        assert u["provider_total_tokens"] is None
