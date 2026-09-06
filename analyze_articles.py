@@ -106,6 +106,63 @@ def _load_api_keys() -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Token accounting
+# ---------------------------------------------------------------------------
+
+USAGE_LOG_FILE = BASE_DIR / "logs" / "analyze-usage.jsonl"
+
+# Each provider names the same two numbers differently.  Reaching for one
+# spelling with a `or 0` fallback would book an unrecognised payload as a free
+# call, which is exactly the failure this table exists to prevent: unknown must
+# stay unknown so an aggregate can say "incomplete" instead of "cheap".
+_USAGE_FIELDS = {
+    "gemini-2.5-pro": ("promptTokenCount", "candidatesTokenCount"),
+    "gpt-4.1-mini": ("prompt_tokens", "completion_tokens"),
+    "claude-sonnet-4-6": ("input_tokens", "output_tokens"),
+}
+
+
+def _normalize_usage(model: str, usage: dict) -> dict:
+    """Map a provider's usage payload onto {input_tokens, output_tokens}.
+
+    Returns None for both when the model is unknown or the payload does not
+    carry the fields we expect -- never 0.  A model added to MODEL_CHAIN
+    without a matching entry here shows up as unmeasured, not as free.
+    """
+    fields = _USAGE_FIELDS.get(model)
+    if not fields:
+        return {"input_tokens": None, "output_tokens": None}
+    in_key, out_key = fields
+    if in_key not in usage or out_key not in usage:
+        return {"input_tokens": None, "output_tokens": None}
+    return {"input_tokens": usage[in_key], "output_tokens": usage[out_key]}
+
+
+def _append_usage_log(article_id_: str, model: str, usage: dict, path=None,
+                      parsed: bool | None = None) -> None:
+    """Append one token-accounting row.  Never raises.
+
+    Instrumentation must not be able to kill the pipeline it measures, so every
+    failure here is swallowed after a warning.  The row is written even when the
+    counts are unknown: "a call happened and we cannot price it" is information,
+    and dropping it would understate the total.
+    """
+    path = USAGE_LOG_FILE if path is None else path
+    row = {
+        "at": datetime.now(BJT).isoformat(timespec="seconds"),
+        "article_id": article_id_,
+        "model": model,
+        "parsed": parsed,
+        **_normalize_usage(model, usage),
+    }
+    try:
+        with open(path, "a") as f:
+            f.write(json.dumps(row, ensure_ascii=False) + "\n")
+    except Exception as e:
+        log.warning("  usage log write failed (%s): %s", path, e)
+
+
+# ---------------------------------------------------------------------------
 # LLM call functions
 # ---------------------------------------------------------------------------
 
@@ -248,6 +305,7 @@ def _analyze_with_fallback(
     source: str = "",
     date: str = "",
     metadata_only: bool = False,
+    article_id: str = "",
 ) -> Optional[dict]:
     """Try each model in MODEL_CHAIN with MAX_ATTEMPTS each.
 
@@ -280,6 +338,13 @@ def _analyze_with_fallback(
                 log.info("  Trying %s (attempt %d/%d)", model_name, attempt, MAX_ATTEMPTS)
                 raw_text, usage, used_model = caller(prompt, api_key)
                 parsed = _parse_llm_output(raw_text)
+                # Book the call here, at the HTTP boundary -- a response that
+                # fails to parse burned the same tokens as one that succeeds,
+                # and gemini-2.5-pro 503s (then retries) every few days.  An
+                # exception never got a usage payload, so it books nothing:
+                # inventing a zero row would be fabricating data.
+                _append_usage_log(article_id, used_model, usage,
+                                  parsed=parsed is not None)
                 if parsed is not None:
                     parsed["_model"] = used_model
                     parsed["_usage"] = usage
@@ -391,6 +456,7 @@ def main() -> None:
             source=a.get("source_id", ""),
             date=a.get("date", ""),
             metadata_only=is_metadata,
+            article_id=a["id"],
         )
 
         if result is not None:
