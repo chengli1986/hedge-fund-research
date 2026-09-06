@@ -8431,9 +8431,7 @@
       "total_articles": 160,
       "days_with_articles": 8,
       "avg_quality_score": 0.772
-    }
-  ],
-  "active_trials": [
+    },
     {
       "id": "mfs-investment-management",
       "name": "MFS Investment Management",
@@ -8443,7 +8441,7 @@
       "quality": "MEDIUM",
       "topics": "fixed income, credit, equity, multi-asset, macro",
       "start_date": "2026-08-30",
-      "end_date": null,
+      "end_date": "2026-09-06",
       "daily_checks": {
         "2026-08-30": {
           "accessible": true,
@@ -8555,10 +8553,18 @@
           "article_urls": [],
           "error": "'expected_hostname'",
           "fetcher_used": true
+        },
+        "2026-09-06": {
+          "accessible": false,
+          "article_count": 0,
+          "date_count": 0,
+          "article_urls": [],
+          "error": "'expected_hostname'",
+          "fetcher_used": true
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -8708,8 +8714,13 @@
           "day": 7,
           "date": "2026-09-05"
         }
-      ]
-    },
+      ],
+      "total_articles": 50,
+      "days_with_articles": 5,
+      "avg_quality_score": 0.683
+    }
+  ],
+  "active_trials": [
     {
       "id": "northleaf-capital",
       "name": "Northleaf Capital Group",
@@ -8794,6 +8805,24 @@
           "fetcher_used": false
         },
         "2026-09-05": {
+          "accessible": true,
+          "article_count": 11,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.northleafcapital.com/news/keynote-interview-new-blueprint-infrastructure",
+            "https://www.northleafcapital.com/news/private-equity-market-update-q2-2026",
+            "https://www.northleafcapital.com/news/private-credit-market-update-q2-2026",
+            "https://www.northleafcapital.com/news/keynote-interview-assessing-mid-market-secondaries",
+            "https://www.northleafcapital.com/news/private-equity-market-update-q1-2026",
+            "https://www.northleafcapital.com/news/why-now-case-secondaries-2026",
+            "https://www.northleafcapital.com/news/private-credit-market-update-q1-2026",
+            "https://www.northleafcapital.com/news/private-equity-market-update-q4-2025",
+            "https://www.northleafcapital.com/news/private-credit-market-update-q4-2025"
+          ],
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-09-06": {
           "accessible": true,
           "article_count": 11,
           "date_count": 10,
@@ -8935,6 +8964,14 @@
           "error": "No new (un-sampled) article links available",
           "day": 5,
           "date": "2026-09-05"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 6,
+          "date": "2026-09-06"
         }
       ]
     }

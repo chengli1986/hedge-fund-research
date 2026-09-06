@@ -3448,7 +3448,7 @@
     "name": "MFS Investment Management",
     "homepage_url": "https://www.mfs.com/en-us/insights.html",
     "source": "manual",
-    "status": "visitable",
+    "status": "promoted",
     "strategy_tags": [
       "fixed_income",
       "equity",
@@ -3509,14 +3509,14 @@
         "path": "content/mfs-enterprise/mfscom/us/en/investment-professional/insights/market-insights/market-pulse.html"
       }
     ],
-    "status_since": "2026-08-30T02:02:24.320159+08:00",
+    "status_since": "2026-09-06T09:03:09.546071+08:00",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-08-23T09:02:42.105412+08:00",
     "last_deep_analyzed_at": "2026-09-02T01:03:42Z",
     "quality": "MEDIUM",
     "quality_score": 0.72,
     "topics": "fixed income, credit, ESG/sustainability, multi-asset",
-    "notes": "Public access confirmed; proprietary ESG/EMD research",
+    "notes": "RECOMMEND: trial passed (5/7 days with articles, quality=0.68)",
     "is_publicly_accessible": true,
     "has_article_index": true,
     "last_screened_at": "2026-08-25T09:02:59.326225+08:00",
@@ -3762,7 +3762,7 @@
         "path": "en-us/professional/insight-overview/publications"
       }
     ],
-    "status_since": "2026-09-06T09:02:38.863389+08:00",
+    "status_since": "2026-09-06T09:03:09.262482+08:00",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-09-06T09:02:38.863348+08:00"
   }
