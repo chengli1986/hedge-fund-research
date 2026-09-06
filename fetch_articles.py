@@ -3373,6 +3373,30 @@ def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False) ->
         log.error("Failed to fetch %s: %s", source_id, e)
         return []
 
+    # A listing page that silently stops being newest-first hands us archive
+    # articles that look brand new.  acadian-asset, 2026-09-02: the insight
+    # listing defaults to "Sort By: Relevance" (not Date); for a year relevance
+    # happened to surface the newest posts first, then it stopped, and nine
+    # 2016-2023 pieces were ingested, summarised and published while August's
+    # real posts fell off the page.  The staleness WARN saw only "newest is 98d
+    # old" -- nothing saw "we just ingested a 2016 article".
+    #
+    # Sources whose listing URL pins a chronological sort declare date_sorted in
+    # sources.json.  Break the contract and we refuse the WHOLE batch: a partial
+    # accept is how archive pieces get in.  Refusing shows up as "0 articles",
+    # which scripts/gmia-fetcher-health.py already reports as a FAIL.
+    # `date` is the ISO YYYY-MM-DD produced by parse_date, so plain string
+    # comparison orders it correctly; undated articles are skipped, not fatal.
+    if source.get("date_sorted"):
+        dates = [a["date"] for a in raw_articles if a.get("date")]
+        if any(dates[i] < dates[i + 1] for i in range(len(dates) - 1)):
+            log.error(
+                "DATE_ORDER_BROKEN: %s declares date_sorted but returned %s -- "
+                "refusing all %d articles (listing sort order changed?)",
+                source_id, dates, len(raw_articles),
+            )
+            return []
+
     # Required, not source.get(..., ""): an empty default silently DISABLES the
     # host check (`if expected_host and ...` below), so a source that lost the
     # field would keep ingesting articles from any host and look healthy.

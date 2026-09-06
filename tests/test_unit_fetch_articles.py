@@ -2001,3 +2001,67 @@ class TestFetchBaillieGifford:
         html = "<html><body></body></html>"
         with patch("fetch_articles.requests.get", return_value=self._mock_response(html)):
             assert fetch_baillie_gifford(self.SOURCE) == []
+
+
+class TestDateSortedGuard:
+    """A listing page whose sort order silently stops being chronological must
+    fail loudly, not quietly ingest archive articles.
+
+    Root cause of the 2026-09-02 Acadian incident: acadian-asset.com's insight
+    listing defaults to "Sort By: Relevance", not Date.  For a year relevance
+    happened to surface the newest posts first; on 2026-09-02 it stopped, the
+    fetcher took the first 10 DOM cards as always, and nine 2016-2023 archive
+    pieces were ingested, summarised by Gemini and published to the live
+    research page — while August's two genuinely new posts fell off the page
+    entirely.  The staleness WARN only saw "newest article is 98d old"; nothing
+    saw "we just ingested a 2016 article".
+
+    Sources that declare ``date_sorted: true`` in sources.json assert their
+    listing is newest-first.  fetch_source enforces that contract per run and
+    refuses the whole batch when it breaks, so the failure surfaces as "0
+    articles" (a health-check FAIL) instead of silent archive ingestion.
+    """
+
+    SOURCE = {
+        "id": "sorted-test-source",
+        "name": "Sorted Test",
+        "short_name": "SortedTest",
+        "method": "scrape",
+        "expected_hostname": "example.com",
+        "date_sorted": True,
+    }
+
+    def _run(self, raw_articles, source=None):
+        from fetch_articles import fetch_source, FETCHERS
+        src = source if source is not None else self.SOURCE
+        with patch.dict(FETCHERS, {src["id"]: lambda s: raw_articles}):
+            return fetch_source(src, set())
+
+    def _art(self, n, date):
+        return {"title": f"T{n}", "url": f"https://example.com/{n}", "date": date}
+
+    def test_newest_first_batch_is_ingested(self):
+        new = self._run([self._art(1, "2026-08-31"), self._art(2, "2026-07-31")])
+        assert len(new) == 2
+
+    def test_equal_dates_are_not_a_violation(self):
+        # Month-granularity dates ("August 2026") collapse to one day; order
+        # within a month is arbitrary and must stay legal.
+        new = self._run([self._art(1, "2026-08-31"), self._art(2, "2026-08-31")])
+        assert len(new) == 2
+
+    def test_out_of_order_batch_is_refused_whole(self):
+        # The real shape: one recent post buried among archive pieces.
+        new = self._run([self._art(1, "2022-09-30"), self._art(2, "2026-05-31")])
+        assert new == []
+
+    def test_undated_articles_do_not_trip_the_guard(self):
+        new = self._run([self._art(1, "2026-08-31"), self._art(2, None),
+                         self._art(3, "2026-07-31")])
+        assert len(new) == 3
+
+    def test_source_without_the_flag_is_unaffected(self):
+        src = dict(self.SOURCE, id="unsorted-test-source")
+        del src["date_sorted"]
+        new = self._run([self._art(1, "2022-09-30"), self._art(2, "2026-05-31")], source=src)
+        assert len(new) == 2
