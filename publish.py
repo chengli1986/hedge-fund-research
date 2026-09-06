@@ -68,6 +68,7 @@ BADGE_COLORS: dict[str, str] = {
     "loomis-sayles": "#a31fa3",             # Loomis Sayles magenta-orchid — the brand navy is unusable (the corporate-blue cluster #003a70/#00568c/#0066cc/#1f49e0/#4a6fa5 is full), and the magenta-violet gap between #9b6be0 GMO lavender (much lighter) and #80276c Natixis plum-purple (much darker/redder) was the widest hole left in the wheel: min ΔE 26.0 (to #7a4cb1 JPMAM violet), min RGB dist 62.5; WCAG AA 6.4:1 on white
     "resonanz-capital": "#3c1518",          # Resonanz deep oxblood (near-black maroon) — the palette had no very-dark neutral-red point at all, so this candidate scores the highest separation of any tested: min RGB dist 62.4 across all 38 existing colors (nearest #5d4037 Acadian umber, which is far lighter and browner; 68 to #6b0f1a-family wine tones and 78 to #9d2235 Aberdeen burgundy); WCAG AAA 16.0:1 on white
     "baillie-gifford": "#046307",           # Baillie Gifford deep emerald (pure saturated dark green; the green band held only desaturated/olive-leaning tones, so a fully-saturated green was the widest hole left: min RGB dist 61.2 across all 39 existing colors — 61.2 to #004d40 Franklin pine-teal, 67 to #1e7f3e Brookfield, 83 to #2d6a4f Robeco, 127 to #3fb950 AQR lime; WCAG AAA 7.5:1 on white)
+    "mfs-investment-management": "#8b0000",  # MFS dark crimson — the brand teal is unusable (the teal/cyan band #00607a/#006d75/#00838f/#004d40/#2ba397 is full), and pure dark red was the widest hole left in the wheel: min RGB dist 50.7 across all 40 existing colors (nearest #7c2d12 Verdad terracotta, which is far browner; 54 to #9d2235 Aberdeen burgundy, 66 to #b85450 Ares coral, 92 to #f85149 Oaktree bright red); WCAG AAA 10.0:1 on white
     "blue-owl-capital": "#301070",          # Blue Owl midnight indigo-violet ("night owl"; the deep blue-violet slot between the navy and violet clusters was empty — min RGB dist 63.8 to any of the 36 existing colors, the highest of any palette-consistent candidate: 63.8 to #003a70 PIMCO navy, 82 to #3949ab Matthews indigo, 66 to #5e3a82 Apollo plum; WCAG AAA 14.6:1 on white)
 }
 
@@ -361,6 +362,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "爱丁堡的成长股投资机构，1908 年由 Augustus Baillie 与 T J Carlyle Gifford 从橡胶产业投资起家，现管理约 £197B 资产，是英国唯一大规模独立无限责任投资合伙制公司（无外部股东，合伙人自担风险）。风格为长周期、低换手、高集中度，专注寻找少数驱动指数回报的高成长公司，覆盖全球/国际成长、美股成长与新兴市场。",
         "notable_en": "Its listed vehicles hold private companies alongside public equities — the trusts took SpaceX stakes from 2018, and the firm was once Tesla's largest institutional shareholder. Flagship Scottish Mortgage dates back to a 1913 renaming and remains its best-known long-horizon growth trust.",
         "notable_zh": "旗下上市信托在公开股票之外直接持有未上市公司：2018 年起买入 SpaceX，并曾是特斯拉最大的机构股东。招牌产品 Scottish Mortgage 信托可追溯至 1913 年更名，至今仍是其最知名的长周期成长载体。",
+    },
+    "mfs-investment-management": {
+        "founded": "1924", "aum": "~$645B", "hq": "Boston, USA",
+        "type_en": "Asset Manager (active, long-only)", "type_zh": "资产管理（主动多头）",
+        "desc_zh": "美国最老的资管公司之一，1924 年在波士顿创立全美第一只开放式共同基金（Massachusetts Investors Trust），现为加拿大永明金融（Sun Life）全资子公司，管理规模约 ~$645B。只做主动管理：全球与区域股票、固定收益（利率、信用、市政债、新兴市场债）及多资产，依托分析师与基金经理共用的长期基本面研究平台自下而上选股选券，不做量化或指数化产品。",
+        "notable_en": "Invented the US open-end mutual fund: Massachusetts Investors Trust launched 21 March 1924 and still operates today. Its weekly \"Week in Review\" macro wrap and \"Strategist's Corner\" commentary anchor a research output that leans on multi-decade holding periods and stewardship rather than trading calls.",
+        "notable_zh": "开创了美国开放式共同基金这一品类——1924 年 3 月 21 日成立的 Massachusetts Investors Trust 至今仍在运作。研究输出以每周宏观综述 Week in Review 和策略师专栏 Strategist's Corner 为主，风格强调跨周期长持有与管理人尽责，而非短线交易观点。",
     },
 }
 

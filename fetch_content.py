@@ -1730,6 +1730,36 @@ def _fetch_content_baillie_gifford(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+def _fetch_content_mfs(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch MFS Investment Management insight content via requests (SSR — AEM).
+
+    The listing comes from MFS's Solr search API (see fetch_articles), but the
+    article pages themselves are plain AEM server-rendered HTML: the body lives
+    in `rich-text` containers under `article`, so `article p` is enough and
+    matches what `main p` would return on every page checked. Verified live
+    2026-09-06: 7.5K chars on "Municipals: The Hidden Costs of a Passive
+    Approach", 9.4K on Week in Review, 11.6K on the target-date-funds piece.
+    """
+    url = article["url"]
+    log.info("  MFS: fetching article page %s", url)
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  MFS: fetch failed: %s", e)
+        return None
+
+    text = _normalize_html(resp.text, "article p")
+    if not _check_min_content_length(text):
+        log.warning("  MFS: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  MFS: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -1771,6 +1801,7 @@ CONTENT_FETCHERS = {
     "loomis-sayles": _fetch_content_loomis_sayles,
     "resonanz-capital": _fetch_content_resonanz_capital,
     "baillie-gifford": _fetch_content_baillie_gifford,
+    "mfs-investment-management": _fetch_content_mfs,
 }
 
 

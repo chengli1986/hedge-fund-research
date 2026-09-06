@@ -768,6 +768,24 @@
       "notable_authors": [],
       "expected_hostname": "bailliegifford.com",
       "max_articles": 10
+    },
+    {
+      "id": "mfs-investment-management",
+      "strategy_tags": [
+        "fixed_income",
+        "equity",
+        "multi_asset",
+        "esg_climate"
+      ],
+      "name": "MFS Investment Management",
+      "short_name": "MFS",
+      "url": "https://www.mfs.com/en-us/investment-professional/insights/fixed-income.html",
+      "method": "api",
+      "frequency": "weekly",
+      "description": "Boston-based active manager founded in 1924 (~$645B AUM as of 30 September 2024), now a wholly owned subsidiary of Sun Life Financial. Invented the US open-end mutual fund with Massachusetts Investors Trust and still runs only bottom-up, long-horizon active strategies — global and regional equity, fixed income (rates, credit, municipals, emerging-market debt) and multi-asset — built on a collaborative analyst/portfolio-manager research platform with explicit long-term risk and stewardship discipline rather than quantitative or index-tracking mandates.",
+      "notable_authors": [],
+      "expected_hostname": "mfs.com",
+      "max_articles": 10
     }
   ],
   "settings": {
