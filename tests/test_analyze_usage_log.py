@@ -231,3 +231,46 @@ class TestGeminiThinkingTokens:
         u = aa._normalize_usage("claude-sonnet-4-6", {
             "input_tokens": 100, "output_tokens": 20})
         assert u["provider_total_tokens"] is None
+
+
+class TestTestsNeverTouchProductionLog:
+    """Instrumentation must not let the test suite write into the real cost log.
+
+    Found 2026-09-07, one day after the accounting went in: `logs/analyze-usage.jsonl`
+    held 8 rows with an empty `article_id` and null token counts.  Measured, not
+    inferred -- running tests/test_unit_analyze.py alone grew the production file
+    by exactly 2 rows per run, because its three `_analyze_with_fallback` calls
+    exercise the chain and the chain books every HTTP-boundary call against the
+    module-level USAGE_LOG_FILE.
+
+    That corrupts the very data the accounting exists to produce: every full test
+    run silently mixes fake zero-cost rows into the spend record.
+
+    The guard is an autouse fixture in conftest rather than a monkeypatch in each
+    calling test.  Per-call-site patching is the shape that gets forgotten -- the
+    same failure mode as `article_id` defaulting to "" -- and a test added later
+    that happens to exercise the chain would start polluting again with nobody
+    noticing.
+    """
+
+    PARSEABLE = ('{"summary_en":"e","summary_zh":"z","themes":[],'
+                 '"key_takeaway_en":"e","key_takeaway_zh":"z"}')
+
+    def test_chain_call_leaves_production_log_untouched(self, monkeypatch):
+        prod = aa.BASE_DIR / "logs" / "analyze-usage.jsonl"
+        before = prod.stat().st_size if prod.exists() else None
+
+        monkeypatch.setattr(
+            aa, "_call_gemini",
+            lambda prompt, api_key: (self.PARSEABLE,
+                                     {"promptTokenCount": 1, "candidatesTokenCount": 1},
+                                     "gemini-2.5-pro"))
+        # Deliberately does NOT redirect USAGE_LOG_FILE: the conftest guard is
+        # what has to hold, exactly as it must for a test that never thought
+        # about the usage log at all.
+        aa._analyze_with_fallback("body", {"GEMINI_API_KEY": "k"}, article_id="x")
+
+        after = prod.stat().st_size if prod.exists() else None
+        assert after == before, (
+            "a test run wrote into the production cost log at "
+            f"{prod} — the conftest guard is missing or broken")
