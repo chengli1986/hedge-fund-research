@@ -204,33 +204,36 @@ class TestAnalyzeWithFallback:
         assert result is None
 
     def test_skip_model_without_api_key(self, monkeypatch):
-        """Models without API keys should be skipped entirely."""
-        call_order = []
+        """A tier with no key is skipped, not called with api_key=None.
 
-        def mock_gemini(prompt, api_key):
-            call_order.append("gemini")
-            raise RuntimeError("down")
+        Rewritten 2026-09-07. The old version withheld GEMINI_API_KEY and
+        asserted OpenAI ran first — but after the chain reorder OpenAI runs
+        first unconditionally, so it passed without ever reaching the skip
+        branch: deleting that branch outright kept the whole suite green. The
+        skippable tier now is the OpenAI one, so this withholds that key.
+        Without the branch, api_key=None reaches the caller and every article
+        costs two 401s per OpenAI tier instead of a clean skip.
+        """
+        calls = []
 
         def mock_openai(prompt, api_key, model="gpt-4.1-mini"):
-            call_order.append("openai")
+            calls.append(("openai", model, api_key))
             return (self.GOOD_RESULT, {}, model)
 
-        def mock_anthropic(prompt, api_key, model="claude-sonnet-4-6"):
-            call_order.append("anthropic")
-            return (self.GOOD_RESULT, {}, model)
+        def mock_gemini(prompt, api_key):
+            calls.append(("gemini", "gemini-2.5-pro", api_key))
+            return (self.GOOD_RESULT, {}, "gemini-2.5-pro")
 
-        monkeypatch.setattr("analyze_articles._call_gemini", mock_gemini)
         monkeypatch.setattr("analyze_articles._call_openai", mock_openai)
-        monkeypatch.setattr("analyze_articles._call_anthropic", mock_anthropic)
+        monkeypatch.setattr("analyze_articles._call_gemini", mock_gemini)
 
-        # No Gemini key — should skip straight to OpenAI
-        api_keys = {"OPENAI_API_KEY": "fake-openai"}
+        result = _analyze_with_fallback("content", {"GEMINI_API_KEY": "fake-gemini"})
 
-        result = _analyze_with_fallback("content", api_keys)
         assert result is not None
-        assert "gemini" not in call_order
-        assert call_order[0] == "openai"
-
+        assert result["_model"] == "gemini-2.5-pro"
+        assert not [c for c in calls if c[0] == "openai"], (
+            "an OpenAI tier ran with no OPENAI_API_KEY")
+        assert all(c[2] is not None for c in calls), "a caller was handed api_key=None"
 
 class TestResolveContentPath:
     def test_uses_explicit_relative_content_path(self):
@@ -277,7 +280,8 @@ class TestPromptsEnumerateThemes:
 
     def test_metadata_prompt_lists_every_valid_theme(self):
         from analyze_articles import METADATA_PROMPT, VALID_THEMES
-        missing = sorted(t for t in METADATA_PROMPT and VALID_THEMES if t not in METADATA_PROMPT)
+        assert METADATA_PROMPT, "prompt is empty; the check below would pass vacuously"
+        missing = sorted(t for t in VALID_THEMES if t not in METADATA_PROMPT)
         assert not missing, f"METADATA_PROMPT does not show these themes: {missing}"
 
     def test_prompts_forbid_inventing_labels(self):
@@ -403,3 +407,47 @@ class TestModelChainOrder:
         from analyze_articles import MODEL_CHAIN, OPENAI_MODELS
         assert MODEL_CHAIN[-1] not in OPENAI_MODELS, (
             "every tier is OpenAI — one provider outage would empty the chain")
+
+
+class TestGeminiOutputBudget:
+    """gemini-2.5-pro is the last tier, and its thinking shares the output cap.
+
+    On 2026-09-07 BJT (09-06 UTC) two calls on the same article stopped at
+    exactly 3996 of a 4000-token cap and both failed to parse -- the thinking
+    had eaten the budget mid-JSON. The chain then fell through, but gemini is
+    now the LAST tier, so the same truncation would fail the whole chain. A
+    revert of the cap must not be silent, and neither must a truncation.
+    """
+
+    def _post(self, monkeypatch, finish_reason="STOP"):
+        import analyze_articles as aa
+        sent = {}
+
+        class R:
+            def raise_for_status(self): pass
+            def json(self):
+                return {"candidates": [{"finishReason": finish_reason,
+                                        "content": {"parts": [{"text": "{}"}]}}],
+                        "usageMetadata": {}}
+
+        monkeypatch.setattr(aa.requests, "post",
+                            lambda url, **kw: (sent.update(kw["json"]), R())[1])
+        return sent
+
+    def test_output_budget_leaves_room_for_thinking(self, monkeypatch):
+        import analyze_articles as aa
+        sent = self._post(monkeypatch)
+        aa._call_gemini("p", "k")
+        assert sent["generationConfig"]["maxOutputTokens"] >= 12000, (
+            "back at a cap the model's thinking can exhaust — the 09-06 failure")
+
+    def test_truncation_is_reported_as_truncation(self, monkeypatch, caplog):
+        import logging
+        import analyze_articles as aa
+        self._post(monkeypatch, finish_reason="MAX_TOKENS")
+        with caplog.at_level(logging.WARNING):
+            aa._call_gemini("p", "k")
+        assert any("MAX_TOKENS" in r.message or "truncat" in r.message.lower()
+                   for r in caplog.records), (
+            "a truncated reply surfaces only as 'failed to parse output' — the "
+            "same misleading symptom as the 09-06 incident")

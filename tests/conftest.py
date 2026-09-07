@@ -102,3 +102,33 @@ def _no_production_writes():
     assert not changed, (
         "test run modified production files (see tests/conftest.py):\n  "
         + "\n  ".join(changed))
+
+
+@pytest.fixture(autouse=True)
+def _no_network(request, monkeypatch):
+    """Unit tests must not reach the network.
+
+    Found 2026-09-07: tests/test_unit_discover.py never patched
+    discover_entrypoints._call_llm, so two of its cases made real, billed
+    gemini-2.5-pro requests on every run -- 8.5s and 6.0s, about half the
+    suite's wall clock -- and neither asserted anything about the reply.  The
+    daily gmia-nightly-test and gmia-auto-promote crons each run pytest, so it
+    was a standing charge.
+
+    Blocked centrally rather than mocked case by case: patching each call site
+    is the shape that gets forgotten, and the next test to reach a live API
+    would do it silently.  Tests marked `live` or `nightly` are exempt --
+    reaching real sites is their whole purpose.
+    """
+    if request.node.get_closest_marker("live") or request.node.get_closest_marker("nightly"):
+        return
+    import socket
+
+    def _blocked(self, *args, **kwargs):
+        raise RuntimeError(
+            "a unit test tried to open a network connection "
+            f"({args[0] if args else '?'}) — mock the caller, or mark the test "
+            "`live`/`nightly` if it is meant to hit the real thing")
+
+    monkeypatch.setattr(socket.socket, "connect", _blocked)
+    monkeypatch.setattr(socket.socket, "connect_ex", _blocked)

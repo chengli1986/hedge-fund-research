@@ -237,6 +237,15 @@ def _call_gemini(prompt: str, api_key: str) -> tuple[str, dict, str]:
     resp.raise_for_status()
     data = resp.json()
     candidate = data["candidates"][0]
+    # A truncated reply still carries parts, so without this it surfaces only
+    # as "failed to parse output" -- the symptom that made the 09-06 incident
+    # look like a model quirk rather than an exhausted output budget.  Warn and
+    # still return the text: the tokens were spent and the HTTP-boundary
+    # accounting should book them.
+    if candidate.get("finishReason") == "MAX_TOKENS":
+        log.warning("  gemini-2.5-pro: reply truncated (finishReason=MAX_TOKENS, "
+                    "output %s of maxOutputTokens) -- thinking exhausted the budget",
+                    (data.get("usageMetadata") or {}).get("candidatesTokenCount"))
     content = candidate.get("content", {})
     parts = content.get("parts", [])
     if not parts:
@@ -320,16 +329,25 @@ def _should_analyze(article: dict) -> bool:
     return True
 
 
+def strip_code_fences(raw: str) -> str:
+    """Return `raw` with a surrounding markdown code fence removed.
+
+    Shared so there is exactly one fence stripper.  backfill_themes.py grew a
+    private one that required a newline after the opening fence, so a
+    single-line ```json {...} ``` reply crashed its run while this regex (whose
+    \n? is optional) handled it fine.
+    """
+    text = (raw or "").strip()
+    match = re.search(r"```(?:json)?\s*\n?(.*?)\n?\s*```", text, re.DOTALL)
+    return match.group(1).strip() if match else text
+
+
 def _parse_llm_output(raw: str) -> Optional[dict]:
     """Parse LLM JSON output, stripping markdown fences if present.
 
     Returns dict with validated fields, or None on failure.
     """
-    text = raw.strip()
-    # Strip markdown ```json ... ``` fences
-    match = re.search(r"```(?:json)?\s*\n?(.*?)\n?\s*```", text, re.DOTALL)
-    if match:
-        text = match.group(1).strip()
+    text = strip_code_fences(raw)
 
     try:
         data = json.loads(text)
@@ -449,14 +467,22 @@ def load_articles() -> list[dict]:
     return articles
 
 
-def save_articles(articles: list[dict]) -> None:
-    """Rewrite all articles to JSONL data file atomically."""
-    DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
+def save_articles(articles: list[dict], path: Path | None = None) -> None:
+    """Rewrite all articles to a JSONL data file atomically.
+
+    `path` uses a None sentinel rather than defaulting to DATA_FILE: a default
+    argument binds once at def time, which is how write_session_heartbeat's
+    output path stayed pinned through every monkeypatch.  Parameterised so
+    backfill_themes.py can reuse this writer instead of growing its own -- it
+    had a plain write_text(), and a failure mid-write left 151 of 4000 rows.
+    """
+    path = DATA_FILE if path is None else path
+    path.parent.mkdir(parents=True, exist_ok=True)
     data = "\n".join(json.dumps(a, ensure_ascii=False) for a in articles) + "\n"
-    tmp_path = DATA_FILE.with_suffix(".jsonl.tmp")
+    tmp_path = path.with_suffix(".jsonl.tmp")
     try:
         tmp_path.write_text(data, encoding="utf-8")
-        os.replace(str(tmp_path), str(DATA_FILE))
+        os.replace(str(tmp_path), str(path))
     except Exception:
         if tmp_path.exists():
             tmp_path.unlink()

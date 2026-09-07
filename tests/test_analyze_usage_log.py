@@ -294,3 +294,15 @@ class TestTestsNeverTouchProductionLog:
         assert after == before, (
             "a test run wrote into the production cost log at "
             f"{prod} — the conftest guard is missing or broken")
+
+
+def test_unit_tests_cannot_reach_the_network():
+    """Self-test for the conftest network guard.
+
+    Without it, tests/test_unit_discover.py made two real, billed
+    gemini-2.5-pro calls per run (about half the suite's wall clock) while
+    asserting nothing about the reply.
+    """
+    import socket
+    with pytest.raises(RuntimeError, match="network connection"):
+        socket.create_connection(("example.com", 443), timeout=1)
