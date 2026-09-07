@@ -257,8 +257,19 @@ class TestTestsNeverTouchProductionLog:
                  '"key_takeaway_en":"e","key_takeaway_zh":"z"}')
 
     def test_chain_call_leaves_production_log_untouched(self, monkeypatch):
-        prod = aa.BASE_DIR / "logs" / "analyze-usage.jsonl"
-        before = prod.stat().st_size if prod.exists() else None
+        # Read the module's own value, captured by the conftest fixture BEFORE
+        # it patched anything -- not a path rebuilt by hand here.  A hand-copied
+        # literal keeps passing after the real constant is renamed: the test and
+        # the code would no longer share one abstraction, and this canary would
+        # report all-clear while the suite wrote into the new production file.
+        from conftest import PRODUCTION_PATHS
+        prod = PRODUCTION_PATHS["USAGE_LOG_FILE"]
+        assert aa.USAGE_LOG_FILE != prod, (
+            "conftest redirect is missing — the chain would write to production")
+        assert prod.exists(), (
+            f"production log {prod} absent; a size comparison against None "
+            "would pass vacuously and prove nothing")
+        before = prod.stat().st_size
 
         monkeypatch.setattr(
             aa, "_call_gemini",
@@ -270,7 +281,7 @@ class TestTestsNeverTouchProductionLog:
         # about the usage log at all.
         aa._analyze_with_fallback("body", {"GEMINI_API_KEY": "k"}, article_id="x")
 
-        after = prod.stat().st_size if prod.exists() else None
+        after = prod.stat().st_size
         assert after == before, (
             "a test run wrote into the production cost log at "
             f"{prod} — the conftest guard is missing or broken")

@@ -190,3 +190,38 @@ def test_heartbeat_records_backfilled_count(tmp_path):
                                agent_exit=0, history_path=log, backfilled_count=2)
     assert entry["backfilled_count"] == 2
     assert json.loads(log.read_text().splitlines()[0])["backfilled_count"] == 2
+
+
+def test_main_honours_patched_history_file(tmp_path, monkeypatch):
+    """monkeypatching HISTORY_FILE must actually redirect main()'s write.
+
+    Until 2026-09-07 it did not.  `write_heartbeat`'s `history_path` defaulted
+    to the module constant, and a default argument is bound once at def time --
+    so `main()`, which never passes the argument, kept the production path no
+    matter what a test patched afterwards.  Both `main()` tests above have been
+    silently writing into the real logs/fetcher-synthesis-history.jsonl since
+    2026-05-08: 551 of its 560 heartbeat rows are test artefacts, in pairs
+    matching these two tests' exact (targets, appended) signatures.
+
+    That is not merely dirty data.  scripts/gmia_liveness_audit.py reads this
+    file and a FRESH HEARTBEAT WINS over a lock-bail marker, while synthesis
+    itself only runs weekly -- so a pytest run (the daily 02:30 BJT
+    gmia-auto-promote cron runs one) forges the very signal that says the
+    weekly job is alive.
+    """
+    log = tmp_path / "history.jsonl"
+    monkeypatch.setattr(hb, "HISTORY_FILE", log)
+    prod = hb.BASE_DIR / "logs" / "fetcher-synthesis-history.jsonl"
+    before = prod.stat().st_size if prod.exists() else None
+
+    sys_argv_orig = sys.argv
+    try:
+        sys.argv = ["write_session_heartbeat.py", "--targets-count", "2",
+                    "--reconcile-appended", "2", "--agent-exit", "0"]
+        hb.main()
+    finally:
+        sys.argv = sys_argv_orig
+
+    assert log.exists(), "patched HISTORY_FILE was not written — default arg still pinned"
+    after = prod.stat().st_size if prod.exists() else None
+    assert after == before, f"main() wrote into the production history at {prod}"

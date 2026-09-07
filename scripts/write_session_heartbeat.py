@@ -30,9 +30,19 @@ HISTORY_FILE = BASE_DIR / "logs" / "fetcher-synthesis-history.jsonl"
 
 
 def write_heartbeat(targets_count: int, reconcile_appended: int,
-                    agent_exit: int, history_path: Path = HISTORY_FILE,
+                    agent_exit: int, history_path: Path | None = None,
                     backfilled_count: int = 0) -> dict:
-    """Append a heartbeat entry. Returns the entry dict for inspection."""
+    """Append a heartbeat entry. Returns the entry dict for inspection.
+
+    `history_path` uses a None sentinel, not `= HISTORY_FILE`: a default
+    argument is bound once at def time, so the module constant was captured
+    before any test could patch it.  main() never passes the argument, so every
+    `monkeypatch.setattr(hb, "HISTORY_FILE", ...)` was dead code and both main()
+    tests wrote into the real history from 2026-05-08 on -- 551 of its 560
+    heartbeat rows were test artefacts, forging the freshness signal that
+    scripts/gmia_liveness_audit.py trusts over a lock-bail marker.
+    """
+    history_path = HISTORY_FILE if history_path is None else history_path
     entry = {
         "date": datetime.now(BJT).strftime("%Y-%m-%d"),
         "timestamp": datetime.now(BJT).isoformat(),
