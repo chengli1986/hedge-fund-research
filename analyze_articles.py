@@ -40,6 +40,20 @@ MODEL_CHAIN = ["gemini-2.5-pro", "gpt-4.1-mini", "claude-sonnet-4-6"]
 MAX_ATTEMPTS = 2
 MAX_CONTENT_CHARS = 15000
 
+# Rendered from VALID_THEMES so the prompt and the allowlist cannot drift: a
+# theme added to the set but not shown to the model can never be chosen, and one
+# shown but no longer in the set is offered and then silently filtered away.
+# Sorted for a stable prompt prefix (volatile prompts defeat caching).
+_THEME_LINES = "\n".join(f'  - "{t}"' for t in sorted(VALID_THEMES))
+
+_THEME_INSTRUCTION = """
+
+Allowed themes - choose 1 to 3 that fit the article, copying each label exactly
+as written below. Never invent a label or reword one: anything not on this list
+is discarded, and the article ends up with no theme at all. Every article gets
+at least one theme; if none fits well, choose the single closest.
+""" + _THEME_LINES
+
 ANALYSIS_PROMPT = """You are a senior investment analyst. Analyze the following hedge fund research article and produce a structured JSON response.
 
 Article title: {title}
@@ -50,7 +64,7 @@ Article content:
 {content}
 
 Respond with ONLY a JSON object (no markdown fences, no explanation):
-{{"summary_en": "...", "summary_zh": "...", "themes": [...], "key_takeaway_en": "...", "key_takeaway_zh": "..."}}"""
+{{"summary_en": "...", "summary_zh": "...", "themes": [...], "key_takeaway_en": "...", "key_takeaway_zh": "..."}}""" + _THEME_INSTRUCTION
 
 METADATA_PROMPT = """You are a senior investment analyst. Based on LIMITED metadata (title, category, summary) from a hedge fund research article, produce a structured JSON response. Note: you only have metadata, not the full article — keep analysis conservative.
 
@@ -62,7 +76,7 @@ Available metadata:
 {content}
 
 Respond with ONLY a JSON object (no markdown fences, no explanation):
-{{"summary_en": "...", "summary_zh": "...", "themes": [...], "key_takeaway_en": "...", "key_takeaway_zh": "..."}}"""
+{{"summary_en": "...", "summary_zh": "...", "themes": [...], "key_takeaway_en": "...", "key_takeaway_zh": "..."}}""" + _THEME_INSTRUCTION
 
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 logging.basicConfig(

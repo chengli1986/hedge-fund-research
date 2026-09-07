@@ -250,3 +250,57 @@ class TestResolveContentPath:
         article = {"id": "abc123", "content_path": "/tmp/escape.txt"}
         with pytest.raises(ValueError):
             _resolve_content_path(article)
+
+
+class TestPromptsEnumerateThemes:
+    """The prompt must name the themes it will be graded against.
+
+    Root cause of the empty-theme problem found 2026-09-07: neither prompt
+    listed VALID_THEMES -- they only showed a JSON skeleton with
+    `"themes": [...]`.  The model invented free-form labels and
+    _parse_llm_output then filtered them against a closed 15-item allowlist, so
+    they were all dropped.  Measured on one article: the model returned
+    ['Retirement Plan Management', 'Benchmark Risk', 'Fiduciary Scrutiny',
+    'Regulatory Changes', 'Investment Policy', 'Portfolio Construction'] and the
+    stored result was [].  611 of 1331 summarised articles (46%) had no themes,
+    and publish.py's theme view only lists articles that have them -- so nearly
+    half the corpus was missing from the site's theme navigation.
+
+    Asking the model to choose from a list it can see is the fix; the parser
+    keeps filtering as a defence, not as the mechanism.
+    """
+
+    def test_analysis_prompt_lists_every_valid_theme(self):
+        from analyze_articles import ANALYSIS_PROMPT, VALID_THEMES
+        missing = sorted(t for t in VALID_THEMES if t not in ANALYSIS_PROMPT)
+        assert not missing, f"ANALYSIS_PROMPT does not show these themes: {missing}"
+
+    def test_metadata_prompt_lists_every_valid_theme(self):
+        from analyze_articles import METADATA_PROMPT, VALID_THEMES
+        missing = sorted(t for t in METADATA_PROMPT and VALID_THEMES if t not in METADATA_PROMPT)
+        assert not missing, f"METADATA_PROMPT does not show these themes: {missing}"
+
+    def test_prompts_forbid_inventing_labels(self):
+        # Without this the model returns precise-but-unlisted labels that the
+        # parser silently drops -- the exact failure being fixed.
+        import re
+        from analyze_articles import ANALYSIS_PROMPT, METADATA_PROMPT
+        for name, p in (("ANALYSIS_PROMPT", ANALYSIS_PROMPT),
+                        ("METADATA_PROMPT", METADATA_PROMPT)):
+            # Normalise whitespace: the assertion is about what the prompt says,
+            # not about where its lines happen to wrap.
+            flat = re.sub(r"\s+", " ", p)
+            assert "exactly as written" in flat, f"{name} does not pin the label wording"
+            assert "invent" in flat, f"{name} does not forbid invented labels"
+
+    def test_theme_list_stays_in_sync_with_the_allowlist(self):
+        # A theme added to VALID_THEMES but not to the prompts is invisible to
+        # the model and can never be chosen; one removed from VALID_THEMES but
+        # left in the prompts is offered and then filtered away.
+        from analyze_articles import ANALYSIS_PROMPT, METADATA_PROMPT, VALID_THEMES
+        import re
+        for name, p in (("ANALYSIS_PROMPT", ANALYSIS_PROMPT),
+                        ("METADATA_PROMPT", METADATA_PROMPT)):
+            listed = set(re.findall(r'"([A-Za-z][A-Za-z/ ]+)"', p.split("Allowed themes")[-1]))
+            stale = sorted(listed - VALID_THEMES)
+            assert not stale, f"{name} offers themes not in VALID_THEMES: {stale}"
