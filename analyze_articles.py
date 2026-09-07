@@ -14,6 +14,7 @@ Usage:
 
 import argparse
 import json
+from functools import partial
 import logging
 import os
 import re
@@ -36,7 +37,19 @@ VALID_THEMES = {
     "Real Estate", "Private Markets", "Behavioral/Sentiment",
 }
 
-MODEL_CHAIN = ["gemini-2.5-pro", "gpt-4.1-mini", "claude-sonnet-4-6"]
+# Order set 2026-09-07 from a measured 30-article bake-off (content 25-26,639
+# chars) run with the theme-allowlist prompt.  All three parse 30/30; cost per
+# month at 369 articles was luna $0.36, gpt-4.1-mini $0.57, gemini-2.5-pro
+# $8.76.  Luna leads on behaviour rather than price: it says when the source
+# text does not support an answer instead of writing around the gap, and it
+# files articles under the theme they are actually about (gpt-4.1-mini put
+# "AI/Tech" first on 14 of 30, including a fixed-income outlook).
+# gemini-2.5-pro stays last so an OpenAI-wide outage still leaves a tier;
+# claude-sonnet-4-6 left the chain because _load_api_keys never sees an
+# ANTHROPIC_API_KEY (it lives only in ~/.openclaw/.env), so that tier could
+# never run - the chain is now three tiers that all actually have credentials.
+MODEL_CHAIN = ["gpt-5.6-luna", "gpt-4.1-mini", "gemini-2.5-pro"]
+OPENAI_MODELS = frozenset({"gpt-5.6-luna", "gpt-4.1-mini"})
 MAX_ATTEMPTS = 2
 MAX_CONTENT_CHARS = 15000
 
@@ -51,7 +64,9 @@ _THEME_INSTRUCTION = """
 Allowed themes - choose 1 to 3 that fit the article, copying each label exactly
 as written below. Never invent a label or reword one: anything not on this list
 is discarded, and the article ends up with no theme at all. Every article gets
-at least one theme; if none fits well, choose the single closest.
+at least one theme; if none fits well, choose the single closest. List the
+most important theme first - the research page files each article under its
+first theme and shows the rest only in the sidebar.
 """ + _THEME_LINES
 
 ANALYSIS_PROMPT = """You are a senior investment analyst. Analyze the following hedge fund research article and produce a structured JSON response.
@@ -141,6 +156,9 @@ _USAGE_FIELDS = {
                        ("candidatesTokenCount", "thoughtsTokenCount"),
                        "totalTokenCount"),
     "gpt-4.1-mini": ("prompt_tokens", ("completion_tokens",), "total_tokens"),
+    # reasoning_tokens is a breakdown of completion_tokens, not an addition to
+    # it (verified live: prompt + completion == total while reasoning was 58).
+    "gpt-5.6-luna": ("prompt_tokens", ("completion_tokens",), "total_tokens"),
     "claude-sonnet-4-6": ("input_tokens", ("output_tokens",), None),
 }
 
@@ -207,7 +225,12 @@ def _call_gemini(prompt: str, api_key: str) -> tuple[str, dict, str]:
         headers={"Content-Type": "application/json", "x-goog-api-key": api_key},
         json={
             "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"temperature": 0.4, "maxOutputTokens": 4000},
+            # 12000, not 4000: gemini-2.5-pro is a reasoning model and its
+            # thinking tokens are billed and counted as output, so a long
+            # article exhausted the budget mid-JSON -- observed twice on
+            # 2026-09-06 at exactly 3996/4000, both unparseable.  It is now the
+            # last tier, so a truncation here fails the whole chain.
+            "generationConfig": {"temperature": 0.4, "maxOutputTokens": 12000},
         },
         timeout=120,
     )
@@ -224,6 +247,23 @@ def _call_gemini(prompt: str, api_key: str) -> tuple[str, dict, str]:
     return (text, usage, "gemini-2.5-pro")
 
 
+# Per-model request shape.  Verified live 2026-09-07: gpt-5.6-luna rejects
+# `max_tokens` (400 "Use 'max_completion_tokens' instead") and rejects
+# `temperature: 0.4` (400 "Only the default (1) value is supported").  Sending
+# one shape to both models makes the newer one fail on every call and the chain
+# falls through to the next tier - which reads as a working fallback rather than
+# a misconfiguration.  A model with no entry raises instead of guessing; its
+# reasoning tokens are already inside `completion_tokens` (verified: prompt +
+# completion == total with reasoning_tokens 58), so no special accounting.
+_OPENAI_PARAMS = {
+    "gpt-4.1-mini": {"temperature": 0.4, "max_tokens": 4000},
+    # 8000, not 4000: reasoning shares the completion budget, and a cap that the
+    # reasoning can exhaust is exactly how gemini-2.5-pro truncated its JSON at
+    # 3996/4000 and failed to parse.  Observed completions run ~520.
+    "gpt-5.6-luna": {"max_completion_tokens": 8000},
+}
+
+
 def _call_openai(prompt: str, api_key: str, model: str = "gpt-4.1-mini") -> tuple[str, dict, str]:
     """Call OpenAI API. Returns (text, usage_dict, model_name)."""
     resp = requests.post(
@@ -232,8 +272,7 @@ def _call_openai(prompt: str, api_key: str, model: str = "gpt-4.1-mini") -> tupl
         json={
             "model": model,
             "messages": [{"role": "user", "content": prompt}],
-            "temperature": 0.4,
-            "max_tokens": 4000,
+            **_OPENAI_PARAMS[model],
         },
         timeout=120,
     )
@@ -354,10 +393,13 @@ def _analyze_with_fallback(
         content=content[:MAX_CONTENT_CHARS],
     )
 
+    # partial, not the bare function: the dispatcher calls caller(prompt, key),
+    # so without binding the model every OpenAI tier would silently run
+    # _call_openai's default model and the chain would have two identical tiers.
     model_to_caller = {
+        "gpt-5.6-luna": ("OPENAI_API_KEY", partial(_call_openai, model="gpt-5.6-luna")),
+        "gpt-4.1-mini": ("OPENAI_API_KEY", partial(_call_openai, model="gpt-4.1-mini")),
         "gemini-2.5-pro": ("GEMINI_API_KEY", _call_gemini),
-        "gpt-4.1-mini": ("OPENAI_API_KEY", _call_openai),
-        "claude-sonnet-4-6": ("ANTHROPIC_API_KEY", _call_anthropic),
     }
 
     for model_name in MODEL_CHAIN:

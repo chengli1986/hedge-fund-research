@@ -120,13 +120,19 @@ class TestChainRecordsEveryCall:
         monkeypatch.setattr(aa, "USAGE_LOG_FILE", p)
         calls = {"n": 0}
 
-        def fake_gemini(prompt, api_key):
+        def fake_luna(prompt, api_key, model="gpt-4.1-mini"):
             calls["n"] += 1
-            usage = {"promptTokenCount": 100 * calls["n"], "candidatesTokenCount": 10}
+            usage = {"prompt_tokens": 100 * calls["n"], "completion_tokens": 10}
             text = "not json" if calls["n"] == 1 else self.PARSEABLE
-            return (text, usage, "gemini-2.5-pro")
+            return (text, usage, model)
 
-        monkeypatch.setattr(aa, "_call_gemini", fake_gemini)
+        # Mock the whole caller, not one provider: since MODEL_CHAIN was
+        # reordered the first tier is OpenAI, and patching only _call_gemini
+        # left the earlier tiers making real HTTP requests with a fake key.
+        monkeypatch.setattr(aa, "_call_openai", fake_luna)
+        monkeypatch.setattr(aa, "_call_gemini",
+                            lambda prompt, api_key: (_ for _ in ()).throw(
+                                AssertionError("gemini tier must not be reached")))
         res = aa._analyze_with_fallback("body", self._keys(), title="t",
                                         source="s", date="2026-09-06",
                                         article_id="art1")
@@ -136,6 +142,7 @@ class TestChainRecordsEveryCall:
         assert [r["input_tokens"] for r in rows] == [100, 200]
         assert [r["parsed"] for r in rows] == [False, True]
         assert {r["article_id"] for r in rows} == {"art1"}
+        assert {r["model"] for r in rows} == {"gpt-5.6-luna"}
 
     def test_exception_logs_nothing(self, tmp_path, monkeypatch):
         # A 503 never returned a usage payload; inventing a zero row would be
@@ -143,13 +150,15 @@ class TestChainRecordsEveryCall:
         p = tmp_path / "usage.jsonl"
         monkeypatch.setattr(aa, "USAGE_LOG_FILE", p)
 
-        def boom(prompt, api_key):
-            raise RuntimeError("503")
+        def mock_openai(prompt, api_key, model="gpt-4.1-mini"):
+            if model == "gpt-5.6-luna":          # 首层抛异常：没有 usage payload
+                raise RuntimeError("503")
+            return (self.PARSEABLE, {"prompt_tokens": 5, "completion_tokens": 1}, model)
 
-        monkeypatch.setattr(aa, "_call_gemini", boom)
-        monkeypatch.setattr(aa, "_call_openai",
-                            lambda prompt, api_key, model="gpt-4.1-mini":
-                            (self.PARSEABLE, {"prompt_tokens": 5, "completion_tokens": 1}, model))
+        monkeypatch.setattr(aa, "_call_openai", mock_openai)
+        monkeypatch.setattr(aa, "_call_gemini",
+                            lambda prompt, api_key: (_ for _ in ()).throw(
+                                AssertionError("gemini tier must not be reached")))
         aa._analyze_with_fallback("body", self._keys(), title="t", source="s",
                                   date="2026-09-06", article_id="art2")
         rows = [json.loads(l) for l in p.read_text().splitlines()]

@@ -145,39 +145,39 @@ class TestAnalyzeWithFallback:
         "key_takeaway_zh": "要点",
     })
 
-    def test_gemini_fails_openai_succeeds(self, monkeypatch):
-        """When Gemini fails, should fall back to OpenAI."""
-        call_order = []
+    def test_primary_fails_second_tier_succeeds(self, monkeypatch):
+        """When the leading model fails, the next tier runs — and each tier is
+        called with its OWN model id.
 
-        def mock_gemini(prompt, api_key):
-            call_order.append("gemini")
-            raise RuntimeError("Gemini down")
+        Rewritten 2026-09-07 when MODEL_CHAIN became
+        [gpt-5.6-luna, gpt-4.1-mini, gemini-2.5-pro]. Both OpenAI tiers share
+        one caller, so the assertion that matters is that the model ids differ:
+        without partial() binding them, both tiers would run _call_openai's
+        default and the chain would be one model tried twice.
+        """
+        calls = []
 
         def mock_openai(prompt, api_key, model="gpt-4.1-mini"):
-            call_order.append("openai")
+            calls.append(model)
+            if model == "gpt-5.6-luna":
+                raise RuntimeError("luna down")
             return (self.GOOD_RESULT, {"total_tokens": 100}, model)
 
-        def mock_anthropic(prompt, api_key, model="claude-sonnet-4-6"):
-            call_order.append("anthropic")
-            return (self.GOOD_RESULT, {}, model)
+        def mock_gemini(prompt, api_key):
+            calls.append("gemini-2.5-pro")
+            return (self.GOOD_RESULT, {}, "gemini-2.5-pro")
 
-        monkeypatch.setattr("analyze_articles._call_gemini", mock_gemini)
         monkeypatch.setattr("analyze_articles._call_openai", mock_openai)
-        monkeypatch.setattr("analyze_articles._call_anthropic", mock_anthropic)
+        monkeypatch.setattr("analyze_articles._call_gemini", mock_gemini)
 
-        api_keys = {
-            "GEMINI_API_KEY": "fake-gemini",
-            "OPENAI_API_KEY": "fake-openai",
-            "ANTHROPIC_API_KEY": "fake-anthropic",
-        }
+        api_keys = {"OPENAI_API_KEY": "fake-openai", "GEMINI_API_KEY": "fake-gemini"}
 
         result = _analyze_with_fallback("article content", api_keys, title="Test")
         assert result is not None
         assert result["_model"] == "gpt-4.1-mini"
-        # Gemini should have been tried MAX_ATTEMPTS times before falling back
-        assert call_order.count("gemini") == 2
-        assert call_order.count("openai") == 1
-        assert "anthropic" not in call_order
+        assert calls.count("gpt-5.6-luna") == 2      # MAX_ATTEMPTS before falling through
+        assert calls.count("gpt-4.1-mini") == 1
+        assert "gemini-2.5-pro" not in calls
 
     def test_all_models_fail(self, monkeypatch):
         """When all models fail, should return None."""
@@ -304,3 +304,102 @@ class TestPromptsEnumerateThemes:
             listed = set(re.findall(r'"([A-Za-z][A-Za-z/ ]+)"', p.split("Allowed themes")[-1]))
             stale = sorted(listed - VALID_THEMES)
             assert not stale, f"{name} offers themes not in VALID_THEMES: {stale}"
+
+
+class TestPrimaryThemeOrdering:
+    """publish.py clusters each article by themes[0], so order is not cosmetic.
+
+    `publish.py` assigns every article to ONE primary cluster using
+    `article_themes[0]`; the rest only feed the sidebar. Measured on 30
+    articles, gpt-4.1-mini put "AI/Tech" first on 14 of them against
+    gpt-5.6-luna's 8, and the disagreements were articles like "Global Fixed
+    Income Team Views & Outlook" and "Tight bond spreads mean no stone
+    unturned" -- a fixed-income outlook filed under AI on the research page.
+    Until now nothing in either prompt said the order meant anything.
+    """
+
+    def test_prompts_state_that_the_first_theme_is_primary(self):
+        import re
+        from analyze_articles import ANALYSIS_PROMPT, METADATA_PROMPT
+        for name, p in (("ANALYSIS_PROMPT", ANALYSIS_PROMPT),
+                        ("METADATA_PROMPT", METADATA_PROMPT)):
+            flat = re.sub(r"\s+", " ", p)
+            assert "most important theme first" in flat, (
+                f"{name} does not tell the model that theme order matters")
+
+
+class TestOpenAIParamStyles:
+    """Each OpenAI model gets the request shape it actually accepts.
+
+    Verified live 2026-09-07: gpt-5.6-luna rejects `max_tokens` (400,
+    "Use 'max_completion_tokens' instead") and rejects `temperature: 0.4`
+    (400, "Only the default (1) value is supported"). gpt-4.1-mini accepts
+    both. Sending one shape to both models makes the newer one fail every
+    call, and the chain would silently fall through to the next tier -- which
+    looks like a working fallback, not a misconfiguration.
+    """
+
+    def test_every_openai_model_in_the_chain_has_a_param_style(self):
+        from analyze_articles import MODEL_CHAIN, OPENAI_MODELS, _OPENAI_PARAMS
+        missing = [m for m in MODEL_CHAIN if m in OPENAI_MODELS and m not in _OPENAI_PARAMS]
+        assert not missing, f"OpenAI models in MODEL_CHAIN with no param style: {missing}"
+
+    def test_luna_sends_max_completion_tokens_and_no_temperature(self, monkeypatch):
+        import analyze_articles as aa
+        sent = {}
+
+        class R:
+            status_code = 200
+            def raise_for_status(self): pass
+            def json(self): return {"choices": [{"message": {"content": "{}"}}], "usage": {}}
+
+        monkeypatch.setattr(aa.requests, "post",
+                            lambda url, **kw: (sent.update(kw["json"]), R())[1])
+        aa._call_openai("p", "k", "gpt-5.6-luna")
+        assert "max_tokens" not in sent, "luna rejects max_tokens"
+        assert "temperature" not in sent, "luna only accepts the default temperature"
+        assert sent["max_completion_tokens"] > 0
+
+    def test_gpt41_mini_keeps_the_classic_shape(self, monkeypatch):
+        import analyze_articles as aa
+        sent = {}
+
+        class R:
+            status_code = 200
+            def raise_for_status(self): pass
+            def json(self): return {"choices": [{"message": {"content": "{}"}}], "usage": {}}
+
+        monkeypatch.setattr(aa.requests, "post",
+                            lambda url, **kw: (sent.update(kw["json"]), R())[1])
+        aa._call_openai("p", "k", "gpt-4.1-mini")
+        assert sent["max_tokens"] == 4000
+        assert sent["temperature"] == 0.4
+
+    def test_unknown_openai_model_fails_loudly(self):
+        # Adding a model to MODEL_CHAIN without declaring its request shape must
+        # raise, not quietly send a shape the API will reject on every call.
+        import pytest as _pytest
+        import analyze_articles as aa
+        with _pytest.raises(KeyError):
+            aa._call_openai("p", "k", "gpt-9-imaginary")
+
+
+class TestModelChainOrder:
+    """gpt-5.6-luna leads; the chain keeps a non-OpenAI tier at the end.
+
+    Measured over 30 articles with the theme-allowlist prompt: luna $0.36/mo
+    vs gpt-4.1-mini $0.57 vs gemini-2.5-pro $8.76, all three 30/30 parseable,
+    0/30 empty themes for both OpenAI models. Luna was chosen on behaviour,
+    not price: it flags missing source material instead of writing around it
+    (three cases), and files articles under the theme they are actually about.
+    gemini-2.5-pro stays last so an OpenAI-wide outage still has a tier.
+    """
+
+    def test_luna_is_the_primary_model(self):
+        from analyze_articles import MODEL_CHAIN
+        assert MODEL_CHAIN[0] == "gpt-5.6-luna"
+
+    def test_chain_ends_with_a_non_openai_provider(self):
+        from analyze_articles import MODEL_CHAIN, OPENAI_MODELS
+        assert MODEL_CHAIN[-1] not in OPENAI_MODELS, (
+            "every tier is OpenAI — one provider outage would empty the chain")
