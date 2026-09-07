@@ -75,8 +75,9 @@ def _call_model(prompt: str, api_keys: dict, article_id: str = "") -> tuple[str,
     """
     key_name = "OPENAI_API_KEY" if MODEL in aa.OPENAI_MODELS else "GEMINI_API_KEY"
     caller = aa._call_openai if MODEL in aa.OPENAI_MODELS else aa._call_gemini
-    kwargs = {"model": MODEL} if MODEL in aa.OPENAI_MODELS else {}
-    return caller(prompt, api_keys[key_name], **kwargs)
+    # Always pass the model: the gemini branch used to send no kwargs, so a
+    # gemini MODEL would silently call _call_gemini's default instead.
+    return caller(prompt, api_keys[key_name], model=MODEL)
 
 
 def classify(article: dict, api_keys: dict) -> list[str]:

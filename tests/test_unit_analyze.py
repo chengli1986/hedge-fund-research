@@ -163,7 +163,7 @@ class TestAnalyzeWithFallback:
                 raise RuntimeError("luna down")
             return (self.GOOD_RESULT, {"total_tokens": 100}, model)
 
-        def mock_gemini(prompt, api_key):
+        def mock_gemini(prompt, api_key, model="gemini-2.5-flash"):
             calls.append("gemini-2.5-pro")
             return (self.GOOD_RESULT, {}, "gemini-2.5-pro")
 
@@ -181,7 +181,7 @@ class TestAnalyzeWithFallback:
 
     def test_all_models_fail(self, monkeypatch):
         """When all models fail, should return None."""
-        def mock_gemini(prompt, api_key):
+        def mock_gemini(prompt, api_key, model="gemini-2.5-flash"):
             raise RuntimeError("down")
 
         def mock_openai(prompt, api_key, model="gpt-4.1-mini"):
@@ -220,7 +220,7 @@ class TestAnalyzeWithFallback:
             calls.append(("openai", model, api_key))
             return (self.GOOD_RESULT, {}, model)
 
-        def mock_gemini(prompt, api_key):
+        def mock_gemini(prompt, api_key, model="gemini-2.5-flash"):
             calls.append(("gemini", "gemini-2.5-pro", api_key))
             return (self.GOOD_RESULT, {}, "gemini-2.5-pro")
 
@@ -451,3 +451,38 @@ class TestGeminiOutputBudget:
                    for r in caplog.records), (
             "a truncated reply surfaces only as 'failed to parse output' — the "
             "same misleading symptom as the 09-06 incident")
+
+
+class TestChainModelsAreFullyDeclared:
+    """Every tier must be declared everywhere it needs declaring.
+
+    Adding a model to MODEL_CHAIN touches three tables: the caller dispatch,
+    _OPENAI_PARAMS (OpenAI only), and _USAGE_FIELDS. A model missing from the
+    last one logs as unmeasured rather than wrong -- safe, but its spend
+    silently stops being counted, which is the whole point of the accounting.
+    """
+
+    def test_every_chain_model_has_usage_fields(self):
+        from analyze_articles import MODEL_CHAIN, _USAGE_FIELDS
+        missing = [m for m in MODEL_CHAIN if m not in _USAGE_FIELDS]
+        assert not missing, f"models in MODEL_CHAIN with no usage mapping: {missing}"
+
+    def test_gemini_caller_requests_the_model_it_is_given(self, monkeypatch):
+        # The URL used to hard-code gemini-2.5-pro, so pointing the chain at a
+        # different Gemini model would have kept calling the expensive one
+        # while reporting the cheap one's name.
+        import analyze_articles as aa
+        seen = {}
+
+        class R:
+            def raise_for_status(self): pass
+            def json(self):
+                return {"candidates": [{"finishReason": "STOP",
+                                        "content": {"parts": [{"text": "{}"}]}}],
+                        "usageMetadata": {}}
+
+        monkeypatch.setattr(aa.requests, "post",
+                            lambda url, **kw: (seen.update(url=url), R())[1])
+        _, _, used = aa._call_gemini("p", "k", model="gemini-2.5-flash")
+        assert "gemini-2.5-flash:generateContent" in seen["url"]
+        assert used == "gemini-2.5-flash"

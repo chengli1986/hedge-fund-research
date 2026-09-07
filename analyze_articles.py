@@ -48,7 +48,14 @@ VALID_THEMES = {
 # claude-sonnet-4-6 left the chain because _load_api_keys never sees an
 # ANTHROPIC_API_KEY (it lives only in ~/.openclaw/.env), so that tier could
 # never run - the chain is now three tiers that all actually have credentials.
-MODEL_CHAIN = ["gpt-5.6-luna", "gpt-4.1-mini", "gemini-2.5-pro"]
+# 2026-09-07: the last tier moved gemini-2.5-pro -> gemini-2.5-flash. It only
+# runs when BOTH OpenAI tiers fail, so it is insurance rather than a running
+# cost, but flash is ~4x cheaper per call ($0.30/$2.50 vs $1.25/$10) and keeps
+# the chain from being single-provider. Measured on 3 real articles: 3/3
+# parseable, no truncation at 12000, themes populated, and the same usage
+# fields as pro (promptTokenCount + candidatesTokenCount + thoughtsTokenCount
+# == totalTokenCount), so the accounting needed no new case.
+MODEL_CHAIN = ["gpt-5.6-luna", "gpt-4.1-mini", "gemini-2.5-flash"]
 OPENAI_MODELS = frozenset({"gpt-5.6-luna", "gpt-4.1-mini"})
 MAX_ATTEMPTS = 2
 MAX_CONTENT_CHARS = 15000
@@ -155,6 +162,11 @@ _USAGE_FIELDS = {
     "gemini-2.5-pro": ("promptTokenCount",
                        ("candidatesTokenCount", "thoughtsTokenCount"),
                        "totalTokenCount"),
+    # Same shape, and flash thinks hard too: measured 1550 thinking tokens
+    # against 198 of visible content on one article, all billed as output.
+    "gemini-2.5-flash": ("promptTokenCount",
+                         ("candidatesTokenCount", "thoughtsTokenCount"),
+                         "totalTokenCount"),
     "gpt-4.1-mini": ("prompt_tokens", ("completion_tokens",), "total_tokens"),
     # reasoning_tokens is a breakdown of completion_tokens, not an addition to
     # it (verified live: prompt + completion == total while reasoning was 58).
@@ -218,10 +230,15 @@ def _append_usage_log(article_id_: str, model: str, usage: dict, path=None,
 # LLM call functions
 # ---------------------------------------------------------------------------
 
-def _call_gemini(prompt: str, api_key: str) -> tuple[str, dict, str]:
-    """Call Gemini 2.5 Pro. Returns (text, usage_dict, model_name)."""
+def _call_gemini(prompt: str, api_key: str, model: str = "gemini-2.5-flash") -> tuple[str, dict, str]:
+    """Call a Gemini model. Returns (text, usage_dict, model_name).
+
+    The model id was hard-coded into the URL, so pointing the chain at a
+    different Gemini model would have kept calling the expensive one while
+    reporting the cheap one's name in the usage log.
+    """
     resp = requests.post(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent",
+        f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
         headers={"Content-Type": "application/json", "x-goog-api-key": api_key},
         json={
             "contents": [{"parts": [{"text": prompt}]}],
@@ -243,9 +260,9 @@ def _call_gemini(prompt: str, api_key: str) -> tuple[str, dict, str]:
     # still return the text: the tokens were spent and the HTTP-boundary
     # accounting should book them.
     if candidate.get("finishReason") == "MAX_TOKENS":
-        log.warning("  gemini-2.5-pro: reply truncated (finishReason=MAX_TOKENS, "
+        log.warning("  %s: reply truncated (finishReason=MAX_TOKENS, "
                     "output %s of maxOutputTokens) -- thinking exhausted the budget",
-                    (data.get("usageMetadata") or {}).get("candidatesTokenCount"))
+                    model, (data.get("usageMetadata") or {}).get("candidatesTokenCount"))
     content = candidate.get("content", {})
     parts = content.get("parts", [])
     if not parts:
@@ -253,7 +270,7 @@ def _call_gemini(prompt: str, api_key: str) -> tuple[str, dict, str]:
         raise ValueError(f"Gemini returned no content parts (finishReason={finish_reason})")
     text = parts[0]["text"]
     usage = data.get("usageMetadata", {})
-    return (text, usage, "gemini-2.5-pro")
+    return (text, usage, model)
 
 
 # Per-model request shape.  Verified live 2026-09-07: gpt-5.6-luna rejects
@@ -417,7 +434,7 @@ def _analyze_with_fallback(
     model_to_caller = {
         "gpt-5.6-luna": ("OPENAI_API_KEY", partial(_call_openai, model="gpt-5.6-luna")),
         "gpt-4.1-mini": ("OPENAI_API_KEY", partial(_call_openai, model="gpt-4.1-mini")),
-        "gemini-2.5-pro": ("GEMINI_API_KEY", _call_gemini),
+        "gemini-2.5-flash": ("GEMINI_API_KEY", partial(_call_gemini, model="gemini-2.5-flash")),
     }
 
     for model_name in MODEL_CHAIN:

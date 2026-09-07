@@ -131,7 +131,7 @@ class TestChainRecordsEveryCall:
         # left the earlier tiers making real HTTP requests with a fake key.
         monkeypatch.setattr(aa, "_call_openai", fake_luna)
         monkeypatch.setattr(aa, "_call_gemini",
-                            lambda prompt, api_key: (_ for _ in ()).throw(
+                            lambda prompt, api_key, model="gemini-2.5-flash": (_ for _ in ()).throw(
                                 AssertionError("gemini tier must not be reached")))
         res = aa._analyze_with_fallback("body", self._keys(), title="t",
                                         source="s", date="2026-09-06",
@@ -157,7 +157,7 @@ class TestChainRecordsEveryCall:
 
         monkeypatch.setattr(aa, "_call_openai", mock_openai)
         monkeypatch.setattr(aa, "_call_gemini",
-                            lambda prompt, api_key: (_ for _ in ()).throw(
+                            lambda prompt, api_key, model="gemini-2.5-flash": (_ for _ in ()).throw(
                                 AssertionError("gemini tier must not be reached")))
         aa._analyze_with_fallback("body", self._keys(), title="t", source="s",
                                   date="2026-09-06", article_id="art2")
@@ -282,7 +282,7 @@ class TestTestsNeverTouchProductionLog:
 
         monkeypatch.setattr(
             aa, "_call_gemini",
-            lambda prompt, api_key: (self.PARSEABLE,
+            lambda prompt, api_key, model="gemini-2.5-flash": (self.PARSEABLE,
                                      {"promptTokenCount": 1, "candidatesTokenCount": 1},
                                      "gemini-2.5-pro"))
         # Deliberately does NOT redirect USAGE_LOG_FILE: the conftest guard is
