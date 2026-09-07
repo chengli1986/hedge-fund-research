@@ -3435,7 +3435,7 @@
     "official_domain": "www.fulcrumasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-06T09:00:15.633469+08:00",
+    "last_discovered_at": "2026-09-07T09:00:16.806413+08:00",
     "status_since": "2026-08-22T09:03:32.572404+08:00",
     "last_deep_analyzed_at": "2026-08-31T01:15:00Z",
     "quality": "MEDIUM",
@@ -3550,7 +3550,7 @@
     "official_domain": "www.muzinich.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-06T09:00:16.100477+08:00",
+    "last_discovered_at": "2026-09-07T09:00:17.320401+08:00",
     "status_since": "2026-08-25T09:03:39.585223+08:00",
     "quality": "HIGH",
     "quality_score": 0.75,
@@ -3569,7 +3569,7 @@
       "macro"
     ],
     "status_since": "2026-08-28T09:02:28.706616+08:00",
-    "last_deep_analyzed_at": "2026-08-30T01:01:39Z",
+    "last_deep_analyzed_at": "2026-09-07T01:01:24Z",
     "quality": "HIGH",
     "quality_score": 0.85,
     "topics": "quant, market microstructure, systematic trading",
@@ -3717,7 +3717,7 @@
     "name": "Candriam",
     "homepage_url": "https://www.candriam.com/en-us/professional/insight-overview/",
     "source": "manual",
-    "status": "discovered",
+    "status": "inaccessible",
     "strategy_tags": [
       "fixed_income",
       "esg_climate",
@@ -3762,8 +3762,24 @@
         "path": "en-us/professional/insight-overview/publications"
       }
     ],
-    "status_since": "2026-09-06T09:03:09.262482+08:00",
+    "status_since": "2026-09-07T09:00:32.874606+08:00",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-06T09:02:38.863348+08:00"
+    "last_discovered_at": "2026-09-06T09:02:38.863348+08:00",
+    "is_publicly_accessible": false,
+    "has_article_index": false,
+    "last_screened_at": "2026-09-07T09:00:20.683223+08:00",
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": true,
+      "login_marker_count": 5,
+      "article_tags": 0,
+      "time_tags": 0,
+      "date_patterns": 0,
+      "h2_tags": 0,
+      "article_signals": 0
+    },
+    "screening_reason": "Login/paywall detected",
+    "fit_score": 0.92,
+    "last_validated_at": "2026-09-07T09:00:32.874588+08:00"
   }
 ]

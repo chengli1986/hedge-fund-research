@@ -1665,6 +1665,40 @@
         }
       ],
       "rejected_pages": []
+    },
+    "candriam": {
+      "last_discovered_at": "2026-09-07T09:00:32.874588+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://www.candriam.com/en-us/professional/insight-overview/publications/webinar/a-candriam-and-caia-association-webinar-series/",
+          "final_score": 0.92,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.8333,
+          "gate_penalty": 0.15,
+          "active": true
+        },
+        {
+          "url": "https://www.candriam.com/en-us/professional/insight-overview/",
+          "final_score": 0.91,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.8,
+          "gate_penalty": 0.15,
+          "active": false
+        },
+        {
+          "url": "https://www.candriam.com/en-us/professional/insight-overview/publications/",
+          "final_score": 0.91,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.8,
+          "gate_penalty": 0.15,
+          "active": false
+        }
+      ],
+      "rejected_pages": []
     }
   }
 }
