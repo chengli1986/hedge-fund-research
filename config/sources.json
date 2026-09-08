@@ -786,6 +786,23 @@
       "notable_authors": [],
       "expected_hostname": "mfs.com",
       "max_articles": 10
+    },
+    {
+      "id": "northleaf-capital",
+      "strategy_tags": [
+        "private_equity",
+        "private_credit",
+        "real_assets"
+      ],
+      "name": "Northleaf Capital Partners",
+      "short_name": "Northleaf",
+      "url": "https://www.northleafcapital.com/insights",
+      "method": "ssr",
+      "frequency": "monthly",
+      "description": "Toronto-based global private markets manager (~$32B of total capital commitments raised), operationally independent since its 2009 spin-out from TD Bank and majority-owned since 2020 by Mackenzie Investments (IGM Financial) and Great-West Lifeco of the Power Corporation group. Invests exclusively in the mid-market across three platforms — private equity (secondaries, primaries, direct co-investments, venture/growth), private credit (senior floating-rate corporate direct lending, asset-based specialty finance, NAV lending) and infrastructure (essential long-life communications and energy-transition assets) — serving 375+ institutional and family-office investors from 10 offices worldwide.",
+      "notable_authors": [],
+      "expected_hostname": "northleafcapital.com",
+      "max_articles": 10
     }
   ],
   "settings": {

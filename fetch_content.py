@@ -1760,6 +1760,43 @@ def _fetch_content_mfs(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+def _fetch_content_northleaf_capital(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Northleaf Capital Partners insight content via requests (SSR — Drupal).
+
+    Same plain SSR Drupal site the listing fetcher uses. There is no `<article>`
+    wrapper — the body paragraphs sit in Drupal field containers directly under
+    `<main>`, so `main p` is the selector (`article p` returns 0 on every page
+    checked). `_normalize_html` already strips nav/footer/header/script/aside.
+
+    The page tail repeats a short "about Northleaf" platform blurb twice (a
+    template quirk: the same paragraph renders in both the inline CTA and the
+    closing band). It is ~2 sentences on a 7-10K body, so it is left in rather
+    than special-cased.
+
+    Verified live 2026-09-08: 9.7K chars on "Private Credit Market Update:
+    Q2-2026", 7.0K on "Private Equity Market Update: Q2-2026", 724 on the
+    shorter "Keynote Interview" write-up — all clear MIN_CONTENT_LENGTH.
+    """
+    url = article["url"]
+    log.info("  Northleaf: fetching article page %s", url)
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Northleaf: fetch failed: %s", e)
+        return None
+
+    text = _normalize_html(resp.text, "main p")
+    if not _check_min_content_length(text):
+        log.warning("  Northleaf: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Northleaf: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -1802,6 +1839,7 @@ CONTENT_FETCHERS = {
     "resonanz-capital": _fetch_content_resonanz_capital,
     "baillie-gifford": _fetch_content_baillie_gifford,
     "mfs-investment-management": _fetch_content_mfs,
+    "northleaf-capital": _fetch_content_northleaf_capital,
 }
 
 

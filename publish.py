@@ -69,6 +69,7 @@ BADGE_COLORS: dict[str, str] = {
     "resonanz-capital": "#3c1518",          # Resonanz deep oxblood (near-black maroon) — the palette had no very-dark neutral-red point at all, so this candidate scores the highest separation of any tested: min RGB dist 62.4 across all 38 existing colors (nearest #5d4037 Acadian umber, which is far lighter and browner; 68 to #6b0f1a-family wine tones and 78 to #9d2235 Aberdeen burgundy); WCAG AAA 16.0:1 on white
     "baillie-gifford": "#046307",           # Baillie Gifford deep emerald (pure saturated dark green; the green band held only desaturated/olive-leaning tones, so a fully-saturated green was the widest hole left: min RGB dist 61.2 across all 39 existing colors — 61.2 to #004d40 Franklin pine-teal, 67 to #1e7f3e Brookfield, 83 to #2d6a4f Robeco, 127 to #3fb950 AQR lime; WCAG AAA 7.5:1 on white)
     "mfs-investment-management": "#8b0000",  # MFS dark crimson — the brand teal is unusable (the teal/cyan band #00607a/#006d75/#00838f/#004d40/#2ba397 is full), and pure dark red was the widest hole left in the wheel: min RGB dist 50.7 across all 40 existing colors (nearest #7c2d12 Verdad terracotta, which is far browner; 54 to #9d2235 Aberdeen burgundy, 66 to #b85450 Ares coral, 92 to #f85149 Oaktree bright red); WCAG AAA 10.0:1 on white
+    "northleaf-capital": "#364b0c",         # Northleaf deep moss/leaf green (brand-literal "leaf", but the bright- and mid-green band is full, so this takes the dark yellow-green hole below it: min RGB dist 55.6 across all 41 existing colors — 55.7 to #046307 Baillie Gifford emerald (pure green, no yellow), 56.7 to #556b2f KKR olive (much lighter and greyer), 59+ to #827717 G&R khaki and #5d4037 Acadian umber; WCAG AAA 9.7:1 on white)
     "blue-owl-capital": "#301070",          # Blue Owl midnight indigo-violet ("night owl"; the deep blue-violet slot between the navy and violet clusters was empty — min RGB dist 63.8 to any of the 36 existing colors, the highest of any palette-consistent candidate: 63.8 to #003a70 PIMCO navy, 82 to #3949ab Matthews indigo, 66 to #5e3a82 Apollo plum; WCAG AAA 14.6:1 on white)
 }
 
@@ -369,6 +370,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "美国最老的资管公司之一，1924 年在波士顿创立全美第一只开放式共同基金（Massachusetts Investors Trust），现为加拿大永明金融（Sun Life）全资子公司，管理规模约 ~$645B。只做主动管理：全球与区域股票、固定收益（利率、信用、市政债、新兴市场债）及多资产，依托分析师与基金经理共用的长期基本面研究平台自下而上选股选券，不做量化或指数化产品。",
         "notable_en": "Invented the US open-end mutual fund: Massachusetts Investors Trust launched 21 March 1924 and still operates today. Its weekly \"Week in Review\" macro wrap and \"Strategist's Corner\" commentary anchor a research output that leans on multi-decade holding periods and stewardship rather than trading calls.",
         "notable_zh": "开创了美国开放式共同基金这一品类——1924 年 3 月 21 日成立的 Massachusetts Investors Trust 至今仍在运作。研究输出以每周宏观综述 Week in Review 和策略师专栏 Strategist's Corner 为主，风格强调跨周期长持有与管理人尽责，而非短线交易观点。",
+    },
+    "northleaf-capital": {
+        "founded": "2009", "aum": "~$32B", "hq": "Toronto, Canada",
+        "type_en": "Private Markets Manager (PE / Private Credit / Infra)", "type_zh": "私募市场管理人（私募股权 / 私募信贷 / 基础设施）",
+        "desc_zh": "多伦多的全球私募市场管理人，2009 年从道明银行（TD Bank）分拆独立，累计募集承诺资本 ~$32B。只做中端市场，三大平台并行：私募股权（二级份额、初级基金、直接跟投、创投成长）、私募信贷（企业直贷、资产支持特殊金融、NAV 贷款）与基础设施（通信、能源转型等长周期核心资产）。2020 年起由 Power 集团旗下 Mackenzie Investments 与 Great-West Lifeco 共同持股。",
+        "notable_en": "Spun out of TD Bank in 2009 and given a long-term ownership structure in 2020 with Power Corporation's Mackenzie Investments and Great-West Lifeco. Crossed US$30B of cumulative capital commitments in 2025, raised from 375+ institutional and family-office investors across 10 offices; publishes quarterly Private Equity and Private Credit Market Updates.",
+        "notable_zh": "2009 年从道明银行分拆，2020 年与 Power 集团旗下 Mackenzie Investments、Great-West Lifeco 建立长期股权结构。2025 年累计承诺资本突破 300 亿美元，投资人超 375 家机构与家族办公室，全球 10 个办公室；按季发布私募股权与私募信贷市场综述。",
     },
 }
 
