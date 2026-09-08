@@ -3624,7 +3624,11 @@
     "fit_score": 0.64,
     "last_validated_at": "2026-09-01T09:01:49.976965+08:00",
     "synthesis_priority": true,
-    "synthesis_priority_set_at": "2026-09-08T09:03:17.581281+08:00"
+    "synthesis_priority_set_at": "2026-09-08T09:03:17.581281+08:00",
+    "synthesis_attempted_at": "2026-09-08T01:04:33.341455+00:00",
+    "synthesis_outcome": "success",
+    "promoted_at": "2026-09-08T01:04:33.341455+00:00",
+    "promoted_reason": "fetcher_synthesis_success (trial-PASS shortcut)"
   },
   {
     "id": "evanston-capital-management",

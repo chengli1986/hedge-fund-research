@@ -3011,6 +3011,57 @@ def fetch_mfs_investment_management(source: dict) -> list[dict]:
     return articles[:max_articles]
 
 
+def fetch_northleaf_capital(source: dict) -> list[dict]:
+    """Fetch insights from Northleaf Capital Group.
+
+    Plain SSR Drupal listing (``/insights``), no JS needed.  Each row is a
+    ``div.m-listing-item--news__content-header`` holding the date and the
+    title link; article URLs live under ``/news/<slug>``.  The site's main
+    nav also renders a promo card (``div.m-menu-main__card-content``) that
+    links to a ``/news/`` slug — scoping the loop to the listing-item class
+    keeps that pinned nav item out of the results.
+
+    Titles are split across the anchor and a trailing
+    ``span.a-heading__last-word`` (plus an inline SVG), so the text comes back
+    with heavy internal whitespace; it is collapsed with a ``\\s+`` re.sub.
+    """
+    base_url = _site_base(source["url"])
+    expected_host = source["expected_hostname"]
+    resp = requests.get(source["url"], headers=HEADERS, timeout=20)
+    resp.raise_for_status()
+    soup = BeautifulSoup(resp.text, "html.parser")
+
+    articles = []
+    seen = set()
+    for item in soup.select("div.m-listing-item--news__content-header"):
+        link_el = item.select_one("div.m-listing-item--news__title a[href]")
+        if not link_el:
+            continue
+        url = urljoin(base_url, link_el["href"])
+        if not _validate_hostname(url, expected_host) or url in seen:
+            continue
+
+        title = re.sub(r"\s+", " ", link_el.get_text(" ", strip=True)).strip()
+        if not title:
+            continue
+
+        date_el = item.select_one("div.m-listing-item--news__date")
+        date_raw = ""
+        if date_el:
+            date_raw = re.sub(r"\s+", " ", date_el.get_text(" ", strip=True)).strip()
+
+        seen.add(url)
+        articles.append({
+            "title": title,
+            "url": url,
+            "date": parse_date(date_raw) if date_raw else None,
+            "date_raw": date_raw,
+        })
+
+    articles.sort(key=lambda a: a["date"] or "", reverse=True)
+    return articles[:source.get("max_articles", 10)]
+
+
 # FETCHER_SYNTHESIS_INSERTION_POINT — auto-generated fetchers inserted above this line
 
 
@@ -3327,6 +3378,7 @@ FETCHERS = {
     "aberdeen": fetch_aberdeen,
     "research-affiliates": fetch_researchaffiliates,
     "pimco": fetch_pimco,
+    "northleaf-capital": fetch_northleaf_capital,
     "mfs-investment-management": fetch_mfs_investment_management,
     "baillie-gifford": fetch_baillie_gifford,
     "partners-group": fetch_partners_group,
