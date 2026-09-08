@@ -16,7 +16,10 @@ LOG_PREFIX="[$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')]"
 # the weekly run always bails with "Another instance is running". Use a distinct
 # inner lock: it still serialises the immediate trigger vs the weekly run (both
 # invoke THIS script) without colliding with the parent's outer lock.
-LOCK_FILE="/tmp/cron-locks/gmia-fetcher-synthesis-inner.lock"
+# Overridable so a test can drive this script without taking the production
+# lock — a test holding it would make a real weekly run bail as "another
+# instance is running", i.e. the test would suppress the job it checks.
+LOCK_FILE="${SYNTHESIS_LOCK_FILE:-/tmp/cron-locks/gmia-fetcher-synthesis-inner.lock}"
 mkdir -p /tmp/cron-locks
 exec 9>"$LOCK_FILE"
 if ! flock -n 9; then
@@ -46,6 +49,24 @@ TARGET_COUNT=$(echo "$TARGETS_JSON" | python3 -c "import json,sys; print(len(jso
 PLANNED_IDS=$(echo "$TARGETS_JSON" | python3 -c "import json,sys; d=json.load(sys.stdin); print(','.join(t['id'] for t in d[:2]))")
 if [ "$TARGET_COUNT" -eq 0 ]; then
     echo "$LOG_PREFIX No inaccessible targets to process. Exiting."
+    # Record the session anyway. gmia_liveness_audit.py judges this weekly job
+    # by the freshest heartbeat, so leaving without one makes a healthy
+    # no-work run indistinguishable from a job that never fired -- which is
+    # exactly how the 2026-09-05 session (and 2026-08-22 before it) read to the
+    # 09-08 audit: "no session in 9d". The heartbeat block further down already
+    # says "always write one line per session, even when agent did nothing";
+    # this path was simply skipping it. detect_inconsistency only alerts when
+    # targets_count > 0, so a zero-target line records the run without
+    # inventing a problem.
+    python3 "$REPO_DIR/scripts/write_session_heartbeat.py" \
+        --targets-count 0 \
+        --reconcile-appended 0 \
+        --agent-exit 0
+    NOWORK_HEARTBEAT_EXIT=$?
+    if [ "$NOWORK_HEARTBEAT_EXIT" -ne 0 ]; then
+        echo "$LOG_PREFIX WARN: heartbeat write failed (exit $NOWORK_HEARTBEAT_EXIT)"
+        exit "$NOWORK_HEARTBEAT_EXIT"
+    fi
     exit 0
 fi
 echo "$LOG_PREFIX Found $TARGET_COUNT target(s)."
