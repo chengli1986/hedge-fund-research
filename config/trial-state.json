@@ -8718,9 +8718,7 @@
       "total_articles": 50,
       "days_with_articles": 5,
       "avg_quality_score": 0.683
-    }
-  ],
-  "active_trials": [
+    },
     {
       "id": "northleaf-capital",
       "name": "Northleaf Capital Group",
@@ -8730,7 +8728,7 @@
       "quality": "HIGH",
       "topics": "private equity, private credit, infrastructure, secondaries",
       "start_date": "2026-09-01",
-      "end_date": null,
+      "end_date": "2026-09-08",
       "daily_checks": {
         "2026-09-01": {
           "accessible": true,
@@ -8857,10 +8855,28 @@
           ],
           "error": null,
           "fetcher_used": false
+        },
+        "2026-09-08": {
+          "accessible": true,
+          "article_count": 11,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.northleafcapital.com/news/keynote-interview-new-blueprint-infrastructure",
+            "https://www.northleafcapital.com/news/private-equity-market-update-q2-2026",
+            "https://www.northleafcapital.com/news/private-credit-market-update-q2-2026",
+            "https://www.northleafcapital.com/news/keynote-interview-assessing-mid-market-secondaries",
+            "https://www.northleafcapital.com/news/private-equity-market-update-q1-2026",
+            "https://www.northleafcapital.com/news/why-now-case-secondaries-2026",
+            "https://www.northleafcapital.com/news/private-credit-market-update-q1-2026",
+            "https://www.northleafcapital.com/news/private-equity-market-update-q4-2025",
+            "https://www.northleafcapital.com/news/private-credit-market-update-q4-2025"
+          ],
+          "error": null,
+          "fetcher_used": false
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -8999,8 +9015,12 @@
           "day": 7,
           "date": "2026-09-07"
         }
-      ]
+      ],
+      "total_articles": 82,
+      "days_with_articles": 8,
+      "avg_quality_score": 0.783
     }
   ],
+  "active_trials": [],
   "last_summary_sent_date": "2026-09-01"
 }
