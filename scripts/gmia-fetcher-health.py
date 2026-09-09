@@ -50,6 +50,10 @@ CANDIDATES_FILE = BASE_DIR / "config" / "fund_candidates.json"
 TRIAL_STATE_FILE = BASE_DIR / "config" / "trial-state.json"
 LOGS_DIR = BASE_DIR / "logs"
 STATE_FILE = LOGS_DIR / "gmia-fetcher-health.json"
+# Written by fetch_articles.record_quality_metrics during the 03:45 BJT pipeline,
+# read here at 04:30 -- a different measurement, taken 45 minutes earlier, which
+# is why it is reported in its own section rather than mixed into probe results.
+INSPECTION_STATE_FILE = BASE_DIR / "config" / "inspection_state.json"
 ENV_FILE = Path.home() / ".stock-monitor.env"
 
 # Validated-candidate URL probe (--include-validated): catches the 2026-05-08
@@ -543,9 +547,54 @@ def merge_into_state(prev_state: dict, per_source: dict[str, dict]) -> dict:
     return {"last_run": iso, "sources": next_sources}
 
 
+def pipeline_zero_fetches(state_path=None) -> list[tuple[str, dict]]:
+    """Sources whose most recent pipeline fetch returned no articles.
+
+    The pipeline already records this and check_anomalies already flags two in a
+    row, but the only destination was a log.warning nobody reads.  A single zero
+    is worth reporting on its own: the 04:30 probe runs 45 minutes after the
+    fetch, so a site that was slow at 03:45 and fine at 04:30 leaves no other
+    trace -- which is exactly how acadian-asset's 2026-09-06 miss went unseen.
+
+    Never raises: this is extra reporting bolted onto a health check, and it
+    must not be able to fail the thing it reports on.
+    """
+    path = INSPECTION_STATE_FILE if state_path is None else Path(state_path)
+    try:
+        state = json.loads(path.read_text())
+    except Exception:
+        return []
+    if not isinstance(state, dict):
+        return []
+    return sorted(
+        ((sid, rec) for sid, rec in state.items()
+         if isinstance(rec, dict) and rec.get("last_article_count") == 0),
+        key=lambda kv: kv[0],
+    )
+
+
+def should_email(alerts: dict, zero_fetches: list) -> bool:
+    """Whether this run has anything worth sending.
+
+    zero_fetches is part of the condition, not just part of the body: the email
+    was suppressed whenever every probe passed, which is the precise case a
+    silent zero-article fetch produces.
+    """
+    return bool(alerts["failing"] or alerts["warning"] or alerts["recovered"]
+                or zero_fetches)
+
+
+def _zero_fetch_line(sid: str, rec: dict) -> str:
+    consecutive = rec.get("consecutive_zero_count", 1)
+    when = (rec.get("last_inspected_at") or "")[:19] or "unknown time"
+    run = "run" if consecutive == 1 else "runs"
+    return f"fetched 0 articles in the last pipeline run ({consecutive} consecutive {run}) · {when}"
+
+
 # ── reporting ────────────────────────────────────────────────────────────────
 
-def print_console_report(per_source: dict[str, dict], total_runtime_s: float) -> None:
+def print_console_report(per_source: dict[str, dict], total_runtime_s: float,
+                         zero_fetches: list | None = None) -> None:
     print(f"\n=== GMIA Fetcher Health — {now_human()} ===")
     print(f"Sources probed: {len(per_source)}    Total runtime: {total_runtime_s:.1f}s\n")
 
@@ -563,6 +612,11 @@ def print_console_report(per_source: dict[str, dict], total_runtime_s: float) ->
         for sid, r in warn_rows:
             print(f"  {sid:25} {r['reason']}")
         print()
+    if zero_fetches:
+        print(f"📉 PIPELINE FETCHED NOTHING ({len(zero_fetches)}):")
+        for sid, rec in zero_fetches:
+            print(f"  {sid:25} {_zero_fetch_line(sid, rec)}")
+        print()
     print(f"✅ HEALTHY ({len(ok_rows)}):")
     for sid, r in ok_rows:
         print(
@@ -576,6 +630,7 @@ def render_html_email(
     alerts: dict,
     state: dict,
     total_runtime_s: float,
+    zero_fetches: list | None = None,
 ) -> str:
     """HTML body with same visual idiom as gmia-trial-manager email."""
     sources_state = state.get("sources", {})
@@ -641,6 +696,14 @@ def render_html_email(
     if recovered_rows:
         sections.append(section_table(
             f"✅ RECOVERED ({len(alerts['recovered'])})", "#1a7f37", recovered_rows))
+    if zero_fetches:
+        zero_rows = "".join(
+            f'<tr><td style="padding:8px;font-weight:bold;color:#9a6700">{sid}</td>'
+            f'<td style="padding:8px">{_zero_fetch_line(sid, rec)}</td></tr>'
+            for sid, rec in zero_fetches
+        )
+        sections.append(section_table(
+            f"📉 PIPELINE FETCHED NOTHING ({len(zero_fetches)})", "#9a6700", zero_rows))
     sections.append(
         f'<h3 style="margin:14px 0 6px;color:#1a7f37">✅ HEALTHY ({len(alerts["healthy"])})</h3>'
         f'{healthy_html}'
@@ -843,7 +906,10 @@ def main() -> int:
 
     total_runtime_s = time.monotonic() - started
 
-    print_console_report(per_source, total_runtime_s)
+    # Read once, before the --source early return below, so the console report
+    # and the email decision see the same list.
+    zero_fetches = pipeline_zero_fetches()
+    print_console_report(per_source, total_runtime_s, zero_fetches=zero_fetches)
 
     # Validated-candidate URL probes (decoupled from production source state /
     # email logic): purely informational, but a FAIL bumps the script's exit
@@ -868,9 +934,10 @@ def main() -> int:
         next_state = merge_into_state(prev_state, per_source)
         print("[dry-run] state file NOT written")
 
-    needs_alert = bool(alerts["failing"] or alerts["warning"] or alerts["recovered"])
+    needs_alert = should_email(alerts, zero_fetches)
     if args.email and needs_alert and not args.dry_run:
-        html_body = render_html_email(per_source, alerts, next_state, total_runtime_s)
+        html_body = render_html_email(per_source, alerts, next_state, total_runtime_s,
+                                      zero_fetches=zero_fetches)
         send_email(html_body, alerts_subject(alerts))
     elif args.email and not needs_alert:
         print("All sources OK and no recoveries — email suppressed.")
