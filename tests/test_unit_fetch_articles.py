@@ -2216,3 +2216,72 @@ class TestFailurePathsAreRecorded:
             "an unchanged page recorded as a zero fetch — every stable source "
             "would be reported as fetching nothing")
         assert rec["consecutive_zero_count"] == 0
+
+
+class TestMetricsWriteCannotKillTheRun:
+    """Instrumentation must not be able to kill the pipeline it measures.
+
+    `record_quality_metrics` is now called from `fetch_source`'s two failure
+    paths (the `except Exception` around the fetcher, and the DATE_ORDER_BROKEN
+    refusal), and `fetch_source` itself is called from a bare `for source in
+    sources:` loop with no try/except.  So an OSError from this write turns a
+    contained fetcher failure into an aborted run -- and because
+    `save_articles(all_new)` runs only AFTER that loop, every article already
+    fetched from earlier sources that night is discarded rather than saved.
+
+    `analyze_articles._append_usage_log` already states the rule for this repo:
+    "Instrumentation must not be able to kill the pipeline it measures, so every
+    failure here is swallowed after a warning."  This is the same kind of thing
+    -- a metric written for a health email -- and must follow it.
+    """
+
+    def test_an_unwritable_state_file_does_not_raise(self, tmp_path, monkeypatch):
+        # No mocks: the parent directory simply does not exist, which is what a
+        # renamed/unmounted path looks like from here.
+        dead = tmp_path / "gone" / "inspection_state.json"
+        monkeypatch.setattr("fetch_articles.INSPECTION_STATE_FILE", dead)
+        record_quality_metrics("some-source", 0, 0, 0, 0)   # must not raise
+
+    def test_the_whole_run_survives_a_metrics_write_failure(self, tmp_path, monkeypatch):
+        """The load-bearing case: a failing fetcher AND a failing metrics write.
+
+        This is the combination the change introduced. fetch_source must still
+        return [] rather than propagating, so main()'s loop reaches the next
+        source and the articles already collected still get saved.
+        """
+        dead = tmp_path / "gone" / "inspection_state.json"
+        monkeypatch.setattr("fetch_articles.INSPECTION_STATE_FILE", dead)
+        from fetch_articles import fetch_source, FETCHERS
+
+        def boom(source):
+            raise RuntimeError("goto timeout")
+
+        src = {"id": "metrics-failpath", "name": "MF", "short_name": "MF",
+               "method": "scrape", "expected_hostname": "example.com"}
+        with patch.dict(FETCHERS, {"metrics-failpath": boom}):
+            assert fetch_source(src, set()) == []
+
+    def test_a_failed_write_leaves_the_previous_state_intact(self, tmp_path, monkeypatch):
+        """config/inspection_state.json must be written atomically.
+
+        It is the only writer in this repo that is not tmp+os.replace, while
+        `analyze_articles.save_articles` and `fetch_content._atomic_write` both
+        are -- and commit 93971d5 fixed backfill_themes for exactly this reason.
+        A kill mid-write truncates the file; the next run catches only
+        JSONDecodeError and falls back to `state = {}`, silently resetting
+        consecutive_zero_count for every configured source.
+        """
+        import os as _os
+        state_file = tmp_path / "inspection_state.json"
+        state_file.write_text(json.dumps({"kept": {"last_article_count": 7}}))
+        before = state_file.read_bytes()
+        monkeypatch.setattr("fetch_articles.INSPECTION_STATE_FILE", state_file)
+        monkeypatch.setattr(_os, "replace",
+                            lambda *a, **k: (_ for _ in ()).throw(OSError("ENOSPC")))
+
+        record_quality_metrics("new-source", 0, 0, 0, 0)    # must not raise
+
+        assert state_file.read_bytes() == before, (
+            "a failed write damaged inspection_state.json — the next run reads "
+            "it, hits JSONDecodeError and silently resets every source's state")
+        assert not list(tmp_path.glob("*.tmp")), "a temp file was left behind"

@@ -351,3 +351,51 @@ class TestConcurrentWriteIsRefused:
             bt.run(dry_run=False, limit=None, api_keys={"OPENAI_API_KEY": "k"})
         assert len([l for l in f.read_text().splitlines() if l.strip()]) == 3, (
             "the concurrent writer's row was lost")
+
+
+class TestTheFinalFlushDoesNotHideACrash:
+    """`finally` must not replace the exception that sent us there.
+
+    run()'s finally calls _flush, which raises SystemExit when the corpus
+    changed underneath the run. If the loop was already unwinding a real
+    failure, that SystemExit replaces it and the operator is told "corpus
+    changed" about a run that actually died of something else.
+    """
+
+    def test_the_original_exception_survives_a_refused_final_flush(self, tmp_path, monkeypatch):
+        rows = [_article(f"a{i}") for i in range(4)]
+        f = _corpus(tmp_path, rows)
+        monkeypatch.setattr(bt, "DATA_FILE", f)
+        monkeypatch.setattr(bt, "CHECKPOINT_EVERY", 99)     # nothing flushes mid-run
+        seen = {"n": 0}
+
+        def classify(a, keys):
+            seen["n"] += 1
+            if seen["n"] == 3:
+                # The nightly pipeline appends while we are unwinding, so the
+                # final flush will refuse.
+                f.write_text(f.read_text() + json.dumps(_article("added")) + "\n")
+                raise RuntimeError("the actual failure")
+            return ["Macro/Rates"]
+
+        monkeypatch.setattr(bt, "classify", classify)
+        with pytest.raises(RuntimeError, match="the actual failure"):
+            bt.run(dry_run=False, limit=None, api_keys={"OPENAI_API_KEY": "k"})
+
+    def test_a_refused_flush_still_raises_when_nothing_else_failed(self, tmp_path, monkeypatch):
+        # The refusal must stay loud when it is the only thing that went wrong.
+        rows = [_article("a"), _article("b")]
+        f = _corpus(tmp_path, rows)
+        monkeypatch.setattr(bt, "DATA_FILE", f)
+        monkeypatch.setattr(bt, "CHECKPOINT_EVERY", 99)
+        added = {"done": False}
+
+        def classify(a, keys):
+            if not added["done"]:
+                f.write_text(f.read_text() + json.dumps(_article("added")) + "\n")
+                added["done"] = True
+            return ["Macro/Rates"]
+
+        monkeypatch.setattr(bt, "classify", classify)
+        with pytest.raises(SystemExit, match="changed"):
+            bt.run(dry_run=False, limit=None, api_keys={"OPENAI_API_KEY": "k"})

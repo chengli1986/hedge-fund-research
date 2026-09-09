@@ -159,6 +159,7 @@ def run(dry_run: bool, limit: int | None, api_keys: dict) -> int:
     print(f"{len(todo)} article(s) to classify (model={MODEL}, dry_run={dry_run})")
     changed = unsaved = 0
     backed_up = False
+    crashed: BaseException | None = None
     try:
         for a in todo:
             # Goes through apply() rather than repeating its logic: the
@@ -176,10 +177,24 @@ def run(dry_run: bool, limit: int | None, api_keys: dict) -> int:
                     backed_up = _flush(rows, backed_up, fingerprint)
                     fingerprint = _corpus_fingerprint()
                     unsaved = 0
+    except BaseException as exc:
+        crashed = exc                 # remembered only to decide what finally may raise
+        raise
     finally:
         # Also runs on Ctrl-C or a crash: whatever was classified is kept.
         if unsaved and not dry_run:
-            backed_up = _flush(rows, backed_up, fingerprint)
+            try:
+                backed_up = _flush(rows, backed_up, fingerprint)
+            except SystemExit as exc:
+                # A refusal raised from `finally` REPLACES whatever exception
+                # sent us here, so a run that died of something else would be
+                # reported as "corpus changed underneath this run".  Stay loud
+                # when the refusal is the only thing that went wrong; step aside
+                # when it is not.  Nothing is lost either way: refusing means
+                # nothing was written, and the last checkpoint is still on disk.
+                if crashed is None:
+                    raise
+                print(f"  ! final flush refused: {exc}", file=sys.stderr)
     if dry_run:
         print("dry run: nothing written")
         return 0

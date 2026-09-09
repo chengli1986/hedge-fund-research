@@ -21,6 +21,7 @@ import html
 import json
 import hashlib
 import logging
+import os
 import re
 import sys
 import time
@@ -102,12 +103,26 @@ def get_source_url(source: dict, entrypoints: dict) -> str:
 
 def record_quality_metrics(source_id: str, total_found: int, new_count: int,
                            gated_count: int, mismatch_count: int) -> None:
-    """Record fetch quality metrics to inspection_state.json."""
+    """Record fetch quality metrics to inspection_state.json.  Never raises.
+
+    Same rule analyze_articles._append_usage_log states for the token log:
+    instrumentation must not be able to kill the pipeline it measures.  This one
+    is now called from fetch_source's two FAILURE paths as well as its success
+    path, and fetch_source runs inside a bare `for source in sources:` loop with
+    no try/except -- so an OSError here would end the whole run, and because
+    save_articles(all_new) comes after that loop, every article already fetched
+    that night would be discarded rather than saved.
+
+    The write goes through a temp file + os.replace, like save_articles and
+    fetch_content._atomic_write.  A plain write_text truncates in place, and a
+    kill mid-write leaves a partial file that the read below turns into
+    `state = {}` -- silently resetting consecutive_zero_count for every source.
+    """
     state: dict = {}
     if INSPECTION_STATE_FILE.exists():
         try:
             state = json.loads(INSPECTION_STATE_FILE.read_text())
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, OSError):
             state = {}
 
     prev = state.get(source_id, {})
@@ -129,7 +144,17 @@ def record_quality_metrics(source_id: str, total_found: int, new_count: int,
         "last_mismatch_count": mismatch_count,
     }
 
-    INSPECTION_STATE_FILE.write_text(json.dumps(state, indent=2, ensure_ascii=False))
+    tmp_path = INSPECTION_STATE_FILE.with_suffix(INSPECTION_STATE_FILE.suffix + ".tmp")
+    try:
+        tmp_path.write_text(json.dumps(state, indent=2, ensure_ascii=False))
+        os.replace(str(tmp_path), str(INSPECTION_STATE_FILE))
+    except Exception as e:
+        log.warning("  quality metrics write failed (%s): %s", INSPECTION_STATE_FILE, e)
+        try:
+            if tmp_path.exists():
+                tmp_path.unlink()
+        except OSError:
+            pass
 
 
 def check_anomalies(metrics: dict) -> list[str]:

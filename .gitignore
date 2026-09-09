@@ -15,4 +15,8 @@ tests/fixtures/*.html
 tests/fixtures/*.json
 # Runtime state files (updated by pipeline, not manually)
 config/inspection_state.json
+# ...and the temp file its atomic write goes through. The line above is an
+# exact path, so it does not cover the sibling; a SIGKILL between write and
+# os.replace would otherwise leave an untracked file inside config/.
+config/inspection_state.json.tmp
 pending_profiles/
