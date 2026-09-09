@@ -122,7 +122,10 @@ def record_quality_metrics(source_id: str, total_found: int, new_count: int,
     if INSPECTION_STATE_FILE.exists():
         try:
             state = json.loads(INSPECTION_STATE_FILE.read_text())
-        except (json.JSONDecodeError, OSError):
+        except OSError as e:
+            log.warning("  quality metrics read failed (%s): %s", INSPECTION_STATE_FILE, e)
+            return
+        except json.JSONDecodeError:
             state = {}
 
     prev = state.get(source_id, {})
