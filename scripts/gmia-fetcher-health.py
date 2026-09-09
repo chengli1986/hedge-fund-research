@@ -600,7 +600,49 @@ def pipeline_zero_fetches(state_path=None) -> list[tuple[str, dict]]:
         return []
 
 
-def should_email(alerts: dict, zero_fetches: list) -> bool:
+def pipeline_did_not_run(state_path=None) -> bool:
+    """True when the last pipeline run refreshed nothing at all.
+
+    The freshness filter in pipeline_zero_fetches is right for a retired source
+    and wrong for a dead pipeline: if gmia-daily stops running, every zero ages
+    out and the check goes quiet exactly when it should be loudest.  A source
+    that fetched 0 and was then never fetched again would alert for one more
+    night and then never again -- the same "detected but never delivered"
+    defect this whole feature exists to fix, inverted.
+
+    gmia_liveness_audit.check_fetch does not cover it: that is whole-pipeline
+    (newest article across all sources) on a 4-day threshold, and 4 days is
+    already the largest gap in this repo's fetch history, so it cannot be
+    tightened to reach back here.
+
+    A missing state file counts as "did not run": in an established deployment
+    it is written every night, so its absence means the zero-fetch check itself
+    is dead, which is the silence this exists to prevent.
+    """
+    path = INSPECTION_STATE_FILE if state_path is None else Path(state_path)
+    try:
+        state = json.loads(path.read_text())
+        if not isinstance(state, dict):
+            return True
+        configured = {s["id"] for s in load_sources()}
+    except Exception:
+        return True
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=ZERO_FETCH_FRESH_HOURS)
+    for sid, rec in state.items():
+        if sid not in configured or not isinstance(rec, dict):
+            continue
+        try:
+            seen = datetime.fromisoformat(str(rec.get("last_inspected_at")))
+        except (TypeError, ValueError):
+            continue
+        if seen.tzinfo is None:
+            seen = seen.replace(tzinfo=timezone.utc)
+        if seen >= cutoff:
+            return False
+    return True
+
+
+def should_email(alerts: dict, zero_fetches: list, pipeline_stale: bool = False) -> bool:
     """Whether this run has anything worth sending.
 
     zero_fetches is part of the condition, not just part of the body: the email
@@ -608,7 +650,7 @@ def should_email(alerts: dict, zero_fetches: list) -> bool:
     silent zero-article fetch produces.
     """
     return bool(alerts["failing"] or alerts["warning"] or alerts["recovered"]
-                or zero_fetches)
+                or zero_fetches or pipeline_stale)
 
 
 def _zero_fetch_line(sid: str, rec: dict) -> str:
@@ -778,7 +820,8 @@ def send_email(html_body: str, summary_subject: str) -> bool:
         return False
 
 
-def alerts_subject(alerts: dict, zero_fetches: list | None = None) -> str:
+def alerts_subject(alerts: dict, zero_fetches: list | None = None,
+                   pipeline_stale: bool = False) -> str:
     """Subject line. Must name every condition that caused the send.
 
     zero_fetches is a send condition on its own, and it is the ONLY one that
@@ -800,6 +843,8 @@ def alerts_subject(alerts: dict, zero_fetches: list | None = None) -> str:
         ids = ", ".join(sid for sid, _ in zero_fetches[:3])
         more = f" +{len(zero_fetches) - 3}" if len(zero_fetches) > 3 else ""
         parts.append(f"📉 {len(zero_fetches)} fetched nothing ({ids}{more})")
+    if pipeline_stale:
+        parts.append(f"⛔ pipeline recorded nothing in {ZERO_FETCH_FRESH_HOURS}h")
     return f"GMIA fetcher health: {' / '.join(parts)}" if parts else "GMIA fetcher health: all OK"
 
 
@@ -948,6 +993,10 @@ def main() -> int:
     # Read once, before the --source early return below, so the console report
     # and the email decision see the same list.
     zero_fetches = pipeline_zero_fetches()
+    pipeline_stale = pipeline_did_not_run()
+    if pipeline_stale:
+        print(f"⛔ the last pipeline run recorded nothing in the past "
+              f"{ZERO_FETCH_FRESH_HOURS}h — zero-fetch reporting is blind until it runs")
     print_console_report(per_source, total_runtime_s, zero_fetches=zero_fetches)
 
     # Validated-candidate URL probes (decoupled from production source state /
@@ -974,11 +1023,12 @@ def main() -> int:
         print("[dry-run] state file NOT written")
 
     email_failed = False
-    needs_alert = should_email(alerts, zero_fetches)
+    needs_alert = should_email(alerts, zero_fetches, pipeline_stale)
     if args.email and needs_alert and not args.dry_run:
         html_body = render_html_email(per_source, alerts, next_state, total_runtime_s,
                                       zero_fetches=zero_fetches)
-        email_failed = not send_email(html_body, alerts_subject(alerts, zero_fetches))
+        email_failed = not send_email(
+            html_body, alerts_subject(alerts, zero_fetches, pipeline_stale))
     elif args.email and not needs_alert:
         print("All sources OK and no recoveries — email suppressed.")
 

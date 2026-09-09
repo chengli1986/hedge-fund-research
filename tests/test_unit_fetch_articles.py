@@ -2190,3 +2190,29 @@ class TestFailurePathsAreRecorded:
         assert rec.get("last_article_count") == 0, (
             f"recorded {rec.get('last_article_count')} found while ingesting 0")
         assert rec.get("last_mismatch_count") == 10
+
+    def test_an_all_duplicates_run_records_what_was_found_not_what_was_new(self, tmp_path, monkeypatch):
+        """`found` and `new` are different numbers and must stay so.
+
+        A source whose page has not changed since yesterday returns its full
+        listing and ingests nothing new -- that is a healthy run. Recording the
+        NEW count instead would make every unchanged source look like it fetched
+        nothing, and the zero-fetch email would name all of them every night.
+        Mutation-caught 2026-09-09: `accepted_count = len(new_articles)` passed
+        the whole suite.
+        """
+        arts = [{"title": f"t{i}", "url": f"https://example.com/{i}",
+                 "date": "2026-09-01"} for i in range(10)]
+        state_file = tmp_path / "inspection_state.json"
+        state_file.write_text("{}")
+        monkeypatch.setattr("fetch_articles.INSPECTION_STATE_FILE", state_file)
+        from fetch_articles import fetch_source, FETCHERS, article_id
+        seen = {article_id("failpath-source", a["url"]) for a in arts}
+        with patch.dict(FETCHERS, {"failpath-source": lambda s: arts}):
+            new = fetch_source(self.SOURCE, seen)
+        assert new == [], "fixture is wrong: nothing should have been new"
+        rec = json.loads(state_file.read_text())["failpath-source"]
+        assert rec["last_article_count"] == 10, (
+            "an unchanged page recorded as a zero fetch — every stable source "
+            "would be reported as fetching nothing")
+        assert rec["consecutive_zero_count"] == 0

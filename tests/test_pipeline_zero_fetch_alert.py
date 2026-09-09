@@ -42,10 +42,23 @@ def _state(tmp_path, payload) -> Path:
     return f
 
 
+def _hours_ago(n: float) -> str:
+    """A timestamp n hours old.
+
+    Never hardcode one here: the freshness filter is measured against the wall
+    clock, so a literal expires. The first version of these fixtures pinned
+    2026-09-09T03:48+08:00, which would have turned seven tests red 30 hours
+    later -- and scripts/wrapper-auto-promote.sh tells the nightly 02:30 agent
+    to ROLL BACK its work if pytest fails, so a clock-driven red suite would
+    have reverted a correctly promoted source.
+    """
+    from datetime import datetime, timedelta, timezone
+    return (datetime.now(timezone.utc) - timedelta(hours=n)).isoformat()
+
+
 def _fresh() -> str:
     """A timestamp the last pipeline run would plausibly have written."""
-    from datetime import datetime, timezone
-    return datetime.now(timezone.utc).isoformat()
+    return _hours_ago(0.75)          # health check runs 45min after the pipeline
 
 
 class TestDetection:
@@ -61,13 +74,18 @@ class TestDetection:
         f = _state(tmp_path, {
             "acadian-asset": {"last_article_count": 0, "consecutive_zero_count": 1,
                               "last_inspected_at": _fresh()},
-            "aqr": {"last_article_count": 10, "consecutive_zero_count": 0},
+            # last_inspected_at is required: without it this row is excluded by
+            # the freshness gate, so the test would pass even if the
+            # last_article_count check were deleted (caught by mutation).
+            "aqr": {"last_article_count": 10, "consecutive_zero_count": 0,
+                    "last_inspected_at": _fresh()},
         })
         got = gfh.pipeline_zero_fetches(f)
         assert [sid for sid, _ in got] == ["acadian-asset"]
 
     def test_a_source_that_fetched_articles_is_not_reported(self, tmp_path):
-        f = _state(tmp_path, {"aqr": {"last_article_count": 10, "consecutive_zero_count": 0}})
+        f = _state(tmp_path, {"aqr": {"last_article_count": 10, "consecutive_zero_count": 0,
+                                      "last_inspected_at": _fresh()}})
         assert gfh.pipeline_zero_fetches(f) == []
 
     def test_missing_state_file_is_not_an_error(self, tmp_path):
@@ -116,8 +134,11 @@ class TestItAppearsInBothReports:
         assert "acadian-asset" in html
 
     def test_html_email_omits_the_section_when_there_is_nothing_to_say(self):
+        # Assert the HEADING is absent, not the row text: rendering the section
+        # with zero rows keeps "fetched 0 articles" out of the html while an
+        # all-clear email carries "📉 PIPELINE FETCHED NOTHING (0)".
         html = gfh.render_html_email({}, NO_ALERTS, {}, 1.0, zero_fetches=[])
-        assert "fetched 0 articles" not in html
+        assert "PIPELINE FETCHED NOTHING" not in html
 
 
 class TestTheWiringItself:
@@ -157,7 +178,7 @@ class TestTheWiringItself:
         return rc, sent, capsys.readouterr().out
 
     ZERO = {"acadian-asset": {"last_article_count": 0, "consecutive_zero_count": 1,
-                              "last_inspected_at": "2026-09-09T03:48:00+08:00"}}
+                              "last_inspected_at": _fresh()}}
 
     def test_a_zero_fetch_alone_actually_sends_an_email(self, tmp_path, monkeypatch, capsys):
         _, sent, _ = self._drive(tmp_path, monkeypatch, capsys, self.ZERO)
@@ -188,7 +209,8 @@ class TestTheWiringItself:
         assert "fetched 0 articles" in out
 
     def test_a_clean_run_still_sends_nothing(self, tmp_path, monkeypatch, capsys):
-        clean = {"acadian-asset": {"last_article_count": 10, "consecutive_zero_count": 0}}
+        clean = {"acadian-asset": {"last_article_count": 10, "consecutive_zero_count": 0,
+                                   "last_inspected_at": _fresh()}}
         _, sent, _ = self._drive(tmp_path, monkeypatch, capsys, clean)
         assert not sent, "an all-clear run must stay quiet"
 
@@ -209,8 +231,8 @@ class TestStaleEntriesDoNotLatch:
     beside it contradicts the sentence.
     """
 
-    FRESH = "2026-09-09T03:48:00+08:00"
-    ANCIENT = "2026-06-11T03:48:00+08:00"
+    FRESH = staticmethod(lambda: _fresh())
+    ANCIENT = staticmethod(lambda: _hours_ago(24 * 90))
 
     def _state(self, tmp_path, payload):
         f = tmp_path / "inspection_state.json"
@@ -220,22 +242,22 @@ class TestStaleEntriesDoNotLatch:
     def test_a_retired_source_is_ignored(self, tmp_path, monkeypatch):
         monkeypatch.setattr(gfh, "load_sources", lambda: [{"id": "aqr"}])
         f = self._state(tmp_path, {
-            "pgim": {"last_article_count": 0, "last_inspected_at": self.FRESH},
-            "aqr": {"last_article_count": 0, "last_inspected_at": self.FRESH},
+            "pgim": {"last_article_count": 0, "last_inspected_at": self.FRESH()},
+            "aqr": {"last_article_count": 0, "last_inspected_at": self.FRESH()},
         })
         assert [sid for sid, _ in gfh.pipeline_zero_fetches(f)] == ["aqr"]
 
     def test_a_record_the_last_run_did_not_refresh_is_ignored(self, tmp_path, monkeypatch):
         monkeypatch.setattr(gfh, "load_sources", lambda: [{"id": "aqr"}])
         f = self._state(tmp_path, {
-            "aqr": {"last_article_count": 0, "last_inspected_at": self.ANCIENT}})
+            "aqr": {"last_article_count": 0, "last_inspected_at": self.ANCIENT()}})
         assert gfh.pipeline_zero_fetches(f) == [], (
             "a months-old record still alerts — nothing can ever clear it")
 
     def test_a_fresh_zero_still_alerts(self, tmp_path, monkeypatch):
         monkeypatch.setattr(gfh, "load_sources", lambda: [{"id": "aqr"}])
         f = self._state(tmp_path, {
-            "aqr": {"last_article_count": 0, "last_inspected_at": self.FRESH}})
+            "aqr": {"last_article_count": 0, "last_inspected_at": self.FRESH()}})
         assert [sid for sid, _ in gfh.pipeline_zero_fetches(f)] == ["aqr"]
 
     def test_an_unreadable_timestamp_is_ignored_rather_than_trusted(self, tmp_path, monkeypatch):
@@ -249,7 +271,7 @@ class TestStaleEntriesDoNotLatch:
             raise RuntimeError("config unreadable")
         monkeypatch.setattr(gfh, "load_sources", boom)
         f = self._state(tmp_path, {
-            "aqr": {"last_article_count": 0, "last_inspected_at": self.FRESH}})
+            "aqr": {"last_article_count": 0, "last_inspected_at": self.FRESH()}})
         assert gfh.pipeline_zero_fetches(f) == []
 
 
@@ -276,3 +298,79 @@ class TestAFailedSendIsNotSilent:
         assert gfh.main() == 1, (
             "the email failed to send and the run still exited 0 — cron-wrapper "
             "would report the night as healthy")
+
+
+class TestPipelineNotRunningIsItsOwnAlert:
+    """Falling silent because nothing was recorded is the same bug, inverted.
+
+    The freshness filter drops records the last run did not refresh. That is
+    right for a retired source and wrong for a dead pipeline: if gmia-daily
+    stops running, every zero ages out and this check goes quiet exactly when
+    it should be loudest. A source that fetched 0 and was then never fetched
+    again would alert for one more night and then never again.
+
+    The compensating monitor does not reach: gmia_liveness_audit.check_fetch
+    is whole-pipeline (newest article across all sources) with a 4-day
+    threshold, and 4 days is already the largest gap observed in this repo's
+    fetch history, so it cannot be tightened. That leaves a window where
+    neither channel speaks. "Nothing was recorded" is therefore its own alert.
+    """
+
+    def _state(self, tmp_path, payload):
+        f = tmp_path / "inspection_state.json"
+        f.write_text(json.dumps(payload, ensure_ascii=False))
+        return f
+
+    def test_a_normal_night_is_not_an_alert(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(gfh, "load_sources", lambda: [{"id": "aqr"}, {"id": "gmo"}])
+        f = self._state(tmp_path, {
+            "aqr": {"last_article_count": 10, "last_inspected_at": _fresh()},
+            "gmo": {"last_article_count": 5, "last_inspected_at": _fresh()}})
+        assert gfh.pipeline_did_not_run(f) is False
+
+    def test_nothing_refreshed_is_an_alert(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(gfh, "load_sources", lambda: [{"id": "aqr"}, {"id": "gmo"}])
+        f = self._state(tmp_path, {
+            "aqr": {"last_article_count": 10, "last_inspected_at": _hours_ago(50)},
+            "gmo": {"last_article_count": 5, "last_inspected_at": _hours_ago(50)}})
+        assert gfh.pipeline_did_not_run(f) is True
+
+    def test_one_fresh_source_is_enough_to_stay_quiet(self, tmp_path, monkeypatch):
+        # A single source skipped is the zero-fetch check's job, not this one.
+        monkeypatch.setattr(gfh, "load_sources", lambda: [{"id": "aqr"}, {"id": "gmo"}])
+        f = self._state(tmp_path, {
+            "aqr": {"last_article_count": 10, "last_inspected_at": _fresh()},
+            "gmo": {"last_article_count": 5, "last_inspected_at": _hours_ago(50)}})
+        assert gfh.pipeline_did_not_run(f) is False
+
+    def test_a_missing_state_file_is_an_alert(self, tmp_path, monkeypatch):
+        # In an established deployment the file is written every night; its
+        # absence means the whole zero-fetch feature is dead, which is exactly
+        # the silence this class exists to prevent.
+        monkeypatch.setattr(gfh, "load_sources", lambda: [{"id": "aqr"}])
+        assert gfh.pipeline_did_not_run(tmp_path / "nope.json") is True
+
+    def test_it_is_a_send_condition_on_its_own(self):
+        assert gfh.should_email(NO_ALERTS, [], pipeline_stale=True) is True
+        assert gfh.should_email(NO_ALERTS, [], pipeline_stale=False) is False
+
+    def test_the_subject_says_so(self):
+        subject = gfh.alerts_subject(NO_ALERTS, [], pipeline_stale=True)
+        assert "all OK" not in subject, subject
+        assert "pipeline" in subject.lower()
+
+    def test_main_sends_when_nothing_was_recorded(self, tmp_path, monkeypatch, capsys):
+        w = TestTheWiringItself()
+        f = self._state(tmp_path, {
+            "acadian-asset": {"last_article_count": 10, "last_inspected_at": _hours_ago(50)}})
+        monkeypatch.setattr(gfh, "INSPECTION_STATE_FILE", f)
+        monkeypatch.setattr(gfh, "STATE_FILE", tmp_path / "health.json")
+        monkeypatch.setattr(gfh, "load_sources", lambda: [w.SOURCE])
+        monkeypatch.setattr(gfh, "probe_source", lambda src: dict(w.OK_PROBE))
+        sent = {}
+        monkeypatch.setattr(gfh, "send_email",
+                            lambda body, subject: sent.update(body=body, subject=subject) or True)
+        monkeypatch.setattr(sys, "argv", ["gmia-fetcher-health.py", "--email"])
+        gfh.main()
+        assert sent, "every probe passed and the pipeline had not run — nothing was sent"
+        assert "pipeline" in sent["subject"].lower()
