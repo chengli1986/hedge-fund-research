@@ -547,6 +547,12 @@ def merge_into_state(prev_state: dict, per_source: dict[str, dict]) -> dict:
     return {"last_run": iso, "sources": next_sources}
 
 
+# The pipeline runs daily at 03:45 BJT, so any record the last run touched is
+# well under a day old.  36h leaves margin for a late run without letting a
+# frozen record alert forever.
+ZERO_FETCH_FRESH_HOURS = 36
+
+
 def pipeline_zero_fetches(state_path=None) -> list[tuple[str, dict]]:
     """Sources whose most recent pipeline fetch returned no articles.
 
@@ -556,21 +562,42 @@ def pipeline_zero_fetches(state_path=None) -> list[tuple[str, dict]]:
     fetch, so a site that was slow at 03:45 and fine at 04:30 leaves no other
     trace -- which is exactly how acadian-asset's 2026-09-06 miss went unseen.
 
+    Two filters keep a frozen record from alerting forever.  config/
+    inspection_state.json is append-only in practice -- record_quality_metrics
+    writes and nothing prunes -- so it still holds pgim and pinebridge months
+    after they were retired.  A source retired BECAUSE it stopped producing is
+    precisely the one whose last count is 0, and without these it would alert
+    every day with no way to clear it but hand-editing the file.  So: the id
+    must still be configured, and the record must be one the last run actually
+    refreshed.
+
     Never raises: this is extra reporting bolted onto a health check, and it
     must not be able to fail the thing it reports on.
     """
     path = INSPECTION_STATE_FILE if state_path is None else Path(state_path)
     try:
         state = json.loads(path.read_text())
+        if not isinstance(state, dict):
+            return []
+        configured = {s["id"] for s in load_sources()}
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=ZERO_FETCH_FRESH_HOURS)
+        out = []
+        for sid, rec in state.items():
+            if sid not in configured or not isinstance(rec, dict):
+                continue
+            if rec.get("last_article_count") != 0:
+                continue
+            try:
+                seen = datetime.fromisoformat(str(rec.get("last_inspected_at")))
+            except (TypeError, ValueError):
+                continue          # unreadable stamp: stay quiet rather than guess
+            if seen.tzinfo is None:
+                seen = seen.replace(tzinfo=timezone.utc)
+            if seen >= cutoff:
+                out.append((sid, rec))
+        return sorted(out, key=lambda kv: kv[0])
     except Exception:
         return []
-    if not isinstance(state, dict):
-        return []
-    return sorted(
-        ((sid, rec) for sid, rec in state.items()
-         if isinstance(rec, dict) and rec.get("last_article_count") == 0),
-        key=lambda kv: kv[0],
-    )
 
 
 def should_email(alerts: dict, zero_fetches: list) -> bool:
@@ -751,7 +778,15 @@ def send_email(html_body: str, summary_subject: str) -> bool:
         return False
 
 
-def alerts_subject(alerts: dict) -> str:
+def alerts_subject(alerts: dict, zero_fetches: list | None = None) -> str:
+    """Subject line. Must name every condition that caused the send.
+
+    zero_fetches is a send condition on its own, and it is the ONLY one that
+    fires while failing/warning/recovered are all empty -- so without it here,
+    the one email this feature exists to produce arrives titled "all OK",
+    which is the whispering the feature was built to stop, reproduced at the
+    last hop.
+    """
     parts = []
     if alerts["failing"]:
         ids = ", ".join(sid for sid, _, _ in alerts["failing"][:3])
@@ -761,6 +796,10 @@ def alerts_subject(alerts: dict) -> str:
         parts.append(f"⚠️ {len(alerts['warning'])} WARN")
     if alerts["recovered"]:
         parts.append(f"✅ {len(alerts['recovered'])} recovered")
+    if zero_fetches:
+        ids = ", ".join(sid for sid, _ in zero_fetches[:3])
+        more = f" +{len(zero_fetches) - 3}" if len(zero_fetches) > 3 else ""
+        parts.append(f"📉 {len(zero_fetches)} fetched nothing ({ids}{more})")
     return f"GMIA fetcher health: {' / '.join(parts)}" if parts else "GMIA fetcher health: all OK"
 
 
@@ -934,11 +973,12 @@ def main() -> int:
         next_state = merge_into_state(prev_state, per_source)
         print("[dry-run] state file NOT written")
 
+    email_failed = False
     needs_alert = should_email(alerts, zero_fetches)
     if args.email and needs_alert and not args.dry_run:
         html_body = render_html_email(per_source, alerts, next_state, total_runtime_s,
                                       zero_fetches=zero_fetches)
-        send_email(html_body, alerts_subject(alerts))
+        email_failed = not send_email(html_body, alerts_subject(alerts, zero_fetches))
     elif args.email and not needs_alert:
         print("All sources OK and no recoveries — email suppressed.")
 
@@ -946,7 +986,11 @@ def main() -> int:
 
     # Exit code: 1 if any production FAIL OR any validated-candidate URL FAIL
     # (cron-wrapper picks this up and emails)
-    return 1 if (alerts["failing"] or candidate_fail) else 0
+    # email_failed is in here because send_email returns False on missing SMTP
+    # config and on any SMTP exception, and that return used to be discarded:
+    # a detected problem whose email never left the box reached nobody, while
+    # cron-wrapper saw exit 0 and called the night healthy.
+    return 1 if (alerts["failing"] or candidate_fail or email_failed) else 0
 
 
 if __name__ == "__main__":

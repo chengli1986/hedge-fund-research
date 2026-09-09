@@ -3434,6 +3434,11 @@ def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False) ->
         raw_articles = fetcher(source)
     except Exception as e:
         log.error("Failed to fetch %s: %s", source_id, e)
+        # Record the zero before returning. This metric is what the fetcher
+        # health email reads; without it a raised fetcher leaves
+        # last_article_count showing yesterday's count, so the alert built to
+        # catch a silent zero is blind to the loudest failure there is.
+        record_quality_metrics(source_id, 0, 0, 0, 0)
         return []
 
     # A listing page that silently stops being newest-first hands us archive
@@ -3446,8 +3451,10 @@ def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False) ->
     #
     # Sources whose listing URL pins a chronological sort declare date_sorted in
     # sources.json.  Break the contract and we refuse the WHOLE batch: a partial
-    # accept is how archive pieces get in.  Refusing shows up as "0 articles",
-    # which scripts/gmia-fetcher-health.py already reports as a FAIL.
+    # accept is how archive pieces get in.  A refusal records a zero metric
+    # (below), which the fetcher health email surfaces; it is NOT visible to
+    # that script's own probe, which calls the fetcher directly and never runs
+    # this guard.
     # `date` is the ISO YYYY-MM-DD produced by parse_date, so plain string
     # comparison orders it correctly; undated articles are skipped, not fatal.
     if source.get("date_sorted"):
@@ -3458,6 +3465,12 @@ def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False) ->
                 "refusing all %d articles (listing sort order changed?)",
                 source_id, dates, len(raw_articles),
             )
+            # Same reason as the except path above: the comment that used to
+            # sit here claimed a refusal "shows up as 0 articles", but the
+            # return skipped the metric entirely and the health probe calls the
+            # fetcher directly, bypassing this guard. Recording it is what
+            # makes the refusal visible to anyone at all.
+            record_quality_metrics(source_id, 0, 0, 0, 0)
             return []
 
     # Required, not source.get(..., ""): an empty default silently DISABLES the
@@ -3499,15 +3512,20 @@ def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False) ->
             "summarized": False,
         })
 
+    # Count what survived the host check, not what the fetcher handed over: a
+    # source whose entrypoint drifted to another domain returns a full page of
+    # articles that are then all dropped here, and recording the raw count made
+    # that read as a healthy fetch while nothing was ingested.
+    accepted_count = len(raw_articles) - mismatch_count
     log.info(
         "  %s: %d articles found, %d new",
         source_id,
-        len(raw_articles),
+        accepted_count,
         len(new_articles),
     )
 
     # Record quality metrics for inspection
-    record_quality_metrics(source_id, len(raw_articles), len(new_articles),
+    record_quality_metrics(source_id, accepted_count, len(new_articles),
                            gated_count, mismatch_count)
 
     if dry_run:

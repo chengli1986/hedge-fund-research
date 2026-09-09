@@ -2118,3 +2118,75 @@ class TestFetchAcadianAssetWaitStrategy:
                    return_value="<html><body></body></html>") as spy:
             fetch_acadian_asset(source)
         assert spy.call_args.kwargs.get("wait_selector") == "article.news-insights-card"
+
+
+class TestFailurePathsAreRecorded:
+    """A source that failed must leave a metric, not just a log line.
+
+    record_quality_metrics is what the 09-09 zero-fetch email reads. It sits at
+    the end of fetch_source, after two early returns that skip it entirely:
+    the `except Exception` around the fetcher call, and the DATE_ORDER_BROKEN
+    refusal. So the two loudest failures wrote nothing, and the alert built to
+    catch a silent zero was blind to them -- `last_article_count` kept showing
+    yesterday's count.
+
+    This is one second away from the incident it was built for: on 2026-09-06
+    acadian's networkidle landed at ~29s against a 30s goto timeout. Had it
+    been 1.5s slower, page.goto would have raised, fetch_source would have
+    swallowed it, and nothing would have been recorded at all.
+    """
+
+    SOURCE = {"id": "failpath-source", "name": "Fail Path", "short_name": "FP",
+              "method": "scrape", "expected_hostname": "example.com"}
+
+    def _state_after(self, tmp_path, monkeypatch, fetcher, source=None):
+        state_file = tmp_path / "inspection_state.json"
+        state_file.write_text("{}")
+        monkeypatch.setattr("fetch_articles.INSPECTION_STATE_FILE", state_file)
+        from fetch_articles import fetch_source, FETCHERS
+        src = source or self.SOURCE
+        with patch.dict(FETCHERS, {src["id"]: fetcher}):
+            fetch_source(src, set())
+        return json.loads(state_file.read_text())
+
+    def test_a_raising_fetcher_records_a_zero(self, tmp_path, monkeypatch):
+        def boom(source):
+            raise RuntimeError("goto timeout")
+        state = self._state_after(tmp_path, monkeypatch, boom)
+        assert state.get("failpath-source", {}).get("last_article_count") == 0, (
+            "the fetcher raised and nothing was recorded — the zero-fetch email "
+            "cannot see this, and the stale count keeps saying all is well")
+
+    def test_a_refused_batch_records_a_zero(self, tmp_path, monkeypatch):
+        # DATE_ORDER_BROKEN: the guard that stops archive articles being
+        # republished. Its own comment claimed refusing "shows up as 0
+        # articles"; it did not, because the refusal returned before this.
+        src = dict(self.SOURCE, id="sorted-failpath", date_sorted=True)
+        out_of_order = [
+            {"title": "old", "url": "https://example.com/1", "date": "2022-09-30"},
+            {"title": "new", "url": "https://example.com/2", "date": "2026-05-31"},
+        ]
+        state = self._state_after(tmp_path, monkeypatch, lambda s: out_of_order, source=src)
+        assert state.get("sorted-failpath", {}).get("last_article_count") == 0
+
+    def test_a_normal_fetch_is_unaffected(self, tmp_path, monkeypatch):
+        arts = [{"title": "a", "url": "https://example.com/a", "date": "2026-09-01"}]
+        state = self._state_after(tmp_path, monkeypatch, lambda s: arts)
+        assert state["failpath-source"]["last_article_count"] == 1
+
+    def test_articles_dropped_by_the_host_check_are_not_counted_as_found(self, tmp_path, monkeypatch):
+        """An entrypoint that drifted to another host ingests nothing.
+
+        record_quality_metrics was handed len(raw_articles), but the hostname
+        filter runs afterwards -- so a source whose listing moved to a different
+        domain recorded "10 found" while ingesting 0, and the zero-fetch email
+        stayed silent. The count that matters downstream is what survived the
+        filter, not what the fetcher handed over.
+        """
+        off_host = [{"title": f"t{i}", "url": f"https://elsewhere.example/{i}",
+                     "date": "2026-09-01"} for i in range(10)]
+        state = self._state_after(tmp_path, monkeypatch, lambda s: off_host)
+        rec = state.get("failpath-source", {})
+        assert rec.get("last_article_count") == 0, (
+            f"recorded {rec.get('last_article_count')} found while ingesting 0")
+        assert rec.get("last_mismatch_count") == 10
