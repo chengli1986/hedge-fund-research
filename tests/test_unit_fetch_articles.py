@@ -12,6 +12,7 @@ from fetch_articles import (
     fetch_amundi, fetch_jpmam, fetch_pgim, fetch_aberdeen,
     fetch_cambridge_associates, fetch_verdad,
     fetch_metlife_im, fetch_rothschild_co_am, fetch_baillie_gifford,
+    fetch_acadian_asset,
     fetch_msci_research,
 )
 
@@ -2065,3 +2066,55 @@ class TestDateSortedGuard:
         del src["date_sorted"]
         new = self._run([self._art(1, "2022-09-30"), self._art(2, "2026-05-31")], source=src)
         assert len(new) == 2
+
+
+class TestFetchAcadianAssetWaitStrategy:
+    """acadian-asset must not stake the fetch on networkidle.
+
+    Measured 2026-09-07: the page reached networkidle at ~29s against the
+    helper's 30s goto timeout — one second of margin — and in a controlled
+    comparison 5 of 6 cold loads produced no cards at all, on the old URL as
+    well as the new one, so the site itself is intermittently slow rather than
+    anything the ?sortby=date-desc change caused. That is how the 2026-09-06
+    pipeline run fetched 0 articles: nav 29s, then the card selector timed out
+    with only ~1s of budget left.
+
+    Re-measured 2026-09-09 while the site was healthy: the two signals are not
+    equally reliable. Cards appear 0.5-1.2s after domcontentloaded on every
+    load, while networkidle ranged 1.3-2.1s that day and 29s two days earlier.
+    Waiting on "the whole page went quiet" buys no extra data and couples the
+    fetch to the most variable signal on the page.
+    """
+
+    def test_uses_domcontentloaded_not_networkidle(self):
+        source = {
+            "id": "acadian-asset",
+            "url": "https://www.acadian-asset.com/investment-insights?sortby=date-desc",
+            "max_articles": 10,
+            "expected_hostname": "acadian-asset.com",
+        }
+        with patch("fetch_articles._get_playwright_page",
+                   return_value="<html><body></body></html>") as spy:
+            fetch_acadian_asset(source)
+
+        kwargs = spy.call_args.kwargs
+        assert kwargs.get("wait_until") == "domcontentloaded", (
+            "fetch_acadian_asset must pass wait_until='domcontentloaded'; the "
+            "default 'networkidle' took 29s against a 30s timeout on 09-07 and "
+            "left the card wait no room."
+        )
+
+    def test_still_waits_for_the_cards_themselves(self):
+        # domcontentloaded fires before the client-rendered list exists, so the
+        # selector wait is what makes this safe — dropping it would trade a
+        # slow failure for a silent empty result.
+        source = {
+            "id": "acadian-asset",
+            "url": "https://www.acadian-asset.com/investment-insights?sortby=date-desc",
+            "max_articles": 10,
+            "expected_hostname": "acadian-asset.com",
+        }
+        with patch("fetch_articles._get_playwright_page",
+                   return_value="<html><body></body></html>") as spy:
+            fetch_acadian_asset(source)
+        assert spy.call_args.kwargs.get("wait_selector") == "article.news-insights-card"

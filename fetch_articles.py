@@ -2299,7 +2299,18 @@ def fetch_acadian_asset(source: dict) -> list[dict]:
       span.news-insights-card__theme-date ("May 2026" → %B %Y)
     """
     base_url = _site_base(source["url"])
-    html = _get_playwright_page(source["url"], wait_selector="article.news-insights-card")
+    # domcontentloaded, not the helper's default networkidle: measured
+    # 2026-09-07, this page reached networkidle at ~29s against the 30s goto
+    # timeout, leaving the card wait ~1s -- which is how the 09-06 pipeline run
+    # fetched 0 articles.  A controlled comparison failed 5 of 6 cold loads on
+    # the old URL too, so the site is intermittently slow rather than anything
+    # ?sortby=date-desc caused.  The two signals are not equally reliable: on a
+    # healthy day (09-09) the cards appeared 0.5-1.2s after domcontentloaded on
+    # every load, while networkidle ranged 1.3-2.1s that day and 29s two days
+    # before.  Waiting for the whole page to go quiet buys no extra data.
+    html = _get_playwright_page(source["url"],
+                                wait_selector="article.news-insights-card",
+                                wait_until="domcontentloaded")
     soup = BeautifulSoup(html, "html.parser")
     expected_host = source["expected_hostname"]
 
