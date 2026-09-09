@@ -2285,3 +2285,45 @@ class TestMetricsWriteCannotKillTheRun:
             "a failed write damaged inspection_state.json — the next run reads "
             "it, hits JSONDecodeError and silently resets every source's state")
         assert not list(tmp_path.glob("*.tmp")), "a temp file was left behind"
+
+    def test_an_unreadable_existing_file_is_not_overwritten(self, tmp_path, monkeypatch):
+        """An OSError while READING must not be treated like a corrupt file.
+
+        Caught by Codex in the 2026-09-09 CRA round, against `b2e5361` — which
+        had widened the read's `except` to `(json.JSONDecodeError, OSError)` and
+        called it hardening. The two are not the same failure:
+
+        - JSONDecodeError means the file really is corrupt, so `state = {}` and
+          rewriting it is the recovery.
+        - OSError means the file may be perfectly fine and merely unreadable
+          right now. Falling through to `state = {}` and then writing
+          SUCCESSFULLY (the directory is still writable) deletes every other
+          source's metrics and consecutive-zero history — the exact data loss
+          the atomic write was added to prevent, arrived at from the other side.
+
+        Losing one source's metric for one run is the cheap failure; losing all
+        42 sources' history is not. So this path writes nothing at all.
+        """
+        state_file = tmp_path / "inspection_state.json"
+        state_file.write_text(json.dumps({
+            "kept-a": {"last_article_count": 7, "consecutive_zero_count": 0},
+            "kept-b": {"last_article_count": 0, "consecutive_zero_count": 3},
+        }))
+        before = state_file.read_bytes()
+        monkeypatch.setattr("fetch_articles.INSPECTION_STATE_FILE", state_file)
+
+        real_read = type(state_file).read_text
+
+        def unreadable(self, *a, **k):
+            if self == state_file:
+                raise OSError("EIO")
+            return real_read(self, *a, **k)
+
+        monkeypatch.setattr(type(state_file), "read_text", unreadable)
+
+        record_quality_metrics("new-source", 0, 0, 0, 0)   # must not raise
+
+        monkeypatch.undo()
+        assert state_file.read_bytes() == before, (
+            "an unreadable-but-intact state file was overwritten with a fresh "
+            "dict — every other source's consecutive_zero_count is gone")
