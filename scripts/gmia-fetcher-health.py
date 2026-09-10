@@ -700,6 +700,7 @@ def render_html_email(
     state: dict,
     total_runtime_s: float,
     zero_fetches: list | None = None,
+    pipeline_stale: bool = False,
 ) -> str:
     """HTML body with same visual idiom as gmia-trial-manager email."""
     sources_state = state.get("sources", {})
@@ -765,6 +766,19 @@ def render_html_email(
     if recovered_rows:
         sections.append(section_table(
             f"✅ RECOVERED ({len(alerts['recovered'])})", "#1a7f37", recovered_rows))
+    if pipeline_stale:
+        # The body must say what the subject shouts. When this is the only send
+        # condition -- the case the check exists for -- the email used to carry
+        # a subject reading "⛔ pipeline recorded nothing in 36h" above a body
+        # containing nothing but the HEALTHY table. alerts_subject's docstring
+        # already made this argument for the subject line; it was not carried
+        # across to the body, which is the same last-hop whisper one commit
+        # after it was fixed for zero_fetches.
+        sections.append(section_table(
+            "⛔ PIPELINE RECORDED NOTHING", "#cf222e",
+            f'<tr><td style="padding:8px">No configured source was refreshed in the '
+            f'last {ZERO_FETCH_FRESH_HOURS}h, so zero-fetch reporting is blind until '
+            f'the pipeline runs again. Check the gmia-daily cron.</td></tr>'))
     if zero_fetches:
         zero_rows = "".join(
             f'<tr><td style="padding:8px;font-weight:bold;color:#9a6700">{sid}</td>'
@@ -1026,7 +1040,8 @@ def main() -> int:
     needs_alert = should_email(alerts, zero_fetches, pipeline_stale)
     if args.email and needs_alert and not args.dry_run:
         html_body = render_html_email(per_source, alerts, next_state, total_runtime_s,
-                                      zero_fetches=zero_fetches)
+                                      zero_fetches=zero_fetches,
+                                      pipeline_stale=pipeline_stale)
         email_failed = not send_email(
             html_body, alerts_subject(alerts, zero_fetches, pipeline_stale))
     elif args.email and not needs_alert:

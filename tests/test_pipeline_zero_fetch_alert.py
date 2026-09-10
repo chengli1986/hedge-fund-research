@@ -374,3 +374,103 @@ class TestPipelineNotRunningIsItsOwnAlert:
         gfh.main()
         assert sent, "every probe passed and the pipeline had not run — nothing was sent"
         assert "pipeline" in sent["subject"].lower()
+
+
+class TestTheDeadPipelineAlertIsNotWhisperedEither:
+    """The body must say what the subject shouts.
+
+    8dee473's entire thesis was that a detected problem must not be whispered
+    at the last hop -- it fixed exactly that for zero_fetches, where the email
+    arrived titled "all OK". ab3f44b then added pipeline_stale as a send
+    condition and did not carry the lesson across: when it is the ONLY
+    condition (the case the feature exists for), the subject reads
+    "⛔ pipeline recorded nothing in 36h" and the body contains nothing but a
+    HEALTHY table. alerts_subject's own docstring makes the argument; it simply
+    was not applied to render_html_email.
+    """
+
+    def test_the_html_body_says_the_pipeline_recorded_nothing(self):
+        html = gfh.render_html_email({}, NO_ALERTS, {}, 1.0, zero_fetches=[],
+                                     pipeline_stale=True)
+        assert "PIPELINE RECORDED NOTHING" in html, (
+            "the subject shouts and the body says everything is fine")
+
+    def test_the_body_stays_quiet_on_a_normal_night(self):
+        html = gfh.render_html_email({}, NO_ALERTS, {}, 1.0, zero_fetches=[],
+                                     pipeline_stale=False)
+        assert "PIPELINE RECORDED NOTHING" not in html
+
+    def test_main_puts_it_in_the_body_not_just_the_subject(self, tmp_path, monkeypatch, capsys):
+        w = TestTheWiringItself()
+        f = tmp_path / "inspection_state.json"
+        f.write_text(json.dumps(
+            {"acadian-asset": {"last_article_count": 10,
+                               "last_inspected_at": _hours_ago(50)}}, ensure_ascii=False))
+        monkeypatch.setattr(gfh, "INSPECTION_STATE_FILE", f)
+        monkeypatch.setattr(gfh, "STATE_FILE", tmp_path / "health.json")
+        monkeypatch.setattr(gfh, "load_sources", lambda: [w.SOURCE])
+        monkeypatch.setattr(gfh, "probe_source", lambda src: dict(w.OK_PROBE))
+        sent = {}
+        monkeypatch.setattr(gfh, "send_email",
+                            lambda body, subject: sent.update(body=body, subject=subject) or True)
+        monkeypatch.setattr(sys, "argv", ["gmia-fetcher-health.py", "--email"])
+        gfh.main()
+        assert "PIPELINE RECORDED NOTHING" in sent["body"], (
+            f"subject said {sent['subject']!r} but the body never mentions it")
+
+
+class TestDeadPipelineDetectionIsFullyPinned:
+    """Four guarantees that a mutation audit found unpinned."""
+
+    def _state(self, tmp_path, payload):
+        tmp_path.mkdir(parents=True, exist_ok=True)
+        f = tmp_path / "inspection_state.json"
+        f.write_text(json.dumps(payload, ensure_ascii=False))
+        return f
+
+    def test_a_garbage_timestamp_does_not_silence_the_alert(self, tmp_path, monkeypatch):
+        # The mirror of test_an_unreadable_timestamp_is_ignored_rather_than_trusted:
+        # there, an unreadable stamp must not raise a zero alert; here it must
+        # not COUNT AS FRESH and cancel the dead-pipeline alert.
+        monkeypatch.setattr(gfh, "load_sources", lambda: [{"id": "aqr"}])
+        f = self._state(tmp_path, {"aqr": {"last_article_count": 10,
+                                           "last_inspected_at": "not-a-date"}})
+        assert gfh.pipeline_did_not_run(f) is True
+
+    def test_a_fresh_record_for_an_unconfigured_source_does_not_count(self, tmp_path, monkeypatch):
+        # "no CONFIGURED source refreshed in 36h" -- a leftover row for a
+        # retired source must not stand in for a live one.
+        monkeypatch.setattr(gfh, "load_sources", lambda: [{"id": "aqr"}])
+        f = self._state(tmp_path, {
+            "pgim": {"last_article_count": 8, "last_inspected_at": _fresh()},
+            "aqr": {"last_article_count": 10, "last_inspected_at": _hours_ago(50)}})
+        assert gfh.pipeline_did_not_run(f) is True
+
+    def test_the_console_says_so_too(self, tmp_path, monkeypatch, capsys):
+        w = TestTheWiringItself()
+        f = self._state(tmp_path, {"acadian-asset": {"last_article_count": 10,
+                                                     "last_inspected_at": _hours_ago(50)}})
+        monkeypatch.setattr(gfh, "INSPECTION_STATE_FILE", f)
+        monkeypatch.setattr(gfh, "STATE_FILE", tmp_path / "health.json")
+        monkeypatch.setattr(gfh, "load_sources", lambda: [w.SOURCE])
+        monkeypatch.setattr(gfh, "probe_source", lambda src: dict(w.OK_PROBE))
+        monkeypatch.setattr(gfh, "send_email", lambda body, subject: True)
+        monkeypatch.setattr(sys, "argv", ["gmia-fetcher-health.py", "--email"])
+        gfh.main()
+        assert "recorded nothing" in capsys.readouterr().out
+
+    def test_the_freshness_window_is_pinned_at_both_ends(self, tmp_path, monkeypatch):
+        # The window was only bracketed from above: 36 -> 360 was caught, but
+        # 36 -> 1 was not, so the documented value could drift anywhere in
+        # (1h, 50h] undetected. A record from the last run (0.75h) must be
+        # fresh, and one from two missed nights (48.75h) must not.
+        monkeypatch.setattr(gfh, "load_sources", lambda: [{"id": "aqr"}])
+        just_ran = self._state(tmp_path / "a", {"aqr": {"last_article_count": 10,
+                                                        "last_inspected_at": _hours_ago(0.75)}})
+        one_missed = self._state(tmp_path / "b", {"aqr": {"last_article_count": 10,
+                                                          "last_inspected_at": _hours_ago(24.75)}})
+        two_missed = self._state(tmp_path / "c", {"aqr": {"last_article_count": 10,
+                                                          "last_inspected_at": _hours_ago(48.75)}})
+        assert gfh.pipeline_did_not_run(just_ran) is False
+        assert gfh.pipeline_did_not_run(one_missed) is False, "36h must survive one missed night"
+        assert gfh.pipeline_did_not_run(two_missed) is True, "36h must not survive two"
