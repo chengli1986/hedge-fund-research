@@ -911,9 +911,14 @@ def generate_html(articles: list[dict]) -> str:
         src = sources.get(sid, {})
         color = BADGE_COLORS.get(sid, "#8b949e")
         name = _esc(src.get("name", sid))
-        arts = fund_all.get(sid, [])[:5]
+        # The panel lists five, but the counts below describe the fund. Taking
+        # them from the slice made every one of the 42 panels read "5 tracked"
+        # -- man-group has 50 articles -- because the count was computed after
+        # the step that discards the rest.
+        all_arts = fund_all.get(sid, [])
+        arts = all_arts[:5]
         latest_date = arts[0].get("date", "n/a") if arts else "n/a"
-        analyzed_count = sum(1 for a in arts if a.get("summarized"))
+        analyzed_count = sum(1 for a in all_arts if a.get("summarized"))
         art_list = "\n".join(
             f'<li><span class="mini-date">{_esc(_display_date(a) or "n/a")}</span>'
             f'<a href="{_esc(a.get("url", "#"))}" target="_blank" rel="noopener">{_esc(a.get("title", ""))}</a></li>'
@@ -925,7 +930,7 @@ def generate_html(articles: list[dict]) -> str:
             f"""<section class="fund-panel" style="--fund-accent:{color}">
   <div class="fund-head">
     <h3>{name}</h3>
-    <span class="fund-count">{len(arts)} tracked</span>
+    <span class="fund-count">{len(all_arts)} tracked</span>
   </div>
   <div class="fund-meta">
     <span>Latest {latest_date}</span>

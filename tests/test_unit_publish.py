@@ -673,3 +673,49 @@ class TestOlderArticlesLazyLoaded:
         assert "older-articles-data" in html
         # the toggle must consult the island, not just flip a CSS class
         assert "ensureOlderLoaded" in html
+
+
+class TestSidebarFundCountIsNotTheDisplaySlice:
+    """"N tracked" must count the fund's articles, not the five it shows.
+
+    Live on the page 2026-09-10: all 42 fund panels read "5 tracked", including
+    man-group's, which has 50 articles. The sidebar deliberately lists only the
+    five most recent (`fund_all.get(sid, [])[:5]`), and both the tracked count
+    and the analyzed count were taken from that slice — a count computed after
+    the step that throws the data away.
+
+    Dates are relative for the reason the file header gives: a literal date
+    silently crosses the RECENT_DAYS boundary as the calendar advances.
+    """
+
+    def _fund(self, n: int) -> list[dict]:
+        return [{
+            "id": f"a{i}", "source_id": "aqr", "source_name": "AQR",
+            "title": f"Article {i}", "url": f"https://aqr.com/{i}",
+            "date": _date_str(i), "summarized": True,
+            "summary_en": "s", "summary_zh": "摘要", "themes": ["Quant/Factor"],
+            "key_takeaway_en": "k", "key_takeaway_zh": "要",
+        } for i in range(n)]
+
+    def test_a_fund_with_more_than_five_articles_reports_all_of_them(self):
+        html = generate_html(self._fund(12))
+        assert '<span class="fund-count">12 tracked</span>' in html, (
+            "the sidebar reported the size of its own display slice")
+
+    def test_the_analyzed_count_is_not_capped_by_the_slice_either(self):
+        html = generate_html(self._fund(12))
+        assert "<span>12 analyzed</span>" in html
+
+    def test_a_fund_with_fewer_than_five_is_unchanged(self):
+        html = generate_html(self._fund(3))
+        assert '<span class="fund-count">3 tracked</span>' in html
+
+    def test_the_sidebar_still_lists_only_five(self):
+        # The slice itself is deliberate — this pins that the fix did not turn
+        # the panel into a 50-item list.
+        html = generate_html(self._fund(12))
+        # Locate AQR's panel by name: panels render for every configured
+        # source in order, so panel[0] is whichever fund sorts first (and has
+        # no articles in this fixture).
+        panel = html.split("<h3>AQR Capital Management</h3>", 1)[1].split("</section>", 1)[0]
+        assert panel.count("<li>") == 5
