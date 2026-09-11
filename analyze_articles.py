@@ -14,6 +14,7 @@ Usage:
 
 import argparse
 import json
+import sys
 from functools import partial
 import logging
 import os
@@ -530,7 +531,7 @@ def _resolve_content_path(article: dict) -> Path:
 # Main
 # ---------------------------------------------------------------------------
 
-def main() -> None:
+def main() -> int:
     parser = argparse.ArgumentParser(description="Hedge Fund Research — LLM Analysis")
     parser.add_argument("--dry-run", action="store_true", help="Show what would be analyzed")
     args = parser.parse_args()
@@ -603,6 +604,24 @@ def main() -> None:
     print(f"Pending: {len(pending)} | Success: {success_count} | Failed: {fail_count}")
     print()
 
+    # Articles were waiting and not one was summarised: quota exhaustion, or
+    # all three MODEL_CHAIN tiers down. Until 2026-09-11 main() returned None
+    # here too, so the process exited 0 and run_pipeline.sh's
+    # `if python3 analyze_articles.py` guard saw a clean run -- the same shape
+    # fixed for stage 1 in 9f6e291.
+    #
+    # An empty pending list is the normal quiet case and stays silent, and a
+    # partial failure is not an outage: those articles keep their unsummarised
+    # state and are retried next run, and their cost is already visible in
+    # logs/analyze-usage.jsonl.
+    if pending and success_count == 0:
+        log.error("TOTAL ANALYSIS OUTAGE: %d article(s) pending, none summarised",
+                  len(pending))
+        return 1
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    # sys.exit, not a bare call: main()'s return value was discarded, so the
+    # process exited 0 however the run went.
+    sys.exit(main() or 0)

@@ -1,6 +1,7 @@
 """Unit tests for analyze_articles.py — Stage 3 LLM Analysis."""
 
 import json
+import sys
 import pytest
 
 from analyze_articles import (
@@ -486,3 +487,95 @@ class TestChainModelsAreFullyDeclared:
         _, _, used = aa._call_gemini("p", "k", model="gemini-2.5-flash")
         assert "gemini-2.5-flash:generateContent" in seen["url"]
         assert used == "gemini-2.5-flash"
+
+
+class TestTotalAnalysisOutageIsAFailure:
+    """Stage 3 must not report success when nothing could be summarised.
+
+    Same shape as the stage 1 outage fixed in 9f6e291: `fail_count` could
+    equal `len(pending)` and main() still returned None, so the process exited
+    0 and run_pipeline.sh's `if python3 analyze_articles.py` guard saw a clean
+    run. A quota exhaustion or all three MODEL_CHAIN tiers failing is invisible
+    to the pipeline's own alert channel.
+
+    The floor is "articles were waiting and not one was summarised". An empty
+    pending list is the normal quiet case and must stay silent.
+    """
+
+    # No content_path: _resolve_content_path derives CONTENT_DIR/<id>.txt.
+    # An earlier version set a RELATIVE "content/a1.txt", which resolves
+    # against the repo cwd and was rejected as escaping the patched content
+    # dir -- so the model stub was never reached and the outage test passed
+    # for the wrong reason (path errors, not model failures).
+    ART = {"id": "a1", "source_id": "aqr", "title": "T", "url": "https://aqr.com/1",
+           "date": "2026-09-01", "content_status": "ok", "summarized": False}
+    GOOD = {"summary_en": "e", "summary_zh": "摘", "themes": ["Quant/Factor"],
+            "key_takeaway_en": "k", "key_takeaway_zh": "要",
+            "_model": "gpt-5.6-luna", "_usage": {}}
+
+    def _run(self, tmp_path, monkeypatch, articles, result):
+        import analyze_articles as aa
+        data = tmp_path / "articles.jsonl"
+        data.write_text("".join(json.dumps(a, ensure_ascii=False) + "\n" for a in articles))
+        content = tmp_path / "content"
+        content.mkdir()
+        for a in articles:
+            (content / f"{a['id']}.txt").write_text("body text long enough to analyse")
+        monkeypatch.setattr(aa, "DATA_FILE", data)
+        monkeypatch.setattr(aa, "CONTENT_DIR", content)
+        monkeypatch.setattr(aa, "_load_api_keys", lambda: {"OPENAI_API_KEY": "k"})
+        monkeypatch.setattr(aa, "_analyze_with_fallback",
+                            lambda *a, **k: (dict(result) if result else None))
+        monkeypatch.setattr(sys, "argv", ["analyze_articles.py"])
+        return aa.main()
+
+    def test_every_article_failing_is_reported_as_a_failure(self, tmp_path, monkeypatch):
+        rc = self._run(tmp_path, monkeypatch, [dict(self.ART)], result=None)
+        assert rc == 1, ("every model failed on every article and the pipeline "
+                         "still reported a clean run")
+
+    def test_nothing_to_do_is_not_a_failure(self, tmp_path, monkeypatch):
+        done = dict(self.ART, summarized=True)
+        rc = self._run(tmp_path, monkeypatch, [done], result=None)
+        assert rc in (0, None), "a run with nothing pending was treated as an outage"
+
+    def test_a_partial_failure_is_not_an_outage(self, tmp_path, monkeypatch):
+        import analyze_articles as aa
+        arts = [dict(self.ART, id="a1"), dict(self.ART, id="a2")]
+        calls = {"n": 0}
+
+        def flaky(*a, **k):
+            calls["n"] += 1
+            return dict(self.GOOD) if calls["n"] == 1 else None
+
+        data = tmp_path / "articles.jsonl"
+        data.write_text("".join(json.dumps(a, ensure_ascii=False) + "\n" for a in arts))
+        content = tmp_path / "content"
+        content.mkdir()
+        for a in arts:
+            (content / f"{a['id']}.txt").write_text("body text long enough to analyse")
+        monkeypatch.setattr(aa, "DATA_FILE", data)
+        monkeypatch.setattr(aa, "CONTENT_DIR", content)
+        monkeypatch.setattr(aa, "_load_api_keys", lambda: {"OPENAI_API_KEY": "k"})
+        monkeypatch.setattr(aa, "_analyze_with_fallback", flaky)
+        monkeypatch.setattr(sys, "argv", ["analyze_articles.py"])
+        assert aa.main() in (0, None)
+
+    def test_the_entry_point_propagates_the_exit_code(self):
+        """The tests above call main() directly and pass either way.
+
+        On stage 1 this exact line was reverted in a mutation and all four
+        behavioural tests stayed green while the whole bug came back.
+        """
+        import ast
+        import inspect
+        import analyze_articles as aa
+
+        tree = ast.parse(inspect.getsource(aa))
+        guards = [n for n in tree.body if isinstance(n, ast.If)
+                  and "__name__" in ast.dump(n.test)]
+        assert guards, "no `if __name__ == '__main__'` block found"
+        exits = [c for c in ast.walk(guards[-1]) if isinstance(c, ast.Call)
+                 and isinstance(c.func, ast.Attribute) and c.func.attr == "exit"]
+        assert exits, "the entry point discards main()'s return value"
+        assert any("main" in ast.dump(a) for c in exits for a in c.args)
