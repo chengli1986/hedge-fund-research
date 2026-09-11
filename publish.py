@@ -859,7 +859,13 @@ def generate_html(articles: list[dict]) -> str:
         name = _esc(src.get("name", sid))
         arts = fund_all.get(sid, [])
         analyzed = sum(1 for a in arts if a.get("summarized"))
-        latest = arts[0].get("date", "n/a") if arts else "n/a"
+        # _display_date, not the raw date: month-granularity dates are stored
+        # as the month's LAST day so staleness checks don't fire early, and
+        # rendering that verbatim dated three funds 19 days into the future.
+        # `or "n/a"` covers date=null (23 rows carry the key with no value, so
+        # .get's default never applied). Escaped: this and its sidebar twin
+        # were the only article-derived interpolations left unescaped.
+        latest = _esc(_display_date(arts[0]) or "n/a") if arts else "n/a"
         article_ids = " ".join(_esc(a.get("id", "")) for a in arts)
         fund_view_parts.append(
             f"""<section class="cluster fund-section" data-source-id="{_esc(sid)}" style="--fund-accent:{color}">
@@ -917,7 +923,7 @@ def generate_html(articles: list[dict]) -> str:
         # the step that discards the rest.
         all_arts = fund_all.get(sid, [])
         arts = all_arts[:5]
-        latest_date = arts[0].get("date", "n/a") if arts else "n/a"
+        latest_date = _esc(_display_date(arts[0]) or "n/a") if arts else "n/a"
         analyzed_count = sum(1 for a in all_arts if a.get("summarized"))
         art_list = "\n".join(
             f'<li><span class="mini-date">{_esc(_display_date(a) or "n/a")}</span>'

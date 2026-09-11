@@ -719,3 +719,73 @@ class TestSidebarFundCountIsNotTheDisplaySlice:
         # no articles in this fixture).
         panel = html.split("<h3>AQR Capital Management</h3>", 1)[1].split("</section>", 1)[0]
         assert panel.count("<li>") == 5
+
+
+class TestLatestDateIsShownAsPublished:
+    """"Latest" must show what the source published, not the sort key.
+
+    Live on the page 2026-09-11: three funds read "Latest: 2026-09-30" — 19
+    days in the future — and one read "Latest: None".
+
+    Month-granularity dates ("Sep 2026") are normalised upstream to the
+    month's LAST day so staleness checks don't fire ~30 days early; that is
+    deliberate and `_display_date` exists precisely to undo it for the reader.
+    Its own docstring records the same bug being fixed once already ("on
+    2026-08-10 the page led with 2026-08-31"). Both Latest fields were still
+    rendering the raw sort key, so the Timeline row showed "Sep 2026" while
+    the Funds view showed "2026-09-30" for the same article.
+
+    "None" is a different slip: `.get("date", "n/a")` only returns the default
+    when the key is ABSENT, and 23 rows carry the key with value null.
+    """
+
+    def _article(self, **over):
+        a = {"id": "x1", "source_id": "aqr", "source_name": "AQR",
+             "title": "T", "url": "https://aqr.com/1", "date": _date_str(1),
+             "summarized": True, "summary_en": "s", "summary_zh": "摘",
+             "themes": ["Quant/Factor"], "key_takeaway_en": "k", "key_takeaway_zh": "要"}
+        a.update(over)
+        return a
+
+    def _latest_labels(self, html: str) -> list[str]:
+        import re
+        return (re.findall(r'Latest: ([^<]*)', html) + re.findall(r'<span>Latest ([^<]*)</span>', html))
+
+    def test_a_month_only_date_shows_the_month_not_a_future_day(self):
+        # date_raw is the label the source actually published.
+        art = self._article(date="2026-09-30", date_raw="Sep 2026")
+        labels = self._latest_labels(generate_html([art]))
+        assert "Sep 2026" in labels, labels
+        assert "2026-09-30" not in labels, (
+            "a month-granularity article was dated to the last day of the month")
+
+    def test_a_missing_date_shows_na_not_none(self):
+        art = self._article(date=None, date_raw="")
+        labels = self._latest_labels(generate_html([art]))
+        assert "None" not in labels, labels
+        assert "n/a" in labels
+
+    def test_an_ordinary_date_is_unchanged(self):
+        d = _date_str(2)
+        art = self._article(date=d, date_raw=d)
+        assert d in self._latest_labels(generate_html([art]))
+
+    def test_the_month_label_cannot_carry_markup(self):
+        r"""The anchored regex is the real guarantee here, not the escaping.
+
+        The first version of this test fed `date_raw='Sep <img src=x ...> 2026'`
+        and asserted the markup came out escaped — but _MONTH_ONLY_RAW is
+        `^[A-Za-z]{3,9}\.?\s+\d{4}$`, so that string never matches and
+        _display_date falls back to the ISO date; the markup never reached the
+        page at all. The assertion was about a scenario the code makes
+        impossible. `_esc` stays as defence in depth, but what would actually
+        regress is someone loosening this pattern, so that is what is pinned.
+        """
+        from publish import _MONTH_ONLY_RAW, _display_date
+        for hostile in ('Sep <img src=x onerror=alert(1)> 2026',
+                        '<script>alert(1)</script>',
+                        'Sep 2026"><script>x</script>'):
+            assert not _MONTH_ONLY_RAW.match(hostile), hostile
+            assert _display_date({"date": "2026-09-30", "date_raw": hostile}) == "2026-09-30"
+        assert _MONTH_ONLY_RAW.match("Sep 2026")
+        assert _MONTH_ONLY_RAW.match("September 2026")
