@@ -685,3 +685,46 @@ class TestVerdadFetcher:
     def test_verdad_registered(self):
         from fetch_content import CONTENT_FETCHERS
         assert "verdad-capital" in CONTENT_FETCHERS
+
+
+class TestInlineTagsDoNotFuseWords:
+    """Text either side of an inline tag must not be glued together.
+
+    `el.get_text(strip=True)` drops inline markup with no separator, so every
+    bolded number, linked phrase and italicised term in the corpus reached the
+    LLM fused to its neighbour: `by75bpinSeptember`, and in production
+    `theirConcentration`, `bookExpert`, `loseThough`. `_normalize_html` backs
+    about 35 of the 42 sources, so this is the whole corpus.
+
+    _extract_bridgewater_text and _fetch_content_matthews_asia already pass a
+    separator; this brings the shared helper in line.
+
+    Adding a separator alone trades one artefact for another -- it yields
+    "September ." and "the report , page 3" -- so the spacing before closing
+    punctuation is collapsed too, which is why that is asserted here rather
+    than left to look like a cosmetic detail.
+    """
+
+    def test_a_bolded_number_keeps_its_spaces(self):
+        html = ("<article><p>The Fed raised rates by <strong>75bp</strong> "
+                "in <em>September</em>.</p></article>")
+        assert _normalize_html(html, "article p") == (
+            "The Fed raised rates by 75bp in September.")
+
+    def test_a_link_does_not_swallow_the_preceding_word(self):
+        html = '<article><p>See <a href="#">the report</a>, page 3.</p></article>'
+        assert _normalize_html(html, "article p") == "See the report, page 3."
+
+    def test_paragraphs_stay_on_separate_lines(self):
+        # The newline between elements is the only paragraph signal the LLM
+        # gets; collapsing whitespace must not eat it.
+        html = "<article><p>First para.</p><p>Second para.</p></article>"
+        assert _normalize_html(html, "article p") == "First para.\nSecond para."
+
+    def test_plain_text_is_unchanged(self):
+        html = "<article><p>No inline markup at all.</p></article>"
+        assert _normalize_html(html, "article p") == "No inline markup at all."
+
+    def test_runs_of_whitespace_collapse(self):
+        html = "<article><p>Spaced   out\n\ttext.</p></article>"
+        assert _normalize_html(html, "article p") == "Spaced out text."

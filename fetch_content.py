@@ -127,12 +127,34 @@ def _normalize_html(html: str, selector: str) -> str:
             if elements:
                 break
 
+    # get_text(" ", ...), not get_text(...): without a separator BeautifulSoup
+    # concatenates the strings either side of an inline tag, so every bolded
+    # number, linked phrase and italicised term in the corpus reached the LLM
+    # fused to its neighbour -- "by75bpinSeptember", and in production
+    # "theirConcentration", "bookExpert", "loseThough". This helper backs ~35
+    # of the 42 sources. _extract_bridgewater_text and
+    # _fetch_content_matthews_asia already passed a separator.
+    #
+    # The separator alone trades one artefact for another ("September .",
+    # "the report , page 3"), so runs of whitespace collapse and the space
+    # before closing punctuation goes with them. Element joins stay "\n":
+    # that newline is the only paragraph boundary the LLM gets.
     if elements:
-        text = "\n".join(el.get_text(strip=True) for el in elements)
+        text = "\n".join(_collapse_inline_spacing(el.get_text(" ", strip=True))
+                          for el in elements)
     else:
-        text = soup.get_text(strip=True)
+        text = _collapse_inline_spacing(soup.get_text(" ", strip=True))
 
     return text
+
+
+# Closing punctuation only: an opening bracket or quote legitimately hugs the
+# word that follows it, and separating those would be the same bug mirrored.
+_SPACE_BEFORE_PUNCT = re.compile(r"\s+([.,;:!?%)\]}])")
+
+
+def _collapse_inline_spacing(text: str) -> str:
+    return _SPACE_BEFORE_PUNCT.sub(r"\1", re.sub(r"\s+", " ", text)).strip()
 
 
 def _normalize_whitespace(text: str) -> str:
