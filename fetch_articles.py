@@ -3588,6 +3588,10 @@ def main() -> None:
     existing_ids = load_existing_ids()
     entrypoints = load_entrypoints()
     all_new: list[dict] = []
+    # How many articles each source actually returned this run. Read back from
+    # the metrics record_quality_metrics just wrote, which is the only place
+    # the accepted count survives fetch_source.
+    found_by_source: dict[str, int] = {}
 
     for source in sources:
         if args.source and source["id"] != args.source:
@@ -3605,6 +3609,7 @@ def main() -> None:
             try:
                 state = json.loads(INSPECTION_STATE_FILE.read_text())
                 source_metrics = state.get(source["id"], {})
+                found_by_source[source["id"]] = source_metrics.get("last_article_count", 0)
                 for alert in check_anomalies(source_metrics):
                     log.warning("ANOMALY [%s]: %s", source["id"], alert)
             except json.JSONDecodeError:
@@ -3630,6 +3635,29 @@ def main() -> None:
         print(f"  [{a['source_name']:12s}] {a['date'] or 'n/a':10s}  {a['title'][:70]}")
     print()
 
+    # A fleet-wide outage must not exit 0. Until 2026-09-10 every per-source
+    # failure was swallowed inside fetch_source, so 42 sources going down
+    # produced "No new articles found.", exit 0, and run_pipeline.sh printing
+    # "Pipeline complete — all stages OK" with nobody emailed; the only thing
+    # that noticed was a different cron job 45 minutes later.
+    #
+    # The floor is FOUND, not NEW. "0 new" is the normal case -- on 2026-09-06
+    # all 40 sources logged ", 0 new" because nothing had been published since
+    # the previous run -- so failing on that would alert most nights. No source
+    # returning any article at all is what an outage looks like and what a
+    # quiet night never does.
+    #
+    # Skipped for --source (a debug path; one silent source is the fetcher
+    # health email's job) and when no metrics were collected, since then we
+    # cannot tell an outage from a first run.
+    if not args.source and found_by_source and not any(found_by_source.values()):
+        log.error("TOTAL FETCH OUTAGE: all %d sources returned 0 articles",
+                  len(found_by_source))
+        return 1
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    # sys.exit, not a bare call: main()'s return value was discarded, so the
+    # process exited 0 no matter what it found.
+    sys.exit(main() or 0)

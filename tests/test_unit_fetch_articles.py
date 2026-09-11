@@ -1,6 +1,7 @@
 """Unit tests for fetch_articles.py — article_id, parse_date, _validate_hostname, load_existing_ids, entrypoints."""
 
 import json
+import sys
 from unittest.mock import MagicMock, patch
 import pytest
 from fetch_articles import (
@@ -2327,3 +2328,103 @@ class TestMetricsWriteCannotKillTheRun:
         assert state_file.read_bytes() == before, (
             "an unreadable-but-intact state file was overwritten with a fresh "
             "dict — every other source's consecutive_zero_count is gone")
+
+
+class TestTotalFetchOutageIsAFailure:
+    """Stage 1 must not report success when nothing was fetched at all.
+
+    Verified 2026-09-10: monkeypatching all 42 fetchers to raise produced
+    "No new articles found.", main() returning None, process exit 0, and
+    run_pipeline.sh printing "Pipeline complete — all stages OK". 42 sources
+    down and nobody is emailed; the only thing that notices is a different
+    cron job 45 minutes later.
+
+    The distinction that matters is FOUND vs NEW. "0 new" is the normal case
+    -- on 2026-09-06 all 40 sources logged ", 0 new" because no site had
+    published since the previous run -- so the floor is "no source returned
+    any article at all", which is what a fleet-wide outage looks like and
+    what a quiet night never does.
+    """
+
+    SRC = [{"id": "s1", "name": "S1", "short_name": "S1", "method": "scrape",
+            "expected_hostname": "example.com", "url": "https://example.com/a"},
+           {"id": "s2", "name": "S2", "short_name": "S2", "method": "scrape",
+            "expected_hostname": "example.com", "url": "https://example.com/b"}]
+
+    def _run(self, tmp_path, monkeypatch, fetchers, argv=("fetch_articles.py",)):
+        import fetch_articles as fa
+        cfg = tmp_path / "sources.json"
+        cfg.write_text(json.dumps({"sources": self.SRC}, ensure_ascii=False))
+        monkeypatch.setattr(fa, "CONFIG_FILE", cfg)
+        monkeypatch.setattr(fa, "DATA_FILE", tmp_path / "articles.jsonl")
+        monkeypatch.setattr(fa, "INSPECTION_STATE_FILE", tmp_path / "state.json")
+        monkeypatch.setattr(fa, "ENTRYPOINTS_FILE", tmp_path / "entrypoints.json")
+        monkeypatch.setattr(fa.time, "sleep", lambda *_: None)
+        monkeypatch.setattr(sys, "argv", list(argv))
+        with patch.dict(fa.FETCHERS, fetchers, clear=False):
+            return fa.main()
+
+    def _art(self, i):
+        return {"title": f"t{i}", "url": f"https://example.com/{i}", "date": "2026-09-01"}
+
+    def test_every_source_failing_is_reported_as_a_failure(self, tmp_path, monkeypatch):
+        def boom(source):
+            raise RuntimeError("site down")
+        rc = self._run(tmp_path, monkeypatch, {"s1": boom, "s2": boom})
+        assert rc == 1, ("42 sources can go down and the pipeline still says "
+                         "'all stages OK' — nothing emails anyone")
+
+    def test_a_quiet_night_is_not_a_failure(self, tmp_path, monkeypatch):
+        """The common case: every source answers, nothing is new."""
+        import fetch_articles as fa
+        arts = [self._art(1)]
+        seen = {fa.article_id("s1", arts[0]["url"]), fa.article_id("s2", arts[0]["url"])}
+        (tmp_path / "articles.jsonl").write_text("")
+        monkeypatch.setattr(fa, "load_existing_ids", lambda: set(seen))
+        rc = self._run(tmp_path, monkeypatch, {"s1": lambda s: arts, "s2": lambda s: arts})
+        assert rc in (0, None), "a night with no NEW articles was treated as an outage"
+
+    def test_one_surviving_source_is_not_an_outage(self, tmp_path, monkeypatch):
+        def boom(source):
+            raise RuntimeError("site down")
+        rc = self._run(tmp_path, monkeypatch,
+                       {"s1": boom, "s2": lambda s: [self._art(2)]})
+        assert rc in (0, None)
+
+    def test_single_source_debug_mode_does_not_fail_the_pipeline(self, tmp_path, monkeypatch):
+        # --source is a debug path; one source returning nothing is the
+        # zero-fetch email's job, not a reason to fail the nightly run.
+        def boom(source):
+            raise RuntimeError("site down")
+        rc = self._run(tmp_path, monkeypatch, {"s1": boom, "s2": boom},
+                       argv=("fetch_articles.py", "--source", "s1"))
+        assert rc in (0, None)
+
+    def test_the_entry_point_propagates_the_exit_code(self):
+        """main()'s return value must reach the process.
+
+        The tests above call main() directly, so they pass whether or not the
+        `if __name__ == "__main__"` block does anything with what it returns.
+        Reverting that line to a bare `main()` left all four green (mutation,
+        2026-09-10) while restoring the exact bug: exit 0 on a total outage.
+
+        Structural rather than behavioural: the failure path needs a fleet-wide
+        outage to trigger, which a subprocess cannot stage without the network.
+        Same shape as test_main_passes_article_id_to_the_chain.
+        """
+        import ast
+        import inspect
+        import fetch_articles as fa
+
+        tree = ast.parse(inspect.getsource(fa))
+        guards = [n for n in tree.body if isinstance(n, ast.If)
+                  and ast.dump(n.test).find("__name__") != -1]
+        assert guards, "no `if __name__ == '__main__'` block found"
+        calls = [n for n in ast.walk(guards[-1]) if isinstance(n, ast.Call)]
+        exits = [c for c in calls
+                 if isinstance(c.func, ast.Attribute) and c.func.attr == "exit"]
+        assert exits, (
+            "the entry point discards main()'s return value — the process "
+            "exits 0 however the run went")
+        assert any("main" in ast.dump(a) for c in exits for a in c.args), (
+            "sys.exit() is called but not with main()'s result")
