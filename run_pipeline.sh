@@ -2,6 +2,13 @@
 set -uo pipefail
 cd ~/hedge-fund-research || { echo "FATAL: cannot cd to ~/hedge-fund-research"; exit 1; }
 
+# Captured before any stage runs, and handed to the Stage 5 checker so it can
+# tell "publish wrote this page" from "yesterday's page is still on disk".
+# Stage 4 runs unconditionally after Stages 1-3 fail, so a publish that
+# silently no-ops used to leave the old page in place and the checker blessed
+# it -- a copy touched to 2020-01-01 passed all six checks.
+PIPELINE_START_EPOCH=$(date +%s)
+
 echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Pipeline starting"
 
 # --- Weekly entrypoint validation pre-check (non-fatal) ---
@@ -70,7 +77,7 @@ fi
 # missing fund sections, duplicate sections, empty h2s, duplicate style attrs.
 # Failure is reported as a stage failure so cron-wrapper alerts.
 if [[ ! " ${failed_stages[*]} " =~ " Stage4:publish " ]]; then
-  if ! python3 scripts/check_dashboard_html.py; then
+  if ! python3 scripts/check_dashboard_html.py --written-after "$PIPELINE_START_EPOCH"; then
     failed_stages+=("Stage5:dashboard-sanity")
     echo "WARN: dashboard HTML sanity check failed — page may be broken at /var/www/overview/hedge-fund-research.html"
   fi

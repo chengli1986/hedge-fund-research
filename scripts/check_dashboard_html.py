@@ -13,9 +13,20 @@ What we check:
   5. no empty <h2></h2> headers (catches missing fund/cluster names)
 
 Exit codes:
-  0 = all checks pass (or all skipped because input missing)
+  0 = all checks pass
   1 = at least one check failed
   2 = HTML file unreadable
+
+A missing config/sources.json used to disarm every check and still exit 0 --
+and publish.py degrades that same input in the opposite direction, rendering
+zero fund sections under a headline reading "0 funds tracked". The one input
+whose loss most damages the page turned the gate off. It is now an error
+unless --allow-missing-sources is passed explicitly.
+
+--written-after <epoch> asserts the HTML was written by the run that is
+checking it. Stage 4 runs unconditionally after stages 1-3 fail, so a publish
+that silently no-ops leaves the previous day's page on disk; without this the
+checker blessed a file six years old.
 
 Usage:
   python3 scripts/check_dashboard_html.py
@@ -83,7 +94,10 @@ def load_expected_source_ids() -> set[str]:
     return {s["id"] for s in data.get("sources", []) if s.get("id")}
 
 
-def check_dashboard(html: str, expected_ids: set[str]) -> dict:
+def check_dashboard(html: str, expected_ids: set[str], *,
+                    allow_missing_sources: bool = False,
+                    html_mtime: float | None = None,
+                    written_after: float | None = None) -> dict:
     """Run all checks; return {ok: bool, checks: [...]}."""
     fund_ids = _extract_fund_section_ids(html)
     fund_id_set = set(fund_ids)
@@ -97,8 +111,12 @@ def check_dashboard(html: str, expected_ids: set[str]) -> dict:
     expected_count = len(expected_ids)
     actual_count = len(fund_ids)
     if expected_count == 0:
-        checks.append({"check": "fund_section_count", "passed": True,
-                       "detail": "no expected sources to compare against (skipping)"})
+        checks.append({"check": "fund_section_count",
+                       "passed": bool(allow_missing_sources),
+                       "detail": ("no expected sources — skipping (--allow-missing-sources)"
+                                  if allow_missing_sources else
+                                  "config/sources.json is missing or empty; every check "
+                                  "below is comparing against nothing")})
     elif actual_count == 0:
         checks.append({"check": "fund_section_count", "passed": False,
                        "detail": f"expected {expected_count} fund sections, got 0 — page is empty/broken"})
@@ -135,9 +153,26 @@ def check_dashboard(html: str, expected_ids: set[str]) -> dict:
     if zero_count:
         checks.append({"check": "non_empty_sections", "passed": False,
                        "detail": f"sections with 0 articles in cluster-count: {zero_count}"})
+    elif not counts:
+        # "all 0 sections have >=1 article" is a vacuous truth dressed as a
+        # green tick, and the green tick is what a human acts on.
+        checks.append({"check": "non_empty_sections",
+                       "passed": bool(allow_missing_sources),
+                       "detail": "no fund sections rendered at all"})
     else:
         checks.append({"check": "non_empty_sections", "passed": True,
                        "detail": f"all {len(counts)} sections have ≥1 article"})
+
+    # 6. freshness — only claimed when a reference time was supplied, so the
+    # report never implies it verified something it did not.
+    if written_after is not None:
+        fresh = html_mtime is not None and html_mtime >= written_after
+        checks.append({
+            "check": "freshness", "passed": fresh,
+            "detail": (f"written {html_mtime:.0f} >= run start {written_after:.0f}"
+                       if fresh else
+                       f"stale: page mtime {html_mtime} predates this run's start "
+                       f"{written_after:.0f} — publish did not write it")})
 
     # 5. no duplicate style attributes
     if dup_styles:
@@ -164,6 +199,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--html-path", default=str(DEFAULT_HTML_PATH))
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--written-after", type=float, default=None,
+                        help="epoch seconds; fail if the HTML predates it "
+                             "(pass the pipeline's start time)")
+    parser.add_argument("--allow-missing-sources", action="store_true",
+                        help="treat an absent config/sources.json as a skip "
+                             "rather than an error (development only)")
     args = parser.parse_args()
 
     html_path = Path(args.html_path)
@@ -178,7 +219,14 @@ def main() -> int:
         return 2
 
     expected_ids = load_expected_source_ids()
-    result = check_dashboard(html, expected_ids)
+    try:
+        html_mtime = html_path.stat().st_mtime
+    except OSError:
+        html_mtime = None
+    result = check_dashboard(html, expected_ids,
+                             allow_missing_sources=args.allow_missing_sources,
+                             html_mtime=html_mtime,
+                             written_after=args.written_after)
 
     if args.json:
         print(json.dumps(result, indent=2, ensure_ascii=False))
