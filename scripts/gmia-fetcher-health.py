@@ -318,6 +318,7 @@ def _probe_once(source: dict) -> dict:
     chars = 0
     content_attempts: list[dict] = []
     content_success = False
+    extraction_note = ""
     transient_exc_seen: Exception | None = None
     all_failures_transient = True  # only true if every attempt raised transient
     try:
@@ -327,6 +328,9 @@ def _probe_once(source: dict) -> dict:
                 probe_article = dict(article)
                 probe_article["id"] = f"healthprobe_{sid}_{idx}"
                 attempt: dict = {"index": idx, "url": article.get("url", "")}
+                # Per attempt, so a teaser that hit a fallback before the
+                # article that succeeded cannot taint the verdict.
+                fetch_content.drain_extraction_paths()
                 try:
                     outcome = content_fetcher(probe_article)
                 except Exception as exc:
@@ -366,6 +370,14 @@ def _probe_once(source: dict) -> dict:
                     content_attempts.append(attempt)
                     continue
 
+                off_primary = sorted({p for p in fetch_content.drain_extraction_paths()
+                                      if p != "primary"})
+                if off_primary:
+                    extraction_note = (
+                        f"content selector matched nothing; text came from "
+                        f"{', '.join(off_primary)} (may include navigation, "
+                        f"cookie banners or related-article lists)"
+                    )
                 attempt["reason"] = f"ok ({this_chars} chars)"
                 content_attempts.append(attempt)
                 chars = this_chars
@@ -399,7 +411,7 @@ def _probe_once(source: dict) -> dict:
     if result["most_recent_date"] is None and not source.get("no_publish_dates", False):
         result["status"] = "WARN"
         result["reason"] = "most recent article has no parsed date"
-        return result
+        return _add_extraction_note(result, extraction_note)
 
     # Step 4: staleness vs declared frequency. Catches the "site stopped publishing
     # but old article index still serves" failure mode — fetcher returns articles
@@ -422,6 +434,14 @@ def _probe_once(source: dict) -> dict:
                 reason += f" — {cadence}"
             result["reason"] = reason
 
+    return _add_extraction_note(result, extraction_note)
+
+
+def _add_extraction_note(result: dict, note: str) -> dict:
+    """WARN on a fallback extraction, keeping any reason already set."""
+    if note:
+        result["status"] = "FAIL" if result["status"] == "FAIL" else "WARN"
+        result["reason"] = f"{result['reason']}; {note}" if result["reason"] else note
     return result
 
 

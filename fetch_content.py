@@ -102,6 +102,21 @@ def _validate_json_response(text: str) -> bool:
         return False
 
 
+# Which path each _normalize_html call took, in call order: "primary",
+# "fallback:<selector>" or "whole-page". A dead selector used to be invisible:
+# the fallback returned navigation, cookie banners or a list of other
+# articles' titles, which clears MIN_CONTENT_LENGTH and was saved as "ok".
+# scripts/gmia-fetcher-health.py drains this around each probe attempt.
+_extraction_paths: list[str] = []
+
+
+def drain_extraction_paths() -> list[str]:
+    """Return the paths recorded since the last drain, and clear them."""
+    paths = list(_extraction_paths)
+    _extraction_paths.clear()
+    return paths
+
+
 def _normalize_html(html: str, selector: str) -> str:
     """Extract article text from HTML using CSS selectors, stripping boilerplate.
 
@@ -120,12 +135,17 @@ def _normalize_html(html: str, selector: str) -> str:
 
     # Try primary selector
     elements = soup.select(selector)
+    path = "primary"
     if not elements:
         # Fallback selectors
+        path = "whole-page"
         for fallback in ["article", "main", ".content", ".article-body"]:
             elements = soup.select(fallback)
             if elements:
+                path = f"fallback:{fallback}"
                 break
+        log.warning("  extraction: selector %r matched nothing, used %s", selector, path)
+    _extraction_paths.append(path)
 
     # get_text(" ", ...), not get_text(...): without a separator BeautifulSoup
     # concatenates the strings either side of an inline tag, so every bolded

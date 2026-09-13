@@ -10,6 +10,7 @@ from fetch_content import (
     _validate_pdf_response,
     _validate_json_response,
     _normalize_html,
+    drain_extraction_paths,
     _check_min_content_length,
     _atomic_write,
     load_articles,
@@ -124,6 +125,43 @@ class TestNormalizeHtml:
         assert "Real content" in text
         assert "var x" not in text
         assert "color: red" not in text
+
+
+class TestExtractionPathIsRecorded:
+    """_normalize_html used to fall back from a dead selector to <main>, or to
+    the whole page, and return the result exactly as if the selector had
+    matched. Four sources (aqr, man-group, msci-research, acadian-asset) were
+    on the <main> fallback and three (troweprice, verdad-capital,
+    research-affiliates) on the whole page when probed live on 2026-09-13;
+    their stored "bodies" included cookie banners, language pickers and, for
+    acadian, nothing but a list of other articles' titles. The length check
+    (>100 chars) cannot tell, because navigation alone clears it. So the path
+    taken is recorded for whoever can report it."""
+
+    def setup_method(self):
+        drain_extraction_paths()
+
+    def test_a_matching_selector_is_recorded_as_primary(self):
+        _normalize_html("<article><p>Body.</p></article>", "article p")
+        assert drain_extraction_paths() == ["primary"]
+
+    def test_a_dead_selector_that_lands_on_main_is_recorded_as_fallback(self):
+        _normalize_html("<main><p>Body.</p></main>", ".gone p")
+        assert drain_extraction_paths() == ["fallback:main"]
+
+    def test_nothing_matching_is_recorded_as_whole_page(self):
+        _normalize_html("<div><p>Body.</p></div>", ".gone p")
+        assert drain_extraction_paths() == ["whole-page"]
+
+    def test_drain_empties_the_record(self):
+        _normalize_html("<article><p>Body.</p></article>", "article p")
+        drain_extraction_paths()
+        assert drain_extraction_paths() == []
+
+    def test_every_call_is_recorded_in_order(self):
+        _normalize_html("<article><p>A.</p></article>", "article p")
+        _normalize_html("<main><p>B.</p></main>", ".gone p")
+        assert drain_extraction_paths() == ["primary", "fallback:main"]
 
 
 # ---------------------------------------------------------------------------

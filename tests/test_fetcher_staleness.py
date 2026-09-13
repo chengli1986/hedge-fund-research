@@ -102,6 +102,11 @@ class _FakeFetchContent:
         self.CONTENT_FETCHERS = content_fetchers
         self.MIN_CONTENT_LENGTH = min_chars
         self.CONTENT_DIR = Path("/tmp")
+        self.extraction_paths: list[str] = []
+
+    def drain_extraction_paths(self):
+        paths, self.extraction_paths = self.extraction_paths, []
+        return paths
 
 
 def _install_fakes(monkeypatch, articles_returned, content_chars=500):
@@ -620,3 +625,103 @@ def test_probe_zero_articles_reason_carries_the_diagnosis(monkeypatch):
     assert result["status"] == "WARN"
     assert "0 articles" in result["reason"]
     assert "www.metlife.com/investments/en-us/disclaimer/" in result["reason"]
+
+
+# ── extraction-path probe (2026-09-13: seven sources silently on a fallback) ──
+#
+# A content fetcher whose selector had stopped matching still returned "ok":
+# _normalize_html fell back to <main> or the whole page, and navigation text
+# alone clears MIN_CONTENT_LENGTH. The probe passed; the stored bodies were
+# cookie banners and link lists. The probe now asks fetch_content which path
+# the successful extraction took.
+
+
+def _install_path_fakes(monkeypatch, paths_by_url, date_iso=None):
+    date_iso = date_iso or datetime.now(gfh.BJT).strftime("%Y-%m-%d")
+    sid = "fake-fund"
+    articles = [{"title": u, "url": u, "date": date_iso} for u in paths_by_url]
+    fake_fc = _FakeFetchContent({}, min_chars=100)
+
+    def content_fetcher(article):
+        entry = paths_by_url[article["url"]]
+        fake_fc.extraction_paths.extend(entry["paths"])
+        return _write_chars(article, entry["chars"])
+
+    fake_fc.CONTENT_FETCHERS[sid] = content_fetcher
+    monkeypatch.setitem(sys.modules, "fetch_articles", _FakeFetchArticles({sid: lambda s: articles}))
+    monkeypatch.setitem(sys.modules, "fetch_content", fake_fc)
+    return sid
+
+
+def test_probe_ok_when_extraction_used_the_primary_selector(monkeypatch):
+    sid = _install_path_fakes(monkeypatch, {"http://a/1": {"paths": ["primary"], "chars": 500}})
+    result = gfh._probe_once({"id": sid, "frequency": "weekly"})
+    assert result["status"] == "OK", result
+
+
+def test_probe_warns_when_extraction_fell_back_to_main(monkeypatch):
+    sid = _install_path_fakes(monkeypatch, {"http://a/1": {"paths": ["fallback:main"], "chars": 500}})
+    result = gfh._probe_once({"id": sid, "frequency": "weekly"})
+    assert result["status"] == "WARN", result
+    assert "fallback:main" in result["reason"]
+    assert "selector" in result["reason"]
+
+
+def test_probe_judges_only_the_attempt_that_succeeded(monkeypatch):
+    """A short teaser that happened to hit the fallback before the real article
+    must not taint a clean extraction -- the drain has to happen per attempt."""
+    sid = _install_path_fakes(monkeypatch, {
+        "http://a/teaser": {"paths": ["fallback:main"], "chars": 50},
+        "http://a/full": {"paths": ["primary"], "chars": 500},
+    })
+    result = gfh._probe_once({"id": sid, "frequency": "weekly"})
+    assert result["status"] == "OK", result
+    assert result["content_probe_index"] == 1
+
+
+def test_fallback_warning_survives_a_stale_warning(monkeypatch):
+    """Step 4 used to assign result["reason"] outright; a stale source on a
+    fallback must report both, or fixing the staleness hides the selector."""
+    sid = _install_path_fakes(
+        monkeypatch, {"http://a/1": {"paths": ["fallback:main"], "chars": 500}},
+        date_iso="2024-06-01")
+    result = gfh._probe_once({"id": sid, "frequency": "monthly"})
+    assert result["status"] == "WARN", result
+    assert "stale" in result["reason"]
+    assert "fallback:main" in result["reason"]
+
+
+def test_fallback_warning_survives_a_missing_date(monkeypatch):
+    sid = _install_path_fakes(monkeypatch, {"http://a/1": {"paths": ["fallback:main"], "chars": 500}})
+    import fetch_articles as fa  # the fake installed above
+    fa.FETCHERS[sid] = lambda s: [{"title": "x", "url": "http://a/1", "date": None}]
+    result = gfh._probe_once({"id": sid, "frequency": "weekly"})
+    assert result["status"] == "WARN", result
+    assert "no parsed date" in result["reason"]
+    assert "fallback:main" in result["reason"]
+
+
+def test_probe_is_wired_to_the_real_extractor(monkeypatch, tmp_path):
+    """Tests above use a fake fetch_content. This one runs a content fetcher
+    that calls the real _normalize_html, so a renamed or unwired recorder
+    cannot leave the WARN unable to fire."""
+    import fetch_articles as real_fa
+    import fetch_content as real_fc
+    monkeypatch.setitem(sys.modules, "fetch_articles", real_fa)
+    monkeypatch.setitem(sys.modules, "fetch_content", real_fc)
+    sid = "fake-fund"
+    today_iso = datetime.now(gfh.BJT).strftime("%Y-%m-%d")
+    monkeypatch.setitem(real_fa.FETCHERS, sid,
+                        lambda s: [{"title": "t", "url": "http://a/1", "date": today_iso}])
+
+    def content_fetcher(article):
+        text = real_fc._normalize_html(
+            "<main><p>" + "Real words here. " * 20 + "</p></main>", ".gone p")
+        p = real_fc.CONTENT_DIR / f"{article['id']}.txt"
+        p.write_text(text)
+        return (p, "ok")
+
+    monkeypatch.setitem(real_fc.CONTENT_FETCHERS, sid, content_fetcher)
+    result = gfh._probe_once({"id": sid, "frequency": "weekly"})
+    assert result["status"] == "WARN", result
+    assert "fallback:main" in result["reason"]
