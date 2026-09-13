@@ -466,7 +466,12 @@ def _fetch_content_aqr(article: dict) -> Optional[tuple[Path, str]]:
         log.error("  AQR: Playwright fetch failed: %s", e)
         return None
 
-    text = _normalize_html(html, ".article-content p, .article__body p, .research-detail p")
+    # div.article-page-body. The earlier list (.article-content p,
+    # .article__body p, .research-detail p) matched nothing; stored bodies were
+    # the <main> fallback with the unrendered "${ numberSection } ${ text }"
+    # nav and the disclaimer section. div.article-page__body is one level too
+    # high -- it also holds Related Thinking.
+    text = _normalize_html(html, "div.article-page-body")
 
     if not _check_min_content_length(text):
         log.warning("  AQR: extracted text too short (%d chars)", len(text))
@@ -490,7 +495,12 @@ def _fetch_content_man(article: dict) -> Optional[tuple[Path, str]]:
         log.error("  Man: failed to fetch article page: %s", e)
         return None
 
-    text = _normalize_html(resp.text, ".field--body p, .article-body p, .node__content p")
+    # div.digital-article is the body. The earlier list (.field--body p,
+    # .article-body p, .node__content p) matched nothing, and all 51 stored
+    # bodies were the <main> fallback: breadcrumb first, disclaimer last.
+    # div.paragraph-body is not a substitute -- it also wraps the header and
+    # the Important information accordion.
+    text = _normalize_html(resp.text, "div.digital-article")
 
     if not _check_min_content_length(text):
         log.warning("  Man: extracted text too short (%d chars)", len(text))
@@ -737,9 +747,21 @@ def _fetch_content_troweprice(article: dict) -> Optional[tuple[Path, str]]:
                 return None
             time.sleep(5)
 
+    title = BeautifulSoup(html, "html.parser").title
+    if title and "Page Not Found" in title.get_text():
+        # Soft 404 for a withdrawn article. Its site-picker text is inside
+        # div.grid-layout-container, so the selector below would match it.
+        log.warning("  T.Rowe Price: page not found (withdrawn article?)")
+        return None
+
     text = _normalize_html(
         html,
-        ".beacon-article-body p, .article-content p, [itemprop='articleBody'] p, main p",
+        # Articles: div.article-lhs. Podcasts: div.grid-layout-container. The
+        # list before 2026-09-13 (.beacon-article-body p, .article-content p,
+        # [itemprop='articleBody'] p, main p) matched nothing on this AEM
+        # page, which has no <main>; all 58 stored bodies were the whole page,
+        # ending in the OneTrust cookie-preferences panel.
+        ".article-lhs, .grid-layout-container",
     )
 
     if not _check_min_content_length(text):
@@ -1035,8 +1057,14 @@ def _fetch_content_msci(article: dict) -> Optional[tuple[Path, str]]:
 
     MSCI's article pages are SSR-rendered (despite the listing page being
     Next.js CSR — listing requires Playwright but article body is in initial
-    HTML). Article body lives in <main><article><p> with Tailwind layout
-    div.ms-flex.ms-flex-col.ms-gap-4 wrapping content paragraphs.
+    HTML).
+
+    There is no <article> and no semantic body class, only Tailwind utilities
+    (div.ms-flex.ms-flex-col.ms-gap-4 also wraps sidebar product cards). The
+    earlier "main article p" matched nothing, so every body was the <main>
+    fallback -- which is the right content (title, byline, body, legal
+    footer). <main> is named explicitly (2026-09-13) so the fallback WARN in
+    gmia-fetcher-health does not fire for this source on every run.
     """
     url = article["url"]
     log.info("  MSCI: fetching article page %s", url)
@@ -1048,7 +1076,7 @@ def _fetch_content_msci(article: dict) -> Optional[tuple[Path, str]]:
         log.error("  MSCI: fetch failed: %s", e)
         return None
 
-    text = _normalize_html(resp.text, "main article p")
+    text = _normalize_html(resp.text, "main")
 
     if not _check_min_content_length(text):
         log.warning("  MSCI: extracted text too short (%d chars)", len(text))

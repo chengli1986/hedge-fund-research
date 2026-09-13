@@ -930,3 +930,170 @@ class TestVerdadMailchimpTemplate:
         text, _, _ = _run_fetcher(fc._fetch_content_verdad, self._page(), tmp_path, monkeypatch)
         for junk in ("View this email", "Want to change", "unsubscribe", "Disclaimers", "Afrikaans"):
             assert junk not in text, junk
+
+
+def _fake_playwright(monkeypatch, html):
+    """Make `from playwright.sync_api import sync_playwright` render `html`."""
+    import playwright.sync_api as pw
+
+    class _Page:
+        def goto(self, *a, **k): pass
+        def wait_for_timeout(self, *a, **k): pass
+        def wait_for_selector(self, *a, **k): pass
+        def content(self): return html
+
+    class _Ctx:
+        def new_page(self): return _Page()
+
+    class _Browser:
+        def new_context(self, **k): return _Ctx()
+        def new_page(self, **k): return _Page()
+        def close(self): pass
+
+    class _PW:
+        chromium = type("C", (), {"launch": staticmethod(lambda **k: _Browser())})()
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+
+    monkeypatch.setattr(pw, "sync_playwright", lambda: _PW())
+
+
+class TestTrowepriceLayouts:
+    """No selector in the troweprice list has matched for as long as the
+    corpus goes back: the AEM page has no <main>/<article> and the body is
+    in div.article-lhs. All 58 stored bodies are whole-page text, ending in
+    the OneTrust cookie-preferences panel. Podcast episodes use a second
+    layout, div.grid-layout-container (overview + transcript)."""
+
+    BODY = "Solid earnings growth and AI-driven investment continue to support equities. " * 4
+
+    def _run(self, html, tmp_path, monkeypatch):
+        import fetch_content as fc
+        monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
+        _fake_playwright(monkeypatch, html)
+        fc.drain_extraction_paths()
+        out = fc._fetch_content_troweprice({"id": "trp-001", "url": "https://www.troweprice.com/x"})
+        paths = fc.drain_extraction_paths()
+        assert out is not None
+        return out[0].read_text(), paths
+
+    def test_article_body_is_article_lhs(self, tmp_path, monkeypatch):
+        html = f"""<html><body>
+          <div class="responsivegrid article-lhs"><div class="cmp-contentfragment__elements">
+            <div class="b-flow-space"><p>{self.BODY}</p></div></div></div>
+          <div class="responsivegrid article-rhs"><p>Related: Why we have become more positive</p></div>
+          <div class="responsivegrid article-bottom"><p>Additional Disclosures glossary.</p></div>
+          <div id="onetrust-pc-sdk"><p>Confirm My Choices cookie list</p></div>
+        </body></html>"""
+        text, paths = self._run(html, tmp_path, monkeypatch)
+        assert paths == ["primary"]
+        assert "AI-driven investment" in text
+        for junk in ("Confirm My Choices", "Related:", "Additional Disclosures"):
+            assert junk not in text, junk
+
+    def test_podcast_transcript_layout(self, tmp_path, monkeypatch):
+        html = f"""<html><body>
+          <div class="grid-layout-container"><p>Overview of this episode.</p>
+            <div class="b-flow-space"><p>{self.BODY}</p></div></div>
+          <div id="onetrust-pc-sdk"><p>Confirm My Choices cookie list</p></div>
+        </body></html>"""
+        text, paths = self._run(html, tmp_path, monkeypatch)
+        assert paths == ["primary"]
+        assert "Overview of this episode" in text and "AI-driven investment" in text
+        assert "Confirm My Choices" not in text
+
+
+class TestTrowepriceSoftNotFound:
+    def test_page_not_found_is_not_saved(self, tmp_path, monkeypatch):
+        """A withdrawn article serves a soft 404 ("T. Rowe Price Page Not
+        Found") whose site-picker text sits in div.grid-layout-container --
+        the podcast container -- so the selector matches and 688 chars of
+        "For access to all of the T. Rowe Price websites" would be saved as
+        ok. Seen live 2026-09-13 on from-saving-to-spending-retirement-spending-plan."""
+        import fetch_content as fc
+        monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
+        html = ("<html><head><title>T. Rowe Price Page Not Found</title></head><body>"
+                '<div class="grid-layout-container"><p>'
+                + "For access to all of the T. Rowe Price websites, please use the following. " * 5
+                + "</p></div></body></html>")
+        _fake_playwright(monkeypatch, html)
+        assert fc._fetch_content_troweprice({"id": "trp-404", "url": "https://www.troweprice.com/x"}) is None
+
+
+class TestManGroupLayout:
+    """man.com is Drupal, but none of .field--body p / .article-body p /
+    .node__content p exist; all 51 stored bodies are the <main> fallback,
+    opening with the breadcrumb and closing with the Important information
+    accordion. The body is div.digital-article (div.paragraph-body also
+    matches, but nine times, including the header and the disclaimer)."""
+
+    BODY = "Technology giants are flooding the bond market to pay for data centres. " * 4
+
+    def test_body_is_digital_article(self, tmp_path, monkeypatch):
+        import fetch_content as fc
+        html = f"""<html><body><main>
+          <div class="paragraph-body"><p>Home &gt; Insights</p><p>ARTICLE | 4 MIN | VIEWS FROM THE FLOOR</p></div>
+          <div class="col-12 col-lg-8"><div class="paragraph-body">
+            <div class="digital-article"><p>{self.BODY}</p></div></div></div>
+          <div class="accordion"><div class="paragraph-body"><p>Important information This is communicated by Man.</p></div></div>
+          <div class="section container"><p>Related insights Podcast 46 min</p></div>
+        </main></body></html>"""
+        text, status, paths = _run_fetcher(fc._fetch_content_man, html, tmp_path, monkeypatch)
+        assert paths == ["primary"]
+        assert "flooding the bond market" in text
+        for junk in ("Home > Insights", "VIEWS FROM THE FLOOR", "Important information", "Related insights"):
+            assert junk not in text, junk
+
+
+class TestAqrLayout:
+    """None of .article-content p / .article__body p / .research-detail p
+    exist on aqr.com; stored bodies are the <main> fallback, opening with the
+    unrendered ${ numberSection } ${ text } template and carrying the
+    ~4,400-char disclaimer section. The body is div.article-page-body;
+    div.article-page__body, one level up, also holds Related Thinking."""
+
+    BODY = "Tax-aware long-short strategies balance pre-tax returns with tax benefits. " * 3
+
+    def test_body_is_article_page_body(self, tmp_path, monkeypatch):
+        import fetch_content as fc
+        monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
+        html = f"""<html><body><main>
+          <div class="article-nav"><div class="article-nav__left">${{ numberSection }} ${{ text }}</div></div>
+          <div class="article-page__body">
+            <div class="article-page-body"><div class="richtext"><p>{self.BODY}</p></div></div>
+            <section class="article-page__related__insight"><p>Related Thinking Liquidity without Liquidation</p></section>
+          </div>
+          <section class="article-page__disclaimer"><div class="richtext"><p>This material is intended for informational purposes only.</p></div></section>
+        </main></body></html>"""
+        _fake_playwright(monkeypatch, html)
+        fc.drain_extraction_paths()
+        out = fc._fetch_content_aqr({"id": "aqr-001", "url": "https://www.aqr.com/x"})
+        paths = fc.drain_extraction_paths()
+        assert out is not None
+        text = out[0].read_text()
+        assert paths == ["primary"]
+        assert "pre-tax returns" in text
+        for junk in ("numberSection", "Related Thinking", "informational purposes"):
+            assert junk not in text, junk
+
+
+class TestMsciLayout:
+    """MSCI article pages have no <article> and no semantic body class --
+    only Tailwind utilities (ms-flex ms-flex-col ms-gap-4 also wraps the
+    sidebar product cards). "main article p" matched nothing and every body
+    was the <main> fallback, which on inspection is the right content: title,
+    byline, preview/body, and the legal footer. Naming <main> explicitly
+    keeps that content and keeps the fallback WARN meaningful -- left as a
+    fallback, it would fire for msci every run and teach its reader to
+    ignore it."""
+
+    def test_main_is_the_primary_selector(self, tmp_path, monkeypatch):
+        import fetch_content as fc
+        body = "How a factor index is built shapes what it delivers. " * 4
+        html = f"""<html><body><header>MSCI menu</header><main>
+          <section class="section"><div class="ms-flex ms-flex-col ms-gap-4"><p>Preview</p><p>{body}</p></div></section>
+        </main><footer>Footer links</footer></body></html>"""
+        text, status, paths = _run_fetcher(fc._fetch_content_msci, html, tmp_path, monkeypatch)
+        assert paths == ["primary"]
+        assert "factor index is built" in text
+        assert "MSCI menu" not in text and "Footer links" not in text
