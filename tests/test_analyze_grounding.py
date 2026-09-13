@@ -35,7 +35,11 @@ import pytest
 
 import analyze_articles as aa
 
-CASES = json.loads((Path(__file__).parent / "fixtures" / "grounding_cases.json").read_text())
+# tests/grounding, not tests/fixtures: fixtures/*.json is gitignored because
+# those files are re-downloadable (download_fixtures.sh), and any "data/" is
+# ignored too. These are not re-downloadable -- they are the summaries that
+# were published and are removed from the corpus.
+CASES = json.loads((Path(__file__).parent / "grounding" / "grounding_cases.json").read_text())
 
 
 def _result(case):
