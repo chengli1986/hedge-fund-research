@@ -651,7 +651,10 @@ def recent_analysis_declines(data_path=None) -> list[tuple[str, list[dict]]]:
                 continue
             if row.get("source_id") not in configured:
                 continue
-            checked = datetime.fromisoformat(str(row.get("analysis_checked_at") or ""))
+            ts = row.get("analysis_checked_at")
+            if not ts:
+                continue
+            checked = datetime.fromisoformat(str(ts))
             if checked.tzinfo is None or checked < cutoff:
                 continue
             groups.setdefault(row["source_id"], []).append(row)
