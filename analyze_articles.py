@@ -77,8 +77,26 @@ most important theme first - the research page files each article under its
 first theme and shows the rest only in the sidebar.
 """ + _THEME_LINES
 
-ANALYSIS_PROMPT = """You are a senior investment analyst. Analyze the following hedge fund research article and produce a structured JSON response.
+# Shown to the model in both prompts. Until 2026-09-13 neither prompt gave the
+# model a way to decline, so navigation, a disclaimer or chart source notes
+# saved in place of an article came back as a confident summary written from
+# the title (research-affiliates 1115: "The author likely uses quantitative
+# analysis ... The discussion probably extends"), and METADATA_PROMPT asked for
+# title-based analysis outright. check_grounding() enforces this after the call.
+_GROUNDING_INSTRUCTION = """
+Rules for what you may write:
+- Use ONLY the text given below. Every claim in the summary and takeaway must
+  be stated in that text. Never infer an article's argument from its title,
+  author, source or tags, and never describe what it "likely" or "probably" says.
+- If the text is not the article itself -- navigation, a cookie or consent
+  banner, a legal disclaimer or risk disclosure, chart source notes, a list of
+  other articles, a registration or login wall -- or is too thin to summarise
+  faithfully, do not write a summary. Respond instead with ONLY:
+  {{"insufficient_content": true, "reason": "<what the text actually is>"}}
+"""
 
+ANALYSIS_PROMPT = """You are a senior investment analyst. Analyze the following hedge fund research article and produce a structured JSON response.
+""" + _GROUNDING_INSTRUCTION + """
 Article title: {title}
 Source: {source}
 Date: {date}
@@ -89,8 +107,8 @@ Article content:
 Respond with ONLY a JSON object (no markdown fences, no explanation):
 {{"summary_en": "...", "summary_zh": "...", "themes": [...], "key_takeaway_en": "...", "key_takeaway_zh": "..."}}""" + _THEME_INSTRUCTION
 
-METADATA_PROMPT = """You are a senior investment analyst. Based on LIMITED metadata (title, category, summary) from a hedge fund research article, produce a structured JSON response. Note: you only have metadata, not the full article — keep analysis conservative.
-
+METADATA_PROMPT = """You are a senior investment analyst. You have LIMITED metadata (title, category, publisher's description) from a hedge fund research article, not the article itself. Summarise only what the description states; do not extend it into the article's likely argument.
+""" + _GROUNDING_INSTRUCTION + """
 Article title: {title}
 Source: {source}
 Date: {date}
@@ -344,6 +362,10 @@ def _should_analyze(article: dict) -> bool:
         return False
     if article.get("content_status") not in ("ok", "metadata_only"):
         return False
+    # Declined or rejected once: the text will not have changed by tomorrow,
+    # and re-asking every night is how a model eventually says yes.
+    if article.get("analysis_status") == INSUFFICIENT:
+        return False
     return True
 
 
@@ -375,6 +397,10 @@ def _parse_llm_output(raw: str) -> Optional[dict]:
     if not isinstance(data, dict):
         return None
 
+    if data.get("insufficient_content") is True:
+        reason = str(data.get("reason") or "").strip() or "model reported insufficient content"
+        return {"insufficient_content": True, "reason": reason}
+
     # Validate required fields
     required = {"summary_en", "summary_zh", "themes", "key_takeaway_en", "key_takeaway_zh"}
     if not required.issubset(data.keys()):
@@ -405,6 +431,105 @@ def _parse_llm_output(raw: str) -> Optional[dict]:
         data["themes"] = []
 
     return data
+
+
+INSUFFICIENT = "insufficient_content"
+
+# Coverage: the share of the English summary's content words (stemmed to five
+# letters) that occur in the article text. Measured on 2026-09-13 across the
+# corpus: 1,351 ordinary summaries have p01 0.39 and median ~0.75; the 38
+# title-only ARK summaries top out at 0.31 and the 21 summaries of known-bad
+# bodies have median ~0.14. 0.25 rejects the chart-notes and navigation cases
+# (metlife 0.11, research-affiliates 0.19) while a faithful paraphrase of a
+# 267-char teaser (robeco, 0.28) and a summary of chart numbers (gmo, 0.39)
+# pass. Coverage alone misses some bad bodies (damaged max 0.49), which is why
+# the phrase checks and the model's own refusal exist -- no single layer is
+# the fix.
+MIN_SUMMARY_COVERAGE = 0.25
+_COVERAGE_STEM = 5
+_COVERAGE_STOPWORDS = frozenset("""
+about above after again against also although among another around because been
+before being below between both could does doing down during each even every
+from further have having here however into itself just more most much must near
+need once only other over same should since some such than that their them then
+there these they this those though through thus under until upon very were what
+when where which while whom will with within without would your
+""".split())
+
+# Speculation about the article itself. Deliberately not "may"/"could"/"可能"
+# on their own: hedging about markets is normal analysis.
+_SPECULATION_EN = re.compile(
+    r"\bbased on (the )?(article'?s? |paper'?s? |report'?s? )?(title|headline|tags?|authors?)\b"
+    r"|\b(title|headline) (suggests|implies|indicates)\b"
+    r"|\b(the )?(article|paper|piece|report|author|authors|analysis|discussion|it)\s+"
+    r"(likely|probably|presumably|possibly)\b"
+    r"|\b(likely|probably|presumably)\s+(argues?|discuss|discusses|explores?|examines?|"
+    r"investigates?|uses?|covers?|addresses|extends?|delves?|focuses|contrasts?|highlights?)\b"
+    r"|\bis (likely|expected) to (discuss|explore|examine|cover|address)\b",
+    re.IGNORECASE,
+)
+_SPECULATION_ZH = re.compile(
+    r"(根据|从|依据)(文章)?(的)?(标题|题目)"
+    r"|(文章|作者|报告|该文|本文|论文|讨论)[^。；，,]{0,6}(可能|大概|或许|想必|推测)"
+)
+# The summary describing its input rather than an article.
+_NOT_AN_ARTICLE = re.compile(
+    r"\bthe (provided|given|supplied) (text|content|material|document)\b"
+    r"|\b(text|content|document) (does not|doesn't) contain\b"
+    r"|提供的(文本|内容|材料)",
+    re.IGNORECASE,
+)
+
+
+def _content_words(text: str) -> set[str]:
+    return {w[:_COVERAGE_STEM] for w in re.findall(r"[a-z]{4,}", (text or "").lower())
+            if w not in _COVERAGE_STOPWORDS}
+
+
+def _mostly_latin(text: str) -> bool:
+    letters = [ch for ch in text if ch.isalpha()]
+    return bool(letters) and sum(ch.isascii() for ch in letters) >= 0.5 * len(letters)
+
+
+def check_grounding(result: dict, content: str) -> list[str]:
+    """Reasons the summary is not supported by `content`; [] when it is.
+
+    Runs on every summary a model returns, independent of the prompt: a
+    prompt is a request, this is the check. Covers all four text fields for
+    wording, and the English summary for coverage. Coverage is skipped for a
+    non-Latin article (a Japanese source summarised in English shares almost
+    no words with it); the wording checks still apply.
+    """
+    problems = []
+    en = " ".join(str(result.get(k) or "") for k in ("summary_en", "key_takeaway_en"))
+    zh = " ".join(str(result.get(k) or "") for k in ("summary_zh", "key_takeaway_zh"))
+
+    if _SPECULATION_EN.search(en) or _SPECULATION_ZH.search(zh):
+        hit = (_SPECULATION_EN.search(en) or _SPECULATION_ZH.search(zh)).group(0)
+        problems.append(f"speculates about the article ({hit!r})")
+    if _NOT_AN_ARTICLE.search(en) or _NOT_AN_ARTICLE.search(zh):
+        hit = (_NOT_AN_ARTICLE.search(en) or _NOT_AN_ARTICLE.search(zh)).group(0)
+        problems.append(f"describes its input, not an article ({hit!r})")
+
+    if _mostly_latin(content):
+        words = _content_words(str(result.get("summary_en") or ""))
+        if words:
+            coverage = len(words & _content_words(content)) / len(words)
+            if coverage < MIN_SUMMARY_COVERAGE:
+                problems.append(f"coverage {coverage:.2f} < {MIN_SUMMARY_COVERAGE}: "
+                                "most of the summary's content words are not in the text")
+    return problems
+
+
+# A metadata_only file holding nothing but "Title: ..." (all 38 ARK rows as of
+# 2026-09-13, avg 63 chars) gives a model nothing to summarise but the title.
+MIN_METADATA_DESCRIPTION_CHARS = 150
+
+
+def is_title_only(content: str) -> bool:
+    body = "\n".join(line for line in (content or "").splitlines()
+                     if not line.strip().lower().startswith("title:"))
+    return len(body.strip()) < MIN_METADATA_DESCRIPTION_CHARS
 
 
 def _analyze_with_fallback(
@@ -458,6 +583,16 @@ def _analyze_with_fallback(
                 _append_usage_log(article_id, used_model, usage,
                                   parsed=parsed is not None)
                 if parsed is not None:
+                    # A decline or a rejected summary is final: the next tier
+                    # would get the same text, and a weaker model is the one
+                    # likelier to invent an answer that happens to pass.
+                    if not parsed.get("insufficient_content"):
+                        problems = check_grounding(parsed, content[:MAX_CONTENT_CHARS])
+                        if problems:
+                            log.warning("  %s: summary rejected by grounding check: %s",
+                                        model_name, "; ".join(problems))
+                            parsed = {"insufficient_content": True,
+                                      "reason": "failed grounding check: " + "; ".join(problems)}
                     parsed["_model"] = used_model
                     parsed["_usage"] = usage
                     return parsed
@@ -531,6 +666,27 @@ def _resolve_content_path(article: dict) -> Path:
 # Main
 # ---------------------------------------------------------------------------
 
+_SUMMARY_FIELDS = ("summary_en", "summary_zh", "key_takeaway_en", "key_takeaway_zh")
+
+
+def _record_insufficient(article: dict, result: dict) -> None:
+    """Mark an article as not summarisable, and remove any older summary.
+
+    The removal matters for re-queued articles (the 2026-09-13 backfill): an
+    invented summary left in place would stay on the page. Themes go too --
+    publish.py files an article under themes[0] whether or not it is summarised.
+    """
+    article["summarized"] = False
+    article["analysis_status"] = INSUFFICIENT
+    article["analysis_reason"] = result.get("reason") or ""
+    article["analysis_model"] = result.get("_model")
+    article["analysis_checked_at"] = datetime.now(BJT).isoformat(timespec="seconds")
+    for field in _SUMMARY_FIELDS:
+        article.pop(field, None)
+    article["themes"] = []
+    article.pop("analysis_confidence", None)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Hedge Fund Research — LLM Analysis")
     parser.add_argument("--dry-run", action="store_true", help="Show what would be analyzed")
@@ -549,6 +705,7 @@ def main() -> int:
 
     success_count = 0
     fail_count = 0
+    insufficient_count = 0
 
     for a in pending:
         try:
@@ -569,23 +726,33 @@ def main() -> int:
         level = "metadata-only" if is_metadata else "full"
         log.info("Analyzing (%s): %s — %s", level, a.get("source_id", "?"), a.get("title", "?"))
 
-        result = _analyze_with_fallback(
-            content,
-            api_keys,
-            title=a.get("title", ""),
-            source=a.get("source_id", ""),
-            date=a.get("date", ""),
-            metadata_only=is_metadata,
-            article_id=a["id"],
-        )
+        if is_metadata and is_title_only(content):
+            result = {"insufficient_content": True, "_model": None,
+                      "reason": "metadata holds only a title; nothing to summarise"}
+        else:
+            result = _analyze_with_fallback(
+                content,
+                api_keys,
+                title=a.get("title", ""),
+                source=a.get("source_id", ""),
+                date=a.get("date", ""),
+                metadata_only=is_metadata,
+                article_id=a["id"],
+            )
 
-        if result is not None:
+        if result is not None and result.get("insufficient_content"):
+            _record_insufficient(a, result)
+            insufficient_count += 1
+            log.warning("  Not summarised (%s): %s", a["id"], result["reason"])
+        elif result is not None:
             a["summary_en"] = result["summary_en"]
             a["summary_zh"] = result["summary_zh"]
             a["themes"] = result["themes"]
             a["key_takeaway_en"] = result["key_takeaway_en"]
             a["key_takeaway_zh"] = result["key_takeaway_zh"]
             a["summarized"] = True
+            a.pop("analysis_status", None)
+            a.pop("analysis_reason", None)
             a["analysis_model"] = result["_model"]
             if is_metadata:
                 a["analysis_confidence"] = "low"
@@ -596,12 +763,14 @@ def main() -> int:
             fail_count += 1
 
     save_articles(articles)
-    log.info("Analysis complete: %d ok, %d failed", success_count, fail_count)
+    log.info("Analysis complete: %d ok, %d failed, %d not summarised (insufficient content)",
+             success_count, fail_count, insufficient_count)
 
     print(f"\n{'='*60}")
     print(f"LLM Analysis — {datetime.now(BJT).strftime('%Y-%m-%d %H:%M BJT')}")
     print(f"{'='*60}")
-    print(f"Pending: {len(pending)} | Success: {success_count} | Failed: {fail_count}")
+    print(f"Pending: {len(pending)} | Success: {success_count} | Failed: {fail_count}"
+          f" | Not summarised (insufficient content): {insufficient_count}")
     print()
 
     # Articles were waiting and not one was summarised: quota exhaustion, or
@@ -614,7 +783,8 @@ def main() -> int:
     # partial failure is not an outage: those articles keep their unsummarised
     # state and are retried next run, and their cost is already visible in
     # logs/analyze-usage.jsonl.
-    if pending and success_count == 0:
+    # A decline is a handled outcome: only "nothing answered at all" is an outage.
+    if pending and success_count == 0 and insufficient_count == 0:
         log.error("TOTAL ANALYSIS OUTAGE: %d article(s) pending, none summarised",
                   len(pending))
         return 1

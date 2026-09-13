@@ -173,8 +173,12 @@ class TestAnalyzeWithFallback:
 
         api_keys = {"OPENAI_API_KEY": "fake-openai", "GEMINI_API_KEY": "fake-gemini"}
 
-        result = _analyze_with_fallback("article content", api_keys, title="Test")
+        # The body must support GOOD_RESULT's summary: since 2026-09-13 every
+        # summary passes check_grounding, and "article content" would turn this
+        # into a test of a rejection that still returned _model == mini.
+        result = _analyze_with_fallback("Summary of the article.", api_keys, title="Test")
         assert result is not None
+        assert not result.get("insufficient_content"), result
         assert result["_model"] == "gpt-4.1-mini"
         assert calls.count("gpt-5.6-luna") == 2      # MAX_ATTEMPTS before falling through
         assert calls.count("gpt-4.1-mini") == 1
@@ -228,9 +232,10 @@ class TestAnalyzeWithFallback:
         monkeypatch.setattr("analyze_articles._call_openai", mock_openai)
         monkeypatch.setattr("analyze_articles._call_gemini", mock_gemini)
 
-        result = _analyze_with_fallback("content", {"GEMINI_API_KEY": "fake-gemini"})
+        result = _analyze_with_fallback("Summary of the article.", {"GEMINI_API_KEY": "fake-gemini"})
 
         assert result is not None
+        assert not result.get("insufficient_content"), result
         assert result["_model"] == "gemini-2.5-pro"
         assert not [c for c in calls if c[0] == "openai"], (
             "an OpenAI tier ran with no OPENAI_API_KEY")
