@@ -153,6 +153,26 @@ class TestExtractionPathIsRecorded:
         _normalize_html("<div><p>Body.</p></div>", ".gone p")
         assert drain_extraction_paths() == ["whole-page"]
 
+    def test_whole_page_yields_no_text(self):
+        """With no body container at all, the whole page is navigation,
+        footer and banners. Returning it let it clear MIN_CONTENT_LENGTH and
+        be saved as ok -- troweprice, verdad-capital and research-affiliates
+        stored exactly that. Returning "" makes the fetcher's length check
+        refuse it: the article is retried and eventually permafails instead of
+        being summarised, and the health probe FAILs the same night."""
+        html = "<div><nav>Menu</nav><p>" + "Cookie preferences and site links. " * 20 + "</p></div>"
+        assert _normalize_html(html, ".gone p") == ""
+        assert drain_extraction_paths() == ["whole-page"]
+
+    def test_a_fetcher_on_the_whole_page_returns_none(self, tmp_path, monkeypatch):
+        import fetch_content as fc
+        monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
+        html = "<html><body><div><p>" + "Confirm My Choices cookie list. " * 20 + "</p></div></body></html>"
+        resp = MagicMock(status_code=200, text=html); resp.raise_for_status = lambda: None
+        monkeypatch.setattr(fc.requests, "get", lambda *a, **k: resp)
+        assert fc._fetch_content_man({"id": "man-x", "url": "https://www.man.com/x"}) is None
+        assert list(tmp_path.iterdir()) == []
+
     def test_drain_empties_the_record(self):
         _normalize_html("<article><p>Body.</p></article>", "article p")
         drain_extraction_paths()

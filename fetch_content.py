@@ -163,7 +163,11 @@ def _normalize_html(html: str, selector: str) -> str:
         text = "\n".join(_collapse_inline_spacing(el.get_text(" ", strip=True))
                           for el in elements)
     else:
-        text = _collapse_inline_spacing(soup.get_text(" ", strip=True))
+        # No body container at all: what is left is navigation, footer and
+        # banners, and it clears MIN_CONTENT_LENGTH. Returning it saved exactly
+        # that as "ok" for troweprice, verdad-capital and research-affiliates
+        # until 2026-09-13. "" lets the caller's length check refuse it.
+        text = ""
 
     return text
 
