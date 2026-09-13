@@ -464,13 +464,17 @@ _SPECULATION_EN = re.compile(
     r"|\b(the )?(article|paper|piece|report|author|authors|analysis|discussion|it)\s+"
     r"(likely|probably|presumably|possibly)\b"
     r"|\b(likely|probably|presumably)\s+(argues?|discuss|discusses|explores?|examines?|"
-    r"investigates?|uses?|covers?|addresses|extends?|delves?|focuses|contrasts?|highlights?)\b"
-    r"|\bis (likely|expected) to (discuss|explore|examine|cover|address)\b",
+    r"investigates?|uses?|covers?|addresses|extends?|delves?|focuses|contrasts?|highlights?)\b",
     re.IGNORECASE,
 )
+# The hedge must sit directly on the subject ("作者可能", "讨论可能还会"). A gap
+# means the summary is reporting the article's own view -- the first version
+# allowed six characters and flagged "文章警示可能出现衰退" and "作者认为这很
+# 可能是噪音" in the corpus, and "推测" alone flagged "文章推测...", which is
+# the article conjecturing, not the model.
 _SPECULATION_ZH = re.compile(
     r"(根据|从|依据)(文章)?(的)?(标题|题目)"
-    r"|(文章|作者|报告|该文|本文|论文|讨论)[^。；，,]{0,6}(可能|大概|或许|想必|推测)"
+    r"|(文章|作者|报告|该文|本文|论文|讨论)(很|大|也|还)?(可能|大概|或许|想必)"
 )
 # The summary describing its input rather than an article.
 _NOT_AN_ARTICLE = re.compile(

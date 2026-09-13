@@ -101,10 +101,27 @@ class TestGroundingCheckRules:
         r = dict(self.SUMMARY, summary_en=self.SUMMARY["summary_en"] + " " + phrase)
         assert any("speculat" in p for p in aa.check_grounding(r, self.BODY))
 
-    @pytest.mark.parametrize("zh", ["根据标题，文章认为提款无需清仓。", "作者可能使用了量化分析。", "从标题来看，本文讨论税务。"])
+    @pytest.mark.parametrize("zh", ["根据标题，文章认为提款无需清仓。", "作者可能通过量化分析论证。",
+                                    "讨论可能还会延伸到资产配置。", "从标题来看，本文讨论税务。"])
     def test_chinese_speculation_about_the_article_is_rejected(self, zh):
         r = dict(self.SUMMARY, summary_zh=zh)
         assert any("speculat" in p for p in aa.check_grounding(r, self.BODY))
+
+    @pytest.mark.parametrize("zh", [
+        "文章警示可能出现全球经济衰退。",          # man-group: reporting the article's warning
+        "作者认为这很可能是噪音。",                # pimco: reporting the author's view
+        "文章推测企业集团折价正在消失。",          # research-affiliates: the article's own conjecture
+    ])
+    def test_chinese_reporting_of_the_articles_view_is_not_speculation(self, zh):
+        """False positives found when the first version ran over the corpus."""
+        r = dict(self.SUMMARY, summary_zh=zh)
+        assert aa.check_grounding(r, self.BODY) == []
+
+    def test_an_expected_market_effect_is_not_speculation(self):
+        """kkr: "This regulatory change is expected to address the supply-demand imbalance"."""
+        r = dict(self.SUMMARY, summary_en=self.SUMMARY["summary_en"]
+                 + " The rule change is expected to address the funding gap.")
+        assert aa.check_grounding(r, self.BODY + " The rule change addresses the funding gap.") == []
 
     def test_market_hedging_is_not_speculation_about_the_article(self):
         """"may"/"可能" about markets is normal analysis, not a fabrication tell."""
