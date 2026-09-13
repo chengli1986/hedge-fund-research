@@ -881,6 +881,10 @@ def _fetch_content_brookfield(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+# Mailchimp blocks that share #templateFooter with the issue body.
+_VERDAD_BOILERPLATE_PREFIXES = ("Want to change how you receive these emails", "Disclaimers:")
+
+
 def _fetch_content_verdad(article: dict) -> Optional[tuple[Path, str]]:
     """Fetch Verdad Weekly Research content from its Mailchimp campaign page.
 
@@ -888,6 +892,13 @@ def _fetch_content_verdad(article: dict) -> Optional[tuple[Path, str]]:
     only via the newsletter, so articles land on mailchi.mp. Those pages are
     table-based email HTML with no <p> tags — the body lives in
     <td class="mcnTextContent"> blocks.
+
+    The template now renders the whole issue inside #templateFooter, beside
+    the preferences and disclaimer blocks. Until 2026-09-13 #templateFooter
+    was decomposed wholesale, which deleted the body; .mcnTextContent then
+    matched nothing and the whole page was saved (archive-bar language picker
+    plus one sentence). Only the preheader/header regions are dropped now, and
+    the footer's boilerplate is removed block by block.
     """
     url = article["url"]
     log.info("  Verdad: fetching article page %s", url)
@@ -900,8 +911,11 @@ def _fetch_content_verdad(article: dict) -> Optional[tuple[Path, str]]:
         return None
 
     _soup = BeautifulSoup(resp.text, "html.parser")
-    for _boilerplate in _soup.select("#templatePreheader, #templateHeader, #templateFooter"):
+    for _boilerplate in _soup.select("#templatePreheader, #templateHeader"):
         _boilerplate.decompose()
+    for _block in _soup.select(".mcnTextContent"):
+        if _block.get_text(" ", strip=True).startswith(_VERDAD_BOILERPLATE_PREFIXES):
+            _block.decompose()
     text = _normalize_html(str(_soup), ".mcnTextContent")
 
     if not _check_min_content_length(text):
@@ -1074,19 +1088,48 @@ def _fetch_content_janus_henderson(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+_NEXT_PUSH_PREFIX = "self.__next_f.push("
+
+
+def _next_flight_payload(html: str) -> str:
+    """Concatenate the string chunks of a Next.js App Router flight payload.
+
+    Each chunk is a ``<script>self.__next_f.push([1, "..."])</script>``; the
+    argument is a JSON array, so it is decoded with json rather than a regex
+    over an escaped string literal. Chunks split mid-tag, so they are joined
+    before any HTML parsing. Returns "" when the page has no payload.
+    """
+    chunks = []
+    for script in BeautifulSoup(html, "html.parser").find_all("script"):
+        code = (script.string or "").strip()
+        if not (code.startswith(_NEXT_PUSH_PREFIX) and code.endswith(")")):
+            continue
+        try:
+            arr = json.loads(code[len(_NEXT_PUSH_PREFIX):-1])
+        except ValueError:
+            continue
+        if isinstance(arr, list) and len(arr) > 1 and isinstance(arr[1], str):
+            chunks.append(arr[1])
+    return "".join(chunks)
+
+
 def _fetch_content_researchaffiliates(article: dict) -> Optional[tuple[Path, str]]:
-    """Fetch Syzygy Asset Management (ex-Research Affiliates) content via requests (SSR).
+    """Fetch Syzygy Asset Management (ex-Research Affiliates) content via requests.
 
-    2026-08 rename: article bodies moved to syzygyassetmanagement.com with the
-    same markup. No code change was needed — requests follows the 302 and
-    ``div.rendered-html`` still matches (verified 2026-08-21: old and new URL
-    both yield the identical 2737-char body for article 1122).
+    2026-08 rename: article bodies moved to syzygyassetmanagement.com.
+    Requests follows the 302 from the old host.
 
-    Listing page is Next.js CSR (fetch_articles uses Playwright), but article
-    body is SSR-rendered into div.rendered-html (also tagged
-    ra-mathjax-content / article-html-lightbox). No <main>/<article> tags,
-    so the generic "main p" / "article p" selectors yield zero — must use the
-    rendered-html wrapper directly.
+    The article page is now a Next.js App Router shell: the static HTML holds
+    navigation, a "Loading..." placeholder and the footer, and the body is an
+    HTML string inside ``self.__next_f.push([1, "..."])`` script payloads.
+    ``div.rendered-html``, the selector used until 2026-09-13, no longer
+    exists, so every article fell back to the whole page and the shell was
+    saved as "ok" (9 of 19 stored bodies are navigation and author blocks).
+
+    Paragraphs are ``p.ckeditor-paragraph`` with show-when-logged-in /
+    show-when-logged-out classes. All of them are kept: in article 1122 the
+    lede is marked logged-out only and the logged-in paragraphs do not repeat
+    it (checked live 2026-09-13), so filtering on visibility drops the lede.
     """
     url = article["url"]
     log.info("  Research Affiliates: fetching article page %s", url)
@@ -1098,7 +1141,10 @@ def _fetch_content_researchaffiliates(article: dict) -> Optional[tuple[Path, str
         log.error("  Research Affiliates: fetch failed: %s", e)
         return None
 
-    text = _normalize_html(resp.text, "div.rendered-html p")
+    text = _normalize_html(
+        _next_flight_payload(resp.text),
+        "p.ckeditor-paragraph",
+    )
 
     if not _check_min_content_length(text):
         log.warning("  Research Affiliates: extracted text too short (%d chars)", len(text))
@@ -1416,6 +1462,12 @@ def _fetch_content_acadian_asset(article: dict) -> Optional[tuple[Path, str]]:
     container. Selecting `main p` would double-count text because html.parser
     nests the article's paragraphs inside one malformed outer <p>; selecting
     the container once yields the deduplicated body.
+
+    The monthly Quick Takes use a second layout, `div.short-form__main` (text
+    column + chart column). Until 2026-09-13 only the long-form container was
+    listed, so every Quick Take fell back to <main>: a list of other Quick
+    Take titles on the older markup (9 of 15 stored bodies, ~480 chars) and a
+    ~5,000-char disclaimer on the current one.
     """
     url = article["url"]
     log.info("  Acadian: fetching article page %s", url)
@@ -1427,7 +1479,7 @@ def _fetch_content_acadian_asset(article: dict) -> Optional[tuple[Path, str]]:
         log.error("  Acadian: fetch failed: %s", e)
         return None
 
-    text = _normalize_html(resp.text, "div.long-form__main")
+    text = _normalize_html(resp.text, "div.long-form__main, div.short-form__main")
 
     if not _check_min_content_length(text):
         log.warning("  Acadian: extracted text too short (%d chars)", len(text))

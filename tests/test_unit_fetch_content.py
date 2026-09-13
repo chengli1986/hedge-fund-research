@@ -766,3 +766,167 @@ class TestInlineTagsDoNotFuseWords:
     def test_runs_of_whitespace_collapse(self):
         html = "<article><p>Spaced   out\n\ttext.</p></article>"
         assert _normalize_html(html, "article p") == "Spaced out text."
+
+
+# ---------------------------------------------------------------------------
+# Content selectors against each source's current layout (2026-09-13)
+# ---------------------------------------------------------------------------
+#
+# A live probe found seven fetchers whose selector matched nothing, so
+# _normalize_html fell back to <main> or the whole page and the result was
+# saved as "ok". Each fixture below reproduces the class names of the live
+# page, with the body AND the decoy the fallback used to pick up, and each
+# test asserts the primary selector matched -- the text check alone passes
+# on a fallback, which is how these went unnoticed.
+
+def _run_fetcher(fetcher, html, tmp_path, monkeypatch):
+    import fetch_content as fc
+    monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
+    resp = MagicMock(status_code=200, text=html, content=html.encode())
+    resp.raise_for_status = lambda: None
+    monkeypatch.setattr(fc.requests, "get", lambda *a, **k: resp)
+    fc.drain_extraction_paths()
+    out = fetcher({"id": "fixture-001", "url": "https://example.com/a"})
+    paths = fc.drain_extraction_paths()
+    assert out is not None, "fetcher returned None"
+    path, status = out
+    return path.read_text(), status, paths
+
+
+class TestAcadianLayouts:
+    """Acadian serves two layouts. Long pieces use div.long-form__main; the
+    monthly Quick Takes use div.short-form__main, which the fetcher did not
+    know. Quick Takes fell back to <main>, which on the older markup was a
+    list of other Quick Takes (9 of 15 stored bodies are ~480 chars of those
+    titles) and on the current markup carries a 5,000-char disclaimer."""
+
+    BODY = "Korean chipmakers forecasts have risen three times faster than prices. " * 5
+
+    def test_quick_take_short_form_body_is_extracted(self, tmp_path, monkeypatch):
+        import fetch_content as fc
+        html = f"""<html><body><main>
+          <div class="short-form__two-col-container">
+            <div class="short-form__main short-form__main-two-col">
+              <div class="short-form__main-col-l"><p>{self.BODY}</p></div>
+              <div class="short-form__main-col-r"><p>Chart: forward FCF estimates.</p></div>
+            </div>
+          </div>
+          <div class="disclaimer__container"><p>Past performance is not indicative.</p></div>
+        </main></body></html>"""
+        text, status, paths = _run_fetcher(fc._fetch_content_acadian_asset, html, tmp_path, monkeypatch)
+        assert paths == ["primary"]
+        assert "three times faster" in text and "forward FCF" in text
+        assert "Past performance" not in text
+
+    def test_long_form_body_still_extracted(self, tmp_path, monkeypatch):
+        import fetch_content as fc
+        html = f"""<html><body><main>
+          <div class="long-form__main"><p>{self.BODY}</p></div>
+          <div class="disclaimer__container"><p>Past performance is not indicative.</p></div>
+        </main></body></html>"""
+        text, status, paths = _run_fetcher(fc._fetch_content_acadian_asset, html, tmp_path, monkeypatch)
+        assert paths == ["primary"]
+        assert "three times faster" in text and "Past performance" not in text
+
+
+class TestResearchAffiliatesNextPayload:
+    """After the Syzygy rebrand the article page is a Next.js App Router
+    shell: the static HTML holds navigation, a "Loading..." placeholder and
+    the footer, and the body arrives as an HTML string inside
+    self.__next_f.push([1, "..."]) script payloads. div.rendered-html no
+    longer exists, so every article since fell to the whole page -- 9 of 19
+    stored bodies are navigation and author blocks."""
+
+    @staticmethod
+    def _page(fragment: str) -> str:
+        push = "self.__next_f.push(" + json.dumps([1, fragment]) + ")"
+        return (
+            "<html><body><nav>STRATEGIES INSIGHTS AAI TOOL</nav>"
+            "<div>Loading...</div><footer>Newport Beach, CA</footer>"
+            f"<script>{push}</script></body></html>"
+        )
+
+    BODY = "Valuations embed expectations that the price asks and answers implicitly. " * 4
+
+    def test_body_is_read_from_the_next_payload(self, tmp_path, monkeypatch):
+        import fetch_content as fc
+        html = self._page(
+            f'<div><p class="ckeditor-paragraph show-when-logged-out show-when-logged-in">{self.BODY}</p>'
+            '<p class="ckeditor-paragraph show-when-logged-in">1. A footnote on syzygies.</p></div>')
+        text, status, paths = _run_fetcher(fc._fetch_content_researchaffiliates, html, tmp_path, monkeypatch)
+        assert paths == ["primary"]
+        assert "price asks and answers" in text and "footnote on syzygies" in text
+        assert "STRATEGIES" not in text and "Loading" not in text and "Newport" not in text
+
+    def test_a_logged_out_only_lede_is_kept(self, tmp_path, monkeypatch):
+        """Article 1122 marks its lede show-when-logged-out only, and the
+        logged-in paragraphs do not repeat it. Filtering on visibility, which
+        looks like de-duplication, drops the opening of the article."""
+        import fetch_content as fc
+        html = self._page(
+            '<p class="ckeditor-paragraph show-when-logged-out">LEDE artificial intelligence is powerful.</p>'
+            f'<p class="ckeditor-paragraph show-when-logged-in">{self.BODY}</p>')
+        text, _, paths = _run_fetcher(fc._fetch_content_researchaffiliates, html, tmp_path, monkeypatch)
+        assert paths == ["primary"]
+        assert "LEDE" in text and "price asks and answers" in text
+
+    def test_payload_split_across_several_pushes_is_joined(self, tmp_path, monkeypatch):
+        import fetch_content as fc
+        frag = (f'<p class="ckeditor-paragraph show-when-logged-in">{self.BODY}</p>'
+                '<p class="ckeditor-paragraph show-when-logged-in">SECOND-CHUNK-ONLY closing line.</p>')
+        half = len(frag) // 2
+        pushes = "".join(
+            "<script>self.__next_f.push(" + json.dumps([1, part]) + ")</script>"
+            for part in (frag[:half], frag[half:]))
+        html = f"<html><body><nav>STRATEGIES</nav>{pushes}</body></html>"
+        text, _, paths = _run_fetcher(fc._fetch_content_researchaffiliates, html, tmp_path, monkeypatch)
+        assert paths == ["primary"]
+        assert "price asks and answers implicitly." in text
+        assert "SECOND-CHUNK-ONLY" in text
+
+    def test_no_payload_is_not_saved_as_ok(self, tmp_path, monkeypatch):
+        """If the payload format moves again, the shell must not be saved."""
+        import fetch_content as fc
+        monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
+        html = "<html><body><nav>STRATEGIES INSIGHTS</nav><div>" + "Loading... " * 40 + "</div></body></html>"
+        resp = MagicMock(status_code=200, text=html); resp.raise_for_status = lambda: None
+        monkeypatch.setattr(fc.requests, "get", lambda *a, **k: resp)
+        assert fc._fetch_content_researchaffiliates({"id": "ra-x", "url": "https://x"}) is None
+
+
+class TestVerdadMailchimpTemplate:
+    """Verdad's Mailchimp template now renders the whole issue inside
+    #templateFooter, next to the preferences and disclaimer blocks. The
+    fetcher decomposed #templateFooter as boilerplate, which deleted the
+    body, so .mcnTextContent matched nothing and the page fell back to the
+    whole document: the archive bar's language picker plus one sentence (the
+    three most recent stored bodies, ~500 chars)."""
+
+    BODY = "From 1926 to 2007, small caps earned a 2% per year premium over large caps. " * 4
+
+    def _page(self):
+        return f"""<html><body>
+          <div id="awesomebar">Campaign URL Translate English Afrikaans Deutsch</div>
+          <table id="bodyTable"><tr><td id="bodyCell">
+            <table id="templatePreheader"><tr><td class="mcnTextContent">View this email in your browser</td></tr></table>
+            <table id="templateHeader"></table>
+            <table id="templateBody"></table>
+            <table id="templateFooter">
+              <tr><td class="mcnTextContent">Small Caps in 2026: The Lottery and the Leftovers</td></tr>
+              <tr><td class="mcnTextContent">{self.BODY}</td></tr>
+              <tr><td class="mcnTextContent">Want to change how you receive these emails? You can update your preferences or unsubscribe.</td></tr>
+              <tr><td class="mcnTextContent">Disclaimers: This does not constitute an offer.</td></tr>
+            </table>
+          </td></tr></table></body></html>"""
+
+    def test_body_inside_template_footer_is_extracted(self, tmp_path, monkeypatch):
+        import fetch_content as fc
+        text, status, paths = _run_fetcher(fc._fetch_content_verdad, self._page(), tmp_path, monkeypatch)
+        assert paths == ["primary"]
+        assert "Lottery and the Leftovers" in text and "2% per year premium" in text
+
+    def test_mailchimp_boilerplate_is_dropped(self, tmp_path, monkeypatch):
+        import fetch_content as fc
+        text, _, _ = _run_fetcher(fc._fetch_content_verdad, self._page(), tmp_path, monkeypatch)
+        for junk in ("View this email", "Want to change", "unsubscribe", "Disclaimers", "Afrikaans"):
+            assert junk not in text, junk
