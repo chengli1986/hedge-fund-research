@@ -31,6 +31,7 @@ CLI:
 from __future__ import annotations
 
 import argparse
+import html
 import json
 import smtplib
 import statistics
@@ -620,6 +621,53 @@ def pipeline_zero_fetches(state_path=None) -> list[tuple[str, dict]]:
         return []
 
 
+ARTICLES_FILE = BASE_DIR / "data" / "articles.jsonl"
+DECLINE_SAMPLE_REASONS = 2
+
+
+def recent_analysis_declines(data_path=None) -> list[tuple[str, list[dict]]]:
+    """Articles stage 3 declined to summarise in the last run, by source.
+
+    analyze_articles records analysis_status "insufficient_content" when the
+    model declines or check_grounding rejects its summary (e10d923). A cluster
+    on one source means stage 2 is saving the wrong text -- on 2026-09-13
+    lazard-am had 27 (series intro + disclaimer), oaktree a broker-dealer
+    disclosure, gmo an employee tax notice. Largest cluster first.
+
+    Same filters as pipeline_zero_fetches: configured sources only, and only
+    rows the last run touched (ZERO_FETCH_FRESH_HOURS), so a decline is
+    reported once rather than forever. Never raises.
+    """
+    path = ARTICLES_FILE if data_path is None else Path(data_path)
+    try:
+        configured = {s["id"] for s in load_sources()}
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=ZERO_FETCH_FRESH_HOURS)
+        groups: dict[str, list[dict]] = {}
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            row = json.loads(line)
+            if row.get("analysis_status") != "insufficient_content":
+                continue
+            if row.get("source_id") not in configured:
+                continue
+            checked = datetime.fromisoformat(str(row.get("analysis_checked_at") or ""))
+            if checked.tzinfo is None or checked < cutoff:
+                continue
+            groups.setdefault(row["source_id"], []).append(row)
+        return sorted(groups.items(), key=lambda kv: (-len(kv[1]), kv[0]))
+    except Exception:
+        return []
+
+
+def _decline_line(rows: list[dict]) -> str:
+    reasons = list(dict.fromkeys(str(r.get("analysis_reason") or "") for r in rows))
+    shown = " | ".join(reasons[:DECLINE_SAMPLE_REASONS])
+    more = f" (+{len(reasons) - DECLINE_SAMPLE_REASONS} other reasons)" if len(reasons) > DECLINE_SAMPLE_REASONS else ""
+    n = len(rows)
+    return f"{n} article{'s' if n != 1 else ''} not summarised: {shown}{more}"
+
+
 def pipeline_did_not_run(state_path=None) -> bool:
     """True when the last pipeline run refreshed nothing at all.
 
@@ -662,7 +710,8 @@ def pipeline_did_not_run(state_path=None) -> bool:
     return True
 
 
-def should_email(alerts: dict, zero_fetches: list, pipeline_stale: bool = False) -> bool:
+def should_email(alerts: dict, zero_fetches: list, pipeline_stale: bool = False,
+                 declines: list | None = None) -> bool:
     """Whether this run has anything worth sending.
 
     zero_fetches is part of the condition, not just part of the body: the email
@@ -670,7 +719,7 @@ def should_email(alerts: dict, zero_fetches: list, pipeline_stale: bool = False)
     silent zero-article fetch produces.
     """
     return bool(alerts["failing"] or alerts["warning"] or alerts["recovered"]
-                or zero_fetches or pipeline_stale)
+                or zero_fetches or pipeline_stale or declines)
 
 
 def _zero_fetch_line(sid: str, rec: dict) -> str:
@@ -721,6 +770,7 @@ def render_html_email(
     total_runtime_s: float,
     zero_fetches: list | None = None,
     pipeline_stale: bool = False,
+    declines: list | None = None,
 ) -> str:
     """HTML body with same visual idiom as gmia-trial-manager email."""
     sources_state = state.get("sources", {})
@@ -807,6 +857,16 @@ def render_html_email(
         )
         sections.append(section_table(
             f"📉 PIPELINE FETCHED NOTHING ({len(zero_fetches)})", "#9a6700", zero_rows))
+    if declines:
+        # analysis_reason is model output: escape it like any untrusted text.
+        decline_rows = "".join(
+            f'<tr><td style="padding:8px;font-weight:bold;color:#9a6700">{html.escape(sid)}</td>'
+            f'<td style="padding:8px">{html.escape(_decline_line(rows))}</td></tr>'
+            for sid, rows in declines
+        )
+        total = sum(len(rows) for _, rows in declines)
+        sections.append(section_table(
+            f"🤖 NOT SUMMARISED — text was not an article ({total})", "#9a6700", decline_rows))
     sections.append(
         f'<h3 style="margin:14px 0 6px;color:#1a7f37">✅ HEALTHY ({len(alerts["healthy"])})</h3>'
         f'{healthy_html}'
@@ -855,7 +915,7 @@ def send_email(html_body: str, summary_subject: str) -> bool:
 
 
 def alerts_subject(alerts: dict, zero_fetches: list | None = None,
-                   pipeline_stale: bool = False) -> str:
+                   pipeline_stale: bool = False, declines: list | None = None) -> str:
     """Subject line. Must name every condition that caused the send.
 
     zero_fetches is a send condition on its own, and it is the ONLY one that
@@ -879,6 +939,11 @@ def alerts_subject(alerts: dict, zero_fetches: list | None = None,
         parts.append(f"📉 {len(zero_fetches)} fetched nothing ({ids}{more})")
     if pipeline_stale:
         parts.append(f"⛔ pipeline recorded nothing in {ZERO_FETCH_FRESH_HOURS}h")
+    if declines:
+        total = sum(len(rows) for _, rows in declines)
+        ids = ", ".join(sid for sid, _ in declines[:3])
+        more = f" +{len(declines) - 3}" if len(declines) > 3 else ""
+        parts.append(f"🤖 {total} not summarised ({ids}{more})")
     return f"GMIA fetcher health: {' / '.join(parts)}" if parts else "GMIA fetcher health: all OK"
 
 
@@ -1032,6 +1097,11 @@ def main() -> int:
         print(f"⛔ the last pipeline run recorded nothing in the past "
               f"{ZERO_FETCH_FRESH_HOURS}h — zero-fetch reporting is blind until it runs")
     print_console_report(per_source, total_runtime_s, zero_fetches=zero_fetches)
+    declines = recent_analysis_declines()
+    if declines:
+        print(f"🤖 NOT SUMMARISED ({sum(len(r) for _, r in declines)}):")
+        for sid, rows in declines:
+            print(f"  {sid:25} {_decline_line(rows)}")
 
     # Validated-candidate URL probes (decoupled from production source state /
     # email logic): purely informational, but a FAIL bumps the script's exit
@@ -1057,13 +1127,14 @@ def main() -> int:
         print("[dry-run] state file NOT written")
 
     email_failed = False
-    needs_alert = should_email(alerts, zero_fetches, pipeline_stale)
+    needs_alert = should_email(alerts, zero_fetches, pipeline_stale, declines=declines)
     if args.email and needs_alert and not args.dry_run:
         html_body = render_html_email(per_source, alerts, next_state, total_runtime_s,
                                       zero_fetches=zero_fetches,
-                                      pipeline_stale=pipeline_stale)
+                                      pipeline_stale=pipeline_stale,
+                                      declines=declines)
         email_failed = not send_email(
-            html_body, alerts_subject(alerts, zero_fetches, pipeline_stale))
+            html_body, alerts_subject(alerts, zero_fetches, pipeline_stale, declines=declines))
     elif args.email and not needs_alert:
         print("All sources OK and no recoveries — email suppressed.")
 
