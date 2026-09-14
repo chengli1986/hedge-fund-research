@@ -87,6 +87,44 @@ def test_two_spellings_in_one_listing_store_one(monkeypatch):
     assert [a["url"] for a in got] == [listed[0]["url"]]
 
 
+class TestTitleOnlySources:
+    """Cohen & Steers republishes a piece per audience on later dates --
+    "the-case-for-real-assets" (07-30), "-fp", "-inst" (08-21);
+    "the-active-advantage-in-real-assets" (08-10) and "-global" (08-19). Same
+    title, different date and URL, near-identical text: title+date cannot see
+    it. Stripping the suffix from the URL could point the page at a URL that
+    does not exist for that edition, so the source opts into title-only
+    matching instead (no cohen-steers title recurs across different pieces)."""
+
+    STORED = [{"id": "720002bd", "source_id": "cohen-steers", "date": "2026-07-30",
+               "title": "The case for real assets",
+               "url": "https://www.cohenandsteers.com/insights/the-case-for-real-assets/"}]
+    LISTED = [{"title": "The case for real assets", "date": "2026-08-21",
+               "url": "https://www.cohenandsteers.com/insights/the-case-for-real-assets-inst/"}]
+
+    def _run(self, monkeypatch, title_only):
+        sid = "cohen-steers"
+        monkeypatch.setitem(fa.FETCHERS, sid, lambda s: self.LISTED)
+        monkeypatch.setattr(fa, "record_quality_metrics", lambda *a, **k: None)
+        src = dict(_source(sid), dedupe_on_title=title_only)
+        keys = fa.title_date_keys(self.STORED, title_only_sources={sid} if title_only else set())
+        return fa.fetch_source(src, {"720002bd"}, existing_keys=keys)
+
+    def test_an_audience_edition_on_a_later_date_is_not_stored_again(self, monkeypatch):
+        assert self._run(monkeypatch, title_only=True) == []
+
+    def test_other_sources_still_require_the_date(self, monkeypatch):
+        assert len(self._run(monkeypatch, title_only=False)) == 1
+
+    def test_the_flag_is_set_for_cohen_steers_only(self):
+        sources = json.load(open(fa.CONFIG_FILE))["sources"]
+        assert [s["id"] for s in sources if s.get("dedupe_on_title")] == ["cohen-steers"]
+
+    def test_main_passes_the_title_only_sources(self):
+        import inspect
+        assert "title_only_sources=" in inspect.getsource(fa.main)
+
+
 def test_main_loads_and_passes_the_keys():
     import inspect
     src = inspect.getsource(fa.main)

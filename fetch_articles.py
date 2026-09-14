@@ -87,7 +87,7 @@ def _title_key(title: str) -> str:
     return re.sub(r"[^\w]+", " ", text).strip()
 
 
-def title_date_keys(rows) -> dict[tuple[str, str, str], str]:
+def title_date_keys(rows, title_only_sources=frozenset()) -> dict[tuple[str, str, str], str]:
     """(source_id, normalised title, date) -> stored article id.
 
     article_id hashes the URL, and sites rename slugs after publishing, so the
@@ -97,10 +97,16 @@ def title_date_keys(rows) -> dict[tuple[str, str, str], str]:
     two-section listing, cohen-steers' "-fp" edition, a matthews transcript
     page. Undated rows are left out: several sources publish no dates and a
     bare title repeats across years.
+
+    Sources in title_only_sources (sources.json "dedupe_on_title") match on
+    title alone, stored under the date slot "*": Cohen & Steers republishes a
+    piece per audience on later dates ("-fp", "-inst", "-global").
     """
     keys: dict[tuple[str, str, str], str] = {}
     for r in rows:
         title, date = _title_key(r.get("title", "")), r.get("date")
+        if r.get("source_id") in title_only_sources:
+            date = "*"
         if title and date:
             keys.setdefault((r.get("source_id", ""), title, date), r.get("id", ""))
     return keys
@@ -3592,7 +3598,8 @@ def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False,
         aid = article_id(source_id, art["url"])
         if aid in existing_ids:
             continue
-        key = (source_id, _title_key(art.get("title", "")), art.get("date"))
+        key = (source_id, _title_key(art.get("title", "")),
+               "*" if source.get("dedupe_on_title") else art.get("date"))
         if key[1] and key[2] and key in existing_keys:
             log.info("  %s: skipped %r at %s -- same title and date as stored article %s",
                      source_id, art.get("title", ""), art["url"], existing_keys[key])
@@ -3661,7 +3668,10 @@ def main() -> None:
         return
 
     existing_ids = load_existing_ids()
-    existing_keys = title_date_keys(load_existing_rows())
+    existing_keys = title_date_keys(
+        load_existing_rows(),
+        title_only_sources={s["id"] for s in sources if s.get("dedupe_on_title")},
+    )
     entrypoints = load_entrypoints()
     all_new: list[dict] = []
     # How many articles each source actually returned this run. Read back from
