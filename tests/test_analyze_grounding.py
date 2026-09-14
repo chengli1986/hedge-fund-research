@@ -141,6 +141,39 @@ class TestGroundingCheckRules:
             r = dict(self.SUMMARY, summary_zh=phrase)
         assert any("not an article" in p for p in aa.check_grounding(r, self.BODY))
 
+    @pytest.mark.parametrize("summary", [
+        # Published for lazard-am september-11-2026 (gpt-5.6-luna), passed e10d923's check:
+        "The article, titled \u201cUS-Iran Escalation Risk Returns,\u201d provides no substantive "
+        "macroeconomic analysis or specific market views beyond identifying renewed US-Iran "
+        "geopolitical escalation risk. The remainder consists of publication details and extensive "
+        "legal and informational disclaimers.",
+        # Published for lazard-am june-26-2026 (gemini-2.5-pro), passed too:
+        "The provided article from Lazard Asset Management consists solely of an introduction to a "
+        "weekly macroeconomic analysis and a comprehensive legal disclaimer. Despite the title, the "
+        "text contains no substantive market commentary, economic analysis, or investment views.",
+        "The document does not contain the article's substantive analysis.",
+    ])
+    def test_a_summary_saying_there_is_nothing_to_summarise_is_rejected(self, summary):
+        """Not invented, but a non-summary published as one: the "provided text"
+        rule matched only text/content/material/document."""
+        r = dict(self.SUMMARY, summary_en=summary)
+        body = summary + " Important Information. This content represents the views of the author."
+        assert any("not an article" in p for p in aa.check_grounding(r, body))
+
+    @pytest.mark.parametrize("zh", ["所提供的文章仅包含一段介绍和法律免责声明。", "文本并未包含实质性分析。"])
+    def test_chinese_nothing_to_summarise_is_rejected(self, zh):
+        r = dict(self.SUMMARY, summary_zh=zh)
+        assert any("not an article" in p for p in aa.check_grounding(r, self.BODY))
+
+    @pytest.mark.parametrize("summary", [
+        "The Fed provides no specific guidance on the timing of rate cuts.",
+        "Talks produced no substantive progress on tariffs.",
+        "The index contains no Chinese A-shares after the rebalance.",
+    ])
+    def test_ordinary_negatives_about_markets_pass(self, summary):
+        r = dict(self.SUMMARY, summary_en=self.SUMMARY["summary_en"] + " " + summary)
+        assert aa.check_grounding(r, self.BODY + " " + summary) == []
+
     def test_coverage_is_skipped_for_a_non_latin_article(self):
         """A Japanese or Chinese source summarised in English shares almost no
         words with its text; the coverage layer cannot judge it, the others still apply."""

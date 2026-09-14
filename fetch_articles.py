@@ -2376,6 +2376,18 @@ def fetch_acadian_asset(source: dict) -> list[dict]:
     return articles[:source.get("max_articles", 10)]
 
 
+# The index intermittently renders card hrefs as AEM repository paths
+# (/content/lam/us/en_us/....html) instead of the public /us/en_us/... form.
+# Both serve the same page, but article_id hashes the URL, so each such night
+# re-stored the visible batch as new articles: 10 rows on 2026-08-06 and 5 on
+# 2026-08-26, all duplicates of rows already present.
+_LAZARD_AEM_PATH = re.compile(r"^(https?://[^/]+)/content/lam(/.*?)(?:\.html)?$")
+
+
+def _canonical_lazard_url(url: str) -> str:
+    return _LAZARD_AEM_PATH.sub(r"\1\2", url)
+
+
 def fetch_lazard_am(source: dict) -> list[dict]:
     """Fetch articles from Lazard Asset Management (SSR — AEM insights cards).
 
@@ -2397,7 +2409,7 @@ def fetch_lazard_am(source: dict) -> list[dict]:
         href = link_el.get("href", "")
         if not href:
             continue
-        url = urljoin(base_url, href)
+        url = _canonical_lazard_url(urljoin(base_url, href))
         if not _validate_hostname(url, expected_host):
             continue
         if url in seen_urls:

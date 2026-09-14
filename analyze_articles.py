@@ -476,11 +476,20 @@ _SPECULATION_ZH = re.compile(
     r"(根据|从|依据)(文章)?(的)?(标题|题目)"
     r"|(文章|作者|报告|该文|本文|论文|讨论)(很|大|也|还)?(可能|大概|或许|想必)"
 )
-# The summary describing its input rather than an article.
+# The summary describing its input rather than an article. Extended 2026-09-14:
+# two lazard-am summaries passed the first version by saying the same thing in
+# other words -- "provides no substantive macroeconomic analysis ... the
+# remainder consists of ... disclaimers" and "The provided article ... consists
+# solely of an introduction ... and a legal disclaimer". The "no substantive"
+# forms require an article-ish object (analysis/content/commentary/views), so
+# "talks produced no substantive progress" is not caught.
 _NOT_AN_ARTICLE = re.compile(
-    r"\bthe (provided|given|supplied) (text|content|material|document)\b"
-    r"|\b(text|content|document) (does not|doesn't) contain\b"
-    r"|提供的(文本|内容|材料)",
+    r"\bthe (provided|given|supplied) (text|content|material|document|article|excerpt|page)\b"
+    r"|\b(text|content|document|article|page) (does not|doesn't) (contain|include|provide)\b"
+    r"|\b(provides|contains|offers|includes) no substantive\b"
+    r"|\bno substantive (\w+ ){0,2}(analysis|content|commentary|discussion|views|insights?)\b"
+    r"|提供的(文本|内容|材料|文章)"
+    r"|(并?未|没有|不)(包含|提供)(任何)?实质",
     re.IGNORECASE,
 )
 

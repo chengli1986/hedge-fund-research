@@ -1528,6 +1528,13 @@ def _fetch_content_lazard_am(article: dict) -> Optional[tuple[Path, str]]:
 
     Individual article pages are server-rendered using the same AEM .cmp-text
     pattern as Ares / Apollo. A plain requests.get suffices; no Playwright needed.
+
+    List items are body text. "Behind the Headlines" is a weekly list of
+    bullets in .cmp-text <ul><li>; with only ".cmp-text p" every issue was
+    stored as the series intro plus the disclaimer, and stage 3 declined 26 of
+    them (2026-09-13). Research pieces also gain their bulleted passages. No
+    .cmp-text li on the site contains a <p> (all 53 stored URLs checked), so
+    selecting both does not double any text.
     """
     url = article["url"]
     log.info("  Lazard: fetching article page %s", url)
@@ -1539,7 +1546,7 @@ def _fetch_content_lazard_am(article: dict) -> Optional[tuple[Path, str]]:
         log.error("  Lazard: fetch failed: %s", e)
         return None
 
-    text = _normalize_html(resp.text, ".cmp-text p")
+    text = _normalize_html(resp.text, ".cmp-text p, .cmp-text li")
 
     if not _check_min_content_length(text):
         log.warning("  Lazard: extracted text too short (%d chars)", len(text))
