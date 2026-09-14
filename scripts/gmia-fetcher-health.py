@@ -625,7 +625,7 @@ ARTICLES_FILE = BASE_DIR / "data" / "articles.jsonl"
 DECLINE_SAMPLE_REASONS = 2
 
 
-def recent_analysis_declines(data_path=None) -> list[tuple[str, list[dict]]]:
+def recent_analysis_declines(data_path=None, since=None) -> list[tuple[str, list[dict]]]:
     """Articles stage 3 declined to summarise in the last run, by source.
 
     analyze_articles records analysis_status "insufficient_content" when the
@@ -634,14 +634,24 @@ def recent_analysis_declines(data_path=None) -> list[tuple[str, list[dict]]]:
     lazard-am had 27 (series intro + disclaimer), oaktree a broker-dealer
     disclosure, gmo an employee tax notice. Largest cluster first.
 
-    Same filters as pipeline_zero_fetches: configured sources only, and only
-    rows the last run touched (ZERO_FETCH_FRESH_HOURS), so a decline is
-    reported once rather than forever. Never raises.
+    Configured sources only. `since` is the previous health run's last_run:
+    only declines recorded after it are reported, so each is reported once.
+    d905f85 used the ZERO_FETCH_FRESH_HOURS window alone, and a decline
+    recorded mid-day falls inside two consecutive 04:30 runs (09-13's 78 were
+    34h old at the second). With no usable `since` -- first run, unreadable
+    state -- the window applies. A long gap between health runs reports
+    everything since the last one. Never raises.
     """
     path = ARTICLES_FILE if data_path is None else Path(data_path)
     try:
         configured = {s["id"] for s in load_sources()}
         cutoff = datetime.now(timezone.utc) - timedelta(hours=ZERO_FETCH_FRESH_HOURS)
+        try:
+            previous = datetime.fromisoformat(str(since))
+            if previous.tzinfo is not None:
+                cutoff = previous
+        except ValueError:
+            pass
         groups: dict[str, list[dict]] = {}
         for line in path.read_text(encoding="utf-8").splitlines():
             if not line.strip():
@@ -655,7 +665,7 @@ def recent_analysis_declines(data_path=None) -> list[tuple[str, list[dict]]]:
             if not ts:
                 continue
             checked = datetime.fromisoformat(str(ts))
-            if checked.tzinfo is None or checked < cutoff:
+            if checked.tzinfo is None or checked <= cutoff:
                 continue
             groups.setdefault(row["source_id"], []).append(row)
         return sorted(groups.items(), key=lambda kv: (-len(kv[1]), kv[0]))
@@ -1100,7 +1110,8 @@ def main() -> int:
         print(f"⛔ the last pipeline run recorded nothing in the past "
               f"{ZERO_FETCH_FRESH_HOURS}h — zero-fetch reporting is blind until it runs")
     print_console_report(per_source, total_runtime_s, zero_fetches=zero_fetches)
-    declines = recent_analysis_declines()
+    # Before this run's state is written: last_run is still the previous run.
+    declines = recent_analysis_declines(since=load_state().get("last_run"))
     if declines:
         print(f"🤖 NOT SUMMARISED ({sum(len(r) for _, r in declines)}):")
         for sid, rows in declines:

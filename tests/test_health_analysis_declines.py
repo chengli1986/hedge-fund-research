@@ -63,6 +63,27 @@ class TestRecentDeclines:
         rows = [_declined("lazard-am", gfh.ZERO_FETCH_FRESH_HOURS + 5)]
         assert self._run(tmp_path, monkeypatch, rows) == []
 
+    def test_a_decline_already_reported_by_the_previous_run_is_not_repeated(self, tmp_path, monkeypatch):
+        """d905f85 used only the 36h window. The 09-13 re-analysis ran at 10:31
+        UTC; the 20:30 UTC health run reported it, and the next day's 20:30 run
+        is 34h later -- inside the window -- so all 78 would have been sent twice."""
+        monkeypatch.setattr(gfh, "load_sources", lambda: [{"id": "lazard-am"}])
+        rows = [_declined("lazard-am", 34, i=0), _declined("lazard-am", 2, i=1)]
+        got = gfh.recent_analysis_declines(_data(tmp_path, rows), since=_hours_ago(24))
+        assert [r["id"] for _, rs in got for r in rs] == ["lazard-am-1"]
+
+    def test_without_a_previous_run_the_window_applies(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(gfh, "load_sources", lambda: [{"id": "lazard-am"}])
+        rows = [_declined("lazard-am", 34, i=0)]
+        assert len(gfh.recent_analysis_declines(_data(tmp_path, rows), since=None)) == 1
+        assert len(gfh.recent_analysis_declines(_data(tmp_path, rows), since="garbage")) == 1
+
+    def test_a_long_gap_since_the_previous_run_reports_everything_since(self, tmp_path, monkeypatch):
+        """If the health check did not run for three days, nothing is skipped."""
+        monkeypatch.setattr(gfh, "load_sources", lambda: [{"id": "lazard-am"}])
+        rows = [_declined("lazard-am", 60, i=0)]
+        assert len(gfh.recent_analysis_declines(_data(tmp_path, rows), since=_hours_ago(72))) == 1
+
     def test_summarised_and_other_rows_are_ignored(self, tmp_path, monkeypatch):
         ok = {"id": "x", "source_id": "aqr", "summarized": True, "analysis_checked_at": _hours_ago(1)}
         assert self._run(tmp_path, monkeypatch, [ok]) == []
@@ -107,4 +128,5 @@ class TestDeclinesReachTheEmail:
         import inspect
         src = inspect.getsource(gfh.main)
         assert "recent_analysis_declines(" in src
+        assert "since=" in src and "last_run" in src, "declines not limited to the previous health run"
         assert src.count("declines=declines") >= 3, "declines not passed to should_email, subject and body"
