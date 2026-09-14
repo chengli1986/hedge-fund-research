@@ -1709,7 +1709,11 @@ def _fetch_content_franklin_templeton(article: dict) -> Optional[tuple[Path, str
     if not html:
         return None
 
-    text = _normalize_html(html, "main p")
+    # Key points live in <li> ("Quick Thoughts" posts are an intro <p> plus
+    # takeaway bullets); "main p" alone stored four articles as intro +
+    # disclosures. A list item holding a nested <p> or <li> is skipped -- its
+    # children are selected themselves and would otherwise appear twice.
+    text = _normalize_html(html, "main p, main li:not(:has(p)):not(:has(li))")
     if not _check_min_content_length(text):
         log.warning("  Franklin Templeton: extracted text too short (%d chars)", len(text))
         return None

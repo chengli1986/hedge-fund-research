@@ -64,9 +64,14 @@ HEADERS = {
 }
 
 
-def article_id(source_id: str, url: str) -> str:
-    """Generate a stable article ID from source + URL."""
-    return hashlib.sha256(f"{source_id}:{url}".encode()).hexdigest()[:16]
+def article_id(source_id: str, url: str, issue_date: str | None = None) -> str:
+    """Generate a stable article ID from source + URL.
+
+    issue_date is set only for a later issue published at a URL already stored
+    for an earlier one (see fetch_source); every other id is unchanged.
+    """
+    key = f"{source_id}:{url}" if issue_date is None else f"{source_id}:{url}#{issue_date}"
+    return hashlib.sha256(key.encode()).hexdigest()[:16]
 
 
 def load_existing_ids() -> set[str]:
@@ -3518,13 +3523,17 @@ FETCHERS = {
 
 
 def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False,
-                 existing_keys: dict | None = None) -> list[dict]:
+                 existing_keys: dict | None = None,
+                 existing_rows: list[dict] | None = None) -> list[dict]:
     """Fetch articles for a single source, skip duplicates.
 
-    existing_keys is title_date_keys() of the stored rows; main() passes it.
-    Without it, only duplicates within this listing are caught by title.
+    existing_keys is title_date_keys() of the stored rows, and existing_rows
+    the rows themselves; main() passes both. Without them only duplicates
+    within this listing are caught by title, and a new issue at a reused URL
+    is taken for the stored one.
     """
     existing_keys = {} if existing_keys is None else existing_keys
+    stored_by_id = {r.get("id"): r for r in (existing_rows or [])}
     source_id = source["id"]
     fetcher = FETCHERS.get(source_id)
     if not fetcher:
@@ -3597,7 +3606,21 @@ def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False,
             gated_count += 1
         aid = article_id(source_id, art["url"])
         if aid in existing_ids:
-            continue
+            # Some URLs are reused for every issue: Franklin's series cards link
+            # the series page (/articles/series/from-the-market-desk) and its
+            # monthly posts reuse a path (.../global-macro-insights). Hashing the
+            # URL alone made every later issue look stored -- three were being
+            # dropped on 2026-09-14. A listing whose title AND date both differ
+            # from the stored article at that URL is a new issue; an edited
+            # title or a corrected date alone is still the same article.
+            stored = stored_by_id.get(aid)
+            date = art.get("date")
+            if not (stored and date and stored.get("date") and date != stored.get("date")
+                    and _title_key(art.get("title", "")) != _title_key(stored.get("title", ""))):
+                continue
+            aid = article_id(source_id, art["url"], issue_date=date)
+            if aid in existing_ids:
+                continue
         key = (source_id, _title_key(art.get("title", "")),
                "*" if source.get("dedupe_on_title") else art.get("date"))
         if key[1] and key[2] and key in existing_keys:
@@ -3668,8 +3691,9 @@ def main() -> None:
         return
 
     existing_ids = load_existing_ids()
+    existing_rows = load_existing_rows()
     existing_keys = title_date_keys(
-        load_existing_rows(),
+        existing_rows,
         title_only_sources={s["id"] for s in sources if s.get("dedupe_on_title")},
     )
     entrypoints = load_entrypoints()
@@ -3686,7 +3710,8 @@ def main() -> None:
         source = dict(source)  # copy to avoid mutating config
         source["url"] = get_source_url(source, entrypoints)
 
-        new = fetch_source(source, existing_ids, dry_run=args.dry_run, existing_keys=existing_keys)
+        new = fetch_source(source, existing_ids, dry_run=args.dry_run, existing_keys=existing_keys,
+                           existing_rows=existing_rows)
         all_new.extend(new)
         existing_ids.update(a["id"] for a in new)
 
