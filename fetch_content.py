@@ -571,7 +571,18 @@ def _fetch_content_ark(article: dict) -> Optional[tuple[Path, str]]:
         log.warning("  ARK: failed to fetch article page: %s", e)
         return None
 
-    text = _normalize_html(resp.text, "article p, .post-content p, .entry-content p, .wp-block-paragraph")
+    # Video pages carry their description in .single__content .wysiwyg; none of
+    # the other selectors matched it, so the ten reachable "In The Know" pages
+    # were stored as a bare title until 2026-09-14. The trailing "For more
+    # updates, follow us on X ..." line is dropped. (Articles, white papers and
+    # "Stock Stories" videos are Cloudflare-challenged from this server; a
+    # challenge page matches nothing and falls to the metadata fallback.)
+    text = _normalize_html(
+        resp.text,
+        ".single__content .wysiwyg p, article p, .post-content p, .entry-content p, .wp-block-paragraph",
+    )
+    text = "\n".join(line for line in text.split("\n")
+                     if not line.lower().startswith("for more updates, follow us"))
 
     if not _check_min_content_length(text):
         log.warning("  ARK: extracted text too short (%d chars)", len(text))
