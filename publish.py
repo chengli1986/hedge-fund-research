@@ -1750,16 +1750,26 @@ def sync_docs_site(docs_repo: Path, html_content: str) -> bool:
         return subprocess.run(["git", "-C", str(docs_repo), *args], capture_output=True, text=True)
 
     page.write_text(html_content, encoding="utf-8")
-    if git("diff", "--quiet", "--", DOCS_PAGE_RELPATH).returncode == 0 and \
-            git("ls-files", "--error-unmatch", DOCS_PAGE_RELPATH).returncode == 0:
+
+    file_tracked = git("ls-files", "--error-unmatch", DOCS_PAGE_RELPATH).returncode == 0
+    no_new_content = file_tracked and \
+        git("diff", "HEAD", "--quiet", "--", DOCS_PAGE_RELPATH).returncode == 0
+
+    ahead = git("rev-list", "--count", "@{u}..HEAD")
+    has_pending_push = ahead.returncode == 0 and ahead.stdout.strip() not in ("", "0")
+
+    if no_new_content and not has_pending_push:
         print("docs-site: no change, skipping commit")
         return True
 
     stamp = datetime.now(BJT).strftime("%Y-%m-%d %H:%M BJT")
     message = f"sync: hedge-fund-research.html from pipeline ({stamp})"
-    for step, args in (("add", ("add", "--", DOCS_PAGE_RELPATH)),
-                       ("commit", ("commit", "-m", message, "--", DOCS_PAGE_RELPATH)),
-                       ("push", ("push",))):
+    steps = []
+    if not no_new_content:
+        steps += [("add", ("add", "--", DOCS_PAGE_RELPATH)),
+                  ("commit", ("commit", "-m", message, "--", DOCS_PAGE_RELPATH))]
+    steps.append(("push", ("push",)))
+    for step, args in steps:
         result = git(*args)
         if result.returncode != 0:
             detail = (result.stderr or result.stdout).strip().splitlines()
