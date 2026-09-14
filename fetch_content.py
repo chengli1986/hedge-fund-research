@@ -178,6 +178,16 @@ def _normalize_html(html: str, selector: str) -> str:
 _SPACE_BEFORE_PUNCT = re.compile(r"\s+([.,;:!?%)\]}])")
 
 
+def _paragraph_text(el) -> str:
+    """One element's text with inline tags separated, as _normalize_html does.
+
+    For fetchers that loop over paragraphs themselves. gsam, robeco, de-shaw
+    and metlife-im called el.get_text(strip=True), so c149894's word-fusing
+    fix never reached them ("by75bpinSeptember" in 9/9 de-shaw bodies).
+    """
+    return _collapse_inline_spacing(el.get_text(" ", strip=True))
+
+
 def _collapse_inline_spacing(text: str) -> str:
     return _SPACE_BEFORE_PUNCT.sub(r"\1", re.sub(r"\s+", " ", text)).strip()
 
@@ -770,7 +780,7 @@ def _fetch_content_troweprice(article: dict) -> Optional[tuple[Path, str]]:
             time.sleep(5)
 
     title = BeautifulSoup(html, "html.parser").title
-    if title and "Page Not Found" in title.get_text():
+    if title and "Page Not Found" in title.get_text(" ", strip=True):
         # Soft 404 for a withdrawn article. Its site-picker text is inside
         # div.grid-layout-container, so the selector below would match it.
         log.warning("  T.Rowe Price: page not found (withdrawn article?)")
@@ -1226,7 +1236,7 @@ def _fetch_content_gsam(article: dict) -> Optional[tuple[Path, str]]:
                                ".footer-disclosure-text"):
             tag.decompose()
         paragraphs = soup.select("main p")
-        text = "\n".join(p.get_text(strip=True) for p in paragraphs if p.get_text(strip=True))
+        text = "\n".join(t for t in map(_paragraph_text, paragraphs) if t)
     except Exception as e:
         log.error("  GSAM: fetch failed: %s", e)
 
@@ -1268,7 +1278,7 @@ def _fetch_content_robeco(article: dict) -> Optional[tuple[Path, str]]:
         tag.decompose()
 
     paragraphs = soup.select("main p")
-    text = "\n".join(p.get_text(strip=True) for p in paragraphs if p.get_text(strip=True))
+    text = "\n".join(t for t in map(_paragraph_text, paragraphs) if t)
 
     if not _check_min_content_length(text):
         log.warning("  Robeco: extracted text too short (%d chars)", len(text))
@@ -1304,7 +1314,7 @@ def _fetch_content_de_shaw(article: dict) -> Optional[tuple[Path, str]]:
         tag.decompose()
 
     paragraphs = soup.select("div[class*='Blogs_'] p:not([class*='MILegal'])")
-    text = "\n".join(p.get_text(strip=True) for p in paragraphs if p.get_text(strip=True))
+    text = "\n".join(t for t in map(_paragraph_text, paragraphs) if t)
 
     if not _check_min_content_length(text):
         log.warning("  D. E. Shaw: extracted text too short (%d chars)", len(text))
@@ -1357,7 +1367,7 @@ def _fetch_content_metlife_im(article: dict) -> Optional[tuple[Path, str]]:
     paragraphs = soup.select("div.read-more-section.richtext p")
     kept = []
     for p in paragraphs:
-        para = p.get_text(strip=True)
+        para = _paragraph_text(p)
         if not para:
             continue
         # Same disclaimer, sometimes inlined in the body under a "Disclosure"
@@ -1447,7 +1457,7 @@ def _fetch_content_matthews_asia(article: dict) -> Optional[tuple[Path, str]]:
 
     paragraphs = soup.select("main p")
     text = "\n".join(
-        p.get_text(" ", strip=True) for p in paragraphs if p.get_text(strip=True)
+        p.get_text(" ", strip=True) for p in paragraphs if p.get_text(" ", strip=True)
     )
 
     if not _check_min_content_length(text, MATTHEWS_MIN_CONTENT):
