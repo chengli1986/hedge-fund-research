@@ -17,7 +17,7 @@ Usage:
 """
 
 import argparse
-from html import unescape as _html_unescape
+import html
 import json
 import hashlib
 import logging
@@ -1502,7 +1502,7 @@ def fetch_ark_invest(source: dict) -> list[dict]:
 
         # The feed double-escapes: "ARK&apos;s" arrives after XML parsing still
         # as an entity, and was stored and shown that way.
-        title = _html_unescape(title_el.text.strip()) if title_el is not None and title_el.text else ""
+        title = html.unescape(title_el.text.strip()) if title_el is not None and title_el.text else ""
         link = link_el.text.strip() if link_el is not None and link_el.text else ""
         if not title or not link:
             continue
