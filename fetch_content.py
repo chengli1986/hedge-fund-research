@@ -19,6 +19,7 @@ Usage:
 
 import argparse
 import json
+from urllib.parse import urljoin
 import logging
 import os
 import re
@@ -297,6 +298,25 @@ def _atomic_write(path: Path, data: bytes) -> None:
 # Per-source content fetchers
 # ---------------------------------------------------------------------------
 
+def _gmo_pdf_url(html: str, page_url: str) -> Optional[str]:
+    """The article's PDF on a GMO page, or None.
+
+    Until 2026-09-14 the fetcher took the first .pdf href on the page, which on
+    a video page is the site-wide "Important Health Care Coverage" 1095-C form
+    in nav.menu -- stored and summarised as the article. Links inside nav,
+    header and footer are site-wide and never the article. The share bar's
+    download button is the article's own PDF; 9 of 36 pages (7-year forecasts,
+    EMD valuation updates) have no button and link the PDF in the text, so the
+    first remaining link is the fallback.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    for chrome in soup.select("nav, header, footer"):
+        chrome.decompose()
+    button = soup.select_one('.share-links a.downloadDocumentTracking[href*=".pdf"]')
+    link = button or soup.select_one('a[href*=".pdf"]')
+    return urljoin(page_url, link["href"]) if link else None
+
+
 def _fetch_content_gmo(article: dict) -> Optional[tuple[Path, str]]:
     """Fetch GMO article content: download PDF, extract text with pdfplumber."""
     import pdfplumber
@@ -312,16 +332,10 @@ def _fetch_content_gmo(article: dict) -> Optional[tuple[Path, str]]:
         log.error("  GMO: failed to fetch article page: %s", e)
         return None
 
-    # Extract PDF href from the page
-    pdf_match = re.search(r'href=["\']([^"\']*\.pdf[^"\']*)["\']', resp.text)
-    if not pdf_match:
-        log.warning("  GMO: no PDF link found on page %s", url)
+    pdf_url = _gmo_pdf_url(resp.text, url)
+    if not pdf_url:
+        log.warning("  GMO: no article PDF on page %s", url)
         return None
-
-    pdf_url = pdf_match.group(1)
-    if not pdf_url.startswith("http"):
-        from fetch_articles import _site_base
-        pdf_url = _site_base(url) + pdf_url
 
     log.info("  GMO: downloading PDF %s", pdf_url)
     try:
@@ -362,6 +376,29 @@ def _fetch_content_gmo(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+_OAKTREE_OPENPDF = re.compile(r"openPDF\(['\"][^'\"]+['\"],\s*['\"]([^'\"]+\.pdf[^'\"]*)['\"]")
+_OAKTREE_TRANSLATION = re.compile(r"_(jpn|krn|sc|tc)\.", re.IGNORECASE)
+
+
+def _oaktree_pdf_url(html: str, page_url: str) -> Optional[str]:
+    """The article's PDF on an Oaktree page: the English openPDF(...) target.
+
+    The fetcher used to find this and then, in an `else` branch, overwrite it
+    with the first .pdf href on the page. Memos link earlier memos in their
+    text, so "Cockroaches in the Coal Mine" and "What's Going on in Private
+    Credit?" were stored as "What Does the Market Know?", and "AI Hurtles
+    Ahead" as "Something of Value"; a video page with no openPDF got the Form
+    CRS. A live survey on 2026-09-14 found every one of the 15 PDF-bearing
+    pages lists its PDF through openPDF, so there is no href fallback: no
+    openPDF means no article PDF.
+    """
+    targets = _OAKTREE_OPENPDF.findall(html)
+    if not targets:
+        return None
+    english = [t for t in targets if not _OAKTREE_TRANSLATION.search(t)]
+    return urljoin(page_url, (english or targets)[0])
+
+
 def _fetch_content_oaktree(article: dict) -> Optional[tuple[Path, str]]:
     """Fetch Oaktree article content: Playwright page -> find PDF URL -> download -> extract."""
     import pdfplumber
@@ -386,29 +423,10 @@ def _fetch_content_oaktree(article: dict) -> Optional[tuple[Path, str]]:
         log.error("  Oaktree: Playwright fetch failed: %s", e)
         return None
 
-    # Look for PDF URL via openPDF() call or direct .pdf href
-    pdf_url = None
-    # openPDF('title','url') — capture the second argument (URL)
-    # Find all PDF URLs, prefer English (no _JPN/_KRN/_SC/_TC suffix)
-    pdf_matches = re.findall(r"openPDF\(['\"][^'\"]+['\"],\s*['\"]([^'\"]+\.pdf[^'\"]*)['\"]", html)
-    for match in pdf_matches:
-        if not re.search(r"_(jpn|krn|sc|tc)\.", match, re.IGNORECASE):
-            pdf_url = match
-            break
-    if not pdf_url and pdf_matches:
-        pdf_url = pdf_matches[0]  # fallback to first match
-    else:
-        pdf_match = re.search(r'href=["\']([^"\']*\.pdf[^"\']*)["\']', html)
-        if pdf_match:
-            pdf_url = pdf_match.group(1)
-
+    pdf_url = _oaktree_pdf_url(html, url)
     if not pdf_url:
-        log.warning("  Oaktree: no PDF link found on page %s", url)
+        log.warning("  Oaktree: no openPDF link on page %s", url)
         return None
-
-    if not pdf_url.startswith("http"):
-        from fetch_articles import _site_base
-        pdf_url = _site_base(url) + pdf_url
 
     log.info("  Oaktree: downloading PDF %s", pdf_url)
     try:
