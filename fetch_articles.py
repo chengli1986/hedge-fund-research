@@ -28,7 +28,7 @@ import time
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Optional
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urlsplit, urlunsplit, urljoin, urlparse
 
 import xml.etree.ElementTree as ET
 from email.utils import parsedate_to_datetime
@@ -2381,11 +2381,16 @@ def fetch_acadian_asset(source: dict) -> list[dict]:
 # Both serve the same page, but article_id hashes the URL, so each such night
 # re-stored the visible batch as new articles: 10 rows on 2026-08-06 and 5 on
 # 2026-08-26, all duplicates of rows already present.
-_LAZARD_AEM_PATH = re.compile(r"^(https?://[^/]+)/content/lam(/.*?)(?:\.html)?$")
+#
+# Query and fragment are dropped first: with "?utm=..." the .html suffix used
+# to survive, a third spelling and a third id. No stored lazard URL has either.
+_LAZARD_AEM_PATH = re.compile(r"^/content/lam(/.*?)(?:\.html)?$")
 
 
 def _canonical_lazard_url(url: str) -> str:
-    return _LAZARD_AEM_PATH.sub(r"\1\2", url)
+    parts = urlsplit(url)
+    path = _LAZARD_AEM_PATH.sub(r"\1", parts.path)
+    return urlunsplit((parts.scheme, parts.netloc, path, "", ""))
 
 
 def fetch_lazard_am(source: dict) -> list[dict]:

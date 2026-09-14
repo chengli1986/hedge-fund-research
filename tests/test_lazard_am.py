@@ -55,6 +55,26 @@ class TestLazardUrlsAreCanonical:
                                            "Ceasefire Remains Fragile")])
         assert [a["url"] for a in got] == [CLEAN]
 
+    def test_query_and_fragment_do_not_create_a_new_id(self, monkeypatch):
+        """Found re-checking 06e658e: with a query string the .html suffix
+        survived, giving a third spelling and a new article_id. Lazard card
+        hrefs carry no meaningful query (none of the 38 stored URLs has one)."""
+        for href in (
+            "/content/lam/us/en_us/research-insights/market-insights/behind-the-headlines/june-26-2026.html?utm_source=x",
+            "/content/lam/us/en_us/research-insights/market-insights/behind-the-headlines/june-26-2026.html#top",
+            "/us/en_us/research-insights/market-insights/behind-the-headlines/june-26-2026?utm_source=x",
+        ):
+            got = _listing(monkeypatch, [_card(href, "Ceasefire Remains Fragile")])
+            assert [a["url"] for a in got] == [CLEAN], href
+
+    def test_other_paths_are_left_alone(self):
+        assert fa._canonical_lazard_url(
+            "https://www.lazardassetmanagement.com/content/dam/lam/pdfs/report.pdf"
+        ) == "https://www.lazardassetmanagement.com/content/dam/lam/pdfs/report.pdf"
+        assert fa._canonical_lazard_url(
+            "https://www.lazardassetmanagement.com/us/en_us/x/report.html"
+        ) == "https://www.lazardassetmanagement.com/us/en_us/x/report.html"
+
     def test_both_forms_on_one_page_yield_one_article(self, monkeypatch):
         got = _listing(monkeypatch, [
             _card("/us/en_us/research-insights/market-insights/behind-the-headlines/june-26-2026", "Ceasefire Remains Fragile"),
