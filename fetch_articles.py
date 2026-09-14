@@ -23,6 +23,7 @@ import hashlib
 import logging
 import os
 import re
+import unicodedata
 import sys
 import time
 from datetime import datetime, timezone, timedelta
@@ -79,6 +80,42 @@ def load_existing_ids() -> set[str]:
                 except (json.JSONDecodeError, KeyError):
                     continue
     return ids
+
+
+def _title_key(title: str) -> str:
+    text = unicodedata.normalize("NFKC", title or "").lower()
+    return re.sub(r"[^\w]+", " ", text).strip()
+
+
+def title_date_keys(rows) -> dict[tuple[str, str, str], str]:
+    """(source_id, normalised title, date) -> stored article id.
+
+    article_id hashes the URL, and sites rename slugs after publishing, so the
+    URL is not a stable identity. On 2026-09-14 twelve (source, title, date)
+    groups were stored twice -- metlife, mfs, brookfield and rothschild slug
+    renames, man-group "%20" -> "-", an ares case variant, apollo's
+    two-section listing, cohen-steers' "-fp" edition, a matthews transcript
+    page. Undated rows are left out: several sources publish no dates and a
+    bare title repeats across years.
+    """
+    keys: dict[tuple[str, str, str], str] = {}
+    for r in rows:
+        title, date = _title_key(r.get("title", "")), r.get("date")
+        if title and date:
+            keys.setdefault((r.get("source_id", ""), title, date), r.get("id", ""))
+    return keys
+
+
+def load_existing_rows() -> list[dict]:
+    rows: list[dict] = []
+    if DATA_FILE.exists():
+        for line in DATA_FILE.read_text().strip().split("\n"):
+            if line.strip():
+                try:
+                    rows.append(json.loads(line))
+                except json.JSONDecodeError:
+                    continue
+    return rows
 
 
 def load_entrypoints() -> dict:
@@ -2294,6 +2331,14 @@ def fetch_matthews_asia(source: dict) -> list[dict]:
         title = title_el.get_text(strip=True)
         if not title:
             continue
+        # Some cards split the title: h4 "China Innovation:" and the rest in the
+        # next <p>. Two different pieces were both stored as "China Innovation:".
+        # A complete title's next <p> is the description, so only a trailing
+        # colon pulls it in.
+        if title.endswith(":"):
+            rest = title_el.find_next_sibling("p")
+            if rest and rest.get_text(strip=True):
+                title = f"{title} {rest.get_text(' ', strip=True)}"
         href = item.get("href", "")
         if not href:
             continue
@@ -3466,8 +3511,14 @@ FETCHERS = {
 }
 
 
-def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False) -> list[dict]:
-    """Fetch articles for a single source, skip duplicates."""
+def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False,
+                 existing_keys: dict | None = None) -> list[dict]:
+    """Fetch articles for a single source, skip duplicates.
+
+    existing_keys is title_date_keys() of the stored rows; main() passes it.
+    Without it, only duplicates within this listing are caught by title.
+    """
+    existing_keys = {} if existing_keys is None else existing_keys
     source_id = source["id"]
     fetcher = FETCHERS.get(source_id)
     if not fetcher:
@@ -3541,6 +3592,13 @@ def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False) ->
         aid = article_id(source_id, art["url"])
         if aid in existing_ids:
             continue
+        key = (source_id, _title_key(art.get("title", "")), art.get("date"))
+        if key[1] and key[2] and key in existing_keys:
+            log.info("  %s: skipped %r at %s -- same title and date as stored article %s",
+                     source_id, art.get("title", ""), art["url"], existing_keys[key])
+            continue
+        if key[1] and key[2]:
+            existing_keys[key] = aid
         # Add immediately: a fetcher can return the same URL twice in one
         # result list (wellington did), and the on-disk check alone lets every
         # occurrence through — this was the source of jsonl duplicate rows.
@@ -3603,6 +3661,7 @@ def main() -> None:
         return
 
     existing_ids = load_existing_ids()
+    existing_keys = title_date_keys(load_existing_rows())
     entrypoints = load_entrypoints()
     all_new: list[dict] = []
     # How many articles each source actually returned this run. Read back from
@@ -3617,7 +3676,7 @@ def main() -> None:
         source = dict(source)  # copy to avoid mutating config
         source["url"] = get_source_url(source, entrypoints)
 
-        new = fetch_source(source, existing_ids, dry_run=args.dry_run)
+        new = fetch_source(source, existing_ids, dry_run=args.dry_run, existing_keys=existing_keys)
         all_new.extend(new)
         existing_ids.update(a["id"] for a in new)
 
