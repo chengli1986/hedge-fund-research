@@ -160,6 +160,12 @@ class TestGroundingCheckRules:
         body = summary + " Important Information. This content represents the views of the author."
         assert any("not an article" in p for p in aa.check_grounding(r, body))
 
+    @pytest.mark.parametrize("zh", ["美联储并未提供实质性指引。", "央行没有提供实质性的前瞻指引。", "谈判未包含实质内容。"])
+    def test_chinese_market_negatives_pass(self, zh):
+        """Rejected by the 06e658e rule, which had no subject requirement."""
+        r = dict(self.SUMMARY, summary_zh=zh)
+        assert aa.check_grounding(r, self.BODY) == []
+
     @pytest.mark.parametrize("zh", ["所提供的文章仅包含一段介绍和法律免责声明。", "文本并未包含实质性分析。"])
     def test_chinese_nothing_to_summarise_is_rejected(self, zh):
         r = dict(self.SUMMARY, summary_zh=zh)
@@ -169,6 +175,13 @@ class TestGroundingCheckRules:
         "The Fed provides no specific guidance on the timing of rate cuts.",
         "Talks produced no substantive progress on tariffs.",
         "The index contains no Chinese A-shares after the rebalance.",
+        # The first version of this test used "no specific guidance" and so
+        # never exercised the word the 06e658e rule keys on. All four of these
+        # were rejected by it -- and a rejection is permanent (not retried).
+        "The Fed provides no substantive guidance on rate cuts.",
+        "The ECB offers no substantive forward guidance.",
+        "Management includes no substantive changes to the forecast.",
+        "The article does not provide a specific price target but argues valuations are stretched.",
     ])
     def test_ordinary_negatives_about_markets_pass(self, summary):
         r = dict(self.SUMMARY, summary_en=self.SUMMARY["summary_en"] + " " + summary)

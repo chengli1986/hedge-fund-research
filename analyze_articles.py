@@ -478,18 +478,30 @@ _SPECULATION_ZH = re.compile(
 )
 # The summary describing its input rather than an article. Extended 2026-09-14:
 # two lazard-am summaries passed the first version by saying the same thing in
-# other words -- "provides no substantive macroeconomic analysis ... the
-# remainder consists of ... disclaimers" and "The provided article ... consists
-# solely of an introduction ... and a legal disclaimer". The "no substantive"
-# forms require an article-ish object (analysis/content/commentary/views), so
-# "talks produced no substantive progress" is not caught.
+# other words -- "The article, titled ..., provides no substantive
+# macroeconomic analysis ... the remainder consists of ... disclaimers" and
+# "The provided article ... consists solely of an introduction ... and a legal
+# disclaimer".
+#
+# Every form must name the INPUT as its subject. The first extension did not
+# ("(provides|contains) no substantive", "no substantive ... analysis",
+# 未提供实质) and rejected ordinary market sentences -- "The Fed provides no
+# substantive guidance", "美联储并未提供实质性指引" -- and a rejection is
+# permanent. "article" is accepted as the subject only with an article-ish
+# object (analysis/content/commentary/views/discussion), because a real
+# summary may say "the article does not provide a price target but argues...".
+_INPUT_NOUN = r"(?:text|excerpt|page|document|material|content)"
+_ARTICLE_OBJECT = r"(?:analysis|content|commentary|discussion|views|insights?|information)"
 _NOT_AN_ARTICLE = re.compile(
-    r"\bthe (provided|given|supplied) (text|content|material|document|article|excerpt|page)\b"
-    r"|\b(text|content|document|article|page) (does not|doesn't) (contain|include|provide)\b"
-    r"|\b(provides|contains|offers|includes) no substantive\b"
-    r"|\bno substantive (\w+ ){0,2}(analysis|content|commentary|discussion|views|insights?)\b"
-    r"|提供的(文本|内容|材料|文章)"
-    r"|(并?未|没有|不)(包含|提供)(任何)?实质",
+    r"\bthe (?:provided|given|supplied) (?:text|content|material|document|article|excerpt|page)\b"
+    rf"|\b(?:the |this )?{_INPUT_NOUN} (?:does not|doesn't|did not) (?:contain|include|provide)\b"
+    rf"|\b(?:the |this )?{_INPUT_NOUN} (?:contains|provides|includes|offers) no\b"
+    rf"|\b(?:article|piece)\b[^.;]{{0,80}}?\b(?:provides|contains|offers|includes) no substantive "
+    rf"(?:\w+ ){{0,2}}{_ARTICLE_OBJECT}\b"
+    rf"|\b(?:article|piece) (?:does not|doesn't) (?:contain|include|provide) (?:any |the )?"
+    rf"(?:substantive|actual) (?:\w+ ){{0,2}}{_ARTICLE_OBJECT}\b"
+    r"|提供的(?:文本|内容|材料|文章)"
+    r"|(?:文本|本文|该文|原文|文章)(?:中)?(?:并?未|没有|不)(?:包含|提供)(?:任何)?实质",
     re.IGNORECASE,
 )
 
