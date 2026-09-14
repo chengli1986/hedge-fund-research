@@ -69,7 +69,13 @@ fi
 if [[ ${#failed_stages[@]} -gt 0 ]]; then
   echo "WARN: publishing with degraded data (failed: ${failed_stages[*]})"
 fi
-if ! python3 publish.py; then
+# Exit 3 = the dashboard was written but the docs-site sync (commit/push)
+# failed: an alert, not a reason to skip Stage 5 -- the page is live.
+python3 publish.py
+publish_rc=$?
+if [[ $publish_rc -eq 3 ]]; then
+  failed_stages+=("Stage4:docs-sync")
+elif [[ $publish_rc -ne 0 ]]; then
   failed_stages+=("Stage4:publish")
 fi
 

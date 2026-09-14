@@ -17,6 +17,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import argparse
 import os
+import sys
 
 BJT = timezone(timedelta(hours=8))
 
@@ -1720,8 +1721,57 @@ def publish_html(output_file: Path, html_content: str) -> Path:
     return gzip_path
 
 
-def main() -> None:
-    """Load data, generate HTML, and publish to the configured output path."""
+# publish.py exit code when the dashboard was written but the docs-site sync
+# failed. run_pipeline.sh records it as Stage4:docs-sync and still runs Stage 5.
+DOCS_SYNC_FAILED = 3
+DOCS_PAGE_RELPATH = "pages/hedge-fund-research.html"
+
+
+def sync_docs_site(docs_repo: Path, html_content: str) -> bool:
+    """Copy the page into docs-site, commit only that file, and push.
+
+    Returns False when the commit or push fails, after saying so on stderr.
+    docs-site is shared with other crons, so:
+      - the commit takes a pathspec; until 2026-09-14 a bare `git commit -m`
+        would also have committed whatever another writer had staged;
+      - nothing pulls or rebases here, because the working tree routinely
+        holds other writers' uncommitted changes. A local commit left by a
+        rejected push is carried by the next successful one.
+    An absent docs-site (a dev machine) is not a failure.
+    """
+    import subprocess
+
+    page = docs_repo / DOCS_PAGE_RELPATH
+    if not page.parent.exists():
+        print("docs-site: not present, skipping sync")
+        return True
+
+    def git(*args):
+        return subprocess.run(["git", "-C", str(docs_repo), *args], capture_output=True, text=True)
+
+    page.write_text(html_content, encoding="utf-8")
+    if git("diff", "--quiet", "--", DOCS_PAGE_RELPATH).returncode == 0 and \
+            git("ls-files", "--error-unmatch", DOCS_PAGE_RELPATH).returncode == 0:
+        print("docs-site: no change, skipping commit")
+        return True
+
+    stamp = datetime.now(BJT).strftime("%Y-%m-%d %H:%M BJT")
+    message = f"sync: hedge-fund-research.html from pipeline ({stamp})"
+    for step, args in (("add", ("add", "--", DOCS_PAGE_RELPATH)),
+                       ("commit", ("commit", "-m", message, "--", DOCS_PAGE_RELPATH)),
+                       ("push", ("push",))):
+        result = git(*args)
+        if result.returncode != 0:
+            detail = (result.stderr or result.stdout).strip().splitlines()
+            print(f"ERROR: docs-site sync failed at git {step}: "
+                  f"{detail[-1] if detail else 'no output'}", file=sys.stderr)
+            return False
+    print(f"Synced docs-site: {page}")
+    return True
+
+
+def main() -> int:
+    """Load data, generate HTML, publish it, and sync the page into docs-site."""
     parser = argparse.ArgumentParser(description="Hedge Fund Research — HTML publisher")
     parser.add_argument(
         "--output",
@@ -1738,36 +1788,10 @@ def main() -> None:
     print(f"Written {len(html_content)} bytes to {output_file}")
     print(f"Gzipped: {gzip_path}")
 
-    # Sync generated page back to docs-site repo so docs-sync stays consistent
-    docs_page = Path.home() / "docs-site" / "pages" / "hedge-fund-research.html"
-    if docs_page.parent.exists():
-        try:
-            docs_page.write_text(html_content, encoding="utf-8")
-            import subprocess
-            result = subprocess.run(
-                ["git", "-C", str(docs_page.parent.parent), "diff", "--quiet", str(docs_page)],
-                capture_output=True,
-            )
-            if result.returncode != 0:  # file changed
-                subprocess.run(
-                    ["git", "-C", str(docs_page.parent.parent), "add", str(docs_page)],
-                    check=True, capture_output=True,
-                )
-                subprocess.run(
-                    ["git", "-C", str(docs_page.parent.parent), "commit", "-m",
-                     f"sync: hedge-fund-research.html from pipeline ({datetime.now(BJT).strftime('%Y-%m-%d %H:%M BJT')})"],
-                    check=True, capture_output=True,
-                )
-                subprocess.run(
-                    ["git", "-C", str(docs_page.parent.parent), "push"],
-                    check=True, capture_output=True,
-                )
-                print(f"Synced docs-site: {docs_page}")
-            else:
-                print("docs-site: no change, skipping commit")
-        except Exception as e:
-            print(f"docs-site sync skipped: {e}")
+    if not sync_docs_site(Path.home() / "docs-site", html_content):
+        return DOCS_SYNC_FAILED
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
