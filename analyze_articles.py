@@ -13,6 +13,7 @@ Usage:
 """
 
 import argparse
+import hashlib
 import json
 import sys
 from functools import partial
@@ -694,6 +695,35 @@ def _resolve_content_path(article: dict) -> Path:
 _SUMMARY_FIELDS = ("summary_en", "summary_zh", "key_takeaway_en", "key_takeaway_zh")
 
 
+def _body_key(source_id: str, text: str) -> tuple[str, str]:
+    """Identity of a stored body within its source, ignoring whitespace."""
+    normalised = re.sub(r"\s+", " ", text).strip()
+    return source_id, hashlib.sha256(normalised.encode("utf-8")).hexdigest()
+
+
+def _published_bodies(articles: list[dict]) -> dict[tuple[str, str], dict]:
+    """(source_id, body hash) -> the summarised article that already owns it.
+
+    Stage 2 has stored one document under two titles (oaktree's memo links,
+    GMO's shared download buttons) and one article under two URL spellings
+    (brookfield, apollo, ares, man-group, rothschild, metlife, mfs) -- 14
+    identical-body groups on 2026-09-14. A summary of such a body passes
+    check_grounding, because it is faithful to the text; publishing it again
+    is the fault. Only summarised articles count: a declined copy published
+    nothing.
+    """
+    owners: dict[tuple[str, str], dict] = {}
+    for a in articles:
+        if not a.get("summarized"):
+            continue
+        try:
+            text = _resolve_content_path(a).read_text(encoding="utf-8")
+        except (OSError, ValueError):
+            continue
+        owners.setdefault(_body_key(a.get("source_id", ""), text), a)
+    return owners
+
+
 def _record_insufficient(article: dict, result: dict) -> None:
     """Mark an article as not summarisable, and remove any older summary.
 
@@ -731,6 +761,7 @@ def main() -> int:
     success_count = 0
     fail_count = 0
     insufficient_count = 0
+    published = _published_bodies(articles)
 
     for a in pending:
         try:
@@ -751,7 +782,15 @@ def main() -> int:
         level = "metadata-only" if is_metadata else "full"
         log.info("Analyzing (%s): %s — %s", level, a.get("source_id", "?"), a.get("title", "?"))
 
-        if is_metadata and is_title_only(content):
+        body_key = _body_key(a.get("source_id", ""), content)
+        owner = published.get(body_key)
+        if owner is not None and owner.get("id") != a["id"]:
+            result = {"insufficient_content": True, "_model": None,
+                      "reason": (f"same text as the already-summarised article "
+                                 f"\"{owner.get('title', '')}\" ({owner.get('id')}); the page "
+                                 f"served a document that belongs to another article, or "
+                                 f"this article is stored twice")}
+        elif is_metadata and is_title_only(content):
             result = {"insufficient_content": True, "_model": None,
                       "reason": "metadata holds only a title; nothing to summarise"}
         else:
@@ -776,6 +815,7 @@ def main() -> int:
             a["key_takeaway_en"] = result["key_takeaway_en"]
             a["key_takeaway_zh"] = result["key_takeaway_zh"]
             a["summarized"] = True
+            published.setdefault(body_key, a)
             a.pop("analysis_status", None)
             a.pop("analysis_reason", None)
             a["analysis_model"] = result["_model"]
