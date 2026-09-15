@@ -1045,6 +1045,16 @@ def _fetch_content_apollo(article: dict) -> Optional[tuple[Path, str]]:
     text = _normalize_html(resp.text, ".cmp-text p")
 
     if not _check_min_content_length(text, APOLLO_MIN_CONTENT):
+        # Whitepapers and reports are a short excerpt plus a download button,
+        # a custom element (<acl-apollo-button iconType="download" href=".pdf">)
+        # rather than an <a>. Episode pages carry none and stay skipped.
+        button = BeautifulSoup(resp.text, "html.parser").select_one(
+            'acl-apollo-button[icontype="download"][href*=".pdf"]')
+        pdf_text = _linked_article_pdf(button, url, article.get("title", ""), "Apollo")
+        if pdf_text:
+            text = pdf_text
+
+    if not _check_min_content_length(text, APOLLO_MIN_CONTENT):
         log.warning("  Apollo: extracted text too short (%d chars, min %d filters video/podcast previews)",
                     len(text), APOLLO_MIN_CONTENT)
         return None
