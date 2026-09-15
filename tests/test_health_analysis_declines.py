@@ -91,6 +91,16 @@ class TestRecentDeclines:
     def test_retired_sources_are_ignored(self, tmp_path, monkeypatch):
         assert self._run(tmp_path, monkeypatch, [_declined("pgim", 1)]) == []
 
+    def test_a_row_without_a_timestamp_does_not_hide_the_others(self, tmp_path, monkeypatch):
+        """Pins 6eb47b2 (auto-review): fromisoformat("") raised, the outer
+        except returned [], and one row lacking analysis_checked_at silenced
+        every decline in the email."""
+        undated = dict(_declined("lazard-am", 1, i=9))
+        undated.pop("analysis_checked_at")
+        rows = [undated, _declined("gmo", 2)]
+        got = dict(self._run(tmp_path, monkeypatch, rows))
+        assert set(got) == {"gmo"}
+
     def test_never_raises(self, tmp_path, monkeypatch):
         monkeypatch.setattr(gfh, "load_sources", lambda: [{"id": "aqr"}])
         assert gfh.recent_analysis_declines(tmp_path / "missing.jsonl") == []

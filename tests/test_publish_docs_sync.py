@@ -74,6 +74,18 @@ def test_a_rejected_push_is_reported(docs_repo, capsys):
         "the local commit is kept so the next push carries it"
 
 
+def test_a_commit_left_by_a_rejected_push_is_pushed_on_an_unchanged_rerun(docs_repo):
+    """Pins b43ef86 (auto-review): after a rejected push the page is committed
+    locally; the next run with identical HTML used to see "no change" and
+    return True without pushing, so the commit never left the machine."""
+    good_remote = _git(docs_repo, "remote", "get-url", "origin").stdout.strip()
+    _git(docs_repo, "remote", "set-url", "origin", str(docs_repo.parent / "missing.git"))
+    assert publish.sync_docs_site(docs_repo, "<html>v2</html>") is False
+    _git(docs_repo, "remote", "set-url", "origin", good_remote)
+    assert publish.sync_docs_site(docs_repo, "<html>v2</html>") is True
+    assert _git(docs_repo, "rev-list", "--count", "@{u}..HEAD").stdout.strip() == "0", "local commit still unpushed"
+
+
 def test_no_change_is_success_without_a_commit(docs_repo):
     before = _git(docs_repo, "rev-parse", "HEAD").stdout
     assert publish.sync_docs_site(docs_repo, "old") is True
