@@ -1433,6 +1433,47 @@ def _fetch_content_ares(article: dict) -> Optional[tuple[Path, str]]:
 _MATTHEWS_DISCLAIMER = "The views and information discussed in this report"
 
 
+def _pdf_text(content: bytes) -> str:
+    """Text of a PDF's pages, joined by newlines."""
+    import io
+    import pdfplumber
+    with pdfplumber.open(io.BytesIO(content)) as pdf:
+        return "\n".join(page.extract_text() or "" for page in pdf.pages)
+
+
+def _matthews_linked_pdf(soup, page_url: str, title: str) -> str:
+    """Text of the article's PDF, when the page links one; "" otherwise.
+
+    Only the first PDF linked from the page body is tried (nav/header/footer
+    are already stripped), and its text is used only if the article title
+    appears near its start -- so a factsheet or brochure never stands in for
+    the article.
+    """
+    link = soup.select_one('main a[href*=".pdf"]')
+    if not link or not title:
+        return ""
+    pdf_url = urljoin(page_url, link["href"])
+    try:
+        resp = requests.get(pdf_url, headers=HEADERS, timeout=60)
+    except Exception as e:
+        log.warning("  Matthews Asia: PDF download failed %s: %s", pdf_url, e)
+        return ""
+    if not _validate_pdf_response(resp.status_code, resp.headers.get("Content-Type", ""),
+                                  len(resp.content)):
+        return ""
+    try:
+        text = _pdf_text(resp.content)
+    except Exception as e:
+        log.warning("  Matthews Asia: PDF extraction failed %s: %s", pdf_url, e)
+        return ""
+    head = _collapse_inline_spacing(text[:2000]).lower()
+    if _collapse_inline_spacing(title).lower() not in head:
+        log.warning("  Matthews Asia: linked PDF %s does not open with the article title; not used", pdf_url)
+        return ""
+    log.info("  Matthews Asia: article body read from linked PDF %s", pdf_url)
+    return text
+
+
 def _fetch_content_matthews_asia(article: dict) -> Optional[tuple[Path, str]]:
     """Fetch Matthews Asia Insights article content via requests (SSR).
 
@@ -1470,6 +1511,11 @@ def _fetch_content_matthews_asia(article: dict) -> Optional[tuple[Path, str]]:
     text = "\n".join(
         p.get_text(" ", strip=True) for p in paragraphs if p.get_text(" ", strip=True)
     )
+
+    if not _check_min_content_length(text, MATTHEWS_MIN_CONTENT):
+        # A Perspective can be a lead plus a "Read Now" PDF ("China Innovation:
+        # Completing Global Innovation...", 11 pages). Video pages link none.
+        text = _matthews_linked_pdf(soup, url, article.get("title", "")) or text
 
     if not _check_min_content_length(text, MATTHEWS_MIN_CONTENT):
         log.warning("  Matthews Asia: extracted text too short (%d chars, min %d "
