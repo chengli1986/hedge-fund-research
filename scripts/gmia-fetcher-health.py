@@ -31,6 +31,7 @@ CLI:
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import html
 import json
 import smtplib
@@ -681,6 +682,72 @@ def _decline_line(rows: list[dict]) -> str:
     return f"{n} article{'s' if n != 1 else ''} not summarised: {shown}{more}"
 
 
+QUALITY_WINDOW_DAYS = 7
+
+
+def load_quality(days: int = QUALITY_WINDOW_DAYS, since=None) -> dict | None:
+    """failure_stats.quality_summary over production data; None if unavailable.
+
+    Never raises: extra reporting must not be able to fail the health check.
+    """
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "failure_stats", Path(__file__).resolve().parent / "failure_stats.py")
+        fs = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(fs)
+        rows = fs._rows(ARTICLES_FILE)
+        configured = {s["id"] for s in load_sources()}
+        return fs.quality_summary(rows, configured, fs.LEDGER_FILE, days, since=since)
+    except Exception as exc:
+        print(f"WARNING: content-quality summary unavailable: {exc}")
+        return None
+
+
+def _quality_section(quality: dict) -> str:
+    import failure_labels
+    esc = html.escape
+    parts = []
+    i = quality["intake"]
+    parts.append(
+        f'<p style="margin:6px 0;font-size:13px">最近 {quality["days"]} 天新入库 <b>{i["total"]}</b> 篇：'
+        f'有正文 <b>{i["with_body"]}</b>（其中仅简介 {i["metadata_only"]}）· '
+        f'未取得正文 <b>{i["without_body"]}</b> · AI 拒绝摘要 <b>{i["declined"]}</b></p>')
+    if quality["alerts"]:
+        rows = "".join(
+            f'<tr><td style="padding:6px;font-weight:bold;color:#cf222e">{esc(sid)}</td>'
+            f'<td style="padding:6px"><code>{esc(label)}</code> — '
+            f'{esc((failure_labels.CONTENT_FAILURE_LABELS if kind == "content" else failure_labels.ANALYSIS_DECLINE_LABELS).get(label, ""))}'
+            f'</td></tr>'
+            for kind, sid, label in quality["alerts"])
+        parts.append('<p style="margin:10px 0 4px;color:#cf222e;font-weight:bold">'
+                     '⚠️ 本周首次出现的问题（通常意味着网站改版、被拦截或抓错文件）</p>'
+                     f'<table style="width:100%;border-collapse:collapse;font-size:13px;background:#fff5f5">{rows}</table>')
+
+    def by_label(counter, descriptions, title):
+        if not counter:
+            return f'<p style="margin:10px 0 4px;font-weight:bold">{title}</p><p style="margin:0;color:#586069">（无）</p>'
+        totals = Counter()
+        for (_, label), n in counter.items():
+            totals[label] += n
+        body = ""
+        for label, n in totals.most_common():
+            sources = " · ".join(f"{esc(sid)}×{m}" for (sid, lab), m in
+                                 sorted(counter.items(), key=lambda kv: -kv[1]) if lab == label)
+            body += (f'<tr><td style="padding:6px;white-space:nowrap"><code>{esc(label)}</code></td>'
+                     f'<td style="padding:6px;text-align:right"><b>{n}</b></td>'
+                     f'<td style="padding:6px">{esc(descriptions.get(label, ""))}<br>'
+                     f'<span style="color:#586069;font-size:11px">{sources}</span></td></tr>')
+        return (f'<p style="margin:10px 0 4px;font-weight:bold">{title}</p>'
+                f'<table style="width:100%;border-collapse:collapse;font-size:13px;background:#f6f8fa">{body}</table>')
+
+    parts.append(by_label(quality["content"], failure_labels.CONTENT_FAILURE_LABELS, "目前未取得正文（按原因）"))
+    parts.append(by_label(quality["declines"], failure_labels.ANALYSIS_DECLINE_LABELS, "AI 拒绝摘要（按原因）"))
+    parts.append('<p style="margin:6px 0;color:#8b949e;font-size:11px">标签说明与真实案例：'
+                 '<code>docs/content-failure-casebook.md</code> · 明细：<code>python3 scripts/failure_stats.py</code></p>')
+    return ('<h3 style="margin:14px 0 6px;color:#0969da">📋 正文获取质量（Content quality）</h3>' + "".join(parts))
+
+
 def pipeline_did_not_run(state_path=None) -> bool:
     """True when the last pipeline run refreshed nothing at all.
 
@@ -724,7 +791,7 @@ def pipeline_did_not_run(state_path=None) -> bool:
 
 
 def should_email(alerts: dict, zero_fetches: list, pipeline_stale: bool = False,
-                 declines: list | None = None) -> bool:
+                 declines: list | None = None, quality: dict | None = None) -> bool:
     """Whether this run has anything worth sending.
 
     zero_fetches is part of the condition, not just part of the body: the email
@@ -732,7 +799,8 @@ def should_email(alerts: dict, zero_fetches: list, pipeline_stale: bool = False,
     silent zero-article fetch produces.
     """
     return bool(alerts["failing"] or alerts["warning"] or alerts["recovered"]
-                or zero_fetches or pipeline_stale or declines)
+                or zero_fetches or pipeline_stale or declines
+                or (quality is not None and quality.get("alerts")))
 
 
 def _zero_fetch_line(sid: str, rec: dict) -> str:
@@ -784,6 +852,7 @@ def render_html_email(
     zero_fetches: list | None = None,
     pipeline_stale: bool = False,
     declines: list | None = None,
+    quality: dict | None = None,
 ) -> str:
     """HTML body with same visual idiom as gmia-trial-manager email."""
     sources_state = state.get("sources", {})
@@ -880,6 +949,8 @@ def render_html_email(
         total = sum(len(rows) for _, rows in declines)
         sections.append(section_table(
             f"🤖 NOT SUMMARISED — text was not an article ({total})", "#9a6700", decline_rows))
+    if quality is not None:
+        sections.append(_quality_section(quality))
     sections.append(
         f'<h3 style="margin:14px 0 6px;color:#1a7f37">✅ HEALTHY ({len(alerts["healthy"])})</h3>'
         f'{healthy_html}'
@@ -900,11 +971,11 @@ State: <code>~/hedge-fund-research/logs/gmia-fetcher-health.json</code>  ·  Cro
 </body></html>"""
 
 
-def send_email(html_body: str, summary_subject: str) -> bool:
+def send_email(html_body: str, summary_subject: str, to: str | None = None) -> bool:
     env = load_env()
     smtp_user = env.get("SMTP_USER", "")
     smtp_pass = env.get("SMTP_PASS", "")
-    mail_to = env.get("MAIL_TO", "")
+    mail_to = to or env.get("MAIL_TO", "")
     if not smtp_user or not smtp_pass or not mail_to:
         print("WARNING: SMTP not configured (missing SMTP_USER/SMTP_PASS/MAIL_TO)")
         return False
@@ -928,7 +999,8 @@ def send_email(html_body: str, summary_subject: str) -> bool:
 
 
 def alerts_subject(alerts: dict, zero_fetches: list | None = None,
-                   pipeline_stale: bool = False, declines: list | None = None) -> str:
+                   pipeline_stale: bool = False, declines: list | None = None,
+                   quality: dict | None = None) -> str:
     """Subject line. Must name every condition that caused the send.
 
     zero_fetches is a send condition on its own, and it is the ONLY one that
@@ -952,6 +1024,9 @@ def alerts_subject(alerts: dict, zero_fetches: list | None = None,
         parts.append(f"📉 {len(zero_fetches)} fetched nothing ({ids}{more})")
     if pipeline_stale:
         parts.append(f"⛔ pipeline recorded nothing in {ZERO_FETCH_FRESH_HOURS}h")
+    if quality is not None and quality.get("alerts"):
+        ids = ", ".join(dict.fromkeys(sid for _, sid, _ in quality["alerts"][:3]))
+        parts.append(f"🧩 {len(quality['alerts'])} new content issue(s) ({ids})")
     if declines:
         total = sum(len(rows) for _, rows in declines)
         ids = ", ".join(sid for sid, _ in declines[:3])
@@ -1071,6 +1146,9 @@ def main() -> int:
                         help="probe a single source by id (no state mutation)")
     parser.add_argument("--dry-run", action="store_true",
                         help="run probes but skip state-write and email")
+    parser.add_argument("--test-email", metavar="ADDRESS", default=None,
+                        help="run the real check, write no state, and always send the email "
+                             "to ADDRESS only (subject prefixed [测试])")
     parser.add_argument("--include-validated", action="store_true",
                         help="also probe URL liveness of validated candidates "
                              "(catches the 'status=visitable but URL is 404' bug)")
@@ -1116,6 +1194,15 @@ def main() -> int:
         print(f"🤖 NOT SUMMARISED ({sum(len(r) for _, r in declines)}):")
         for sid, rows in declines:
             print(f"  {sid:25} {_decline_line(rows)}")
+    # Alerts only for issues first seen since the previous run (state not yet written).
+    quality = load_quality(since=load_state().get("last_run"))
+    if quality is not None:
+        i = quality["intake"]
+        print(f"📋 CONTENT QUALITY (last {quality['days']}d): {i['total']} new, {i['with_body']} with body, "
+              f"{i['without_body']} without, {i['declined']} declined; "
+              f"{len(quality['alerts'])} first-seen alert(s)")
+        for kind, sid, label in quality["alerts"]:
+            print(f"  ⚠️ {sid:25} {kind}:{label}")
 
     # Validated-candidate URL probes (decoupled from production source state /
     # email logic): purely informational, but a FAIL bumps the script's exit
@@ -1133,7 +1220,7 @@ def main() -> int:
     prev_state = load_state()
     alerts = classify_alerts(per_source, prev_state)
 
-    if not args.dry_run:
+    if not args.dry_run and not args.test_email:
         next_state = merge_into_state(prev_state, per_source)
         save_state(next_state)
     else:
@@ -1141,14 +1228,20 @@ def main() -> int:
         print("[dry-run] state file NOT written")
 
     email_failed = False
-    needs_alert = should_email(alerts, zero_fetches, pipeline_stale, declines=declines)
-    if args.email and needs_alert and not args.dry_run:
+    needs_alert = should_email(alerts, zero_fetches, pipeline_stale, declines=declines, quality=quality)
+    if args.test_email:
+        html_body = render_html_email(per_source, alerts, next_state, total_runtime_s,
+                                      zero_fetches=zero_fetches, pipeline_stale=pipeline_stale,
+                                      declines=declines, quality=quality)
+        subject = alerts_subject(alerts, zero_fetches, pipeline_stale, declines=declines, quality=quality)
+        email_failed = not send_email(html_body, f"[测试] {subject}", to=args.test_email)
+    elif args.email and needs_alert and not args.dry_run:
         html_body = render_html_email(per_source, alerts, next_state, total_runtime_s,
                                       zero_fetches=zero_fetches,
                                       pipeline_stale=pipeline_stale,
-                                      declines=declines)
+                                      declines=declines, quality=quality)
         email_failed = not send_email(
-            html_body, alerts_subject(alerts, zero_fetches, pipeline_stale, declines=declines))
+            html_body, alerts_subject(alerts, zero_fetches, pipeline_stale, declines=declines, quality=quality))
     elif args.email and not needs_alert:
         print("All sources OK and no recoveries — email suppressed.")
 

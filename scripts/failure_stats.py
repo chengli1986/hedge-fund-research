@@ -73,6 +73,89 @@ def ledger_summary(path: Path, days: int) -> tuple[Counter, list]:
     return inside, sorted(k for k in inside if k not in before)
 
 
+# A (source, label) pair seen for the first time in the window, for one of
+# these labels, is worth an email: a redesign, a new block, a PDF that stopped
+# matching, or a document landing under the wrong title.
+ALERT_CONTENT_LABELS = ("selector_miss", "blocked_by_bot_protection", "pdf_not_usable")
+ALERT_DECLINE_LABELS = ("wrong_document", "duplicate_body", "grounding_failed")
+
+
+def _when(value):
+    try:
+        at = datetime.fromisoformat(str(value))
+    except (TypeError, ValueError):
+        return None
+    return at if at.tzinfo else None
+
+
+def recent_intake(rows, configured, days: int) -> dict:
+    """What happened to articles first fetched in the last `days`."""
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    out = {"total": 0, "with_body": 0, "metadata_only": 0, "without_body": 0, "declined": 0}
+    for r in rows:
+        at = _when(r.get("fetched_at"))
+        if r.get("source_id") not in configured or at is None or at < cutoff:
+            continue
+        out["total"] += 1
+        status = r.get("content_status")
+        if status in ("ok", "metadata_only"):
+            out["with_body"] += 1
+        if status == "metadata_only":
+            out["metadata_only"] += 1
+        if status in ("failed", "permafail"):
+            out["without_body"] += 1
+        if r.get("analysis_status") == "insufficient_content":
+            out["declined"] += 1
+    return out
+
+
+def analysis_first_seen(rows, configured, days: int, since=None) -> list:
+    """(source, decline label) pairs whose first decline is after the cutoff:
+    `since` (the previous health run) when given, else the window start."""
+    cutoff = _when(since) or datetime.now(timezone.utc) - timedelta(days=days)
+    inside, before = set(), set()
+    for r in rows:
+        if r.get("source_id") not in configured or r.get("analysis_status") != "insufficient_content":
+            continue
+        at = _when(r.get("analysis_checked_at"))
+        if at is None:
+            continue
+        label = r.get("analysis_label") or failure_labels.classify_analysis_decline(r.get("analysis_reason", ""))
+        (inside if at >= cutoff else before).add((r["source_id"], label))
+    return sorted(inside - before)
+
+
+def _ledger_first_seen(path: Path, since) -> list:
+    """(source, label) pairs whose earliest ledger event is after `since`."""
+    if not path.exists() or _when(since) is None:
+        return []
+    first: dict = {}
+    for e in _rows(path):
+        at = _when(e.get("at"))
+        if at is None:
+            continue
+        key = (e.get("source_id"), e.get("label"))
+        if key not in first or at < first[key]:
+            first[key] = at
+    return sorted(k for k, at in first.items() if at > _when(since))
+
+
+def quality_summary(rows, configured, ledger: Path, days: int = 7, since=None) -> dict:
+    """Everything the health email's content-quality section shows.
+
+    Alerts are pairs first seen after `since` (the previous health run), so
+    each is reported once; without `since` the window start is the cutoff.
+    """
+    new_content = _ledger_first_seen(ledger, since) if _when(since) else ledger_summary(ledger, days)[1]
+    alerts = [("content", s, l) for s, l in new_content if l in ALERT_CONTENT_LABELS]
+    alerts += [("analysis", s, l) for s, l in analysis_first_seen(rows, configured, days, since=since)
+               if l in ALERT_DECLINE_LABELS]
+    return {"days": days, "intake": recent_intake(rows, configured, days),
+            "content": current_content_failures(rows, configured),
+            "declines": current_analysis_declines(rows, configured),
+            "alerts": alerts}
+
+
 def _table(counter: Counter, descriptions: dict) -> list[str]:
     if not counter:
         return ["  (none)"]
