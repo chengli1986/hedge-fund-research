@@ -26,6 +26,8 @@ from typing import Optional
 
 import requests
 
+import failure_labels
+
 BJT = timezone(timedelta(hours=8))
 BASE_DIR = Path(__file__).resolve().parent
 DATA_FILE = BASE_DIR / "data" / "articles.jsonl"
@@ -734,6 +736,8 @@ def _record_insufficient(article: dict, result: dict) -> None:
     article["summarized"] = False
     article["analysis_status"] = INSUFFICIENT
     article["analysis_reason"] = result.get("reason") or ""
+    # The countable form of the reason, shared with stage-2 failure labels.
+    article["analysis_label"] = failure_labels.classify_analysis_decline(article["analysis_reason"])
     article["analysis_model"] = result.get("_model")
     article["analysis_checked_at"] = datetime.now(BJT).isoformat(timespec="seconds")
     for field in _SUMMARY_FIELDS:
@@ -818,6 +822,7 @@ def main() -> int:
             published.setdefault(body_key, a)
             a.pop("analysis_status", None)
             a.pop("analysis_reason", None)
+            a.pop("analysis_label", None)
             a["analysis_model"] = result["_model"]
             if is_metadata:
                 a["analysis_confidence"] = "low"

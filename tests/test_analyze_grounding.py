@@ -303,8 +303,22 @@ class TestMainRecordsDeclines:
         assert "chart notes only" in row["analysis_reason"]
         for field in ("summary_en", "summary_zh", "key_takeaway_en", "key_takeaway_zh"):
             assert not row.get(field), f"{field} survived a decline"
+        assert row["analysis_label"] in __import__("failure_labels").ANALYSIS_DECLINE_LABELS
         assert row.get("themes") in (None, []), "themes survived -- publish.py files by themes[0]"
         assert rc in (0, None), "a decline is a handled outcome, not an outage"
+
+    def test_a_decline_carries_a_label(self, tmp_path, monkeypatch):
+        """analysis_label is the countable form of analysis_reason (failure_labels)."""
+        _, rows, _ = self._run(tmp_path, monkeypatch, [dict(self.ART)], {"a1": "Source: Bloomberg."},
+                               {"insufficient_content": True, "_model": "gpt-5.6-luna", "_usage": {},
+                                "reason": "The text consists only of repeated chart source notes"})
+        assert rows[0]["analysis_label"] == "chart_notes_only"
+
+    def test_a_decline_carries_a_label_for_title_only_metadata(self, tmp_path, monkeypatch):
+        ark = dict(self.ART, id="ark9", source_id="ark-invest", content_status="metadata_only")
+        _, rows, _ = self._run(tmp_path, monkeypatch, [ark], {"ark9": "Title: Embodied AI"},
+                               {"summary_en": "x", "_model": "m", "_usage": {}})
+        assert rows[0]["analysis_label"] == "title_only"
 
     def test_a_declined_article_is_not_retried(self):
         assert aa._should_analyze(dict(self.ART, analysis_status="insufficient_content")) is False
