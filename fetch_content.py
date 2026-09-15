@@ -103,6 +103,18 @@ def _validate_json_response(text: str) -> bool:
         return False
 
 
+# Every labelled content-fetch failure, one JSON line each (see failure_labels).
+CONTENT_FAILURE_LOG = BASE_DIR / "logs" / "content-failures.jsonl"
+
+# Explicit failure causes a fetcher knows better than the evidence shows
+# (a soft 404, a PDF that is not the article). Drained per article.
+_failure_hints: list[tuple[str, str]] = []
+
+
+def note_failure_hint(label: str, detail: str) -> None:
+    _failure_hints.append((label, detail))
+
+
 # Which path each _normalize_html call took, in call order: "primary",
 # "fallback:<selector>" or "whole-page". A dead selector used to be invisible:
 # the fallback returned navigation, cookie banners or a list of other
@@ -795,6 +807,7 @@ def _fetch_content_troweprice(article: dict) -> Optional[tuple[Path, str]]:
         # Soft 404 for a withdrawn article. Its site-picker text is inside
         # div.grid-layout-container, so the selector below would match it.
         log.warning("  T.Rowe Price: page not found (withdrawn article?)")
+        note_failure_hint("page_gone", "soft 404: 'T. Rowe Price Page Not Found'")
         return None
 
     text = _normalize_html(
@@ -1262,6 +1275,8 @@ def _fetch_content_gsam(article: dict) -> Optional[tuple[Path, str]]:
         else:
             log.warning("  GSAM: extracted text too short (%d chars, summary %d chars)",
                         len(text), len(summary))
+            note_failure_hint("body_rendered_client_side",
+                              f"no body in the HTML ({len(text)} chars) and no API summary to stand in")
             return None
 
     content_path = CONTENT_DIR / f"{article['id']}.txt"
@@ -1497,6 +1512,7 @@ def _linked_article_pdf(link, page_url: str, title: str, label: str, cookies=Non
         return ""
     if not _pdf_matches_title(text[:2000], title):
         log.warning("  %s: linked PDF %s does not open with the article title; not used", label, pdf_url)
+        note_failure_hint("pdf_not_usable", f"linked PDF does not match the title: {pdf_url}")
         return ""
     log.info("  %s: article body read from linked PDF %s", label, pdf_url)
     return text
@@ -2112,6 +2128,10 @@ def _fetch_content_pdf_url(article: dict) -> Optional[tuple[Path, str]]:
     if not _validate_pdf_response(resp.status_code, resp.headers.get("Content-Type", ""),
                                   len(resp.content)):
         log.warning("  PDF article: invalid PDF response (status=%d)", resp.status_code)
+        if resp.status_code in (404, 410):
+            note_failure_hint("page_gone", f"HTTP {resp.status_code} at {url}")
+        else:
+            note_failure_hint("pdf_not_usable", f"invalid PDF response, HTTP {resp.status_code}")
         return None
     try:
         text = _pdf_text(resp.content)
@@ -2125,6 +2145,81 @@ def _fetch_content_pdf_url(article: dict) -> Optional[tuple[Path, str]]:
     _atomic_write(content_path, text.encode("utf-8"))
     log.info("  PDF article: saved %d chars to %s", len(text), content_path.name)
     return (content_path, "ok")
+
+
+class _MessageCapture(logging.Handler):
+    def __init__(self):
+        super().__init__(level=logging.WARNING)
+        self.messages: list[str] = []
+
+    def emit(self, record):
+        self.messages.append(record.getMessage().strip())
+
+
+def fetch_with_evidence(article: dict, fetcher) -> tuple[Optional[tuple[Path, str]], dict]:
+    """Run one fetcher and collect what is needed to label a failure.
+
+    Wraps the fetcher rather than changing forty of them: requests made
+    through requests.Session.request are recorded (status, final URL after
+    redirects, challenge and media-player markers), warnings the fetcher logs
+    are captured, and the extraction paths and hints it produced are drained.
+    Playwright fetches leave no response record; their evidence is the log
+    messages and extraction path.
+    """
+    import failure_labels
+
+    drain_extraction_paths()
+    _failure_hints.clear()
+    responses: list[dict] = []
+    original_request = requests.sessions.Session.request
+
+    def recording_request(self, method, url, *args, **kwargs):
+        resp = original_request(self, method, url, *args, **kwargs)
+        try:
+            ctype = resp.headers.get("Content-Type", "")
+            body = resp.text if "html" in ctype or not ctype else ""
+            responses.append({"status": resp.status_code, "url": url, "final_url": resp.url,
+                              "content_type": ctype,
+                              "challenge": failure_labels.looks_like_challenge(body[:50000]),
+                              "media_player": failure_labels.has_media_player(body)})
+        except Exception:
+            pass
+        return resp
+
+    capture = _MessageCapture()
+    log.addHandler(capture)
+    requests.sessions.Session.request = recording_request
+    exception = None
+    try:
+        result = fetcher(article)
+    except Exception as e:
+        result, exception = None, f"{type(e).__name__}: {e}"
+    finally:
+        requests.sessions.Session.request = original_request
+        log.removeHandler(capture)
+    evidence = {"exception": exception, "messages": capture.messages, "responses": responses,
+                "extraction_paths": drain_extraction_paths(), "hints": list(_failure_hints)}
+    _failure_hints.clear()
+    return result, evidence
+
+
+def _record_content_failure(article: dict, evidence: dict) -> dict:
+    """Label the failure on the article and append it to CONTENT_FAILURE_LOG."""
+    import failure_labels
+
+    label, detail = failure_labels.classify_content_failure(evidence)
+    failure = {"label": label, "detail": detail, "at": datetime.now(BJT).isoformat(timespec="seconds"),
+               "attempt": int(article.get("content_attempts", 0))}
+    article["content_failure"] = failure
+    try:
+        CONTENT_FAILURE_LOG.parent.mkdir(parents=True, exist_ok=True)
+        with CONTENT_FAILURE_LOG.open("a", encoding="utf-8") as f:
+            f.write(json.dumps({"id": article.get("id"), "source_id": article.get("source_id"),
+                                "url": article.get("url"), "status": article.get("content_status"),
+                                **failure}, ensure_ascii=False) + "\n")
+    except OSError as e:
+        log.warning("  could not append to %s: %s", CONTENT_FAILURE_LOG, e)
+    return failure
 
 
 def content_fetcher_for(article: dict):
@@ -2220,21 +2315,21 @@ def main() -> None:
     permafail_count = 0  # articles retired to permafail THIS run
 
     for a in pending:
-        fetcher = content_fetcher_for(a)
-        try:
-            result = fetcher(a)
-        except Exception as e:
-            log.error("Unexpected error fetching %s (%s): %s", a["id"], a["title"], e)
-            result = None
+        result, evidence = fetch_with_evidence(a, content_fetcher_for(a))
+        if evidence["exception"]:
+            log.error("Unexpected error fetching %s (%s): %s", a["id"], a["title"], evidence["exception"])
 
         if result is not None:
             content_path, status = result
             a["content_path"] = str(content_path.relative_to(BASE_DIR))
             a["content_status"] = status
             a.pop("content_attempts", None)  # clear the failure counter on success
+            a.pop("content_failure", None)
             success_count += 1
         else:
             status = mark_content_failure(a)
+            failure = _record_content_failure(a, evidence)
+            log.warning("  Content failure [%s] %s: %s", failure["label"], a["id"], failure["detail"])
             fail_count += 1
             if status == "permafail":
                 permafail_count += 1

@@ -39,7 +39,8 @@ PRODUCTION_DIRS = ("logs", "config", "data", "content", "pending_profiles")
 PRODUCTION_PATHS: dict[str, Path] = {}
 
 _REDIRECTED = (("analyze_articles", "USAGE_LOG_FILE"),
-               ("fetch_articles", "INSPECTION_STATE_FILE"))
+               ("fetch_articles", "INSPECTION_STATE_FILE"),
+               ("fetch_content", "CONTENT_FAILURE_LOG"))
 
 
 @pytest.fixture(scope="session")
