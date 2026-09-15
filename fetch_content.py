@@ -1357,8 +1357,11 @@ def _fetch_content_metlife_im(article: dict) -> Optional[tuple[Path, str]]:
     Deliberately no `main p` fallback: the pages that lack a read-more section
     are PDF-teaser stubs (e.g. the monthly Pension Funding Status), where
     `main p` yields a 260-400 char blurb — over MIN_CONTENT_LENGTH, so it would
-    be stored and summarised as if it were the research itself. Returning None
-    for those is the correct outcome; the real content is in a linked PDF.
+    be stored and summarised as if it were the research itself. The real
+    content is the linked PDF, which is read since 2026-09-15: the PDF behind a
+    "Download ..." button in <main> (ten quarterly reviews, pension funding
+    statuses and a chartbook had been permafail), if its opening matches the
+    title. No such PDF still returns None.
     """
     url = article["url"]
     log.info("  MetLife IM: fetching article page %s", url)
@@ -1388,6 +1391,12 @@ def _fetch_content_metlife_im(article: dict) -> Optional[tuple[Path, str]]:
             continue
         kept.append(para)
     text = "\n".join(kept)
+
+    if not _check_min_content_length(text):
+        button = next((a for a in soup.select('main a[href*=".pdf"]')
+                       if a.get_text(" ", strip=True).lower().startswith("download")), None)
+        text = _linked_article_pdf(button, url, article.get("title", ""),
+                                   "MetLife IM", cookies=METLIFE_COOKIES)
 
     if not _check_min_content_length(text):
         log.warning("  MetLife IM: extracted text too short (%d chars)", len(text))
@@ -1441,22 +1450,39 @@ def _pdf_text(content: bytes) -> str:
         return "\n".join(page.extract_text() or "" for page in pdf.pages)
 
 
-def _matthews_linked_pdf(soup, page_url: str, title: str) -> str:
-    """Text of the article's PDF, when the page links one; "" otherwise.
+PDF_TITLE_MIN_OVERLAP = 0.75
 
-    Only the first PDF linked from the page body is tried (nav/header/footer
-    are already stripped), and its text is used only if the article title
-    appears near its start -- so a factsheet or brochure never stands in for
-    the article.
+
+def _pdf_matches_title(pdf_head: str, title: str) -> bool:
+    """Whether a PDF's opening is recognisably the article with this title.
+
+    Word overlap, not an exact match: PDFs reorder and respell their titles
+    ("Equity Market Review Q2 2026" for "Q2 2026 Equity Market Review",
+    "Chart Book" for "Chartbook"), and metlife's own page title reads
+    "Pending Funding Status" over a PDF headed "Pension Funding Status". The
+    ten metlife PDFs measured 0.80-1.00 on 2026-09-15.
     """
-    link = soup.select_one('main a[href*=".pdf"]')
-    if not link or not title:
+    title_words = set(re.findall(r"[a-z0-9]{2,}", (title or "").lower()))
+    if not title_words:
+        return False
+    head_words = set(re.findall(r"[a-z0-9]{2,}", (pdf_head or "").lower()))
+    return len(title_words & head_words) / len(title_words) >= PDF_TITLE_MIN_OVERLAP
+
+
+def _linked_article_pdf(link, page_url: str, title: str, label: str, cookies=None) -> str:
+    """Text of the PDF behind `link` if it is this article; "" otherwise.
+
+    The caller chooses which link is the article's own (matthews: the first
+    PDF in <main>; metlife: a "Download ..." button). The first 2,000 chars
+    must pass _pdf_matches_title, so a factsheet or brochure never stands in.
+    """
+    if link is None or not title:
         return ""
     pdf_url = urljoin(page_url, link["href"])
     try:
-        resp = requests.get(pdf_url, headers=HEADERS, timeout=60)
+        resp = requests.get(pdf_url, headers=HEADERS, cookies=cookies, timeout=60)
     except Exception as e:
-        log.warning("  Matthews Asia: PDF download failed %s: %s", pdf_url, e)
+        log.warning("  %s: PDF download failed %s: %s", label, pdf_url, e)
         return ""
     if not _validate_pdf_response(resp.status_code, resp.headers.get("Content-Type", ""),
                                   len(resp.content)):
@@ -1464,13 +1490,12 @@ def _matthews_linked_pdf(soup, page_url: str, title: str) -> str:
     try:
         text = _pdf_text(resp.content)
     except Exception as e:
-        log.warning("  Matthews Asia: PDF extraction failed %s: %s", pdf_url, e)
+        log.warning("  %s: PDF extraction failed %s: %s", label, pdf_url, e)
         return ""
-    head = _collapse_inline_spacing(text[:2000]).lower()
-    if _collapse_inline_spacing(title).lower() not in head:
-        log.warning("  Matthews Asia: linked PDF %s does not open with the article title; not used", pdf_url)
+    if not _pdf_matches_title(text[:2000], title):
+        log.warning("  %s: linked PDF %s does not open with the article title; not used", label, pdf_url)
         return ""
-    log.info("  Matthews Asia: article body read from linked PDF %s", pdf_url)
+    log.info("  %s: article body read from linked PDF %s", label, pdf_url)
     return text
 
 
@@ -1515,7 +1540,8 @@ def _fetch_content_matthews_asia(article: dict) -> Optional[tuple[Path, str]]:
     if not _check_min_content_length(text, MATTHEWS_MIN_CONTENT):
         # A Perspective can be a lead plus a "Read Now" PDF ("China Innovation:
         # Completing Global Innovation...", 11 pages). Video pages link none.
-        text = _matthews_linked_pdf(soup, url, article.get("title", "")) or text
+        text = _linked_article_pdf(soup.select_one('main a[href*=".pdf"]'), url,
+                                   article.get("title", ""), "Matthews Asia") or text
 
     if not _check_min_content_length(text, MATTHEWS_MIN_CONTENT):
         log.warning("  Matthews Asia: extracted text too short (%d chars, min %d "
