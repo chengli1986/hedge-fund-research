@@ -338,6 +338,44 @@ def fetch_cambridge_associates(source: dict) -> list[dict]:
 _MAN_GROUP_DATE_RE = re.compile(r"^[A-Z][a-z]{2,8} \d{4}$")  # "Jul 2026" / "July 2026"
 
 
+# From 2026-09-15 man.com/insights shows a "Confirm your region / country /
+# Select your role" form and no article cards until it is submitted. The choice
+# lives in the server-side session (not a static cookie like METLIFE_COOKIES),
+# so the form is posted in a requests.Session and the listing read in it.
+# Same declaration as metlife's -- Americas / United States / Institutional
+# Investor -- approved by the owner on 2026-09-15. Article pages still serve
+# their body without it.
+_MAN_GROUP_ATTESTATION_FORM = "form#mangroup-digital-attestation-form"
+MAN_GROUP_ATTESTATION = {"regions": "AM", "country_AM": "237", "country_mobile_AM": "237",
+                         "selected_country": "237", "investor_type": "2", "op": "Accept"}
+
+
+def _man_group_attested_listing(url: str) -> BeautifulSoup:
+    session = requests.Session()
+    session.headers.update(HEADERS)
+    page = session.get(url, timeout=30)
+    page.raise_for_status()
+    form = BeautifulSoup(page.text, "html.parser").select_one(_MAN_GROUP_ATTESTATION_FORM)
+    if form is None:
+        return BeautifulSoup(page.text, "html.parser")
+    fields: dict[str, str] = {}
+    for el in form.select("input[name], select[name]"):
+        if el.name == "select":
+            chosen = el.select_one("option[selected]")
+            fields[el["name"]] = chosen.get("value", "") if chosen else ""
+        elif el.get("type") not in ("radio", "checkbox") or el.has_attr("checked"):
+            fields[el["name"]] = el.get("value", "")
+    fields.update(MAN_GROUP_ATTESTATION)
+    posted = session.post(urljoin(url, form.get("action") or url), data=fields, timeout=30)
+    posted.raise_for_status()
+    listing = session.get(url, timeout=30)
+    listing.raise_for_status()
+    soup = BeautifulSoup(listing.text, "html.parser")
+    if soup.select_one(_MAN_GROUP_ATTESTATION_FORM) and not soup.select('div.card a[href*="/insights/"]'):
+        log.warning("  man-group: listing still gated after submitting the role attestation")
+    return soup
+
+
 def fetch_man_group(source: dict) -> list[dict]:
     """Fetch articles from Man Group (SSR).
 
@@ -354,6 +392,8 @@ def fetch_man_group(source: dict) -> list[dict]:
     resp = requests.get(source["url"], headers=HEADERS, timeout=30)
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
+    if soup.select_one(_MAN_GROUP_ATTESTATION_FORM) and not soup.select('div.card a[href*="/insights/"]'):
+        soup = _man_group_attested_listing(source["url"])
 
     articles = []
     seen_urls: set[str] = set()
