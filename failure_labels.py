@@ -26,6 +26,24 @@ CONTENT_FAILURE_LABELS = {
     "fetch_error": "网络错误、超时、服务器 5xx 或程序异常",
 }
 
+# How a content failure is retried, by label.
+#   backoff_days: wait before the Nth retry (the last value repeats)
+#   max_attempts: retire to permafail at this many attempts
+#   retire_streak: retire earlier after this many consecutive same-label failures
+#   code_dependent: a permafail is retried once when fetch_content.py changes
+RETRY_POLICY = {
+    "fetch_error":               {"backoff_days": [1, 2, 4, 8], "max_attempts": 5, "code_dependent": True},
+    "blocked_by_bot_protection": {"backoff_days": [7], "max_attempts": 4, "code_dependent": False},
+    "page_gone":                 {"backoff_days": [1], "max_attempts": 5, "retire_streak": 2,
+                                  "code_dependent": False},
+    "media_without_text":        {"backoff_days": [1], "max_attempts": 5, "retire_streak": 2,
+                                  "code_dependent": False},
+    "selector_miss":             {"backoff_days": [1], "max_attempts": 3, "code_dependent": True},
+    "body_too_short":            {"backoff_days": [1], "max_attempts": 3, "code_dependent": True},
+    "body_rendered_client_side": {"backoff_days": [1], "max_attempts": 3, "code_dependent": True},
+    "pdf_not_usable":            {"backoff_days": [1], "max_attempts": 3, "code_dependent": True},
+}
+
 ANALYSIS_DECLINE_LABELS = {
     "title_only": "只有标题，没有可总结的内容",
     "duplicate_body": "正文与另一篇已摘要文章完全相同",

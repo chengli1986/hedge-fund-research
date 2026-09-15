@@ -18,6 +18,7 @@ Usage:
 """
 
 import argparse
+import hashlib
 import json
 from urllib.parse import urljoin, urlsplit
 import logging
@@ -2214,13 +2215,12 @@ def fetch_with_evidence(article: dict, fetcher) -> tuple[Optional[tuple[Path, st
 
 
 def _record_content_failure(article: dict, evidence: dict) -> dict:
-    """Label the failure on the article and append it to CONTENT_FAILURE_LOG."""
+    """Label the failure, apply the retry policy, and log it to CONTENT_FAILURE_LOG."""
     import failure_labels
 
     label, detail = failure_labels.classify_content_failure(evidence)
-    failure = {"label": label, "detail": detail, "at": datetime.now(BJT).isoformat(timespec="seconds"),
-               "attempt": int(article.get("content_attempts", 0))}
-    article["content_failure"] = failure
+    mark_content_failure(article, failure={"label": label, "detail": detail})
+    failure = article["content_failure"]
     try:
         CONTENT_FAILURE_LOG.parent.mkdir(parents=True, exist_ok=True)
         with CONTENT_FAILURE_LOG.open("a", encoding="utf-8") as f:
@@ -2271,31 +2271,77 @@ def save_articles(articles: list[dict]) -> None:
         raise
 
 
-def is_content_pending(article: dict, source_filter: Optional[str] = None) -> bool:
+# Identity of this fetch_content.py. A permafail with a code-dependent label
+# records the version it failed under and is retried once when it changes
+# (aqr's two articles extracted fine after e906481 but stayed permafail).
+CODE_VERSION = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()[:12]
+
+
+def is_content_pending(article: dict, source_filter: Optional[str] = None,
+                       now: Optional[datetime] = None) -> bool:
     """True if an article still needs a content fetch this run.
 
-    Excludes already-summarized articles, terminal content_status values
-    (ok / metadata_only / permafail — see MAX_CONTENT_ATTEMPTS), and sources with
-    no registered content fetcher."""
-    return (
-        not article.get("summarized")
-        and article.get("content_status") not in TERMINAL_CONTENT_STATUSES
-        and article.get("source_id") in CONTENT_FETCHERS
-        and (not source_filter or article.get("source_id") == source_filter)
-    )
+    Excludes already-summarized articles, ok / metadata_only, sources with no
+    registered content fetcher, failures whose content_retry_after is still
+    ahead, and permafail -- except a permafail whose label is code-dependent
+    (failure_labels.RETRY_POLICY) and whose recorded code_version is not this
+    file's, which is retried once."""
+    import failure_labels
+
+    if (article.get("summarized") or article.get("source_id") not in CONTENT_FETCHERS
+            or (source_filter and article.get("source_id") != source_filter)):
+        return False
+    status = article.get("content_status")
+    if status == "permafail":
+        failure = article.get("content_failure") or {}
+        policy = failure_labels.RETRY_POLICY.get(failure.get("label"), {})
+        return bool(policy.get("code_dependent")) and failure.get("code_version") != CODE_VERSION
+    if status in TERMINAL_CONTENT_STATUSES:
+        return False
+    retry_after = article.get("content_retry_after")
+    if retry_after:
+        try:
+            if datetime.fromisoformat(retry_after) > (now or datetime.now(BJT)):
+                return False
+        except (TypeError, ValueError):
+            pass
+    return True
 
 
-def mark_content_failure(article: dict, max_attempts: int = MAX_CONTENT_ATTEMPTS) -> str:
+def mark_content_failure(article: dict, max_attempts: int = MAX_CONTENT_ATTEMPTS,
+                         failure: Optional[dict] = None, now: Optional[datetime] = None) -> str:
     """Record one content-fetch failure and return the new content_status.
 
-    Increments content_attempts; once it reaches max_attempts the article is
-    retired to the terminal "permafail" status (stamped with when) so it drops
-    out of the pending set permanently instead of being retried every day."""
+    Without a labelled `failure`: the original rule -- retire to permafail at
+    max_attempts. With one, failure_labels.RETRY_POLICY for its label decides
+    the wait before the next attempt (content_retry_after), the attempt cap,
+    and an early retirement after consecutive same-label failures; the
+    failure is stored as content_failure with a same-label streak and this
+    file's CODE_VERSION."""
+    import failure_labels
+
+    now = now or datetime.now(BJT)
     attempts = int(article.get("content_attempts", 0)) + 1
     article["content_attempts"] = attempts
-    if attempts >= max_attempts:
+    if failure is None:
+        retire = attempts >= max_attempts
+    else:
+        label = failure.get("label")
+        policy = failure_labels.RETRY_POLICY.get(label, {"backoff_days": [1], "max_attempts": max_attempts})
+        previous = article.get("content_failure") or {}
+        streak = int(previous.get("streak", 0)) + 1 if previous.get("label") == label else 1
+        article["content_failure"] = {**failure, "at": now.isoformat(timespec="seconds"),
+                                      "attempt": attempts, "streak": streak, "code_version": CODE_VERSION}
+        retire = (attempts >= policy["max_attempts"]
+                  or streak >= policy.get("retire_streak", float("inf")))
+        if not retire:
+            backoff = policy["backoff_days"]
+            wait = backoff[min(streak, len(backoff)) - 1]
+            article["content_retry_after"] = (now + timedelta(days=wait)).isoformat(timespec="seconds")
+    if retire:
         article["content_status"] = "permafail"
-        article["content_permafailed_at"] = datetime.now(BJT).isoformat()
+        article["content_permafailed_at"] = now.isoformat()
+        article.pop("content_retry_after", None)
     else:
         article["content_status"] = "failed"
     return article["content_status"]
@@ -2335,10 +2381,12 @@ def main() -> None:
             a["content_status"] = status
             a.pop("content_attempts", None)  # clear the failure counter on success
             a.pop("content_failure", None)
+            a.pop("content_retry_after", None)
+            a.pop("content_permafailed_at", None)
             success_count += 1
         else:
-            status = mark_content_failure(a)
             failure = _record_content_failure(a, evidence)
+            status = a["content_status"]
             log.warning("  Content failure [%s] %s: %s", failure["label"], a["id"], failure["detail"])
             fail_count += 1
             if status == "permafail":
