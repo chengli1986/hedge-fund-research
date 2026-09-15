@@ -19,7 +19,7 @@ Usage:
 
 import argparse
 import json
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit
 import logging
 import os
 import re
@@ -1255,7 +1255,10 @@ def _fetch_content_gsam(article: dict) -> Optional[tuple[Path, str]]:
         summary = article.get("gsam_summary", "")
         if _check_min_content_length(summary):
             log.info("  GSAM: HTML body empty (SPA), using API summary (%d chars)", len(summary))
-            text = summary
+            content_path = CONTENT_DIR / f"{article['id']}.txt"
+            _atomic_write(content_path, summary.encode("utf-8"))
+            # The search API's description, not the article: limited, like ARK's RSS summary.
+            return (content_path, "metadata_only")
         else:
             log.warning("  GSAM: extracted text too short (%d chars, summary %d chars)",
                         len(text), len(summary))
@@ -2091,6 +2094,47 @@ CONTENT_FETCHERS = {
 }
 
 
+def _is_pdf_url(url: str) -> bool:
+    return urlsplit(url or "").path.lower().endswith(".pdf")
+
+
+def _fetch_content_pdf_url(article: dict) -> Optional[tuple[Path, str]]:
+    """An article whose URL is itself a PDF (de-shaw's "Divergent Interests",
+    oaktree's press release). Source fetchers parsed these as HTML (0 chars)
+    or opened them in a browser ("Download is starting")."""
+    url = article["url"]
+    log.info("  PDF article: downloading %s", url)
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=60)
+    except Exception as e:
+        log.error("  PDF article: download failed: %s", e)
+        return None
+    if not _validate_pdf_response(resp.status_code, resp.headers.get("Content-Type", ""),
+                                  len(resp.content)):
+        log.warning("  PDF article: invalid PDF response (status=%d)", resp.status_code)
+        return None
+    try:
+        text = _pdf_text(resp.content)
+    except Exception as e:
+        log.error("  PDF article: extraction failed: %s", e)
+        return None
+    if not _check_min_content_length(text):
+        log.warning("  PDF article: extracted text too short (%d chars)", len(text))
+        return None
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  PDF article: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
+def content_fetcher_for(article: dict):
+    """The content fetcher for an article: a PDF URL is read as a PDF whatever
+    its source; otherwise the source's own fetcher."""
+    if _is_pdf_url(article.get("url", "")):
+        return _fetch_content_pdf_url
+    return CONTENT_FETCHERS[article["source_id"]]
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -2176,7 +2220,7 @@ def main() -> None:
     permafail_count = 0  # articles retired to permafail THIS run
 
     for a in pending:
-        fetcher = CONTENT_FETCHERS[a["source_id"]]
+        fetcher = content_fetcher_for(a)
         try:
             result = fetcher(a)
         except Exception as e:

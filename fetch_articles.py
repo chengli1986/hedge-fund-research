@@ -92,6 +92,14 @@ def _title_key(title: str) -> str:
     return re.sub(r"[^\w]+", " ", text).strip()
 
 
+# Listing fields that content fetchers read. fetch_source stored a fixed set of
+# keys until 2026-09-15, so these never reached articles.jsonl and the
+# fallbacks built on them (gsam's API summary for SPA pages, ARK's RSS
+# summary) could not fire. tests/test_listing_fields_and_pdf_urls.py fails if
+# fetch_content reads a field that is neither stored nor listed here.
+LISTING_FIELDS_KEPT = ("summary", "category", "gsam_summary")
+
+
 def title_date_keys(rows, title_only_sources=frozenset()) -> dict[tuple[str, str, str], str]:
     """(source_id, normalised title, date) -> stored article id.
 
@@ -3645,6 +3653,7 @@ def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False,
             "date_raw": art.get("date_raw", ""),
             "fetched_at": now,
             "summarized": False,
+            **{k: art[k] for k in LISTING_FIELDS_KEPT if art.get(k)},
         })
 
     # Count what survived the host check, not what the fetcher handed over: a
