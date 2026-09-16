@@ -275,10 +275,10 @@ class TestTestsNeverTouchProductionLog:
         prod = PRODUCTION_PATHS["USAGE_LOG_FILE"]
         assert aa.USAGE_LOG_FILE != prod, (
             "conftest redirect is missing — the chain would write to production")
-        assert prod.exists(), (
-            f"production log {prod} absent; a size comparison against None "
-            "would pass vacuously and prove nothing")
-        before = prod.stat().st_size
+        # A fresh clone has no logs/ at all. Absent is a state worth guarding
+        # too -- the chain must not CREATE the production log either -- so the
+        # canary compares "absent stays absent" instead of failing vacuously.
+        before = prod.stat().st_size if prod.exists() else None
 
         monkeypatch.setattr(
             aa, "_call_gemini",
@@ -290,7 +290,7 @@ class TestTestsNeverTouchProductionLog:
         # about the usage log at all.
         aa._analyze_with_fallback("body", {"GEMINI_API_KEY": "k"}, article_id="x")
 
-        after = prod.stat().st_size
+        after = prod.stat().st_size if prod.exists() else None
         assert after == before, (
             "a test run wrote into the production cost log at "
             f"{prod} — the conftest guard is missing or broken")

@@ -37,6 +37,8 @@ import sys
 from collections import defaultdict
 from datetime import date, datetime
 from pathlib import Path
+
+import pytest
 from urllib.parse import urlparse
 
 REPO = Path(__file__).resolve().parent.parent

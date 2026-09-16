@@ -158,8 +158,13 @@ def get_source_url(source: dict, entrypoints: dict) -> str:
 
 
 def record_quality_metrics(source_id: str, total_found: int, new_count: int,
-                           gated_count: int, mismatch_count: int) -> None:
+                           gated_count: int, mismatch_count: int,
+                           dry_run: bool = False) -> None:
     """Record fetch quality metrics to inspection_state.json.  Never raises.
+
+    A dry run records nothing: --dry-run is how a source is inspected, and
+    inspecting must not move last_inspected_at or the consecutive_zero_count
+    the fetcher-health email reads to decide a source has gone silent.
 
     Same rule analyze_articles._append_usage_log states for the token log:
     instrumentation must not be able to kill the pipeline it measures.  This one
@@ -174,6 +179,10 @@ def record_quality_metrics(source_id: str, total_found: int, new_count: int,
     kill mid-write leaves a partial file that the read below turns into
     `state = {}` -- silently resetting consecutive_zero_count for every source.
     """
+    if dry_run:
+        log.debug("  dry run: not recording quality metrics for %s", source_id)
+        return
+
     state: dict = {}
     if INSPECTION_STATE_FILE.exists():
         try:
@@ -3599,7 +3608,7 @@ def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False,
         # health email reads; without it a raised fetcher leaves
         # last_article_count showing yesterday's count, so the alert built to
         # catch a silent zero is blind to the loudest failure there is.
-        record_quality_metrics(source_id, 0, 0, 0, 0)
+        record_quality_metrics(source_id, 0, 0, 0, 0, dry_run=dry_run)
         return []
 
     # A listing page that silently stops being newest-first hands us archive
@@ -3631,7 +3640,7 @@ def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False,
             # return skipped the metric entirely and the health probe calls the
             # fetcher directly, bypassing this guard. Recording it is what
             # makes the refusal visible to anyone at all.
-            record_quality_metrics(source_id, 0, 0, 0, 0)
+            record_quality_metrics(source_id, 0, 0, 0, 0, dry_run=dry_run)
             return []
 
     # Required, not source.get(..., ""): an empty default silently DISABLES the
@@ -3710,7 +3719,7 @@ def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False,
 
     # Record quality metrics for inspection
     record_quality_metrics(source_id, accepted_count, len(new_articles),
-                           gated_count, mismatch_count)
+                           gated_count, mismatch_count, dry_run=dry_run)
 
     if dry_run:
         for a in new_articles:

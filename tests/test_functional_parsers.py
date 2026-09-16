@@ -8,6 +8,16 @@ import pytest
 
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
 
+
+def _fixture(name: str) -> Path:
+    """The saved snapshot, or a skip: tests/fixtures/*.html|json is gitignored
+    (re-savable from the live site), so a fresh clone has none of them and
+    erroring there says nothing about the parser under test."""
+    path = FIXTURES_DIR / name
+    if not path.exists():
+        pytest.skip(f"fixture {name} not present (tests/fixtures is gitignored; re-save it from the live page)")
+    return path
+
 # ---------------------------------------------------------------------------
 # Man Group
 # ---------------------------------------------------------------------------
@@ -17,7 +27,7 @@ class TestManGroupFixture:
 
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.html = (FIXTURES_DIR / "man-group-insights.html").read_text(encoding="utf-8")
+        self.html = _fixture("man-group-insights.html").read_text(encoding="utf-8")
         self.source = {
             "id": "man-group",
             "url": "https://www.man.com/insights",
@@ -62,7 +72,7 @@ class TestBridgewaterFixture:
 
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.html = (FIXTURES_DIR / "bridgewater-research.html").read_text(encoding="utf-8")
+        self.html = _fixture("bridgewater-research.html").read_text(encoding="utf-8")
         self.source = {
             "id": "bridgewater",
             "url": "https://www.bridgewater.com/research-and-insights",
@@ -103,7 +113,7 @@ class TestGmoApiFixture:
 
     @pytest.fixture(autouse=True)
     def setup(self):
-        with open(FIXTURES_DIR / "gmo-api-response.json") as f:
+        with open(_fixture("gmo-api-response.json")) as f:
             self.data = json.load(f)
 
     def test_has_listing_key(self):
