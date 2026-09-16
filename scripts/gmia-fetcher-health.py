@@ -622,6 +622,66 @@ def pipeline_zero_fetches(state_path=None) -> list[tuple[str, dict]]:
         return []
 
 
+# One stray URL is already an outlier: all 42 configured sources sit at 0
+# (measured 2026-09-16), and the log-only alert's own threshold of >3 meant
+# three strays a night stayed invisible for as long as they kept happening.
+INTAKE_MISMATCH_MIN = 1
+INTAKE_GATED_RATIO = 0.5
+
+
+def pipeline_intake_anomalies(state_path=None) -> list[tuple[str, list[str]]]:
+    """Per-source intake problems the pipeline recorded but told nobody about.
+
+    fetch_articles.check_anomalies writes these to log.warning and stops --
+    the same last-hop whisper that hid acadian-asset's zero fetch. Two signals
+    are real and reach the email here:
+
+      · listing URLs that are not on the source's declared host (fetcher drift,
+        or a config edit left half-done);
+      · a listing that is mostly locked/members-only.
+
+    The filters are the ones pipeline_zero_fetches argues for: the id must
+    still be configured, and the record must be one the last run refreshed --
+    config/inspection_state.json is append-only, so a frozen record would
+    otherwise alert every day with no way to clear it.
+
+    Never raises: extra reporting must not fail the check it rides on.
+    """
+    path = INSPECTION_STATE_FILE if state_path is None else Path(state_path)
+    try:
+        state = json.loads(path.read_text())
+        if not isinstance(state, dict):
+            return []
+        configured = {s["id"] for s in load_sources()}
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=ZERO_FETCH_FRESH_HOURS)
+        out = []
+        for sid, rec in sorted(state.items()):
+            if sid not in configured or not isinstance(rec, dict):
+                continue
+            try:
+                seen = datetime.fromisoformat(str(rec.get("last_inspected_at")))
+            except (TypeError, ValueError):
+                continue
+            if seen.tzinfo is None:
+                seen = seen.replace(tzinfo=timezone.utc)
+            if seen < cutoff:
+                continue
+            notes = []
+            mismatches = rec.get("last_mismatch_count") or 0
+            if mismatches >= INTAKE_MISMATCH_MIN:
+                plural = "" if mismatches == 1 else "s"
+                notes.append(f"{mismatches} listing URL{plural} were not on the declared host "
+                             "— the fetcher may have drifted, or a config edit is half-done")
+            gated = rec.get("last_gated_ratio") or 0
+            if gated > INTAKE_GATED_RATIO:
+                notes.append(f"{gated:.0%} of the listing is locked or members-only")
+            if notes:
+                out.append((sid, notes))
+        return out
+    except Exception:
+        return []
+
+
 ARTICLES_FILE = BASE_DIR / "data" / "articles.jsonl"
 DECLINE_SAMPLE_REASONS = 2
 
@@ -791,7 +851,8 @@ def pipeline_did_not_run(state_path=None) -> bool:
 
 
 def should_email(alerts: dict, zero_fetches: list, pipeline_stale: bool = False,
-                 declines: list | None = None, quality: dict | None = None) -> bool:
+                 declines: list | None = None, quality: dict | None = None,
+                 intake: list | None = None) -> bool:
     """Whether this run has anything worth sending.
 
     zero_fetches is part of the condition, not just part of the body: the email
@@ -799,7 +860,7 @@ def should_email(alerts: dict, zero_fetches: list, pipeline_stale: bool = False,
     silent zero-article fetch produces.
     """
     return bool(alerts["failing"] or alerts["warning"] or alerts["recovered"]
-                or zero_fetches or pipeline_stale or declines
+                or zero_fetches or pipeline_stale or declines or intake
                 or (quality is not None and quality.get("alerts")))
 
 
@@ -813,7 +874,7 @@ def _zero_fetch_line(sid: str, rec: dict) -> str:
 # ── reporting ────────────────────────────────────────────────────────────────
 
 def print_console_report(per_source: dict[str, dict], total_runtime_s: float,
-                         zero_fetches: list | None = None) -> None:
+                         zero_fetches: list | None = None, intake: list | None = None) -> None:
     print(f"\n=== GMIA Fetcher Health — {now_human()} ===")
     print(f"Sources probed: {len(per_source)}    Total runtime: {total_runtime_s:.1f}s\n")
 
@@ -831,6 +892,11 @@ def print_console_report(per_source: dict[str, dict], total_runtime_s: float,
         for sid, r in warn_rows:
             print(f"  {sid:25} {r['reason']}")
         print()
+    if intake:
+        print(f"🔀 INTAKE ANOMALIES ({len(intake)}):")
+        for sid, notes in intake:
+            for note in notes:
+                print(f"  {sid:26s} {note}")
     if zero_fetches:
         print(f"📉 PIPELINE FETCHED NOTHING ({len(zero_fetches)}):")
         for sid, rec in zero_fetches:
@@ -853,6 +919,7 @@ def render_html_email(
     pipeline_stale: bool = False,
     declines: list | None = None,
     quality: dict | None = None,
+    intake: list | None = None,
 ) -> str:
     """HTML body with same visual idiom as gmia-trial-manager email."""
     sources_state = state.get("sources", {})
@@ -939,6 +1006,14 @@ def render_html_email(
         )
         sections.append(section_table(
             f"📉 PIPELINE FETCHED NOTHING ({len(zero_fetches)})", "#9a6700", zero_rows))
+    if intake:
+        intake_rows = "".join(
+            f'<tr><td style="padding:8px;font-weight:bold;color:#9a6700">{html.escape(sid)}</td>'
+            f'<td style="padding:8px">{"<br>".join(html.escape(n) for n in notes)}</td></tr>'
+            for sid, notes in intake
+        )
+        sections.append(section_table(
+            f"🔀 INTAKE ANOMALIES ({len(intake)})", "#9a6700", intake_rows))
     if declines:
         # analysis_reason is model output: escape it like any untrusted text.
         decline_rows = "".join(
@@ -1000,7 +1075,7 @@ def send_email(html_body: str, summary_subject: str, to: str | None = None) -> b
 
 def alerts_subject(alerts: dict, zero_fetches: list | None = None,
                    pipeline_stale: bool = False, declines: list | None = None,
-                   quality: dict | None = None) -> str:
+                   quality: dict | None = None, intake: list | None = None) -> str:
     """Subject line. Must name every condition that caused the send.
 
     zero_fetches is a send condition on its own, and it is the ONLY one that
@@ -1024,6 +1099,10 @@ def alerts_subject(alerts: dict, zero_fetches: list | None = None,
         parts.append(f"📉 {len(zero_fetches)} fetched nothing ({ids}{more})")
     if pipeline_stale:
         parts.append(f"⛔ pipeline recorded nothing in {ZERO_FETCH_FRESH_HOURS}h")
+    if intake:
+        ids = ", ".join(sid for sid, _ in intake[:3])
+        more = f" +{len(intake) - 3}" if len(intake) > 3 else ""
+        parts.append(f"🔀 {len(intake)} intake anomaly(ies) ({ids}{more})")
     if quality is not None and quality.get("alerts"):
         ids = ", ".join(dict.fromkeys(sid for _, sid, _ in quality["alerts"][:3]))
         parts.append(f"🧩 {len(quality['alerts'])} new content issue(s) ({ids})")
@@ -1183,11 +1262,12 @@ def main() -> int:
     # Read once, before the --source early return below, so the console report
     # and the email decision see the same list.
     zero_fetches = pipeline_zero_fetches()
+    intake = pipeline_intake_anomalies()
     pipeline_stale = pipeline_did_not_run()
     if pipeline_stale:
         print(f"⛔ the last pipeline run recorded nothing in the past "
               f"{ZERO_FETCH_FRESH_HOURS}h — zero-fetch reporting is blind until it runs")
-    print_console_report(per_source, total_runtime_s, zero_fetches=zero_fetches)
+    print_console_report(per_source, total_runtime_s, zero_fetches=zero_fetches, intake=intake)
     # Before this run's state is written: last_run is still the previous run.
     declines = recent_analysis_declines(since=load_state().get("last_run"))
     if declines:
@@ -1228,20 +1308,23 @@ def main() -> int:
         print("[dry-run] state file NOT written")
 
     email_failed = False
-    needs_alert = should_email(alerts, zero_fetches, pipeline_stale, declines=declines, quality=quality)
+    needs_alert = should_email(alerts, zero_fetches, pipeline_stale, declines=declines,
+                               quality=quality, intake=intake)
     if args.test_email:
         html_body = render_html_email(per_source, alerts, next_state, total_runtime_s,
                                       zero_fetches=zero_fetches, pipeline_stale=pipeline_stale,
-                                      declines=declines, quality=quality)
-        subject = alerts_subject(alerts, zero_fetches, pipeline_stale, declines=declines, quality=quality)
+                                      declines=declines, quality=quality, intake=intake)
+        subject = alerts_subject(alerts, zero_fetches, pipeline_stale, declines=declines,
+                                 quality=quality, intake=intake)
         email_failed = not send_email(html_body, f"[测试] {subject}", to=args.test_email)
     elif args.email and needs_alert and not args.dry_run:
         html_body = render_html_email(per_source, alerts, next_state, total_runtime_s,
                                       zero_fetches=zero_fetches,
                                       pipeline_stale=pipeline_stale,
-                                      declines=declines, quality=quality)
+                                      declines=declines, quality=quality, intake=intake)
         email_failed = not send_email(
-            html_body, alerts_subject(alerts, zero_fetches, pipeline_stale, declines=declines, quality=quality))
+            html_body, alerts_subject(alerts, zero_fetches, pipeline_stale, declines=declines,
+                                      quality=quality, intake=intake))
     elif args.email and not needs_alert:
         print("All sources OK and no recoveries — email suppressed.")
 

@@ -201,13 +201,11 @@ def record_quality_metrics(source_id: str, total_found: int, new_count: int,
         consecutive_zero = 0
 
     gated_ratio = gated_count / max(total_found, 1)
-    valid_body_ratio = 1.0 - gated_ratio
 
     state[source_id] = {
         "last_inspected_at": datetime.now(timezone.utc).isoformat(),
         "consecutive_zero_count": consecutive_zero,
         "last_article_count": total_found,
-        "last_valid_body_ratio": round(valid_body_ratio, 2),
         "last_gated_ratio": round(gated_ratio, 2),
         "last_mismatch_count": mismatch_count,
     }
@@ -231,9 +229,13 @@ def check_anomalies(metrics: dict) -> list[str]:
     if metrics.get("consecutive_zero_count", 0) >= 2:
         alerts.append("Consecutive zero articles detected — entrypoint may be broken")
     if metrics.get("last_gated_ratio", 0) > 0.5:
-        alerts.append("High gated page ratio (>50%) — entrypoint may point to gated content")
-    if metrics.get("last_valid_body_ratio", 1.0) < 0.3:
-        alerts.append("Low valid body ratio (<30%) — content extraction failing")
+        alerts.append("More than half the listing is locked — the entrypoint may point to members-only content")
+    # "last_valid_body_ratio < 0.3" used to be a third alert. It was
+    # 1 - gated_ratio, so it fired only when the gated alert already had, and
+    # its text ("content extraction failing") described something this record
+    # does not measure -- extraction happens in stage 2. Removed 2026-09-16
+    # with the field; a duplicate signal with a wrong explanation sends a
+    # human looking in the wrong place.
     if metrics.get("last_mismatch_count", 0) > 3:
         alerts.append("High source mismatch count (>3) — entrypoint may have drifted")
     return alerts

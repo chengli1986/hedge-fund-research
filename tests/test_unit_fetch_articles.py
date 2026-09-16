@@ -433,26 +433,29 @@ class TestRecordQualityMetrics:
 
 
 class TestCheckAnomalies:
+    # last_valid_body_ratio was dropped on 2026-09-16: it was 1 - gated_ratio
+    # and its alert said "content extraction failing", which this record does
+    # not measure. See tests/test_health_intake_anomalies.py.
     def test_no_anomaly(self):
         metrics = {"consecutive_zero_count": 0, "last_article_count": 5,
-                   "last_valid_body_ratio": 0.8, "last_gated_ratio": 0.0, "last_mismatch_count": 0}
+                   "last_gated_ratio": 0.0, "last_mismatch_count": 0}
         assert check_anomalies(metrics) == []
 
     def test_consecutive_zero(self):
         metrics = {"consecutive_zero_count": 2, "last_article_count": 0,
-                   "last_valid_body_ratio": 1.0, "last_gated_ratio": 0.0, "last_mismatch_count": 0}
+                   "last_gated_ratio": 0.0, "last_mismatch_count": 0}
         alerts = check_anomalies(metrics)
         assert any("zero" in a.lower() for a in alerts)
 
     def test_high_gated_ratio(self):
         metrics = {"consecutive_zero_count": 0, "last_article_count": 10,
-                   "last_valid_body_ratio": 0.4, "last_gated_ratio": 0.6, "last_mismatch_count": 0}
+                   "last_gated_ratio": 0.6, "last_mismatch_count": 0}
         alerts = check_anomalies(metrics)
-        assert any("gated" in a.lower() for a in alerts)
+        assert any("locked" in a.lower() for a in alerts)
 
     def test_high_mismatch(self):
         metrics = {"consecutive_zero_count": 0, "last_article_count": 10,
-                   "last_valid_body_ratio": 0.8, "last_gated_ratio": 0.0, "last_mismatch_count": 5}
+                   "last_gated_ratio": 0.0, "last_mismatch_count": 5}
         alerts = check_anomalies(metrics)
         assert any("mismatch" in a.lower() for a in alerts)
 
