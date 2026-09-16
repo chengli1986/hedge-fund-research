@@ -3765,37 +3765,59 @@ def main() -> None:
     # the accepted count survives fetch_source.
     found_by_source: dict[str, int] = {}
 
+    # Sources whose processing raised. fetch_source catches what the FETCHER
+    # raises (a timeout, a 500 -- the site, not us) and returns []; what lands
+    # here is malformed data reaching the parse loop or a bug in our own code,
+    # so it fails the run and cron alerts the same night.
+    broken_sources: list[str] = []
+
     for source in sources:
         if args.source and source["id"] != args.source:
             continue
-        # Use entrypoint URL if available, fallback to sources.json
-        source = dict(source)  # copy to avoid mutating config
-        source["url"] = get_source_url(source, entrypoints)
+        source_id = source["id"]
+        try:
+            # Use entrypoint URL if available, fallback to sources.json
+            source = dict(source)  # copy to avoid mutating config
+            source["url"] = get_source_url(source, entrypoints)
 
-        new = fetch_source(source, existing_ids, dry_run=args.dry_run, existing_keys=existing_keys,
-                           existing_rows=existing_rows)
-        all_new.extend(new)
-        existing_ids.update(a["id"] for a in new)
+            new = fetch_source(source, existing_ids, dry_run=args.dry_run, existing_keys=existing_keys,
+                               existing_rows=existing_rows)
+            # Saved per source, not accumulated to the end: a crash or the cron
+            # wrapper's timeout kill at source 40 used to discard the 39 that
+            # had already worked.
+            if new and not args.dry_run:
+                save_articles(new)
+                log.info("  %s: saved %d new article(s)", source_id, len(new))
+            all_new.extend(new)
+            existing_ids.update(a["id"] for a in new)
 
-        # Check for anomalies after fetch
-        if INSPECTION_STATE_FILE.exists():
-            try:
-                state = json.loads(INSPECTION_STATE_FILE.read_text())
-                source_metrics = state.get(source["id"], {})
-                found_by_source[source["id"]] = source_metrics.get("last_article_count", 0)
-                for alert in check_anomalies(source_metrics):
-                    log.warning("ANOMALY [%s]: %s", source["id"], alert)
-            except json.JSONDecodeError:
-                pass
+            # Check for anomalies after fetch
+            if INSPECTION_STATE_FILE.exists():
+                try:
+                    state = json.loads(INSPECTION_STATE_FILE.read_text())
+                    source_metrics = state.get(source_id, {})
+                    found_by_source[source_id] = source_metrics.get("last_article_count", 0)
+                    for alert in check_anomalies(source_metrics):
+                        log.warning("ANOMALY [%s]: %s", source_id, alert)
+                except json.JSONDecodeError:
+                    pass
+        except Exception as exc:
+            # One source's shape drift must not cost the other 41 their night.
+            log.error("SOURCE_BROKEN: %s raised %s: %s -- skipping it, the run continues",
+                      source_id, type(exc).__name__, str(exc)[:200])
+            broken_sources.append(source_id)
+            # Record the zero so the fetcher-health email sees the silence too;
+            # without it the source keeps yesterday's count and looks healthy.
+            record_quality_metrics(source_id, 0, 0, 0, 0, dry_run=args.dry_run)
+            found_by_source[source_id] = 0
 
         # Rate-limit between sources
         if source != sources[-1]:
             time.sleep(2)
 
-    if all_new and not args.dry_run:
-        save_articles(all_new)
+    if all_new:
         log.info("Saved %d new articles to %s", len(all_new), DATA_FILE)
-    elif not all_new:
+    else:
         log.info("No new articles found.")
 
     # Summary
@@ -3823,6 +3845,11 @@ def main() -> None:
     # Skipped for --source (a debug path; one silent source is the fetcher
     # health email's job) and when no metrics were collected, since then we
     # cannot tell an outage from a first run.
+    if broken_sources:
+        log.error("BROKEN SOURCES: %d source(s) raised while being processed: %s",
+                  len(broken_sources), ", ".join(broken_sources))
+        return 1
+
     if not args.source and found_by_source and not any(found_by_source.values()):
         log.error("TOTAL FETCH OUTAGE: all %d sources returned 0 articles",
                   len(found_by_source))
