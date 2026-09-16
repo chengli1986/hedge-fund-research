@@ -222,7 +222,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.97,
-    "notes": "Rejected: culture/HR dominates, minor stale research",
+    "notes": "Recheck: still culture/HR dominated, no fresh quant research",
     "research_links": [
       {
         "url": "https://www.twosigma.com/insights/",
@@ -246,16 +246,16 @@
       "article_signals": 2
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-08-15T01:01:21Z",
+    "last_deep_analyzed_at": "2026-09-16T01:01:24Z",
     "quality": "LOW",
-    "topics": "quant, features research, HR/culture (culture-heavy)",
+    "topics": "quant research, HR/culture (culture-heavy, stale tech content)",
     "reject_reason": "content_not_research",
     "rejected_at": "2026-04-12T19:21:09.876510+08:00",
     "strategy_tags": [
       "quant"
     ],
     "source": "auto_discovered",
-    "quality_score": 0.25,
+    "quality_score": 0.2,
     "status_since": "2026-04-12T02:31:04.953038+08:00"
   },
   {
@@ -811,7 +811,7 @@
     "official_domain": "www.fidelity.com",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-04-19T09:00:12.375997+08:00",
-    "notes": "Rejected: retail education portal, not institutional",
+    "notes": "Recheck: still retail education portal, not institutional",
     "research_links": [],
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -829,7 +829,7 @@
     "screening_reason": "Login/paywall detected",
     "fit_score": 0.82,
     "last_validated_at": "2026-04-16T09:01:28.399090+08:00",
-    "last_deep_analyzed_at": "2026-08-15T01:01:21Z",
+    "last_deep_analyzed_at": "2026-09-16T01:01:24Z",
     "quality": "LOW",
     "topics": "retail education, personal finance",
     "strategy_tags": [
@@ -2220,10 +2220,10 @@
     "fit_score": 0.88,
     "last_validated_at": "2026-05-12T09:00:20.241489+08:00",
     "quality": "LOW",
-    "quality_score": 0.3,
+    "quality_score": 0.25,
     "topics": "factor investing, equity, multi-asset (podcast-heavy)",
-    "notes": "Watchlist: still no dated research index found",
-    "last_deep_analyzed_at": "2026-08-15T01:01:21Z",
+    "notes": "Recheck: still no dated article index, podcast-only",
+    "last_deep_analyzed_at": "2026-09-16T01:01:24Z",
     "status_since": "2026-05-12T09:00:20.241489+08:00"
   },
   {
@@ -2236,12 +2236,12 @@
     "strategy_tags": [
       "venture_capital"
     ],
-    "notes": "VC advocacy, not buy-side research; wrong fund category",
+    "notes": "Recheck: VC advocacy/portfolio promo, not buy-side research",
     "official_domain": "a16z.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-05-15T09:00:10.435535+08:00",
-    "last_deep_analyzed_at": "2026-08-16T17:15:00Z",
+    "last_deep_analyzed_at": "2026-09-16T01:01:24Z",
     "quality": "LOW",
     "quality_score": 0.1,
     "topics": "venture capital, AI, enterprise tech, founder commentary",
@@ -3435,7 +3435,7 @@
     "official_domain": "www.fulcrumasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-15T09:00:17.179231+08:00",
+    "last_discovered_at": "2026-09-16T09:00:12.613132+08:00",
     "status_since": "2026-08-22T09:03:32.572404+08:00",
     "last_deep_analyzed_at": "2026-09-10T01:03:27.443401+00:00",
     "quality": "MEDIUM",
@@ -3550,7 +3550,7 @@
     "official_domain": "www.muzinich.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-15T09:00:17.487583+08:00",
+    "last_discovered_at": "2026-09-16T09:00:12.920502+08:00",
     "status_since": "2026-08-25T09:03:39.585223+08:00",
     "quality": "HIGH",
     "quality_score": 0.78,
