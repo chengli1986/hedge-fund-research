@@ -4,6 +4,9 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import pytest
 
+import os
+
+import publish as publish_mod
 from publish import BADGE_COLORS, generate_html, publish_html
 
 BJT = timezone(timedelta(hours=8))
@@ -789,3 +792,174 @@ class TestLatestDateIsShownAsPublished:
             assert _display_date({"date": "2026-09-30", "date_raw": hostile}) == "2026-09-30"
         assert _MONTH_ONLY_RAW.match("Sep 2026")
         assert _MONTH_ONLY_RAW.match("September 2026")
+
+
+class TestThemeCountsAreUnambiguous:
+    """2026-09-16: every theme showed two different numbers on one page --
+    AI/Tech was "260" on its cluster card and "398" on the filter pill and in
+    the sidebar, with nothing saying why. The two counts measure different
+    things on purpose (a cluster card holds the articles whose FIRST theme is
+    this one -- the prompts ask the model to put the main theme first -- while
+    the pill and the sidebar count every article tagged with it), so the fix is
+    to say which is which, and to show the difference where the smaller number
+    appears.
+    """
+    ARTICLES = [
+        dict(SAMPLE_ARTICLES[0], id="t1", themes=["AI/Tech", "Equities/Value"]),
+        dict(SAMPLE_ARTICLES[0], id="t2", themes=["AI/Tech"]),
+        dict(SAMPLE_ARTICLES[0], id="t3", themes=["Equities/Value", "AI/Tech"]),
+    ]
+
+    def _counts(self, html, theme="AI/Tech"):
+        import re
+        card = re.search(rf'<h2>{re.escape(theme)} <span class="cluster-count">(\d+)', html)
+        pill = re.search(rf'class="filter-pill"[^>]*>\s*{re.escape(theme)} <span>(\d+)</span>', html)
+        side = re.search(rf'<h3>{re.escape(theme)} <span class="count">\((\d+)\)', html)
+        return card, pill, side
+
+    def test_the_cluster_card_says_its_count_is_the_primary_theme(self):
+        html = generate_html(self.ARTICLES)
+        card, pill, side = self._counts(html)
+        assert card and pill and side
+        assert (int(card.group(1)), int(pill.group(1)), int(side.group(1))) == (2, 3, 3)
+        head = html[card.start():card.start() + 400]
+        assert "primary" in head and "主线" in head, "the smaller number is not explained"
+
+    def test_the_cluster_card_shows_how_many_more_are_tagged(self):
+        html = generate_html(self.ARTICLES)
+        card, _, _ = self._counts(html)
+        head = html[card.start():card.start() + 400]
+        assert "+1" in head and ("also tagged" in head and "另有提及" in head)
+
+    def test_a_theme_with_no_extra_mentions_shows_no_remainder(self):
+        only = [dict(SAMPLE_ARTICLES[0], id="t1", themes=["AI/Tech"])]
+        html = generate_html(only)
+        card, _, _ = self._counts(html)
+        head = html[card.start():card.start() + 400]
+        assert "also tagged" not in head and "+0" not in head
+
+    def test_the_pill_and_the_sidebar_say_they_count_every_tagged_article(self):
+        import re
+        html = generate_html(self.ARTICLES)
+        pill = re.search(r'class="filter-pill"[^>]*title="([^"]*)"[^>]*>\s*AI/Tech', html)
+        side = re.search(r'<div class="theme-group"[^>]*title="([^"]*)"', html)
+        assert pill and "tagged" in pill.group(1)
+        assert side and "tagged" in side.group(1)
+
+    def test_the_pill_count_matches_the_rows_that_filter_shows(self):
+        """The pill filters timeline rows by data-themes, so its number must be
+        the number of rows carrying that slug -- not the cluster count."""
+        import re
+        html = generate_html(self.ARTICLES)
+        rows = len(re.findall(r'data-themes="[^"]*ai-tech', html))
+        pill = re.search(r'class="filter-pill"[^>]*>\s*AI/Tech <span>(\d+)</span>', html)
+        assert int(pill.group(1)) == rows == 3
+
+
+class TestHeaderShowsDataRecency:
+    """2026-09-16: the header's only timestamp was the moment publish.py ran,
+    so a rebuild with no new data (a template fix, a re-publish) advanced
+    "Updated" and the page claimed today's data. The render time stays -- it
+    answers "is the page stale?" -- but the data date is what a reader needs.
+    """
+    def _header(self, html):
+        start = html.index('<div class="stats">')
+        return html[start:start + 900]
+
+    def _data_through(self, html):
+        import re
+        m = re.search(r'Data through ([0-9-]+|n/a)', self._header(html))
+        return m.group(1) if m else None
+
+    def test_the_header_carries_the_newest_article_date(self):
+        arts = [dict(SAMPLE_ARTICLES[0], id="h1", date=_date_str(8)),
+                dict(SAMPLE_ARTICLES[0], id="h2", date=_date_str(30))]
+        assert self._data_through(generate_html(arts)) == _date_str(8)
+
+    def test_the_data_date_is_not_todays_date_when_the_data_is_old(self):
+        """The render time still says today -- that is the point of having both."""
+        arts = [dict(SAMPLE_ARTICLES[0], id="h1", date=_date_str(9))]
+        html = generate_html(arts)
+        assert self._data_through(html) == _date_str(9)
+        assert f"page built {_date_str(0)}" in self._header(html)
+
+    def test_a_future_dated_article_does_not_set_the_data_date(self):
+        """Month-granularity dates normalise to the month end, so a row can be
+        dated after today (the same trap that inflated 'new this week')."""
+        arts = [dict(SAMPLE_ARTICLES[0], id="h1", date=_date_str(5)),
+                dict(SAMPLE_ARTICLES[0], id="h2", date=_date_str(-20))]
+        assert self._data_through(generate_html(arts)) == _date_str(5)
+
+    def test_both_the_data_date_and_the_render_time_are_labelled_in_both_languages(self):
+        head = self._header(generate_html([dict(SAMPLE_ARTICLES[0], id="h1", date=_date_str(3))]))
+        assert "Data through" in head and "数据截至" in head
+        assert "page built" in head and "页面生成" in head
+
+    def test_no_articles_still_renders(self):
+        assert self._data_through(generate_html([])) == "n/a"
+
+
+class TestAtomicPublish:
+    """2026-09-16: the page and its .gz were written in place, so a crash or a
+    full disk mid-write left nginx serving a truncated dashboard (4.3MB of it,
+    written over ~seconds), and for a moment the .html and the .gz disagreed.
+    Both are now written beside the target and renamed into place.
+    """
+    def test_a_failed_write_leaves_the_previous_page_intact(self, tmp_path, monkeypatch):
+        import gzip as gz
+        out = tmp_path / "page.html"
+        out.write_text("OLD PAGE")
+        (tmp_path / "page.html.gz").write_bytes(gz.compress(b"OLD PAGE"))
+
+        def boom(*a, **k):
+            raise OSError("No space left on device")
+
+        monkeypatch.setattr(publish_mod.gzip, "open", boom)
+        with pytest.raises(OSError):
+            publish_html(out, "NEW PAGE")
+        assert out.read_text() == "OLD PAGE", "the old page was overwritten before the .gz succeeded"
+        assert gz.decompress((tmp_path / "page.html.gz").read_bytes()) == b"OLD PAGE"
+        assert not list(tmp_path.glob("*.tmp*")), "a temporary file was left behind"
+
+    def test_a_successful_write_replaces_both_files(self, tmp_path):
+        import gzip as gz
+        out = tmp_path / "page.html"
+        out.write_text("OLD PAGE")
+        publish_html(out, "NEW PAGE")
+        assert out.read_text() == "NEW PAGE"
+        assert gz.decompress((tmp_path / "page.html.gz").read_bytes()) == b"NEW PAGE"
+        assert not list(tmp_path.glob("*.tmp*"))
+
+    def test_the_published_files_are_readable_whatever_the_umask(self, tmp_path):
+        """The cron's umask is not the page's business: nginx must be able to
+        read it, and a staged file inherits the umask, not the old file's mode."""
+        out = tmp_path / "page.html"
+        old = os.umask(0o077)
+        try:
+            publish_html(out, "NEW PAGE")
+        finally:
+            os.umask(old)
+        for p in (out, tmp_path / "page.html.gz"):
+            assert p.stat().st_mode & 0o777 == publish_mod.PUBLISHED_MODE, \
+                f"{p.name} is {oct(p.stat().st_mode & 0o777)}, not readable by nginx"
+
+    def test_both_files_are_renamed_into_place_not_written_over(self, tmp_path, monkeypatch):
+        """Renaming is what makes the swap atomic; copying into the live file
+        is the bug this replaced."""
+        renamed = []
+        real_replace = os.replace
+        monkeypatch.setattr(publish_mod.os, "replace",
+                            lambda src, dst: renamed.append(Path(dst).name) or real_replace(src, dst))
+        out = tmp_path / "page.html"
+        publish_html(out, "NEW PAGE")
+        assert sorted(renamed) == ["page.html", "page.html.gz"]
+
+    def test_a_symlinked_output_path_stays_a_symlink(self, tmp_path):
+        """An atomic rename onto a symlink replaces the link with a file."""
+        real = tmp_path / "real.html"
+        real.write_text("OLD")
+        link = tmp_path / "page.html"
+        link.symlink_to(real)
+        publish_html(link, "NEW PAGE")
+        assert link.is_symlink(), "the symlink was replaced by a plain file"
+        assert real.read_text() == "NEW PAGE"

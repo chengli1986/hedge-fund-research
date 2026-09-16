@@ -663,6 +663,13 @@ def generate_html(articles: list[dict]) -> str:
     )
     production_source_count = len(sources)
 
+    # The header used to carry only the render time, so a rebuild with no new
+    # data claimed today's data. The data date is the newest article on the
+    # page, capped at today: month-granularity dates normalise to the month
+    # end, which is how "new this week" once counted 46 against 41 real.
+    data_through = max((a.get("date") or "" for a in sorted_articles
+                        if (a.get("date") or "") <= today_str), default="") or "n/a"
+
     # Recency split: articles older than RECENT_DAYS days are tagged data-age="older"
     # so CSS (body.hide-older …) can fold them by default. Empty/unparseable dates
     # default to "recent" (safer: visible, not silently hidden).
@@ -769,6 +776,19 @@ def generate_html(articles: list[dict]) -> str:
     # ── Build cluster HTML (Themes view) ──
     cluster_parts = []
     for theme_name, cluster_arts in cluster_order:
+        # A card holds the articles whose FIRST theme is this one (the prompts
+        # ask the model to put the main theme first); the filter pill and the
+        # sidebar count every article tagged with it. Both numbers are on the
+        # same page under the same name, so each says what it counts and the
+        # card carries the difference (2026-09-16: AI/Tech read 260 and 398
+        # with nothing explaining either).
+        tagged_here = len(themes.get(theme_name, []))
+        also_tagged = max(tagged_here - len(cluster_arts), 0)
+        extra_html = (
+            f'<span class="cluster-extra">+{also_tagged} '
+            f'<span class="lang-en">also tagged</span>'
+            f'<span class="lang-zh" style="display:none">另有提及</span></span>'
+        ) if also_tagged else ""
         source_set = set(a.get("source_id", "") for a in cluster_arts)
         cross_fund = len(source_set) >= 2
         new_count = sum(1 for a in cluster_arts if (a.get("date") or "") >= week_ago)
@@ -810,7 +830,7 @@ def generate_html(articles: list[dict]) -> str:
                 f"""<section class="cluster" data-cluster="{slug}">
   <div class="cluster-head">
     <div>
-      <h2>{_esc(theme_name)} <span class="cluster-count">{len(cluster_arts)}</span> {cross_badge} {new_badge}</h2>
+      <h2>{_esc(theme_name)} <span class="cluster-count">{len(cluster_arts)} <span class="lang-en">primary</span><span class="lang-zh" style="display:none">主线</span></span> {extra_html} {cross_badge} {new_badge}</h2>
       <div class="cluster-meta">{fund_names}</div>
     </div>
   </div>
@@ -823,7 +843,9 @@ def generate_html(articles: list[dict]) -> str:
     theme_filters = []
     for theme_name, theme_arts in sorted_themes:
         theme_filters.append(
-            f'<button class="filter-pill" data-theme="{_slugify_theme(theme_name)}" onclick="toggleThemeFilter(this)">'
+            f'<button class="filter-pill" data-theme="{_slugify_theme(theme_name)}" '
+            f'title="{len(theme_arts)} articles tagged {_esc(theme_name)} (any position) · '
+            f'标注该主题的全部文章" onclick="toggleThemeFilter(this)">'
             f'{_esc(theme_name)} <span>{len(theme_arts)}</span></button>'
         )
     unthemed_count = sum(1 for a in sorted_articles if not a.get("themes"))
@@ -957,7 +979,8 @@ def generate_html(articles: list[dict]) -> str:
             for a in theme_arts
         )
         theme_sections.append(
-            f"""<div class="theme-group" data-theme="{_slugify_theme(theme_name)}">
+            f"""<div class="theme-group" data-theme="{_slugify_theme(theme_name)}"
+     title="{len(theme_arts)} articles tagged {_esc(theme_name)} (any position) · 标注该主题的全部文章">
   <h3>{_esc(theme_name)} <span class="count">({len(theme_arts)})</span></h3>
   <ul>{items}</ul>
 </div>"""
@@ -1136,6 +1159,7 @@ body.hide-older article.pool-article[data-age="older"] {{ display: none !importa
   background: rgba(15,23,39,0.9);
 }}
 .cluster-head h2 {{ margin: 0; font-size: 1.05rem; letter-spacing: 0.02em; }}
+.cluster-extra {{ color: var(--text-muted); font-weight: 400; font-size: 0.75rem; margin-left: 4px; }}
 .cluster-count {{ color: var(--text-muted); font-weight: 400; font-size: 0.8rem; margin-left: 6px; }}
 .cluster-meta {{ color: var(--text-muted); font-size: 0.76rem; margin-top: 2px; }}
 .cross-fund-badge {{
@@ -1338,7 +1362,14 @@ body.hide-older article.pool-article[data-age="older"] {{ display: none !importa
         <span>{total} articles</span>
         <span>{new_this_week} new this week</span>
         <span>{production_source_count} funds tracked</span>
-        <span>Updated {now}</span>
+        <span title="Newest article on the page; the page itself was built at {now}">
+          <span class="lang-en">Data through {data_through}</span>
+          <span class="lang-zh" style="display:none">数据截至 {data_through}</span>
+        </span>
+        <span class="muted">
+          <span class="lang-en">page built {now}</span>
+          <span class="lang-zh" style="display:none">页面生成于 {now}</span>
+        </span>
       </div>
     </div>
     <div class="header-actions">
@@ -1710,14 +1741,49 @@ bindRowToggles();
     return page
 
 
-def publish_html(output_file: Path, html_content: str) -> Path:
-    """Write HTML and gzipped HTML to the configured output path."""
-    output_file.parent.mkdir(parents=True, exist_ok=True)
-    output_file.write_text(html_content, encoding="utf-8")
+# The published files are group- and world-readable: nginx reads them, and a
+# temp file is created 0600.
+PUBLISHED_MODE = 0o664
 
+
+def _staged_copy(target: Path, write) -> tuple[Path, Path]:
+    """Write the content beside `target`; return (temp path, real target).
+
+    Renaming onto a symlink would replace the link with a plain file, so the
+    real path is resolved here and is what the caller renames onto (a
+    /var/www page has been a symlink before).
+    """
+    real = Path(os.path.realpath(target))
+    tmp = real.with_name(f".{real.name}.tmp{os.getpid()}")
+    write(tmp)
+    os.chmod(tmp, PUBLISHED_MODE)     # a 0600 temp file would be unreadable to nginx
+    return tmp, real
+
+
+def publish_html(output_file: Path, html_content: str) -> Path:
+    """Write HTML and gzipped HTML to the configured output path.
+
+    Both are staged next to their target and renamed into place only after
+    both were written: an in-place write left nginx serving a truncated 4MB
+    page if anything failed mid-write, and briefly served an .html and a .gz
+    that disagreed.
+    """
+    output_file.parent.mkdir(parents=True, exist_ok=True)
     gzip_path = output_file.with_suffix(output_file.suffix + ".gz")
-    with gzip.open(gzip_path, "wt", encoding="utf-8") as f:
-        f.write(html_content)
+
+    def write_gz(path: Path) -> None:
+        with gzip.open(path, "wt", encoding="utf-8") as f:
+            f.write(html_content)
+
+    staged = []
+    try:
+        staged.append(_staged_copy(output_file, lambda p: p.write_text(html_content, encoding="utf-8")))
+        staged.append(_staged_copy(gzip_path, write_gz))
+        for tmp, target in staged:
+            os.replace(tmp, target)
+    finally:
+        for tmp, _ in staged:
+            tmp.unlink(missing_ok=True)
     return gzip_path
 
 
