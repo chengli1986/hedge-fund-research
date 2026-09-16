@@ -65,12 +65,28 @@ HEADERS = {
 
 
 # A later issue at a URL already stored for an earlier one is recognised by a
-# forward date jump of at least this many days. Measured 2026-09-16 on every
-# reused URL in the store: the shortest real gap between consecutive issues is
-# 7 days (mfs week-in-review); the rest are 28-126. A publisher correcting a
-# date moves it by a day or two, which is what this keeps out -- and what the
-# rule used to demand (a changed title AS WELL) silently dropped every issue of
-# a series whose headline never changes.
+# forward date jump of at least this many days.
+#
+# What IS measured (2026-09-16, every source's live listing against the store,
+# 26 rows where the same title at the same URL carried a different date):
+#   1-4 days    0 rows      <- nothing at all near this threshold
+#   16-22 days  3 rows      the uncertain band: one sitemap lastmod that moved
+#                           (goehring, audit B6), one annual chart deck re-dated
+#                           (janus-henderson), two monthly updates that look
+#                           like real issues (loomis-sayles)
+#   27-30 days  20 rows     all month-granular dates being re-normalised; the
+#                           same-month rule below holds these
+#   91-147 days 5 rows      real issues of series that had stalled for months
+# and the shortest real gap between consecutive stored issues is 7 days (mfs
+# week-in-review), the rest 28-126.
+#
+# What is NOT measured: the lower bound. No drift of 1-4 days has ever been
+# observed, so 3 or 10 would give the same result on today's 42 sources. The
+# number is a guess with a safety margin, not a measurement -- do not cite it
+# as one. The real discriminator between "a new issue" and "the same document
+# re-dated" is the BODY, and stage 3 applies it: _published_bodies is checked
+# BEFORE any model call, so a wrongly ingested issue costs a fetch, is labelled
+# duplicate_body and is never published. Date proposes; content decides.
 ISSUE_MIN_GAP_DAYS = 5
 
 
@@ -2808,7 +2824,11 @@ def fetch_principal_am(source: dict) -> list[dict]:
                 "searchHub": "web-search",
                 "locale": "en-US",
                 "aq": "@level1==Insights",
-                "context": {"region": "8", "hostname": "www.principalam.com"},
+                # The site identity the Coveo index is keyed on: derived from
+                # the configured URL so a domain move stays a config edit
+                # (audit B6, 2026-09-16 -- the hardcoded-host guard could not
+                # see a bare hostname literal until that day).
+                "context": {"region": "8", "hostname": urlsplit(source["url"]).netloc},
             }
             try:
                 res = page.evaluate(
@@ -3476,6 +3496,21 @@ def fetch_janus_henderson(source: dict) -> list[dict]:
     return articles
 
 
+_LD_PUBLISHED_RE = re.compile(r'"datePublished"\s*:\s*"([^"]+)"')
+
+
+def _ld_published_date(html_text: str) -> str:
+    """The JSON-LD datePublished on an article page, or "" if there is none.
+
+    Read with a regex rather than a JSON parse: the blocks are hand-written by
+    CMS templates and a single trailing comma would throw away a date we can
+    see plainly. dateModified is deliberately not read -- it is what put a
+    re-render's timestamp in the publication date in the first place.
+    """
+    m = _LD_PUBLISHED_RE.search(html_text or "")
+    return m.group(1) if m else ""
+
+
 def fetch_goehring_rozencwajg(source: dict) -> list[dict]:
     """Fetch articles from Goehring & Rozencwajg energy/commodities research blog.
 
@@ -3505,7 +3540,7 @@ def fetch_goehring_rozencwajg(source: dict) -> list[dict]:
         if url in seen:
             continue
         seen.add(url)
-        if not _validate_hostname(url, "blog.gorozen.com"):
+        if not _validate_hostname(url, source["expected_hostname"]):
             continue
         try:
             r = requests.get(url, headers=HEADERS, timeout=20)
@@ -3521,7 +3556,16 @@ def fetch_goehring_rozencwajg(source: dict) -> list[dict]:
                     title = title[: -len(suffix)]
             if not title:
                 continue
-            articles.append({"title": html.unescape(title), "url": url, "date": date_raw})
+            # The sitemap serves <lastmod>, a MODIFICATION time: "Why Haven't
+            # the Tanks Run Dry" carries datePublished 2026-08-07 and
+            # dateModified 2026-08-27, and the sitemap gives the latter, so a
+            # re-render moved the article 20 days forward. The page is already
+            # being fetched for its title and carries JSON-LD, so read the real
+            # publication date from it and keep lastmod only as the fallback.
+            published = _ld_published_date(r.text) or date_raw
+            articles.append({"title": html.unescape(title), "url": url,
+                             "date": parse_date(published) or published,
+                             "date_raw": published})
         except Exception as e:
             log.warning("  G&R: skipping %s — %s", url, e)
             continue

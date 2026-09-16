@@ -46,6 +46,10 @@ ALLOWED_LITERALS: dict[tuple[str, str, str], str] = {
         "XML namespace URI from the sitemaps.org spec, not a host we fetch. "
         "It is a fixed string in the sitemap format; deriving it from the "
         "source URL would break parsing.",
+    ("fetch_articles", "fetch_principal_am", "coveo.com"):
+        "Matched against outgoing request URLs to grab the search API's auth "
+        "token. coveo.com is the third-party host, not principalam.com, so it "
+        "cannot be derived from source[\"url\"].",
     ("fetch_articles", "fetch_principal_am", "https://"):
         "f-string scheme prefix for the third-party Coveo search API "
         "(f\"https://{org}.org.coveo.com/...\"). The host is coveo.com, not "
@@ -53,7 +57,17 @@ ALLOWED_LITERALS: dict[tuple[str, str, str], str] = {
         "is built from is already read from the page.",
 }
 
+# A literal with a scheme, OR a bare hostname ("blog.gorozen.com"). The first
+# version matched only the scheme, so fetch_goehring_rozencwajg's
+# `_validate_hostname(url, "blog.gorozen.com")` was invisible to this guard for
+# as long as it existed (found 2026-09-16 by auditing stage 1, not by the
+# guard). A bare hostname is the same defect wearing fewer characters.
 _URL_LITERAL = re.compile(r"https?://", re.I)
+_BARE_HOST = re.compile(r"^(?:[a-z0-9-]+\.)+(?:com|net|org|io|co|ai|uk|ch|de|fr|jp|cn|asia|global)$", re.I)
+
+
+def _looks_like_a_host(value: str) -> bool:
+    return bool(_URL_LITERAL.search(value) or _BARE_HOST.match(value.strip()))
 
 
 def _runtime_url_literals(fn) -> list[str]:
@@ -73,7 +87,7 @@ def _runtime_url_literals(fn) -> list[str]:
     for stmt in body:
         for node in ast.walk(stmt):
             if isinstance(node, ast.Constant) and isinstance(node.value, str):
-                if _URL_LITERAL.search(node.value):
+                if _looks_like_a_host(node.value):
                     found.append(node.value)
     return found
 
