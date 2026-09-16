@@ -28,6 +28,8 @@ import requests
 
 import failure_labels
 
+import jsonl_store
+
 BJT = timezone(timedelta(hours=8))
 BASE_DIR = Path(__file__).resolve().parent
 DATA_FILE = BASE_DIR / "data" / "articles.jsonl"
@@ -681,16 +683,9 @@ def _analyze_with_fallback(
 # ---------------------------------------------------------------------------
 
 def load_articles() -> list[dict]:
-    """Load all articles from the JSONL data file."""
-    articles = []
-    if DATA_FILE.exists():
-        for line in DATA_FILE.read_text().strip().split("\n"):
-            if line.strip():
-                try:
-                    articles.append(json.loads(line))
-                except json.JSONDecodeError:
-                    continue
-    return articles
+    """Load all articles from the JSONL data file (see jsonl_store)."""
+    rows, _ = jsonl_store.read_rows(DATA_FILE)
+    return rows
 
 
 def save_articles(articles: list[dict], path: Path | None = None) -> None:

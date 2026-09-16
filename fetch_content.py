@@ -31,6 +31,7 @@ from pathlib import Path
 from typing import Optional
 
 import requests
+import jsonl_store
 from bs4 import BeautifulSoup
 
 BJT = timezone(timedelta(hours=8))
@@ -2268,30 +2269,14 @@ def content_fetcher_for(article: dict):
 # ---------------------------------------------------------------------------
 
 def load_articles() -> list[dict]:
-    """Load all articles from the JSONL data file."""
-    articles = []
-    if DATA_FILE.exists():
-        for line in DATA_FILE.read_text().strip().split("\n"):
-            if line.strip():
-                try:
-                    articles.append(json.loads(line))
-                except json.JSONDecodeError:
-                    continue
-    return articles
+    """Load all articles from the JSONL data file (see jsonl_store)."""
+    rows, _ = jsonl_store.read_rows(DATA_FILE)
+    return rows
 
 
 def save_articles(articles: list[dict]) -> None:
-    """Rewrite all articles to JSONL data file atomically."""
-    DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
-    data = "\n".join(json.dumps(a, ensure_ascii=False) for a in articles) + "\n"
-    tmp_path = DATA_FILE.with_suffix(".jsonl.tmp")
-    try:
-        tmp_path.write_text(data, encoding="utf-8")
-        os.replace(str(tmp_path), str(DATA_FILE))
-    except Exception:
-        if tmp_path.exists():
-            tmp_path.unlink()
-        raise
+    """Rewrite all articles to the JSONL data file atomically (see jsonl_store)."""
+    jsonl_store.rewrite_rows(DATA_FILE, articles)
 
 
 # Identity of this fetch_content.py. A permafail with a code-dependent label

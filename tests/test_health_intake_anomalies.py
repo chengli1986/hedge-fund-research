@@ -166,3 +166,47 @@ def test_main_computes_it_and_passes_it_on(monkeypatch, tmp_path, capsys):
     gfh.main()
     assert seen.get("intake"), "main did not pass intake anomalies to the send decision"
     assert "INTAKE ANOMALIES" in capsys.readouterr().out
+
+
+class TestDamagedStoreReachesAHuman:
+    """jsonl_store reports a damaged row with log.error, and audit B8 exists
+    because a log line is not a destination. The daily email carries it too.
+    """
+    def _store(self, tmp_path, text):
+        f = tmp_path / "articles.jsonl"
+        f.write_text(text)
+        return f
+
+    def test_a_damaged_row_is_counted(self, tmp_path):
+        f = self._store(tmp_path, '{"id": "a1"}\ntorn line\n{"id": "a3"}\n')
+        assert gfh.store_damage(f) == 1
+
+    def test_a_clean_store_reports_nothing(self, tmp_path):
+        f = self._store(tmp_path, '{"id": "a1"}\n{"id": "a2"}\n')
+        assert gfh.store_damage(f) == 0
+
+    def test_a_missing_store_is_not_damage(self, tmp_path):
+        assert gfh.store_damage(tmp_path / "nope.jsonl") == 0
+
+    def test_it_is_a_send_condition_and_names_itself(self):
+        alerts = {"failing": [], "warning": [], "recovered": [], "healthy": []}
+        assert gfh.should_email(alerts, [], damaged_rows=2) is True
+        assert "2" in gfh.alerts_subject(alerts, damaged_rows=2)
+        html = gfh.render_html_email({}, alerts, {"sources": {}}, 1.0, damaged_rows=2)
+        assert "articles.jsonl" in html and "2" in html
+
+    def test_main_computes_it(self, monkeypatch, tmp_path):
+        seen = {}
+        monkeypatch.setattr(gfh, "load_sources", lambda: [])
+        monkeypatch.setattr(gfh, "store_damage", lambda *a, **k: 3)
+        monkeypatch.setattr(gfh, "pipeline_intake_anomalies", lambda *a, **k: [])
+        monkeypatch.setattr(gfh, "pipeline_zero_fetches", lambda *a, **k: [])
+        monkeypatch.setattr(gfh, "recent_analysis_declines", lambda *a, **k: [])
+        monkeypatch.setattr(gfh, "load_quality", lambda *a, **k: None)
+        monkeypatch.setattr(gfh, "pipeline_did_not_run", lambda *a, **k: False)
+        monkeypatch.setattr(gfh, "save_state", lambda *a, **k: None)
+        monkeypatch.setattr(gfh, "load_state", lambda: {})
+        monkeypatch.setattr(gfh, "should_email", lambda *a, **k: seen.update(k) or False)
+        monkeypatch.setattr(sys, "argv", ["gmia-fetcher-health.py"])
+        gfh.main()
+        assert seen.get("damaged_rows") == 3

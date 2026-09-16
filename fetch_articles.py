@@ -31,6 +31,8 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import urlsplit, urlunsplit, urljoin, urlparse
 
+import jsonl_store
+
 import xml.etree.ElementTree as ET
 from email.utils import parsedate_to_datetime
 
@@ -135,16 +137,14 @@ def article_id(source_id: str, url: str, issue_date: str | None = None) -> str:
 
 
 def load_existing_ids() -> set[str]:
-    """Load existing article IDs to avoid duplicates."""
-    ids: set[str] = set()
-    if DATA_FILE.exists():
-        for line in DATA_FILE.read_text().strip().split("\n"):
-            if line.strip():
-                try:
-                    ids.add(json.loads(line)["id"])
-                except (json.JSONDecodeError, KeyError):
-                    continue
-    return ids
+    """Load existing article IDs to avoid duplicates.
+
+    Reads through jsonl_store so a damaged line is reported rather than
+    skipped in silence (audit B8): an id that never reaches this set is an
+    article stage 1 will fetch and store all over again.
+    """
+    rows, _ = jsonl_store.read_rows(DATA_FILE, require="id")
+    return {r["id"] for r in rows}
 
 
 def _title_key(title: str) -> str:
@@ -186,14 +186,7 @@ def title_date_keys(rows, title_only_sources=frozenset()) -> dict[tuple[str, str
 
 
 def load_existing_rows() -> list[dict]:
-    rows: list[dict] = []
-    if DATA_FILE.exists():
-        for line in DATA_FILE.read_text().strip().split("\n"):
-            if line.strip():
-                try:
-                    rows.append(json.loads(line))
-                except json.JSONDecodeError:
-                    continue
+    rows, _ = jsonl_store.read_rows(DATA_FILE)
     return rows
 
 
@@ -3847,11 +3840,8 @@ def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False,
 
 
 def save_articles(articles: list[dict]) -> None:
-    """Append new articles to JSONL data file."""
-    DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
-    with DATA_FILE.open("a", encoding="utf-8") as f:
-        for a in articles:
-            f.write(json.dumps(a, ensure_ascii=False) + "\n")
+    """Append new articles to the JSONL data file (see jsonl_store)."""
+    jsonl_store.append_rows(DATA_FILE, articles)
 
 
 def main() -> None:
