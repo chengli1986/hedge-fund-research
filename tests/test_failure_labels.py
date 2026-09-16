@@ -18,9 +18,9 @@ def ev(**kw):
 
 
 def resp(status=200, url="https://site.com/insights/a-piece/", final=None, challenge=False, media=False,
-         content_type="text/html"):
+         content_type="text/html", links=0):
     return {"status": status, "url": url, "final_url": final or url, "content_type": content_type,
-            "challenge": challenge, "media_player": media}
+            "challenge": challenge, "media_player": media, "links": links}
 
 
 class TestContentFailure:
@@ -28,6 +28,41 @@ class TestContentFailure:
         # ARK articles: 403 "Just a moment..." from requests and headless Chromium
         e = ev(responses=[resp(403, "https://www.ark-invest.com/articles/analyst-research/x", challenge=True)])
         assert fl.classify_content_failure(e)[0] == "blocked_by_bot_protection"
+
+    def test_the_sites_own_refusal_page_is_access_denied_not_bot_protection(self):
+        """blue-owl 2026-09-16: one 2026-05-28 article returns the site's own
+        "403 | Blue Owl Capital" page -- 123KB, 88 links, full navigation, no
+        challenge -- while its other articles return 200 and the piece has left
+        the listing. Measured against a real block: the ARK Cloudflare page is
+        5,897 bytes with 0 links and "Just a moment...". So the page came from
+        the CMS and the document is withdrawn, gated or region-locked; calling
+        that bot protection sends a human looking for the wrong thing.
+        """
+        e = ev(responses=[resp(403, "https://www.blueowl.com/insights/x", links=88)])
+        assert fl.classify_content_failure(e)[0] == "access_denied"
+
+    @pytest.mark.parametrize("status", [401, 403, 451])
+    def test_every_refusal_status_with_the_site_around_it_is_access_denied(self, status):
+        e = ev(responses=[resp(status, links=40)])
+        assert fl.classify_content_failure(e)[0] == "access_denied"
+
+    def test_a_bare_403_with_no_site_around_it_stays_bot_protection(self):
+        """An Akamai/WAF "Access Denied" page has no navigation to render."""
+        e = ev(responses=[resp(403, links=0)])
+        assert fl.classify_content_failure(e)[0] == "blocked_by_bot_protection"
+
+    def test_a_challenge_page_is_bot_protection_however_many_links_it_has(self):
+        e = ev(responses=[resp(403, links=88, challenge=True)])
+        assert fl.classify_content_failure(e)[0] == "blocked_by_bot_protection"
+
+    def test_rate_limiting_is_not_access_denied(self):
+        """429 is us asking too fast, not the site refusing the document."""
+        e = ev(responses=[resp(429, links=88)])
+        assert fl.classify_content_failure(e)[0] == "blocked_by_bot_protection"
+
+    def test_access_denied_is_retired_rather_than_retried_for_weeks(self):
+        policy = fl.RETRY_POLICY["access_denied"]
+        assert policy.get("retire_streak") == 2 and not policy.get("code_dependent")
 
     def test_a_challenge_served_with_200_is_blocked(self):
         # ARK "Stock Stories": 200 "Enable JavaScript and cookies to continue"

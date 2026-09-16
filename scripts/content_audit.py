@@ -28,6 +28,7 @@ later audits compare against it instead of the stored body.
   python3 scripts/content_audit.py --email          # weekly cron
   python3 scripts/content_audit.py --test-email ADDR
   python3 scripts/content_audit.py --accept ID [ID ...]
+  python3 scripts/content_audit.py --mark-gone ID [ID ...]
 """
 from __future__ import annotations
 
@@ -55,11 +56,20 @@ REPORT_DIR = BASE_DIR / "logs" / "content-audit"
 BASELINE_DIR = REPORT_DIR / "baseline"
 PER_SOURCE = 3
 
-ALERT_FINDINGS = ("now_failing", "extraction_drift", "body_shrunk", "content_changed")
+ALERT_FINDINGS = ("now_failing", "extraction_drift", "body_shrunk", "content_changed",
+                  "site_wide_access_loss")
+# Documents that are simply not there any more. One is housekeeping; several
+# at one source in one run is a new gate (man.com added a role wall on
+# 2026-09-15 and every article went at once), so mark_site_wide_losses raises
+# those to an alert.
+LOST_FINDINGS = ("page_gone", "access_denied")
+SITE_WIDE_LOSS_MIN = 2
 FINDING_LABELS = {
     "extraction_drift": "抓取方式变了：专用规则不再匹配，退回了通用容器或整页（多为网站改版）",
     "now_failing": "现在抓不到了",
     "page_gone": "页面已删除（仅记录）",
+    "access_denied": "站方拒绝这一篇：撤下、需登录或地区限制（返回的是网站自己的拒绝页，仅记录）",
+    "site_wide_access_loss": "同一网站有多篇同时打不开了——可能整站加了门槛",
     "body_shrunk": "正文比库里存的短了一半以上",
     "body_grew": "正文比库里存的长了一倍以上（可能混进了页面杂物，仅记录）",
     "content_changed": "正文内容与库里存的对不上（可能抓成了别的内容）",
@@ -146,7 +156,8 @@ def audit_article(article: dict, fetcher, stored_dir: Path | None = None,
            "paths": evidence["extraction_paths"], "label": None, "detail": ""}
     if result is None:
         label, detail = failure_labels.classify_content_failure(evidence)
-        out.update(label=label, detail=detail, findings=["page_gone" if label == "page_gone" else "now_failing"])
+        out.update(label=label, detail=detail,
+                   findings=[label if label in LOST_FINDINGS else "now_failing"])
         return out
     findings = []
     if any(p != "primary" for p in evidence["extraction_paths"]):
@@ -170,6 +181,53 @@ def accept_article(article: dict, fetcher, baseline_dir: Path | None = None) -> 
     baseline_dir.mkdir(parents=True, exist_ok=True)
     (baseline_dir / f"{article['id']}.txt").write_text(new, encoding="utf-8")
     return True, f"{len(new)} chars"
+
+
+def mark_site_wide_losses(results: list) -> None:
+    """Raise per-source clusters of lost documents to an alert, in place."""
+    lost = Counter(r["source_id"] for r in results
+                   if any(f in LOST_FINDINGS for f in r.get("findings") or []))
+    for r in results:
+        if lost[r["source_id"]] >= SITE_WIDE_LOSS_MIN \
+                and any(f in LOST_FINDINGS for f in r.get("findings") or []):
+            r["findings"].append("site_wide_access_loss")
+
+
+def mark_gone(article_ids: list, data_file: Path | None = None) -> int:
+    """Stamp url_status="gone" on rows whose original the publisher removed.
+
+    Evidence-gated on purpose: each page is fetched and only page_gone or
+    access_denied is accepted. A timeout is not a takedown, and a stamp on a
+    live article would print "original removed" under a working link.
+    Returns the number of ids it refused.
+    """
+    import fetch_content as fc
+
+    data_file = data_file or DATA_FILE
+    rows = [json.loads(l) for l in data_file.read_text(encoding="utf-8").splitlines() if l.strip()]
+    by_id = {r["id"]: r for r in rows}
+    stamped, refused = 0, 0
+    for aid in article_ids:
+        row = by_id.get(aid)
+        if row is None:
+            print(f"  ✗ {aid}: no such article"); refused += 1; continue
+        result, evidence, _ = _fetch_to_temp(row, fc.content_fetcher_for(row))
+        if result is not None:
+            print(f"  ✗ {aid}: the page still serves an article"); refused += 1; continue
+        label, detail = failure_labels.classify_content_failure(evidence)
+        if label not in LOST_FINDINGS:
+            print(f"  ✗ {aid}: {label} ({detail}) is not a takedown"); refused += 1; continue
+        row["url_status"] = "gone"
+        row["url_checked_at"] = datetime.now(BJT).strftime("%Y-%m-%d")
+        row["url_note"] = f"{label}: {detail}"[:300]
+        stamped += 1
+        print(f"  ✓ {aid} {row.get('source_id')}: {label}")
+    if stamped:
+        tmp = data_file.with_name(data_file.name + ".tmp")
+        tmp.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
+        tmp.replace(data_file)
+    print(f"marked {stamped} article(s) as withdrawn, refused {refused}")
+    return refused
 
 
 def is_alert(result: dict) -> bool:
@@ -196,6 +254,7 @@ def run_audit(per_source: int = PER_SOURCE) -> tuple[list, int]:
                             "findings": ["now_failing"], "label": "fetch_error",
                             "detail": f"audit raised {type(exc).__name__}: {exc}"[:300]})
         time.sleep(0.5)
+    mark_site_wide_losses(results)
     return results, len({r["source_id"] for r in results})
 
 
@@ -259,7 +318,16 @@ def main() -> int:
     parser.add_argument("--report-dir", default=str(REPORT_DIR))
     parser.add_argument("--accept", nargs="+", metavar="ID",
                         help="after checking the page, save today's fetch as these articles' baseline")
+    parser.add_argument("--mark-gone", nargs="+", metavar="ID",
+                        help="stamp url_status=gone on articles whose original the publisher removed")
     args = parser.parse_args()
+
+    if args.mark_gone:
+        import logging
+        for h in list(logging.getLogger().handlers):
+            if isinstance(h, logging.FileHandler):
+                logging.getLogger().removeHandler(h)
+        return 1 if mark_gone(args.mark_gone) else 0
 
     if args.accept:
         import logging

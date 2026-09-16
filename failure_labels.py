@@ -17,6 +17,7 @@ from urllib.parse import urlsplit
 
 CONTENT_FAILURE_LABELS = {
     "blocked_by_bot_protection": "网站防护拦截（403 / Cloudflare 验证页）",
+    "access_denied": "站方拒绝这一篇（撤下、需登录或地区限制）——返回的是网站自己的拒绝页，不是防护验证页",
     "page_gone": "页面已删除（404/410）或跳转到首页、栏目列表页",
     "media_without_text": "视频或播客页，只有一段简介，没有可读正文",
     "selector_miss": "抓取规则未匹配，只能退回通用容器或整页（网站改版的典型信号）",
@@ -34,6 +35,8 @@ CONTENT_FAILURE_LABELS = {
 RETRY_POLICY = {
     "fetch_error":               {"backoff_days": [1, 2, 4, 8], "max_attempts": 5, "code_dependent": True},
     "blocked_by_bot_protection": {"backoff_days": [7], "max_attempts": 4, "code_dependent": False},
+    "access_denied":              {"backoff_days": [1], "max_attempts": 5, "retire_streak": 2,
+                                  "code_dependent": False},
     "page_gone":                 {"backoff_days": [1], "max_attempts": 5, "retire_streak": 2,
                                   "code_dependent": False},
     "media_without_text":        {"backoff_days": [1], "max_attempts": 5, "retire_streak": 2,
@@ -67,6 +70,15 @@ _MEDIA = re.compile(
     re.IGNORECASE)
 _ERROR_MESSAGE = re.compile(r"timeout|timed out|fetch failed|failed to fetch|connection|"
                             r"download failed|http error|ssl|refused|reset by peer", re.IGNORECASE)
+
+
+# A refusal that carries this many links came from the site's own template.
+SITE_PAGE_MIN_LINKS = 20
+_REFUSAL_STATUSES = (401, 403, 451)
+
+
+def count_links(html: str) -> int:
+    return (html or "").count("<a ")
 
 
 def looks_like_challenge(html: str) -> bool:
@@ -120,6 +132,15 @@ def classify_content_failure(evidence: dict) -> tuple[str, str]:
 
     if page is not None:
         status = int(page.get("status") or 0)
+        if not page.get("challenge") and status in _REFUSAL_STATUSES \
+                and (page.get("links") or 0) >= SITE_PAGE_MIN_LINKS:
+            # The site's own refusal page, rendered with its navigation: the
+            # CMS answered, so this document is withdrawn, gated or
+            # region-locked. A block looks different -- the ARK Cloudflare
+            # page is 5,897 bytes with 0 links; blue-owl's 403 is 123KB with
+            # 88 (measured 2026-09-16). 429 is us asking too fast, so it is
+            # not here.
+            return "access_denied", f"HTTP {status} at {page.get('url')} (site's own page)"
         if page.get("challenge") or status in (403, 429):
             return "blocked_by_bot_protection", f"HTTP {status} at {page.get('url')}"
         if status in (404, 410):

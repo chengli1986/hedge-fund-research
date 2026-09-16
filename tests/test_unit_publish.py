@@ -963,3 +963,28 @@ class TestAtomicPublish:
         publish_html(link, "NEW PAGE")
         assert link.is_symlink(), "the symlink was replaced by a plain file"
         assert real.read_text() == "NEW PAGE"
+
+
+class TestWithdrawnOriginals:
+    """2026-09-16: 8 research-affiliates pieces were unpublished by the site
+    (404, absent from its sitemap of 190 articles, no renamed slug), and one
+    blue-owl piece is refused by its own server. We keep the body and the
+    summary; what the page must not do is offer a headline that 404s with no
+    warning. A row stamped url_status="gone" keeps the link (the reader may
+    still want the archive) and says so next to it.
+    """
+    GONE = dict(SAMPLE_ARTICLES[0], id="g1", url_status="gone",
+                url_checked_at="2026-09-16", title="Winning the Long Game")
+
+    def test_a_withdrawn_original_is_marked_in_both_languages(self):
+        html = generate_html([self.GONE])
+        assert "原文已下架" in html and "original removed" in html
+
+    def test_an_ordinary_article_carries_no_marker(self):
+        html = generate_html([dict(SAMPLE_ARTICLES[0], id="ok1")])
+        assert "原文已下架" not in html and "original removed" not in html
+
+    def test_the_link_and_the_summary_survive(self):
+        html = generate_html([self.GONE])
+        assert self.GONE["url"] in html
+        assert self.GONE["summary_en"] in html

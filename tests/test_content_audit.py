@@ -205,6 +205,19 @@ class TestAuditArticle:
         assert not ok and why
         assert not (base / f"{r['id']}.txt").exists()
 
+    def test_a_document_the_site_refuses_is_recorded_not_alerted(self, tmp_path):
+        """blue-owl 2026-09-16: one withdrawn article would otherwise be an
+        alert every week for as long as it stays in the sample."""
+        r = self._stored(tmp_path)
+
+        def fetcher(a):
+            import fetch_content as fc
+            fc.note_failure_hint("access_denied", "HTTP 403 (site's own page)")
+            return None
+
+        result = ca.audit_article(r, fetcher, stored_dir=tmp_path)
+        assert result["findings"] == ["access_denied"] and not ca.is_alert(result)
+
     def test_the_audit_never_writes_production_content(self, tmp_path):
         import fetch_content as fc
         r = self._stored(tmp_path)
@@ -223,6 +236,134 @@ class TestAuditArticle:
         ca.audit_article(r, fetcher, stored_dir=tmp_path)
         assert seen and seen[0] != before, "the fetch ran in the production content directory"
         assert fc.CONTENT_DIR == before
+
+
+class TestSiteWideLoss:
+    """One withdrawn document is housekeeping; two at once from the same site
+    is the shape of a new gate (man.com added a role wall on 2026-09-15 and
+    every article went at once), so it has to reach a human.
+    """
+    def _r(self, source, finding, i=0):
+        return {"source_id": source, "id": f"{source}{i}", "title": "T", "url": "u",
+                "findings": [finding], "label": finding}
+
+    def test_two_lost_documents_from_one_source_become_an_alert(self):
+        results = [self._r("man-group", "access_denied", 1), self._r("man-group", "access_denied", 2)]
+        ca.mark_site_wide_losses(results)
+        assert all(ca.is_alert(r) for r in results)
+        assert all("site_wide_access_loss" in r["findings"] for r in results)
+
+    def test_a_deleted_page_counts_towards_the_same_signal(self):
+        results = [self._r("man-group", "access_denied", 1), self._r("man-group", "page_gone", 2)]
+        ca.mark_site_wide_losses(results)
+        assert all(ca.is_alert(r) for r in results)
+
+    def test_one_lost_document_stays_informational(self):
+        results = [self._r("blue-owl-capital", "access_denied"), self._r("aqr", "page_gone")]
+        ca.mark_site_wide_losses(results)
+        assert not any(ca.is_alert(r) for r in results)
+
+    def test_losses_at_different_sources_do_not_add_up(self):
+        results = [self._r("aqr", "access_denied"), self._r("gmo", "access_denied")]
+        ca.mark_site_wide_losses(results)
+        assert not any(ca.is_alert(r) for r in results)
+
+    def test_the_run_marks_them(self, monkeypatch, tmp_path):
+        """run_audit must call it -- a helper nothing calls is not a signal."""
+        import fetch_content as fc
+        rows = [_row(1, source="man-group", url="https://www.man.com/a"),
+                _row(2, source="man-group", url="https://www.man.com/b")]
+        content = tmp_path / "content"
+        content.mkdir()
+        for r in rows:
+            (content / f"{r['id']}.txt").write_text(BODY)
+        data = tmp_path / "articles.jsonl"
+        data.write_text("\n".join(json.dumps(r) for r in rows))
+        monkeypatch.setattr(ca, "DATA_FILE", data)
+        monkeypatch.setattr(ca, "SOURCES_FILE", tmp_path / "sources.json")
+        (tmp_path / "sources.json").write_text(json.dumps({"sources": [{"id": "man-group"}]}))
+        monkeypatch.setattr(ca, "BASE_DIR", tmp_path)
+        monkeypatch.setattr(fc, "CONTENT_DIR", content)
+
+        def fetcher_for(article):
+            def fetcher(a):
+                fc.note_failure_hint("access_denied", "HTTP 403 (site's own page)")
+                return None
+            return fetcher
+
+        monkeypatch.setattr(fc, "content_fetcher_for", fetcher_for)
+        results, _ = ca.run_audit(per_source=2)
+        assert len(results) == 2 and all(ca.is_alert(r) for r in results)
+
+
+class TestMarkGone:
+    """--mark-gone stamps url_status on rows whose original the publisher took
+    down, so the dashboard can say so. It is human-triggered and evidence-gated:
+    the page is fetched first and only page_gone / access_denied is accepted,
+    because a stamp on a live article would put a false "removed" on the page.
+    """
+    def _data(self, tmp_path, rows):
+        f = tmp_path / "articles.jsonl"
+        f.write_text("\n".join(json.dumps(r) for r in rows) + "\n")
+        return f
+
+    def _fetcher(self, hint):
+        def factory(article):
+            def fetcher(a):
+                import fetch_content as fc
+                if hint:
+                    fc.note_failure_hint(hint, "checked")
+                    return None
+                p = fc.CONTENT_DIR / f"{a['id']}.txt"; p.write_text(BODY)
+                fc._extraction_paths.append("primary")
+                return (p, "ok")
+            return fetcher
+        return factory
+
+    def _run(self, tmp_path, monkeypatch, hint, ids=None, capsys=None):
+        import fetch_content as fc
+        row = _row(1, source="research-affiliates", url="https://www.syzygyassetmanagement.com/x")
+        data = self._data(tmp_path, [row])
+        monkeypatch.setattr(ca, "DATA_FILE", data)
+        monkeypatch.setattr(fc, "content_fetcher_for", self._fetcher(hint))
+        monkeypatch.setattr(sys, "argv", ["content_audit.py", "--mark-gone", *(ids or [row["id"]])])
+        rc = ca.main()
+        return rc, json.loads(data.read_text().splitlines()[0])
+
+    @pytest.mark.parametrize("hint", ["page_gone", "access_denied"])
+    def test_a_page_the_publisher_removed_is_stamped(self, tmp_path, monkeypatch, hint):
+        rc, row = self._run(tmp_path, monkeypatch, hint)
+        assert rc == 0 and row["url_status"] == "gone"
+        assert row["url_checked_at"] and row["url_note"].startswith(hint)
+
+    def test_a_live_article_is_refused_for_being_alive(self, tmp_path, monkeypatch, capsys):
+        """Refused by the first gate, and it must say so: "the page still
+        serves an article" is a different thing to check than a label that
+        happens not to be a takedown."""
+        rc, row = self._run(tmp_path, monkeypatch, None)
+        assert rc == 1 and "url_status" not in row
+        assert "still serves an article" in capsys.readouterr().out
+
+    def test_a_transient_failure_is_refused(self, tmp_path, monkeypatch):
+        """A timeout is not a takedown."""
+        rc, row = self._run(tmp_path, monkeypatch, "fetch_error")
+        assert rc == 1 and "url_status" not in row
+
+    def test_an_unknown_id_is_refused_and_writes_nothing(self, tmp_path, monkeypatch):
+        rc, row = self._run(tmp_path, monkeypatch, "page_gone", ids=["nope"])
+        assert rc == 1 and "url_status" not in row
+
+    def test_the_other_rows_are_left_byte_identical(self, tmp_path, monkeypatch):
+        import fetch_content as fc
+        rows = [_row(1, source="research-affiliates", url="https://www.syzygyassetmanagement.com/x"),
+                _row(2, source="aqr")]
+        data = self._data(tmp_path, rows)
+        before = data.read_text().splitlines()[1]
+        monkeypatch.setattr(ca, "DATA_FILE", data)
+        monkeypatch.setattr(fc, "content_fetcher_for", self._fetcher("page_gone"))
+        monkeypatch.setattr(sys, "argv", ["content_audit.py", "--mark-gone", rows[0]["id"]])
+        assert ca.main() == 0
+        assert data.read_text().splitlines()[1] == before
 
 
 class TestReportAndEmail:

@@ -620,10 +620,21 @@ def _article_card(a: dict, show_takeaway: bool = False) -> tuple[str, dict | Non
     # prefer the original label when it carries no day.
     display_date = _display_date(a)
 
+    # The publisher withdrew the original (research-affiliates unpublished 8
+    # pieces; blue-owl refuses one). The body and summary stay -- they were
+    # fetched when the page was live -- but the headline must not 404 without
+    # warning. Stamped by scripts/content_audit.py --mark-gone, which checks
+    # the page first.
+    gone_marker = ('<span class="gone-note" title="The publisher removed the original page">'
+                   '<span class="lang-en">original removed</span>'
+                   '<span class="lang-zh" style="display:none">原文已下架</span></span>'
+                   ) if a.get("url_status") == "gone" else ""
+
     html = f"""<div class="row-main">
     <span class="badge" style="background:{color}">{source_name}</span>
     <span class="date">{_esc(display_date)}</span>
     <a class="headline" href="{url}" target="_blank" rel="noopener">{title}</a>
+    {gone_marker}
     <span class="row-spacer"></span>
     {toggle}
   </div>
@@ -1159,6 +1170,8 @@ body.hide-older article.pool-article[data-age="older"] {{ display: none !importa
   background: rgba(15,23,39,0.9);
 }}
 .cluster-head h2 {{ margin: 0; font-size: 1.05rem; letter-spacing: 0.02em; }}
+.gone-note {{ color: var(--text-muted); font-size: 0.72rem; border: 1px solid var(--border);
+  border-radius: 999px; padding: 1px 7px; margin-left: 6px; white-space: nowrap; }}
 .cluster-extra {{ color: var(--text-muted); font-weight: 400; font-size: 0.75rem; margin-left: 4px; }}
 .cluster-count {{ color: var(--text-muted); font-weight: 400; font-size: 0.8rem; margin-left: 6px; }}
 .cluster-meta {{ color: var(--text-muted); font-size: 0.76rem; margin-top: 2px; }}

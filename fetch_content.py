@@ -1031,6 +1031,10 @@ def _fetch_content_jpmam(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+# The disclaimer block Apollo appends to every insight page.
+_APOLLO_BOILERPLATE_PREFIXES = ("The information herein is provided for educational purposes only",)
+
+
 def _fetch_content_apollo(article: dict) -> Optional[tuple[Path, str]]:
     """Fetch Apollo Global Management article content via requests (SSR — AEM .cmp-text)."""
     url = article["url"]
@@ -1043,14 +1047,32 @@ def _fetch_content_apollo(article: dict) -> Optional[tuple[Path, str]]:
         log.error("  Apollo: fetch failed: %s", e)
         return None
 
-    text = _normalize_html(resp.text, ".cmp-text p")
+    # Drop the standard disclaimer block BEFORE extracting. It is ~4,200 chars
+    # and on some pages it holds the only <p> tags, so ".cmp-text p" returned
+    # the disclaimer, passed the length check, and was stored as the article
+    # ("The Financing Gap in Sports", 2026-08-11 -- declined as
+    # disclaimer_only). A length check cannot catch that; removing the block
+    # can. Same move as verdad's Mailchimp footer.
+    soup = BeautifulSoup(resp.text, "html.parser")
+    for block in soup.select(".cmp-text"):
+        if block.get_text(" ", strip=True).startswith(_APOLLO_BOILERPLATE_PREFIXES):
+            block.decompose()
+    cleaned = str(soup)
+
+    text = _normalize_html(cleaned, ".cmp-text p")
+
+    if not _check_min_content_length(text, APOLLO_MIN_CONTENT):
+        # Written as a lead heading plus a "Key Takeaways" list: no <p> at all
+        # once the disclaimer is gone, so read the blocks themselves.
+        blocks = _normalize_html(cleaned, ".cmp-text")
+        if len(blocks) > len(text):
+            text = blocks
 
     if not _check_min_content_length(text, APOLLO_MIN_CONTENT):
         # Whitepapers and reports are a short excerpt plus a download button,
         # a custom element (<acl-apollo-button iconType="download" href=".pdf">)
         # rather than an <a>. Episode pages carry none and stay skipped.
-        button = BeautifulSoup(resp.text, "html.parser").select_one(
-            'acl-apollo-button[icontype="download"][href*=".pdf"]')
+        button = soup.select_one('acl-apollo-button[icontype="download"][href*=".pdf"]')
         pdf_text = _linked_article_pdf(button, url, article.get("title", ""), "Apollo")
         if pdf_text:
             text = pdf_text
@@ -2192,6 +2214,7 @@ def fetch_with_evidence(article: dict, fetcher) -> tuple[Optional[tuple[Path, st
             responses.append({"status": resp.status_code, "url": url, "final_url": resp.url,
                               "content_type": ctype,
                               "challenge": failure_labels.looks_like_challenge(body[:50000]),
+                              "links": failure_labels.count_links(body),
                               "media_player": failure_labels.has_media_player(body)})
         except Exception:
             pass
