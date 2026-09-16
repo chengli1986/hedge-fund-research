@@ -359,6 +359,16 @@ def _call_anthropic(prompt: str, api_key: str, model: str = "claude-sonnet-4-6")
 # Analysis helpers
 # ---------------------------------------------------------------------------
 
+# This file's fingerprint, stamped on every decline our own rules make (see
+# _should_analyze). Same idea as fetch_content.CODE_VERSION.
+CODE_VERSION = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()[:12]
+
+# The only decline a code change can invalidate: the model produced a summary
+# and check_grounding rejected it. Everything else is the model saying the text
+# is not an article, and the text will not have changed.
+RULE_MADE_DECLINE = "grounding_failed"
+
+
 def _should_analyze(article: dict) -> bool:
     """Return True if article is eligible for analysis."""
     if article.get("summarized"):
@@ -366,9 +376,12 @@ def _should_analyze(article: dict) -> bool:
     if article.get("content_status") not in ("ok", "metadata_only"):
         return False
     # Declined or rejected once: the text will not have changed by tomorrow,
-    # and re-asking every night is how a model eventually says yes.
+    # and re-asking every night is how a model eventually says yes. The one
+    # exception is a rejection this file's own rules made: when those rules
+    # change, the articles they rejected get one more run under the new rules.
     if article.get("analysis_status") == INSUFFICIENT:
-        return False
+        return (article.get("analysis_label") == RULE_MADE_DECLINE
+                and article.get("analysis_code_version") != CODE_VERSION)
     return True
 
 
@@ -509,6 +522,23 @@ _NOT_AN_ARTICLE = re.compile(
 )
 
 
+# The wording rule alone means the model read the article and wrote about
+# "the provided text" (franklin-templeton 2026-09-16, a real 9,287-char
+# article). Asking once for the same summary without that framing keeps the
+# article; the instruction repeats the refusal so a page that really has no
+# article can still be declined, and check_grounding runs again on the answer.
+_WORDING_PROBLEM = "describes its input"
+_WORDING_RETRY_INSTRUCTION = """
+
+IMPORTANT -- your previous answer was rejected: it wrote about the input
+("the provided text", "the document contains no ...") instead of about the
+subject. Write the summary about the subject matter itself, never referring to
+the text, the page, the document or the article as such. Do not add anything
+that is not in the text. If the text genuinely holds no article to summarise,
+answer {"insufficient_content": true, "reason": "<what the text actually is>"}
+instead of summarising it."""
+
+
 def _content_words(text: str) -> set[str]:
     return {w[:_COVERAGE_STEM] for w in re.findall(r"[a-z]{4,}", (text or "").lower())
             if w not in _COVERAGE_STOPWORDS}
@@ -537,7 +567,7 @@ def check_grounding(result: dict, content: str) -> list[str]:
         problems.append(f"speculates about the article ({hit!r})")
     if _NOT_AN_ARTICLE.search(en) or _NOT_AN_ARTICLE.search(zh):
         hit = (_NOT_AN_ARTICLE.search(en) or _NOT_AN_ARTICLE.search(zh)).group(0)
-        problems.append(f"describes its input, not an article ({hit!r})")
+        problems.append(f"{_WORDING_PROBLEM}, not an article ({hit!r})")
 
     if _mostly_latin(content):
         words = _content_words(str(result.get("summary_en") or ""))
@@ -591,6 +621,16 @@ def _analyze_with_fallback(
         "gemini-2.5-flash": ("GEMINI_API_KEY", partial(_call_gemini, model="gemini-2.5-flash")),
     }
 
+    def call(model_prompt: str, caller, api_key: str):
+        """One model call: raw -> parsed, booked at the HTTP boundary."""
+        raw_text, usage, used_model = caller(model_prompt, api_key)
+        parsed = _parse_llm_output(raw_text)
+        # Book the call here -- a response that fails to parse burned the same
+        # tokens as one that succeeds. An exception never got a usage payload,
+        # so it books nothing: inventing a zero row would be fabricating data.
+        _append_usage_log(article_id, used_model, usage, parsed=parsed is not None)
+        return parsed, usage, used_model
+
     for model_name in MODEL_CHAIN:
         key_name, caller = model_to_caller[model_name]
         api_key = api_keys.get(key_name)
@@ -601,21 +641,26 @@ def _analyze_with_fallback(
         for attempt in range(1, MAX_ATTEMPTS + 1):
             try:
                 log.info("  Trying %s (attempt %d/%d)", model_name, attempt, MAX_ATTEMPTS)
-                raw_text, usage, used_model = caller(prompt, api_key)
-                parsed = _parse_llm_output(raw_text)
-                # Book the call here, at the HTTP boundary -- a response that
-                # fails to parse burned the same tokens as one that succeeds,
-                # and gemini-2.5-pro 503s (then retries) every few days.  An
-                # exception never got a usage payload, so it books nothing:
-                # inventing a zero row would be fabricating data.
-                _append_usage_log(article_id, used_model, usage,
-                                  parsed=parsed is not None)
+                parsed, usage, used_model = call(prompt, caller, api_key)
                 if parsed is not None:
                     # A decline or a rejected summary is final: the next tier
                     # would get the same text, and a weaker model is the one
                     # likelier to invent an answer that happens to pass.
                     if not parsed.get("insufficient_content"):
                         problems = check_grounding(parsed, content[:MAX_CONTENT_CHARS])
+                        if problems and all(p.startswith(_WORDING_PROBLEM) for p in problems):
+                            # Wording only: the summary's content words are in
+                            # the article. One re-ask of the same model, which
+                            # may still decline; anything else it returns is
+                            # checked again below.
+                            log.warning("  %s: %s -- re-asking once without the input framing",
+                                        model_name, "; ".join(problems))
+                            retry, retry_usage, retry_model = call(
+                                prompt + _WORDING_RETRY_INSTRUCTION, caller, api_key)
+                            if retry is not None:
+                                parsed, usage, used_model = retry, retry_usage, retry_model
+                                problems = ([] if parsed.get("insufficient_content")
+                                            else check_grounding(parsed, content[:MAX_CONTENT_CHARS]))
                         if problems:
                             log.warning("  %s: summary rejected by grounding check: %s",
                                         model_name, "; ".join(problems))
@@ -740,6 +785,7 @@ def _record_insufficient(article: dict, result: dict) -> None:
     article["analysis_label"] = failure_labels.classify_analysis_decline(article["analysis_reason"])
     article["analysis_model"] = result.get("_model")
     article["analysis_checked_at"] = datetime.now(BJT).isoformat(timespec="seconds")
+    article["analysis_code_version"] = CODE_VERSION
     for field in _SUMMARY_FIELDS:
         article.pop(field, None)
     article["themes"] = []
@@ -823,6 +869,7 @@ def main() -> int:
             a.pop("analysis_status", None)
             a.pop("analysis_reason", None)
             a.pop("analysis_label", None)
+            a.pop("analysis_code_version", None)
             a["analysis_model"] = result["_model"]
             if is_metadata:
                 a["analysis_confidence"] = "low"

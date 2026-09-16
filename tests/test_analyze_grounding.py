@@ -261,6 +261,152 @@ class TestFallbackChainOnDecline:
         assert out["summary_en"] == self.GROUNDED["summary_en"]
 
 
+class TestWordingOnlyRetry:
+    """2026-09-16: franklin-templeton "The Limit Does Not Exist" -- a real
+    9,287-char article -- was declined because its summary said "the provided
+    text". The wording rule exists for pages that are not articles, and the
+    declines it has to catch are not short (gmo 30,531 chars, franklin 10,061,
+    apollo 4,234), so length cannot tell them apart. Instead: when the wording
+    rule is the ONLY thing that fired -- the summary's own content words are in
+    the article, so the model did read it -- ask the same model once more not
+    to write about its input. The retry prompt still offers the refusal, and
+    the answer is checked again.
+    """
+    GROUNDED = TestGroundingCheckRules.SUMMARY
+    BODY = TestGroundingCheckRules.BODY
+    WORDING = dict(GROUNDED, summary_en="The provided text explains that tax-aware long-short "
+                                        "strategies fund withdrawals from the short book without "
+                                        "liquidating long positions.")
+
+    def _chain(self, monkeypatch, replies):
+        """replies: {model: [reply, ...]} consumed in order."""
+        calls, prompts = [], []
+
+        def fake_openai(prompt, api_key, model="gpt-4.1-mini"):
+            calls.append(model)
+            prompts.append(prompt)
+            queue = replies[model]
+            return (queue.pop(0) if len(queue) > 1 else queue[0], {}, model)
+
+        monkeypatch.setattr(aa, "_call_openai", fake_openai)
+        monkeypatch.setattr(aa, "_call_gemini", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("x")))
+        monkeypatch.setattr(aa, "_append_usage_log", lambda *a, **k: None)
+        return calls, prompts
+
+    def test_a_wording_only_rejection_is_retried_once_with_the_same_model(self, monkeypatch):
+        calls, prompts = self._chain(monkeypatch, {
+            "gpt-5.6-luna": [json.dumps(self.WORDING), json.dumps(self.GROUNDED)],
+            "gpt-4.1-mini": [json.dumps(self.GROUNDED)]})
+        out = aa._analyze_with_fallback(self.BODY, {"OPENAI_API_KEY": "k"})
+        assert not out.get("insufficient_content")
+        assert out["summary_en"] == self.GROUNDED["summary_en"]
+        assert calls == ["gpt-5.6-luna", "gpt-5.6-luna"]
+        assert "provided text" in prompts[1] and prompts[1] != prompts[0]
+
+    def test_the_retry_may_still_decline_and_its_reason_is_kept(self, monkeypatch):
+        """The escape hatch must survive the retry: a page that really is a
+        disclaimer must not be talked into a summary."""
+        calls, _ = self._chain(monkeypatch, {
+            "gpt-5.6-luna": [json.dumps(self.WORDING),
+                             '{"insufficient_content": true, "reason": "legal disclaimer only"}'],
+            "gpt-4.1-mini": [json.dumps(self.GROUNDED)]})
+        out = aa._analyze_with_fallback(self.BODY, {"OPENAI_API_KEY": "k"})
+        assert out["insufficient_content"] is True
+        assert out["reason"] == "legal disclaimer only"
+        assert calls == ["gpt-5.6-luna", "gpt-5.6-luna"]
+
+    def test_a_second_wording_failure_is_final(self, monkeypatch):
+        calls, _ = self._chain(monkeypatch, {
+            "gpt-5.6-luna": [json.dumps(self.WORDING)],
+            "gpt-4.1-mini": [json.dumps(self.GROUNDED)]})
+        out = aa._analyze_with_fallback(self.BODY, {"OPENAI_API_KEY": "k"})
+        assert out["insufficient_content"] is True and "grounding" in out["reason"]
+        assert calls == ["gpt-5.6-luna", "gpt-5.6-luna"]      # retried once, no fall-through
+
+    def test_a_retry_that_fails_to_parse_keeps_the_rejection(self, monkeypatch):
+        calls, _ = self._chain(monkeypatch, {
+            "gpt-5.6-luna": [json.dumps(self.WORDING), "not json at all"],
+            "gpt-4.1-mini": [json.dumps(self.GROUNDED)]})
+        out = aa._analyze_with_fallback(self.BODY, {"OPENAI_API_KEY": "k"})
+        assert out["insufficient_content"] is True and "grounding" in out["reason"]
+        assert calls == ["gpt-5.6-luna", "gpt-5.6-luna"]
+
+    def test_a_coverage_failure_is_not_retried(self, monkeypatch):
+        """Coverage failing means the summary is not in the text at all --
+        asking again for different words is how a fabrication gets published."""
+        case = CASES["fabricated_chart_notes_metlife"]
+        calls, _ = self._chain(monkeypatch, {
+            "gpt-5.6-luna": [json.dumps(_result(case)), json.dumps(self.GROUNDED)],
+            "gpt-4.1-mini": [json.dumps(self.GROUNDED)]})
+        out = aa._analyze_with_fallback(case["content"], {"OPENAI_API_KEY": "k"})
+        assert out["insufficient_content"] is True
+        assert calls == ["gpt-5.6-luna"]
+
+    def test_wording_together_with_another_problem_is_not_retried(self, monkeypatch):
+        both = dict(self.WORDING, key_takeaway_en="The author probably argues for tax awareness.")
+        calls, _ = self._chain(monkeypatch, {
+            "gpt-5.6-luna": [json.dumps(both), json.dumps(self.GROUNDED)],
+            "gpt-4.1-mini": [json.dumps(self.GROUNDED)]})
+        out = aa._analyze_with_fallback(self.BODY, {"OPENAI_API_KEY": "k"})
+        assert out["insufficient_content"] is True
+        assert calls == ["gpt-5.6-luna"]
+
+    def test_the_retry_instruction_still_offers_the_refusal(self):
+        assert "insufficient_content" in aa._WORDING_RETRY_INSTRUCTION
+
+
+class TestRequeueAfterARuleChange:
+    """A decline is permanent -- except the ones our own rule made. When the
+    wording rule was loosened (2026-09-16) the article it had wrongly declined
+    would otherwise have stayed title-only forever. Only grounding_failed is
+    re-queued, once per version of analyze_articles.py; a model's own "this is
+    not an article" stays permanent, because the text has not changed.
+    """
+    def _declined(self, label, code_version):
+        return {"id": "a1", "summarized": False, "content_status": "ok",
+                "analysis_status": aa.INSUFFICIENT, "analysis_label": label,
+                "analysis_reason": "r", "analysis_code_version": code_version}
+
+    def test_a_rule_rejection_from_older_code_is_analysed_again(self):
+        assert aa._should_analyze(self._declined("grounding_failed", "oldversion12")) is True
+
+    def test_a_rule_rejection_from_this_code_is_not(self):
+        assert aa._should_analyze(self._declined("grounding_failed", aa.CODE_VERSION)) is False
+
+    @pytest.mark.parametrize("label", ["title_only", "disclaimer_only", "wrong_document", "duplicate_body"])
+    def test_a_model_decline_is_never_re_queued(self, label):
+        assert aa._should_analyze(self._declined(label, "oldversion12")) is False
+
+    def test_a_decline_records_the_code_version_that_made_it(self):
+        article = {"id": "a1"}
+        aa._record_insufficient(article, {"reason": "failed grounding check: x", "_model": "m"})
+        assert article["analysis_code_version"] == aa.CODE_VERSION
+        assert article["analysis_label"] == "grounding_failed"
+
+    def test_a_later_success_clears_the_stamp(self, tmp_path, monkeypatch):
+        """Otherwise a summarised row keeps a version stamp that means nothing."""
+        art = dict(self._declined("grounding_failed", "oldversion12"), source_id="aqr",
+                   title="T", url="https://x/1", date="2026-09-16")
+        data = tmp_path / "articles.jsonl"
+        data.write_text(json.dumps(art) + "\n")
+        content = tmp_path / "content"
+        content.mkdir()
+        (content / "a1.txt").write_text(TestGroundingCheckRules.BODY)
+        monkeypatch.setattr(aa, "DATA_FILE", data)
+        monkeypatch.setattr(aa, "CONTENT_DIR", content)
+        monkeypatch.setattr(aa, "_load_api_keys", lambda: {"OPENAI_API_KEY": "k"})
+        monkeypatch.setattr(aa, "_analyze_with_fallback",
+                            lambda *a, **k: dict(TestGroundingCheckRules.SUMMARY, _model="m", _usage={}))
+        monkeypatch.setattr(sys, "argv", ["analyze_articles.py"])
+        aa.main()
+        row = json.loads(data.read_text().splitlines()[0])
+        assert row["summarized"] is True and "analysis_code_version" not in row
+        assert "analysis_status" not in row and "analysis_label" not in row
+
+    def test_a_summarised_article_is_not_affected(self):
+        assert aa._should_analyze(dict(self._declined("grounding_failed", "old"), summarized=True)) is False
+
+
 # ── main(): recording, not retrying, not publishing; layer 3 ───────────────
 
 class TestMainRecordsDeclines:
