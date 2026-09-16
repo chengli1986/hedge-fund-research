@@ -26,7 +26,7 @@ import re
 import unicodedata
 import sys
 import time
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, date as date_cls
 from pathlib import Path
 from typing import Optional
 from urllib.parse import urlsplit, urlunsplit, urljoin, urlparse
@@ -62,6 +62,50 @@ HEADERS = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.9",
 }
+
+
+# A later issue at a URL already stored for an earlier one is recognised by a
+# forward date jump of at least this many days. Measured 2026-09-16 on every
+# reused URL in the store: the shortest real gap between consecutive issues is
+# 7 days (mfs week-in-review); the rest are 28-126. A publisher correcting a
+# date moves it by a day or two, which is what this keeps out -- and what the
+# rule used to demand (a changed title AS WELL) silently dropped every issue of
+# a series whose headline never changes.
+ISSUE_MIN_GAP_DAYS = 5
+
+
+# A date that names only a month ("FEB 2026", "2026-02"). parse_date resolves
+# those to the month's LAST day, but rows stored before that convention hold the
+# FIRST -- so the same research-affiliates article reads as a 27-day forward
+# jump. Within one month, a month-granular date is a re-normalisation, never a
+# new issue.
+_MONTH_ONLY_RE = re.compile(r"^(?:[A-Za-z]{3,9}\.?\s+\d{4}|\d{4}-\d{2}|\d{4}年\d{1,2}月)$")
+
+
+def _is_month_granular(row: dict) -> bool:
+    raw = (row.get("date_raw") or "").strip()
+    if raw:
+        return bool(_MONTH_ONLY_RE.match(raw))
+    # No raw string to read (older rows): a stored 1st or month-end is far more
+    # likely a normalised month than a real publication day.
+    parsed = row.get("date") or ""
+    try:
+        d = date_cls.fromisoformat(parsed)
+    except (TypeError, ValueError):
+        return False
+    return d.day == 1 or (d + timedelta(days=1)).day == 1
+
+
+def _date_gap_days(stored_date: str, new_date: str) -> int:
+    """Days from stored_date to new_date; negative if it moved backwards.
+
+    An unparseable date returns 0 (treated as no gap): guessing an issue out of
+    a date we cannot read is how a duplicate gets minted.
+    """
+    try:
+        return (date_cls.fromisoformat(new_date) - date_cls.fromisoformat(stored_date)).days
+    except (TypeError, ValueError):
+        return 0
 
 
 def article_id(source_id: str, url: str, issue_date: str | None = None) -> str:
@@ -3671,13 +3715,42 @@ def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False,
             # the series page (/articles/series/from-the-market-desk) and its
             # monthly posts reuse a path (.../global-macro-insights). Hashing the
             # URL alone made every later issue look stored -- three were being
-            # dropped on 2026-09-14. A listing whose title AND date both differ
-            # from the stored article at that URL is a new issue; an edited
-            # title or a corrected date alone is still the same article.
+            # dropped on 2026-09-14.
+            #
+            # Until 2026-09-16 a new issue had to differ in BOTH title and date,
+            # so a series with a stable headline ("Weekly Market Update", every
+            # week) was dropped forever, silently, while the source still
+            # reported "10 articles found, 0 new". A dropped issue is invisible
+            # and permanent; a wrongly ingested one is visible and stage 3
+            # already refuses to publish a body it has published before
+            # (duplicate_body). So a date that moved FORWARD is a new issue
+            # whatever the title says, a date that moved backwards is still read
+            # as a correction, and every skip says why.
             stored = stored_by_id.get(aid)
             date = art.get("date")
-            if not (stored and date and stored.get("date") and date != stored.get("date")
-                    and _title_key(art.get("title", "")) != _title_key(stored.get("title", ""))):
+            title_changed = bool(stored and _title_key(art.get("title", ""))
+                                 != _title_key(stored.get("title", "")))
+            stored_date = (stored or {}).get("date")
+            skip_reason = ""
+            if not stored:
+                skip_reason = "already stored"
+            elif not date:
+                skip_reason = "listing row has no date, so there is no issue key to store it under"
+            elif not stored_date:
+                skip_reason = "the stored article has no date to compare against"
+            elif date == stored_date:
+                skip_reason = ("same date as the stored article — an edited title is still that article"
+                               if title_changed else "same title and same date")
+            elif (not title_changed and stored_date[:7] == date[:7]
+                    and (_is_month_granular(stored) or _is_month_granular(art))):
+                skip_reason = (f"same month ({date[:7]}) and the date is month-granular "
+                               f"({stored_date} -> {date}) — a re-normalised date, not a new issue")
+            elif not title_changed and _date_gap_days(stored_date, date) < ISSUE_MIN_GAP_DAYS:
+                skip_reason = (f"same title and the date moved {stored_date} -> {date}, under the "
+                               f"{ISSUE_MIN_GAP_DAYS}-day issue gap — read as a correction")
+            if skip_reason:
+                log.info("  %s: skipped %r at %s -- %s", source_id, art.get("title", ""),
+                         art["url"], skip_reason)
                 continue
             aid = article_id(source_id, art["url"], issue_date=date)
             if aid in existing_ids:
