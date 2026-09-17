@@ -557,6 +557,37 @@ def _display_date(a: dict) -> str:
     return a.get("date") or ""
 
 
+def _effective_date(a: dict, today: str) -> str:
+    """The date the page should order and count an article by.
+
+    parse_date resolves a month-granularity label ("September 2026") to the
+    month's LAST day so staleness checks do not fire ~30 days early. Ordering
+    on that value parks such a piece above every genuinely newer article until
+    the month ends -- 22 stored rows sat in the future on 2026-09-17 (audit
+    B7). fetched_at, the moment we first saw the row, is a much better estimate
+    for those, and nothing can be newer than today, so: the earliest of the
+    three.
+    """
+    date = (a.get("date") or "").strip()
+    if not date:
+        return ""
+    candidates = [date, today]
+    fetched = (a.get("fetched_at") or "")[:10]
+    if len(fetched) == 10:
+        candidates.append(fetched)
+    return min(candidates)
+
+
+def _dateable(a: dict, today: str) -> bool:
+    """Whether we can say when this article appeared at all.
+
+    A stored date in the future with no fetched_at is a label we cannot place:
+    counting it as new, or letting it set "data through", claims knowledge we
+    do not have. Ordering still shows it (capped at today); the counts skip it.
+    """
+    return (a.get("date") or "") <= today or bool(a.get("fetched_at"))
+
+
 def _slugify_theme(theme: str) -> str:
     """Convert a theme label into a stable DOM-safe slug."""
     slug = "".join(ch.lower() if ch.isalnum() else "-" for ch in theme)
@@ -649,9 +680,10 @@ def generate_html(articles: list[dict]) -> str:
     now = datetime.now(BJT).strftime("%Y-%m-%d %H:%M BJT")
 
     # Sort by date descending
+    today_str = datetime.now(BJT).strftime("%Y-%m-%d")
     sorted_articles = sorted(
         articles,
-        key=lambda a: a.get("date") or "1970-01-01",
+        key=lambda a: _effective_date(a, today_str) or "1970-01-01",
         reverse=True,
     )
 
@@ -674,26 +706,34 @@ def generate_html(articles: list[dict]) -> str:
     # Upper bound matters: month-granularity dates normalise to the month end,
     # so without it the current month's articles all counted as "new this week"
     # (46 shown vs 41 real, 2026-08-10 audit).
-    today_str = datetime.now(BJT).strftime("%Y-%m-%d")
-    new_this_week = sum(
-        1 for a in sorted_articles
-        if week_ago <= (a.get("date") or "") <= today_str
-    )
+    def _is_new(a: dict) -> bool:
+        """One definition, used by the header count and the cluster badges.
+
+        They had two: the header capped at today and the badge did not, so a
+        month-end date made the same article new in one place and not the
+        other.
+        """
+        return _dateable(a, today_str) and week_ago <= _effective_date(a, today_str) <= today_str
+
+    new_this_week = sum(1 for a in sorted_articles if _is_new(a))
     production_source_count = len(sources)
 
     # The header used to carry only the render time, so a rebuild with no new
     # data claimed today's data. The data date is the newest article on the
     # page, capped at today: month-granularity dates normalise to the month
     # end, which is how "new this week" once counted 46 against 41 real.
-    data_through = max((a.get("date") or "" for a in sorted_articles
-                        if (a.get("date") or "") <= today_str), default="") or "n/a"
+    # A row whose stored date is in the future and that carries no fetched_at
+    # cannot be dated at all: counting it would make the header claim data we
+    # do not have. Everything else reports its effective date.
+    data_through = max((_effective_date(a, today_str) for a in sorted_articles
+                        if _dateable(a, today_str)), default="") or "n/a"
 
     # Recency split: articles older than RECENT_DAYS days are tagged data-age="older"
     # so CSS (body.hide-older …) can fold them by default. Empty/unparseable dates
     # default to "recent" (safer: visible, not silently hidden).
     older_cutoff = (datetime.now(BJT) - timedelta(days=RECENT_DAYS)).strftime("%Y-%m-%d")
     def _age_of(a: dict) -> str:
-        d = a.get("date") or ""
+        d = _effective_date(a, today_str)
         return "older" if d and d < older_cutoff else "recent"
     older_count = sum(1 for a in sorted_articles if _age_of(a) == "older")
 
@@ -809,7 +849,7 @@ def generate_html(articles: list[dict]) -> str:
         ) if also_tagged else ""
         source_set = set(a.get("source_id", "") for a in cluster_arts)
         cross_fund = len(source_set) >= 2
-        new_count = sum(1 for a in cluster_arts if (a.get("date") or "") >= week_ago)
+        new_count = sum(1 for a in cluster_arts if _is_new(a))
         slug = _slugify_theme(theme_name) if theme_name != "General" else "general"
         cross_badge = '<span class="cross-fund-badge">Cross-fund</span>' if cross_fund else ""
         new_badge = f'<span class="new-badge">{new_count} new</span>' if new_count else ""

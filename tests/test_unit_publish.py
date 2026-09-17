@@ -1022,3 +1022,74 @@ class TestDuplicatesAreNotRendered:
     def test_the_owner_survives_alone(self):
         html = generate_html([self.DUPE])
         assert "dup1" not in html
+
+
+class TestFutureDatedArticles:
+    """A month-granular date must not park an article at the top of the page
+    for the rest of the month (audit B7).
+
+    fetch_articles.parse_date resolves "September 2026" to the month's LAST day
+    so staleness checks do not fire ~30 days early. On 2026-09-17 that left 22
+    stored rows dated 2026-09-30 -- man-group, baillie-gifford, troweprice,
+    brookfield, research-affiliates -- and publish.py sorted on that raw value,
+    so a piece labelled only "September 2026" outranked every genuinely newer
+    article until the month ended. _display_date already showed the label
+    rather than the invented day; the ordering never did.
+
+    Every row records fetched_at, the moment we first saw it, which is a far
+    better estimate of when a month-granular piece appeared than the last day
+    of its month. So recency uses min(date, fetched_at, today): an article is
+    never treated as newer than the day it was published, the day we saw it, or
+    today.
+    """
+    def _row(self, i, date, fetched=None, **kw):
+        row = dict(SAMPLE_ARTICLES[0], id=f"f{i}", title=f"Piece {i}", date=date, **kw)
+        if fetched:
+            row["fetched_at"] = fetched
+        return row
+
+    def test_a_month_granular_piece_sorts_by_when_we_saw_it(self):
+        month_end = _date_str(-13)                       # e.g. 2026-09-30 seen on the 2nd
+        seen = _date_str(15)
+        rows = [self._row(1, month_end, fetched=f"{seen}T03:49:32+08:00", date_raw="September 2026"),
+                self._row(2, _date_str(1))]
+        html = generate_html(rows)
+        # By title, not by id: "f1" also occurs inside CSS colour literals.
+        assert html.index("Piece 2") < html.index("Piece 1"), \
+            "a piece dated to the end of the month outranked a genuinely newer article"
+
+    def test_an_ordinary_article_is_unaffected(self):
+        rows = [self._row(1, _date_str(1), fetched=f"{_date_str(0)}T03:00:00+08:00"),
+                self._row(2, _date_str(9), fetched=f"{_date_str(8)}T03:00:00+08:00")]
+        html = generate_html(rows)
+        assert html.index("Piece 1") < html.index("Piece 2")
+
+    def test_a_future_row_without_fetched_at_is_capped_at_today(self):
+        rows = [self._row(1, _date_str(-20), date_raw="September 2026"),
+                self._row(2, _date_str(0))]
+        html = generate_html(rows)
+        head = html[html.index('<div class="stats">'):][:600]
+        assert _date_str(-20) not in head
+
+    def test_a_future_row_is_never_ordered_ahead_of_today(self):
+        """It is excluded from the counts, but it is still rendered, so its
+        ordering key must be capped: an invented date cannot outrank a real
+        one. (Equal keys are left in input order, so this is asserted on the
+        key itself rather than on two positions in the HTML.)"""
+        import publish as publish_mod
+        today = _date_str(0)
+        row = self._row(1, _date_str(-20), date_raw="September 2026")
+        assert publish_mod._effective_date(row, today) == today
+
+    def test_the_two_counts_of_new_agree(self):
+        """The header capped at today and the cluster badge did not, so the
+        same article was 'new this week' in one place and not the other."""
+        import re
+        rows = [self._row(1, _date_str(-13), fetched=f"{_date_str(40)}T03:00:00+08:00",
+                          date_raw="September 2026", themes=["AI/Tech"]),
+                self._row(2, _date_str(2), themes=["AI/Tech"])]
+        html = generate_html(rows)
+        header = re.search(r"(\d+) new this week", html)
+        badge = re.search(r'<span class="new-badge">(\d+) new</span>', html)
+        assert header and int(header.group(1)) == 1, header and header.group(0)
+        assert badge is None or int(badge.group(1)) == 1, badge and badge.group(0)
