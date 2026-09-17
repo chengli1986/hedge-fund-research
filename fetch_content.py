@@ -23,6 +23,7 @@ import json
 from urllib.parse import urljoin, urlsplit
 import logging
 import os
+import sys
 import re
 import tempfile
 import time
@@ -2355,7 +2356,17 @@ def mark_content_failure(article: dict, max_attempts: int = MAX_CONTENT_ATTEMPTS
     return article["content_status"]
 
 
-def main() -> None:
+# A night where this many articles were queued and not one could be fetched is
+# not an ordinary night: it is DNS, a shared CDN blocking us, or a bug in our
+# own extraction. Below it, failures are the fetcher-health email's business --
+# the observed runs have had 1, 14, 18, 20, 21 and 25 articles pending, and a
+# single queued article failing because one site is down happens often.
+# A judgement, not a measurement: there is no history of all-failed nights to
+# fit a number to. Do not cite it as measured.
+CONTENT_OUTAGE_MIN_PENDING = 5
+
+
+def main() -> int:
     parser = argparse.ArgumentParser(description="Hedge Fund Research — Content Fetcher")
     parser.add_argument("--source", help="Fetch content for this source ID only")
     parser.add_argument("--dry-run", action="store_true", help="Show what would be fetched")
@@ -2415,6 +2426,16 @@ def main() -> None:
           f" | Retired(permafail): {permafail_count}")
     print()
 
+    # Stage 1 and stage 3 both fail the run when nothing at all worked; stage 2
+    # used to have no exit code at all, so the pipeline reported "all stages OK"
+    # after a night that fetched nothing (audit A1).
+    if len(pending) >= CONTENT_OUTAGE_MIN_PENDING and success_count == 0:
+        log.error("TOTAL CONTENT OUTAGE: %d article(s) pending, not one fetched", len(pending))
+        return 1
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    # sys.exit, not a bare call: main()'s return value was discarded, so the
+    # process exited 0 however the run went.
+    sys.exit(main() or 0)
