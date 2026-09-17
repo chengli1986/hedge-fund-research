@@ -210,6 +210,24 @@ def get_source_url(source: dict, entrypoints: dict) -> str:
     return source["url"]
 
 
+def _preserve_unreadable_state() -> None:
+    """Copy an unreadable inspection_state.json aside before it is replaced.
+
+    Never raises: this runs inside instrumentation that must not be able to
+    kill the pipeline it measures.
+    """
+    try:
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+        backup = INSPECTION_STATE_FILE.with_name(f"{INSPECTION_STATE_FILE.name}.corrupt-{stamp}")
+        backup.write_bytes(INSPECTION_STATE_FILE.read_bytes())
+        log.error("STATE FILE UNREADABLE: %s could not be parsed; kept a copy at %s. Every "
+                  "source's consecutive_zero_count restarts from this run -- silence alerts "
+                  "are delayed until the streaks rebuild.", INSPECTION_STATE_FILE, backup.name)
+    except OSError as exc:
+        log.error("STATE FILE UNREADABLE: %s could not be parsed, and the copy failed too (%s)",
+                  INSPECTION_STATE_FILE, exc)
+
+
 def record_quality_metrics(source_id: str, total_found: int, new_count: int,
                            gated_count: int, mismatch_count: int,
                            dry_run: bool = False) -> None:
@@ -231,6 +249,15 @@ def record_quality_metrics(source_id: str, total_found: int, new_count: int,
     fetch_content._atomic_write.  A plain write_text truncates in place, and a
     kill mid-write leaves a partial file that the read below turns into
     `state = {}` -- silently resetting consecutive_zero_count for every source.
+
+    That reset is audit finding B4: this function used to answer an unreadable
+    file by starting an empty dict and writing its own source back as the WHOLE
+    file, so one bad read deleted 41 other sources' zero streaks and pushed
+    their alerts back by as many nights.  It cannot refuse to write instead --
+    the fleet would record nothing until a human noticed -- so it keeps a
+    timestamped copy of the bad file (evidence, and the counters can be read
+    back out of it by hand), says so at ERROR, and carries on.  The daily
+    health check reports the copies, because a log line is not a destination.
     """
     if dry_run:
         log.debug("  dry run: not recording quality metrics for %s", source_id)
@@ -245,6 +272,10 @@ def record_quality_metrics(source_id: str, total_found: int, new_count: int,
             return
         except json.JSONDecodeError:
             state = {}
+        if not isinstance(state, dict):
+            state = {}
+        if not state:
+            _preserve_unreadable_state()
 
     prev = state.get(source_id, {})
     consecutive_zero = prev.get("consecutive_zero_count", 0)

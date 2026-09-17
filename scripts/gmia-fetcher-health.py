@@ -686,6 +686,21 @@ ARTICLES_FILE = BASE_DIR / "data" / "articles.jsonl"
 DECLINE_SAMPLE_REASONS = 2
 
 
+def corrupt_state_backups(path=None) -> list:
+    """Copies fetch_articles kept of an unreadable inspection_state.json.
+
+    Each one means a night where every source's consecutive_zero_count
+    restarted, so silence alerts were delayed until the streaks rebuilt
+    (audit B4). They stay on disk until a human has looked; reporting them is
+    how anyone learns they exist. Never raises.
+    """
+    try:
+        state_file = Path(path) if path else INSPECTION_STATE_FILE
+        return sorted(p.name for p in state_file.parent.glob(f"{state_file.name}.corrupt-*"))
+    except Exception:
+        return []
+
+
 def store_damage(path=None) -> int:
     """Rows in the article store that will not parse.
 
@@ -867,7 +882,8 @@ def pipeline_did_not_run(state_path=None) -> bool:
 
 def should_email(alerts: dict, zero_fetches: list, pipeline_stale: bool = False,
                  declines: list | None = None, quality: dict | None = None,
-                 intake: list | None = None, damaged_rows: int = 0) -> bool:
+                 intake: list | None = None, damaged_rows: int = 0,
+                 corrupt_state: list | None = None) -> bool:
     """Whether this run has anything worth sending.
 
     zero_fetches is part of the condition, not just part of the body: the email
@@ -876,6 +892,7 @@ def should_email(alerts: dict, zero_fetches: list, pipeline_stale: bool = False,
     """
     return bool(alerts["failing"] or alerts["warning"] or alerts["recovered"]
                 or zero_fetches or pipeline_stale or declines or intake or damaged_rows
+                or corrupt_state
                 or (quality is not None and quality.get("alerts")))
 
 
@@ -936,6 +953,7 @@ def render_html_email(
     quality: dict | None = None,
     intake: list | None = None,
     damaged_rows: int = 0,
+    corrupt_state: list | None = None,
 ) -> str:
     """HTML body with same visual idiom as gmia-trial-manager email."""
     sources_state = state.get("sources", {})
@@ -1022,6 +1040,15 @@ def render_html_email(
         )
         sections.append(section_table(
             f"📉 PIPELINE FETCHED NOTHING ({len(zero_fetches)})", "#9a6700", zero_rows))
+    if corrupt_state:
+        state_rows = "".join(
+            f'<tr><td style="padding:8px">{html.escape(name)}</td></tr>' for name in corrupt_state)
+        sections.append(section_table(
+            f"🗃️ STATE FILE WAS UNREADABLE ({len(corrupt_state)})", "#cf222e",
+            state_rows +
+            '<tr><td style="padding:8px">config/inspection_state.json could not be parsed, so every '
+            "source's consecutive_zero_count restarted that night and silence alerts were delayed. "
+            'The copies hold the old counters; delete them once checked.</td></tr>'))
     if damaged_rows:
         sections.append(section_table(
             f"🧨 DAMAGED ROWS ({damaged_rows})", "#cf222e",
@@ -1099,7 +1126,7 @@ def send_email(html_body: str, summary_subject: str, to: str | None = None) -> b
 def alerts_subject(alerts: dict, zero_fetches: list | None = None,
                    pipeline_stale: bool = False, declines: list | None = None,
                    quality: dict | None = None, intake: list | None = None,
-                   damaged_rows: int = 0) -> str:
+                   damaged_rows: int = 0, corrupt_state: list | None = None) -> str:
     """Subject line. Must name every condition that caused the send.
 
     zero_fetches is a send condition on its own, and it is the ONLY one that
@@ -1123,6 +1150,8 @@ def alerts_subject(alerts: dict, zero_fetches: list | None = None,
         parts.append(f"📉 {len(zero_fetches)} fetched nothing ({ids}{more})")
     if pipeline_stale:
         parts.append(f"⛔ pipeline recorded nothing in {ZERO_FETCH_FRESH_HOURS}h")
+    if corrupt_state:
+        parts.append(f"🗃️ state file was unreadable ({len(corrupt_state)} copy/copies)")
     if damaged_rows:
         parts.append(f"🧨 {damaged_rows} damaged row(s) in articles.jsonl")
     if intake:
@@ -1290,6 +1319,7 @@ def main() -> int:
     zero_fetches = pipeline_zero_fetches()
     intake = pipeline_intake_anomalies()
     damaged_rows = store_damage()
+    corrupt_state = corrupt_state_backups()
     pipeline_stale = pipeline_did_not_run()
     if pipeline_stale:
         print(f"⛔ the last pipeline run recorded nothing in the past "
@@ -1336,24 +1366,24 @@ def main() -> int:
 
     email_failed = False
     needs_alert = should_email(alerts, zero_fetches, pipeline_stale, declines=declines,
-                               quality=quality, intake=intake, damaged_rows=damaged_rows)
+                               quality=quality, intake=intake, damaged_rows=damaged_rows, corrupt_state=corrupt_state)
     if args.test_email:
         html_body = render_html_email(per_source, alerts, next_state, total_runtime_s,
                                       zero_fetches=zero_fetches, pipeline_stale=pipeline_stale,
                                       declines=declines, quality=quality, intake=intake,
-                                      damaged_rows=damaged_rows)
+                                      damaged_rows=damaged_rows, corrupt_state=corrupt_state)
         subject = alerts_subject(alerts, zero_fetches, pipeline_stale, declines=declines,
-                                 quality=quality, intake=intake, damaged_rows=damaged_rows)
+                                 quality=quality, intake=intake, damaged_rows=damaged_rows, corrupt_state=corrupt_state)
         email_failed = not send_email(html_body, f"[测试] {subject}", to=args.test_email)
     elif args.email and needs_alert and not args.dry_run:
         html_body = render_html_email(per_source, alerts, next_state, total_runtime_s,
                                       zero_fetches=zero_fetches,
                                       pipeline_stale=pipeline_stale,
                                       declines=declines, quality=quality, intake=intake,
-                                      damaged_rows=damaged_rows)
+                                      damaged_rows=damaged_rows, corrupt_state=corrupt_state)
         email_failed = not send_email(
             html_body, alerts_subject(alerts, zero_fetches, pipeline_stale, declines=declines,
-                                      quality=quality, intake=intake, damaged_rows=damaged_rows))
+                                      quality=quality, intake=intake, damaged_rows=damaged_rows, corrupt_state=corrupt_state))
     elif args.email and not needs_alert:
         print("All sources OK and no recoveries — email suppressed.")
 
