@@ -766,6 +766,82 @@ def _published_bodies(articles: list[dict]) -> dict[tuple[str, str], dict]:
     return owners
 
 
+# A re-published document is rarely byte-identical: janus-henderson's "Charts
+# for the beach 2026" came back 13 characters longer than the stored copy and
+# was summarised a second time (2026-09-17). Similarity is measured as Jaccard
+# over 8-character shingles, and ONLY between articles of the same source that
+# carry the same title -- without that, ares' 1,489-char boilerplate-heavy
+# pieces score 0.89 against a dozen unrelated ones, and gmo's quarterly
+# forecasts (one template, different numbers) score 0.90 against each other.
+#
+# Measured on the store, same source + same title:
+#   1.00 loomis monthly update, 1.00 janus chart deck  -> duplicates
+#   0.79 franklin survey page still being filled in    -> kept
+#   0.35 kkr, 0.33 gsam, 0.30 loomis, 0.18 gsam, 0.14 troweprice -> real issues
+# so 0.85 sits far above every genuine issue seen and below both duplicates.
+DUPLICATE_JACCARD = 0.85
+NEAR_DUPLICATE_WATCH = 0.6          # logged and kept, so the borderline stays visible
+SHINGLE = 8
+MIN_COMPARABLE_CHARS = 400          # below this a ratio says nothing
+
+
+def _shingles(text: str) -> set:
+    compact = re.sub(r"[^0-9a-z]", "", (text or "").lower())[:20000]
+    return {compact[i:i + SHINGLE] for i in range(max(len(compact) - SHINGLE + 1, 0))}
+
+
+def _title_key(title: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", (title or "").lower())
+
+
+def published_index(articles: list[dict], bodies: dict[str, str] | None = None) -> dict:
+    """What has already been published, for both duplicate checks.
+
+    bodies is for tests; in production the text comes from each article's
+    stored content file.
+    """
+    index = {"exact": {}, "by_title": {}}
+    for a in articles:
+        if not a.get("summarized"):
+            continue
+        if bodies is not None:
+            text = bodies.get(a.get("id", ""))
+            if text is None:
+                continue
+        else:
+            try:
+                text = _resolve_content_path(a).read_text(encoding="utf-8")
+            except (OSError, ValueError):
+                continue
+        index["exact"].setdefault(_body_key(a.get("source_id", ""), text), a)
+        key = (a.get("source_id", ""), _title_key(a.get("title", "")))
+        index["by_title"].setdefault(key, []).append((a, text))
+    return index
+
+
+def duplicate_owner(index: dict, source_id: str, title: str, text: str) -> dict | None:
+    """The already-published article this body repeats, or None."""
+    owner = index["exact"].get(_body_key(source_id, text))
+    if owner is not None:
+        return owner
+    if len(re.sub(r"\s+", " ", text or "").strip()) < MIN_COMPARABLE_CHARS:
+        return None
+    mine = _shingles(text)
+    if not mine:
+        return None
+    for other, other_text in index["by_title"].get((source_id, _title_key(title)), []):
+        theirs = _shingles(other_text)
+        if not theirs:
+            continue
+        jaccard = len(mine & theirs) / len(mine | theirs)
+        if jaccard >= DUPLICATE_JACCARD:
+            return other
+        if jaccard >= NEAR_DUPLICATE_WATCH:
+            log.info("  near-duplicate kept (jaccard %.2f): %r vs already-published %s",
+                     jaccard, title, other.get("id"))
+    return None
+
+
 def _record_insufficient(article: dict, result: dict) -> None:
     """Mark an article as not summarisable, and remove any older summary.
 
@@ -806,7 +882,7 @@ def main() -> int:
     success_count = 0
     fail_count = 0
     insufficient_count = 0
-    published = _published_bodies(articles)
+    published = published_index(articles)
 
     for a in pending:
         try:
@@ -827,8 +903,7 @@ def main() -> int:
         level = "metadata-only" if is_metadata else "full"
         log.info("Analyzing (%s): %s — %s", level, a.get("source_id", "?"), a.get("title", "?"))
 
-        body_key = _body_key(a.get("source_id", ""), content)
-        owner = published.get(body_key)
+        owner = duplicate_owner(published, a.get("source_id", ""), a.get("title", ""), content)
         if owner is not None and owner.get("id") != a["id"]:
             result = {"insufficient_content": True, "_model": None,
                       "reason": (f"same text as the already-summarised article "
@@ -860,7 +935,11 @@ def main() -> int:
             a["key_takeaway_en"] = result["key_takeaway_en"]
             a["key_takeaway_zh"] = result["key_takeaway_zh"]
             a["summarized"] = True
-            published.setdefault(body_key, a)
+            # Register it so a second copy later in the SAME run is caught too
+            # (both halves: the exact hash and the same-title similarity list).
+            published["exact"].setdefault(_body_key(a.get("source_id", ""), content), a)
+            published["by_title"].setdefault(
+                (a.get("source_id", ""), _title_key(a.get("title", ""))), []).append((a, content))
             a.pop("analysis_status", None)
             a.pop("analysis_reason", None)
             a.pop("analysis_label", None)

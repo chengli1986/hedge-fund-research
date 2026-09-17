@@ -661,6 +661,13 @@ def generate_html(articles: list[dict]) -> str:
     if sources:
         sorted_articles = [a for a in sorted_articles if a.get("source_id") in sources]
 
+    # A body already shown under the article that owns it: stage 3 labelled this
+    # row duplicate_body, and rendering it title-only would put the same
+    # document on the page twice (janus-henderson, 2026-09-17). Every other
+    # decline stays visible -- ark-invest's blocked pages are real articles with
+    # no body, and the user's call on 2026-09-15 was to keep them as title+link.
+    sorted_articles = [a for a in sorted_articles if a.get("analysis_label") != "duplicate_body"]
+
     # Stats
     total = len(sorted_articles)
     week_ago = (datetime.now(BJT) - timedelta(days=7)).strftime("%Y-%m-%d")

@@ -988,3 +988,37 @@ class TestWithdrawnOriginals:
         html = generate_html([self.GONE])
         assert self.GONE["url"] in html
         assert self.GONE["summary_en"] in html
+
+
+class TestDuplicatesAreNotRendered:
+    """A body we already show under another article must not appear twice.
+
+    2026-09-17: janus-henderson's "Charts for the beach 2026" was ingested a
+    second time when its listing date moved, and stage 3's near-duplicate check
+    declined it (analysis_label duplicate_body). Declined articles are still
+    rendered as title-only rows -- right for ark-invest, whose pages are
+    blocked but real, and wrong here: the document is already on the page under
+    the article that owns it.
+    """
+    OWNER = dict(SAMPLE_ARTICLES[0], id="own1", title="Charts for the beach 2026")
+    DUPE = dict(SAMPLE_ARTICLES[0], id="dup1", title="Charts for the beach 2026",
+                summarized=False, analysis_status="insufficient_content",
+                analysis_label="duplicate_body", summary_en="", summary_zh="",
+                key_takeaway_en="", key_takeaway_zh="", themes=[])
+
+    def test_a_duplicate_body_row_is_not_rendered(self):
+        html = generate_html([self.OWNER, self.DUPE])
+        assert html.count("own1") >= 1
+        assert "dup1" not in html
+
+    def test_other_declines_are_still_rendered(self):
+        """ark-invest's blocked pages are real articles with no body; they stay
+        on the page as title and link (the user's 2026-09-15 decision)."""
+        blocked = dict(self.DUPE, id="blk1", title="Blocked piece",
+                       analysis_label="title_only")
+        html = generate_html([self.OWNER, blocked])
+        assert "blk1" in html
+
+    def test_the_owner_survives_alone(self):
+        html = generate_html([self.DUPE])
+        assert "dup1" not in html
