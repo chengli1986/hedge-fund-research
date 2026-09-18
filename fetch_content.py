@@ -2356,14 +2356,23 @@ def mark_content_failure(article: dict, max_attempts: int = MAX_CONTENT_ATTEMPTS
     return article["content_status"]
 
 
-# A night where this many articles were queued and not one could be fetched is
-# not an ordinary night: it is DNS, a shared CDN blocking us, or a bug in our
-# own extraction. Below it, failures are the fetcher-health email's business --
-# the observed runs have had 1, 14, 18, 20, 21 and 25 articles pending, and a
-# single queued article failing because one site is down happens often.
-# A judgement, not a measurement: there is no history of all-failed nights to
-# fit a number to. Do not cite it as measured.
-CONTENT_OUTAGE_MIN_PENDING = 5
+# Stage 2 fails the run when the articles attempted for the FIRST time tonight
+# come from at least this many different sources and nothing at all was
+# fetched. An outage is a shared cause across independent sites (DNS, a CDN
+# blocking us, a bug in our own extraction); one site being down is the
+# fetcher-health email's business.
+#
+# Not a count of pending articles. The first version was "5 or more pending and
+# none fetched", and replayed over all 186 stage-2 runs in
+# logs/fetch_content.log (2026-03-31 .. 2026-09-17) it would have alarmed 14
+# times, every one false: 13 were the May-July retry backlog (5-32 known-bad
+# retries from AQR, Apollo, D. E. Shaw, PineBridge, Robeco..., and not one
+# first attempt that night) and 1 was ten new ARK white papers behind
+# Cloudflare. Failures cluster by source and retries inflate the pending count.
+# This rule, replayed over the same 186 runs: zero alarms. Assuming every first
+# attempt failed on each of the 171 cron nights, it would have fired on 120
+# (70%); the rest had no new article, or new articles from one source only.
+CONTENT_OUTAGE_MIN_SOURCES = 2
 
 
 def main() -> int:
@@ -2377,6 +2386,9 @@ def main() -> int:
     articles = load_articles()
     # Skip articles already fetched, classified terminal, or retired to permafail.
     pending = [a for a in articles if is_content_pending(a, args.source)]
+    # Read before the loop: a failure sets content_attempts, so afterwards
+    # every pending article would look like a retry.
+    first_attempt_sources = {a.get("source_id") for a in pending if not a.get("content_attempts")}
 
     log.info("Found %d articles pending content fetch (of %d total)", len(pending), len(articles))
 
@@ -2429,8 +2441,10 @@ def main() -> int:
     # Stage 1 and stage 3 both fail the run when nothing at all worked; stage 2
     # used to have no exit code at all, so the pipeline reported "all stages OK"
     # after a night that fetched nothing (audit A1).
-    if len(pending) >= CONTENT_OUTAGE_MIN_PENDING and success_count == 0:
-        log.error("TOTAL CONTENT OUTAGE: %d article(s) pending, not one fetched", len(pending))
+    if success_count == 0 and len(first_attempt_sources) >= CONTENT_OUTAGE_MIN_SOURCES:
+        log.error("TOTAL CONTENT OUTAGE: new articles from %d sources (%s) and not one "
+                  "article fetched", len(first_attempt_sources),
+                  ", ".join(sorted(s for s in first_attempt_sources if s)))
         return 1
     return 0
 

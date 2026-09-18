@@ -9,13 +9,25 @@ way it could fail. A night where every content fetch failed (DNS down, a shared
 CDN blocking us, a bug in our own extraction) printed "Pending: 20 | Success: 0"
 and the pipeline still reported "all stages OK".
 
-The floor is deliberately not "any failure": the observed runs have had
-pending counts of 1, 14, 18, 20, 21, 25, and a single pending article failing
-because one site is down is an ordinary night the fetcher-health email already
-reports. CONTENT_OUTAGE_MIN_PENDING is a judgement, not a measurement -- there
-is not enough history of all-failed nights to fit a number to -- so it is set
-where a normal night cannot reach it: five or more articles queued and not one
-of them fetched.
+The floor is not a count. The first version was "5 or more pending and none
+fetched", and replaying it over all 186 stage-2 runs in logs/fetch_content.log
+(2026-03-31 to 2026-09-17) it would have alarmed 14 times -- every one false:
+  · 13 were the May-July retry backlog: 5 to 32 articles pending, all of them
+    known-bad retries (AQR, Apollo, D. E. Shaw, PineBridge, Robeco, ...), and
+    NOT ONE article attempted for the first time that night;
+  · 1 was 2026-03-31: 10 new ARK white papers, all behind Cloudflare -- one
+    blocked source with a backlog.
+Failures cluster by source and retries inflate the pending count, so neither
+says anything about whether tonight's fetching works.
+
+An outage is a shared cause across independent sites. So the rule is: the
+articles attempted for the FIRST time tonight come from at least two different
+sources, and nothing at all was fetched. Replayed over the same 186 runs: zero
+alarms. Sensitivity, by assuming every first attempt failed on each of the 171
+cron nights: it would have fired on 120 (70%); the rest had no new articles
+(34), or new articles from a single source -- nights where an outage loses
+nothing stage 2 can report, and stage 1's own floor catches a network outage
+first anyway.
 """
 import json
 import os
@@ -28,18 +40,20 @@ import fetch_content as fc
 SRC = "aqr"
 
 
-def _art(i, **kw):
-    return dict({"id": f"c{i}", "source_id": SRC, "title": f"T{i}", "url": f"https://www.aqr.com/{i}",
-                 "date": "2026-09-16", "summarized": False}, **kw)
+def _art(i, source=SRC, **kw):
+    return dict({"id": f"c{i}", "source_id": source, "title": f"T{i}",
+                 "url": f"https://www.{source}.example/{i}", "date": "2026-09-16",
+                 "summarized": False}, **kw)
 
 
-def _run(tmp_path, monkeypatch, n, fetcher):
+def _run(tmp_path, monkeypatch, rows, fetcher):
     data = tmp_path / "articles.jsonl"
-    data.write_text("".join(json.dumps(_art(i)) + "\n" for i in range(n)))
+    data.write_text("".join(json.dumps(r) + "\n" for r in rows))
     monkeypatch.setattr(fc, "DATA_FILE", data)
     monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path / "content")
     monkeypatch.setattr(fc, "BASE_DIR", tmp_path)
-    monkeypatch.setitem(fc.CONTENT_FETCHERS, SRC, fetcher)
+    for src in {r["source_id"] for r in rows}:
+        monkeypatch.setitem(fc.CONTENT_FETCHERS, src, fetcher)
     monkeypatch.setattr(sys, "argv", ["fetch_content.py"])
     return fc.main()
 
@@ -56,31 +70,40 @@ def _succeeds(a):
     return (p, "ok")
 
 
-def test_a_night_where_nothing_could_be_fetched_fails_the_stage(tmp_path, monkeypatch):
-    assert _run(tmp_path, monkeypatch, 6, _fails) == 1
+def test_new_articles_from_two_sources_all_failing_fails_the_stage(tmp_path, monkeypatch):
+    rows = [_art(1, "aqr"), _art(2, "gmo")]
+    assert _run(tmp_path, monkeypatch, rows, _fails) == 1
 
 
-def test_one_success_is_not_an_outage(tmp_path, monkeypatch):
-    calls = {"n": 0}
-
-    def mixed(a):
-        calls["n"] += 1
-        return _succeeds(a) if calls["n"] == 1 else _fails(a)
-
-    assert _run(tmp_path, monkeypatch, 6, mixed) in (0, None)
+def test_one_blocked_source_with_a_backlog_is_not_an_outage(tmp_path, monkeypatch):
+    """2026-03-31: ten new ARK white papers, all behind Cloudflare."""
+    rows = [_art(i, "ark-invest") for i in range(10)]
+    assert _run(tmp_path, monkeypatch, rows, _fails) in (0, None)
 
 
-def test_a_handful_of_failures_is_an_ordinary_night(tmp_path, monkeypatch):
-    """One site down with two articles queued is what the health email is for."""
-    assert _run(tmp_path, monkeypatch, 2, _fails) in (0, None)
+def test_a_retry_backlog_across_many_sources_is_not_an_outage(tmp_path, monkeypatch):
+    """May-July: up to 32 known-bad retries from 7 sources, no new article."""
+    rows = [_art(i, src, content_attempts=3, content_status="failed")
+            for i, src in enumerate(["aqr", "apollo", "robeco", "gsam", "matthews", "des", "pinebridge"])]
+    assert _run(tmp_path, monkeypatch, rows, _fails) in (0, None)
+
+
+def test_any_success_means_fetching_works(tmp_path, monkeypatch):
+    """A retry that succeeds proves the network and the extraction both work."""
+    rows = [_art(1, "aqr"), _art(2, "gmo"), _art(3, "robeco", content_attempts=2, content_status="failed")]
+
+    def only_the_retry(a):
+        return _succeeds(a) if a["source_id"] == "robeco" else _fails(a)
+
+    assert _run(tmp_path, monkeypatch, rows, only_the_retry) in (0, None)
 
 
 def test_a_clean_run_returns_zero(tmp_path, monkeypatch):
-    assert _run(tmp_path, monkeypatch, 3, _succeeds) in (0, None)
+    assert _run(tmp_path, monkeypatch, [_art(1, "aqr"), _art(2, "gmo")], _succeeds) in (0, None)
 
 
 def test_an_empty_queue_is_not_an_outage(tmp_path, monkeypatch):
-    assert _run(tmp_path, monkeypatch, 0, _fails) in (0, None)
+    assert _run(tmp_path, monkeypatch, [], _fails) in (0, None)
 
 
 def test_the_module_really_exits_with_mains_return_value(tmp_path):
@@ -116,8 +139,8 @@ def test_the_module_really_exits_with_mains_return_value(tmp_path):
     assert out.returncode == 3, (out.returncode, out.stderr[-300:])
 
 
-def test_the_threshold_is_stated_and_above_a_normal_night():
-    assert fc.CONTENT_OUTAGE_MIN_PENDING >= 3
+def test_the_rule_needs_independent_sources():
+    assert fc.CONTENT_OUTAGE_MIN_SOURCES >= 2
 
 
 def test_the_pipeline_reads_stage_2s_exit_code():
