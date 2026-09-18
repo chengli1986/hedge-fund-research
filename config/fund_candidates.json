@@ -3415,10 +3415,10 @@
     "fit_score": 0.97,
     "last_validated_at": "2026-08-18T09:00:19.754475+08:00",
     "quality": "MEDIUM",
-    "quality_score": 0.58,
+    "quality_score": 0.55,
     "topics": "fixed income, equity, macro, behavioral finance",
-    "notes": "Accessible content; screener flagged gate falsely",
-    "last_deep_analyzed_at": "2026-08-18T01:01:49Z"
+    "notes": "Mixed: sub-advised macro rigor amid retail marketing",
+    "last_deep_analyzed_at": "2026-09-18T01:02:34Z"
   },
   {
     "id": "fulcrum-asset-management",
@@ -3435,13 +3435,13 @@
     "official_domain": "www.fulcrumasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-17T09:00:15.584340+08:00",
+    "last_discovered_at": "2026-09-18T09:02:43.350384+08:00",
     "status_since": "2026-08-22T09:03:32.572404+08:00",
-    "last_deep_analyzed_at": "2026-09-10T01:03:27.443401+00:00",
+    "last_deep_analyzed_at": "2026-09-18T01:02:34Z",
     "quality": "MEDIUM",
-    "quality_score": 0.65,
+    "quality_score": 0.5,
     "topics": "macro, quant, multi-asset, central bank analysis",
-    "notes": "Confirmed 09-10: monthly macro/quant, PDF-gated teasers"
+    "notes": "PDF-gated: genuine quant/macro research, not HTML text"
   },
   {
     "id": "mfs-investment-management",
@@ -3550,7 +3550,7 @@
     "official_domain": "www.muzinich.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-17T09:00:15.990574+08:00",
+    "last_discovered_at": "2026-09-18T09:02:43.704366+08:00",
     "status_since": "2026-08-25T09:03:39.585223+08:00",
     "quality": "HIGH",
     "quality_score": 0.78,
@@ -3831,5 +3831,22 @@
     "quality_score": 0.85,
     "topics": "real estate, infrastructure, macro, real assets",
     "notes": "RECOMMEND: Real estate/infra research, real assets gap"
+  },
+  {
+    "id": "nexpoint",
+    "name": "NexPoint",
+    "homepage_url": "https://www.nexpoint.com",
+    "source": "manual",
+    "status": "seed",
+    "strategy_tags": [
+      "event_driven",
+      "real_assets",
+      "private_credit"
+    ],
+    "rss_url": "https://www.nexpoint.com/feed/",
+    "official_domain": "www.nexpoint.com",
+    "research_links": [],
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-09-18T09:03:53.311857+08:00"
   }
 ]
