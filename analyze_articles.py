@@ -277,7 +277,15 @@ def _call_gemini(prompt: str, api_key: str, model: str = "gemini-2.5-flash") -> 
     )
     resp.raise_for_status()
     data = resp.json()
-    candidate = data["candidates"][0]
+    candidates = data.get("candidates") or []
+    if not candidates:
+        # A safety-filtered request comes back with an empty list and the
+        # reason in promptFeedback; indexing [0] raised IndexError, which the
+        # model chain logged as "list index out of range" and retried.
+        feedback = data.get("promptFeedback") or {}
+        raise ValueError("Gemini returned no candidates "
+                         f"(blockReason={feedback.get('blockReason', 'UNKNOWN')})")
+    candidate = candidates[0]
     # A truncated reply still carries parts, so without this it surfaces only
     # as "failed to parse output" -- the symptom that made the 09-06 incident
     # look like a model quirk rather than an exhausted output budget.  Warn and

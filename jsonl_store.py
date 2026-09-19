@@ -41,11 +41,15 @@ def read_rows(path: Path, require: str | None = None) -> tuple[list[dict], int]:
         return [], 0
     rows: list[dict] = []
     damaged = 0
-    for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
-        if not line.strip():
+    # Decoded line by line: a write torn inside a multi-byte character (rows
+    # are written with ensure_ascii=False) must cost that one line, not raise
+    # UnicodeDecodeError before the first line is read and lose them all.
+    for n, raw in enumerate(path.read_bytes().split(b"\n"), start=1):
+        if not raw.strip():
             continue                      # a blank line is formatting, not damage
+        line = raw.decode("utf-8", errors="replace")
         try:
-            row = json.loads(line)
+            row = json.loads(raw.decode("utf-8"))
             if require is not None and require not in row:
                 raise KeyError(require)
             rows.append(row)

@@ -34,6 +34,8 @@ import argparse
 from collections import Counter
 import html
 import json
+import logging
+import os
 import smtplib
 import statistics
 import sys
@@ -52,6 +54,7 @@ CANDIDATES_FILE = BASE_DIR / "config" / "fund_candidates.json"
 TRIAL_STATE_FILE = BASE_DIR / "config" / "trial-state.json"
 LOGS_DIR = BASE_DIR / "logs"
 STATE_FILE = LOGS_DIR / "gmia-fetcher-health.json"
+log = logging.getLogger("gmia-fetcher-health")
 # Written by fetch_articles.record_quality_metrics during the 03:45 BJT pipeline,
 # read here at 04:30 -- a different measurement, taken 45 minutes earlier, which
 # is why it is reported in its own section rather than mixed into probe results.
@@ -121,15 +124,53 @@ def load_sources() -> list[dict]:
     return data.get("sources", [])
 
 
+def _preserve_unreadable_state(exc: Exception) -> None:
+    """Copy an unreadable state file aside before it is replaced. Never raises."""
+    try:
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+        backup = STATE_FILE.with_name(f"{STATE_FILE.name}.corrupt-{stamp}")
+        backup.write_bytes(STATE_FILE.read_bytes())
+        log.error("STATE FILE UNREADABLE: %s could not be parsed (%s); kept a copy at %s. "
+                  "Every source's alert streak restarts from this run.",
+                  STATE_FILE, exc, backup.name)
+    except OSError as copy_exc:
+        log.error("STATE FILE UNREADABLE: %s could not be parsed (%s), and the copy failed "
+                  "too (%s)", STATE_FILE, exc, copy_exc)
+
+
 def load_state() -> dict:
-    if STATE_FILE.exists():
-        return json.loads(STATE_FILE.read_text())
-    return {"last_run": None, "sources": {}}
+    """The previous run's per-source status. An unreadable file is kept aside
+    as evidence and read as empty, so the health check still runs and still
+    emails: aborting here meant no FAIL/WARN mail until someone deleted the
+    file by hand (audit D3, same family as B4)."""
+    empty = {"last_run": None, "sources": {}}
+    if not STATE_FILE.exists():
+        return empty
+    try:
+        state = json.loads(STATE_FILE.read_text())
+        if not isinstance(state, dict):
+            raise ValueError(f"state is {type(state).__name__}, not an object")
+        return state
+    except (json.JSONDecodeError, UnicodeDecodeError, ValueError, OSError) as exc:
+        _preserve_unreadable_state(exc)
+        return empty
 
 
 def save_state(state: dict) -> None:
+    """Write via a temp file and os.replace, so a save that dies midway
+    leaves the previous file intact instead of a truncated one."""
     LOGS_DIR.mkdir(exist_ok=True)
-    STATE_FILE.write_text(json.dumps(state, indent=2, ensure_ascii=False) + "\n")
+    tmp = STATE_FILE.with_name(STATE_FILE.name + ".tmp")
+    try:
+        with tmp.open("w", encoding="utf-8") as f:
+            f.write(json.dumps(state, indent=2, ensure_ascii=False) + "\n")
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(str(tmp), str(STATE_FILE))
+    except Exception:
+        if tmp.exists():
+            tmp.unlink()
+        raise
 
 
 def now_iso() -> str:
@@ -1319,7 +1360,9 @@ def main() -> int:
     zero_fetches = pipeline_zero_fetches()
     intake = pipeline_intake_anomalies()
     damaged_rows = store_damage()
-    corrupt_state = corrupt_state_backups()
+    # Both state files this script depends on: the fleet's (fetch_articles
+    # keeps the copies) and its own (load_state keeps them).
+    corrupt_state = sorted(set(corrupt_state_backups()) | set(corrupt_state_backups(STATE_FILE)))
     pipeline_stale = pipeline_did_not_run()
     if pipeline_stale:
         print(f"⛔ the last pipeline run recorded nothing in the past "
