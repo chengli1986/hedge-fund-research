@@ -53,6 +53,10 @@ MIN_CONTENT_LENGTH = 100
 # new failure. Per-article, NOT per-source: a source that recovers still fetches
 # its new articles normally.
 MAX_CONTENT_ATTEMPTS = 5
+# Lifetime ceiling whatever the labels: each label's max_attempts counts
+# consecutive failures under that label (audit F4), so an article whose
+# failures alternate between labels needs this to be retired at all.
+ATTEMPT_CEILING = 12
 # content_status values that mean "done, never pending again".
 TERMINAL_CONTENT_STATUSES = {"ok", "metadata_only", "permafail"}
 
@@ -2379,6 +2383,9 @@ def mark_content_failure(article: dict, max_attempts: int = MAX_CONTENT_ATTEMPTS
     import failure_labels
 
     now = now or datetime.now(BJT)
+    # A permafail that is being re-tried because its code changed gets that
+    # one retry: failing again under the new code retires it again at once.
+    was_permafail = article.get("content_status") == "permafail"
     attempts = int(article.get("content_attempts", 0)) + 1
     article["content_attempts"] = attempts
     if failure is None:
@@ -2391,8 +2398,14 @@ def mark_content_failure(article: dict, max_attempts: int = MAX_CONTENT_ATTEMPTS
         article["content_failure"] = {**failure, "at": now.isoformat(timespec="seconds"),
                                       "attempt": attempts, "streak": streak,
                                       "code_version": code_version_for(article)}
-        retire = (attempts >= policy["max_attempts"]
-                  or streak >= policy.get("retire_streak", float("inf")))
+        # The label's cap counts failures under that label, like its
+        # retire_streak: compared with the lifetime count, fetch_error x3 and
+        # then one 403 retired the article after a single block, under a
+        # label nothing ever requeues (audit F4).
+        retire = (was_permafail
+                  or streak >= policy["max_attempts"]
+                  or streak >= policy.get("retire_streak", float("inf"))
+                  or attempts >= ATTEMPT_CEILING)
         if not retire:
             backoff = policy["backoff_days"]
             wait = backoff[min(streak, len(backoff)) - 1]

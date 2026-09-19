@@ -218,3 +218,39 @@ class TestF3EveryCapturedMessageIsEvidence:
     def test_a_linked_pdf_extraction_failure_is_pdf_not_usable(self):
         label, _ = _classify(messages=["  MetLife: PDF extraction failed https://m/x.pdf: EOF marker not found"])
         assert label == "pdf_not_usable"
+
+
+class TestF4TheAttemptCapIsPerLabel:
+    """mark_content_failure compared the lifetime content_attempts with the
+    label's max_attempts. fetch_error x3 and then one 403 gave attempts=4 >=
+    blocked_by_bot_protection's 4 -> permafail after ONE block, with a label
+    that is not code-dependent, so nothing ever requeued it. The cap now
+    counts consecutive failures under the same label, like retire_streak; a
+    separate ceiling on lifetime attempts stops an article alternating
+    labels forever; a permafail re-tried after a code change that fails again
+    is still re-retired at once."""
+
+    def test_one_block_after_three_fetch_errors_is_not_a_retirement(self):
+        a = _art("gmo")
+        for i in range(3):
+            fc.mark_content_failure(a, failure={"label": "fetch_error", "detail": "d"}, now=NOW + timedelta(days=i))
+        status = fc.mark_content_failure(a, failure={"label": "blocked_by_bot_protection", "detail": "d"},
+                                         now=NOW + timedelta(days=10))
+        assert status == "failed"
+        assert a["content_retry_after"] == (NOW + timedelta(days=17)).isoformat(timespec="seconds")
+
+    def test_four_consecutive_blocks_still_retire(self):
+        a = _art("gmo")
+        for i in range(4):
+            status = fc.mark_content_failure(a, failure={"label": "blocked_by_bot_protection", "detail": "d"},
+                                             now=NOW + timedelta(days=7 * i))
+        assert status == "permafail"
+
+    def test_alternating_labels_hit_the_lifetime_ceiling(self):
+        a = _art("gmo")
+        labels = ["fetch_error", "selector_miss"]
+        for i in range(fc.ATTEMPT_CEILING):
+            status = fc.mark_content_failure(a, failure={"label": labels[i % 2], "detail": "d"},
+                                             now=NOW + timedelta(days=i))
+        assert status == "permafail"
+        assert a["content_attempts"] == fc.ATTEMPT_CEILING
