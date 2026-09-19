@@ -144,6 +144,20 @@ def _normalize_html(html: str, selector: str) -> str:
     Returns:
         Cleaned text string. Falls back to broad selectors if primary yields nothing.
     """
+    import failure_labels
+
+    # The page itself is evidence, whatever delivered it. A fetcher that got
+    # this HTML from Playwright leaves no response record for
+    # fetch_with_evidence, so a Cloudflare interstitial used to fall through
+    # every selector and be labelled selector_miss ("site redesigned") --
+    # retried daily and retired in three nights, when the right label,
+    # blocked_by_bot_protection, waits a week and retries four times.
+    if failure_labels.looks_like_challenge(html[:50000]):
+        log.warning("  extraction: the page is a bot-protection challenge, not an article")
+        _extraction_paths.append("challenge")
+        note_failure_hint("blocked_by_bot_protection", "challenge page served instead of the article")
+        return ""
+
     soup = BeautifulSoup(html, "html.parser")
 
     # Remove boilerplate elements
