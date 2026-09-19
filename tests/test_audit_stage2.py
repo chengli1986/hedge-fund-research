@@ -147,3 +147,74 @@ class TestF1ChallengePageThroughPlaywright:
         fc._normalize_html("<html><body><article><p>" + "real text " * 30 + "</p></article></body></html>", "article p")
         assert fc.drain_extraction_paths() == ["primary"]
         assert not fc._failure_hints
+
+
+def _resp(status, url, ctype="text/html", links=50, challenge=False):
+    return {"status": status, "url": url, "final_url": url, "content_type": ctype,
+            "challenge": challenge, "links": links, "media_player": False}
+
+
+def _classify(**ev):
+    import failure_labels as fl
+    return fl.classify_content_failure({"exception": None, "hints": [], "extraction_paths": [],
+                                        "responses": [], "messages": [], **ev})
+
+
+class TestF2TheFailingResponseIsTheEvidence:
+    """GMO and Oaktree fetch the article page (200) and then its PDF; the
+    classifier judged responses[0], so a 404 on the PDF was body_too_short
+    (daily x3, code-dependent, nobody emailed) instead of page_gone."""
+
+    def test_a_pdf_404_after_a_200_page_is_page_gone(self):
+        label, detail = _classify(
+            responses=[_resp(200, "https://gmo/x"), _resp(404, "https://gmo/x.pdf", links=3)],
+            messages=["  GMO: invalid PDF response (status=404, type=text/html, size=1200)"])
+        assert label == "page_gone" and "x.pdf" in detail
+
+    def test_a_pdf_403_after_a_200_page_is_blocked(self):
+        label, _ = _classify(
+            responses=[_resp(200, "https://gmo/x"), _resp(403, "https://gmo/x.pdf", links=0)])
+        assert label == "blocked_by_bot_protection"
+
+    def test_a_pdf_500_after_a_200_page_is_fetch_error(self):
+        label, _ = _classify(
+            responses=[_resp(200, "https://gmo/x"), _resp(500, "https://gmo/x.pdf", links=0)])
+        assert label == "fetch_error"
+
+    def test_a_single_200_page_still_judges_that_page(self):
+        label, _ = _classify(responses=[_resp(200, "https://x/a")], messages=["  X: too short"])
+        assert label == "body_too_short"
+
+
+class TestF3EveryCapturedMessageIsEvidence:
+    """Only messages[-1] was matched against _ERROR_MESSAGE, and eleven of the
+    fetchers' failure messages matched nothing. T. Rowe Price logs two
+    Playwright timeouts and then "all attempts failed, giving up" -- the last
+    line hid the two informative ones and the night was body_too_short."""
+
+    def test_a_double_playwright_timeout_is_fetch_error(self):
+        label, _ = _classify(messages=[
+            "  T.Rowe Price: Playwright attempt 1 failed: Page.goto: Timeout 30000ms exceeded.",
+            "  T.Rowe Price: Playwright attempt 2 failed: Page.goto: Timeout 30000ms exceeded.",
+            "  T.Rowe Price: all attempts failed, giving up"])
+        assert label == "fetch_error"
+
+    def test_a_failed_pdf_download_is_fetch_error(self):
+        label, _ = _classify(messages=["  Oaktree: failed to download PDF: HTTPSConnectionPool(...): Read timed out."])
+        assert label == "fetch_error"
+
+    def test_a_pdf_that_will_not_parse_is_pdf_not_usable(self):
+        label, _ = _classify(
+            responses=[_resp(200, "https://gmo/x"), _resp(200, "https://gmo/x.pdf", ctype="application/pdf")],
+            messages=["  GMO: pdfplumber extraction failed: No /Root object! - Is this really a PDF?"])
+        assert label == "pdf_not_usable"
+
+    def test_a_pdf_served_as_html_is_pdf_not_usable(self):
+        label, _ = _classify(
+            responses=[_resp(200, "https://gmo/x"), _resp(200, "https://gmo/x.pdf", links=40)],
+            messages=["  GMO: invalid PDF response (status=200, type=text/html, size=48211)"])
+        assert label == "pdf_not_usable"
+
+    def test_a_linked_pdf_extraction_failure_is_pdf_not_usable(self):
+        label, _ = _classify(messages=["  MetLife: PDF extraction failed https://m/x.pdf: EOF marker not found"])
+        assert label == "pdf_not_usable"

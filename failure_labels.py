@@ -69,7 +69,11 @@ _MEDIA = re.compile(
     r"brightcoveVideoId|libsyn\.com/embed|spotify\.com/embed|podbean\.com/player|soundcloud\.com/player",
     re.IGNORECASE)
 _ERROR_MESSAGE = re.compile(r"timeout|timed out|fetch failed|failed to fetch|connection|"
-                            r"download failed|http error|ssl|refused|reset by peer", re.IGNORECASE)
+                            r"download failed|failed to download|all attempts failed|"
+                            r"http error|ssl|refused|reset by peer", re.IGNORECASE)
+# A PDF was reached but is not usable as one: served as HTML, or unparseable.
+_PDF_MESSAGE = re.compile(r"invalid PDF response|PDF extraction failed|pdfplumber extraction failed|"
+                          r"PDF article: extraction failed", re.IGNORECASE)
 
 
 # A refusal that carries this many links came from the site's own template.
@@ -126,9 +130,18 @@ def classify_content_failure(evidence: dict) -> tuple[str, str]:
 
     responses = [r for r in evidence.get("responses") or []
                  if "html" in (r.get("content_type") or "html")]
-    page = responses[0] if responses else None
+    # The failing response is the evidence. GMO and Oaktree fetch the article
+    # page (200) and then its PDF; judging responses[0] filed a 404 on the PDF
+    # as body_too_short.
+    failing = [r for r in responses if int(r.get("status") or 0) >= 400]
+    page = failing[-1] if failing else (responses[0] if responses else None)
     messages = evidence.get("messages") or []
     last_message = messages[-1] if messages else ""
+    # Every captured message, not only the last: T. Rowe Price logs two
+    # Playwright timeouts and then "all attempts failed, giving up", and the
+    # summary line hid the two that said why.
+    error_message = next((m for m in reversed(messages) if _ERROR_MESSAGE.search(m)), "")
+    pdf_message = next((m for m in reversed(messages) if _PDF_MESSAGE.search(m)), "")
 
     if page is not None:
         status = int(page.get("status") or 0)
@@ -157,14 +170,17 @@ def classify_content_failure(evidence: dict) -> tuple[str, str]:
     if any(p != "primary" for p in paths):
         return "selector_miss", f"extraction took {', '.join(sorted(set(p for p in paths if p != 'primary')))}"
 
-    if page is None and last_message and _ERROR_MESSAGE.search(last_message):
-        return "fetch_error", last_message[:300]
+    if page is None and error_message:
+        return "fetch_error", error_message[:300]
 
     if page is not None and page.get("media_player"):
         return "media_without_text", last_message[:300] or "media player, no article text"
 
-    if last_message and _ERROR_MESSAGE.search(last_message):
-        return "fetch_error", last_message[:300]
+    if error_message:
+        return "fetch_error", error_message[:300]
+
+    if pdf_message:
+        return "pdf_not_usable", pdf_message[:300]
 
     return "body_too_short", last_message[:300] or "no usable text"
 
