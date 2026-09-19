@@ -690,9 +690,15 @@ def _analyze_with_fallback(
 # JSONL I/O (same pattern as fetch_content.py)
 # ---------------------------------------------------------------------------
 
+# Lines the last load could not read, carried over verbatim by the next save
+# so a torn line is evidence on disk, not a deletion (audit F5).
+_damaged_lines: list[bytes] = []
+
+
 def load_articles() -> list[dict]:
     """Load all articles from the JSONL data file (see jsonl_store)."""
-    rows, _ = jsonl_store.read_rows(DATA_FILE)
+    _damaged_lines.clear()
+    rows, _ = jsonl_store.read_rows(DATA_FILE, keep_damaged=_damaged_lines)
     return rows
 
 
@@ -706,16 +712,11 @@ def save_articles(articles: list[dict], path: Path | None = None) -> None:
     had a plain write_text(), and a failure mid-write left 151 of 4000 rows.
     """
     path = DATA_FILE if path is None else path
-    path.parent.mkdir(parents=True, exist_ok=True)
-    data = "\n".join(json.dumps(a, ensure_ascii=False) for a in articles) + "\n"
-    tmp_path = path.with_suffix(".jsonl.tmp")
-    try:
-        tmp_path.write_text(data, encoding="utf-8")
-        os.replace(str(tmp_path), str(path))
-    except Exception:
-        if tmp_path.exists():
-            tmp_path.unlink()
-        raise
+    # Through the store, like stage 2 (this had its own un-fsynced writer):
+    # the lines load_articles could not read go back verbatim when writing
+    # the store itself, and are not copied into some other file.
+    jsonl_store.rewrite_rows(path, articles,
+                             preserve=_damaged_lines if path == DATA_FILE else None)
 
 
 def _content_root() -> Path:

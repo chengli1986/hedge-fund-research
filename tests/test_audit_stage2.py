@@ -254,3 +254,45 @@ class TestF4TheAttemptCapIsPerLabel:
                                              now=NOW + timedelta(days=i))
         assert status == "permafail"
         assert a["content_attempts"] == fc.ATTEMPT_CEILING
+
+
+class TestF5ARewriteKeepsTheTornLine:
+    """read_rows drops a line it cannot parse from `rows` (and says so), and
+    stages 2 and 3 then rewrite the store from `rows`: the torn line was gone
+    from disk for good, stage 1 no longer saw that id and re-ingested the
+    article as new, and stage 3 paid to summarise it again. The B8 recovery
+    ("counted, never skipped in silence") was undone one stage later. A
+    rewrite now carries the raw damaged lines over verbatim, so the evidence
+    survives and every later read still reports it."""
+
+    TORN = b'{"id": "a2", "title": "cut he'
+
+    def _store(self, tmp_path):
+        f = tmp_path / "articles.jsonl"
+        f.write_bytes(b'{"id": "a1"}\n' + self.TORN + b'\n{"id": "a3"}\n')
+        return f
+
+    def test_the_store_can_hand_back_what_it_could_not_read(self, tmp_path):
+        import jsonl_store
+        f = self._store(tmp_path)
+        keep = []
+        rows, damaged = jsonl_store.read_rows(f, keep_damaged=keep)
+        assert [r["id"] for r in rows] == ["a1", "a3"] and damaged == 1
+        assert keep == [self.TORN]
+        jsonl_store.rewrite_rows(f, rows, preserve=keep)
+        assert f.read_bytes() == b'{"id": "a1"}\n{"id": "a3"}\n' + self.TORN + b"\n"
+        _, damaged_again = jsonl_store.read_rows(f)
+        assert damaged_again == 1, "the damage must still be reported after a rewrite"
+
+    def test_stage_2_load_then_save_keeps_it(self, tmp_path, monkeypatch):
+        f = self._store(tmp_path)
+        monkeypatch.setattr(fc, "DATA_FILE", f)
+        fc.save_articles(fc.load_articles())
+        assert self.TORN in f.read_bytes()
+
+    def test_stage_3_load_then_save_keeps_it(self, tmp_path, monkeypatch):
+        import analyze_articles as aa
+        f = self._store(tmp_path)
+        monkeypatch.setattr(aa, "DATA_FILE", f)
+        aa.save_articles(aa.load_articles())
+        assert self.TORN in f.read_bytes()

@@ -2288,15 +2288,21 @@ def content_fetcher_for(article: dict):
 # Main
 # ---------------------------------------------------------------------------
 
+# Lines the last load could not read, carried over verbatim by the next save
+# so a torn line is evidence on disk, not a deletion (audit F5).
+_damaged_lines: list[bytes] = []
+
+
 def load_articles() -> list[dict]:
     """Load all articles from the JSONL data file (see jsonl_store)."""
-    rows, _ = jsonl_store.read_rows(DATA_FILE)
+    _damaged_lines.clear()
+    rows, _ = jsonl_store.read_rows(DATA_FILE, keep_damaged=_damaged_lines)
     return rows
 
 
 def save_articles(articles: list[dict]) -> None:
     """Rewrite all articles to the JSONL data file atomically (see jsonl_store)."""
-    jsonl_store.rewrite_rows(DATA_FILE, articles)
+    jsonl_store.rewrite_rows(DATA_FILE, articles, preserve=_damaged_lines)
 
 
 # Identity of the code an article's fetch depends on. A permafail with a

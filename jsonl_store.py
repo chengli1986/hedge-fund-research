@@ -30,8 +30,16 @@ from pathlib import Path
 log = logging.getLogger(__name__)
 
 
-def read_rows(path: Path, require: str | None = None) -> tuple[list[dict], int]:
+def read_rows(path: Path, require: str | None = None,
+              keep_damaged: list[bytes] | None = None) -> tuple[list[dict], int]:
     """(rows, damaged) from a JSONL file. A missing file reads empty.
+
+    `keep_damaged`, when given, receives every line that could not be read,
+    verbatim, so a caller that rewrites the file can carry them over
+    (rewrite_rows(..., preserve=)) instead of deleting the evidence: stages 2
+    and 3 rewrite the store from the rows they could parse, and without this
+    a torn line was gone from disk for good and stage 1 re-ingested the
+    article as new (audit F5).
 
     `require` names a field a row must carry to count as readable: stage 1
     indexes by "id", and a row without one would silently index nothing.
@@ -55,6 +63,8 @@ def read_rows(path: Path, require: str | None = None) -> tuple[list[dict], int]:
             rows.append(row)
         except (json.JSONDecodeError, KeyError, ValueError) as exc:
             damaged += 1
+            if keep_damaged is not None:
+                keep_damaged.append(raw)
             log.error("DAMAGED ROW: %s line %d is not a usable record (%s): %.120s",
                       path.name, n, type(exc).__name__, line)
     if damaged:
@@ -87,14 +97,19 @@ def append_rows(path: Path, rows: list[dict]) -> None:
         os.fsync(f.fileno())
 
 
-def rewrite_rows(path: Path, rows: list[dict]) -> None:
-    """Replace the file with `rows`, atomically: temp file, fsync, rename."""
+def rewrite_rows(path: Path, rows: list[dict], preserve: list[bytes] | None = None) -> None:
+    """Replace the file with `rows`, atomically: temp file, fsync, rename.
+
+    `preserve`: raw lines read_rows could not parse (its `keep_damaged`),
+    written back verbatim after the rows so they stay on disk as evidence and
+    every later read still reports them."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
-    data = "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows)
+    data = "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows).encode("utf-8")
+    data += b"".join(line.rstrip(b"\r\n") + b"\n" for line in (preserve or []))
     try:
-        with tmp.open("w", encoding="utf-8") as f:
+        with tmp.open("wb") as f:
             f.write(data)
             f.flush()
             os.fsync(f.fileno())
