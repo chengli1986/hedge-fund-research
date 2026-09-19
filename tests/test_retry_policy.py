@@ -73,7 +73,7 @@ def test_code_dependent_labels_retire_after_three():
 def test_the_failure_records_the_code_version():
     a = _art()
     _fail(a, "selector_miss")
-    assert a["content_failure"]["code_version"] == fc.CODE_VERSION
+    assert a["content_failure"]["code_version"] == fc.code_version_for(a)
 
 
 class TestRequeueAfterCodeChange:
@@ -85,7 +85,9 @@ class TestRequeueAfterCodeChange:
         assert fc.is_content_pending(self._permafail("selector_miss", "old-version"))
 
     def test_not_while_the_fetcher_is_unchanged(self):
-        assert not fc.is_content_pending(self._permafail("selector_miss", fc.CODE_VERSION))
+        a = self._permafail("selector_miss", "placeholder")
+        a["content_failure"]["code_version"] = fc.code_version_for(a)
+        assert not fc.is_content_pending(a)
 
     @pytest.mark.parametrize("label", ["page_gone", "media_without_text", "blocked_by_bot_protection"])
     def test_causes_code_cannot_fix_are_not_requeued(self, label):

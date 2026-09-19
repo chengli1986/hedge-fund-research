@@ -19,6 +19,7 @@ Usage:
 
 import argparse
 import hashlib
+import inspect
 import json
 from urllib.parse import urljoin, urlsplit
 import logging
@@ -2280,10 +2281,44 @@ def save_articles(articles: list[dict]) -> None:
     jsonl_store.rewrite_rows(DATA_FILE, articles)
 
 
-# Identity of this fetch_content.py. A permafail with a code-dependent label
-# records the version it failed under and is retried once when it changes
-# (aqr's two articles extracted fine after e906481 but stayed permafail).
-CODE_VERSION = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()[:12]
+# Identity of the code an article's fetch depends on. A permafail with a
+# code-dependent label records the version it failed under and is retried
+# once when it changes (aqr's two articles extracted fine after e906481 but
+# stayed permafail).
+#
+# Per source, not per file: the version was the hash of this whole file, and
+# with a commit most days "retried once per change" was "retried nightly" --
+# the same 7 gsam articles were re-fetched and re-retired four nights running
+# (09-16..09-19, ledger attempt 6 -> 9), each night reported as 7 failures.
+# Now it is the shared machinery (this file minus every per-source fetcher)
+# plus the article's own fetcher, so editing another source's fetcher does
+# not requeue this one; editing a shared helper still requeues all.
+
+def _shared_code_hash() -> str:
+    src = Path(__file__).read_text(encoding="utf-8")
+    for fn in set(CONTENT_FETCHERS.values()) | {_fetch_content_pdf_url}:
+        try:
+            src = src.replace(inspect.getsource(fn), "")
+        except (OSError, TypeError):
+            pass
+    return hashlib.sha256(src.encode("utf-8")).hexdigest()
+
+
+_SHARED_CODE_HASH = _shared_code_hash()
+CODE_VERSION = _SHARED_CODE_HASH[:12]   # the shared machinery alone; compare with code_version_for
+
+
+def code_version_for(article: dict) -> str:
+    """The version an article's fetch depends on: shared code + its fetcher."""
+    if _is_pdf_url(article.get("url", "")) or article.get("source_id") in CONTENT_FETCHERS:
+        fetcher = content_fetcher_for(article)
+    else:
+        return CODE_VERSION
+    try:
+        own = inspect.getsource(fetcher)
+    except (OSError, TypeError):
+        own = repr(fetcher)
+    return hashlib.sha256((_SHARED_CODE_HASH + own).encode("utf-8")).hexdigest()[:12]
 
 
 def is_content_pending(article: dict, source_filter: Optional[str] = None,
@@ -2304,7 +2339,7 @@ def is_content_pending(article: dict, source_filter: Optional[str] = None,
     if status == "permafail":
         failure = article.get("content_failure") or {}
         policy = failure_labels.RETRY_POLICY.get(failure.get("label"), {})
-        return bool(policy.get("code_dependent")) and failure.get("code_version") != CODE_VERSION
+        return bool(policy.get("code_dependent")) and failure.get("code_version") != code_version_for(article)
     if status in TERMINAL_CONTENT_STATUSES:
         return False
     retry_after = article.get("content_retry_after")
@@ -2340,7 +2375,8 @@ def mark_content_failure(article: dict, max_attempts: int = MAX_CONTENT_ATTEMPTS
         previous = article.get("content_failure") or {}
         streak = int(previous.get("streak", 0)) + 1 if previous.get("label") == label else 1
         article["content_failure"] = {**failure, "at": now.isoformat(timespec="seconds"),
-                                      "attempt": attempts, "streak": streak, "code_version": CODE_VERSION}
+                                      "attempt": attempts, "streak": streak,
+                                      "code_version": code_version_for(article)}
         retire = (attempts >= policy["max_attempts"]
                   or streak >= policy.get("retire_streak", float("inf")))
         if not retire:
@@ -2349,7 +2385,9 @@ def mark_content_failure(article: dict, max_attempts: int = MAX_CONTENT_ATTEMPTS
             article["content_retry_after"] = (now + timedelta(days=wait)).isoformat(timespec="seconds")
     if retire:
         article["content_status"] = "permafail"
-        article["content_permafailed_at"] = now.isoformat()
+        # setdefault: a permafail re-tried after a code change and retired
+        # again is the same retirement; success is what clears the stamp.
+        article.setdefault("content_permafailed_at", now.isoformat())
         article.pop("content_retry_after", None)
     else:
         article["content_status"] = "failed"
@@ -2389,6 +2427,9 @@ def main() -> int:
     # Read before the loop: a failure sets content_attempts, so afterwards
     # every pending article would look like a retry.
     first_attempt_sources = {a.get("source_id") for a in pending if not a.get("content_attempts")}
+    # Permafails re-tried because their fetcher's code changed: counted apart,
+    # or "N failed" reads as N new failures every night the file is edited.
+    code_change_retries = sum(1 for a in pending if a.get("content_status") == "permafail")
 
     log.info("Found %d articles pending content fetch (of %d total)", len(pending), len(articles))
 
@@ -2427,15 +2468,17 @@ def main() -> int:
 
     # Save all articles back (full rewrite)
     save_articles(articles)
-    log.info("Content fetch complete: %d ok, %d failed (%d newly retired to permafail)",
-             success_count, fail_count, permafail_count)
+    log.info("Content fetch complete: %d ok, %d failed (%d newly retired to permafail, "
+             "%d re-tried after a code change)",
+             success_count, fail_count, permafail_count, code_change_retries)
 
     # Summary
     print(f"\n{'='*60}")
     print(f"Content Fetch — {datetime.now(BJT).strftime('%Y-%m-%d %H:%M BJT')}")
     print(f"{'='*60}")
     print(f"Pending: {len(pending)} | Success: {success_count} | Failed: {fail_count}"
-          f" | Retired(permafail): {permafail_count}")
+          f" | Retired(permafail): {permafail_count}"
+          f" | re-tried after a code change: {code_change_retries}")
     print()
 
     # Stage 1 and stage 3 both fail the run when nothing at all worked; stage 2
