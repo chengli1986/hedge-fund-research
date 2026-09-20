@@ -210,3 +210,71 @@ class TestDamagedStoreReachesAHuman:
         monkeypatch.setattr(sys, "argv", ["gmia-fetcher-health.py"])
         gfh.main()
         assert seen.get("damaged_rows") == 3
+
+
+class TestEntrypointProblemsReachAHuman:
+    """The weekly entrypoint validation writes logs/entrypoint-validation.json;
+    the daily email is where anyone would see it (audit A2).
+    """
+    def _file(self, tmp_path, payload, age_days=0):
+        import os, time
+        f = tmp_path / "entrypoint-validation.json"
+        f.write_text(json.dumps(payload))
+        if age_days:
+            old = time.time() - age_days * 86400
+            os.utime(f, (old, old))
+        return f
+
+    def test_a_source_whose_entrypoint_is_not_ok_is_reported(self, tmp_path):
+        f = self._file(tmp_path, {"aqr": [{"url": "https://www.aqr.com/x", "status": "404"}],
+                                  "gmo": [{"url": "https://www.gmo.com/y", "status": "ok"}]})
+        out = gfh.entrypoint_problems(f)
+        assert [sid for sid, _ in out] == ["aqr"]
+        assert "404" in out[0][1]
+
+    def test_all_ok_reports_nothing(self, tmp_path):
+        f = self._file(tmp_path, {"aqr": [{"url": "u", "status": "ok"}]})
+        assert gfh.entrypoint_problems(f) == []
+
+    def test_a_validator_crash_is_itself_reported(self, tmp_path):
+        f = self._file(tmp_path, {"_error": "Traceback ... boom"})
+        out = gfh.entrypoint_problems(f)
+        assert out and "boom" in out[0][1]
+
+    def test_a_stale_file_is_ignored(self, tmp_path):
+        """Validation runs weekly; a month-old verdict is not today's news, and
+        a file nothing refreshes would alert every day with no way to clear it
+        (the same argument pipeline_zero_fetches makes)."""
+        f = self._file(tmp_path, {"aqr": [{"url": "u", "status": "404"}]}, age_days=30)
+        assert gfh.entrypoint_problems(f) == []
+
+    def test_a_missing_or_broken_file_is_silent(self, tmp_path):
+        assert gfh.entrypoint_problems(tmp_path / "nope.json") == []
+        bad = tmp_path / "bad.json"
+        bad.write_text("{not json")
+        assert gfh.entrypoint_problems(bad) == []
+
+    def test_it_is_a_send_condition_and_is_named(self):
+        alerts = {"failing": [], "warning": [], "recovered": [], "healthy": []}
+        probs = [("aqr", "404 at https://www.aqr.com/x")]
+        assert gfh.should_email(alerts, [], entrypoints=probs) is True
+        assert "aqr" in gfh.alerts_subject(alerts, entrypoints=probs)
+        html = gfh.render_html_email({}, alerts, {"sources": {}}, 1.0, entrypoints=probs)
+        assert "aqr" in html and "404" in html
+
+    def test_main_reads_it(self, monkeypatch):
+        seen = {}
+        monkeypatch.setattr(gfh, "load_sources", lambda: [])
+        monkeypatch.setattr(gfh, "entrypoint_problems", lambda *a, **k: [("aqr", "404")])
+        for name in ("pipeline_intake_anomalies", "pipeline_zero_fetches", "recent_analysis_declines"):
+            monkeypatch.setattr(gfh, name, lambda *a, **k: [])
+        monkeypatch.setattr(gfh, "corrupt_state_backups", lambda *a, **k: [])
+        monkeypatch.setattr(gfh, "store_damage", lambda *a, **k: 0)
+        monkeypatch.setattr(gfh, "load_quality", lambda *a, **k: None)
+        monkeypatch.setattr(gfh, "pipeline_did_not_run", lambda *a, **k: False)
+        monkeypatch.setattr(gfh, "save_state", lambda *a, **k: None)
+        monkeypatch.setattr(gfh, "load_state", lambda: {})
+        monkeypatch.setattr(gfh, "should_email", lambda *a, **k: seen.update(k) or False)
+        monkeypatch.setattr(sys, "argv", ["gmia-fetcher-health.py"])
+        gfh.main()
+        assert seen.get("entrypoints") == [("aqr", "404")]

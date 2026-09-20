@@ -727,6 +727,45 @@ ARTICLES_FILE = BASE_DIR / "data" / "articles.jsonl"
 DECLINE_SAMPLE_REASONS = 2
 
 
+ENTRYPOINT_VALIDATION_FILE = BASE_DIR / "logs" / "entrypoint-validation.json"
+ENTRYPOINT_FRESH_DAYS = 10          # the check runs weekly; 10 days allows one miss
+
+
+def entrypoint_problems(path=None) -> list:
+    """Sources whose entrypoint the weekly validation found not ok.
+
+    run_pipeline.sh writes the validation result there; until 2026-09-20 it
+    only echoed its findings, and cron-wrapper.sh alerts on the exit code
+    alone, so the one check that can notice an entrypoint going bad had no
+    destination (audit A2). A file nothing has refreshed for longer than
+    ENTRYPOINT_FRESH_DAYS is ignored, for the reason pipeline_zero_fetches
+    gives: a frozen verdict would alert every day with no way to clear it.
+    Never raises.
+    """
+    try:
+        f = Path(path) if path else ENTRYPOINT_VALIDATION_FILE
+        if not f.exists():
+            return []
+        age = datetime.now(timezone.utc) - datetime.fromtimestamp(f.stat().st_mtime, timezone.utc)
+        if age > timedelta(days=ENTRYPOINT_FRESH_DAYS):
+            return []
+        data = json.loads(f.read_text())
+        if not isinstance(data, dict):
+            return []
+        if data.get("_error"):
+            return [("(validation failed)", str(data["_error"])[:300])]
+        out = []
+        for sid, entries in sorted(data.items()):
+            if not isinstance(entries, list):
+                continue
+            bad = [e for e in entries if isinstance(e, dict) and e.get("status") != "ok"]
+            if bad:
+                out.append((sid, "; ".join(f"{e.get('status')} at {e.get('url')}" for e in bad[:3])))
+        return out
+    except Exception:
+        return []
+
+
 def corrupt_state_backups(path=None) -> list:
     """Copies fetch_articles kept of an unreadable inspection_state.json.
 
@@ -924,7 +963,7 @@ def pipeline_did_not_run(state_path=None) -> bool:
 def should_email(alerts: dict, zero_fetches: list, pipeline_stale: bool = False,
                  declines: list | None = None, quality: dict | None = None,
                  intake: list | None = None, damaged_rows: int = 0,
-                 corrupt_state: list | None = None) -> bool:
+                 corrupt_state: list | None = None, entrypoints: list | None = None) -> bool:
     """Whether this run has anything worth sending.
 
     zero_fetches is part of the condition, not just part of the body: the email
@@ -933,7 +972,7 @@ def should_email(alerts: dict, zero_fetches: list, pipeline_stale: bool = False,
     """
     return bool(alerts["failing"] or alerts["warning"] or alerts["recovered"]
                 or zero_fetches or pipeline_stale or declines or intake or damaged_rows
-                or corrupt_state
+                or corrupt_state or entrypoints
                 or (quality is not None and quality.get("alerts")))
 
 
@@ -995,6 +1034,7 @@ def render_html_email(
     intake: list | None = None,
     damaged_rows: int = 0,
     corrupt_state: list | None = None,
+    entrypoints: list | None = None,
 ) -> str:
     """HTML body with same visual idiom as gmia-trial-manager email."""
     sources_state = state.get("sources", {})
@@ -1081,6 +1121,17 @@ def render_html_email(
         )
         sections.append(section_table(
             f"📉 PIPELINE FETCHED NOTHING ({len(zero_fetches)})", "#9a6700", zero_rows))
+    if entrypoints:
+        ep_rows = "".join(
+            f'<tr><td style="padding:8px;font-weight:bold;color:#9a6700">{html.escape(sid)}</td>'
+            f'<td style="padding:8px">{html.escape(detail)}</td></tr>'
+            for sid, detail in entrypoints)
+        sections.append(section_table(
+            f"🚪 ENTRYPOINTS NOT OK ({len(entrypoints)})", "#9a6700",
+            ep_rows +
+            '<tr><td style="padding:8px">From the weekly entrypoint validation '
+            '(logs/entrypoint-validation.json). A listing URL that stopped working is a source '
+            'about to go quiet.</td></tr>'))
     if corrupt_state:
         state_rows = "".join(
             f'<tr><td style="padding:8px">{html.escape(name)}</td></tr>' for name in corrupt_state)
@@ -1167,7 +1218,8 @@ def send_email(html_body: str, summary_subject: str, to: str | None = None) -> b
 def alerts_subject(alerts: dict, zero_fetches: list | None = None,
                    pipeline_stale: bool = False, declines: list | None = None,
                    quality: dict | None = None, intake: list | None = None,
-                   damaged_rows: int = 0, corrupt_state: list | None = None) -> str:
+                   damaged_rows: int = 0, corrupt_state: list | None = None,
+                   entrypoints: list | None = None) -> str:
     """Subject line. Must name every condition that caused the send.
 
     zero_fetches is a send condition on its own, and it is the ONLY one that
@@ -1191,6 +1243,9 @@ def alerts_subject(alerts: dict, zero_fetches: list | None = None,
         parts.append(f"📉 {len(zero_fetches)} fetched nothing ({ids}{more})")
     if pipeline_stale:
         parts.append(f"⛔ pipeline recorded nothing in {ZERO_FETCH_FRESH_HOURS}h")
+    if entrypoints:
+        ids = ", ".join(sid for sid, _ in entrypoints[:3])
+        parts.append(f"🚪 {len(entrypoints)} entrypoint(s) not ok ({ids})")
     if corrupt_state:
         parts.append(f"🗃️ state file was unreadable ({len(corrupt_state)} copy/copies)")
     if damaged_rows:
@@ -1363,6 +1418,7 @@ def main() -> int:
     # Both state files this script depends on: the fleet's (fetch_articles
     # keeps the copies) and its own (load_state keeps them).
     corrupt_state = sorted(set(corrupt_state_backups()) | set(corrupt_state_backups(STATE_FILE)))
+    entrypoints = entrypoint_problems()
     pipeline_stale = pipeline_did_not_run()
     if pipeline_stale:
         print(f"⛔ the last pipeline run recorded nothing in the past "
@@ -1409,24 +1465,24 @@ def main() -> int:
 
     email_failed = False
     needs_alert = should_email(alerts, zero_fetches, pipeline_stale, declines=declines,
-                               quality=quality, intake=intake, damaged_rows=damaged_rows, corrupt_state=corrupt_state)
+                               quality=quality, intake=intake, damaged_rows=damaged_rows, corrupt_state=corrupt_state, entrypoints=entrypoints)
     if args.test_email:
         html_body = render_html_email(per_source, alerts, next_state, total_runtime_s,
                                       zero_fetches=zero_fetches, pipeline_stale=pipeline_stale,
                                       declines=declines, quality=quality, intake=intake,
-                                      damaged_rows=damaged_rows, corrupt_state=corrupt_state)
+                                      damaged_rows=damaged_rows, corrupt_state=corrupt_state, entrypoints=entrypoints)
         subject = alerts_subject(alerts, zero_fetches, pipeline_stale, declines=declines,
-                                 quality=quality, intake=intake, damaged_rows=damaged_rows, corrupt_state=corrupt_state)
+                                 quality=quality, intake=intake, damaged_rows=damaged_rows, corrupt_state=corrupt_state, entrypoints=entrypoints)
         email_failed = not send_email(html_body, f"[测试] {subject}", to=args.test_email)
     elif args.email and needs_alert and not args.dry_run:
         html_body = render_html_email(per_source, alerts, next_state, total_runtime_s,
                                       zero_fetches=zero_fetches,
                                       pipeline_stale=pipeline_stale,
                                       declines=declines, quality=quality, intake=intake,
-                                      damaged_rows=damaged_rows, corrupt_state=corrupt_state)
+                                      damaged_rows=damaged_rows, corrupt_state=corrupt_state, entrypoints=entrypoints)
         email_failed = not send_email(
             html_body, alerts_subject(alerts, zero_fetches, pipeline_stale, declines=declines,
-                                      quality=quality, intake=intake, damaged_rows=damaged_rows, corrupt_state=corrupt_state))
+                                      quality=quality, intake=intake, damaged_rows=damaged_rows, corrupt_state=corrupt_state, entrypoints=entrypoints))
     elif args.email and not needs_alert:
         print("All sources OK and no recoveries — email suppressed.")
 

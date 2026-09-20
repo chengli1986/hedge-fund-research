@@ -20,14 +20,22 @@ elif [[ -n "$(find "$LAST_VALIDATE_FILE" -mtime +7 2>/dev/null)" ]]; then
   RUN_VALIDATION=1
 fi
 
+# The result goes to logs/, not /tmp: the daily fetcher-health email reads it
+# from there and reports any source whose entrypoint is not ok. Until
+# 2026-09-20 this check only echoed its findings, and cron-wrapper.sh alerts on
+# the exit code and nothing else -- so the one check that can notice an
+# entrypoint going bad had no destination (audit finding A2).
+VALIDATE_OUT="logs/entrypoint-validation.json"
 if [[ "$RUN_VALIDATION" -eq 1 ]]; then
   echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Running entrypoint validation..."
-  if python3 validate_entrypoints.py --json > /tmp/gmia-validate.json 2>/dev/null; then
+  mkdir -p logs
+  VALIDATE_ERR=$(mktemp)
+  if python3 validate_entrypoints.py --json > "$VALIDATE_OUT.tmp" 2>"$VALIDATE_ERR"; then
+    mv "$VALIDATE_OUT.tmp" "$VALIDATE_OUT"
     touch "$LAST_VALIDATE_FILE"
-    # Check for any non-"ok" statuses
     BAD_SOURCES=$(python3 -c "
 import json, sys
-data = json.load(open('/tmp/gmia-validate.json'))
+data = json.load(open('$VALIDATE_OUT'))
 bad = [src for src, entries in data.items() if any(e.get('status') != 'ok' for e in entries)]
 if bad:
     print('WARN: entrypoint issues detected for: ' + ', '.join(bad))
@@ -38,8 +46,17 @@ if bad:
       echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Entrypoint validation passed — all sources ok"
     fi
   else
+    # Keep the reason: `2>/dev/null` used to throw away why it failed, and the
+    # marker file is deliberately NOT touched, so it is retried tomorrow.
+    python3 -c "
+import json, sys
+err = open('$VALIDATE_ERR').read()[-2000:]
+json.dump({'_error': err or 'validate_entrypoints.py exited non-zero with no stderr'},
+          open('$VALIDATE_OUT', 'w'))
+"
     echo "WARN: entrypoint validation script failed — continuing pipeline anyway"
   fi
+  rm -f "$VALIDATE_ERR" "$VALIDATE_OUT.tmp"
 else
   echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Skipping entrypoint validation (last run <7d ago)"
 fi
