@@ -238,6 +238,122 @@ class TestAuditArticle:
         assert fc.CONTENT_DIR == before
 
 
+class TestConfirmedGoneIsNotResampled:
+    """The first real weekly email (2026-09-20) carried three findings, and
+    three were articles a human had already confirmed and stamped four days
+    earlier: two research-affiliates pieces the publisher withdrew and one
+    blue-owl piece its own server refuses. Worse, mark_site_wide_losses paired
+    the two research-affiliates rows into an ALERT reading "several documents
+    at this site went at once -- the whole site may have added a gate", which
+    was a wrong diagnosis: nothing changed at that site, we simply re-checked
+    two known-dead URLs.
+
+    An alert channel that repeats a known answer every week, with the wrong
+    explanation, is one people stop reading. A row stamped url_status="gone"
+    is therefore not sampled at all, and the email says how many were skipped.
+
+    The trade-off, stated rather than hidden: if a publisher re-publishes a
+    withdrawn piece we will not notice. Nothing else re-fetches those rows
+    either -- they already hold a body and a summary -- so the loss is a page
+    we would not have used anyway.
+    """
+    def test_a_row_confirmed_gone_is_skipped(self, tmp_path):
+        rows = [_row(1), _row(2, url_status="gone", url_checked_at="2026-09-16"), _row(3)]
+        for r in rows:
+            (tmp_path / f"{r['id']}.txt").write_text(BODY)
+        got = ca.sample_articles(rows, {"aqr"}, per_source=3, content_dir=tmp_path)
+        assert [r["title"] for r in got] == ["T3", "T1"]
+
+    def test_skipping_lets_the_sample_reach_further_back(self, tmp_path):
+        rows = [_row(i, url_status="gone") for i in (5, 4)] + [_row(i) for i in (3, 2, 1)]
+        for r in rows:
+            (tmp_path / f"{r['id']}.txt").write_text(BODY)
+        got = ca.sample_articles(rows, {"aqr"}, per_source=3, content_dir=tmp_path)
+        assert [r["title"] for r in got] == ["T3", "T2", "T1"]
+
+    def test_the_email_says_how_many_were_skipped(self):
+        html = ca.render_email([], sources_audited=1, skipped_gone=3)
+        assert "3" in html and "已确认下架" in html
+
+    def test_no_skips_no_line(self):
+        html = ca.render_email([], sources_audited=1, skipped_gone=0)
+        assert "已确认下架" not in html
+
+
+class TestATransientFailureIsRetried:
+    """cambridge-associates was reported as "now failing" on 2026-09-20 after a
+    single Playwright timeout; run by hand minutes later it succeeded three
+    times out of three in ~6.5s each. One attempt is not evidence.
+
+    Which failures are worth a second attempt is not a new list: RETRY_POLICY
+    already marks fetch_error, selector_miss, body_too_short,
+    body_rendered_client_side and pdf_not_usable as code_dependent -- the ones
+    whose outcome depends on our code and its timing -- while page_gone,
+    access_denied, blocked_by_bot_protection and media_without_text are the
+    site's verdict and read the same however often they are asked.
+
+    A retry that succeeds is not silence either: it is recorded as flaky_fetch,
+    so a source drifting from "occasionally slow" to "usually failing" is
+    visible before it becomes an outage.
+    """
+    def _fetcher(self, failures, hint="fetch_error"):
+        state = {"n": 0}
+
+        def fetcher(a):
+            import fetch_content as fc
+            state["n"] += 1
+            if state["n"] <= failures:
+                fc.note_failure_hint(hint, "timeout")
+                return None
+            p = fc.CONTENT_DIR / f"{a['id']}.txt"; p.write_text(BODY)
+            fc._extraction_paths.append("primary")
+            return (p, "ok")
+        return fetcher, state
+
+    def test_a_timeout_that_passes_on_the_second_try_is_not_an_alert(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(ca, "RETRY_PAUSE_SECONDS", 0)
+        r = _row(1)
+        (tmp_path / f"{r['id']}.txt").write_text(BODY)
+        fetcher, state = self._fetcher(failures=1)
+        result = ca.audit_article(r, fetcher, stored_dir=tmp_path, baseline_dir=tmp_path / "b")
+        assert state["n"] == 2
+        assert result["findings"] == ["flaky_fetch"] and not ca.is_alert(result)
+
+    def test_a_failure_on_both_tries_is_still_an_alert(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(ca, "RETRY_PAUSE_SECONDS", 0)
+        r = _row(1)
+        (tmp_path / f"{r['id']}.txt").write_text(BODY)
+        fetcher, state = self._fetcher(failures=2)
+        result = ca.audit_article(r, fetcher, stored_dir=tmp_path, baseline_dir=tmp_path / "b")
+        assert state["n"] == 2
+        assert result["findings"] == ["now_failing"] and ca.is_alert(result)
+
+    @pytest.mark.parametrize("hint", ["page_gone", "access_denied", "blocked_by_bot_protection",
+                                      "media_without_text"])
+    def test_the_sites_own_verdict_is_not_asked_twice(self, tmp_path, monkeypatch, hint):
+        monkeypatch.setattr(ca, "RETRY_PAUSE_SECONDS", 0)
+        r = _row(1)
+        (tmp_path / f"{r['id']}.txt").write_text(BODY)
+        fetcher, state = self._fetcher(failures=2, hint=hint)
+        ca.audit_article(r, fetcher, stored_dir=tmp_path, baseline_dir=tmp_path / "b")
+        assert state["n"] == 1, f"{hint} was retried; it reads the same however often it is asked"
+
+    def test_the_retried_body_is_still_compared(self, tmp_path, monkeypatch):
+        """The second attempt's text is the one to judge, not a free pass."""
+        monkeypatch.setattr(ca, "RETRY_PAUSE_SECONDS", 0)
+        r = _row(1)
+        (tmp_path / f"{r['id']}.txt").write_text(BODY + BODY + BODY)      # stored is much longer
+        fetcher, _ = self._fetcher(failures=1)
+        result = ca.audit_article(r, fetcher, stored_dir=tmp_path, baseline_dir=tmp_path / "b")
+        assert "body_shrunk" in result["findings"] and "flaky_fetch" in result["findings"]
+
+    def test_the_retry_classes_come_from_the_shared_policy(self):
+        """One taxonomy, not a parallel list that drifts out of step."""
+        import failure_labels as fl
+        for label, policy in fl.RETRY_POLICY.items():
+            assert ca.worth_retrying(label) == bool(policy.get("code_dependent"))
+
+
 class TestSiteWideLoss:
     """One withdrawn document is housekeeping; two at once from the same site
     is the shape of a new gate (man.com added a role wall on 2026-09-15 and
@@ -292,7 +408,7 @@ class TestSiteWideLoss:
             return fetcher
 
         monkeypatch.setattr(fc, "content_fetcher_for", fetcher_for)
-        results, _ = ca.run_audit(per_source=2)
+        results, _, _ = ca.run_audit(per_source=2)
         assert len(results) == 2 and all(ca.is_alert(r) for r in results)
 
 
@@ -387,7 +503,7 @@ class TestReportAndEmail:
 
     def test_main_writes_a_report_and_sends_only_with_alerts(self, tmp_path, monkeypatch):
         sent = []
-        monkeypatch.setattr(ca, "run_audit", lambda per_source: (self.RESULTS, 4))
+        monkeypatch.setattr(ca, "run_audit", lambda per_source: (self.RESULTS, 4, 0))
         monkeypatch.setattr(ca, "send_email", lambda html, subject, to=None: sent.append((subject, to)) or True)
         monkeypatch.setattr(sys, "argv", ["content_audit.py", "--email", "--report-dir", str(tmp_path)])
         assert ca.main() == 0
@@ -398,7 +514,7 @@ class TestReportAndEmail:
     def test_no_alerts_no_email(self, tmp_path, monkeypatch):
         sent = []
         clean = [dict(r, findings=[]) for r in self.RESULTS]
-        monkeypatch.setattr(ca, "run_audit", lambda per_source: (clean, 4))
+        monkeypatch.setattr(ca, "run_audit", lambda per_source: (clean, 4, 0))
         monkeypatch.setattr(ca, "send_email", lambda *a, **k: sent.append(a) or True)
         monkeypatch.setattr(sys, "argv", ["content_audit.py", "--email", "--report-dir", str(tmp_path)])
         ca.main()
@@ -433,7 +549,7 @@ class TestReportAndEmail:
     def test_test_email_always_sends_to_that_address(self, tmp_path, monkeypatch):
         sent = []
         clean = [dict(r, findings=[]) for r in self.RESULTS]
-        monkeypatch.setattr(ca, "run_audit", lambda per_source: (clean, 4))
+        monkeypatch.setattr(ca, "run_audit", lambda per_source: (clean, 4, 0))
         monkeypatch.setattr(ca, "send_email", lambda html, subject, to=None: sent.append((subject, to)) or True)
         monkeypatch.setattr(sys, "argv", ["content_audit.py", "--test-email", "x@example.com", "--report-dir", str(tmp_path)])
         ca.main()

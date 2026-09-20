@@ -64,12 +64,28 @@ ALERT_FINDINGS = ("now_failing", "extraction_drift", "body_shrunk", "content_cha
 # those to an alert.
 LOST_FINDINGS = ("page_gone", "access_denied")
 SITE_WIDE_LOSS_MIN = 2
+
+# One attempt is not evidence: cambridge-associates was reported as "now
+# failing" on 2026-09-20 after a single Playwright timeout and succeeded three
+# times out of three when run by hand minutes later. Which failures deserve a
+# second attempt is not a new list -- failure_labels.RETRY_POLICY already marks
+# the ones whose outcome depends on our code and its timing (fetch_error,
+# selector_miss, body_too_short, body_rendered_client_side, pdf_not_usable) as
+# code_dependent, while page_gone, access_denied, blocked_by_bot_protection and
+# media_without_text are the site's verdict and read the same however often
+# they are asked.
+RETRY_PAUSE_SECONDS = 3
+
+
+def worth_retrying(label: str) -> bool:
+    return bool(failure_labels.RETRY_POLICY.get(label, {}).get("code_dependent"))
 FINDING_LABELS = {
     "extraction_drift": "抓取方式变了：专用规则不再匹配，退回了通用容器或整页（多为网站改版）",
     "now_failing": "现在抓不到了",
     "page_gone": "页面已删除（仅记录）",
     "access_denied": "站方拒绝这一篇：撤下、需登录或地区限制（返回的是网站自己的拒绝页，仅记录）",
     "site_wide_access_loss": "同一网站有多篇同时打不开了——可能整站加了门槛",
+    "flaky_fetch": "第一次抓失败、重试即成功（仅记录；反复出现说明这个源在变慢）",
     "body_shrunk": "正文比库里存的短了一半以上",
     "body_grew": "正文比库里存的长了一倍以上（可能混进了页面杂物，仅记录）",
     "content_changed": "正文内容与库里存的对不上（可能抓成了别的内容）",
@@ -113,6 +129,15 @@ def sample_articles(rows, configured, per_source: int = PER_SOURCE, content_dir:
             continue
         if r.get("analysis_status") == "insufficient_content":
             continue
+        if r.get("url_status") == "gone":
+            # Already checked by a human and stamped (scripts/content_audit.py
+            # --mark-gone). Re-fetching it every week reports a known answer,
+            # and on 2026-09-20 it also paired two such rows into a
+            # site_wide_access_loss alert with a wrong diagnosis. Trade-off: a
+            # withdrawn piece that is re-published will not be noticed -- and
+            # nothing else re-fetches these rows either, since they already
+            # hold a body and a summary.
+            continue
         if url_count[r.get("url")] > 1 or r.get("id") != fa.article_id(r["source_id"], r.get("url", "")):
             continue
         if not (content_dir / f"{r['id']}.txt").exists():
@@ -149,6 +174,14 @@ def audit_article(article: dict, fetcher, stored_dir: Path | None = None,
     old_path = baseline if baseline.exists() else stored_dir / f"{article['id']}.txt"
     stored = old_path.read_text(encoding="utf-8", errors="ignore")
     result, evidence, new = _fetch_to_temp(article, fetcher)
+    flaky = False
+    if result is None:
+        label, _ = failure_labels.classify_content_failure(evidence)
+        if worth_retrying(label):
+            time.sleep(RETRY_PAUSE_SECONDS)
+            retry, retry_evidence, retry_new = _fetch_to_temp(article, fetcher)
+            flaky = retry is not None
+            result, evidence, new = retry, retry_evidence, retry_new
     a, b = _shingles(stored), _shingles(new)
     out = {"source_id": article.get("source_id"), "id": article.get("id"), "title": article.get("title"),
            "url": article.get("url"), "stored_chars": len(stored), "new_chars": len(new),
@@ -159,7 +192,7 @@ def audit_article(article: dict, fetcher, stored_dir: Path | None = None,
         out.update(label=label, detail=detail,
                    findings=[label if label in LOST_FINDINGS else "now_failing"])
         return out
-    findings = []
+    findings = ["flaky_fetch"] if flaky else []
     if any(p != "primary" for p in evidence["extraction_paths"]):
         findings.append("extraction_drift")
     if result[1] == "ok":
@@ -245,7 +278,10 @@ def run_audit(per_source: int = PER_SOURCE) -> tuple[list, int]:
         if isinstance(h, logging.FileHandler):
             root.removeHandler(h)
     results = []
-    for article in sample_articles(rows, configured, per_source):
+    sampled = sample_articles(rows, configured, per_source)
+    skipped_gone = sum(1 for r in rows if r.get("url_status") == "gone"
+                       and r.get("source_id") in configured)
+    for article in sampled:
         try:
             results.append(audit_article(article, fc.content_fetcher_for(article)))
         except Exception as exc:
@@ -255,10 +291,10 @@ def run_audit(per_source: int = PER_SOURCE) -> tuple[list, int]:
                             "detail": f"audit raised {type(exc).__name__}: {exc}"[:300]})
         time.sleep(0.5)
     mark_site_wide_losses(results)
-    return results, len({r["source_id"] for r in results})
+    return results, len({r["source_id"] for r in results}), skipped_gone
 
 
-def render_email(results: list, sources_audited: int) -> str:
+def render_email(results: list, sources_audited: int, skipped_gone: int = 0) -> str:
     esc = html.escape
     alerts = [r for r in results if is_alert(r)]
     info = [r for r in results if not is_alert(r) and r.get("findings")]
@@ -290,6 +326,9 @@ def render_email(results: list, sources_audited: int) -> str:
         f'{sources_audited} 个网站 · 需要处理 <b>{len(alerts)}</b> 篇</p>',
         '<p style="font-size:12px;color:#586069">做法：每个网站抽最近几篇已存正文的文章，用今天的抓取程序重抓，与库里存的比较。</p>',
     ]
+    if skipped_gone:
+        parts.append(f'<p style="font-size:12px;color:#586069">跳过 {skipped_gone} 篇**已确认下架**的文章'
+                     f'（人工核对后打过标记，不再每周重报）。</p>'.replace("**", ""))
     if alerts:
         parts.append('<h3 style="color:#cf222e">⚠️ 需要处理（抓取方式变了 / 抓不到了 / 正文变短 / 内容对不上）</h3>'
                      f'<table style="width:100%;border-collapse:collapse;font-size:13px;background:#fff5f5">{rows(alerts, "#cf222e")}</table>')
@@ -346,14 +385,14 @@ def main() -> int:
             failed += not ok
         return 1 if failed else 0
 
-    results, sources_audited = run_audit(args.per_source)
+    results, sources_audited, skipped_gone = run_audit(args.per_source)
     alerts = [r for r in results if is_alert(r)]
     report_dir = Path(args.report_dir)
     report_dir.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(BJT).strftime("%Y%m%d-%H%M")
     (report_dir / f"content-audit-{stamp}.json").write_text(json.dumps(
         {"at": datetime.now(BJT).isoformat(timespec="seconds"), "sources_audited": sources_audited,
-         "alerts": len(alerts), "results": results}, ensure_ascii=False, indent=1))
+         "alerts": len(alerts), "skipped_gone": skipped_gone, "results": results}, ensure_ascii=False, indent=1))
     print(f"content audit: {len(results)} articles, {sources_audited} sources, {len(alerts)} alert(s)")
     for r in alerts:
         print(f"  ⚠️ {r['source_id']:26s} {','.join(r['findings'])} {r.get('label') or ''} | {r.get('title', '')[:60]}")
@@ -361,9 +400,9 @@ def main() -> int:
     subject = (f"GMIA 每周正文体检：{len(alerts)} 篇需要处理" if alerts else "GMIA 每周正文体检：全部正常")
     ok = True
     if args.test_email:
-        ok = send_email(render_email(results, sources_audited), f"[测试] {subject}", to=args.test_email)
+        ok = send_email(render_email(results, sources_audited, skipped_gone), f"[测试] {subject}", to=args.test_email)
     elif args.email and alerts:
-        ok = send_email(render_email(results, sources_audited), subject)
+        ok = send_email(render_email(results, sources_audited, skipped_gone), subject)
     return 0 if ok else 1
 
 

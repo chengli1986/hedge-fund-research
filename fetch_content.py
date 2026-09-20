@@ -690,7 +690,20 @@ def _fetch_content_bridgewater(article: dict) -> Optional[tuple[Path, str]]:
 
 
 def _fetch_content_cambridge(article: dict) -> Optional[tuple[Path, str]]:
-    """Fetch Cambridge Associates article content: Playwright -> <main> paragraphs."""
+    """Fetch Cambridge Associates article content: Playwright -> <main> paragraphs.
+
+    wait_until="domcontentloaded", not networkidle: the site keeps beacons
+    open and never idles out, so the 2026-09-20 weekly audit reported it as
+    "now failing" on a 30s timeout while the page had long since rendered (it
+    then succeeded 3/3 by hand, ~6.5s each). Measured across four stored
+    articles, old wait vs new: byte-identical text (3,379 / 4,957 / 11,115 /
+    8,300 chars), extraction path "primary" both ways, 4.0s instead of 5.5-9.3s.
+
+    Deliberately NOT wait_for_selector("main p, article p"): two of those four
+    pages never satisfy it -- Playwright does not consider their paragraphs
+    visible -- and that version timed out on both, which would have broken two
+    articles that work today.
+    """
     from playwright.sync_api import sync_playwright
 
     url = article["url"]
@@ -704,7 +717,7 @@ def _fetch_content_cambridge(article: dict) -> Optional[tuple[Path, str]]:
                 viewport={"width": 1440, "height": 900},
             )
             page = context.new_page()
-            page.goto(url, wait_until="networkidle", timeout=30000)
+            page.goto(url, wait_until="domcontentloaded", timeout=30000)
             page.wait_for_timeout(3000)
             html = page.content()
             browser.close()

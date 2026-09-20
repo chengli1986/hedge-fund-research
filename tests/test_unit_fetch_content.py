@@ -511,6 +511,47 @@ class TestPimcoContentFetcher:
         assert 'wait_until="networkidle"' not in src
 
 
+class TestCambridgeContentFetcher:
+    def test_uses_domcontentloaded_not_networkidle(self):
+        # 2026-09-20, the first real weekly audit: one Playwright timeout at
+        # networkidle (30s) reported the source as "now failing". Run by hand
+        # minutes later it succeeded 3/3 in ~6.5s, so the wait, not the site,
+        # was the problem -- cambridgeassociates.com keeps beacons open and
+        # never idles out.
+        #
+        # Measured before changing it, on four stored articles, old vs new:
+        #   3,379 / 4,957 / 11,115 / 8,300 chars, byte-identical both ways,
+        #   extraction path "primary" both ways, and 4.0s instead of 5.5-9.3s.
+        #
+        # NOT wait_for_selector("main p, article p"): two of those four pages
+        # never satisfy it (the paragraphs are not "visible" to Playwright) and
+        # that version timed out on both -- it would have broken two articles
+        # that work today. A plain settle after domcontentloaded is what was
+        # verified.
+        # Read the CODE, not the source text: the docstring below explains why
+        # networkidle and wait_for_selector are wrong, and a test that greps the
+        # whole function would trip over its own explanation (and would pass on
+        # a function that only mentions the right call in a comment).
+        import ast
+        import inspect
+        import textwrap
+        import fetch_content
+        tree = ast.parse(textwrap.dedent(inspect.getsource(fetch_content._fetch_content_cambridge)))
+        body = tree.body[0].body
+        if (isinstance(body[0], ast.Expr) and isinstance(body[0].value, ast.Constant)
+                and isinstance(body[0].value.value, str)):
+            body = body[1:]                       # drop the docstring
+        src = "\n".join(ast.unparse(node) for node in body)
+        assert "wait_until='domcontentloaded'" in src, (
+            "_fetch_content_cambridge must use wait_until='domcontentloaded': "
+            "networkidle timed out in the 2026-09-20 audit while the page was "
+            "long since rendered.")
+        assert "networkidle" not in src
+        assert "wait_for_selector" not in src, (
+            "waiting for a content selector breaks 2 of 4 stored cambridge "
+            "articles (measured 2026-09-20)")
+
+
 class TestTrowepriceContentFetcher:
     def test_uses_domcontentloaded_not_networkidle(self):
         # Same root cause as the fetch_articles.fetch_troweprice listing fix
