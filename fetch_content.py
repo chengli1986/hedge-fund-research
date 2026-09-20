@@ -34,6 +34,7 @@ from typing import Optional
 
 import requests
 import jsonl_store
+import playwright_nav
 from bs4 import BeautifulSoup
 
 BJT = timezone(timedelta(hours=8))
@@ -459,7 +460,7 @@ def _fetch_content_oaktree(article: dict) -> Optional[tuple[Path, str]]:
                 viewport={"width": 1440, "height": 900},
             )
             page = context.new_page()
-            page.goto(url, wait_until="networkidle", timeout=30000)
+            playwright_nav.goto_with_fallback(page, url, wait_until="networkidle", timeout=30000)
             page.wait_for_timeout(3000)
             html = page.content()
             browser.close()
@@ -524,7 +525,7 @@ def _fetch_content_aqr(article: dict) -> Optional[tuple[Path, str]]:
                 viewport={"width": 1440, "height": 900},
             )
             page = context.new_page()
-            page.goto(url, wait_until="networkidle", timeout=30000)
+            playwright_nav.goto_with_fallback(page, url, wait_until="networkidle", timeout=30000)
             page.wait_for_timeout(3000)
             html = page.content()
             browser.close()
@@ -920,7 +921,7 @@ def _fetch_content_aberdeen(article: dict) -> Optional[tuple[Path, str]]:
                 viewport={"width": 1440, "height": 900},
             )
             page = context.new_page()
-            page.goto(url, wait_until="networkidle", timeout=30000)
+            playwright_nav.goto_with_fallback(page, url, wait_until="networkidle", timeout=30000)
             page.wait_for_timeout(2000)
             html = page.content()
             browser.close()

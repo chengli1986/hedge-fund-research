@@ -32,6 +32,7 @@ from typing import Optional
 from urllib.parse import urlsplit, urlunsplit, urljoin, urlparse
 
 import jsonl_store
+import playwright_nav
 
 import xml.etree.ElementTree as ET
 from email.utils import parsedate_to_datetime
@@ -638,7 +639,8 @@ def _get_playwright_page(
         if init_script:
             context.add_init_script(init_script)
         page = context.new_page()
-        page.goto(url, wait_until=wait_until, timeout=timeout)
+        # A never-settling site is slow, not broken: see playwright_nav.
+        playwright_nav.goto_with_fallback(page, url, wait_until=wait_until, timeout=timeout)
         if wait_selector:
             try:
                 page.wait_for_selector(wait_selector, timeout=10000)
