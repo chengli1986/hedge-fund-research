@@ -28,11 +28,15 @@ Spec (type card_list):
     link           anchor inside the card, or "self" when the card is the <a>
     title          optional; defaults to the link's own text
     date           optional; selector for the date text inside the card
+    date_attr      optional; read the date from this attribute of that element
+                   (time[datetime]) and fall back to its text
+    path_prefix    optional; keep only links whose path starts with this
 """
 from __future__ import annotations
 
 import logging
-from urllib.parse import urljoin
+import re
+from urllib.parse import urljoin, urlparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -57,7 +61,17 @@ def validate_spec(spec: dict) -> None:
 
 
 def _text(el) -> str:
-    return el.get_text(strip=True) if el else ""
+    """Text with a space between inline tags, not fused.
+
+    get_text(strip=True) welds "for" and "Infrastructure" into
+    "forInfrastructure" when a site wraps part of a headline in a <span> --
+    the same defect c149894 fixed in four content fetchers, reproduced here
+    and caught by the A/B run against northleaf-capital before this template
+    was switched on.
+    """
+    if not el:
+        return ""
+    return re.sub(r"\s+", " ", el.get_text(" ")).strip()
 
 
 def parse_cards(html: str, source: dict, spec: dict) -> list[dict]:
@@ -77,13 +91,22 @@ def parse_cards(html: str, source: dict, spec: dict) -> list[dict]:
         url = urljoin(source["url"], href)
         if expected_host and not _validate_hostname(url, expected_host):
             continue
+        prefix = spec.get("path_prefix")
+        if prefix and not urlparse(url).path.startswith(prefix):
+            continue
         if url in seen:
             continue
         title = _text(card.select_one(spec["title"])) if spec.get("title") else _text(link_el)
         if not title:
             continue
         seen.add(url)
-        date_raw = _text(card.select_one(spec["date"])) if spec.get("date") else ""
+        date_raw = ""
+        if spec.get("date"):
+            date_el = card.select_one(spec["date"])
+            if date_el is not None:
+                attr = spec.get("date_attr")
+                date_raw = (date_el.get(attr) or "").strip() if attr else ""
+                date_raw = date_raw or _text(date_el)
         rows.append({"title": title, "url": url,
                      "date": parse_date(date_raw) if date_raw else None,
                      "date_raw": date_raw})

@@ -195,3 +195,39 @@ class TestTheSwitch:
         for s in cfg["sources"]:
             if s.get("listing_template_active"):
                 assert s.get("listing_template"), f"{s['id']} activates a template it does not declare"
+
+
+class TestTwoMoreKnobs:
+    """Both are patterns, not site-specific hacks: "only links under this
+    path" and "the date is in an attribute" recur across sites. Anything more
+    particular than that -- brookfield's title in an aria-label and its date
+    found by a regex over the card text, bridgewater's date living in the
+    card's grandparent -- stays hand-written, or the template grows back into
+    the forty-two if-statements it replaces.
+    """
+    HTML = """
+    <a class="card" href="/insights/one"><h3>Kept</h3><time datetime="2026-09-18">18 Sep</time></a>
+    <a class="card" href="/docs/viewer/two"><h3>A PDF viewer</h3><time datetime="2026-09-17">17 Sep</time></a>
+    <a class="card" href="/insights/three"><h3>Also kept</h3><time>September 2026</time></a>
+    """
+    SRC = {"id": "t", "url": "https://site.test/insights", "expected_hostname": "site.test",
+           "max_articles": 10}
+    SPEC = {"type": "card_list", "fetch": "requests", "card": "a.card", "link": "self",
+            "title": "h3", "date": "time", "date_attr": "datetime", "path_prefix": "/insights/"}
+
+    def test_only_links_under_the_path_are_kept(self):
+        rows = lt.parse_cards(self.HTML, self.SRC, self.SPEC)
+        assert [r["title"] for r in rows] == ["Kept", "Also kept"]
+
+    def test_the_date_comes_from_the_attribute(self):
+        rows = lt.parse_cards(self.HTML, self.SRC, self.SPEC)
+        assert rows[0]["date"] == "2026-09-18" and rows[0]["date_raw"] == "2026-09-18"
+
+    def test_the_text_is_used_when_the_attribute_is_missing(self):
+        rows = lt.parse_cards(self.HTML, self.SRC, self.SPEC)
+        assert rows[1]["date"] == "2026-09-30" and rows[1]["date_raw"] == "September 2026"
+
+    def test_without_the_knobs_nothing_changes(self):
+        spec = {k: v for k, v in self.SPEC.items() if k not in ("date_attr", "path_prefix")}
+        rows = lt.parse_cards(self.HTML, self.SRC, spec)
+        assert len(rows) == 3 and rows[0]["date_raw"] == "18 Sep"
