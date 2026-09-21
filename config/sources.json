@@ -805,11 +805,5 @@
       "expected_hostname": "northleafcapital.com",
       "max_articles": 10
     }
-  ],
-  "settings": {
-    "max_articles_per_source": 10,
-    "article_lookback_days": 90,
-    "data_dir": "data",
-    "log_dir": "logs"
-  }
+  ]
 }

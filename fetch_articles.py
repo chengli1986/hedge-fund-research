@@ -218,6 +218,20 @@ def get_source_url(source: dict, entrypoints: dict) -> str:
     return source["url"]
 
 
+# What THIS process measured, per source. The file on disk is the record kept
+# between runs; this is the record of the run in progress. main() reads it
+# rather than the file, because a --dry-run deliberately does not write the
+# file (so the file holds the last REAL run) and because a failed write is
+# swallowed on purpose -- in both cases reading the file back means reporting
+# numbers this run did not produce (audit B10).
+_run_metrics: dict[str, dict] = {}
+
+
+def run_metrics() -> dict[str, dict]:
+    """Per-source metrics measured by this process."""
+    return _run_metrics
+
+
 def _preserve_unreadable_state() -> None:
     """Copy an unreadable inspection_state.json aside before it is replaced.
 
@@ -267,10 +281,6 @@ def record_quality_metrics(source_id: str, total_found: int, new_count: int,
     back out of it by hand), says so at ERROR, and carries on.  The daily
     health check reports the copies, because a log line is not a destination.
     """
-    if dry_run:
-        log.debug("  dry run: not recording quality metrics for %s", source_id)
-        return
-
     state: dict = {}
     if INSPECTION_STATE_FILE.exists():
         try:
@@ -282,7 +292,8 @@ def record_quality_metrics(source_id: str, total_found: int, new_count: int,
             state = {}
         if not isinstance(state, dict):
             state = {}
-        if not state:
+        if not state and not dry_run:
+            # A dry run inspects; it must not write even the evidence copy.
             _preserve_unreadable_state()
 
     prev = state.get(source_id, {})
@@ -294,7 +305,7 @@ def record_quality_metrics(source_id: str, total_found: int, new_count: int,
 
     gated_ratio = gated_count / max(total_found, 1)
 
-    state[source_id] = {
+    record = {
         "last_inspected_at": datetime.now(timezone.utc).isoformat(),
         # Why the count is zero, when it is zero because WE refused the batch:
         # without it a refusal is indistinguishable from the site being down.
@@ -304,6 +315,13 @@ def record_quality_metrics(source_id: str, total_found: int, new_count: int,
         "last_gated_ratio": round(gated_ratio, 2),
         "last_mismatch_count": mismatch_count,
     }
+    _run_metrics[source_id] = record
+    if dry_run:
+        # Measured, not recorded: --dry-run is how a source is inspected, and
+        # inspecting must not move last_inspected_at or the zero streak.
+        log.debug("  dry run: not recording quality metrics for %s", source_id)
+        return
+    state[source_id] = record
 
     tmp_path = INSPECTION_STATE_FILE.with_suffix(INSPECTION_STATE_FILE.suffix + ".tmp")
     try:
@@ -3968,16 +3986,14 @@ def main() -> None:
             all_new.extend(new)
             existing_ids.update(a["id"] for a in new)
 
-            # Check for anomalies after fetch
-            if INSPECTION_STATE_FILE.exists():
-                try:
-                    state = json.loads(INSPECTION_STATE_FILE.read_text())
-                    source_metrics = state.get(source_id, {})
-                    found_by_source[source_id] = source_metrics.get("last_article_count", 0)
-                    for alert in check_anomalies(source_metrics):
-                        log.warning("ANOMALY [%s]: %s", source_id, alert)
-                except json.JSONDecodeError:
-                    pass
+            # Anomalies from what THIS run measured, not from the file: a
+            # --dry-run does not write the file, and a failed write is
+            # swallowed, so reading it back reports another run's numbers
+            # (audit B10).
+            source_metrics = run_metrics().get(source_id, {})
+            found_by_source[source_id] = source_metrics.get("last_article_count", 0)
+            for alert in check_anomalies(source_metrics):
+                log.warning("ANOMALY [%s]: %s", source_id, alert)
         except Exception as exc:
             # One source's shape drift must not cost the other 41 their night.
             log.error("SOURCE_BROKEN: %s raised %s: %s -- skipping it, the run continues",
