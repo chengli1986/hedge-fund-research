@@ -73,11 +73,10 @@ def _call_model(prompt: str, api_keys: dict, article_id: str = "") -> tuple[str,
     recorded as a successful classification, and the field could only ever say
     "fine".
     """
-    key_name = "OPENAI_API_KEY" if MODEL in aa.OPENAI_MODELS else "GEMINI_API_KEY"
-    caller = aa._call_openai if MODEL in aa.OPENAI_MODELS else aa._call_gemini
-    # Always pass the model: the gemini branch used to send no kwargs, so a
-    # gemini MODEL would silently call _call_gemini's default instead.
-    return caller(prompt, api_keys[key_name], model=MODEL)
+    if MODEL not in aa.OPENAI_MODELS:
+        raise RuntimeError(f"backfill has no caller for {MODEL!r} (chain is OpenAI-only since 2026-09-21)")
+    # Always pass the model: without it every tier would run _call_openai's default.
+    return aa._call_openai(prompt, api_keys["OPENAI_API_KEY"], model=MODEL)
 
 
 def classify(article: dict, api_keys: dict) -> list[str]:

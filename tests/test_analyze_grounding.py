@@ -230,7 +230,6 @@ class TestFallbackChainOnDecline:
             return (replies[model], {}, model)
 
         monkeypatch.setattr(aa, "_call_openai", fake_openai)
-        monkeypatch.setattr(aa, "_call_gemini", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("x")))
         monkeypatch.setattr(aa, "_append_usage_log", lambda *a, **k: None)
         return calls
 
@@ -289,7 +288,6 @@ class TestWordingOnlyRetry:
             return (queue.pop(0) if len(queue) > 1 else queue[0], {}, model)
 
         monkeypatch.setattr(aa, "_call_openai", fake_openai)
-        monkeypatch.setattr(aa, "_call_gemini", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("x")))
         monkeypatch.setattr(aa, "_append_usage_log", lambda *a, **k: None)
         return calls, prompts
 

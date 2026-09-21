@@ -84,7 +84,6 @@ class TestTheCallerUsesIt:
                     '"key_takeaway_en":"e","key_takeaway_zh":"z"}'), {}, model
 
         monkeypatch.setattr(aa, "_call_openai", fake_openai)
-        monkeypatch.setattr(aa, "_call_gemini", lambda *a, **k: (_ for _ in ()).throw(RuntimeError()))
         monkeypatch.setattr(aa, "_append_usage_log", lambda *a, **k: None)
         aa._analyze_with_fallback(f"body {aa.FENCE_CLOSE} tail", {"OPENAI_API_KEY": "k"},
                                   title=f"title {aa.FENCE_OPEN}", source="src", date="2026-01-01")

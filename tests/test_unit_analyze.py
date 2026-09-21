@@ -151,7 +151,7 @@ class TestAnalyzeWithFallback:
         called with its OWN model id.
 
         Rewritten 2026-09-07 when MODEL_CHAIN became
-        [gpt-5.6-luna, gpt-4.1-mini, gemini-2.5-pro]. Both OpenAI tiers share
+        [gpt-5.6-luna, gpt-4.1-mini, ...]. Both OpenAI tiers share
         one caller, so the assertion that matters is that the model ids differ:
         without partial() binding them, both tiers would run _call_openai's
         default and the chain would be one model tried twice.
@@ -164,14 +164,9 @@ class TestAnalyzeWithFallback:
                 raise RuntimeError("luna down")
             return (self.GOOD_RESULT, {"total_tokens": 100}, model)
 
-        def mock_gemini(prompt, api_key, model="gemini-2.5-flash"):
-            calls.append("gemini-2.5-pro")
-            return (self.GOOD_RESULT, {}, "gemini-2.5-pro")
-
         monkeypatch.setattr("analyze_articles._call_openai", mock_openai)
-        monkeypatch.setattr("analyze_articles._call_gemini", mock_gemini)
 
-        api_keys = {"OPENAI_API_KEY": "fake-openai", "GEMINI_API_KEY": "fake-gemini"}
+        api_keys = {"OPENAI_API_KEY": "fake-openai"}
 
         # The body must support GOOD_RESULT's summary: since 2026-09-13 every
         # summary passes check_grounding, and "article content" would turn this
@@ -182,25 +177,19 @@ class TestAnalyzeWithFallback:
         assert result["_model"] == "gpt-4.1-mini"
         assert calls.count("gpt-5.6-luna") == 2      # MAX_ATTEMPTS before falling through
         assert calls.count("gpt-4.1-mini") == 1
-        assert "gemini-2.5-pro" not in calls
 
     def test_all_models_fail(self, monkeypatch):
         """When all models fail, should return None."""
-        def mock_gemini(prompt, api_key, model="gemini-2.5-flash"):
-            raise RuntimeError("down")
-
         def mock_openai(prompt, api_key, model="gpt-4.1-mini"):
             raise RuntimeError("down")
 
         def mock_anthropic(prompt, api_key, model="claude-sonnet-4-6"):
             raise RuntimeError("down")
 
-        monkeypatch.setattr("analyze_articles._call_gemini", mock_gemini)
         monkeypatch.setattr("analyze_articles._call_openai", mock_openai)
         monkeypatch.setattr("analyze_articles._call_anthropic", mock_anthropic)
 
         api_keys = {
-            "GEMINI_API_KEY": "fake",
             "OPENAI_API_KEY": "fake",
             "ANTHROPIC_API_KEY": "fake",
         }
@@ -211,13 +200,11 @@ class TestAnalyzeWithFallback:
     def test_skip_model_without_api_key(self, monkeypatch):
         """A tier with no key is skipped, not called with api_key=None.
 
-        Rewritten 2026-09-07. The old version withheld GEMINI_API_KEY and
-        asserted OpenAI ran first — but after the chain reorder OpenAI runs
-        first unconditionally, so it passed without ever reaching the skip
-        branch: deleting that branch outright kept the whole suite green. The
-        skippable tier now is the OpenAI one, so this withholds that key.
-        Without the branch, api_key=None reaches the caller and every article
-        costs two 401s per OpenAI tier instead of a clean skip.
+        Rewritten 2026-09-07 (withhold the OpenAI key, expect the Gemini tier)
+        and again 2026-09-21 when the chain became OpenAI-only: with no
+        OPENAI_API_KEY every tier is skipped and the chain returns None.
+        Without the skip branch, api_key=None reaches the caller and every
+        article costs two 401s per tier instead of a clean skip.
         """
         calls = []
 
@@ -225,21 +212,12 @@ class TestAnalyzeWithFallback:
             calls.append(("openai", model, api_key))
             return (self.GOOD_RESULT, {}, model)
 
-        def mock_gemini(prompt, api_key, model="gemini-2.5-flash"):
-            calls.append(("gemini", "gemini-2.5-pro", api_key))
-            return (self.GOOD_RESULT, {}, "gemini-2.5-pro")
-
         monkeypatch.setattr("analyze_articles._call_openai", mock_openai)
-        monkeypatch.setattr("analyze_articles._call_gemini", mock_gemini)
 
-        result = _analyze_with_fallback("Summary of the article.", {"GEMINI_API_KEY": "fake-gemini"})
+        result = _analyze_with_fallback("Summary of the article.", {"SOME_OTHER_KEY": "x"})
 
-        assert result is not None
-        assert not result.get("insufficient_content"), result
-        assert result["_model"] == "gemini-2.5-pro"
-        assert not [c for c in calls if c[0] == "openai"], (
-            "an OpenAI tier ran with no OPENAI_API_KEY")
-        assert all(c[2] is not None for c in calls), "a caller was handed api_key=None"
+        assert result is None
+        assert calls == [], "an OpenAI tier ran with no OPENAI_API_KEY"
 
 class TestResolveContentPath:
     def test_uses_explicit_relative_content_path(self):
@@ -395,68 +373,27 @@ class TestOpenAIParamStyles:
 
 
 class TestModelChainOrder:
-    """gpt-5.6-luna leads; the chain keeps a non-OpenAI tier at the end.
+    """gpt-5.6-luna leads; gpt-4.1-mini is the only fallback.
 
     Measured over 30 articles with the theme-allowlist prompt: luna $0.36/mo
-    vs gpt-4.1-mini $0.57 vs gemini-2.5-pro $8.76, all three 30/30 parseable,
-    0/30 empty themes for both OpenAI models. Luna was chosen on behaviour,
-    not price: it flags missing source material instead of writing around it
-    (three cases), and files articles under the theme they are actually about.
-    gemini-2.5-pro stays last so an OpenAI-wide outage still has a tier.
+    vs gpt-4.1-mini $0.57, both 30/30 parseable, 0/30 empty themes. Luna was
+    chosen on behaviour, not price: it flags missing source material instead
+    of writing around it (three cases), and files articles under the theme
+    they are actually about.
+
+    Until 2026-09-21 this class also asserted that the chain ENDS with a
+    non-OpenAI provider. That guard was removed deliberately, not because it
+    failed: the Google key is retired and the user chose a single provider
+    over wiring a second key in (tests/test_no_gemini_tier.py has the record).
     """
 
     def test_luna_is_the_primary_model(self):
         from analyze_articles import MODEL_CHAIN
         assert MODEL_CHAIN[0] == "gpt-5.6-luna"
 
-    def test_chain_ends_with_a_non_openai_provider(self):
-        from analyze_articles import MODEL_CHAIN, OPENAI_MODELS
-        assert MODEL_CHAIN[-1] not in OPENAI_MODELS, (
-            "every tier is OpenAI — one provider outage would empty the chain")
-
-
-class TestGeminiOutputBudget:
-    """gemini-2.5-pro is the last tier, and its thinking shares the output cap.
-
-    On 2026-09-07 BJT (09-06 UTC) two calls on the same article stopped at
-    exactly 3996 of a 4000-token cap and both failed to parse -- the thinking
-    had eaten the budget mid-JSON. The chain then fell through, but gemini is
-    now the LAST tier, so the same truncation would fail the whole chain. A
-    revert of the cap must not be silent, and neither must a truncation.
-    """
-
-    def _post(self, monkeypatch, finish_reason="STOP"):
-        import analyze_articles as aa
-        sent = {}
-
-        class R:
-            def raise_for_status(self): pass
-            def json(self):
-                return {"candidates": [{"finishReason": finish_reason,
-                                        "content": {"parts": [{"text": "{}"}]}}],
-                        "usageMetadata": {}}
-
-        monkeypatch.setattr(aa.requests, "post",
-                            lambda url, **kw: (sent.update(kw["json"]), R())[1])
-        return sent
-
-    def test_output_budget_leaves_room_for_thinking(self, monkeypatch):
-        import analyze_articles as aa
-        sent = self._post(monkeypatch)
-        aa._call_gemini("p", "k")
-        assert sent["generationConfig"]["maxOutputTokens"] >= 12000, (
-            "back at a cap the model's thinking can exhaust — the 09-06 failure")
-
-    def test_truncation_is_reported_as_truncation(self, monkeypatch, caplog):
-        import logging
-        import analyze_articles as aa
-        self._post(monkeypatch, finish_reason="MAX_TOKENS")
-        with caplog.at_level(logging.WARNING):
-            aa._call_gemini("p", "k")
-        assert any("MAX_TOKENS" in r.message or "truncat" in r.message.lower()
-                   for r in caplog.records), (
-            "a truncated reply surfaces only as 'failed to parse output' — the "
-            "same misleading symptom as the 09-06 incident")
+    def test_second_tier_is_a_different_model_not_a_retry(self):
+        from analyze_articles import MODEL_CHAIN
+        assert len(MODEL_CHAIN) == 2 and MODEL_CHAIN[1] != MODEL_CHAIN[0]
 
 
 class TestChainModelsAreFullyDeclared:
@@ -472,27 +409,6 @@ class TestChainModelsAreFullyDeclared:
         from analyze_articles import MODEL_CHAIN, _USAGE_FIELDS
         missing = [m for m in MODEL_CHAIN if m not in _USAGE_FIELDS]
         assert not missing, f"models in MODEL_CHAIN with no usage mapping: {missing}"
-
-    def test_gemini_caller_requests_the_model_it_is_given(self, monkeypatch):
-        # The URL used to hard-code gemini-2.5-pro, so pointing the chain at a
-        # different Gemini model would have kept calling the expensive one
-        # while reporting the cheap one's name.
-        import analyze_articles as aa
-        seen = {}
-
-        class R:
-            def raise_for_status(self): pass
-            def json(self):
-                return {"candidates": [{"finishReason": "STOP",
-                                        "content": {"parts": [{"text": "{}"}]}}],
-                        "usageMetadata": {}}
-
-        monkeypatch.setattr(aa.requests, "post",
-                            lambda url, **kw: (seen.update(url=url), R())[1])
-        _, _, used = aa._call_gemini("p", "k", model="gemini-2.5-flash")
-        assert "gemini-2.5-flash:generateContent" in seen["url"]
-        assert used == "gemini-2.5-flash"
-
 
 class TestTotalAnalysisOutageIsAFailure:
     """Stage 3 must not report success when nothing could be summarised.

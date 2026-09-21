@@ -9,7 +9,6 @@ subscription would have been made on a guess.
 The one trap worth a test: the three providers name the same two numbers
 differently --
 
-    gemini-2.5-pro    usageMetadata: promptTokenCount / candidatesTokenCount
     gpt-4.1-mini      usage:         prompt_tokens   / completion_tokens
     claude-*          usage:         input_tokens    / output_tokens
 
@@ -25,12 +24,6 @@ import analyze_articles as aa
 
 
 class TestNormalizeUsage:
-    def test_gemini_shape(self):
-        u = aa._normalize_usage("gemini-2.5-pro", {
-            "promptTokenCount": 4321, "candidatesTokenCount": 890,
-            "totalTokenCount": 5211})
-        assert u["input_tokens"] == 4321 and u["output_tokens"] == 890
-
     def test_openai_shape(self):
         u = aa._normalize_usage("gpt-4.1-mini", {
             "prompt_tokens": 4321, "completion_tokens": 890, "total_tokens": 5211})
@@ -43,7 +36,7 @@ class TestNormalizeUsage:
 
     def test_unknown_payload_is_none_not_zero(self):
         # A provider that renames its fields must surface as unknown, not free.
-        u = aa._normalize_usage("gemini-2.5-pro", {"inputTokens": 4321})
+        u = aa._normalize_usage("gpt-4.1-mini", {"inputTokens": 4321})
         assert u == {"input_tokens": None, "output_tokens": None,
                      "provider_total_tokens": None}
 
@@ -63,8 +56,8 @@ class TestNormalizeUsage:
 class TestUsageLog:
     def test_appends_one_row_per_call(self, tmp_path):
         p = tmp_path / "usage.jsonl"
-        aa._append_usage_log("abc123", "gemini-2.5-pro",
-                             {"promptTokenCount": 100, "candidatesTokenCount": 20}, path=p)
+        aa._append_usage_log("abc123", "gpt-5.6-luna",
+                             {"prompt_tokens": 100, "completion_tokens": 20}, path=p)
         aa._append_usage_log("def456", "gpt-4.1-mini",
                              {"prompt_tokens": 200, "completion_tokens": 30}, path=p)
         rows = [json.loads(l) for l in p.read_text().splitlines()]
@@ -72,12 +65,12 @@ class TestUsageLog:
         assert [r["article_id"] for r in rows] == ["abc123", "def456"]
         assert [r["input_tokens"] for r in rows] == [100, 200]
         assert [r["output_tokens"] for r in rows] == [20, 30]
-        assert [r["model"] for r in rows] == ["gemini-2.5-pro", "gpt-4.1-mini"]
+        assert [r["model"] for r in rows] == ["gpt-5.6-luna", "gpt-4.1-mini"]
 
     def test_row_carries_bjt_timestamp(self, tmp_path):
         p = tmp_path / "usage.jsonl"
-        aa._append_usage_log("abc123", "gemini-2.5-pro",
-                             {"promptTokenCount": 1, "candidatesTokenCount": 1}, path=p)
+        aa._append_usage_log("abc123", "gpt-5.6-luna",
+                             {"prompt_tokens": 1, "completion_tokens": 1}, path=p)
         row = json.loads(p.read_text().splitlines()[0])
         # EC2 runs UTC; every other timestamp in this repo is BJT, so this one
         # must be too or the daily aggregate lands in the wrong day.
@@ -87,7 +80,7 @@ class TestUsageLog:
         # The row must still exist: "we made a call and don't know its cost" is
         # information, and silently skipping it understates the total.
         p = tmp_path / "usage.jsonl"
-        aa._append_usage_log("abc123", "gemini-2.5-pro", {}, path=p)
+        aa._append_usage_log("abc123", "gpt-5.6-luna", {}, path=p)
         row = json.loads(p.read_text().splitlines()[0])
         assert row["input_tokens"] is None
         assert row["output_tokens"] is None
@@ -95,8 +88,8 @@ class TestUsageLog:
     def test_logging_failure_never_breaks_analysis(self, tmp_path):
         # Instrumentation must not be able to kill the pipeline it measures.
         unwritable = tmp_path / "nope" / "usage.jsonl"   # parent does not exist
-        aa._append_usage_log("abc123", "gemini-2.5-pro",
-                             {"promptTokenCount": 1}, path=unwritable)
+        aa._append_usage_log("abc123", "gpt-5.6-luna",
+                             {"prompt_tokens": 1}, path=unwritable)
 
 
 class TestChainRecordsEveryCall:
@@ -106,14 +99,14 @@ class TestChainRecordsEveryCall:
     falls through to the next model.  Those discarded calls still burned
     tokens.  Booking only the call that finally parsed would understate the
     real spend by exactly the amount the retries cost -- and retries are not
-    rare here: gemini-2.5-pro 503s every few days.
+    rare here: a tier 503s every few days.
     """
 
     PARSEABLE = ('{"summary_en":"e","summary_zh":"z","themes":[],'
                  '"key_takeaway_en":"e","key_takeaway_zh":"z"}')
 
     def _keys(self):
-        return {"GEMINI_API_KEY": "k", "OPENAI_API_KEY": "k"}
+        return {"OPENAI_API_KEY": "k"}
 
     def test_unparseable_then_parseable_logs_both_calls(self, tmp_path, monkeypatch):
         p = tmp_path / "usage.jsonl"
@@ -126,13 +119,8 @@ class TestChainRecordsEveryCall:
             text = "not json" if calls["n"] == 1 else self.PARSEABLE
             return (text, usage, model)
 
-        # Mock the whole caller, not one provider: since MODEL_CHAIN was
-        # reordered the first tier is OpenAI, and patching only _call_gemini
-        # left the earlier tiers making real HTTP requests with a fake key.
+        # Mock the whole caller: both tiers share _call_openai.
         monkeypatch.setattr(aa, "_call_openai", fake_luna)
-        monkeypatch.setattr(aa, "_call_gemini",
-                            lambda prompt, api_key, model="gemini-2.5-flash": (_ for _ in ()).throw(
-                                AssertionError("gemini tier must not be reached")))
         res = aa._analyze_with_fallback("body", self._keys(), title="t",
                                         source="s", date="2026-09-06",
                                         article_id="art1")
@@ -156,9 +144,6 @@ class TestChainRecordsEveryCall:
             return (self.PARSEABLE, {"prompt_tokens": 5, "completion_tokens": 1}, model)
 
         monkeypatch.setattr(aa, "_call_openai", mock_openai)
-        monkeypatch.setattr(aa, "_call_gemini",
-                            lambda prompt, api_key, model="gemini-2.5-flash": (_ for _ in ()).throw(
-                                AssertionError("gemini tier must not be reached")))
         aa._analyze_with_fallback("body", self._keys(), title="t", source="s",
                                   date="2026-09-06", article_id="art2")
         rows = [json.loads(l) for l in p.read_text().splitlines()]
@@ -193,42 +178,9 @@ class TestMainWiresArticleId:
                 "usage rows would be anonymous")
 
 
-class TestGeminiThinkingTokens:
-    """Reasoning tokens are billed as output and must not be dropped.
-
-    Caught by probing the live API instead of trusting the field list in the
-    code's comment (2026-09-06).  A real gemini-2.5-pro reply came back as
-
-        promptTokenCount 43 / candidatesTokenCount 34 /
-        thoughtsTokenCount 305 / totalTokenCount 382
-
-    -- 43 + 34 + 305 = 382.  Booking only candidatesTokenCount as output
-    understated this call's output by 9x, and every summarisation this pipeline
-    runs is a reasoning call.  The provider's own total is recorded alongside so
-    that any future field we fail to map shows up as a reconciliation gap in the
-    data itself, rather than waiting to be noticed by eye.
-    """
-
-    def test_thinking_tokens_count_as_output(self):
-        u = aa._normalize_usage("gemini-2.5-pro", {
-            "promptTokenCount": 43, "candidatesTokenCount": 34,
-            "thoughtsTokenCount": 305, "totalTokenCount": 382})
-        assert u["input_tokens"] == 43
-        assert u["output_tokens"] == 339          # 34 + 305, both billed output
-
-    def test_reconciles_against_provider_total(self):
-        u = aa._normalize_usage("gemini-2.5-pro", {
-            "promptTokenCount": 43, "candidatesTokenCount": 34,
-            "thoughtsTokenCount": 305, "totalTokenCount": 382})
-        assert u["provider_total_tokens"] == 382
-        assert u["input_tokens"] + u["output_tokens"] == u["provider_total_tokens"]
-
-    def test_absent_thinking_tokens_are_not_required(self):
-        u = aa._normalize_usage("gemini-2.5-pro", {
-            "promptTokenCount": 43, "candidatesTokenCount": 34,
-            "totalTokenCount": 77})
-        assert u["output_tokens"] == 34
-        assert u["provider_total_tokens"] == 77
+class TestProviderTotalIsRecorded:
+    """The provider's own total is booked alongside the mapped fields so an
+    unmapped key shows up as a reconciliation gap in the data itself."""
 
     def test_openai_total_is_recorded_too(self):
         u = aa._normalize_usage("gpt-4.1-mini", {
@@ -281,14 +233,14 @@ class TestTestsNeverTouchProductionLog:
         before = prod.stat().st_size if prod.exists() else None
 
         monkeypatch.setattr(
-            aa, "_call_gemini",
-            lambda prompt, api_key, model="gemini-2.5-flash": (self.PARSEABLE,
-                                     {"promptTokenCount": 1, "candidatesTokenCount": 1},
-                                     "gemini-2.5-pro"))
+            aa, "_call_openai",
+            lambda prompt, api_key, model="gpt-4.1-mini": (self.PARSEABLE,
+                                     {"prompt_tokens": 1, "completion_tokens": 1},
+                                     model))
         # Deliberately does NOT redirect USAGE_LOG_FILE: the conftest guard is
         # what has to hold, exactly as it must for a test that never thought
         # about the usage log at all.
-        aa._analyze_with_fallback("body", {"GEMINI_API_KEY": "k"}, article_id="x")
+        aa._analyze_with_fallback("body", {"OPENAI_API_KEY": "k"}, article_id="x")
 
         after = prod.stat().st_size if prod.exists() else None
         assert after == before, (
