@@ -573,6 +573,9 @@ def check_grounding(result: dict, content: str) -> list[str]:
 # 2026-09-13, avg 63 chars) gives a model nothing to summarise but the title.
 MIN_METADATA_DESCRIPTION_CHARS = 150
 
+# How many articles are processed between writes of the store (audit A3).
+SAVE_EVERY = 5
+
 
 def is_title_only(content: str) -> bool:
     body = "\n".join(line for line in (content or "").splitlines()
@@ -940,6 +943,15 @@ def main() -> int:
         else:
             log.error("  All models failed for %s", a["id"])
             fail_count += 1
+
+        # Saved in batches, not once after the loop: the pipeline runs under a
+        # 30-minute cron timeout, and a run killed at minute 29 used to throw
+        # away every summary it had generated -- each already charged to the
+        # API account -- and buy them again the next night (audit A3). One
+        # rewrite per article would mean writing 1,700 rows twenty times a
+        # night, hence a batch.
+        if (success_count + insufficient_count + fail_count) % SAVE_EVERY == 0:
+            save_articles(articles)
 
     save_articles(articles)
     log.info("Analysis complete: %d ok, %d failed, %d not summarised (insufficient content)",

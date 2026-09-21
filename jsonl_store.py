@@ -22,12 +22,61 @@ silence.
 """
 from __future__ import annotations
 
+import contextlib
+import fcntl
 import json
 import logging
 import os
+import time
 from pathlib import Path
 
 log = logging.getLogger(__name__)
+
+# Stage 1 appends; stages 2 and 3 rewrite the file whole. Those two shapes do
+# not compose -- an append lands in the old inode while a rewrite swaps in a
+# file that never had it, and the appended rows vanish with no error (audit
+# A4). The nightly stages run one after another, so what actually risks this is
+# a hand-run command overlapping the cron (which happened repeatedly during
+# this audit) or scripts/content_audit.py --mark-gone, which rewrites too.
+#
+# Waiting forever would turn a stuck process into a stuck pipeline, so the wait
+# is bounded and then fails loudly: stopping with a clear reason is
+# recoverable; hanging until the cron timeout kills the run mid-write is the
+# thing this lock exists to prevent.
+LOCK_TIMEOUT_SECONDS = 60
+_LOCK_POLL_SECONDS = 0.05
+
+
+@contextlib.contextmanager
+def file_lock(path: Path, exclusive: bool = True):
+    """flock a sidecar <path>.lock. Raises TimeoutError if it cannot be had.
+
+    The lock lives beside the file, not on it: a rewrite replaces the file by
+    rename, so a lock held on the old inode would protect nothing.
+    """
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    lock_path = path.with_name(path.name + ".lock")
+    mode = fcntl.LOCK_EX if exclusive else fcntl.LOCK_SH
+    deadline = time.monotonic() + LOCK_TIMEOUT_SECONDS
+    fd = os.open(str(lock_path), os.O_CREAT | os.O_RDWR, 0o664)
+    try:
+        while True:
+            try:
+                fcntl.flock(fd, mode | fcntl.LOCK_NB)
+                break
+            except OSError:
+                if time.monotonic() >= deadline:
+                    raise TimeoutError(
+                        f"could not lock {lock_path} within {LOCK_TIMEOUT_SECONDS}s -- another "
+                        "process is holding it; check for a stuck fetch/analyze/publish run")
+                time.sleep(_LOCK_POLL_SECONDS)
+        yield
+    finally:
+        try:
+            fcntl.flock(fd, fcntl.LOCK_UN)
+        finally:
+            os.close(fd)
 
 
 def read_rows(path: Path, require: str | None = None,
@@ -47,12 +96,23 @@ def read_rows(path: Path, require: str | None = None,
     path = Path(path)
     if not path.exists():
         return [], 0
+    with file_lock(path, exclusive=False):
+        content = path.read_bytes()
+    return _parse_rows(path, content, require, keep_damaged)
+
+
+def _read_locked(path: Path) -> tuple[list[dict], int]:
+    """read_rows for a caller that already holds the lock."""
+    return _parse_rows(path, path.read_bytes(), None, None)
+
+
+def _parse_rows(path: Path, content: bytes, require, keep_damaged) -> tuple[list[dict], int]:
     rows: list[dict] = []
     damaged = 0
     # Decoded line by line: a write torn inside a multi-byte character (rows
     # are written with ensure_ascii=False) must cost that one line, not raise
     # UnicodeDecodeError before the first line is read and lose them all.
-    for n, raw in enumerate(path.read_bytes().split(b"\n"), start=1):
+    for n, raw in enumerate(content.split(b"\n"), start=1):
         if not raw.strip():
             continue                      # a blank line is formatting, not damage
         line = raw.decode("utf-8", errors="replace")
@@ -80,6 +140,11 @@ def append_rows(path: Path, rows: list[dict]) -> None:
         return
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
+    with file_lock(path):
+        _append_locked(path, rows)
+
+
+def _append_locked(path: Path, rows: list[dict]) -> None:
     prefix = ""
     if path.exists() and path.stat().st_size:
         with path.open("rb") as f:
@@ -105,6 +170,37 @@ def rewrite_rows(path: Path, rows: list[dict], preserve: list[bytes] | None = No
     every later read still reports them."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
+    with file_lock(path):
+        rows = _carry_over_unseen(path, rows)
+        _rewrite_locked(path, rows, preserve)
+
+
+def _carry_over_unseen(path: Path, rows: list[dict]) -> list[dict]:
+    """`rows` plus any row on disk the caller never saw.
+
+    The lock makes one operation atomic; it does not make a STAGE atomic.
+    Stages 2 and 3 read the store, work for minutes, then rewrite it from what
+    they read -- so a row appended in between is not in their list and a
+    faithful rewrite would drop it (audit A4, over a longer window than the
+    lock alone covers). Re-reading inside the lock and carrying over rows whose
+    id is absent from the caller's list keeps them. Rows without an id cannot
+    be matched, so this does nothing for them and nothing has ever written one.
+    """
+    if not path.exists():
+        return rows
+    known = {r.get("id") for r in rows if r.get("id")}
+    if not known:
+        return rows
+    on_disk, _ = _read_locked(path)
+    unseen = [r for r in on_disk if r.get("id") and r["id"] not in known]
+    if unseen:
+        log.warning("CARRIED OVER: %d row(s) were appended while this run was working; "
+                    "keeping them rather than overwriting (ids: %s)",
+                    len(unseen), ", ".join(str(r["id"]) for r in unseen[:5]))
+    return rows + unseen
+
+
+def _rewrite_locked(path: Path, rows: list[dict], preserve: list[bytes] | None = None) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
     data = "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows).encode("utf-8")
     data += b"".join(line.rstrip(b"\r\n") + b"\n" for line in (preserve or []))
