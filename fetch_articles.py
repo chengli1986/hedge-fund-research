@@ -32,6 +32,7 @@ from typing import Optional
 from urllib.parse import urlsplit, urlunsplit, urljoin, urlparse
 
 import jsonl_store
+import listing_templates
 import playwright_nav
 
 import xml.etree.ElementTree as ET
@@ -3738,7 +3739,17 @@ def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False,
     existing_keys = {} if existing_keys is None else existing_keys
     stored_by_id = {r.get("id"): r for r in (existing_rows or [])}
     source_id = source["id"]
-    fetcher = FETCHERS.get(source_id)
+    if source.get("listing_template_active"):
+        # One tool per page type instead of one hand-written fetcher per
+        # source (listing_templates.py). The spec alone changes nothing: a
+        # source is switched over only after scripts/compare_fetchers.py shows
+        # the template returning the same titles, urls and dates from the live
+        # site. There is deliberately no fallback to the hand-written fetcher
+        # if the template raises -- a silent fallback is how a broken template
+        # would look healthy for months.
+        fetcher = listing_templates.fetch
+    else:
+        fetcher = FETCHERS.get(source_id)
     if not fetcher:
         log.warning("No fetcher for source: %s", source_id)
         return []

@@ -138,7 +138,15 @@
       "description": "Institutional investment advisor. Private equity, venture capital, endowment strategies.",
       "notable_authors": [],
       "expected_hostname": "cambridgeassociates.com",
-      "max_articles": 10
+      "max_articles": 10,
+      "listing_template": {
+        "type": "card_list",
+        "fetch": "requests",
+        "card": "article.c-list-article",
+        "link": "h2 a, h3 a",
+        "date": "p.c-type--body-sm"
+      },
+      "listing_template_active": true
     },
     {
       "id": "wellington",
@@ -230,7 +238,17 @@
       "description": "UK-headquartered global asset manager. EM debt, multi-asset, sustainable investing.",
       "notable_authors": [],
       "expected_hostname": "aberdeeninvestments.com",
-      "max_articles": 10
+      "max_articles": 10,
+      "listing_template": {
+        "type": "card_list",
+        "fetch": "playwright",
+        "wait_selector": "time.ms-auto",
+        "card": "a:has(time.ms-auto)",
+        "link": "self",
+        "title": "h5",
+        "date": "time.ms-auto"
+      },
+      "listing_template_active": true
     },
     {
       "id": "brookfield",
