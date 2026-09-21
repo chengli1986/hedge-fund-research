@@ -980,6 +980,12 @@ def _zero_fetch_line(sid: str, rec: dict) -> str:
     consecutive = rec.get("consecutive_zero_count", 1)
     when = (rec.get("last_inspected_at") or "")[:19] or "unknown time"
     run = "run" if consecutive == 1 else "runs"
+    refusal = rec.get("last_refusal")
+    if refusal:
+        # A zero WE caused. Without this it reads exactly like the site being
+        # down, which is the pair the 2026-09-21 audit could not tell apart.
+        return (f"0 articles because the batch was refused ({refusal}) · "
+                f"{consecutive} consecutive {run} · {when}")
     return f"fetched 0 articles in the last pipeline run ({consecutive} consecutive {run}) · {when}"
 
 

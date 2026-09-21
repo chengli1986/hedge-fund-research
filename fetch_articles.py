@@ -92,6 +92,13 @@ HEADERS = {
 # duplicate_body and is never published. Date proposes; content decides.
 ISSUE_MIN_GAP_DAYS = 5
 
+# A listing whose newest item is more than this many days older than the newest
+# article already stored for that source has stopped showing what it showed
+# before. Measured 2026-09-21 over all 42 sources: 41 matched exactly, one was
+# 3 days newer. The acadian incident was 92 days.
+BACKWARDS_GRACE_DAYS = 45
+LISTING_HEAD_MIN_DATES = 3
+
 
 # A date that names only a month ("FEB 2026", "2026-02"). parse_date resolves
 # those to the month's LAST day, but rows stored before that convention hold the
@@ -231,7 +238,7 @@ def _preserve_unreadable_state() -> None:
 
 def record_quality_metrics(source_id: str, total_found: int, new_count: int,
                            gated_count: int, mismatch_count: int,
-                           dry_run: bool = False) -> None:
+                           dry_run: bool = False, refusal: str | None = None) -> None:
     """Record fetch quality metrics to inspection_state.json.  Never raises.
 
     A dry run records nothing: --dry-run is how a source is inspected, and
@@ -289,6 +296,9 @@ def record_quality_metrics(source_id: str, total_found: int, new_count: int,
 
     state[source_id] = {
         "last_inspected_at": datetime.now(timezone.utc).isoformat(),
+        # Why the count is zero, when it is zero because WE refused the batch:
+        # without it a refusal is indistinguishable from the site being down.
+        **({"last_refusal": refusal} if refusal else {}),
         "consecutive_zero_count": consecutive_zero,
         "last_article_count": total_found,
         "last_gated_ratio": round(gated_ratio, 2),
@@ -3743,6 +3753,33 @@ def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False,
     # this guard.
     # `date` is the ISO YYYY-MM-DD produced by parse_date, so plain string
     # comparison orders it correctly; undated articles are skipped, not fatal.
+    # The listing stopped showing what it used to show. 2026-09-06, acadian-asset:
+    # its listing defaulted to "Sort By: Relevance" and returned ten 2016-2023
+    # pieces; nine were ingested, summarised and published while August's real
+    # posts fell off the page. The date_sorted monotonicity check missed it (a
+    # page of archive pieces can be internally descending, and the log shows it
+    # refusing one run that night and passing the next).
+    #
+    # What gives it away needs no opt-in: the newest item the listing showed
+    # (2026-05-31) was 92 days older than the newest article already stored for
+    # that source (2026-08-31). Measured across all 42 sources on 2026-09-21,
+    # 41 listings' newest item matched our stored newest EXACTLY and one was 3
+    # days newer, so any backwards movement is abnormal; the grace window is
+    # wide enough that only something like the incident reaches it.
+    listing_dates = sorted((a.get("date") for a in raw_articles if a.get("date")), reverse=True)
+    stored_head = max((r.get("date") or "" for r in (existing_rows or [])
+                       if r.get("source_id") == source_id), default="")
+    if len(listing_dates) >= LISTING_HEAD_MIN_DATES and stored_head:
+        gap = _date_gap_days(listing_dates[0], stored_head)
+        if gap > BACKWARDS_GRACE_DAYS:
+            log.error("LISTING_WENT_BACKWARDS: %s newest listed article is %s, %d days older than "
+                      "the newest stored (%s) -- refusing all %d articles (listing sort order or "
+                      "content changed?)", source_id, listing_dates[0], gap, stored_head,
+                      len(raw_articles))
+            record_quality_metrics(source_id, 0, 0, 0, 0, dry_run=dry_run,
+                                   refusal="listing_head_moved_back")
+            return []
+
     if source.get("date_sorted"):
         dates = [a["date"] for a in raw_articles if a.get("date")]
         if any(dates[i] < dates[i + 1] for i in range(len(dates) - 1)):

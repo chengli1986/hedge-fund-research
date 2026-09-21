@@ -278,3 +278,30 @@ class TestEntrypointProblemsReachAHuman:
         monkeypatch.setattr(sys, "argv", ["gmia-fetcher-health.py"])
         gfh.main()
         assert seen.get("entrypoints") == [("aqr", "404")]
+
+
+class TestARefusedBatchIsNamed:
+    """When stage 1 refuses a batch, the metrics read (0, 0, 0, 0) -- exactly
+    what a site being down looks like. The audit noted you cannot tell them
+    apart; fetch_articles now records last_refusal, and the email says which
+    it was (2026-09-21).
+    """
+    def _state(self, tmp_path, rec):
+        f = tmp_path / "inspection_state.json"
+        f.write_text(json.dumps({"acadian-asset": rec}))
+        return f
+
+    def test_a_refusal_is_reported_as_a_refusal(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(gfh, "load_sources", lambda: [{"id": "acadian-asset"}])
+        f = self._state(tmp_path, {"last_inspected_at": _fresh(), "last_article_count": 0,
+                                   "last_refusal": "listing_head_moved_back"})
+        out = gfh.pipeline_zero_fetches(state_path=f)
+        assert out and "listing_head_moved_back" in gfh._zero_fetch_line(*out[0])
+
+    def test_an_ordinary_zero_reads_as_before(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(gfh, "load_sources", lambda: [{"id": "acadian-asset"}])
+        f = self._state(tmp_path, {"last_inspected_at": _fresh(), "last_article_count": 0,
+                                   "consecutive_zero_count": 1})
+        out = gfh.pipeline_zero_fetches(state_path=f)
+        line = gfh._zero_fetch_line(*out[0])
+        assert "fetched 0 articles" in line and "refus" not in line
