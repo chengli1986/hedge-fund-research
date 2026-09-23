@@ -2397,7 +2397,7 @@
       "equity"
     ],
     "topics": "ESG, climate, sustainability, long-term equity",
-    "notes": "Rejected: still just 1 article, sparse index unchanged since May",
+    "notes": "Rejected: annual flagship report but index still sparse",
     "official_domain": "www.generationim.com",
     "research_links": [
       {
@@ -2422,9 +2422,9 @@
       "article_signals": 0
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-08-23T01:10:00Z",
+    "last_deep_analyzed_at": "2026-09-23T01:02:52Z",
     "quality": "LOW",
-    "quality_score": 0.22,
+    "quality_score": 0.28,
     "status_since": "2026-08-23T09:02:58.398210+08:00"
   },
   {
@@ -3435,7 +3435,7 @@
     "official_domain": "www.fulcrumasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-21T09:00:10.181024+08:00",
+    "last_discovered_at": "2026-09-23T09:00:15.436248+08:00",
     "status_since": "2026-08-22T09:03:32.572404+08:00",
     "last_deep_analyzed_at": "2026-09-18T01:02:34Z",
     "quality": "MEDIUM",
@@ -3550,13 +3550,13 @@
     "official_domain": "www.muzinich.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-21T09:00:10.561564+08:00",
+    "last_discovered_at": "2026-09-23T09:00:15.818019+08:00",
     "status_since": "2026-08-25T09:03:39.585223+08:00",
     "quality": "HIGH",
     "quality_score": 0.78,
     "topics": "high yield, credit, fixed income, emerging markets, private credit",
     "notes": "RECOMMEND: weekly HY/credit/EM, ungated, overlaps credit",
-    "last_deep_analyzed_at": "2026-09-11T01:30:00Z"
+    "last_deep_analyzed_at": "2026-09-23T01:02:52Z"
   },
   {
     "id": "capital-fund-management",
@@ -3712,11 +3712,11 @@
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-09-21T09:00:10.974521+08:00",
     "status_since": "2026-09-05T09:04:28.857065+08:00",
-    "last_deep_analyzed_at": "2026-09-14T01:02:31Z",
+    "last_deep_analyzed_at": "2026-09-23T01:02:52Z",
     "quality": "HIGH",
     "quality_score": 0.72,
     "topics": "macro, quant, trend-following, volatility",
-    "notes": "RECOMMEND: Macro/quant CTA, overlaps Man Group/AQR"
+    "notes": "RECOMMEND: macro/quant CTA, free-reg gate, overlaps Man/AQR"
   },
   {
     "id": "candriam",
@@ -3826,11 +3826,11 @@
       "macro"
     ],
     "status_since": "2026-09-11T09:07:45.215654+08:00",
-    "last_deep_analyzed_at": "2026-09-12T01:03:13.173181Z",
+    "last_deep_analyzed_at": "2026-09-23T01:02:52Z",
     "quality": "HIGH",
     "quality_score": 0.85,
-    "topics": "real estate, infrastructure, macro, real assets",
-    "notes": "RECOMMEND: Real estate/infra research, real assets gap"
+    "topics": "real estate, infrastructure, macro, sustainability, real assets",
+    "notes": "RECOMMEND: real estate/infra research, real assets gap"
   },
   {
     "id": "nexpoint",
