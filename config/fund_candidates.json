@@ -354,7 +354,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.97,
-    "notes": "RECOMMEND: PE/VC+endowment research, freely accessible",
+    "notes": "PE/VC benchmark research, monthly; latest Jul 2026",
     "research_links": [
       {
         "url": "https://www.cambridgeassociates.com/insights/private-investments/",
@@ -463,7 +463,7 @@
       "article_signals": 1
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-08-24T01:00:00Z",
+    "last_deep_analyzed_at": "2026-09-24T01:00:52Z",
     "quality": "HIGH",
     "quality_score": 0.8,
     "topics": "private equity, venture capital, endowments, macro, AI infrastructure",
@@ -663,7 +663,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.95,
-    "notes": "Cross-asset research; full depth needs PDF registration",
+    "notes": "Weekly free Fed/ECB views; sampled article substantive",
     "research_links": [],
     "screening_signals": {
       "status_code": 200,
@@ -676,9 +676,9 @@
       "article_signals": 3
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-08-26T01:15:00Z",
+    "last_deep_analyzed_at": "2026-09-24T01:00:52Z",
     "quality": "MEDIUM",
-    "quality_score": 0.62,
+    "quality_score": 0.66,
     "topics": "macro, equity, fixed income, multi-asset, portfolio strategy",
     "strategy_tags": [
       "macro",
@@ -749,7 +749,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.97,
-    "notes": "RECOMMEND: Data-driven original analysis, free access",
+    "notes": "Free multi-theme insights hub; dated index needs JS",
     "research_links": [
       {
         "url": "https://www.troweprice.com/en/us/insights",
@@ -788,7 +788,7 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-08-24T01:00:00Z",
+    "last_deep_analyzed_at": "2026-09-24T01:00:52Z",
     "quality": "HIGH",
     "quality_score": 0.8,
     "topics": "equity, macro, AI/tech, fixed income, multi-asset",
@@ -849,12 +849,12 @@
     "rss_url": null,
     "official_domain": "www.msci.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "JS nav-only via basic fetch; prod Playwright fetcher OK",
+    "notes": "Weekly; reports gated; prod Playwright fetcher OK",
     "research_links": [],
     "last_discovered_at": "2026-04-19T09:00:14.697222+08:00",
     "quality": "MEDIUM",
     "topics": "factor investing, ESG, climate, multi-asset, risk, fixed income",
-    "last_deep_analyzed_at": "2026-08-24T01:00:00Z",
+    "last_deep_analyzed_at": "2026-09-24T01:00:52Z",
     "strategy_tags": [
       "quant",
       "esg_climate",
@@ -864,7 +864,7 @@
     "source": "manual",
     "inaccessible_reason": null,
     "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager",
-    "quality_score": 0.55,
+    "quality_score": 0.5,
     "status_since": "2026-04-19T09:00:14.697222+08:00"
   },
   {
@@ -3435,7 +3435,7 @@
     "official_domain": "www.fulcrumasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-23T09:00:15.436248+08:00",
+    "last_discovered_at": "2026-09-24T09:00:08.700664+08:00",
     "status_since": "2026-08-22T09:03:32.572404+08:00",
     "last_deep_analyzed_at": "2026-09-18T01:02:34Z",
     "quality": "MEDIUM",
@@ -3550,7 +3550,7 @@
     "official_domain": "www.muzinich.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-23T09:00:15.818019+08:00",
+    "last_discovered_at": "2026-09-24T09:00:09.064449+08:00",
     "status_since": "2026-08-25T09:03:39.585223+08:00",
     "quality": "HIGH",
     "quality_score": 0.78,
@@ -3577,7 +3577,7 @@
     "official_domain": "www.cfm.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-21T09:00:10.776168+08:00"
+    "last_discovered_at": "2026-09-24T09:00:09.261347+08:00"
   },
   {
     "id": "northleaf-capital",
@@ -3710,7 +3710,7 @@
     "official_domain": "www.grahamcapital.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-21T09:00:10.974521+08:00",
+    "last_discovered_at": "2026-09-24T09:00:09.402212+08:00",
     "status_since": "2026-09-05T09:04:28.857065+08:00",
     "last_deep_analyzed_at": "2026-09-23T01:02:52Z",
     "quality": "HIGH",
