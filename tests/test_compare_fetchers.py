@@ -71,3 +71,41 @@ def test_date_raw_is_not_compared(monkeypatch):
     other_raw = [dict(r, date_raw="whatever") for r in ROWS]
     _patch(monkeypatch, ROWS, other_raw)
     assert cf.compare_source(dict(SRC))["agree"] is True
+
+
+class TestDroppedListingFields:
+    """(title, url, date) agreement hides fields the template does not emit.
+
+    fetch_articles stores LISTING_FIELDS_KEPT ("summary", "category",
+    "gsam_summary") on every row that carries them.  A hand-written fetcher
+    that fills one of those and a template that does not compare as identical,
+    so the field would quietly stop being stored from the switch onward -- and
+    gsam_summary is read by fetch_content.  A drop has to be declared in
+    sources.json ("listing_template_drops") to pass.
+    """
+
+    def test_an_undeclared_dropped_field_is_not_agreement(self, monkeypatch):
+        bespoke = [dict(r, category="Markets") for r in ROWS]
+        _patch(monkeypatch, bespoke, ROWS)
+        out = cf.compare_source(dict(SRC))
+        assert out["agree"] is False
+        assert out["dropped_fields"] == ["category"]
+
+    def test_a_declared_drop_agrees_and_is_still_reported(self, monkeypatch):
+        bespoke = [dict(r, category="Markets") for r in ROWS]
+        _patch(monkeypatch, bespoke, ROWS)
+        out = cf.compare_source(dict(SRC, listing_template_drops=["category"]))
+        assert out["agree"] is True
+        assert out["dropped_fields"] == ["category"]
+
+    def test_a_field_the_template_also_emits_is_not_a_drop(self, monkeypatch):
+        rows = [dict(r, category="Markets") for r in ROWS]
+        _patch(monkeypatch, rows, rows)
+        out = cf.compare_source(dict(SRC))
+        assert out["agree"] is True and out["dropped_fields"] == []
+
+    def test_fields_outside_what_gets_stored_are_ignored(self, monkeypatch):
+        """content_type is a fetcher-local field; it never reaches the store."""
+        bespoke = [dict(r, content_type="Read") for r in ROWS]
+        _patch(monkeypatch, bespoke, ROWS)
+        assert cf.compare_source(dict(SRC))["agree"] is True

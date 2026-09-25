@@ -11,6 +11,13 @@ live site, field by field. "It should be the same" is not evidence; this is.
 Exit code 0 when every compared source agrees, 1 otherwise -- so it can gate a
 switch, and be re-run later to catch a site that drifted away from its
 template.
+
+The two fetches run one after the other against the live site, so a listing
+that publishes between them disagrees by one row at each end of the window
+(seen on wellington, 2026-09-25: the template run picked up an article the
+bespoke run had not seen, which pushed the oldest row off the max_articles
+cap). A single-row difference where the extra template row is the newest on
+the page is that race, not a defect -- re-run before concluding anything.
 """
 from __future__ import annotations
 
@@ -36,7 +43,7 @@ def compare_source(source: dict) -> dict:
     """{agree, bespoke, template, only_bespoke, only_template, order_differs, error}"""
     out = {"source_id": source["id"], "agree": False, "error": None,
            "bespoke": 0, "template": 0, "only_bespoke": [], "only_template": [],
-           "order_differs": False}
+           "order_differs": False, "dropped_fields": []}
     try:
         url = fa.get_source_url(dict(source), fa.load_entrypoints())
         bespoke = fa.FETCHERS[source["id"]](dict(source, url=url))
@@ -50,7 +57,17 @@ def compare_source(source: dict) -> dict:
     out["only_bespoke"] = [list(k) for k in b if k not in t]
     out["only_template"] = [list(k) for k in t if k not in b]
     out["order_differs"] = b != t and not out["only_bespoke"] and not out["only_template"]
-    out["agree"] = b == t
+    # Agreeing on (title, url, date) is not the whole story: fetch_articles
+    # also stores LISTING_FIELDS_KEPT, and a template that does not emit one
+    # of them stops it being stored from the switch onward without changing a
+    # single compared value.  gsam_summary is read by fetch_content, so this
+    # can be a real loss, not only dead data.
+    declared = set(source.get("listing_template_drops", []))
+    out["dropped_fields"] = sorted(
+        f for f in fa.LISTING_FIELDS_KEPT
+        if any(r.get(f) for r in bespoke) and not any(r.get(f) for r in template)
+    )
+    out["agree"] = b == t and not (set(out["dropped_fields"]) - declared)
     return out
 
 
@@ -90,6 +107,8 @@ def main() -> int:
                      f"  | only hand-written {len(r['only_bespoke'])}, only template "
                      f"{len(r['only_template'])}"
                      + (", order differs" if r["order_differs"] else "")))
+            if r["dropped_fields"]:
+                print(f"      template drops: {', '.join(r['dropped_fields'])}")
             for k in r["only_bespoke"][:3]:
                 print(f"      only hand-written: {k}")
             for k in r["only_template"][:3]:
