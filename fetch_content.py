@@ -1949,6 +1949,16 @@ def _fetch_content_blue_owl_capital(article: dict) -> Optional[tuple[Path, str]]
     summaries. `_normalize_html`'s generic article/main fallback covers any
     page that skips the wysiwyg component.
     Verified live 2026-08-06: 10.1K chars from the continuation-vehicles piece.
+
+    "Executive Perspectives" video pages (2026-09-23 Anaplan piece) put their
+    substance -- three "key takeaways" paragraphs -- in a separate
+    `paragraph--type--insights-executive-summary` component, and their
+    third-party disclaimer sits in a wysiwyg block, so the wysiwyg selector
+    alone stored 846 chars of intro + disclaimer and stage 3 refused it. The
+    selector therefore takes both components, in document order. Verified live
+    2026-09-25: Anaplan 846 -> 2860 chars with all three takeaways; the
+    long-form mid-year-focus piece keeps every line and gains its five
+    takeaway bullets; a page without the component is byte-identical.
     """
     url = article["url"]
     log.info("  Blue Owl: fetching article page %s", url)
@@ -1959,7 +1969,8 @@ def _fetch_content_blue_owl_capital(article: dict) -> Optional[tuple[Path, str]]
         log.error("  Blue Owl: fetch failed: %s", e)
         return None
 
-    text = _normalize_html(resp.text, ".insights-content-wysiwyg p")
+    text = _normalize_html(
+        resp.text, ".paragraph--type--insights-executive-summary p, .insights-content-wysiwyg p")
     if not _check_min_content_length(text):
         log.warning("  Blue Owl: extracted text too short (%d chars)", len(text))
         return None
