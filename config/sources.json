@@ -216,7 +216,22 @@
       "description": "Active management specialist. Equity, fixed income, multi-asset. Strong fundamental research culture.",
       "notable_authors": [],
       "expected_hostname": "troweprice.com",
-      "max_articles": 10
+      "max_articles": 10,
+      "listing_template": {
+        "type": "card_list",
+        "fetch": "playwright",
+        "wait_selector": "div.b-grid-item--12-col",
+        "wait_until": "domcontentloaded",
+        "card": "div.b-grid-item--12-col",
+        "link": "h2.beacon-article-tile__title a",
+        "title": "h2.beacon-article-tile__title a",
+        "date": "span.beacon-article-tile__eyebrow",
+        "date_separator": "·"
+      },
+      "listing_template_drops": [
+        "category"
+      ],
+      "listing_template_active": true
     },
     {
       "id": "pimco",
@@ -351,7 +366,24 @@
       "description": "Index, factor and ESG analytics provider; ACWI/EAFE/EM benchmarks tracked by $18T+. Factor models (Quality/Value/Momentum), climate risk, multi-asset risk modelling.",
       "notable_authors": [],
       "expected_hostname": "msci.com",
-      "max_articles": 10
+      "max_articles": 10,
+      "listing_template": {
+        "type": "card_list",
+        "fetch": "playwright",
+        "wait_selector": "div[data-test=\"search-result-item\"]",
+        "wait_until": "domcontentloaded",
+        "card": "div[data-test=\"search-result-item\"]",
+        "link": "a[href*=\"/research-and-insights/\"]",
+        "title": "h3",
+        "date": "p",
+        "date_separator": "|",
+        "date_part": "after"
+      },
+      "listing_template_drops": [
+        "category",
+        "summary"
+      ],
+      "listing_template_active": true
     },
     {
       "id": "natixis-im",

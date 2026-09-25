@@ -1043,7 +1043,11 @@ def fetch_troweprice(source: dict) -> list[dict]:
         if not _validate_hostname(url, expected_host):
             continue
 
-        title = link_el.get_text(strip=True)
+        # get_text(" ") + collapse, not get_text(strip=True): the listing
+        # renders non-breaking spaces inside titles ("The Long View:\xa0Wael
+        # Sawan") and wraps parts of headlines in inline tags, which strip=True
+        # would weld together (the c149894 defect).
+        title = re.sub(r"\s+", " ", link_el.get_text(" ")).strip()
         if not title:
             continue
 

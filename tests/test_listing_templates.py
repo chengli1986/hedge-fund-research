@@ -288,3 +288,60 @@ class TestDeadAnchors:
     def test_a_real_link_still_passes(self):
         html = '<div class="card"><a href="/insights/x"><h3>Real</h3></a></div>'
         assert len(lt.parse_cards(html, self.SRC, self.SPEC)) == 1
+
+
+class TestDateSeparator:
+    """Two sources put the date and the category in one text node.
+
+    troweprice renders "Date · Category" in a single eyebrow span and
+    msci-research renders "Category | Month DD, YYYY" in a single <p>. Both
+    hand-written fetchers split on the separator; neither shape is unusual
+    enough to deserve its own fetcher, so the template can express it.
+    When the separator is absent the whole text is the date, which is what
+    both fetchers already do.
+    """
+    SRC = {"id": "t", "url": "https://site.test/i", "expected_hostname": "site.test",
+           "max_articles": 10}
+
+    def _spec(self, **kw):
+        base = {"type": "card_list", "fetch": "requests", "card": "div.card",
+                "link": "a", "title": "h3", "date": "span.meta"}
+        base.update(kw)
+        return base
+
+    def _html(self, meta):
+        return ('<div class="card"><a href="/a"><h3>T</h3></a>'
+                f'<span class="meta">{meta}</span></div>')
+
+    def test_date_before_the_separator(self):
+        rows = lt.parse_cards(self._html("September 3, 2026 · Markets"), self.SRC,
+                              self._spec(date_separator="·"))
+        assert rows[0]["date"] == "2026-09-03" and rows[0]["date_raw"] == "September 3, 2026"
+
+    def test_date_after_the_separator(self):
+        rows = lt.parse_cards(self._html("Markets | September 3, 2026"), self.SRC,
+                              self._spec(date_separator="|", date_part="after"))
+        assert rows[0]["date"] == "2026-09-03" and rows[0]["date_raw"] == "September 3, 2026"
+
+    def test_only_the_first_separator_splits(self):
+        rows = lt.parse_cards(self._html("Markets | September 3, 2026 | ESG"), self.SRC,
+                              self._spec(date_separator="|", date_part="after"))
+        assert rows[0]["date_raw"] == "September 3, 2026 | ESG"
+
+    def test_text_without_the_separator_is_the_date(self):
+        for part in ("before", "after"):
+            rows = lt.parse_cards(self._html("September 3, 2026"), self.SRC,
+                                  self._spec(date_separator="|", date_part=part))
+            assert rows[0]["date"] == "2026-09-03", part
+
+    def test_no_separator_configured_keeps_the_whole_text(self):
+        rows = lt.parse_cards(self._html("Markets | September 3, 2026"), self.SRC, self._spec())
+        assert rows[0]["date_raw"] == "Markets | September 3, 2026"
+
+    def test_an_unknown_date_part_is_refused(self):
+        with pytest.raises(ValueError, match="date_part"):
+            lt.validate_spec(self._spec(date_separator="|", date_part="middle"))
+
+    def test_date_part_without_a_separator_is_refused(self):
+        with pytest.raises(ValueError, match="date_separator"):
+            lt.validate_spec(self._spec(date_part="after"))

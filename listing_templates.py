@@ -32,6 +32,11 @@ Spec (type card_list):
     date_attr      optional; read the date from this attribute of that element
                    (time[datetime]) and fall back to its text
     path_prefix    optional; keep only links whose path starts with this
+    date_separator optional; the date shares a text node with something else
+                   ("Date · Category", "Category | Date") -- split on the
+                   first occurrence of this
+    date_part      optional; "before" (default) or "after" the separator.
+                   Text without the separator is the date either way.
 """
 from __future__ import annotations
 
@@ -47,6 +52,7 @@ log = logging.getLogger(__name__)
 SUPPORTED_TYPES = ("card_list",)
 REQUIRED = {"card_list": ("fetch", "card")}
 FETCH_MODES = ("requests", "playwright")
+DATE_PARTS = ("before", "after")
 
 
 def validate_spec(spec: dict) -> None:
@@ -59,6 +65,20 @@ def validate_spec(spec: dict) -> None:
             raise ValueError(f"listing_template for type {kind!r} needs {key!r}")
     if spec["fetch"] not in FETCH_MODES:
         raise ValueError(f"listing_template fetch {spec['fetch']!r} is not one of {FETCH_MODES}")
+    part = spec.get("date_part")
+    if part is not None and part not in DATE_PARTS:
+        raise ValueError(f"listing_template date_part {part!r} is not one of {DATE_PARTS}")
+    if part is not None and not spec.get("date_separator"):
+        raise ValueError("listing_template date_part needs a date_separator")
+
+
+def _split_date(text: str, spec: dict) -> str:
+    """Pull the date out of a text node it shares with a category."""
+    sep = spec.get("date_separator")
+    if not sep or sep not in text:
+        return text
+    before, after = text.split(sep, 1)
+    return (after if spec.get("date_part") == "after" else before).strip()
 
 
 def _text(el) -> str:
@@ -112,6 +132,7 @@ def parse_cards(html: str, source: dict, spec: dict) -> list[dict]:
                 attr = spec.get("date_attr")
                 date_raw = (date_el.get(attr) or "").strip() if attr else ""
                 date_raw = date_raw or _text(date_el)
+                date_raw = _split_date(date_raw, spec)
         rows.append({"title": title, "url": url,
                      "date": parse_date(date_raw) if date_raw else None,
                      "date_raw": date_raw})
