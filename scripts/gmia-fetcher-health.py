@@ -236,6 +236,25 @@ def _is_transient(exc: Exception) -> bool:
     return "timeout" in msg or "temporarily unavailable" in msg
 
 
+def _evidence_is_transient(evidence: dict, label: str) -> bool:
+    """Whether a content-probe failure labelled from fetch_with_evidence
+    evidence deserves the one retry.
+
+    A fetcher that raised keeps the old rule on the exception's name and
+    message (a ValueError from a dead selector is not transient). A fetcher
+    that swallowed its error and returned None is judged by the label stage 2
+    would give it: fetch_error covers timeouts, connection failures and 5xx,
+    all of which are worth one more try; every other label is the site's or
+    the selector's verdict and is not.
+    """
+    exc = evidence.get("exception")
+    if exc:
+        name, _, msg = str(exc).partition(":")
+        return name.strip() in TRANSIENT_EXC_NAMES or "timeout" in msg.lower() \
+            or "temporarily unavailable" in msg.lower()
+    return label == "fetch_error"
+
+
 # Path fragments that mark a country/role/eligibility interstitial rather than
 # the content itself. MetLife IM's is /disclaimer/; the same pattern shows up as
 # consent walls, investor-type attestations and terms gates across the fleet.
@@ -302,6 +321,7 @@ def _probe_once(source: dict) -> dict:
         _sys.path.insert(0, str(BASE_DIR))
     import fetch_articles
     import fetch_content
+    import failure_labels
 
     sid = source["id"]
     result: dict = {
@@ -374,22 +394,23 @@ def _probe_once(source: dict) -> dict:
                 # Per attempt, so a teaser that hit a fallback before the
                 # article that succeeded cannot taint the verdict.
                 fetch_content.drain_extraction_paths()
-                try:
-                    outcome = content_fetcher(probe_article)
-                except Exception as exc:
-                    attempt["reason"] = (
-                        f"raised {type(exc).__name__}: {str(exc)[:120]}"
-                    )
-                    if _is_transient(exc):
-                        transient_exc_seen = exc
+                # Through the same wrapper stage 2 uses: 42 of the 44 fetchers
+                # catch every exception and return None, so a bare call
+                # cannot tell a Playwright timeout from a dead selector
+                # (wellington 2026-09-24: three 30s timeouts were reported as
+                # "selector regression" and the transient retry never ran).
+                # The wrapper keeps the fetcher's warnings and responses;
+                # failure_labels turns them into the label stage 2 would log.
+                outcome, evidence = fetch_content.fetch_with_evidence(
+                    probe_article, content_fetcher)
+                if outcome is None:
+                    label, detail = failure_labels.classify_content_failure(evidence)
+                    # Playwright details carry a multi-line call log; one line for the email.
+                    attempt["reason"] = f"returned None ({label}: {' '.join(detail.split())[:160]})"
+                    if _evidence_is_transient(evidence, label):
+                        transient_exc_seen = RuntimeError(attempt["reason"])
                     else:
                         all_failures_transient = False
-                    content_attempts.append(attempt)
-                    continue
-
-                if outcome is None:
-                    attempt["reason"] = "returned None (selector regression or HTTP error)"
-                    all_failures_transient = False
                     content_attempts.append(attempt)
                     continue
 
@@ -413,7 +434,7 @@ def _probe_once(source: dict) -> dict:
                     content_attempts.append(attempt)
                     continue
 
-                off_primary = sorted({p for p in fetch_content.drain_extraction_paths()
+                off_primary = sorted({p for p in evidence["extraction_paths"]
                                       if p != "primary"})
                 if off_primary:
                     extraction_note = (

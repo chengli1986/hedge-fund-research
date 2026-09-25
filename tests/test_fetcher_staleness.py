@@ -96,6 +96,9 @@ class _FakeFetchArticles:
         self.FETCHERS = fetchers
 
 
+import fetch_content as _real_fetch_content  # noqa: E402  (kept before the fakes swap sys.modules)
+
+
 class _FakeFetchContent:
     """Stand-in for fetch_content module."""
     def __init__(self, content_fetchers, min_chars=100):
@@ -107,6 +110,14 @@ class _FakeFetchContent:
     def drain_extraction_paths(self):
         paths, self.extraction_paths = self.extraction_paths, []
         return paths
+
+    def fetch_with_evidence(self, article, fetcher):
+        # The real wrapper: it only needs `requests` and the real module's
+        # logger, so the probe is exercised against the same evidence contract
+        # production uses. Paths a fake fetcher pushed here ride along.
+        result, evidence = _real_fetch_content.fetch_with_evidence(article, fetcher)
+        evidence["extraction_paths"] = self.drain_extraction_paths() + evidence["extraction_paths"]
+        return result, evidence
 
 
 def _install_fakes(monkeypatch, articles_returned, content_chars=500):
@@ -725,3 +736,71 @@ def test_probe_is_wired_to_the_real_extractor(monkeypatch, tmp_path):
     result = gfh._probe_once({"id": sid, "frequency": "weekly"})
     assert result["status"] == "WARN", result
     assert "fallback:main" in result["reason"]
+
+
+# ── swallowed timeouts (wellington 2026-09-24) ─────────────────────────────────
+#
+# 42 of the 44 content fetchers catch every exception and return None, so a
+# Playwright "Page.goto: Timeout 30000ms exceeded" reached the probe as a bare
+# None. The probe reported "returned None (selector regression or HTTP error)",
+# treated it as non-transient and never used its one retry. The probe now runs
+# the fetcher through fetch_content.fetch_with_evidence and labels the failure
+# with failure_labels, the same way stage 2 does.
+
+_TIMEOUT_MSG = ("  Wellington: Playwright fetch failed: Page.goto: Timeout 30000ms exceeded.\n"
+                "Call log:\n  - navigating to \"http://a/1\", waiting until \"load\"")
+
+
+def _install_timeout_fakes(monkeypatch, succeed_on_call=None):
+    """Every article: log a Playwright timeout on the real fetch_content logger
+    and return None, exactly like a production fetcher. If `succeed_on_call`
+    is set, the Nth fetcher call (1-based) returns a full body instead."""
+    today_iso = datetime.now(gfh.BJT).strftime("%Y-%m-%d")
+    sid = "fake-fund"
+    articles = [{"title": f"a{i}", "url": f"http://a/{i}", "date": today_iso} for i in range(1, 4)]
+    calls = {"n": 0}
+
+    def content_fetcher(article):
+        calls["n"] += 1
+        if succeed_on_call is not None and calls["n"] >= succeed_on_call:
+            return _write_chars(article, 500)
+        _real_fetch_content.log.error(_TIMEOUT_MSG)
+        return None
+
+    monkeypatch.setitem(sys.modules, "fetch_articles", _FakeFetchArticles({sid: lambda s: articles}))
+    monkeypatch.setitem(sys.modules, "fetch_content", _FakeFetchContent({sid: content_fetcher}, min_chars=100))
+    monkeypatch.setattr(gfh, "RETRY_SLEEP_S", 0)
+    return sid, calls
+
+
+def test_a_swallowed_timeout_is_reported_as_a_fetch_error_not_a_selector_regression(monkeypatch):
+    sid, _ = _install_timeout_fakes(monkeypatch)
+    result = gfh._probe_once({"id": sid, "frequency": "weekly"})
+    assert result["status"] == "FAIL"
+    assert "fetch_error" in result["reason"] and "Timeout 30000ms" in result["reason"], result["reason"]
+    assert "selector regression" not in result["reason"]
+
+
+def test_a_swallowed_timeout_counts_as_transient_so_the_probe_retries(monkeypatch):
+    sid, calls = _install_timeout_fakes(monkeypatch, succeed_on_call=4)
+    result = gfh.probe_source({"id": sid, "frequency": "weekly"})
+    assert result["status"] == "OK", result
+    assert calls["n"] == 4  # three timeouts, then the retry's first article
+
+
+def test_a_raised_non_transient_error_still_gets_no_retry(monkeypatch):
+    today_iso = datetime.now(gfh.BJT).strftime("%Y-%m-%d")
+    calls = {"n": 0}
+
+    def boom(article):
+        calls["n"] += 1
+        raise ValueError("selector returned empty")
+
+    sid = _install_per_article_fakes(
+        monkeypatch,
+        [{"title": "a", "url": "http://a/1", "date": today_iso}],
+        outcomes={"http://a/1": boom})
+    monkeypatch.setattr(gfh, "RETRY_SLEEP_S", 0)
+    result = gfh.probe_source({"id": sid, "frequency": "weekly"})
+    assert result["status"] == "FAIL" and "ValueError" in result["reason"]
+    assert calls["n"] == 1
