@@ -48,7 +48,7 @@ RETRY_POLICY = {
 }
 
 ANALYSIS_DECLINE_LABELS = {
-    "title_only": "只有标题，没有可总结的内容",
+    "title_only": "只有标题或列表元数据（至多一句出版方简介），没有可总结的正文",
     "duplicate_body": "正文与另一篇已摘要文章完全相同",
     "grounding_failed": "摘要没通过防编造核对",
     "wrong_document": "存下的是另一份文件（税表、监管披露、别的报告）",
@@ -186,7 +186,7 @@ def classify_content_failure(evidence: dict) -> tuple[str, str]:
 
 
 _DECLINE_RULES = (
-    ("title_only", r"only a title"),
+    ("title_only", r"only a title|only article metadata"),
     ("duplicate_body", r"same text as the already-summarised"),
     ("grounding_failed", r"failed grounding check"),
     ("wrong_document", r"tax document|relationship summary|different, earlier paper|not the stated|"

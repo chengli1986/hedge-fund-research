@@ -190,6 +190,11 @@ class TestAnalysisDecline:
         ("The text is an important health coverage tax document and GMO contact information", "wrong_document"),
         ("The text is a broker-dealer relationship summary and regulatory disclosure", "wrong_document"),
         ("the page has no article text and its download button serves a different, earlier paper", "wrong_document"),
+        # ark-invest 2026-09-22: a Cloudflare-blocked page stored as listing
+        # metadata plus the publisher's one-line summary. "not the article
+        # itself" used to land it in wrong_document, which is for a page that
+        # served some other document; nothing was served here at all.
+        ("Only article metadata and a publisher-provided summary are supplied, not the article itself.", "title_only"),
         ("something else entirely", "other_declined"),
     ])
     def test_reason_to_label(self, reason, label):

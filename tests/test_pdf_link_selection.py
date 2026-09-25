@@ -115,3 +115,39 @@ class TestGmoPdfUrl:
         monkeypatch.setattr(fc.requests, "get", fake_get)
         assert fc._fetch_content_gmo({"id": "gmo-1", "url": f"{GMO}/x_video/"}) is None
         assert asked == [f"{GMO}/x_video/"], "a PDF was downloaded for a page with no article PDF"
+
+
+class TestGmoInTheNewsPage:
+    """gmo 2026-09-23: research-library entries whose slug ends in `_inthenews`
+    are press/podcast mentions (Jeremy Grantham on The Diary of a CEO): a
+    speaker bio, a paragraph about the appearance, no article PDF. The fetcher
+    returned None with "no article PDF on page" and the evidence had nothing
+    else to say, so failure_labels fell through to body_too_short, a
+    code-dependent label that keeps retrying. The fetcher knows what such a
+    page is and says so through a failure hint."""
+
+    def test_an_in_the_news_page_without_a_pdf_is_media_without_text(self, tmp_path, monkeypatch):
+        import failure_labels as fl
+        monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
+        page = ('<html><body><main><h1>Jeremy Grantham Joins The Diary of a CEO</h1>'
+                '<p>GMO co-founder Jeremy Grantham sat down with Steven Bartlett.</p></main>'
+                f'{HR_FORM}</body></html>')
+        resp = MagicMock(status_code=200, text=page)
+        resp.raise_for_status = lambda: None
+        monkeypatch.setattr(fc.requests, "get", lambda *a, **k: resp)
+        article = {"id": "gmo-inthenews", "url": f"{GMO}/americas/research-library/grantham-diary-of-a-ceo_inthenews/"}
+        result, evidence = fc.fetch_with_evidence(article, fc._fetch_content_gmo)
+        assert result is None
+        assert fl.classify_content_failure(evidence)[0] == "media_without_text"
+
+    def test_an_ordinary_page_without_a_pdf_keeps_the_generic_label(self, tmp_path, monkeypatch):
+        import failure_labels as fl
+        monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
+        page = f'<html><body><main><p>Some page.</p></main>{HR_FORM}</body></html>'
+        resp = MagicMock(status_code=200, text=page)
+        resp.raise_for_status = lambda: None
+        monkeypatch.setattr(fc.requests, "get", lambda *a, **k: resp)
+        article = {"id": "gmo-plain", "url": f"{GMO}/americas/research-library/some-paper/"}
+        result, evidence = fc.fetch_with_evidence(article, fc._fetch_content_gmo)
+        assert result is None
+        assert fl.classify_content_failure(evidence)[0] == "body_too_short"

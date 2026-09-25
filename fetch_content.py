@@ -380,6 +380,13 @@ def _fetch_content_gmo(article: dict) -> Optional[tuple[Path, str]]:
     pdf_url = _gmo_pdf_url(resp.text, url)
     if not pdf_url:
         log.warning("  GMO: no article PDF on page %s", url)
+        if "_inthenews" in url.rstrip("/").rsplit("/", 1)[-1]:
+            # Press/podcast mentions (2026-09-23: Jeremy Grantham on The Diary
+            # of a CEO): a bio and a paragraph about the appearance, never a
+            # paper. Without this the labeller has nothing to go on and files
+            # the page as body_too_short, which keeps retrying it.
+            note_failure_hint("media_without_text",
+                              "in-the-news mention page, no article PDF")
         return None
 
     log.info("  GMO: downloading PDF %s", pdf_url)
