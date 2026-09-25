@@ -3435,7 +3435,7 @@
     "official_domain": "www.fulcrumasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-24T09:00:08.700664+08:00",
+    "last_discovered_at": "2026-09-25T09:00:08.668270+08:00",
     "status_since": "2026-08-22T09:03:32.572404+08:00",
     "last_deep_analyzed_at": "2026-09-18T01:02:34Z",
     "quality": "MEDIUM",
@@ -3550,7 +3550,7 @@
     "official_domain": "www.muzinich.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-24T09:00:09.064449+08:00",
+    "last_discovered_at": "2026-09-25T09:00:09.033557+08:00",
     "status_since": "2026-08-25T09:03:39.585223+08:00",
     "quality": "HIGH",
     "quality_score": 0.78,
@@ -3577,7 +3577,7 @@
     "official_domain": "www.cfm.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-24T09:00:09.261347+08:00"
+    "last_discovered_at": "2026-09-25T09:00:09.240229+08:00"
   },
   {
     "id": "northleaf-capital",
@@ -3710,7 +3710,7 @@
     "official_domain": "www.grahamcapital.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-24T09:00:09.402212+08:00",
+    "last_discovered_at": "2026-09-25T09:00:09.414845+08:00",
     "status_since": "2026-09-05T09:04:28.857065+08:00",
     "last_deep_analyzed_at": "2026-09-23T01:02:52Z",
     "quality": "HIGH",
@@ -3854,5 +3854,18 @@
     "topics": "event-driven, merger arb, real estate DST, marketing",
     "notes": "PR feed + gated sales whitepapers; recheck monthly",
     "last_deep_analyzed_at": "2026-09-19T01:01:34Z"
+  },
+  {
+    "id": "ninety-one",
+    "name": "Ninety One",
+    "homepage_url": "https://ninetyone.com/en/insights",
+    "source": "manual",
+    "status": "seed",
+    "strategy_tags": [
+      "emerging_markets",
+      "macro",
+      "equity",
+      "fixed_income"
+    ]
   }
 ]
