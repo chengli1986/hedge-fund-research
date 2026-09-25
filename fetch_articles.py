@@ -936,6 +936,10 @@ def fetch_wellington(source: dict) -> list[dict]:
     expected_host = source["expected_hostname"]
 
     articles = []
+    # The listing repeats the same card (measured 2026-09-25: 10 cards, 6
+    # distinct URLs), so without this the copies eat the max_articles budget
+    # and the articles further down the page are never ingested.
+    seen_urls: set[str] = set()
     for item in soup.select("section.insight.article"):
         title_el = item.select_one("a.insight__title")
         if not title_el:
@@ -951,6 +955,9 @@ def fetch_wellington(source: dict) -> list[dict]:
         url = urljoin(base_url, href)
         if not _validate_hostname(url, expected_host):
             continue
+        if url in seen_urls:
+            continue
+        seen_urls.add(url)
 
         date_el = item.select_one("date[datetime]")
         parsed_date = None

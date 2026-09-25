@@ -24,6 +24,7 @@ if-statements this exists to remove.
 Spec (type card_list):
     fetch          "requests" | "playwright"
     wait_selector  playwright only: wait for this before reading the HTML
+    wait_until     playwright only: "networkidle" (default) or "domcontentloaded"
     card           selector for each card
     link           anchor inside the card, or "self" when the card is the <a>
     title          optional; defaults to the link's own text
@@ -85,8 +86,12 @@ def parse_cards(html: str, source: dict, spec: dict) -> list[dict]:
     seen: set[str] = set()
     for card in soup.select(spec["card"]):
         link_el = card if link_sel == "self" else card.select_one(link_sel)
-        href = link_el.get("href", "") if link_el else ""
-        if not href:
+        href = (link_el.get("href", "") if link_el else "").strip()
+        # An anchor that goes nowhere is not an article: oaktree leaves
+        # href="#" on cards whose real target is in a data-link attribute, and
+        # urljoin turns that into the listing page itself, which then passes
+        # the host check (found by the A/B run, 2026-09-25).
+        if not href or href.startswith("#") or href.lower().startswith("javascript:"):
             continue
         url = urljoin(source["url"], href)
         if expected_host and not _validate_hostname(url, expected_host):
@@ -113,10 +118,12 @@ def parse_cards(html: str, source: dict, spec: dict) -> list[dict]:
     return rows[:source.get("max_articles", 10)]
 
 
-def _playwright_html(url: str, wait_selector: str | None = None, wait_ms: int = 5000) -> str:
+def _playwright_html(url: str, wait_selector: str | None = None, wait_ms: int = 5000,
+                     wait_until: str = "networkidle") -> str:
     from fetch_articles import _get_playwright_page
 
-    return _get_playwright_page(url, wait_selector=wait_selector, wait_ms=wait_ms)
+    return _get_playwright_page(url, wait_selector=wait_selector, wait_ms=wait_ms,
+                                wait_until=wait_until)
 
 
 def fetch(source: dict) -> list[dict]:
@@ -127,7 +134,8 @@ def fetch(source: dict) -> list[dict]:
     validate_spec(spec)
     if spec["fetch"] == "playwright":
         html = _playwright_html(source["url"], wait_selector=spec.get("wait_selector"),
-                                wait_ms=spec.get("wait_ms", 5000))
+                                wait_ms=spec.get("wait_ms", 5000),
+                                wait_until=spec.get("wait_until", "networkidle"))
     else:
         resp = requests.get(source["url"], headers=HEADERS, timeout=30)
         resp.raise_for_status()

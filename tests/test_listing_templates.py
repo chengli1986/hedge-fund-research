@@ -231,3 +231,60 @@ class TestTwoMoreKnobs:
         spec = {k: v for k, v in self.SPEC.items() if k not in ("date_attr", "path_prefix")}
         rows = lt.parse_cards(self.HTML, self.SRC, spec)
         assert len(rows) == 3 and rows[0]["date_raw"] == "18 Sep"
+
+
+class TestWaitUntilKnob:
+    """networkidle is the Playwright default and 27 places in this repo had to
+    be moved off it (audit follow-up, 2026-09-20). A template must be able to
+    say which wait it wants, or every source it takes over inherits the one
+    that times out on beacon-heavy sites."""
+    def test_the_spec_can_choose_the_wait(self, monkeypatch):
+        seen = {}
+        monkeypatch.setattr(lt, "_playwright_html",
+                            lambda url, wait_selector=None, wait_until="networkidle", **k:
+                            seen.update(wait_until=wait_until) or "<html></html>")
+        spec = {"type": "card_list", "fetch": "playwright", "card": "div.x",
+                "wait_until": "domcontentloaded"}
+        lt.fetch({"id": "t", "url": "https://site.test/i", "expected_hostname": "site.test",
+                  "listing_template": spec})
+        assert seen["wait_until"] == "domcontentloaded"
+
+    def test_the_default_is_unchanged(self, monkeypatch):
+        seen = {}
+        monkeypatch.setattr(lt, "_playwright_html",
+                            lambda url, wait_selector=None, wait_until="networkidle", **k:
+                            seen.update(wait_until=wait_until) or "<html></html>")
+        spec = {"type": "card_list", "fetch": "playwright", "card": "div.x"}
+        lt.fetch({"id": "t", "url": "https://site.test/i", "expected_hostname": "site.test",
+                  "listing_template": spec})
+        assert seen["wait_until"] == "networkidle"
+
+
+class TestDeadAnchors:
+    """An anchor that goes nowhere is not an article.
+
+    oaktree puts external links in a data-link attribute and leaves href="#".
+    The template turned that into urljoin(listing, "#") -- the listing page
+    itself -- which passes the host check and becomes a row pointing at the
+    index (caught by the A/B against the hand-written fetcher, 2026-09-25,
+    where it appeared as a CNBC item whose url was /insights).
+    """
+    SRC = {"id": "t", "url": "https://site.test/insights", "expected_hostname": "site.test",
+           "max_articles": 10}
+    SPEC = {"type": "card_list", "fetch": "requests", "card": "div.card", "link": "a[href]",
+            "title": "h3"}
+
+    @pytest.mark.parametrize("href", ["#", "", "javascript:void(0)", "#section"])
+    def test_an_anchor_that_goes_nowhere_is_skipped(self, href):
+        html = f'<div class="card"><a href="{href}"><h3>Dead</h3></a></div>'
+        assert lt.parse_cards(html, self.SRC, self.SPEC) == []
+
+    def test_dead_anchors_are_skipped_without_a_host_check(self):
+        """The host check is conditional, so it cannot be the only guard."""
+        src = dict(self.SRC, expected_hostname="")
+        html = '<div class="card"><a href="javascript:void(0)"><h3>Dead</h3></a></div>'
+        assert lt.parse_cards(html, src, self.SPEC) == []
+
+    def test_a_real_link_still_passes(self):
+        html = '<div class="card"><a href="/insights/x"><h3>Real</h3></a></div>'
+        assert len(lt.parse_cards(html, self.SRC, self.SPEC)) == 1

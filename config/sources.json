@@ -165,7 +165,18 @@
       "description": "One of the world's largest private investment firms. Equity, fixed income, multi-asset, alternatives.",
       "notable_authors": [],
       "expected_hostname": "wellington.com",
-      "max_articles": 10
+      "max_articles": 10,
+      "listing_template": {
+        "type": "card_list",
+        "fetch": "playwright",
+        "wait_selector": "section.insight.article",
+        "card": "section.insight.article",
+        "link": "a.insight__link, a.insight__title",
+        "title": "a.insight__title",
+        "date": "date[datetime]",
+        "date_attr": "datetime"
+      },
+      "listing_template_active": true
     },
     {
       "id": "amundi",
