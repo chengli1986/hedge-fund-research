@@ -89,16 +89,26 @@ def _freshness(name: str, at: str | None, now: datetime) -> dict:
             "max_age_hours": MAX_AGE_HOURS[name]}
 
 
+def _newest_stamp(inspection: dict) -> str | None:
+    """The most recent last_inspected_at, by instant.
+
+    Not max() over the strings: that compares text. inspection_state.json
+    moved from UTC to BJT on 2026-09-26 and a file holding both would rank
+    "2026-09-27T03:40+08:00" above "2026-09-26T19:45+00:00", which is five
+    minutes older.
+    """
+    stamps = [v.get("last_inspected_at") for v in (inspection or {}).values()
+              if v.get("last_inspected_at") and _parse(v.get("last_inspected_at"))]
+    return max(stamps, key=lambda s: _parse(s)) if stamps else None
+
+
 def build_health(sources: list[dict], inspection: dict, probe: dict, rows: list[dict],
                  census: list[dict], ab: list[dict], corrupt_backups: list[str],
                  now: datetime) -> dict:
     """The whole page as data. Pure: everything it reads is an argument."""
     probe_sources = (probe or {}).get("sources") or {}
     inputs = {
-        "pipeline": _freshness("pipeline",
-                               max((v.get("last_inspected_at") or "")
-                                   for v in inspection.values()) or None
-                               if inspection else None, now),
+        "pipeline": _freshness("pipeline", _newest_stamp(inspection), now),
         "probe": _freshness("probe", (probe or {}).get("last_run"), now),
         "census": _freshness("census", (census or [{}])[-1].get("at") if census else None, now),
         "ab": _freshness("ab", (ab or [{}])[-1].get("at") if ab else None, now),
@@ -127,6 +137,10 @@ def build_health(sources: list[dict], inspection: dict, probe: dict, rows: list[
             "consecutive_zero": state.get("consecutive_zero_count") or 0,
             "last_refusal": state.get("last_refusal"),
             "last_inspected_at": state.get("last_inspected_at"),
+            # A source can drop out of the run without any counter moving:
+            # its stored row keeps last night's count and reads as healthy.
+            "not_inspected_hours": _age_hours(state.get("last_inspected_at"), now)
+            if state.get("last_inspected_at") else None,
             "probe_status": probed.get("status"),
             "probe_reason": probed.get("last_failure_reason") or "",
             "probe_elapsed_ms": probed.get("last_elapsed_ms"),
@@ -135,6 +149,10 @@ def build_health(sources: list[dict], inspection: dict, probe: dict, rows: list[
             "last_ok_at": probed.get("last_ok_at"),
         })
 
+    if not sources:
+        # An unreadable config yields []. Rendering an empty table and
+        # exiting 0 is the one thing a health page must never do.
+        stale.insert(0, {"input": "config", "age_hours": None})
     alerts = _alerts(rendered, ab, corrupt_backups, stale)
     totals = {
         "sources": len(rendered),
@@ -195,6 +213,10 @@ def _alerts(rendered: list[dict], ab: list[dict], corrupt_backups: list[str],
         if row["last_refusal"]:
             alerts.append({"kind": "refusal", "source": row["id"],
                            "detail": f"上次抓取被拒收：{row['last_refusal']}"})
+        if (row["not_inspected_hours"] or 0) > MAX_AGE_HOURS["pipeline"]:
+            alerts.append({"kind": "not_inspected", "source": row["id"],
+                           "detail": f"已 {row['not_inspected_hours'] / 24:.1f} 天未被抓取，"
+                                     "表里的数字是那次留下的"})
         if row["probe_status"] == "FAIL":
             alerts.append({"kind": "probe_fail", "source": row["id"],
                            "detail": row["probe_reason"] or "探针失败"})
@@ -334,14 +356,15 @@ def render_html(health: dict) -> str:
         kind_labels = {"consecutive_zero": "连续零抓取", "refusal": "抓取被拒收",
                        "probe_fail": "探针失败", "probe_warn": "探针告警",
                        "ab_gate": "A/B 不一致", "corrupt_state": "状态文件损坏",
-                       "stale_input": "数据过期"}
+                       "not_inspected": "该源未抓取", "stale_input": "数据过期"}
         rows = "".join(
             f'<div class="alert"><span class="k">{_esc(kind_labels.get(a["kind"], a["kind"]))}</span>'
             f'<span class="s">{_esc(a["source"])}</span> {_esc(a["detail"])}</div>'
             for a in stage["alerts"])
         alerts_html = f'<div class="alerts">{rows}</div>'
     else:
-        alerts_html = '<div class="ok">✓ 无告警：42 源全部正常，无连续零抓取、无拒收、探针全绿</div>'
+        alerts_html = (f'<div class="ok">✓ 无告警：{t["sources"]} 源全部正常，'
+                       '无连续零抓取、无拒收、探针全绿</div>')
 
     body_rows = []
     for r in stage["sources"]:

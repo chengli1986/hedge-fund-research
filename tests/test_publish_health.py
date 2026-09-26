@@ -265,3 +265,57 @@ class TestRender:
         CSS precisely so the generator does not depend on that repo."""
         html = ph.render_html(_build())
         assert "components.css" not in html and "<script src=" not in html
+
+
+class TestSelfAudit:
+    """Four defects found by auditing the page after it shipped.
+
+    None of them showed in today's numbers -- all 42 rows recompute exactly
+    from the raw files. They are about what the page says once something
+    changes, which is the only thing a dashboard is for.
+    """
+
+    def test_the_no_alert_banner_does_not_hardcode_the_source_count(self):
+        """It read "42 源全部正常". A number copied into prose is the defect
+        this repo spends most of its guards on."""
+        out = _build(sources=_sources("alpha", "beta", "gamma"),
+                     inspection=_inspection("alpha", "beta", "gamma"),
+                     probe=_probe("alpha", "beta", "gamma"))
+        html = ph.render_html(out)
+        assert "42" not in html.split("逐源状态")[0].split("告警")[-1]
+        assert "3 源" in html
+
+    def test_the_newest_stamp_is_found_across_mixed_offsets(self):
+        """A string max over ISO stamps compares the text, not the instant.
+        With inspection_state mid-migration from UTC to BJT both appear, and
+        "2026-09-27T03:40+08:00" sorts above "2026-09-26T19:45+00:00" while
+        being five minutes older."""
+        inspection = {"a": {"last_inspected_at": "2026-09-26T19:45:00+00:00"},
+                      "b": {"last_inspected_at": "2026-09-27T03:40:00+08:00"}}
+        out = _build(inspection=inspection,
+                     now=datetime(2026, 9, 27, 4, 50, tzinfo=BJT))
+        assert out["inputs"]["pipeline"]["at"] == "2026-09-26T19:45:00+00:00"
+
+    def test_no_sources_at_all_is_a_failure_not_an_empty_page(self):
+        """An unreadable sources.json yields []; the page rendered a blank
+        table, said nothing was wrong and exited 0."""
+        out = _build(sources=[])
+        assert [s["input"] for s in out["stale"]] == ["config"]
+        assert ph.exit_code(out) == 1
+        assert any(a["kind"] == "stale_input" for a
+                   in out["stages"]["1_fetch_articles"]["alerts"])
+
+    def test_a_source_that_stopped_being_fetched_is_reported(self):
+        """Its stored row keeps yesterday's count, so the table showed a
+        healthy-looking number for a source nothing had touched in days."""
+        inspection = {"alpha": _inspection("alpha")["alpha"],
+                      "beta": _inspection("beta", age_h=6 * 24)["beta"]}
+        out = _build(inspection=inspection)
+        alerts = [a for a in out["stages"]["1_fetch_articles"]["alerts"]
+                  if a["kind"] == "not_inspected"]
+        assert [a["source"] for a in alerts] == ["beta"]
+        assert "未抓取" in ph.render_html(out)
+
+    def test_a_source_fetched_last_night_is_not_reported(self):
+        assert [a for a in _build()["stages"]["1_fetch_articles"]["alerts"]
+                if a["kind"] == "not_inspected"] == []
