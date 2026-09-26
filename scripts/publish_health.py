@@ -291,6 +291,20 @@ def _esc(value) -> str:
     return html.escape("" if value is None else str(value))
 
 
+def _bjt_words(ts: str | None) -> str:
+    """A timestamp as BJT, whatever timezone it was written in.
+
+    inspection_state.json stamps UTC (this machine's clock) while everything
+    on the page is BJT; printing it raw showed a 03:45 event as 19:45. The
+    age in hours was right either way, which is exactly why this kind of
+    error survives a reading.
+    """
+    parsed = _parse(ts)
+    if parsed is None:
+        return "—"
+    return parsed.astimezone(BJT).strftime("%Y-%m-%d %H:%M")
+
+
 def _chip(name: str, label: str, f: dict) -> str:
     if not f["present"]:
         if name in REQUIRED_INPUTS:
@@ -301,7 +315,7 @@ def _chip(name: str, label: str, f: dict) -> str:
     when = f"{age:.1f} 小时前" if age < 48 else f"{age / 24:.1f} 天前"
     mark = " · 数据过期" if stale else ""
     return (f'<span class="chip{" stale" if stale else ""}">{_esc(label)}：'
-            f'{_esc(f["at"][:16].replace("T", " "))}（{when}{mark}）</span>')
+            f'{_esc(_bjt_words(f["at"]))}（{when}{mark}）</span>')
 
 
 def render_html(health: dict) -> str:
@@ -368,7 +382,7 @@ def render_html(health: dict) -> str:
 <body>
 <div class="wrap">
   <h1>GMIA 管线健康 · 第 1 阶段（抓文章列表）</h1>
-  <div class="sub">生成于 {_esc(health["generated_at"][:16].replace("T", " "))} BJT ·
+  <div class="sub">生成于 {_esc(_bjt_words(health["generated_at"]))} BJT ·
     数据来自管线自身与健康探针，每晚 04:50 BJT 重建 ·
     <a href="/hedge-fund-research.html">研报看板 →</a></div>
   <div class="chips">{chips}</div>

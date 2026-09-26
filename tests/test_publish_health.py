@@ -249,6 +249,17 @@ class TestRender:
                                      inspection=_inspection("alpha"), probe=probe))
         assert "今天" in html
 
+    def test_a_utc_timestamp_is_shown_in_bjt(self):
+        """inspection_state.json stamps UTC ("...+00:00") and the page says
+        BJT everywhere else. The first render printed 19:49 for an event that
+        happened at 03:49 BJT -- this machine's oldest trap, on a page whose
+        whole point is that a timestamp can be trusted."""
+        inspection = {"alpha": {"last_inspected_at": "2026-09-25T19:45:06+00:00",
+                                "last_article_count": 10, "consecutive_zero_count": 0}}
+        html = ph.render_html(_build(sources=_sources("alpha"), inspection=inspection,
+                                     probe=_probe("alpha")))
+        assert "2026-09-26 03:45" in html and "2026-09-25 19:45" not in html
+
     def test_the_page_is_self_contained(self):
         """docs-site's verify-pages.sh exempts generated pages from its shared
         CSS precisely so the generator does not depend on that repo."""
