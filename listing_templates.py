@@ -38,6 +38,19 @@ Spec (type card_list):
     date_part      optional; "before" (default) or "after" the separator.
                    Text without the separator is the date either way.
 
+Spec (type api_json):
+    endpoint       the listing API: an absolute URL, or a path joined onto the
+                   source's site
+    params         optional query parameters
+    referer        optional; send the source URL as Referer (some backends
+                   500 without it)
+    items          dotted path to the list of records ("pages",
+                   "response.docs")
+    title          record field holding the title, or a list of fields to try
+    url            record field holding the URL, or a list of fields to try
+    date           optional; record field holding the date
+    sort           optional; "date_desc" to sort before the max_articles cut
+
 Spec (type rss_feed):
     feed           which config key holds the feed URL: "rss_url" or "url"
     categories     optional whitelist of <category> values, case-insensitive
@@ -59,8 +72,9 @@ from bs4 import BeautifulSoup
 
 log = logging.getLogger(__name__)
 
-SUPPORTED_TYPES = ("card_list", "rss_feed")
-REQUIRED = {"card_list": ("fetch", "card"), "rss_feed": ("feed",)}
+SUPPORTED_TYPES = ("card_list", "rss_feed", "api_json")
+REQUIRED = {"card_list": ("fetch", "card"), "rss_feed": ("feed",),
+            "api_json": ("endpoint", "items", "title", "url")}
 FETCH_MODES = ("requests", "playwright")
 DATE_PARTS = ("before", "after")
 FEED_KEYS = ("rss_url", "url")
@@ -80,6 +94,10 @@ def validate_spec(spec: dict) -> None:
     if kind == "rss_feed" and spec["feed"] not in FEED_KEYS:
         raise ValueError(f"listing_template feed {spec['feed']!r} is not one of {FEED_KEYS}; "
                          "it names the config key holding the feed URL, not the URL itself")
+    if kind == "api_json":
+        for key in ("title", "url"):
+            if not isinstance(spec[key], (str, list)):
+                raise ValueError(f"listing_template {key!r} must be a field name or a list")
     sort = spec.get("sort")
     if sort is not None and sort not in SORTS:
         raise ValueError(f"listing_template sort {sort!r} is not one of {SORTS}")
@@ -97,6 +115,16 @@ def _split_date(text: str, spec: dict) -> str:
         return text
     before, after = text.split(sep, 1)
     return (after if spec.get("date_part") == "after" else before).strip()
+
+
+def _norm_ws(text: str) -> str:
+    """One space between words, nothing at the ends.
+
+    Shared by all three types: sites deliver the same headline with a
+    non-breaking space (mfs "&nbsp;", troweprice U+00A0), a newline from a
+    templating engine, or a run of spaces, and those are not different titles.
+    """
+    return re.sub(r"\s+", " ", text or "").strip()
 
 
 def _text(el) -> str:
@@ -220,7 +248,83 @@ def _feed_text(item, tag: str, unescape: bool = True) -> str:
     """
     el = item.find(tag)
     text = (el.text or "").strip() if el is not None else ""
-    return html.unescape(text) if unescape else text
+    return _norm_ws(html.unescape(text)) if unescape else text
+
+
+def _dig(payload: dict, path: str):
+    """Follow a dotted path into the decoded JSON, or return None."""
+    node = payload
+    for part in path.split("."):
+        if not isinstance(node, dict):
+            return None
+        node = node.get(part)
+    return node
+
+
+def _field(record: dict, names) -> str:
+    """First non-empty value among one or more record fields.
+
+    gsam's hits carry title or summaryTitle, and pagePath or slug; a chain
+    says so in the spec instead of in code.
+    """
+    for name in ([names] if isinstance(names, str) else names):
+        value = record.get(name)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return ""
+
+
+def _api_title(raw: str) -> str:
+    """Titles arrive as rich text or with entities, depending on the CMS.
+
+    MFS's Solr docs carry "<p>Market Pulse</p>" because the field is rich
+    text; MetLife's servlet returns "Relative Value &amp; Credit". get_text
+    already unescapes, so a plain title is unescaped on its own.
+    """
+    if "<" in raw:
+        return _norm_ws(BeautifulSoup(raw, "html.parser").get_text(" "))
+    return _norm_ws(html.unescape(raw))
+
+
+def parse_items(payload: dict, source: dict, spec: dict) -> list[dict]:
+    """Rows from a decoded JSON listing response."""
+    from fetch_articles import _validate_hostname, parse_date
+
+    # A path that is absent, or points at something that is not a list, gives
+    # nothing: the per-record isinstance check below handles the rest. An
+    # explicit list guard here was written and removed the same hour -- no
+    # payload could tell it apart from this, which is what dead code is.
+    records = _dig(payload, spec["items"]) or []
+    site = _site(source["url"])
+    expected_host = source.get("expected_hostname")
+
+    rows: list[dict] = []
+    seen: set[str] = set()
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        title = _api_title(_field(record, spec["title"]))
+        raw_url = _field(record, spec["url"])
+        if not title or not raw_url:
+            continue
+        url = urljoin(site, raw_url)
+        if expected_host and not _validate_hostname(url, expected_host):
+            continue
+        if url in seen:
+            continue
+        seen.add(url)
+        date_raw = _field(record, spec["date"]) if spec.get("date") else ""
+        rows.append({"title": title, "url": url,
+                     "date": parse_date(date_raw) if date_raw else None,
+                     "date_raw": date_raw})
+    if spec.get("sort") == "date_desc":
+        rows.sort(key=lambda r: r["date"] or "", reverse=True)
+    return rows[:source.get("max_articles", 10)]
+
+
+def _site(url: str) -> str:
+    parts = urlparse(url)
+    return f"{parts.scheme}://{parts.netloc}"
 
 
 def _playwright_html(url: str, wait_selector: str | None = None, wait_ms: int = 5000,
@@ -237,6 +341,15 @@ def fetch(source: dict) -> list[dict]:
 
     spec = source.get("listing_template") or {}
     validate_spec(spec)
+    if spec["type"] == "api_json":
+        endpoint = spec["endpoint"]
+        url = endpoint if endpoint.startswith("http") else _site(source["url"]) + endpoint
+        headers = dict(HEADERS, Accept="application/json")
+        if spec.get("referer"):
+            headers["Referer"] = source["url"]
+        resp = requests.get(url, params=spec.get("params"), headers=headers, timeout=30)
+        resp.raise_for_status()
+        return parse_items(resp.json(), source, spec)
     if spec["type"] == "rss_feed":
         feed_url = source.get(spec["feed"]) or source["url"]
         resp = requests.get(feed_url, headers=HEADERS, timeout=30)

@@ -3294,10 +3294,13 @@ def fetch_mfs_investment_management(source: dict) -> list[dict]:
         if url in seen_urls:
             continue
         raw_title = (doc.get("title") or "").strip()
-        title = (
-            BeautifulSoup(raw_title, "html.parser").get_text(" ", strip=True)
-            if "<" in raw_title else raw_title
-        )
+        # Entities, not only markup: one headline arrives as "Who Owns the
+        # Outcome?&nbsp;AI ..." with no tag in it, and storing that verbatim
+        # put the six characters on the page (publish html-escapes titles).
+        title = re.sub(r"\s+", " ", (
+            BeautifulSoup(raw_title, "html.parser").get_text(" ")
+            if "<" in raw_title else html.unescape(raw_title)
+        )).strip()
         if not title:
             continue
         seen_urls.add(url)

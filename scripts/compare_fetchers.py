@@ -18,6 +18,11 @@ that publishes between them disagrees by one row at each end of the window
 bespoke run had not seen, which pushed the oldest row off the max_articles
 cap). A single-row difference where the extra template row is the newest on
 the page is that race, not a defect -- re-run before concluding anything.
+
+msci-research reports "order differs" on roughly half its runs: the site
+serves its cards in a different order each load. Its listing renders exactly
+max_articles cards (10 of 10, counted 2026-09-26), so the set cannot change
+and nothing downstream reads fetch order. Re-run; it flips back.
 """
 from __future__ import annotations
 

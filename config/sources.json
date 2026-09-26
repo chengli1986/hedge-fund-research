@@ -347,7 +347,16 @@
       "description": "Investment management arm of J.P. Morgan. On the Minds of Investors series — market commentary across macro, equity, fixed income, alternatives.",
       "notable_authors": [],
       "expected_hostname": "am.jpmorgan.com",
-      "max_articles": 10
+      "max_articles": 10,
+      "listing_template": {
+        "type": "api_json",
+        "endpoint": "/content/jpm-am-aem/americas/us/en/adv/insights/market-insights/market-updates/on-the-minds-of-investors/_jcr_content/root/responsivegrid/jpm_am_editorial_lan.model.json",
+        "items": "pages",
+        "title": "title",
+        "url": "url",
+        "date": "displayDate"
+      },
+      "listing_template_active": true
     },
     {
       "id": "verdad-capital",
@@ -958,7 +967,27 @@
       "description": "Boston-based active manager founded in 1924 (~$645B AUM as of 30 September 2024), now a wholly owned subsidiary of Sun Life Financial. Invented the US open-end mutual fund with Massachusetts Investors Trust and still runs only bottom-up, long-horizon active strategies — global and regional equity, fixed income (rates, credit, municipals, emerging-market debt) and multi-asset — built on a collaborative analyst/portfolio-manager research platform with explicit long-term risk and stewardship discipline rather than quantitative or index-tracking mandates.",
       "notable_authors": [],
       "expected_hostname": "mfs.com",
-      "max_articles": 10
+      "max_articles": 10,
+      "listing_template": {
+        "type": "api_json",
+        "endpoint": "/MFSServices/services/search/v1/queryresults",
+        "params": {
+          "q": "*",
+          "wt": "json",
+          "rows": "30",
+          "sort": "sorteddate desc",
+          "roleCode": "iprof,usiprof",
+          "fq": "locale:(en or en_us) AND region:us AND is_insight:true AND data_type:(insights)"
+        },
+        "items": "response.docs",
+        "title": "title",
+        "url": "url",
+        "date": "publisheddate"
+      },
+      "listing_template_active": true,
+      "listing_template_drops": [
+        "category"
+      ]
     },
     {
       "id": "northleaf-capital",
