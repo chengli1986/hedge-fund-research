@@ -137,11 +137,7 @@
           "market insights"
         ]
       },
-      "listing_template_active": true,
-      "listing_template_drops": [
-        "category",
-        "summary"
-      ]
+      "listing_template_active": true
     },
     {
       "id": "cambridge-associates",

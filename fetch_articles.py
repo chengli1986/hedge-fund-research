@@ -1710,7 +1710,11 @@ def fetch_ark_invest(source: dict) -> list[dict]:
 
         summary = ""
         if desc_el is not None and desc_el.text:
-            summary = _strip_html_tags(desc_el.text)
+            # unescape like the title above: the feed double-escapes, so
+            # "&apos;" and "&quot;" reached the store raw and publish escapes
+            # again -- a reader saw the entity. Found by the A/B against the
+            # rss_feed template, 2026-09-26.
+            summary = html.unescape(_strip_html_tags(desc_el.text))
 
         category = ", ".join(categories) if categories else ""
 

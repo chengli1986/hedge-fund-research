@@ -32,7 +32,8 @@ class TestParseFeed:
     def test_an_item_becomes_a_row(self):
         rows = lt.parse_feed(_feed(_item()), SRC, SPEC)
         assert rows == [{"title": "T", "url": "https://site.test/a", "date": "2026-09-21",
-                         "date_raw": "Mon, 21 Sep 2026 10:00:00 +0000"}]
+                         "date_raw": "Mon, 21 Sep 2026 10:00:00 +0000",
+                         "summary": "", "category": ""}]
 
     def test_a_byte_order_mark_does_not_break_parsing(self):
         assert len(lt.parse_feed(_feed(_item(), bom="﻿"), SRC, SPEC)) == 1
@@ -158,3 +159,72 @@ class TestFeedFetch:
                             lambda url, **kw: (seen.setdefault("url", url), R())[1])
         lt.fetch(dict(SRC, listing_template=dict(SPEC, feed="url")))
         assert seen["url"] == "https://site.test/insights"
+
+
+class TestFeedExtraFields:
+    """A feed carries more than title/link/date, and one of those fields is read.
+
+    _ark_metadata_fallback builds its body from the row's summary and
+    category: ARK blocks the article pages, so 74% of its rows (29 of 39)
+    are metadata_only and that body is all there is. The rss_feed template
+    emitted neither, and on 2026-09-26 ark was switched to it with both
+    fields declared droppable -- on the strength of a grep for
+    `get("summary")` that missed `get("summary", "")`, the one consumer.
+    """
+    SRC = {"id": "t", "url": "https://site.test/feed", "rss_url": "https://site.test/feed",
+           "expected_hostname": "site.test", "max_articles": 10}
+    SPEC = {"type": "rss_feed", "feed": "rss_url"}
+
+    def _rows(self, extra: str):
+        xml = ('<rss><channel><item><title>T</title><link>https://site.test/a</link>'
+               '<pubDate>Mon, 21 Sep 2026 10:00:00 +0000</pubDate>'
+               f'{extra}</item></channel></rss>')
+        return lt.parse_feed(xml, self.SRC, self.SPEC)
+
+    def test_the_description_becomes_the_summary(self):
+        assert self._rows("<description>Why rates matter</description>")[0]["summary"] == \
+            "Why rates matter"
+
+    def test_markup_in_the_description_is_stripped(self):
+        """ARK's feed wraps its teaser in <p> and <a>; the stored body is text."""
+        rows = self._rows("<description>&lt;p&gt;Now in the &lt;a&gt;letter&lt;/a&gt;&lt;/p&gt;</description>")
+        assert rows[0]["summary"] == "Now in the letter"
+
+    def test_categories_are_joined_like_the_hand_written_fetcher(self):
+        rows = self._rows("<category>Market Commentary</category><category>Macro</category>")
+        assert rows[0]["category"] == "Market Commentary, Macro"
+
+    def test_an_item_without_them_carries_empty_strings(self):
+        """Empty is not stored: fetch_source keeps a listing field only when truthy."""
+        row = self._rows("")[0]
+        assert row["summary"] == "" and row["category"] == ""
+
+    def test_the_category_whitelist_still_reads_the_same_categories(self):
+        xml = ('<rss><channel><item><title>T</title><link>https://site.test/a</link>'
+               '<category>Podcast</category></item></channel></rss>')
+        assert lt.parse_feed(xml, self.SRC, dict(self.SPEC, categories=["analyst research"])) == []
+
+
+def test_ark_hand_written_summary_decodes_entities_like_the_template():
+    """The A/B differed on five of ten rows, all of them entities: the
+    bespoke fetcher unescapes its title but not its description, so
+    "&apos;" and "&quot;" were stored raw -- the same defect as the mfs
+    title, and publish escapes again, so a reader sees the entity."""
+    import fetch_articles as fa
+    from unittest.mock import patch
+
+    feed = ('<rss><channel><item><title>T</title>'
+            '<link>https://ark-invest.com/articles/a</link>'
+            '<category>Market Commentary</category>'
+            '<description>In this month&amp;apos;s &amp;quot;In The Know&amp;quot;</description>'
+            '<pubDate>Mon, 21 Sep 2026 10:00:00 +0000</pubDate></item></channel></rss>')
+
+    class R:
+        text = feed
+        def raise_for_status(self): pass
+
+    src = {"id": "ark-invest", "url": "https://www.ark-invest.com/feed",
+           "expected_hostname": "ark-invest.com", "max_articles": 10}
+    with patch("fetch_articles.requests.get", return_value=R()):
+        got = fa.fetch_ark_invest(src)
+    assert got[0]["summary"] == 'In this month\'s "In The Know"'

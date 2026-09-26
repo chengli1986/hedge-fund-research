@@ -52,6 +52,8 @@ Spec (type api_json):
 Spec (type rss_feed):
     feed           which config key holds the feed URL: "rss_url" or "url"
     categories     optional whitelist of <category> values, case-insensitive
+                   (every item's categories are emitted as the "category"
+                   field regardless, alongside "summary" from <description>)
     path_prefix    optional; keep only links whose path starts with this
     sort           optional; "date_desc" to sort before the max_articles cut,
                    for feeds that are not in date order
@@ -230,12 +232,27 @@ def parse_feed(xml_text: str, source: dict, spec: dict) -> list[dict]:
             continue
         seen.add(url)
         date_raw = _feed_text(item, "pubDate", unescape=False)
+        # summary and category too: a feed carries them, and
+        # fetch_content._ark_metadata_fallback reads both -- ARK blocks its
+        # article pages, so for 74% of its rows that fallback body is the
+        # only content there is. Emitting them costs nothing for a feed that
+        # has neither (fetch_source stores a listing field only when truthy).
+        cats = [_norm_ws(html.unescape((c.text or ""))) for c in item.findall("category")]
         rows.append({"title": title, "url": url, "date": _feed_date(date_raw),
-                     "date_raw": date_raw})
+                     "date_raw": date_raw,
+                     "summary": _strip_tags(_feed_text(item, "description")),
+                     "category": ", ".join(c for c in cats if c)})
     if spec.get("sort") == "date_desc":
         # "" sorts below any real date, so undated rows land at the end.
         rows.sort(key=lambda r: r["date"] or "", reverse=True)
     return rows[:source.get("max_articles", 10)]
+
+
+def _strip_tags(text: str) -> str:
+    """Drop markup from a feed field. ARK wraps its teaser in <p> and <a>."""
+    from fetch_articles import _strip_html_tags
+
+    return _norm_ws(_strip_html_tags(text))
 
 
 def _feed_text(item, tag: str, unescape: bool = True) -> str:
