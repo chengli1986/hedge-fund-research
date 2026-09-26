@@ -78,3 +78,55 @@ class TestProbeUsesIt:
                              bespoke_rows=[{"title": "T", "url": "https://site.test/a",
                                             "date": "2026-09-26"}])
         assert result["articles_count"] == 1
+
+
+class TestAlertSaysHowToRollBack:
+    """A listing failure on a template source must say so, and only that one.
+
+    This repo's recurring defect is knowledge that is detected and never
+    reaches a human. "aberdeen: fetch_articles returned 0 articles" sends
+    whoever reads the 04:30 email into fetch_articles.py, where the function
+    still exists and still works -- while what actually ran is a spec in
+    config/sources.json and the one-flag rollback is mentioned nowhere.
+
+    Only the listing step, though: content fetchers are never templated, so
+    hinting at a template rollback on a content failure would point the
+    reader at the wrong file.
+    """
+
+    def _probe(self, monkeypatch, tmp_path, source, rows, content_ok=True):
+        body = tmp_path / "probe-src.txt"
+        body.write_text("x" * 5000)
+        monkeypatch.setattr(listing_templates, "fetch",
+                            (lambda s: list(rows)) if rows is not None
+                            else _raise)
+        monkeypatch.setitem(fetch_articles.FETCHERS, "probe-src",
+                            (lambda s: list(rows)) if rows is not None else _raise)
+        import fetch_content
+        monkeypatch.setitem(
+            fetch_content.CONTENT_FETCHERS, "probe-src",
+            (lambda a: (str(body), "ok")) if content_ok else (lambda a: None))
+        return gfh.probe_source(source)
+
+    def test_zero_articles_from_a_template_names_the_rollback_flag(self, monkeypatch, tmp_path):
+        r = self._probe(monkeypatch, tmp_path, TEMPLATE_SOURCE, rows=[])
+        assert "listing_template_active" in r["reason"] and "card_list" in r["reason"]
+
+    def test_a_raising_template_names_the_rollback_flag(self, monkeypatch, tmp_path):
+        r = self._probe(monkeypatch, tmp_path, TEMPLATE_SOURCE, rows=None)
+        assert r["status"] == "FAIL" and "listing_template_active" in r["reason"]
+
+    def test_a_hand_written_source_says_nothing_about_templates(self, monkeypatch, tmp_path):
+        r = self._probe(monkeypatch, tmp_path, BESPOKE_SOURCE, rows=[])
+        assert "listing_template" not in r["reason"]
+
+    def test_a_content_failure_does_not_blame_the_template(self, monkeypatch, tmp_path):
+        """The listing worked; the article page is what failed."""
+        r = self._probe(monkeypatch, tmp_path, TEMPLATE_SOURCE,
+                        rows=[{"title": "T", "url": "https://site.test/a",
+                               "date": "2026-09-26"}], content_ok=False)
+        assert r["status"] != "OK" and "listing_template" not in r["reason"]
+
+
+def _raise(source):
+    raise RuntimeError("selector gone")

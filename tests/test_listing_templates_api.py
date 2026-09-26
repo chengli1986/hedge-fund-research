@@ -115,7 +115,7 @@ class TestApiSpecValidation:
 
     def test_a_valid_spec_passes(self):
         lt.validate_spec(SPEC)
-        lt.validate_spec(dict(SPEC, params={"q": "*"}, referer=True, sort="date_desc",
+        lt.validate_spec(dict(SPEC, params={"q": "*"}, sort="date_desc",
                               title=["title", "summaryTitle"]))
 
 
@@ -145,20 +145,13 @@ class TestApiFetch:
         lt.fetch(dict(SRC, listing_template=dict(SPEC, endpoint="https://api.test/v1")))
         assert seen["url"] == "https://api.test/v1"
 
-    def test_params_and_referer_are_sent(self, monkeypatch):
+    def test_params_are_sent(self, monkeypatch):
         seen = {}
         monkeypatch.setattr(lt.requests, "get", lambda url, **kw: (
             seen.update(kw), TestApiFetch._R(_payload()))[1])
-        lt.fetch(dict(SRC, listing_template=dict(SPEC, params={"q": "*"}, referer=True)))
+        lt.fetch(dict(SRC, listing_template=dict(SPEC, params={"q": "*"})))
         assert seen["params"] == {"q": "*"}
-        assert seen["headers"]["Referer"] == "https://site.test/insights"
-
-    def test_no_referer_by_default(self, monkeypatch):
-        seen = {}
-        monkeypatch.setattr(lt.requests, "get", lambda url, **kw: (
-            seen.update(kw), TestApiFetch._R(_payload()))[1])
-        lt.fetch(dict(SRC, listing_template=SPEC))
-        assert "Referer" not in seen["headers"]
+        assert seen["headers"]["Accept"] == "application/json"
 
 
 class TestTitleWhitespace:

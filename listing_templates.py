@@ -42,8 +42,6 @@ Spec (type api_json):
     endpoint       the listing API: an absolute URL, or a path joined onto the
                    source's site
     params         optional query parameters
-    referer        optional; send the source URL as Referer (some backends
-                   500 without it)
     items          dotted path to the list of records ("pages",
                    "response.docs")
     title          record field holding the title, or a list of fields to try
@@ -344,9 +342,10 @@ def fetch(source: dict) -> list[dict]:
     if spec["type"] == "api_json":
         endpoint = spec["endpoint"]
         url = endpoint if endpoint.startswith("http") else _site(source["url"]) + endpoint
+        # No Referer knob: it was written for gsam, gsam then proved it could
+        # not move to a template at all, and it has had zero users since. Five
+        # lines to bring back when a source needs it.
         headers = dict(HEADERS, Accept="application/json")
-        if spec.get("referer"):
-            headers["Referer"] = source["url"]
         resp = requests.get(url, params=spec.get("params"), headers=headers, timeout=30)
         resp.raise_for_status()
         return parse_items(resp.json(), source, spec)

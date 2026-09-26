@@ -355,14 +355,16 @@ def _probe_once(source: dict) -> dict:
         articles = fetcher(source)
     except Exception as exc:
         result["status"] = "FAIL"
-        result["reason"] = f"fetch_articles raised {type(exc).__name__}: {str(exc)[:120]}"
+        result["reason"] = (f"fetch_articles raised {type(exc).__name__}: {str(exc)[:120]}"
+                            + _template_hint(source))
         result["transient_exc"] = exc if _is_transient(exc) else None
         return result
 
     result["articles_count"] = len(articles)
     if not articles:
         result["status"] = "WARN"
-        result["reason"] = "fetch_articles returned 0 articles" + _diagnose_zero_articles(source)
+        result["reason"] = ("fetch_articles returned 0 articles"
+                            + _diagnose_zero_articles(source) + _template_hint(source))
         return result
 
     # Staleness is reported relative to the most-recent date across ALL returned
@@ -512,6 +514,21 @@ def _add_extraction_note(result: dict, note: str) -> dict:
         result["status"] = "FAIL" if result["status"] == "FAIL" else "WARN"
         result["reason"] = f"{result['reason']}; {note}" if result["reason"] else note
     return result
+
+
+def _template_hint(source: dict) -> str:
+    """Tell the reader which code actually ran, and how to undo it.
+
+    A listing failure on a switched source sends whoever reads the email into
+    fetch_articles.py, where the hand-written function still sits and still
+    works. What ran is a spec in config/sources.json. Only the listing step
+    gets this: content fetchers are never templated.
+    """
+    if not source.get("listing_template_active"):
+        return ""
+    kind = (source.get("listing_template") or {}).get("type", "?")
+    return (f" · listing runs on the {kind} template (spec in config/sources.json), "
+            'not the hand-written fetcher; roll back with "listing_template_active": false')
 
 
 def probe_source(source: dict) -> dict:
