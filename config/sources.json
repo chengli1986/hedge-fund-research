@@ -404,7 +404,20 @@
         "Brian Hess"
       ],
       "expected_hostname": "im.natixis.com",
-      "max_articles": 10
+      "max_articles": 10,
+      "listing_template": {
+        "type": "card_list",
+        "fetch": "requests",
+        "card": "a[href*=\"/insights/\"]",
+        "link": "self",
+        "title": "div.ntx-insight-card__title",
+        "date": "ntx-card-info",
+        "date_attr": "date"
+      },
+      "listing_template_active": true,
+      "listing_template_drops": [
+        "summary"
+      ]
     },
     {
       "id": "apollo-global-management",
