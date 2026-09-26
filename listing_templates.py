@@ -37,11 +37,21 @@ Spec (type card_list):
                    first occurrence of this
     date_part      optional; "before" (default) or "after" the separator.
                    Text without the separator is the date either way.
+
+Spec (type rss_feed):
+    feed           which config key holds the feed URL: "rss_url" or "url"
+    categories     optional whitelist of <category> values, case-insensitive
+    path_prefix    optional; keep only links whose path starts with this
+    sort           optional; "date_desc" to sort before the max_articles cut,
+                   for feeds that are not in date order
 """
 from __future__ import annotations
 
+import html
 import logging
 import re
+import xml.etree.ElementTree as ET
+from email.utils import parsedate_to_datetime
 from urllib.parse import urljoin, urlparse
 
 import requests
@@ -49,10 +59,12 @@ from bs4 import BeautifulSoup
 
 log = logging.getLogger(__name__)
 
-SUPPORTED_TYPES = ("card_list",)
-REQUIRED = {"card_list": ("fetch", "card")}
+SUPPORTED_TYPES = ("card_list", "rss_feed")
+REQUIRED = {"card_list": ("fetch", "card"), "rss_feed": ("feed",)}
 FETCH_MODES = ("requests", "playwright")
 DATE_PARTS = ("before", "after")
+FEED_KEYS = ("rss_url", "url")
+SORTS = ("date_desc",)
 
 
 def validate_spec(spec: dict) -> None:
@@ -63,8 +75,14 @@ def validate_spec(spec: dict) -> None:
     for key in REQUIRED[kind]:
         if not spec.get(key):
             raise ValueError(f"listing_template for type {kind!r} needs {key!r}")
-    if spec["fetch"] not in FETCH_MODES:
+    if kind == "card_list" and spec["fetch"] not in FETCH_MODES:
         raise ValueError(f"listing_template fetch {spec['fetch']!r} is not one of {FETCH_MODES}")
+    if kind == "rss_feed" and spec["feed"] not in FEED_KEYS:
+        raise ValueError(f"listing_template feed {spec['feed']!r} is not one of {FEED_KEYS}; "
+                         "it names the config key holding the feed URL, not the URL itself")
+    sort = spec.get("sort")
+    if sort is not None and sort not in SORTS:
+        raise ValueError(f"listing_template sort {sort!r} is not one of {SORTS}")
     part = spec.get("date_part")
     if part is not None and part not in DATE_PARTS:
         raise ValueError(f"listing_template date_part {part!r} is not one of {DATE_PARTS}")
@@ -139,6 +157,72 @@ def parse_cards(html: str, source: dict, spec: dict) -> list[dict]:
     return rows[:source.get("max_articles", 10)]
 
 
+def _feed_date(raw: str) -> str | None:
+    """RFC 2822 first, then the shared parser.
+
+    Feeds in this set use RFC 2822 ("Mon, 21 Sep 2026 10:00:00 +0000") except
+    amundi, which emits ISO ("2026-09-21T12:34:59+0200"). parse_date already
+    reads ISO, so there is no separate fromisoformat step -- one was written
+    and removed the same day: no test could tell it apart from parse_date,
+    which is what a dead branch looks like.
+    """
+    from fetch_articles import parse_date
+
+    if not raw:
+        return None
+    try:
+        return parsedate_to_datetime(raw).strftime("%Y-%m-%d")
+    except (ValueError, TypeError):
+        return parse_date(raw)
+
+
+def parse_feed(xml_text: str, source: dict, spec: dict) -> list[dict]:
+    """Rows from an RSS 2.0 feed."""
+    from fetch_articles import _validate_hostname
+
+    root = ET.fromstring(xml_text.lstrip("\ufeff"))
+    wanted = {c.lower() for c in spec.get("categories") or ()}
+    prefix = spec.get("path_prefix")
+    expected_host = source.get("expected_hostname")
+
+    rows: list[dict] = []
+    seen: set[str] = set()
+    for item in root.iter("item"):
+        if wanted:
+            cats = {(c.text or "").strip().lower() for c in item.findall("category")}
+            if not (cats & wanted):
+                continue
+        title = _feed_text(item, "title")
+        url = _feed_text(item, "link")
+        if not title or not url:
+            continue
+        if expected_host and not _validate_hostname(url, expected_host):
+            continue
+        if prefix and not urlparse(url).path.startswith(prefix):
+            continue
+        if url in seen:
+            continue
+        seen.add(url)
+        date_raw = _feed_text(item, "pubDate", unescape=False)
+        rows.append({"title": title, "url": url, "date": _feed_date(date_raw),
+                     "date_raw": date_raw})
+    if spec.get("sort") == "date_desc":
+        # "" sorts below any real date, so undated rows land at the end.
+        rows.sort(key=lambda r: r["date"] or "", reverse=True)
+    return rows[:source.get("max_articles", 10)]
+
+
+def _feed_text(item, tag: str, unescape: bool = True) -> str:
+    """Text of a child element, unescaped.
+
+    Some feeds double-escape: ARK's arrives as "ARK&apos;s" after XML parsing
+    and was stored and displayed that way.
+    """
+    el = item.find(tag)
+    text = (el.text or "").strip() if el is not None else ""
+    return html.unescape(text) if unescape else text
+
+
 def _playwright_html(url: str, wait_selector: str | None = None, wait_ms: int = 5000,
                      wait_until: str = "networkidle") -> str:
     from fetch_articles import _get_playwright_page
@@ -153,6 +237,11 @@ def fetch(source: dict) -> list[dict]:
 
     spec = source.get("listing_template") or {}
     validate_spec(spec)
+    if spec["type"] == "rss_feed":
+        feed_url = source.get(spec["feed"]) or source["url"]
+        resp = requests.get(feed_url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+        return parse_feed(resp.text, source, spec)
     if spec["fetch"] == "playwright":
         html = _playwright_html(source["url"], wait_selector=spec.get("wait_selector"),
                                 wait_ms=spec.get("wait_ms", 5000),

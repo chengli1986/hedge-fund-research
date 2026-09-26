@@ -120,6 +120,22 @@
         "Cathie Wood",
         "Brett Winton",
         "Sam Korus"
+      ],
+      "listing_template": {
+        "type": "rss_feed",
+        "feed": "url",
+        "sort": "date_desc",
+        "categories": [
+          "analyst research",
+          "market commentary",
+          "white papers",
+          "market insights"
+        ]
+      },
+      "listing_template_active": true,
+      "listing_template_drops": [
+        "category",
+        "summary"
       ]
     },
     {
@@ -199,7 +215,12 @@
       "description": "Europe's largest asset manager. Macro, capital markets, ESG, fixed income, emerging markets.",
       "notable_authors": [],
       "expected_hostname": "research-center.amundi.com",
-      "max_articles": 10
+      "max_articles": 10,
+      "listing_template": {
+        "type": "rss_feed",
+        "feed": "rss_url"
+      },
+      "listing_template_active": true
     },
     {
       "id": "troweprice",
@@ -348,7 +369,12 @@
       "historical_hostnames": [
         "verdadcap.com"
       ],
-      "max_articles": 10
+      "max_articles": 10,
+      "listing_template": {
+        "type": "rss_feed",
+        "feed": "rss_url"
+      },
+      "listing_template_active": true
     },
     {
       "id": "msci-research",
@@ -865,7 +891,14 @@
       "description": "Boston fixed-income house founded 1926 (~$435B AUM as of 6/30/2026). Organised around \"Alpha Engines\" — autonomous specialist investment teams with their own philosophies, sitting on top of a shared central research bench that underwrites corporate, securitized, municipal and sovereign issuers bottom-up. Deepest coverage in multisector and global fixed income, EM debt and munis; also runs a concentrated long-horizon growth-equity team.",
       "notable_authors": [],
       "expected_hostname": "loomissayles.com",
-      "max_articles": 10
+      "max_articles": 10,
+      "listing_template": {
+        "type": "rss_feed",
+        "feed": "rss_url",
+        "path_prefix": "/insights/",
+        "sort": "date_desc"
+      },
+      "listing_template_active": true
     },
     {
       "id": "resonanz-capital",
@@ -884,7 +917,13 @@
       "description": "Frankfurt-based, BaFin-regulated alternatives specialist founded in 2019 (~$6B assets under advisory). Designs and runs multi-strategy portfolios out of hedge funds, liquid alternatives and open-architecture QIS (quantitative investment strategies) rather than selecting single managers in isolation — flagship is the Jazz daily-liquid multi-strategy UCITS, alongside bespoke overlay and defensive mandates for institutional allocators.",
       "notable_authors": [],
       "expected_hostname": "resonanzcapital.com",
-      "max_articles": 10
+      "max_articles": 10,
+      "listing_template": {
+        "type": "rss_feed",
+        "feed": "rss_url",
+        "sort": "date_desc"
+      },
+      "listing_template_active": true
     },
     {
       "id": "baillie-gifford",
