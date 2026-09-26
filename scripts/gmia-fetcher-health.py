@@ -4,7 +4,9 @@
 GMIA Fetcher Health Check.
 
 Runs against every source listed in config/sources.json:
-  1) fetch_articles.FETCHERS[id](source)  — must not raise; ≥1 article returned
+  1) fetch_articles.listing_fetcher(source)(source)  — must not raise; ≥1 article
+     returned. That is the template for a switched source, the hand-written
+     function otherwise: whatever the nightly run itself executes.
   2) fetch_content.CONTENT_FETCHERS[id](most_recent_article)  — must yield
      ≥MIN_CONTENT_LENGTH chars (catches Referer/selector-class regressions
      such as the GMO 14-day silent failure on 2026-04-16 → 2026-04-30).
@@ -333,7 +335,10 @@ def _probe_once(source: dict) -> dict:
         "transient_exc": None,
     }
 
-    fetcher = fetch_articles.FETCHERS.get(sid)
+    # The production selection, not FETCHERS directly: 19 sources fetch
+    # through listing_templates now, and probing the hand-written function
+    # they no longer run would miss a broken template entirely.
+    fetcher = fetch_articles.listing_fetcher(source)
     if fetcher is None:
         result["status"] = "FAIL"
         result["reason"] = "no fetch_articles handler registered"

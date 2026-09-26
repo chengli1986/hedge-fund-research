@@ -3740,6 +3740,26 @@ FETCHERS = {
 }
 
 
+def listing_fetcher(source: dict):
+    """The function that actually fetches this source's listing, or None.
+
+    One tool per page type instead of one hand-written fetcher per source
+    (listing_templates.py). The spec alone changes nothing: a source switches
+    only after scripts/compare_fetchers.py shows the template returning the
+    same titles, urls and dates from the live site. There is deliberately no
+    fallback to the hand-written fetcher if the template raises -- a silent
+    fallback is how a broken template would look healthy for months.
+
+    Everything that runs a listing goes through here, the nightly run and the
+    health probe both: the probe called FETCHERS[id] directly until
+    2026-09-26, so for the 19 switched sources it was exercising code the
+    nightly run no longer runs -- a broken template would have probed green.
+    """
+    if source.get("listing_template_active"):
+        return listing_templates.fetch
+    return FETCHERS.get(source["id"])
+
+
 def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False,
                  existing_keys: dict | None = None,
                  existing_rows: list[dict] | None = None) -> list[dict]:
@@ -3753,17 +3773,7 @@ def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False,
     existing_keys = {} if existing_keys is None else existing_keys
     stored_by_id = {r.get("id"): r for r in (existing_rows or [])}
     source_id = source["id"]
-    if source.get("listing_template_active"):
-        # One tool per page type instead of one hand-written fetcher per
-        # source (listing_templates.py). The spec alone changes nothing: a
-        # source is switched over only after scripts/compare_fetchers.py shows
-        # the template returning the same titles, urls and dates from the live
-        # site. There is deliberately no fallback to the hand-written fetcher
-        # if the template raises -- a silent fallback is how a broken template
-        # would look healthy for months.
-        fetcher = listing_templates.fetch
-    else:
-        fetcher = FETCHERS.get(source_id)
+    fetcher = listing_fetcher(source)
     if not fetcher:
         log.warning("No fetcher for source: %s", source_id)
         return []

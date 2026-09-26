@@ -95,8 +95,30 @@ class _FakeFetchArticles:
     def __init__(self, fetchers):
         self.FETCHERS = fetchers
 
+    def listing_fetcher(self, source):
+        """Delegate to the real rule, never a copy of it.
 
+        The probe asks which fetcher production would run. A fake that
+        reimplements that choice can drift from it, which is exactly how a
+        probe ends up exercising code the nightly run does not -- the defect
+        this method exists to prevent. So the real function decides, against
+        this fake's FETCHERS.
+        """
+        return _pick(_real_fetch_articles, self.FETCHERS, source)
+
+
+import fetch_articles as _real_fetch_articles  # noqa: E402  (before the fakes swap sys.modules)
 import fetch_content as _real_fetch_content  # noqa: E402  (kept before the fakes swap sys.modules)
+
+
+def _pick(real_module, fetchers, source):
+    """Run the real listing_fetcher with this fake's FETCHERS in place."""
+    saved = real_module.FETCHERS
+    real_module.FETCHERS = fetchers
+    try:
+        return real_module.listing_fetcher(source)
+    finally:
+        real_module.FETCHERS = saved
 
 
 class _FakeFetchContent:
