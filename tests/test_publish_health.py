@@ -353,3 +353,57 @@ class TestSelfAuditRoundTwo:
         unused_row = [k for k in ("method", "probe_elapsed_ms", "last_ok_at") if k in row]
         assert unused_row == [], unused_row
         assert "coverage_trend" not in model
+
+
+class TestMobileLayout:
+    """At phone width the page must not scroll sideways.
+
+    Measured at 390px: the 8-column table forced the document to 710px, so
+    the whole page slid under the finger. The table is what is wide, so the
+    table is what scrolls.
+    """
+
+    def test_the_table_sits_in_its_own_scrolling_box(self):
+        html = ph.render_html(_build())
+        assert 'class="tablewrap"' in html
+        assert ".tablewrap{overflow-x:auto" in html
+        assert html.index('class="tablewrap"') < html.index("<table>")
+
+    def test_the_page_declares_a_viewport(self):
+        assert 'name="viewport"' in ph.render_html(_build())
+
+
+class TestTrendHover:
+    """The chart has to answer "how many on that night" without leaving it.
+
+    It shipped with a native title attribute: a browser tooltip takes about
+    a second to appear, is unstyled, and is easy to miss entirely -- which
+    is what happened. A CSS tooltip appears at once and matches the page.
+    """
+
+    def _html(self):
+        rows = [{"source_id": "alpha", "fetched_at": _iso(1)},
+                {"source_id": "beta", "fetched_at": _iso(1)}]
+        return ph.render_html(_build(rows=rows))
+
+    def test_every_bar_carries_its_date_and_count(self):
+        html = self._html()
+        assert html.count("data-label=") == ph.TREND_DAYS
+        assert f'data-label="{NOW.date().isoformat()} · 2 篇"' in html
+
+    def test_a_zero_night_says_zero_rather_than_nothing(self):
+        yesterday = (NOW - timedelta(days=1)).date().isoformat()
+        assert f'data-label="{yesterday} · 0 篇"' in self._html()
+
+    def test_the_label_is_shown_on_hover_by_css_not_by_script(self):
+        html = self._html()
+        assert ".bar:hover::after" in html and "attr(data-label)" in html
+        assert "<script" not in html
+
+    def test_the_label_is_available_to_a_screen_reader(self):
+        assert 'aria-label="' in self._html()
+
+    def test_a_label_with_markup_in_it_cannot_break_the_attribute(self):
+        """The date and count are ours, but escaping is not optional."""
+        html = self._html()
+        assert 'data-label="<' not in html

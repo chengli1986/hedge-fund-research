@@ -275,7 +275,10 @@ padding:3px 10px;font-size:12px;color:var(--muted)}
 .alert .s{color:var(--purple)}
 .ok{border:1px solid var(--border);border-radius:8px;background:var(--surface);
 padding:14px;color:var(--green)}
-table{width:100%;border-collapse:collapse;font-size:13px}
+/* 42 rows x 8 columns is 710px wide, and at 390px that made the whole page
+   scroll sideways. The table is what is wide, so the table is what scrolls. */
+.tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:680px}
 th{text-align:left;color:var(--muted);font-weight:600;padding:8px 10px;
 border-bottom:1px solid var(--border);white-space:nowrap}
 td{padding:7px 10px;border-bottom:1px solid #21262d;vertical-align:top}
@@ -288,8 +291,22 @@ color:var(--muted);white-space:nowrap}
 .muted{color:var(--muted)}
 .bars{display:flex;align-items:flex-end;gap:3px;height:90px;background:var(--surface);
 border:1px solid var(--border);border-radius:8px;padding:10px}
-.bar{flex:1;background:var(--blue);border-radius:2px 2px 0 0;min-height:2px;opacity:.85}
+.bar{flex:1;background:var(--blue);border-radius:2px 2px 0 0;min-height:2px;opacity:.85;
+position:relative}
 .bar.zero{background:var(--border)}
+.bar:hover{opacity:1;background:var(--purple)}
+/* A native title tooltip waits about a second, is unstyled, and was missed
+   entirely by the first person to read the chart. This one appears at once
+   and reads like the rest of the page. No script: the page is served from a
+   static file and stays that way. */
+.bar:hover::after{content:attr(data-label);position:absolute;bottom:calc(100% + 6px);
+left:50%;transform:translateX(-50%);white-space:nowrap;background:var(--surface2);
+border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:12px;
+color:var(--text);z-index:2;pointer-events:none}
+/* The first and last few bars would push their label past the edge of the
+   card, so those anchor to their own side instead of the centre. */
+.bar:nth-child(-n+3):hover::after{left:0;transform:none}
+.bar:nth-last-child(-n+3):hover::after{left:auto;right:0;transform:none}
 .legend{color:var(--muted);font-size:12px;margin-top:6px}
 """
 
@@ -388,7 +405,9 @@ def render_html(health: dict) -> str:
     bars = "".join(
         f'<div class="bar{" zero" if d["count"] == 0 else ""}" '
         f'style="height:{max(2, round(d["count"] / peak * 100))}%" '
-        f'title="{_esc(d["date"])}: {d["count"]}"></div>' for d in stage["trend"])
+        f'data-label="{_esc(d["date"])} · {d["count"]} 篇" '
+        f'aria-label="{_esc(d["date"])} 入库 {d["count"]} 篇"></div>'
+        for d in stage["trend"])
 
     coverage = "、".join(f"{k} {v}" for k, v in sorted(stage["coverage"].items())) or "—"
 
@@ -416,16 +435,17 @@ def render_html(health: dict) -> str:
   {alerts_html}
 
   <h2>逐源状态</h2>
-  <table>
+  <div class="tablewrap"><table>
     <thead><tr><th>源</th><th>抓取方式</th><th class="num">列表看到</th>
       <th class="num">新增</th><th class="num">连续零</th><th>探针</th>
       <th>最新文章</th><th>探针备注</th></tr></thead>
     <tbody>{"".join(body_rows)}</tbody>
-  </table>
+  </table></div>
 
   <h2>近 {TREND_DAYS} 天入库量</h2>
   <div class="bars">{bars}</div>
-  <div class="legend">每根柱子是一晚入库的文章数，灰色是零 · 模板覆盖：{_esc(coverage)}</div>
+  <div class="legend">每根柱子是一晚入库的文章数，灰色是零，鼠标停在柱子上看具体数字
+    · 模板覆盖：{_esc(coverage)}</div>
 
   <h2>其余阶段</h2>
   <div class="ok" style="color:var(--muted)">第 2–5 阶段尚未做系统审计，面板结构已预留，
