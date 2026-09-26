@@ -72,8 +72,18 @@ def compare_source(source: dict) -> dict:
         f for f in fa.LISTING_FIELDS_KEPT
         if any(r.get(f) for r in bespoke) and not any(r.get(f) for r in template)
     )
-    out["agree"] = b == t and not (set(out["dropped_fields"]) - declared)
+    # Same rows in a different order is the same ingestion outcome: ids come
+    # from the URL, the listing-head guard sorts the dates it checks, and
+    # publish orders by date. The exception is a source that declares
+    # date_sorted, where fetch_source refuses every article if the order
+    # breaks (DATE_ORDER_BROKEN) -- there the order IS the contract.
+    same_rows = b == t or (not source.get("date_sorted") and sorted(b) == sorted(t))
+    out["agree"] = same_rows and not (set(out["dropped_fields"]) - declared)
     return out
+
+
+def _load_sources() -> list[dict]:
+    return json.loads((BASE_DIR / "config" / "sources.json").read_text())["sources"]
 
 
 def main() -> int:
@@ -81,9 +91,12 @@ def main() -> int:
     parser.add_argument("--source", help="compare this source id")
     parser.add_argument("--all", action="store_true", help="compare every source that has a template")
     parser.add_argument("--json", action="store_true", help="print the result as JSON")
+    parser.add_argument("--recheck", action="store_true",
+                        help="re-run each disagreeing source once before failing "
+                             "(for the weekly cron: the live races are flaky, drift is not)")
     args = parser.parse_args()
 
-    sources = json.loads((BASE_DIR / "config" / "sources.json").read_text())["sources"]
+    sources = _load_sources()
     if args.source:
         chosen = [s for s in sources if s["id"] == args.source]
         if not chosen:
@@ -98,6 +111,15 @@ def main() -> int:
         parser.error("give --source ID or --all")
 
     results = [compare_source(s) for s in chosen]
+    if args.recheck:
+        by_id = {s["id"]: s for s in chosen}
+        for i, r in enumerate(results):
+            if r["agree"]:
+                continue
+            print(f"  … {r['source_id']}: disagreed, re-running once")
+            second = compare_source(by_id[r["source_id"]])
+            second["rechecked"] = True
+            results[i] = second
     if args.json:
         print(json.dumps(results, ensure_ascii=False, indent=1))
     else:
@@ -112,6 +134,8 @@ def main() -> int:
                      f"  | only hand-written {len(r['only_bespoke'])}, only template "
                      f"{len(r['only_template'])}"
                      + (", order differs" if r["order_differs"] else "")))
+            if r["agree"] and r["order_differs"]:
+                print("      same rows, different order (harmless: not date_sorted)")
             if r["dropped_fields"]:
                 print(f"      template drops: {', '.join(r['dropped_fields'])}")
             for k in r["only_bespoke"][:3]:

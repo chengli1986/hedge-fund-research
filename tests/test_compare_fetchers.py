@@ -52,9 +52,24 @@ def test_a_different_date_does_not_agree(monkeypatch):
     assert cf.compare_source(dict(SRC))["agree"] is False
 
 
-def test_the_same_articles_in_a_different_order_is_reported(monkeypatch):
+def test_the_same_articles_in_a_different_order_is_reported_but_passes(monkeypatch):
+    """Same set, different order: the ingestion outcome is identical.
+
+    Ids are derived from the URL, fetch_source sorts the dates it guards on,
+    and publish orders by date, so nothing downstream reads listing order.
+    msci-research serves its cards in a varying order and would otherwise
+    fail the weekly gate about half the time for nothing.
+    """
     _patch(monkeypatch, ROWS, list(reversed(ROWS)))
     out = cf.compare_source(dict(SRC))
+    assert out["agree"] is True and out["order_differs"] is True
+
+
+def test_order_still_matters_for_a_date_sorted_source(monkeypatch):
+    """date_sorted is load-bearing: fetch_source refuses every article when a
+    source that declares it comes back out of order (DATE_ORDER_BROKEN)."""
+    _patch(monkeypatch, ROWS, list(reversed(ROWS)))
+    out = cf.compare_source(dict(SRC, date_sorted=True))
     assert out["agree"] is False and out["order_differs"] is True
 
 
@@ -109,3 +124,76 @@ class TestDroppedListingFields:
         bespoke = [dict(r, content_type="Read") for r in ROWS]
         _patch(monkeypatch, bespoke, ROWS)
         assert cf.compare_source(dict(SRC))["agree"] is True
+
+
+class TestRecheck:
+    """A weekly cron needs the gate to fail only on real drift.
+
+    Two live-fetch races are known and harmless: a site that publishes
+    between the two sequential fetches (wellington, 2026-09-25) and a listing
+    served in a varying card order (msci-research, which renders exactly
+    max_articles cards so the set cannot change). Both clear on a re-run.
+    --recheck re-runs only the sources that disagreed, once, and reports what
+    it did -- a retry queue is only meaningful for flaky failures, so a
+    source that disagrees twice still fails.
+    """
+
+    def _run(self, monkeypatch, sequence, argv):
+        """sequence: list of agree-values compare_source returns in order."""
+        calls = []
+
+        def fake_compare(source):
+            calls.append(source["id"])
+            return {"source_id": source["id"], "agree": sequence.pop(0), "error": None,
+                    "bespoke": 1, "template": 1, "only_bespoke": [], "only_template": [],
+                    "order_differs": False, "dropped_fields": []}
+
+        monkeypatch.setattr(cf, "compare_source", fake_compare)
+        monkeypatch.setattr(cf.sys, "argv", ["compare_fetchers.py"] + argv)
+        monkeypatch.setattr(cf, "_load_sources", lambda: [dict(SRC)])
+        return cf.main(), calls
+
+    def test_a_source_that_clears_on_the_second_try_passes(self, monkeypatch):
+        code, calls = self._run(monkeypatch, [False, True], ["--all", "--recheck"])
+        assert code == 0 and calls == ["t", "t"]
+
+    def test_a_source_that_disagrees_twice_still_fails(self, monkeypatch):
+        code, calls = self._run(monkeypatch, [False, False], ["--all", "--recheck"])
+        assert code == 1 and calls == ["t", "t"]
+
+    def test_an_agreeing_source_is_not_fetched_again(self, monkeypatch):
+        code, calls = self._run(monkeypatch, [True], ["--all", "--recheck"])
+        assert code == 0 and calls == ["t"]
+
+    def test_without_the_flag_a_single_disagreement_fails(self, monkeypatch):
+        code, calls = self._run(monkeypatch, [False], ["--all"])
+        assert code == 1 and calls == ["t"]
+
+
+class TestOutputLayout:
+    """A note must sit under the source it belongs to.
+
+    Written first at the wrong place: it printed before its own source's
+    line, so in the weekly alert it read as a note about the source above.
+    """
+
+    def _print(self, monkeypatch, capsys, result):
+        monkeypatch.setattr(cf, "compare_source", lambda s: result)
+        monkeypatch.setattr(cf, "_load_sources", lambda: [dict(SRC)])
+        monkeypatch.setattr(cf.sys, "argv", ["compare_fetchers.py", "--all"])
+        cf.main()
+        return capsys.readouterr().out.splitlines()
+
+    def test_the_order_note_comes_after_its_own_source_line(self, monkeypatch, capsys):
+        lines = self._print(monkeypatch, capsys, {
+            "source_id": "t", "agree": True, "error": None, "bespoke": 2, "template": 2,
+            "only_bespoke": [], "only_template": [], "order_differs": True,
+            "dropped_fields": []})
+        assert "t" in lines[0] and "different order" in lines[1]
+
+    def test_the_dropped_fields_note_comes_after_its_own_source_line(self, monkeypatch, capsys):
+        lines = self._print(monkeypatch, capsys, {
+            "source_id": "t", "agree": True, "error": None, "bespoke": 2, "template": 2,
+            "only_bespoke": [], "only_template": [], "order_differs": False,
+            "dropped_fields": ["category"]})
+        assert "t" in lines[0] and "template drops: category" in lines[1]
