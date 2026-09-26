@@ -19,7 +19,8 @@
         "Ed Cole",
         "Matthew Sherwood"
       ],
-      "expected_hostname": "man.com"
+      "expected_hostname": "man.com",
+      "fetch_shape": "attestation"
     },
     {
       "id": "bridgewater",
@@ -39,7 +40,8 @@
         "Greg Jensen",
         "Karen Karniol-Tambour"
       ],
-      "expected_hostname": "bridgewater.com"
+      "expected_hostname": "bridgewater.com",
+      "fetch_shape": "card_list"
     },
     {
       "id": "aqr",
@@ -60,7 +62,8 @@
         "Jordan Brooks",
         "Ronen Israel"
       ],
-      "expected_hostname": "aqr.com"
+      "expected_hostname": "aqr.com",
+      "fetch_shape": "attestation"
     },
     {
       "id": "gmo",
@@ -81,7 +84,8 @@
         "Tom Hancock",
         "John Pease"
       ],
-      "expected_hostname": "gmo.com"
+      "expected_hostname": "gmo.com",
+      "fetch_shape": "api_json"
     },
     {
       "id": "oaktree",
@@ -101,7 +105,8 @@
         "Bruce Karsh",
         "Armen Panossian"
       ],
-      "expected_hostname": "oaktreecapital.com"
+      "expected_hostname": "oaktreecapital.com",
+      "fetch_shape": "card_list"
     },
     {
       "id": "ark-invest",
@@ -328,7 +333,8 @@
       "description": "Global alternative asset manager. Real assets, infrastructure, renewables, private credit, private equity.",
       "notable_authors": [],
       "expected_hostname": "brookfield.com",
-      "max_articles": 10
+      "max_articles": 10,
+      "fetch_shape": "card_list"
     },
     {
       "id": "jpmam",
@@ -509,7 +515,8 @@
         "David McNellis"
       ],
       "expected_hostname": "kkr.com",
-      "max_articles": 10
+      "max_articles": 10,
+      "fetch_shape": "card_list"
     },
     {
       "id": "janus-henderson",
@@ -530,7 +537,8 @@
         "Matthew Bullock"
       ],
       "expected_hostname": "janushenderson.com",
-      "max_articles": 10
+      "max_articles": 10,
+      "fetch_shape": "card_list_plus_page"
     },
     {
       "id": "research-affiliates",
@@ -552,7 +560,8 @@
         "Ari Polychronopoulos"
       ],
       "expected_hostname": "syzygyassetmanagement.com",
-      "max_articles": 10
+      "max_articles": 10,
+      "fetch_shape": "card_list"
     },
     {
       "id": "gsam",
@@ -570,7 +579,8 @@
       "description": "One of the world's largest asset managers (~$4.0T AUM) across public and private markets. Multi-asset, equity, fixed income, alternatives and liquidity solutions for institutions and advisors; Insights publishes macro outlooks, market commentary and strategy notes.",
       "notable_authors": [],
       "expected_hostname": "am.gs.com",
-      "max_articles": 10
+      "max_articles": 10,
+      "fetch_shape": "api_json"
     },
     {
       "id": "robeco",
@@ -588,7 +598,8 @@
       "description": "Dutch asset manager (~€228B AUM) headquartered in Rotterdam, founded 1929. Pioneer in quantitative equity investing and sustainable/ESG integration since the 1990s. Strong franchises in emerging-markets equity, global credit and factor-based strategies; Insights publishes quant research, ESG/climate analysis and EM/macro commentary.",
       "notable_authors": [],
       "expected_hostname": "robeco.com",
-      "max_articles": 10
+      "max_articles": 10,
+      "fetch_shape": "card_list"
     },
     {
       "id": "de-shaw",
@@ -606,7 +617,8 @@
       "description": "Quantitative multi-strategy hedge fund (~$85B AUM) founded 1988 by David E. Shaw. Pioneer of systematic/statistical-arbitrage investing with strong technology and computational-science DNA; trades across global equities, macro, credit, convertibles and private capital. Library publishes long-form research on portfolio construction, market microstructure and applied quant techniques.",
       "notable_authors": [],
       "expected_hostname": "deshaw.com",
-      "max_articles": 10
+      "max_articles": 10,
+      "fetch_shape": "card_list"
     },
     {
       "id": "metlife-im",
@@ -631,7 +643,8 @@
         "investments.metlife.com"
       ],
       "max_articles": 10,
-      "content_probe_top_n": 8
+      "content_probe_top_n": 8,
+      "fetch_shape": "api_json"
     },
     {
       "id": "ares-management",
@@ -649,7 +662,8 @@
       "description": "Leading global alternative investment manager (~$644B AUM) specializing in private credit, private equity, real assets and infrastructure. Founded in 1997, listed on NYSE (ARES). Direct-lending pioneer with one of the largest US middle-market credit platforms; significant insurance solutions business via Aspida.",
       "notable_authors": [],
       "expected_hostname": "ares.com",
-      "max_articles": 10
+      "max_articles": 10,
+      "fetch_shape": "sitemap_plus_page"
     },
     {
       "id": "matthews-asia",
@@ -667,7 +681,8 @@
       "description": "Asia- and emerging-markets equity specialist (~$7.6B AUM), founded 1991 and privately owned, with offices in San Francisco and Hong Kong. Active, bottom-up fundamental investing across Asian and EM equities — China, India, Japan and broader emerging markets — spanning all-cap growth, dividend, small-cap and innovation strategies plus a more recent active-ETF lineup.",
       "notable_authors": [],
       "expected_hostname": "matthewsasia.com",
-      "max_articles": 10
+      "max_articles": 10,
+      "fetch_shape": "card_list"
     },
     {
       "id": "capital-group",
@@ -686,7 +701,8 @@
       "notable_authors": [],
       "expected_hostname": "capitalgroup.com",
       "no_publish_dates": true,
-      "max_articles": 10
+      "max_articles": 10,
+      "fetch_shape": "card_list"
     },
     {
       "id": "acadian-asset",
@@ -734,7 +750,8 @@
       "description": "Global active asset manager (~$260B AUM), founded 1848, headquartered in New York. Known for emerging-markets equity research and macro fixed-income perspectives across geopolitics, EM fundamentals, and global monetary policy.",
       "notable_authors": [],
       "expected_hostname": "lazardassetmanagement.com",
-      "max_articles": 10
+      "max_articles": 10,
+      "fetch_shape": "card_list"
     },
     {
       "id": "rothschild-co-am",
@@ -781,7 +798,8 @@
         "Adam Rozencwajg"
       ],
       "expected_hostname": "gorozen.com",
-      "max_articles": 10
+      "max_articles": 10,
+      "fetch_shape": "sitemap_plus_page"
     },
     {
       "id": "cohen-steers",
@@ -800,7 +818,8 @@
       "notable_authors": [],
       "expected_hostname": "cohenandsteers.com",
       "max_articles": 10,
-      "dedupe_on_title": true
+      "dedupe_on_title": true,
+      "fetch_shape": "card_list_plus_page"
     },
     {
       "id": "principal-am",
@@ -818,7 +837,8 @@
       "description": "Global multi-asset manager ($577.9B AUM), the asset-management arm of Principal Financial Group (founded 1879, Des Moines). Institutional platform spanning equities, fixed income, asset allocation and one of the largest US commercial real-estate investment businesses; timely macro commentary on Fed/ECB decisions and quarterly Global Market Perspectives.",
       "notable_authors": [],
       "expected_hostname": "principalam.com",
-      "max_articles": 10
+      "max_articles": 10,
+      "fetch_shape": "api_json"
     },
     {
       "id": "franklin-templeton",
@@ -836,7 +856,8 @@
       "description": "One of the world's largest independent asset managers (~$1.66T AUM), founded 1947 in New York by Rupert H. Johnson Sr. and headquartered in San Mateo, California. Runs a multi-boutique model — Templeton emerging-market value, Western Asset and Brandywine fixed income, Clarion real estate, plus the Legg Mason and Putnam franchises — spanning equity, fixed income, EM and multi-asset strategies.",
       "notable_authors": [],
       "expected_hostname": "franklintempletonglobal.com",
-      "max_articles": 10
+      "max_articles": 10,
+      "fetch_shape": "card_list"
     },
     {
       "id": "partners-group",
@@ -854,7 +875,8 @@
       "description": "Swiss-listed private-markets specialist (~$186B AUM) founded 1996 in Baar-Zug. Runs a thematic, transformational-investing model — buying control positions in private equity, private credit, infrastructure and real estate and driving value through operational change — and pioneered evergreen semi-liquid vehicles that opened private markets to wealth clients.",
       "notable_authors": [],
       "expected_hostname": "partnersgroup.com",
-      "max_articles": 10
+      "max_articles": 10,
+      "fetch_shape": "card_list_paginated"
     },
     {
       "id": "blue-owl-capital",
@@ -949,7 +971,8 @@
       "description": "Edinburgh-based growth-equity house founded in 1908 (~£197B AUM as of 30 June 2026), and the UK's only large-scale independent unlimited-liability investment partnership — no outside shareholders, so the partners carry the firm's risk personally. Runs long-horizon, low-turnover, high-conviction portfolios hunting the small minority of companies that drive index returns, across global/international growth, US equity growth and emerging markets, plus private-company positions held inside the same listed vehicles (its trusts have backed SpaceX since 2018, and the firm was once Tesla's largest institutional shareholder).",
       "notable_authors": [],
       "expected_hostname": "bailliegifford.com",
-      "max_articles": 10
+      "max_articles": 10,
+      "fetch_shape": "card_list"
     },
     {
       "id": "mfs-investment-management",

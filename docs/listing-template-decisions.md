@@ -24,6 +24,24 @@ Two rules decided the close calls:
 `tests/test_template_decisions_doc.py` fails if this file and
 `config/sources.json` disagree.
 
+Both rules above used to depend on someone remembering them while looking at
+a config file, which is not a mechanism. `scripts/template_census.py` counts
+instead, monthly (cron `gmia-census`, 1st at 07:40 BJT), and says nothing
+unless there is something to act on: a shape with no template type reaches
+three hand-written sources, a source arrives with no `fetch_shape` declared
+(auto-promote adds sources on its own, and each needs a decision and a row
+here), a *shape* knob drops to one user, or a knob appears that is in
+neither list in that script. Each hand-written source declares its shape in
+`config/sources.json` as `fetch_shape` — declared, not guessed from the
+code: a marker scan misread man-group (a case-sensitive "attestation") and
+metlife-im (the word "sitemap" appears only in the comment explaining why
+that approach was dropped).
+
+Shapes with no template type today: `sitemap_plus_page` (2),
+`card_list_plus_page` (2, the date is only on the article page),
+`attestation` (2), `card_list_paginated` (1). Each is one source short of
+being worth building.
+
 ## TEMPLATE — card_list (12)
 
 | source | note |
