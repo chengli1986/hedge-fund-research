@@ -119,3 +119,27 @@ def test_the_entry_point_propagates_the_exit_code():
     exits = [c for c in ast.walk(guard) if isinstance(c, ast.Call)
              and isinstance(c.func, ast.Attribute) and c.func.attr == "exit"]
     assert exits and any("main" in ast.dump(a) for c in exits for a in c.args)
+
+
+def test_a_second_page_can_be_synced_without_touching_the_first(docs_repo):
+    """The stage-1 health page reuses this function with its own relpath.
+
+    Two generators write into one shared repo, so the commit must still take
+    a pathspec -- a bare commit would carry whatever the other one had staged
+    (the 2026-09-14 reason this function takes a pathspec at all).
+    """
+    other = "pages/hedge-fund-research-health.html"
+    (docs_repo / "pages" / "hedge-fund-research.html").write_text("<html>bulletin</html>")
+
+    assert publish.sync_docs_site(docs_repo, "<html>health</html>", relpath=other) is True
+    assert (docs_repo / other).read_text() == "<html>health</html>"
+    # the other page is untouched and uncommitted
+    assert (docs_repo / "pages" / "hedge-fund-research.html").read_text() == "<html>bulletin</html>"
+    committed = subprocess.run(["git", "-C", str(docs_repo), "show", "--name-only",
+                                "--format=", "HEAD"], capture_output=True, text=True).stdout
+    assert committed.strip() == other
+
+
+def test_the_default_relpath_is_still_the_bulletin_page(docs_repo):
+    assert publish.sync_docs_site(docs_repo, "<html>x</html>") is True
+    assert (docs_repo / publish.DOCS_PAGE_RELPATH).read_text() == "<html>x</html>"

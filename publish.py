@@ -1853,8 +1853,13 @@ DOCS_SYNC_FAILED = 3
 DOCS_PAGE_RELPATH = "pages/hedge-fund-research.html"
 
 
-def sync_docs_site(docs_repo: Path, html_content: str) -> bool:
+def sync_docs_site(docs_repo: Path, html_content: str,
+                   relpath: str = DOCS_PAGE_RELPATH) -> bool:
     """Copy the page into docs-site, commit only that file, and push.
+
+    relpath names which page: the bulletin by default, and the stage-1 health
+    page (scripts/publish_health.py) passes its own. Two generators writing
+    into one shared repo is exactly why the commit takes a pathspec.
 
     Returns False when the commit or push fails, after saying so on stderr.
     docs-site is shared with other crons, so:
@@ -1867,7 +1872,7 @@ def sync_docs_site(docs_repo: Path, html_content: str) -> bool:
     """
     import subprocess
 
-    page = docs_repo / DOCS_PAGE_RELPATH
+    page = docs_repo / relpath
     if not page.parent.exists():
         print("docs-site: not present, skipping sync")
         return True
@@ -1877,9 +1882,9 @@ def sync_docs_site(docs_repo: Path, html_content: str) -> bool:
 
     page.write_text(html_content, encoding="utf-8")
 
-    file_tracked = git("ls-files", "--error-unmatch", DOCS_PAGE_RELPATH).returncode == 0
+    file_tracked = git("ls-files", "--error-unmatch", relpath).returncode == 0
     no_new_content = file_tracked and \
-        git("diff", "HEAD", "--quiet", "--", DOCS_PAGE_RELPATH).returncode == 0
+        git("diff", "HEAD", "--quiet", "--", relpath).returncode == 0
 
     ahead = git("rev-list", "--count", "@{u}..HEAD")
     has_pending_push = ahead.returncode == 0 and ahead.stdout.strip() not in ("", "0")
@@ -1889,11 +1894,11 @@ def sync_docs_site(docs_repo: Path, html_content: str) -> bool:
         return True
 
     stamp = datetime.now(BJT).strftime("%Y-%m-%d %H:%M BJT")
-    message = f"sync: hedge-fund-research.html from pipeline ({stamp})"
+    message = f"sync: {Path(relpath).name} from pipeline ({stamp})"
     steps = []
     if not no_new_content:
-        steps += [("add", ("add", "--", DOCS_PAGE_RELPATH)),
-                  ("commit", ("commit", "-m", message, "--", DOCS_PAGE_RELPATH))]
+        steps += [("add", ("add", "--", relpath)),
+                  ("commit", ("commit", "-m", message, "--", relpath))]
     steps.append(("push", ("push",)))
     for step, args in steps:
         result = git(*args)

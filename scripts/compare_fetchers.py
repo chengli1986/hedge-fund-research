@@ -34,6 +34,10 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR))
 
+# One line per --all run. The gate mails only on failure, so a green week
+# used to leave no trace and the stage-1 health page had nothing to show.
+HISTORY = BASE_DIR / "data" / "ab-gate.jsonl"
+
 import fetch_articles as fa          # noqa: E402
 import listing_templates as lt       # noqa: E402
 
@@ -82,6 +86,24 @@ def compare_source(source: dict) -> dict:
     return out
 
 
+def _record(results: list[dict]) -> None:
+    """Append what this sweep found, so a green week is visible later."""
+    from datetime import datetime, timedelta, timezone
+
+    row = {"at": datetime.now(timezone(timedelta(hours=8))).isoformat(timespec="seconds"),
+           "sources": len(results),
+           "agree": all(r["agree"] for r in results),
+           "disagreed": [r["source_id"] for r in results if not r["agree"]],
+           "errors": [r["source_id"] for r in results if r["error"]]}
+    try:
+        HISTORY.parent.mkdir(parents=True, exist_ok=True)
+        with HISTORY.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+    except OSError as exc:
+        # Instrumentation must not fail the gate it measures.
+        print(f"WARN: could not record the snapshot: {exc}")
+
+
 def _load_sources() -> list[dict]:
     return json.loads((BASE_DIR / "config" / "sources.json").read_text())["sources"]
 
@@ -91,6 +113,8 @@ def main() -> int:
     parser.add_argument("--source", help="compare this source id")
     parser.add_argument("--all", action="store_true", help="compare every source that has a template")
     parser.add_argument("--json", action="store_true", help="print the result as JSON")
+    parser.add_argument("--no-record", action="store_true",
+                        help="do not append a snapshot to data/ab-gate.jsonl")
     parser.add_argument("--recheck", action="store_true",
                         help="re-run each disagreeing source once before failing "
                              "(for the weekly cron: the live races are flaky, drift is not)")
@@ -142,6 +166,8 @@ def main() -> int:
                 print(f"      only hand-written: {k}")
             for k in r["only_template"][:3]:
                 print(f"      only template:     {k}")
+    if args.all and not args.no_record:
+        _record(results)
     return 0 if all(r["agree"] for r in results) else 1
 
 

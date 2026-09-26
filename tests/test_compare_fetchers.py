@@ -149,7 +149,7 @@ class TestRecheck:
                     "order_differs": False, "dropped_fields": []}
 
         monkeypatch.setattr(cf, "compare_source", fake_compare)
-        monkeypatch.setattr(cf.sys, "argv", ["compare_fetchers.py"] + argv)
+        monkeypatch.setattr(cf.sys, "argv", ["compare_fetchers.py"] + argv + ["--no-record"])
         monkeypatch.setattr(cf, "_load_sources", lambda: [dict(SRC)])
         return cf.main(), calls
 
@@ -180,7 +180,7 @@ class TestOutputLayout:
     def _print(self, monkeypatch, capsys, result):
         monkeypatch.setattr(cf, "compare_source", lambda s: result)
         monkeypatch.setattr(cf, "_load_sources", lambda: [dict(SRC)])
-        monkeypatch.setattr(cf.sys, "argv", ["compare_fetchers.py", "--all"])
+        monkeypatch.setattr(cf.sys, "argv", ["compare_fetchers.py", "--all", "--no-record"])
         cf.main()
         return capsys.readouterr().out.splitlines()
 
@@ -197,3 +197,50 @@ class TestOutputLayout:
             "only_bespoke": [], "only_template": [], "order_differs": False,
             "dropped_fields": ["category"]})
         assert "t" in lines[0] and "template drops: category" in lines[1]
+
+
+class TestSnapshot:
+    """The weekly result has to outlive its stdout.
+
+    The gate mails only on failure, so a green week left no trace at all and
+    the health page had nothing to show. --all now appends a snapshot, which
+    means the crontab line installed on 2026-09-26 keeps working unchanged.
+    """
+
+    def _run(self, monkeypatch, tmp_path, agree, argv=("--all",)):
+        monkeypatch.setattr(cf, "HISTORY", tmp_path / "ab-gate.jsonl")
+        monkeypatch.setattr(cf, "_load_sources", lambda: [dict(SRC), dict(SRC, id="u")])
+        seq = list(agree)
+        monkeypatch.setattr(cf, "compare_source", lambda s: {
+            "source_id": s["id"], "agree": seq.pop(0), "error": None, "bespoke": 1,
+            "template": 1, "only_bespoke": [], "only_template": [], "order_differs": False,
+            "dropped_fields": []})
+        monkeypatch.setattr(cf.sys, "argv", ["compare_fetchers.py", *argv])
+        code = cf.main()
+        rows = [json.loads(l) for l in (tmp_path / "ab-gate.jsonl").read_text().splitlines()] \
+            if (tmp_path / "ab-gate.jsonl").exists() else []
+        return code, rows
+
+    def test_a_green_run_records_that_it_was_green(self, monkeypatch, tmp_path):
+        code, rows = self._run(monkeypatch, tmp_path, [True, True])
+        assert code == 0 and len(rows) == 1
+        assert rows[0]["agree"] is True and rows[0]["disagreed"] == [] and rows[0]["sources"] == 2
+
+    def test_a_disagreement_is_recorded_with_the_source_that_differed(self, monkeypatch, tmp_path):
+        code, rows = self._run(monkeypatch, tmp_path, [True, False])
+        assert code == 1 and rows[0]["agree"] is False and rows[0]["disagreed"] == ["u"]
+
+    def test_no_record_writes_nothing(self, monkeypatch, tmp_path):
+        code, rows = self._run(monkeypatch, tmp_path, [True, True], argv=("--all", "--no-record"))
+        assert code == 0 and rows == []
+
+    def test_a_single_source_run_records_nothing(self, monkeypatch, tmp_path):
+        """One source says nothing about the fleet; only --all is a snapshot."""
+        monkeypatch.setattr(cf, "HISTORY", tmp_path / "ab-gate.jsonl")
+        monkeypatch.setattr(cf, "_load_sources", lambda: [dict(SRC)])
+        monkeypatch.setattr(cf, "compare_source", lambda s: {
+            "source_id": s["id"], "agree": True, "error": None, "bespoke": 1, "template": 1,
+            "only_bespoke": [], "only_template": [], "order_differs": False, "dropped_fields": []})
+        monkeypatch.setattr(cf.sys, "argv", ["compare_fetchers.py", "--source", "t"])
+        cf.main()
+        assert not (tmp_path / "ab-gate.jsonl").exists()
