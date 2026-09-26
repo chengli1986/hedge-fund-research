@@ -307,7 +307,13 @@ def record_quality_metrics(source_id: str, total_found: int, new_count: int,
     gated_ratio = gated_count / max(total_found, 1)
 
     record = {
-        "last_inspected_at": datetime.now(timezone.utc).isoformat(),
+        # BJT, like every other file this pipeline writes (articles.jsonl,
+        # gmia-fetcher-health.json, template-census.jsonl, ab-gate.jsonl).
+        # This one stamped UTC -- the machine's clock -- and two readers
+        # printed it verbatim next to a label saying BJT, showing a 03:45
+        # fetch as 19:45. Every stamp is offset-aware, so the switch changes
+        # no comparison; it changes what a human reads.
+        "last_inspected_at": datetime.now(BJT).isoformat(),
         # Why the count is zero, when it is zero because WE refused the batch:
         # without it a refusal is indistinguishable from the site being down.
         **({"last_refusal": refusal} if refusal else {}),

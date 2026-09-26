@@ -1019,9 +1019,21 @@ def should_email(alerts: dict, zero_fetches: list, pipeline_stale: bool = False,
                 or (quality is not None and quality.get("alerts")))
 
 
+def _bjt_stamp(ts: str | None) -> str:
+    """A stored timestamp as BJT wall-clock, whatever offset it carries.
+
+    inspection_state.json stamped UTC until 2026-09-26, so rows written
+    before then read 19:45 for an 03:45 fetch unless converted here.
+    """
+    try:
+        return datetime.fromisoformat(str(ts)).astimezone(BJT).strftime("%Y-%m-%d %H:%M:%S")
+    except (TypeError, ValueError):
+        return ""
+
+
 def _zero_fetch_line(sid: str, rec: dict) -> str:
     consecutive = rec.get("consecutive_zero_count", 1)
-    when = (rec.get("last_inspected_at") or "")[:19] or "unknown time"
+    when = _bjt_stamp(rec.get("last_inspected_at")) or "unknown time"
     run = "run" if consecutive == 1 else "runs"
     refusal = rec.get("last_refusal")
     if refusal:
