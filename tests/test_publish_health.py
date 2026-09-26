@@ -319,3 +319,37 @@ class TestSelfAudit:
     def test_a_source_fetched_last_night_is_not_reported(self):
         assert [a for a in _build()["stages"]["1_fetch_articles"]["alerts"]
                 if a["kind"] == "not_inspected"] == []
+
+
+class TestSelfAuditRoundTwo:
+    """A second pass, looking for what the first pass's fixes might have
+    introduced and for numbers with two homes."""
+
+    def test_the_template_breakdown_is_computed_live_not_read_from_the_census(self):
+        """The card counted templates from sources.json and the legend read
+        the monthly census, so the two disagreed for up to a month after a
+        source switched: "20/42" above "card_list 12, rss_feed 5, api_json 2"."""
+        sources = (_sources("a", "b", template="card_list")
+                   + _sources("c", template="rss_feed") + _sources("d"))
+        census = [{"at": _iso(4 * 24), "template": 19,
+                   "coverage": {"card_list": 12, "rss_feed": 5, "api_json": 2}}]
+        out = _build(sources=sources, inspection=_inspection("a", "b", "c", "d"),
+                     probe=_probe("a", "b", "c", "d"), census=census)
+        stage = out["stages"]["1_fetch_articles"]
+        assert stage["coverage"] == {"card_list": 2, "rss_feed": 1}
+        assert sum(stage["coverage"].values()) == stage["totals"]["template"]
+
+    def test_the_census_is_still_watched_for_freshness(self):
+        """Its data is no longer read, but a census that stopped running is
+        worth seeing -- it exits 0 silently when there is nothing to report."""
+        out = _build(census=[{"at": _iso(40 * 24)}])
+        assert [s["input"] for s in out["stale"]] == ["census"]
+
+    def test_the_model_carries_no_field_the_page_never_uses(self):
+        """Dead fields are how a model drifts from what it is for."""
+        row = _build()["stages"]["1_fetch_articles"]["sources"][0]
+        html = ph.render_html(_build())
+        model = _build()["stages"]["1_fetch_articles"]
+        unused_row = [k for k in ("method", "probe_elapsed_ms", "last_ok_at") if k in row]
+        assert unused_row == [], unused_row
+        assert "coverage_trend" not in model

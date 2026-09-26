@@ -129,7 +129,6 @@ def build_health(sources: list[dict], inspection: dict, probe: dict, rows: list[
         rendered.append({
             "id": sid,
             "name": source.get("short_name") or sid,
-            "method": source.get("method", ""),
             "template_type": spec.get("type") if source.get("listing_template_active") else None,
             "fetch_shape": source.get("fetch_shape"),
             "found": state.get("last_article_count"),
@@ -143,10 +142,8 @@ def build_health(sources: list[dict], inspection: dict, probe: dict, rows: list[
             if state.get("last_inspected_at") else None,
             "probe_status": probed.get("status"),
             "probe_reason": probed.get("last_failure_reason") or "",
-            "probe_elapsed_ms": probed.get("last_elapsed_ms"),
             "most_recent_date": recent,
             "stale_days": _days_since(recent, now),
-            "last_ok_at": probed.get("last_ok_at"),
         })
 
     if not sources:
@@ -162,11 +159,13 @@ def build_health(sources: list[dict], inspection: dict, probe: dict, rows: list[
         "bespoke": sum(1 for r in rendered if not r["template_type"]),
         "failing": sum(1 for r in rendered if r["probe_status"] == "FAIL"),
     }
+    # Counted here, not read from the monthly census: the card above it
+    # counts sources.json live, and two numbers for one fact drift apart --
+    # for up to a month, which is how often the census runs. The census stays
+    # an input only so a page reader can see whether it is still running.
+    coverage = collections.Counter(r["template_type"] for r in rendered if r["template_type"])
     stage1 = {"sources": rendered, "totals": totals, "alerts": alerts,
-              "trend": _trend(rows, now),
-              "coverage": (census or [{}])[-1].get("coverage") or {},
-              "coverage_trend": [{"at": c.get("at"), "template": c.get("template")}
-                                 for c in (census or [])][-12:]}
+              "trend": _trend(rows, now), "coverage": dict(coverage)}
 
     return {"generated_at": now.isoformat(timespec="seconds"),
             "inputs": inputs, "stale": stale,
