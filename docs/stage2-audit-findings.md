@@ -1,7 +1,7 @@
 # Stage 2 (fetch_content) design audit — findings
 
-Evidence gathered 2026-09-26, read-only. Nineteen findings and one
-observation. Stage 2 is healthy while this is written — 1,526 of 1,585 rows
+Evidence gathered 2026-09-26, read-only; A5 added 2026-09-27 while fixing
+F2. Twenty findings and one observation. Stage 2 is healthy while this is written — 1,526 of 1,585 rows
 have a body (96.3%), and of 89 rows ingested in the last week only 2 have
 none — so none of this is firefighting. Every item is about what the stage
 does when something changes, or about a mechanism that looks protective and
@@ -34,6 +34,7 @@ coverage in the plan; worth its own pass later).
 | **A1** | 40 of 44 extractors say nothing about why they failed; 7 places hold a diagnosis and throw it away. All 44 swallow exceptions, so `fetch_with_evidence`'s `exception` is almost always None and the cause is reconstructed by running regexes over log text. | `_extract_bridgewater_text` runs a gate detector, then returns None; the caller logs "no article body found **or** page looks gated" and the classifier falls through to `body_too_short`. Real record, 2026-09-26 03:49. Exhaustive scan: 11 places hold extractor-only knowledge, 7 discard it. |
 | **A2** | oaktree is the only extractor whose Playwright-delivered HTML never passes through `_normalize_html`, so a challenge page there is invisible to both mechanisms (no recorded response, no shared check). An instance of A3, but worth its own fix. | AST scan of all 8 browser-driven extractors. Note: F1's commit says bridgewater and matthews are the uncovered ones — they use `requests`, so their challenge pages *are* caught by the response path. The note is inverted. |
 | **A3** | 9 extractors bypass `_normalize_html`; any fix made there misses them, silently. | gmo, oaktree, pdf_url, bridgewater, robeco, de_shaw, metlife_im, matthews_asia, gsam |
+| **A5** | `_call_anthropic` is defined and never called: `model_to_caller` holds only the two OpenAI models, so the chain has no non-OpenAI tier. CLAUDE.md still describes "Gemini 2.5 Pro → GPT-4.1 Mini → Claude Sonnet". Found while fixing F2. | grep; the map at analyze_articles.py:646 |
 | **A4** | `_validate_json_response` has tests and no caller. Stage 2 never parses JSON (`.json()` appears 0 times); the JSON APIs belong to stage 1. Tests make dead code look maintained. | grep |
 
 ## ② What counts as a body
@@ -78,7 +79,7 @@ F1, F2, F4, F5, F6, D2, D3 all turn the suite red when removed.
 | ID | Finding | Evidence |
 | --- | --- | --- |
 | **F1** | F3 ("classify on every captured message, not only the last") has no effective guard: reverting it leaves the suite green. Its own test feeds three messages and asserts `fetch_error`, but the last of them, "all attempts failed, giving up", matches `_ERROR_MESSAGE` by itself — the test asserts the right outcome through the wrong mechanism. | Mutant survived. |
-| **F2** | D1's fix died with the code it fixed. It guarded Gemini's unguarded `candidates[0]`; Gemini was removed on 2026-09-21, and both surviving clients have the same shape: `_call_openai` line 319 `data["choices"][0]["message"]["content"]`, `_call_anthropic` line 343 `data["content"][0]["text"]`. An empty list from a content filter raises IndexError, which the chain logs as an unexplained failure and retries — D1's original symptom. | Read both clients. |
+| **F2** | *(fixed 2026-09-27)* D1's fix died with the code it fixed. It guarded Gemini's unguarded `candidates[0]`; Gemini was removed on 2026-09-21, and both surviving clients have the same shape: `_call_openai` line 319 `data["choices"][0]["message"]["content"]`, `_call_anthropic` line 343 `data["content"][0]["text"]`. An empty list from a content filter raises IndexError, which the chain logs as an unexplained failure and retries — D1's original symptom. | Read both clients. |
 
 ## Where to start
 

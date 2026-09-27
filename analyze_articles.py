@@ -302,6 +302,41 @@ _OPENAI_PARAMS = {
 }
 
 
+# An answer that carries no text has to say why. D1 (2026-09-19) fixed this
+# for Gemini -- a safety-filtered request returned {"candidates": []}, and
+# `candidates[0]` raised IndexError, which the chain logged as "list index
+# out of range" and retried. Gemini was deleted on 2026-09-21 and took the
+# fix with it, leaving both remaining clients indexing [0] unguarded.
+# Behaviour is unchanged: these raise, the chain retries and moves on. Only
+# the sentence in the log changes.
+
+def _openai_text(data: dict) -> str:
+    choices = data.get("choices") or []
+    if not choices:
+        raise ValueError(f"openai returned no choices (id={data.get('id')}, "
+                         f"keys={sorted(data)})")
+    message = choices[0].get("message") or {}
+    text = message.get("content")
+    if text is None:
+        refusal = message.get("refusal")
+        reason = choices[0].get("finish_reason")
+        raise ValueError(f"openai returned no content: refusal={refusal!r}, "
+                         f"finish_reason={reason!r}")
+    return text
+
+
+def _anthropic_text(data: dict) -> str:
+    blocks = data.get("content") or []
+    if not blocks:
+        raise ValueError("anthropic returned no content blocks "
+                         f"(stop_reason={data.get('stop_reason')!r})")
+    first = blocks[0]
+    if "text" not in first:
+        raise ValueError(f"anthropic returned a {first.get('type')!r} block, not text "
+                         f"(stop_reason={data.get('stop_reason')!r})")
+    return first["text"]
+
+
 def _call_openai(prompt: str, api_key: str, model: str = "gpt-4.1-mini") -> tuple[str, dict, str]:
     """Call OpenAI API. Returns (text, usage_dict, model_name)."""
     resp = requests.post(
@@ -316,7 +351,7 @@ def _call_openai(prompt: str, api_key: str, model: str = "gpt-4.1-mini") -> tupl
     )
     resp.raise_for_status()
     data = resp.json()
-    text = data["choices"][0]["message"]["content"]
+    text = _openai_text(data)
     usage = data.get("usage", {})
     return (text, usage, model)
 
@@ -340,7 +375,7 @@ def _call_anthropic(prompt: str, api_key: str, model: str = "claude-sonnet-4-6")
     )
     resp.raise_for_status()
     data = resp.json()
-    text = data["content"][0]["text"]
+    text = _anthropic_text(data)
     usage = data.get("usage", {})
     return (text, usage, model)
 
