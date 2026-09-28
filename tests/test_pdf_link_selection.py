@@ -140,7 +140,10 @@ class TestGmoInTheNewsPage:
         assert result is None
         assert fl.classify_content_failure(evidence)[0] == "media_without_text"
 
-    def test_an_ordinary_page_without_a_pdf_keeps_the_generic_label(self, tmp_path, monkeypatch):
+    def test_an_ordinary_page_without_a_pdf_is_unknown(self, tmp_path, monkeypatch):
+        """The generic label is `unknown` since audit D4. GMO's message here
+        is "no article PDF on page" -- nothing measured the body, so calling
+        it body_too_short asserted a cause no one established."""
         import failure_labels as fl
         monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
         page = f'<html><body><main><p>Some page.</p></main>{HR_FORM}</body></html>'
@@ -150,4 +153,4 @@ class TestGmoInTheNewsPage:
         article = {"id": "gmo-plain", "url": f"{GMO}/americas/research-library/some-paper/"}
         result, evidence = fc.fetch_with_evidence(article, fc._fetch_content_gmo)
         assert result is None
-        assert fl.classify_content_failure(evidence)[0] == "body_too_short"
+        assert fl.classify_content_failure(evidence)[0] == "unknown"

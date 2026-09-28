@@ -14,7 +14,9 @@
 | `page_gone` | 页面已删除或下架 | 404/410；同域跳到上级路径（栏目页）；跨域跳到新站首页等浅路径 |
 | `media_without_text` | 视频/播客页，没有可读正文 | 正文太短 + 页面有播放器（brightcoveVideoId、libsyn embed、data-video 等；**页脚的 YouTube 频道链接不算**） |
 | `selector_miss` | 抓取规则未匹配 | `_normalize_html` 走了 fallback 或整页 |
-| `body_too_short` | 规则匹配到了但正文太短 | 以上都不是 |
+| `access_denied` | 站方拒绝这一篇（撤下/需登录/地区限制） | 401/403/451 且返回的是站点自己的页面（≥20 个链接、无验证页标记）；或抓取器显式提示（bridgewater 正文里出现登录墙措辞） |
+| `body_too_short` | 规则匹配到了但正文太短 | 抓取器**量过字数**（日志里带字符数） |
+| `unknown` | 未能判定原因 | 以上都不是。2026-09-27 前这种情况会被记成 `body_too_short`，等于断言一个没人查证过的原因——台账里每一条 `body_too_short` 都是这么来的 |
 | `body_rendered_client_side` | 正文由浏览器脚本渲染 | 抓取器显式提示（gsam：HTML 无正文且无 API 简介） |
 | `pdf_not_usable` | PDF 读不出或不是这篇 | 抓取器显式提示（标题词重合 <75%、PDF 响应无效） |
 | `fetch_error` | 网络/超时/5xx/程序异常 | 5xx、异常、日志中的 timeout/failed 等 |
@@ -63,6 +65,25 @@
 | 09-15 | de-shaw、oaktree | 链接本身是 PDF，按网页解析得 0 字 / 浏览器报「Download is starting」 | `pdf_not_usable`（表象） | 源抓取器只会处理网页 | `aab1bd6` | 永久失败无原因 |
 | 09-15 | gsam、ARK | SPA 页/被拦时的「用简介兜底」从未生效 | `pipeline:field_dropped` | 保存新文章只存固定字段，`gsam_summary`/`summary` 被丢 | `aab1bd6`（+ 结构测试） | 兜底代码存在，看起来有保护 |
 | 09-15 | aqr | 选择器已修好，2 篇仍是永久失败 | `pipeline:never_retried` | permafail 是终态 | 本次手工重排；系统化方案待做 | 修复后没人回头看旧失败 |
+
+## 3b. 案例（2026-09-27）：一个字符串匹配吃掉三万字
+
+bridgewater 的抽取器在正文里搜 `"terms of use"` 等词来判断「这页是不是法律条款页」。
+一篇 31,148 字的真研究报告写着 “In **terms of use** cases, investors can also…”，
+于是整篇被丢弃，失败记成 `body_too_short`（"正文太短"——而它有三万字）。
+
+为什么这条判据从根上就错：
+
+- 这些词在研究报告里很常见：全库 1,548 篇正文中 **104 篇（7%）** 含 `disclaimer`
+  或 `privacy policy`，中位长度 **11,594 字**，都是正常长文
+- bridgewater 自己 19 篇成功入库的文章里，这些词出现 **0 次**——这条判据没有一次战功
+- 它防的东西已经防过一遍：cookie 横幅、免责区块在取文本**之前**就按容器删掉了
+- 代价不对称：放过一个可疑页最多多花一次模型调用（第 3 阶段有 `disclaimer_only` 会拒），
+  误杀一篇真文章是永久损失
+
+改法：只保留**强信号**（`subscribe to read` / `register to continue` / `log in to read` 等
+6 个明确要求登录的短语），命中时上报 `access_denied`；`disclaimer` / `privacy policy` /
+`terms of use` / cookie 类措辞**不再参与判定**。
 
 ## 4. 排查同类问题时的检查清单
 

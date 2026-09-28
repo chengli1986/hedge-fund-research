@@ -25,6 +25,7 @@ CONTENT_FAILURE_LABELS = {
     "body_rendered_client_side": "正文由浏览器脚本渲染，网页源码里没有（且没有可用的替代简介）",
     "pdf_not_usable": "PDF 读不出来，或不是这篇文章",
     "fetch_error": "网络错误、超时、服务器 5xx 或程序异常",
+    "unknown": "未能判定原因：抓取没成功，但证据不足以说明为什么",
 }
 
 # How a content failure is retried, by label.
@@ -45,6 +46,12 @@ RETRY_POLICY = {
     "body_too_short":            {"backoff_days": [1], "max_attempts": 3, "code_dependent": True},
     "body_rendered_client_side": {"backoff_days": [1], "max_attempts": 3, "code_dependent": True},
     "pdf_not_usable":            {"backoff_days": [1], "max_attempts": 3, "code_dependent": True},
+    # Copied from body_too_short, which is what the catch-all used to be
+    # labelled. code_dependent matters most here: an unexplained failure is
+    # exactly the kind a fetcher fix might resolve, and the code-change
+    # requeue is the only mechanism that has ever recovered an article
+    # (audit D1: all 7 rescues were permafails re-queued after a fix).
+    "unknown":                   {"backoff_days": [1], "max_attempts": 3, "code_dependent": True},
 }
 
 ANALYSIS_DECLINE_LABELS = {
@@ -71,6 +78,9 @@ _MEDIA = re.compile(
 _ERROR_MESSAGE = re.compile(r"timeout|timed out|fetch failed|failed to fetch|connection|"
                             r"download failed|failed to download|all attempts failed|"
                             r"http error|ssl|refused|reset by peer", re.IGNORECASE)
+# An extractor that measured the body says so with a character count; the
+# catch-all has no such evidence.
+_MEASURED_LENGTH = re.compile(r"\(\s*\d+\s*chars?\b|\btoo short\b", re.IGNORECASE)
 # A PDF was reached but is not usable as one: served as HTML, or unparseable.
 _PDF_MESSAGE = re.compile(r"invalid PDF response|PDF extraction failed|pdfplumber extraction failed|"
                           r"PDF article: extraction failed", re.IGNORECASE)
@@ -182,7 +192,13 @@ def classify_content_failure(evidence: dict) -> tuple[str, str]:
     if pdf_message:
         return "pdf_not_usable", pdf_message[:300]
 
-    return "body_too_short", last_message[:300] or "no usable text"
+    # body_too_short means an extractor measured the text and found it short.
+    # Anything else lands in unknown: the classifier could not tell, and
+    # saying so is more use than borrowing another message's label (audit
+    # D4 -- every stored body_too_short had borrowed one).
+    if _MEASURED_LENGTH.search(last_message):
+        return "body_too_short", last_message[:300]
+    return "unknown", last_message[:300] or "no evidence of a cause"
 
 
 _DECLINE_RULES = (

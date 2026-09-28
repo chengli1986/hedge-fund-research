@@ -231,9 +231,25 @@ def _normalize_whitespace(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
-def _looks_like_bridgewater_gate(text: str) -> bool:
-    """Detect common bridge/gate/disclaimer pages so we do not store them as正文."""
+def _bridgewater_gate_kind(text: str) -> str:
+    """"gate" when the site is asking us to identify ourselves, else "".
+
+    Audit A1 + A6. This used to also refuse a body containing "disclaimer",
+    "privacy policy", "terms of use" or cookie-banner wording. That cost a
+    real article on 2026-09-27: a 31,148-character note was dropped whole
+    because it reads "In terms of use cases, investors can also...". The
+    phrases are ordinary research prose -- 104 of the 1,548 stored bodies
+    (7%) contain one, median length 11,594 characters -- and Bridgewater's
+    own 19 stored articles contain none, so the rule had no win to weigh
+    against that loss. Cookie banners and legal blocks are already removed
+    by container, before this text exists (see the decompose list below),
+    and the costs are not symmetric: letting a thin page through costs one
+    model call, which stage 3 declines as disclaimer_only, while refusing a
+    real one loses it.
+    """
     lowered = _normalize_whitespace(text).lower()
+    # A wall: the site is telling us to identify ourselves. Only these
+    # justify access_denied.
     gate_markers = (
         "subscribe to read",
         "sign up to read",
@@ -241,18 +257,13 @@ def _looks_like_bridgewater_gate(text: str) -> bool:
         "register to read",
         "log in to continue",
         "log in to read",
-        "accept all cookies",
-        "cookie preferences",
-        "manage cookies",
-        "manage preferences",
-        "privacy policy",
-        "terms of use",
     )
-    disclaimer_markers = (
-        "this content is available",
-        "disclaimer",
-    )
-    return any(marker in lowered for marker in gate_markers + disclaimer_markers)
+    return "gate" if any(marker in lowered for marker in gate_markers) else ""
+
+
+def _looks_like_bridgewater_gate(text: str) -> bool:
+    """True only for a gate, since 2026-09-27."""
+    return bool(_bridgewater_gate_kind(text))
 
 
 def _extract_bridgewater_text(html: str) -> Optional[str]:
@@ -306,7 +317,16 @@ def _extract_bridgewater_text(html: str) -> Optional[str]:
         text = _normalize_whitespace(text)
         if len(text) < MIN_CONTENT_LENGTH:
             continue
-        if _looks_like_bridgewater_gate(text):
+        kind = _bridgewater_gate_kind(text)
+        if kind == "gate":
+            # The extractor is the only thing that can see this: the page is
+            # a 200 with no challenge and no media player, so the evidence
+            # layer has nothing to go on and the failure used to be filed as
+            # body_too_short -- retried daily and re-queued on every code
+            # change, for a page that wants a login.
+            note_failure_hint("access_denied",
+                              "registration/login wall in the article body")
+        if kind:
             continue
         return text
 

@@ -1,7 +1,8 @@
 # Stage 2 (fetch_content) design audit — findings
 
-Evidence gathered 2026-09-26, read-only; A5 added 2026-09-27 while fixing
-F2. Twenty findings and one observation. Stage 2 is healthy while this is written — 1,526 of 1,585 rows
+Evidence gathered 2026-09-26, read-only; A5 and A6 added 2026-09-27 while
+fixing F2 and A1. Twenty-one findings and one observation; F2, D4, A1 and
+A6 are fixed. Stage 2 is healthy while this is written — 1,526 of 1,585 rows
 have a body (96.3%), and of 89 rows ingested in the last week only 2 have
 none — so none of this is firefighting. Every item is about what the stage
 does when something changes, or about a mechanism that looks protective and
@@ -31,7 +32,8 @@ coverage in the plan; worth its own pass later).
 
 | ID | Finding | Evidence |
 | --- | --- | --- |
-| **A1** | 40 of 44 extractors say nothing about why they failed; 7 places hold a diagnosis and throw it away. All 44 swallow exceptions, so `fetch_with_evidence`'s `exception` is almost always None and the cause is reconstructed by running regexes over log text. | `_extract_bridgewater_text` runs a gate detector, then returns None; the caller logs "no article body found **or** page looks gated" and the classifier falls through to `body_too_short`. Real record, 2026-09-26 03:49. Exhaustive scan: 11 places hold extractor-only knowledge, 7 discard it. |
+| **A6** | *(found and fixed 2026-09-27 while fixing A1)* Bridgewater refused any body containing "disclaimer", "privacy policy", "terms of use" or cookie wording, and dropped a 31,148-character research note whole because it reads "In **terms of use** cases, investors can also…". 104 of the 1,548 stored bodies (7%) contain one of those phrases, median length 11,594 — they are ordinary prose. Its own 19 stored articles contain none, so the rule had no win against that loss. | Read the live page; measured the store |
+| **A1** | *(fixed 2026-09-27)* 40 of 44 extractors say nothing about why they failed; 7 places hold a diagnosis and throw it away. All 44 swallow exceptions, so `fetch_with_evidence`'s `exception` is almost always None and the cause is reconstructed by running regexes over log text. | `_extract_bridgewater_text` runs a gate detector, then returns None; the caller logs "no article body found **or** page looks gated" and the classifier falls through to `body_too_short`. Real record, 2026-09-26 03:49. Exhaustive scan: 11 places hold extractor-only knowledge, 7 discard it. |
 | **A2** | oaktree is the only extractor whose Playwright-delivered HTML never passes through `_normalize_html`, so a challenge page there is invisible to both mechanisms (no recorded response, no shared check). An instance of A3, but worth its own fix. | AST scan of all 8 browser-driven extractors. Note: F1's commit says bridgewater and matthews are the uncovered ones — they use `requests`, so their challenge pages *are* caught by the response path. The note is inverted. |
 | **A3** | 9 extractors bypass `_normalize_html`; any fix made there misses them, silently. | gmo, oaktree, pdf_url, bridgewater, robeco, de_shaw, metlife_im, matthews_asia, gsam |
 | **A5** | `_call_anthropic` is defined and never called: `model_to_caller` holds only the two OpenAI models, so the chain has no non-OpenAI tier. CLAUDE.md still describes "Gemini 2.5 Pro → GPT-4.1 Mini → Claude Sonnet". Found while fixing F2. | grep; the map at analyze_articles.py:646 |
@@ -58,7 +60,7 @@ coverage in the plan; worth its own pass later).
 | --- | --- | --- |
 | **D1** | In the traceable range, scheduled retries have rescued nothing. Of 47 articles that ever failed, 7 were later fetched successfully — all seven on 2026-09-15 at 09:55 and 11:25, daytime runs by hand after an extractor was fixed, not the nightly run. Confidence: medium — failure lines before 2026-09-15 carry no article id, so earlier fail→succeed pairs cannot be reconstructed. | 6 months of `logs/fetch_content.log`. |
 | **D2** | The retry policy cannot be replayed. The labelled ledger starts 2026-09-16 (48 records, 10 days) and a row keeps only its **last** failure, as a dict, not a list. This repo's own rule — replay history before choosing a threshold — cannot be applied here. | File inspection. |
-| **D4** | `body_too_short` is the classifier's catch-all *and* is marked `code_dependent`, so "we could not tell why" is recorded as "this depends on our code" and every such article is requeued whenever `fetch_content.py` changes. With A1 (40 of 44 extractors silent), that is the churn engine. | The other 8 labels' `code_dependent` flags match their semantics; this one and `pdf_not_usable` are the two judgement calls. |
+| **D4** | *(fixed 2026-09-27)* `body_too_short` is the classifier's catch-all *and* is marked `code_dependent`, so "we could not tell why" is recorded as "this depends on our code" and every such article is requeued whenever `fetch_content.py` changes. With A1 (40 of 44 extractors silent), that is the churn engine. | The other 8 labels' `code_dependent` flags match their semantics; this one and `pdf_not_usable` are the two judgement calls. |
 | **D5** | `mark_content_failure`'s `failure=None` branch is unreachable in production **and** in the tests — its only caller always passes a labelled failure. So `MAX_CONTENT_ATTEMPTS = 5` and the "retire at max_attempts" rule it guards never run. | grep of every call site. |
 | **D6** | `ATTEMPT_CEILING = 12` cannot change an outcome. Per-label caps are 3–5 and three labels retire at a streak of 2, so another gate always fires first; for a row already retired, the ceiling and `was_permafail` give the same answer. | The policy table, and the gsam rows at attempts=11. |
 | *obs* | After a permafail is requeued by a code change and fails again, its `streak` keeps counting, so "streak 6" reads as six consecutive same-label failures when it is three plus three requeues. Ledger legibility only; no behaviour depends on it. | gsam: attempts 11, streak 6. |
