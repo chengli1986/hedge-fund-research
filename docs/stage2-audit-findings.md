@@ -1,8 +1,8 @@
 # Stage 2 (fetch_content) design audit — findings
 
 Evidence gathered 2026-09-26, read-only; A5 and A6 added 2026-09-27 while
-fixing F2 and A1. Twenty-one findings and one observation; F2, D4, A1 and
-A6 are fixed. Stage 2 is healthy while this is written — 1,526 of 1,585 rows
+fixing F2 and A1. Twenty-one findings and one observation; F2, D4, A1, A6 and A2 are
+fixed, and A3 is mitigated (see the deferred-unification section). Stage 2 is healthy while this is written — 1,526 of 1,585 rows
 have a body (96.3%), and of 89 rows ingested in the last week only 2 have
 none — so none of this is firefighting. Every item is about what the stage
 does when something changes, or about a mechanism that looks protective and
@@ -34,8 +34,8 @@ coverage in the plan; worth its own pass later).
 | --- | --- | --- |
 | **A6** | *(found and fixed 2026-09-27 while fixing A1)* Bridgewater refused any body containing "disclaimer", "privacy policy", "terms of use" or cookie wording, and dropped a 31,148-character research note whole because it reads "In **terms of use** cases, investors can also…". 104 of the 1,548 stored bodies (7%) contain one of those phrases, median length 11,594 — they are ordinary prose. Its own 19 stored articles contain none, so the rule had no win against that loss. | Read the live page; measured the store |
 | **A1** | *(fixed 2026-09-27)* 40 of 44 extractors say nothing about why they failed; 7 places hold a diagnosis and throw it away. All 44 swallow exceptions, so `fetch_with_evidence`'s `exception` is almost always None and the cause is reconstructed by running regexes over log text. | `_extract_bridgewater_text` runs a gate detector, then returns None; the caller logs "no article body found **or** page looks gated" and the classifier falls through to `body_too_short`. Real record, 2026-09-26 03:49. Exhaustive scan: 11 places hold extractor-only knowledge, 7 discard it. |
-| **A2** | oaktree is the only extractor whose Playwright-delivered HTML never passes through `_normalize_html`, so a challenge page there is invisible to both mechanisms (no recorded response, no shared check). An instance of A3, but worth its own fix. | AST scan of all 8 browser-driven extractors. Note: F1's commit says bridgewater and matthews are the uncovered ones — they use `requests`, so their challenge pages *are* caught by the response path. The note is inverted. |
-| **A3** | 9 extractors bypass `_normalize_html`; any fix made there misses them, silently. | gmo, oaktree, pdf_url, bridgewater, robeco, de_shaw, metlife_im, matthews_asia, gsam |
+| **A2** | *(fixed 2026-09-28)* oaktree is the only extractor whose Playwright-delivered HTML never passes through `_normalize_html`, so a challenge page there is invisible to both mechanisms (no recorded response, no shared check). An instance of A3, but worth its own fix. | AST scan of all 8 browser-driven extractors. Note: F1's commit says bridgewater and matthews are the uncovered ones — they use `requests`, so their challenge pages *are* caught by the response path. The note is inverted. |
+| **A3** | *(mitigated 2026-09-28, not unified)* 9 extractors bypass `_normalize_html`; any fix made there misses them, silently. | gmo, oaktree, pdf_url, bridgewater, robeco, de_shaw, metlife_im, matthews_asia, gsam |
 | **A5** | `_call_anthropic` is defined and never called: `model_to_caller` holds only the two OpenAI models, so the chain has no non-OpenAI tier. CLAUDE.md still describes "Gemini 2.5 Pro → GPT-4.1 Mini → Claude Sonnet". Found while fixing F2. | grep; the map at analyze_articles.py:646 |
 | **A4** | `_validate_json_response` has tests and no caller. Stage 2 never parses JSON (`.json()` appears 0 times); the JSON APIs belong to stage 1. Tests make dead code look maintained. | grep |
 
@@ -82,6 +82,39 @@ F1, F2, F4, F5, F6, D2, D3 all turn the suite red when removed.
 | --- | --- | --- |
 | **F1** | F3 ("classify on every captured message, not only the last") has no effective guard: reverting it leaves the suite green. Its own test feeds three messages and asserts `fetch_error`, but the last of them, "all attempts failed, giving up", matches `_ERROR_MESSAGE` by itself — the test asserts the right outcome through the wrong mechanism. | Mutant survived. |
 | **F2** | *(fixed 2026-09-27)* D1's fix died with the code it fixed. It guarded Gemini's unguarded `candidates[0]`; Gemini was removed on 2026-09-21, and both surviving clients have the same shape: `_call_openai` line 319 `data["choices"][0]["message"]["content"]`, `_call_anthropic` line 343 `data["content"][0]["text"]`. An empty list from a content filter raises IndexError, which the chain logs as an unexplained failure and retries — D1's original symptom. | Read both clients. |
+
+## Unifying the nine with the shared path — deferred, with its prerequisite
+
+Considered on 2026-09-28 and deliberately not done yet. Six of the nine
+(robeco, de-shaw, gsam, metlife-im, matthews-asia, bridgewater) are close
+copies of `_normalize_html`: same decompose step, same `soup.select`, and
+they already call the shared `_paragraph_text`. They differ only in which
+containers they strip and, for bridgewater, an ordered selector ladder.
+Three (gmo, oaktree, pdf_url) are genuinely different: the page is a door
+to a PDF.
+
+So unification is feasible, and the way to do it is to split
+`_normalize_html` into the four things it welds together -- challenge
+check, strip, select-and-record, text join -- so a caller can take three
+of them and do its own selecting. What stops it today is proof, not
+design:
+
+- The repo has no corpus of saved HTML, so there is no way to run the old
+  and new extraction over identical input. Comparing two live fetches does
+  not substitute: the 2026-09-28 baseline (84 bodies, 2 per source) found
+  only 55 identical, and most of the other 28 were the sites' own edits
+  between fetches.
+- The stored bodies are not a clean reference either. Several predate
+  extractor fixes: troweprice's stored text carries 6,000 characters of
+  OneTrust cookie panel, man-group's starts with breadcrumb navigation,
+  de-shaw's has words fused from before c149894. Today's extraction is
+  cleaner than what is on disk.
+
+Prerequisite, therefore: a record/replay harness that captures each page's
+HTML once and replays it into both code versions. Until that exists, a
+refactor touching the 35 sources on the shared path cannot be shown to
+have changed nothing, and "it looked fine" is not the standard this
+pipeline holds elsewhere.
 
 ## Where to start
 
