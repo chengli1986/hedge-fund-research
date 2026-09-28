@@ -139,6 +139,55 @@ def drain_extraction_paths() -> list[str]:
     return paths
 
 
+def _note_selector_result(matched: bool) -> None:
+    """Record whether the article selector found anything (audit A3).
+
+    The six extractors that parse HTML themselves never recorded this, so
+    the classifier could not reach selector_miss for them -- the label that
+    says a site has been redesigned. The store holds zero such rows, not
+    because no site was redesigned but because these six could not say so.
+    Same vocabulary as _normalize_html so the health email reads alike;
+    they have no fallback ladder, so a miss is "miss", not "fallback:<sel>".
+    """
+    _extraction_paths.append("primary" if matched else "miss")
+
+
+def _note_if_challenge(html: str) -> bool:
+    """Note a bot-protection page once, wherever the HTML came from.
+
+    Idempotent because the same HTML is examined twice on the browser path:
+    _page_html sees it as it leaves the browser, and _normalize_html sees it
+    again when the seven browser-driven extractors that parse through the
+    shared path hand it over. Two hints would carry the same label and two
+    recorded paths would say the extraction went wrong twice.
+    """
+    import failure_labels
+
+    if not failure_labels.looks_like_challenge(html[:50000]):
+        return False
+    if not any(label == "blocked_by_bot_protection" for label, _ in _failure_hints):
+        log.warning("  extraction: the page is a bot-protection challenge, not an article")
+        _extraction_paths.append("challenge")
+        note_failure_hint("blocked_by_bot_protection",
+                          "challenge page served instead of the article")
+    return True
+
+
+def _page_html(page) -> str:
+    """The HTML a browser rendered, checked before anyone parses it.
+
+    The single door for Playwright-delivered HTML (audit A2). oaktree used
+    to have no check at all: fetch_with_evidence records requests calls, so
+    a browser fetch leaves no response behind, and oaktree parses the page
+    itself instead of going through _normalize_html -- a Cloudflare page
+    there came out labelled as a PDF problem. tests/test_page_html_choke
+    _point.py fails if an extractor calls page.content() directly again.
+    """
+    html = page.content()
+    _note_if_challenge(html)
+    return html
+
+
 def _normalize_html(html: str, selector: str) -> str:
     """Extract article text from HTML using CSS selectors, stripping boilerplate.
 
@@ -157,10 +206,7 @@ def _normalize_html(html: str, selector: str) -> str:
     # every selector and be labelled selector_miss ("site redesigned") --
     # retried daily and retired in three nights, when the right label,
     # blocked_by_bot_protection, waits a week and retries four times.
-    if failure_labels.looks_like_challenge(html[:50000]):
-        log.warning("  extraction: the page is a bot-protection challenge, not an article")
-        _extraction_paths.append("challenge")
-        note_failure_hint("blocked_by_bot_protection", "challenge page served instead of the article")
+    if _note_if_challenge(html):
         return ""
 
     soup = BeautifulSoup(html, "html.parser")
@@ -309,10 +355,15 @@ def _extract_bridgewater_text(html: str) -> Optional[str]:
         ".content p",
     ]
 
+    # Whether any selector in the ladder matched at all: a body that was
+    # found but rejected (too short, or a gate) is not a selector problem,
+    # and labelling it selector_miss would point at the wrong repair.
+    matched_any = False
     for selector in selectors:
         elements = soup.select(selector)
         if not elements:
             continue
+        matched_any = True
         text = "\n".join(_normalize_whitespace(el.get_text(" ", strip=True)) for el in elements)
         text = _normalize_whitespace(text)
         if len(text) < MIN_CONTENT_LENGTH:
@@ -328,8 +379,10 @@ def _extract_bridgewater_text(html: str) -> Optional[str]:
                               "registration/login wall in the article body")
         if kind:
             continue
+        _note_selector_result(True)
         return text
 
+    _note_selector_result(matched_any)
     return None
 
 
@@ -489,7 +542,7 @@ def _fetch_content_oaktree(article: dict) -> Optional[tuple[Path, str]]:
             page = context.new_page()
             playwright_nav.goto_with_fallback(page, url, wait_until="networkidle", timeout=30000)
             page.wait_for_timeout(3000)
-            html = page.content()
+            html = _page_html(page)
             browser.close()
     except Exception as e:
         log.error("  Oaktree: Playwright fetch failed: %s", e)
@@ -554,7 +607,7 @@ def _fetch_content_aqr(article: dict) -> Optional[tuple[Path, str]]:
             page = context.new_page()
             playwright_nav.goto_with_fallback(page, url, wait_until="networkidle", timeout=30000)
             page.wait_for_timeout(3000)
-            html = page.content()
+            html = _page_html(page)
             browser.close()
     except Exception as e:
         log.error("  AQR: Playwright fetch failed: %s", e)
@@ -747,7 +800,7 @@ def _fetch_content_cambridge(article: dict) -> Optional[tuple[Path, str]]:
             page = context.new_page()
             page.goto(url, wait_until="domcontentloaded", timeout=30000)
             page.wait_for_timeout(3000)
-            html = page.content()
+            html = _page_html(page)
             browser.close()
     except Exception as e:
         log.error("  Cambridge: Playwright fetch failed: %s", e)
@@ -784,7 +837,7 @@ def _fetch_content_wellington(article: dict) -> Optional[tuple[Path, str]]:
             # networkidle; SSR content is fully present at load event
             page.goto(url, wait_until="load", timeout=30000)
             page.wait_for_timeout(2000)
-            html = page.content()
+            html = _page_html(page)
             browser.close()
     except Exception as e:
         log.error("  Wellington: Playwright fetch failed: %s", e)
@@ -855,7 +908,7 @@ def _fetch_content_troweprice(article: dict) -> Optional[tuple[Path, str]]:
                 page = context.new_page()
                 page.goto(url, wait_until="domcontentloaded", timeout=30000)
                 page.wait_for_timeout(2000)
-                html = page.content()
+                html = _page_html(page)
                 browser.close()
             break
         except Exception as e:
@@ -915,7 +968,7 @@ def _fetch_content_pimco(article: dict) -> Optional[tuple[Path, str]]:
             page = context.new_page()
             page.goto(url, wait_until="domcontentloaded", timeout=30000)
             page.wait_for_timeout(2000)
-            html = page.content()
+            html = _page_html(page)
             browser.close()
     except Exception as e:
         log.error("  PIMCO: Playwright fetch failed: %s", e)
@@ -950,7 +1003,7 @@ def _fetch_content_aberdeen(article: dict) -> Optional[tuple[Path, str]]:
             page = context.new_page()
             playwright_nav.goto_with_fallback(page, url, wait_until="networkidle", timeout=30000)
             page.wait_for_timeout(2000)
-            html = page.content()
+            html = _page_html(page)
             browser.close()
     except Exception as e:
         log.error("  Aberdeen: Playwright fetch failed: %s", e)
@@ -1355,6 +1408,7 @@ def _fetch_content_gsam(article: dict) -> Optional[tuple[Path, str]]:
                                ".footer-disclosure-text"):
             tag.decompose()
         paragraphs = soup.select("main p")
+        _note_selector_result(bool(paragraphs))
         text = "\n".join(t for t in map(_paragraph_text, paragraphs) if t)
     except Exception as e:
         log.error("  GSAM: fetch failed: %s", e)
@@ -1402,6 +1456,7 @@ def _fetch_content_robeco(article: dict) -> Optional[tuple[Path, str]]:
         tag.decompose()
 
     paragraphs = soup.select("main p")
+    _note_selector_result(bool(paragraphs))
     text = "\n".join(t for t in map(_paragraph_text, paragraphs) if t)
 
     if not _check_min_content_length(text):
@@ -1438,6 +1493,7 @@ def _fetch_content_de_shaw(article: dict) -> Optional[tuple[Path, str]]:
         tag.decompose()
 
     paragraphs = soup.select("div[class*='Blogs_'] p:not([class*='MILegal'])")
+    _note_selector_result(bool(paragraphs))
     text = "\n".join(t for t in map(_paragraph_text, paragraphs) if t)
 
     if not _check_min_content_length(text):
@@ -1492,6 +1548,7 @@ def _fetch_content_metlife_im(article: dict) -> Optional[tuple[Path, str]]:
         tag.decompose()
 
     paragraphs = soup.select("div.read-more-section.richtext p")
+    _note_selector_result(bool(paragraphs))
     kept = []
     for p in paragraphs:
         para = _paragraph_text(p)
@@ -1647,6 +1704,7 @@ def _fetch_content_matthews_asia(article: dict) -> Optional[tuple[Path, str]]:
             sec.decompose()
 
     paragraphs = soup.select("main p")
+    _note_selector_result(bool(paragraphs))
     text = "\n".join(
         p.get_text(" ", strip=True) for p in paragraphs if p.get_text(" ", strip=True)
     )
@@ -1692,7 +1750,7 @@ def _fetch_content_capital_group(article: dict) -> Optional[tuple[Path, str]]:
             page = context.new_page()
             page.goto(url, wait_until="domcontentloaded", timeout=30000)
             page.wait_for_timeout(4000)
-            html = page.content()
+            html = _page_html(page)
             browser.close()
     except Exception as e:
         log.error("  Capital Group: Playwright fetch failed: %s", e)
