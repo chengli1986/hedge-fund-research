@@ -393,6 +393,30 @@ CODE_VERSION = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()[:12]
 # is not an article, and the text will not have changed.
 RULE_MADE_DECLINE = "grounding_failed"
 
+# The three decline reasons this file writes itself, rather than taking from a
+# model. They are named here because failure_labels.classify_analysis_decline
+# turns a reason back into a label with an ORDERED regex list -- the first rule
+# that matches wins -- and two of the labels it can return carry consequences:
+# duplicate_body removes the article from the published page (publish.py), and
+# grounding_failed is the only label _should_analyze ever re-queues. A guard
+# test asserts these exact strings still classify the way those two consumers
+# assume. It can only do that honestly if the test and main() build the string
+# through the same function, so both call these.
+def duplicate_reason(owner: dict) -> str:
+    """Why a body that another article already published is not summarised."""
+    return (f"same text as the already-summarised article "
+            f"\"{owner.get('title', '')}\" ({owner.get('id')}); the page "
+            f"served a document that belongs to another article, or "
+            f"this article is stored twice")
+
+
+def grounding_reason(problems: list[str]) -> str:
+    """Why a summary the model did produce was thrown away."""
+    return "failed grounding check: " + "; ".join(problems)
+
+
+TITLE_ONLY_REASON = "metadata holds only a title; nothing to summarise"
+
 
 def _should_analyze(article: dict) -> bool:
     """Return True if article is eligible for analysis."""
@@ -692,7 +716,8 @@ def _analyze_with_fallback(
                             log.warning("  %s: summary rejected by grounding check: %s",
                                         model_name, "; ".join(problems))
                             parsed = {"insufficient_content": True,
-                                      "reason": "failed grounding check: " + "; ".join(problems)}
+                                      "reason": grounding_reason(problems),
+                                      "_label": RULE_MADE_DECLINE}
                     parsed["_model"] = used_model
                     parsed["_usage"] = usage
                     return parsed
@@ -879,7 +904,15 @@ def _record_insufficient(article: dict, result: dict) -> None:
     article["analysis_status"] = INSUFFICIENT
     article["analysis_reason"] = result.get("reason") or ""
     # The countable form of the reason, shared with stage-2 failure labels.
-    article["analysis_label"] = failure_labels.classify_analysis_decline(article["analysis_reason"])
+    # A reason this file wrote itself already knows its label, so do not ask
+    # the classifier to guess it back. classify_analysis_decline matches an
+    # ORDERED regex list against free text, and duplicate_reason interpolates
+    # the other article's title: a title like "Why Only A Title Is Not Enough"
+    # matched the title_only rule, which sits above duplicate_body, and the
+    # row then escaped publish.py's duplicate filter and put the same body on
+    # the page twice. Guessing is only for what a model actually wrote.
+    article["analysis_label"] = (result.get("_label")
+                                 or failure_labels.classify_analysis_decline(article["analysis_reason"]))
     article["analysis_model"] = result.get("_model")
     article["analysis_checked_at"] = datetime.now(BJT).isoformat(timespec="seconds")
     article["analysis_code_version"] = CODE_VERSION
@@ -932,13 +965,12 @@ def main() -> int:
         owner = duplicate_owner(published, a.get("source_id", ""), a.get("title", ""), content)
         if owner is not None and owner.get("id") != a["id"]:
             result = {"insufficient_content": True, "_model": None,
-                      "reason": (f"same text as the already-summarised article "
-                                 f"\"{owner.get('title', '')}\" ({owner.get('id')}); the page "
-                                 f"served a document that belongs to another article, or "
-                                 f"this article is stored twice")}
+                      "reason": duplicate_reason(owner),
+                      "_label": "duplicate_body"}
         elif is_metadata and is_title_only(content):
             result = {"insufficient_content": True, "_model": None,
-                      "reason": "metadata holds only a title; nothing to summarise"}
+                      "reason": TITLE_ONLY_REASON,
+                      "_label": "title_only"}
         else:
             result = _analyze_with_fallback(
                 content,

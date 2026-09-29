@@ -73,6 +73,43 @@ coverage in the plan; worth its own pass later).
 | **E2** | lazard-am accounts for 7 of those 17: seven near-identical 2,887–2,889 character bodies, all of them the weekly column's standing description ("Each week, I provide my views on…") rather than that week's article. Each paid for its own model call. Near-duplicate detection cannot help: it indexes only **summarised** articles, so a body that is always declined never becomes the owner the copies would match. | Read the bodies; `analyze_articles` line 796. |
 | **E3** | ARK's metadata fallback is a policy disagreement, not a missing mechanism. The lighter prompt exists (`METADATA_PROMPT`) and a pre-check declines title-only bodies without a model call (28 of 29 cost nothing). The one that reached the model — 861 characters with a full publisher summary — was refused on principle: "Only article metadata and a publisher-provided summary are supplied, not the article itself." Stage 2 is built on "a publisher summary is enough"; the model's rule is that it is not, and the model decides. The path yields nothing whatever the fields contain. | 29 rows, all declined; the reason is stored on the row. |
 
+## ⑦ The decline label, 2026-09-29
+
+Opened by two health emails (9-28, 9-29) whose only new line was three
+loomis-sayles articles declined as `disclaimer_only`. The declines were
+correct -- all three are video pages whose body is one sentence of blurb plus
+Loomis's standard disclosure -- but checking *why* they were labelled that way
+turned up something else.
+
+`failure_labels.classify_analysis_decline` turns a decline reason back into a
+countable label with an **ordered** regex list: first rule that matches wins.
+That is right for a reason a model wrote in free text. It was also being
+applied to the three reasons `analyze_articles.py` writes itself, and two of
+the labels it can return are load-bearing:
+
+| Label | Consumer | What a wrong label does |
+| --- | --- | --- |
+| `duplicate_body` | `publish.py:701` drops the row | the same body is published twice |
+| `grounding_failed` | `_should_analyze` re-queues on a rule change | the row is never re-analysed |
+
+| ID | Finding | Evidence | Status |
+| --- | --- | --- | --- |
+| **G1** | `duplicate_reason` interpolates the **other article's title**, so a plausible title steals the label: `"Why Only A Title Is Not Enough"` classified as `title_only`, above `duplicate_body` in the list. The row then escapes publish.py's duplicate filter silently. | Reproduced against the real builder; end-to-end guard test. | **Fixed** — the three code-written declines now declare `_label`; only a model's free text is classified. |
+| **G2** | `grounding_reason` quotes up to 80 characters of the rejected summary (`_NOT_AN_ARTICLE` alternative 4 has `[^.;]{0,80}?`), so a summary calling itself "only a title" steals the label the same way. Consequence is invisible: the row is simply never re-queued. | Reproduced through the real `_analyze_with_fallback` grounding path. | **Fixed** with G1. |
+| **G3** | 9 of 57 stored declines (16%) match more than one rule, so their label is decided by list position, not by evidence. `disclaimer_only` (`disclaimer\|disclosure\|legal`) is a magnet: every asset manager's page carries a disclosure. The loomis videos are 3 of the 4 `disclaimer_only`-over-`teaser_only` cases. | Counted over `articles.jsonl`. | **Recorded, not fixed.** These labels are reporting-only. Reordering would change the email's counts, and there is no evidence that any new order is more true than the current one. |
+| **G4** | The decline taxonomy has no video category, while the content taxonomy does (`media_without_text`). Adding one would not help: the classifier never sees the page, only the model's one-sentence reason, and **none of the three loomis reasons contains the word "video"**. A new rule would have to match "promotional description", which would take rows from `teaser_only` on no evidence. | Checked all three stored reasons. | **Rejected** — the fix proposed first would have caught 0 of the 3 articles it was for. |
+
+Neither G1 nor G2 has ever fired: 7 of 7 stored `duplicate_body` rows are
+labelled correctly and no grounding failure has ever been stored (the
+wording-only retry catches them first). Both were reachable, and both fail
+quietly, which is this stage's recurring shape.
+
+Not from this audit, found while running the suite on 2026-09-29:
+`test_unit_trial_quality.py::test_sample_article_quality_tracks_js_only_count`
+fails on an early-return path in `sample_article_quality` that omits
+`js_only_count`, which the other two return sites set. Pre-existing, unrelated
+to stage 2, unowned.
+
 ## ⑥ Do the 2026-09-19 fixes still hold?
 
 Each fix was reverted by hand and the suite re-run. Seven are protected:

@@ -484,3 +484,68 @@ class TestMainRecordsDeclines:
         _, _, calls = self._run(tmp_path, monkeypatch, [ark], {"ark2": body},
                                 {"insufficient_content": True, "reason": "r", "_model": "m", "_usage": {}})
         assert calls == ["ark2"]
+
+
+class TestCodeWrittenDeclinesKeepTheirLabel:
+    """A decline this file writes itself must not have its label guessed back.
+
+    failure_labels.classify_analysis_decline matches an ORDERED regex list
+    against free text: the first rule that matches wins. That is the right
+    tool for a reason a model wrote, and the wrong one for a reason we built,
+    because two of the labels it can return are load-bearing:
+
+      duplicate_body   publish.py drops the row, so the same body is not
+                       published twice
+      grounding_failed _should_analyze re-queues the row when the rules change
+
+    Both were stealable. duplicate_reason interpolates the other article's
+    title, so an article called "Why Only A Title Is Not Enough" matched the
+    title_only rule, which sits above duplicate_body. grounding_reason quotes
+    up to 80 characters of the rejected summary, so a summary calling itself
+    "only a title" did the same. Neither failure says anything: the page just
+    shows the body twice, and the re-queue silently never happens.
+    """
+
+    HOSTILE_TITLE = "Why Only A Title Is Not Enough"
+
+    def test_a_duplicate_body_keeps_its_label_when_the_owner_title_is_hostile(
+            self, tmp_path, monkeypatch):
+        """End to end: two rows, one body, and the owner named in the reason."""
+        owner = dict(TestMainRecordsDeclines.ART, id="d1", title=self.HOSTILE_TITLE)
+        copy = dict(TestMainRecordsDeclines.ART, id="d2", title="A Second Listing",
+                    url="https://x/2")
+        body = TestGroundingCheckRules.BODY
+        _, rows, _ = TestMainRecordsDeclines()._run(
+            tmp_path, monkeypatch, [owner, copy], {"d1": body, "d2": body},
+            {"summary_en": "s", "summary_zh": "s", "themes": ["Equities/Value"],
+             "key_takeaway_en": "k", "key_takeaway_zh": "k", "_model": "m", "_usage": {}})
+        declined = [r for r in rows if r.get("analysis_status") == "insufficient_content"]
+        assert len(declined) == 1, "the second copy of one body should be declined"
+        assert self.HOSTILE_TITLE in declined[0]["analysis_reason"], "wrong reason under test"
+        assert declined[0]["analysis_label"] == "duplicate_body", (
+            "the owner's title stole the label; publish.py would publish this body twice")
+
+    def test_a_grounding_failure_keeps_its_label_when_the_summary_is_hostile(self, monkeypatch):
+        """The quoted fragment of the rejected summary must not steal it."""
+        hostile = dict(TestGroundingCheckRules.SUMMARY,
+                       summary_en="This article, which is only a title and a redirect, "
+                                  "provides no substantive analysis of anything at all.")
+        reply = json.dumps(hostile)
+        TestWordingOnlyRetry()._chain(monkeypatch, {
+            "gpt-5.6-luna": [reply], "gpt-4.1-mini": [reply]})
+        out = aa._analyze_with_fallback(TestGroundingCheckRules.BODY, {"OPENAI_API_KEY": "k"})
+        assert out.get("insufficient_content"), "the hostile summary should be rejected"
+        article = {"id": "g1", "content_status": "ok", "summarized": False}
+        aa._record_insufficient(article, out)
+        assert "only a title" in article["analysis_reason"], "wrong reason under test"
+        assert article["analysis_label"] == aa.RULE_MADE_DECLINE, (
+            "the quoted summary stole the label; the row would never be re-queued")
+        assert aa._should_analyze(dict(article, analysis_code_version="older")) is True
+
+    def test_the_classifier_still_reads_what_a_model_wrote(self, tmp_path, monkeypatch):
+        """The declared label is for our own reasons only, not a blanket bypass."""
+        _, rows, _ = TestMainRecordsDeclines()._run(
+            tmp_path, monkeypatch, [dict(TestMainRecordsDeclines.ART)], {"a1": "Source: Bloomberg."},
+            {"insufficient_content": True, "_model": "m", "_usage": {},
+             "reason": "The text consists only of repeated chart source notes"})
+        assert rows[0]["analysis_label"] == "chart_notes_only"
