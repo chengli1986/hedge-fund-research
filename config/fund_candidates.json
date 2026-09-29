@@ -87,7 +87,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.97,
-    "notes": "RECOMMEND: proprietary quant research, active Aug 2026",
+    "notes": "Data-driven quant research, low frequency (quarterly)",
     "research_links": [
       {
         "url": "https://www.deshaw.com/library",
@@ -106,19 +106,18 @@
       "article_signals": 1
     },
     "screening_reason": "Insufficient article index signals",
-    "last_deep_analyzed_at": "2026-08-30T01:01:39Z",
+    "last_deep_analyzed_at": "2026-09-29T01:00:46Z",
     "quality": "HIGH",
-    "topics": "quant, portfolio management, equity, macro, credit, interest rates",
+    "topics": "quant, equities, macro, portfolio construction",
     "reject_reason": "no_public_research",
     "rejected_at": "2026-04-12T19:21:09.876510+08:00",
     "strategy_tags": [
       "quant",
-      "macro",
       "equity",
-      "fixed_income"
+      "macro"
     ],
     "source": "auto_discovered",
-    "quality_score": 0.9,
+    "quality_score": 0.85,
     "synthesis_attempted_at": "2026-05-17T08:30:42.494662+00:00",
     "synthesis_outcome": "success",
     "requires_playwright": true,
@@ -1672,20 +1671,19 @@
     "source": "manual",
     "status": "promoted",
     "strategy_tags": [
-      "quant",
       "equity",
-      "multi_asset",
-      "emerging_markets"
+      "quant",
+      "fixed_income"
     ],
-    "notes": "Quant/PE research stalled 4mo, no article since May 2026",
+    "notes": "Weekly free research; latest seen May 2026, recheck",
     "official_domain": "verdadcap.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-04-29T09:00:09.051367+08:00",
-    "last_deep_analyzed_at": "2026-08-30T01:01:39Z",
-    "quality": "MEDIUM",
-    "quality_score": 0.55,
-    "topics": "quant, value investing, factor investing, global equity, Japan, private equity",
+    "last_deep_analyzed_at": "2026-09-29T01:00:46Z",
+    "quality": "HIGH",
+    "quality_score": 0.78,
+    "topics": "factor investing, credit, equities, Japan",
     "status_since": "2026-04-29T09:00:09.051367+08:00"
   },
   {
@@ -2903,8 +2901,8 @@
     "status": "promoted",
     "strategy_tags": [
       "private_credit",
-      "real_assets",
-      "private_equity"
+      "private_equity",
+      "real_assets"
     ],
     "research_url": "https://www.blueowl.com/insights",
     "official_domain": "www.blueowl.com",
@@ -2923,7 +2921,7 @@
     "status_since": "2026-08-06T09:03:11.081278+08:00",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-07-30T09:00:10.684084+08:00",
-    "notes": "RECOMMEND: sample confirms substantive research; live, quality=0.72",
+    "notes": "Monthly private markets thought leadership, some marketing",
     "is_publicly_accessible": true,
     "has_article_index": true,
     "last_screened_at": "2026-07-30T09:00:13.428935+08:00",
@@ -2940,10 +2938,10 @@
     "screening_reason": "Research index detected",
     "fit_score": 0.925,
     "last_validated_at": "2026-07-30T09:00:18.054065+08:00",
-    "last_deep_analyzed_at": "2026-08-29T01:10:00Z",
+    "last_deep_analyzed_at": "2026-09-29T01:00:46Z",
     "quality": "MEDIUM",
-    "quality_score": 0.68,
-    "topics": "private credit, real assets, private equity, GP strategic capital",
+    "quality_score": 0.62,
+    "topics": "private markets, credit, real assets, PE",
     "synthesis_priority": true,
     "synthesis_priority_set_at": "2026-08-06T09:03:11.081305+08:00",
     "synthesis_attempted_at": "2026-08-06T01:05:19.362016+00:00",
@@ -2959,7 +2957,8 @@
     "status": "promoted",
     "strategy_tags": [
       "fixed_income",
-      "macro"
+      "macro",
+      "multi_asset"
     ],
     "research_url": "https://www.loomissayles.com/insights/",
     "rss_url": "https://www.loomissayles.com/feed/",
@@ -3049,11 +3048,11 @@
     "status_since": "2026-08-08T09:02:21.620976+08:00",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-07-30T09:02:50.327072+08:00",
-    "last_deep_analyzed_at": "2026-08-29T01:10:00Z",
-    "quality": "MEDIUM",
-    "quality_score": 0.6,
-    "topics": "fixed income, credit, macro, municipal bonds",
-    "notes": "RECOMMEND: sample confirms substantive research; live, quality=0.64",
+    "last_deep_analyzed_at": "2026-09-29T01:00:46Z",
+    "quality": "HIGH",
+    "quality_score": 0.8,
+    "topics": "fixed income, macro, securitized credit, insurance",
+    "notes": "RECOMMEND: Frequent fixed income/macro research, free",
     "is_publicly_accessible": true,
     "has_article_index": true,
     "last_screened_at": "2026-08-01T09:00:11.611862+08:00",
@@ -3435,7 +3434,7 @@
     "official_domain": "www.fulcrumasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-28T09:00:12.607816+08:00",
+    "last_discovered_at": "2026-09-29T09:00:10.310889+08:00",
     "status_since": "2026-08-22T09:03:32.572404+08:00",
     "last_deep_analyzed_at": "2026-09-28T01:01:31Z",
     "quality": "MEDIUM",
@@ -3550,7 +3549,7 @@
     "official_domain": "www.muzinich.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-28T09:00:12.925801+08:00",
+    "last_discovered_at": "2026-09-29T09:00:10.697180+08:00",
     "status_since": "2026-08-25T09:03:39.585223+08:00",
     "quality": "HIGH",
     "quality_score": 0.78,
@@ -3577,7 +3576,7 @@
     "official_domain": "www.cfm.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-28T09:00:13.131237+08:00"
+    "last_discovered_at": "2026-09-29T09:00:10.895271+08:00"
   },
   {
     "id": "northleaf-capital",
@@ -3710,7 +3709,7 @@
     "official_domain": "www.grahamcapital.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-28T09:00:13.300686+08:00",
+    "last_discovered_at": "2026-09-29T09:00:11.030710+08:00",
     "status_since": "2026-09-05T09:04:28.857065+08:00",
     "last_deep_analyzed_at": "2026-09-23T01:02:52Z",
     "quality": "HIGH",
