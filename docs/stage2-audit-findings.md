@@ -156,6 +156,58 @@ refactor touching the 35 sources on the shared path cannot be shown to
 have changed nothing, and "it looked fine" is not the standard this
 pipeline holds elsewhere.
 
+## C2 re-derived, 2026-09-30 — the orphans have three causes, not two
+
+The original entry guessed from mtime clustering. Each of the 35 files was
+traced instead: its body fingerprinted against every referenced file, and its
+source URL recovered from `logs/fetch_content.log`, where the
+`fetching article page <url>` line precedes the `saved N chars to <id>.txt`
+line. 31 of 35 could be attributed that way. The id formula was self-checked
+against a live row before being trusted (`sha256("lazard-am:<url>")[:16]`
+reproduces that row's id exactly).
+
+| Cause | Files | Disposition |
+| --- | --- | --- |
+| **A body already in the store under another id.** Byte-identical to a referenced file. | 16 | Redundant. Safe to delete. |
+| **The row is gone and this .txt is the only copy left.** Its URL appears in no stored row. 161 KB. | 17 | A decision, not a cleanup — see below. |
+| **Written by something that was not the nightly pipeline** — one is literally `content/test-amundi.txt`, one has no log trace and was written 2026-09-15 11:58 UTC, a daytime hour. | 2 | Audit C3, caught in the act. Safe to delete. |
+
+**Why the rows went missing.** `jsonl_store.rewrite_rows` gained
+`_carry_over_unseen` on 2026-09-21, in a commit titled *"lock the article
+store, and stop losing a night's paid work"*: stages 2 and 3 read the store,
+work for minutes, then rewrite it from what they read, so a row appended in
+between was dropped. **No orphan file was written after 2026-09-21** — the
+newest is 2026-09-15. That is the strongest available evidence that this was
+the mechanism and that it has stopped. It is not proof for each of the 17
+individually: their rows are gone, the mechanism existed while they were
+written, and nothing has been lost since it was fixed.
+
+Two details that rule out the obvious alternatives. There is no retention or
+pruning anywhere — the oldest stored row is dated 2015-08-01 — so age did not
+remove them. And `disk-cleaner` does not touch `content/`; it names GMIA only
+in a comment about Chromium.
+
+**A URL-scheme change is in the picture but is not the cause.** Lazard
+accounts for 15 of the 35. Its old URLs were
+`/content/lam/us/en_us/…/behind-the-headlines/june-26-2026.html`; every
+current row is `/us/en_us/…`. A scheme change alone gives new ids and leaves
+the old rows in place, which is exactly what pgim did — 19 rows with
+`/content/pgim/` URLs are still stored, from a source that has left
+`sources.json` entirely. Zero `/content/lam/` rows survive. The asymmetry is
+the point: lazard's old rows were removed, pgim's were not.
+
+**Still unexplained.** The 2026-09-26 audit counted 45 files; there are 35.
+Ten went away between then and now and nothing records what removed them. Not
+worth chasing — but it is why the disposition below should be a deliberate
+act with a note, rather than another silent change.
+
+**Open decision** on the 17. They are unreferenced, so keeping them changes
+nothing and deleting them changes nothing — unless the rows are rebuilt. That
+is feasible but not free: the id, the URL and the body are all recoverable,
+the title and date are not, though several lazard slugs carry their own date
+(`june-26-2026.html`). Restoring would put articles back on the published
+page that have been absent for weeks.
+
 ## Batch 1, 2026-09-30 — "looks protective, is not"
 
 Six items picked because they share a shape and none of them changes what
