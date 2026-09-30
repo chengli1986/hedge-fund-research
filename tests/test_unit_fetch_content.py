@@ -8,7 +8,6 @@ import pytest
 
 from fetch_content import (
     _validate_pdf_response,
-    _validate_json_response,
     _normalize_html,
     drain_extraction_paths,
     _check_min_content_length,
@@ -51,23 +50,11 @@ class TestValidatePdfResponse:
         assert _validate_pdf_response(200, None, 5000) is False
 
 
-# ---------------------------------------------------------------------------
-# _validate_json_response
-# ---------------------------------------------------------------------------
-
-class TestValidateJsonResponse:
-    def test_rejects_html_error_page(self):
-        assert _validate_json_response("<html><body>Error</body></html>") is False
-
-    def test_rejects_html_with_whitespace(self):
-        assert _validate_json_response("  <html>") is False
-
-    def test_accepts_valid_json(self):
-        assert _validate_json_response('{"key": "value"}') is True
-        assert _validate_json_response('[1, 2, 3]') is True
-
-    def test_rejects_invalid_json(self):
-        assert _validate_json_response("not json at all") is False
+# _validate_json_response and its five tests were removed 2026-09-30 (audit
+# A4): the function had no caller anywhere, and stage 2 parses no JSON --
+# `.json()` appears zero times in fetch_content.py, because the JSON APIs
+# (jpmam, mfs) are stage 1's. A tested function reads as a maintained one,
+# so the tests were the reason nobody noticed.
 
 
 # ---------------------------------------------------------------------------
@@ -262,21 +249,13 @@ class TestContentStatusOnFailure:
 
 
 class TestContentDeadLetterCap:
-    def test_failure_increments_attempts_and_stays_failed_below_cap(self):
-        a = {"id": "x", "title": "t"}
-        for i in range(1, MAX_CONTENT_ATTEMPTS):
-            status = mark_content_failure(a)
-            assert a["content_attempts"] == i
-            assert status == "failed"
-            assert "content_permafailed_at" not in a
-
-    def test_reaches_cap_retires_to_permafail(self):
-        a = {"id": "x", "title": "t", "content_attempts": MAX_CONTENT_ATTEMPTS - 1}
-        status = mark_content_failure(a)
-        assert status == "permafail"
-        assert a["content_status"] == "permafail"
-        assert a["content_attempts"] == MAX_CONTENT_ATTEMPTS
-        assert a.get("content_permafailed_at")  # stamped
+    """Removed 2026-09-30 (audit D5). The two tests here called
+    mark_content_failure with no labelled failure -- a branch no production
+    caller ever took, because _record_content_failure labels every failure
+    first -- and asserted a retirement at MAX_CONTENT_ATTEMPTS that
+    production therefore could not reach. Retirement is per label now:
+    tests/test_retry_policy.py and TestF4TheAttemptCapIsPerLabel in
+    tests/test_audit_stage2.py cover the rules that do run."""
 
     def test_permafail_and_terminal_statuses_drop_out_of_pending(self):
         src = next(iter(CONTENT_FETCHERS))  # a source that HAS a fetcher

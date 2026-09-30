@@ -204,3 +204,17 @@ class TestAnalysisDecline:
         assert set(fl.ANALYSIS_DECLINE_LABELS) >= {
             "title_only", "duplicate_body", "grounding_failed", "disclaimer_only",
             "navigation_or_login_wall", "chart_notes_only", "teaser_only", "wrong_document", "other_declined"}
+
+
+def test_every_content_label_has_a_retry_policy():
+    """A label with no RETRY_POLICY entry silently falls back to a generic
+    one-day, five-attempt rule (mark_content_failure's `policy` default).
+    That fallback exists so a missing entry cannot crash a nightly run, not
+    so a new label can quietly inherit someone else's retry behaviour: the
+    whole point of the taxonomy is that a video page and a Cloudflare block
+    are retried differently. Adding a label means choosing its policy.
+    """
+    missing = set(fl.CONTENT_FAILURE_LABELS) - set(fl.RETRY_POLICY)
+    assert not missing, f"no retry policy chosen for: {sorted(missing)}"
+    extra = set(fl.RETRY_POLICY) - set(fl.CONTENT_FAILURE_LABELS)
+    assert not extra, f"retry policy for a label that does not exist: {sorted(extra)}"

@@ -192,12 +192,36 @@ class TestF3EveryCapturedMessageIsEvidence:
     Playwright timeouts and then "all attempts failed, giving up" -- the last
     line hid the two informative ones and the night was body_too_short."""
 
+    # Audit F1, 2026-09-30: the case below is NOT a guard for the reversed
+    # scan. Commit 53fcf4f did two things at once -- it added "all attempts
+    # failed" to _ERROR_MESSAGE and it started scanning every message -- and
+    # the T. Rowe Price night is fixed by the first alone, because its last
+    # line matches the new pattern by itself. Reverting the scan left the
+    # suite green. The shape that separates them is an informative error
+    # followed by an uninformative last line, which is what the two tests
+    # after it use.
+
     def test_a_double_playwright_timeout_is_fetch_error(self):
         label, _ = _classify(messages=[
             "  T.Rowe Price: Playwright attempt 1 failed: Page.goto: Timeout 30000ms exceeded.",
             "  T.Rowe Price: Playwright attempt 2 failed: Page.goto: Timeout 30000ms exceeded.",
             "  T.Rowe Price: all attempts failed, giving up"])
         assert label == "fetch_error"
+
+    def test_an_error_before_an_uninformative_last_line_still_counts(self):
+        """The real shape: the extractor's closing line says nothing."""
+        label, detail = _classify(messages=[
+            "  Robeco: Playwright attempt 1 failed: Page.goto: Timeout 30000ms exceeded.",
+            "  Robeco: no article body found"])
+        assert label == "fetch_error", "the timeout two lines back is the cause"
+        assert "Timeout" in detail, "the detail must be the line that says why"
+
+    def test_a_pdf_error_before_an_uninformative_last_line_still_counts(self):
+        label, detail = _classify(messages=[
+            "  MetLife: PDF extraction failed https://m/x.pdf: EOF marker not found",
+            "  MetLife: no article body found"])
+        assert label == "pdf_not_usable"
+        assert "EOF marker" in detail
 
     def test_a_failed_pdf_download_is_fetch_error(self):
         label, _ = _classify(messages=["  Oaktree: failed to download PDF: HTTPSConnectionPool(...): Read timed out."])

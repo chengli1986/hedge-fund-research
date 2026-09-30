@@ -101,17 +101,6 @@ def _validate_pdf_response(status_code: int, content_type: str, content_length: 
     return True
 
 
-def _validate_json_response(text: str) -> bool:
-    """Reject if text starts with '<' (HTML error page), else try json.loads."""
-    if text.strip().startswith("<"):
-        return False
-    try:
-        json.loads(text)
-        return True
-    except (json.JSONDecodeError, ValueError):
-        return False
-
-
 # Every labelled content-fetch failure, one JSON line each (see failure_labels).
 CONTENT_FAILURE_LOG = BASE_DIR / "logs" / "content-failures.jsonl"
 
@@ -2486,16 +2475,25 @@ def is_content_pending(article: dict, source_filter: Optional[str] = None,
     return True
 
 
-def mark_content_failure(article: dict, max_attempts: int = MAX_CONTENT_ATTEMPTS,
-                         failure: Optional[dict] = None, now: Optional[datetime] = None) -> str:
+def mark_content_failure(article: dict, failure: dict,
+                         max_attempts: int = MAX_CONTENT_ATTEMPTS,
+                         now: Optional[datetime] = None) -> str:
     """Record one content-fetch failure and return the new content_status.
 
-    Without a labelled `failure`: the original rule -- retire to permafail at
-    max_attempts. With one, failure_labels.RETRY_POLICY for its label decides
-    the wait before the next attempt (content_retry_after), the attempt cap,
-    and an early retirement after consecutive same-label failures; the
-    failure is stored as content_failure with a same-label streak and this
-    file's CODE_VERSION."""
+    failure_labels.RETRY_POLICY for the failure's label decides the wait
+    before the next attempt (content_retry_after), the attempt cap, and an
+    early retirement after consecutive same-label failures; the failure is
+    stored as content_failure with a same-label streak and this file's
+    CODE_VERSION.
+
+    `failure` is required. It used to default to None, which selected an
+    older rule -- retire at max_attempts, counting every attempt whatever
+    went wrong. No production caller ever took that branch, because
+    _record_content_failure labels every failure before recording it, but
+    two tests did, and asserted a retirement production could not reach
+    (audit D5). max_attempts survives as the cap for a label with no entry
+    in RETRY_POLICY; test_every_content_label_has_a_retry_policy keeps that
+    from happening quietly."""
     import failure_labels
 
     now = now or datetime.now(BJT)
@@ -2504,28 +2502,32 @@ def mark_content_failure(article: dict, max_attempts: int = MAX_CONTENT_ATTEMPTS
     was_permafail = article.get("content_status") == "permafail"
     attempts = int(article.get("content_attempts", 0)) + 1
     article["content_attempts"] = attempts
-    if failure is None:
-        retire = attempts >= max_attempts
-    else:
-        label = failure.get("label")
-        policy = failure_labels.RETRY_POLICY.get(label, {"backoff_days": [1], "max_attempts": max_attempts})
-        previous = article.get("content_failure") or {}
-        streak = int(previous.get("streak", 0)) + 1 if previous.get("label") == label else 1
-        article["content_failure"] = {**failure, "at": now.isoformat(timespec="seconds"),
-                                      "attempt": attempts, "streak": streak,
-                                      "code_version": code_version_for(article)}
-        # The label's cap counts failures under that label, like its
-        # retire_streak: compared with the lifetime count, fetch_error x3 and
-        # then one 403 retired the article after a single block, under a
-        # label nothing ever requeues (audit F4).
-        retire = (was_permafail
-                  or streak >= policy["max_attempts"]
-                  or streak >= policy.get("retire_streak", float("inf"))
-                  or attempts >= ATTEMPT_CEILING)
-        if not retire:
-            backoff = policy["backoff_days"]
-            wait = backoff[min(streak, len(backoff)) - 1]
-            article["content_retry_after"] = (now + timedelta(days=wait)).isoformat(timespec="seconds")
+    label = failure.get("label")
+    policy = failure_labels.RETRY_POLICY.get(label, {"backoff_days": [1], "max_attempts": max_attempts})
+    previous = article.get("content_failure") or {}
+    streak = int(previous.get("streak", 0)) + 1 if previous.get("label") == label else 1
+    article["content_failure"] = {**failure, "at": now.isoformat(timespec="seconds"),
+                                  "attempt": attempts, "streak": streak,
+                                  "code_version": code_version_for(article)}
+    # The label's cap counts failures under that label, like its
+    # retire_streak: compared with the lifetime count, fetch_error x3 and
+    # then one 403 retired the article after a single block, under a
+    # label nothing ever requeues (audit F4).
+    #
+    # ATTEMPT_CEILING is not redundant with those two, though audit D6 said
+    # it was and proposed deleting it. streak resets whenever the label
+    # changes, so an article that alternates labels -- fetch_error, block,
+    # fetch_error -- holds streak at 1 forever and neither cap ever fires.
+    # The ceiling is the only thing that retires it. 2 of the 10 articles
+    # with a failure history have changed label at least once.
+    retire = (was_permafail
+              or streak >= policy["max_attempts"]
+              or streak >= policy.get("retire_streak", float("inf"))
+              or attempts >= ATTEMPT_CEILING)
+    if not retire:
+        backoff = policy["backoff_days"]
+        wait = backoff[min(streak, len(backoff)) - 1]
+        article["content_retry_after"] = (now + timedelta(days=wait)).isoformat(timespec="seconds")
     if retire:
         article["content_status"] = "permafail"
         # setdefault: a permafail re-tried after a code change and retired

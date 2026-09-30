@@ -2,10 +2,10 @@
 
 Evidence gathered 2026-09-26, read-only; A5 and A6 added 2026-09-27 while
 fixing F2 and A1. Twenty-five findings and one observation. Fixed: F2, D4, A1, A6, A2, G1,
-G2. Mitigated: A3 (see the deferred-unification section). Recorded
-without a fix by decision: G3, G4. Fifteen remain open; each open item
-was re-verified on 2026-09-30 and two had drifted -- see the notes on
-C2 and D5. Stage 2 is healthy while this is written — 1,526 of 1,585 rows
+G2, and -- in the 2026-09-30 batch below -- F1, D5, C1, A4, half of A5.
+Mitigated: A3 (see the deferred-unification section). Rejected on the
+evidence: G4, D6. Recorded without a fix by decision: G3. Nine remain
+open: A5 (the code half), B1, B2, C2, C3, D1, D2, E1, E2, E3. Stage 2 is healthy while this is written — 1,526 of 1,585 rows
 have a body (96.3%), and of 89 rows ingested in the last week only 2 have
 none — so none of this is firefighting. Every item is about what the stage
 does when something changes, or about a mechanism that looks protective and
@@ -155,6 +155,20 @@ HTML once and replays it into both code versions. Until that exists, a
 refactor touching the 35 sources on the shared path cannot be shown to
 have changed nothing, and "it looked fine" is not the standard this
 pipeline holds elsewhere.
+
+## Batch 1, 2026-09-30 — "looks protective, is not"
+
+Six items picked because they share a shape and none of them changes what
+the pipeline does at night. Two outcomes were not what the audit predicted.
+
+| ID | Outcome |
+| --- | --- |
+| **D6** | **Rejected. The finding was wrong.** `ATTEMPT_CEILING = 12` is not redundant: `streak` resets whenever the label changes, so an article alternating labels (fetch_error, block, fetch_error…) holds streak at 1 forever and neither per-label cap ever fires. Simulated: it retires at attempt 12 and only because of the ceiling. 2 of the 10 articles with a failure history have changed label at least once. It is also *already* guarded — `test_alternating_labels_hit_the_lifetime_ceiling` goes red when the clause is deleted, which is how a live backstop came to be written up as dead code. |
+| **F1** | **Fixed.** The real gap was narrower than "F3 has no guard". Commit `53fcf4f` did two things at once: it added "all attempts failed" to `_ERROR_MESSAGE` *and* started scanning every captured message. The T. Rowe Price night is fixed by the pattern alone, because its last line matches the new pattern by itself — so the existing test passes either way. The shape that separates them is **an informative error followed by an uninformative last line** (`Playwright timeout…`, then `no article body found`): scanning gives `fetch_error` with the timeout as detail, last-message-only gives `unknown`. Two tests added, one for `_ERROR_MESSAGE` and one for `_PDF_MESSAGE`; both go red under the reverted scan. |
+| **D5** | **Fixed.** `failure` is now a required argument, so the `failure=None` branch and the two tests asserting a retirement production could not reach are gone. `MAX_CONTENT_ATTEMPTS` survives as the cap for a label with no `RETRY_POLICY` entry, and a new test (`test_every_content_label_has_a_retry_policy`) keeps that fallback from quietly becoming a road. |
+| **C1** | **Fixed as an invariant, not as a defect.** All 1,548 rows carrying a `content_path` have it equal to `content/<id>.txt`, so the field holds no information and the 10 rows without one are harmless. What matters is that the two readers disagree about whether to read it: stage 3 honours the stored value, `content_audit.py:174` derives its own. A guard test pins the invariant, plus a second test that the checker rejects a bad path before it is trusted against real data. |
+| **A4** | **Fixed.** `_validate_json_response` and its five tests deleted. No caller anywhere; stage 2 parses no JSON. |
+| **A5** | **Half fixed.** `.claude/CLAUDE.md` claimed `MODEL_CHAIN = Gemini 2.5 Pro → GPT-4.1 Mini → Claude Sonnet`; all three names are wrong and so is the provider count. Corrected to `gpt-5.6-luna → gpt-4.1-mini`, both OpenAI, with the single-provider fact stated. Two other claims in that file were stale too: "34 hedge funds" (42) and "714 passing" (2015). **Open:** `_call_anthropic` is a working client for a second provider that `model_to_caller` does not list, and no `ANTHROPIC_API_KEY` is configured, so wiring it today would only log "Skipping". Delete it or fund it — a resilience trade-off, not a cleanup. |
 
 ## ⑧ Observations from the 2026-09-30 email — checked, no action
 

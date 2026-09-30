@@ -1,14 +1,14 @@
 # Hedge Fund Research (GMIA)
 
 ## Overview
-GMIA (Global Market Insight Aggregator) tracks research/commentary from 34 top
+GMIA (Global Market Insight Aggregator) tracks research/commentary from 42 top
 hedge funds, summarizes each article via LLM, and publishes a bilingual (CN/EN)
 HTML dashboard. Stack: Python 3.12; requests + BeautifulSoup for SSR sites,
 Playwright (Chromium) for JS/CSR sites; multi-model LLM chain for summaries.
 
 ## Develop / Test
 ```bash
-python3 -m pytest tests/ -q                       # 714 passing, 15 deselected
+python3 -m pytest tests/ -q                       # 2016 collected, 16 deselected
 bash run_pipeline.sh                              # full 4-stage pipeline
 python3 fetch_articles.py --list                  # list configured sources
 python3 fetch_articles.py --source <id> --dry-run # one source, no save
@@ -20,7 +20,7 @@ python3 fetch_articles.py --source <id> --dry-run # one source, no save
 Daily 4-stage pipeline (`run_pipeline.sh`):
 1. `fetch_articles.py` — scrape metadata (title/url/date), dedup, write `data/articles.jsonl`
 2. `fetch_content.py` — download + normalize full text → `content/*.txt`
-3. `analyze_articles.py` — CN+EN summaries; `MODEL_CHAIN` = Gemini 2.5 Pro → GPT-4.1 Mini → Claude Sonnet (fallback)
+3. `analyze_articles.py` — CN+EN summaries; `MODEL_CHAIN` = **gpt-5.6-luna → gpt-4.1-mini**, both OpenAI. Gemini was removed 2026-09-21, so the chain has **one provider**: `_call_anthropic` exists but is not in `model_to_caller`, and no `ANTHROPIC_API_KEY` is configured, so there is no cross-provider fallback (audit A5)
 4. `publish.py` — render bilingual HTML dashboard + fund-profile cards
 
 Source-acquisition lifecycle (status machine in `config/fund_candidates.json`):

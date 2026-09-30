@@ -482,3 +482,43 @@ def test_every_source_declares_expected_hostname():
         "The fetchers read source['expected_hostname'] directly and will "
         "KeyError; add the field rather than restoring a default in code."
     )
+
+
+# ── audit C1: content_path carries no information beyond the id ─────────────
+
+def _path_disagreements(rows):
+    """Rows whose content_path is not exactly the path its id implies."""
+    return [(r.get("id"), r.get("content_path")) for r in rows
+            if r.get("content_path")
+            and str(r["content_path"]) != f"content/{r.get('id')}.txt"]
+
+
+def test_the_checker_rejects_a_path_the_id_does_not_imply():
+    """Test the check before trusting it against real data."""
+    assert _path_disagreements([{"id": "abc", "content_path": "content/abc.txt"}]) == []
+    assert _path_disagreements([{"id": "abc"}]) == []          # absent is not a disagreement
+    assert _path_disagreements([{"id": "abc", "content_path": "content/other.txt"}])
+    assert _path_disagreements([{"id": "abc", "content_path": "/tmp/abc.txt"}])
+
+
+def test_stored_content_paths_are_derivable_from_the_id():
+    """content_path must stay a restatement of the id, because its two
+    readers disagree about whether to read it at all.
+
+    Audit C1 measured this: all 1,548 rows that carry a content_path have it
+    equal to content/<id>.txt, so today the field holds no information. That
+    is not a reason to relax -- it is the reason the invariant is safe to
+    rely on, and two consumers already do. Stage 3's _resolve_content_path
+    honours the stored value; scripts/content_audit.py line 174 ignores it
+    and derives stored_dir/<id>.txt. The day a writer stores a different
+    path, those two read different files and neither says so: the audit
+    would compare last night's fetch against some other article's body.
+
+    Ten rows say content_status ok and carry no path at all. That is
+    harmless for the same reason -- both readers can derive it -- so an
+    absent path is not a disagreement here.
+    """
+    rows = [json.loads(line) for line in
+            (REPO / "data" / "articles.jsonl").read_text().splitlines() if line.strip()]
+    bad = _path_disagreements(rows)
+    assert not bad, f"{len(bad)} rows whose content_path is not content/<id>.txt: {bad[:5]}"
