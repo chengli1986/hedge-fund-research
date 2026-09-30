@@ -153,6 +153,43 @@ refactor touching the 35 sources on the shared path cannot be shown to
 have changed nothing, and "it looked fine" is not the standard this
 pipeline holds elsewhere.
 
+## ⑧ Observations from the 2026-09-30 email — checked, no action
+
+Nothing was wrong with it. Recorded so the same three things are not
+re-investigated from scratch.
+
+**The `unknown` retry earned its keep.** The bridgewater row that appeared as
+`unknown×1` on 9-28 and 9-29 was gone on 9-30 -- not retired, **recovered**:
+31,309 characters, summarised, counter cleared, on attempt 3 of 3 (`9-26` →
+`9-28` → `9-30`). The failure was transient, and `"no article body found or
+page looks gated"` never said otherwise. Two decisions are vindicated by this
+one row: relabelling it `unknown` instead of asserting `body_too_short`, and
+keeping `unknown` `code_dependent` with `max_attempts: 3` rather than treating
+an unexplained failure as deterministic. Had it been retired at attempt 2 the
+article was lost. Cf. audit D1: the code-change requeue is the only mechanism
+that has ever recovered an article.
+
+**The table counts configured sources only — the 28-vs-29 gap is correct.**
+`articles.jsonl` holds 28 `permafail` plus 1 `failed`, but the email's "目前未
+取得正文" sums to 28. The missing row is pgim, a source that left
+`sources.json`; 19 of its rows are still stored. All three places agree:
+`failure_stats` filters by `configured`, `publish.py:690` drops articles whose
+source has left the config, and the published page contains the string "pgim"
+zero times. No orphan data reaches a reader.
+
+**ares: the declared frequency is looser than the observed one, and that is a
+known, deliberate ambiguity.** The WARN prints its own tension -- `frequency=
+weekly, threshold 30d` beside `median gap 2d` -- so a source whose real rhythm
+is two days went 35 days before anyone was told. `_observed_cadence_note`
+exists precisely to surface this, and its docstring already says why it is a
+hint and not a reclassification: the fetch carries only the most-recent
+`max_articles`, so ares's "2d" is one August burst, not a rate. Reclassifying
+ares to `daily` (14d) on that evidence would be fitting a threshold to a burst.
+**Left as is on 2026-09-30**, with the tension recorded rather than resolved:
+changing a value whose correct setting is unknown is worse than keeping a
+value known to be loose. Revisit only with a cadence measured over full
+history rather than one page of listings.
+
 ## Where to start
 
 **D4 with A1.** They are two halves of one engine: the extractor says
