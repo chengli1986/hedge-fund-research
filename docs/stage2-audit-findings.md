@@ -1,8 +1,11 @@
 # Stage 2 (fetch_content) design audit — findings
 
 Evidence gathered 2026-09-26, read-only; A5 and A6 added 2026-09-27 while
-fixing F2 and A1. Twenty-one findings and one observation; F2, D4, A1, A6 and A2 are
-fixed, and A3 is mitigated (see the deferred-unification section). Stage 2 is healthy while this is written — 1,526 of 1,585 rows
+fixing F2 and A1. Twenty-five findings and one observation. Fixed: F2, D4, A1, A6, A2, G1,
+G2. Mitigated: A3 (see the deferred-unification section). Recorded
+without a fix by decision: G3, G4. Fifteen remain open; each open item
+was re-verified on 2026-09-30 and two had drifted -- see the notes on
+C2 and D5. Stage 2 is healthy while this is written — 1,526 of 1,585 rows
 have a body (96.3%), and of 89 rows ingested in the last week only 2 have
 none — so none of this is firefighting. Every item is about what the stage
 does when something changes, or about a mechanism that looks protective and
@@ -51,7 +54,7 @@ coverage in the plan; worth its own pass later).
 | ID | Finding | Evidence |
 | --- | --- | --- |
 | **C1** | 10 rows say `content_status: ok` and carry no `content_path`. Nothing breaks only because two consumers fall back to `content/<id>.txt` — stage 3's `_resolve_content_path` and the weekly audit's `old_path`. The field is decorative: a disagreement between it and the disk cannot be detected. | Exhaustive cross-check of 9 combinations; the other 7 are clean (no path escapes, no missing files, no 0-byte files, no permafail keeping a path). |
-| **C2** | 45 orphan files (509 KB) that no row references, and nothing counts or reports them. Two causes: 35 written at 19:47–19:50, the nightly pipeline's own hour, for rows whose id later changed (a host or slug migration that did not rename the file — the case CLAUDE.md warns about); 10 written in one burst at 2026-09-15 06:26. | mtime clustering. |
+| **C2** | *(re-counted 2026-09-30: **35 files, 261 KB**, and the causal story below no longer holds — the 2026-09-15 06:26 burst of 10 is gone and nobody recorded why. Re-derive the cause before acting.)* 45 orphan files (509 KB) that no row references, and nothing counts or reports them. Two causes: 35 written at 19:47–19:50, the nightly pipeline's own hour, for rows whose id later changed (a host or slug migration that did not rename the file — the case CLAUDE.md warns about); 10 written in one burst at 2026-09-15 06:26. | mtime clustering. |
 | **C3** | Writing into the production `content/` directory is a side effect of calling an extractor. The health probe and the weekly audit each monkeypatch `CONTENT_DIR` to defend themselves — the defence is on the caller's side, so any new caller pollutes production by default. Those 10 orphans are what that looks like. | Both defences read in the code. |
 
 ## ④ The retry ledger
@@ -61,7 +64,7 @@ coverage in the plan; worth its own pass later).
 | **D1** | In the traceable range, scheduled retries have rescued nothing. Of 47 articles that ever failed, 7 were later fetched successfully — all seven on 2026-09-15 at 09:55 and 11:25, daytime runs by hand after an extractor was fixed, not the nightly run. Confidence: medium — failure lines before 2026-09-15 carry no article id, so earlier fail→succeed pairs cannot be reconstructed. | 6 months of `logs/fetch_content.log`. |
 | **D2** | The retry policy cannot be replayed. The labelled ledger starts 2026-09-16 (48 records, 10 days) and a row keeps only its **last** failure, as a dict, not a list. This repo's own rule — replay history before choosing a threshold — cannot be applied here. | File inspection. |
 | **D4** | *(fixed 2026-09-27)* `body_too_short` is the classifier's catch-all *and* is marked `code_dependent`, so "we could not tell why" is recorded as "this depends on our code" and every such article is requeued whenever `fetch_content.py` changes. With A1 (40 of 44 extractors silent), that is the churn engine. | The other 8 labels' `code_dependent` flags match their semantics; this one and `pdf_not_usable` are the two judgement calls. |
-| **D5** | `mark_content_failure`'s `failure=None` branch is unreachable in production **and** in the tests — its only caller always passes a labelled failure. So `MAX_CONTENT_ATTEMPTS = 5` and the "retire at max_attempts" rule it guards never run. | grep of every call site. |
+| **D5** | `mark_content_failure`'s `failure=None` branch is unreachable **in production**: its only production caller (`_record_content_failure`) always passes a labelled failure, so `MAX_CONTENT_ATTEMPTS = 5` and the "retire at max_attempts" rule it guards never run. *Corrected 2026-09-30: the original wording said "and in the tests", which is false* — `TestContentDeadLetterCap` calls `mark_content_failure(a)` with no failure and asserts the retirement. That makes it a sharper case, not a weaker one: two green tests assert a rule production cannot reach. | grep of every call site; tests/test_unit_fetch_content.py:268,275. |
 | **D6** | `ATTEMPT_CEILING = 12` cannot change an outcome. Per-label caps are 3–5 and three labels retire at a streak of 2, so another gate always fires first; for a row already retired, the ceiling and `was_permafail` give the same answer. | The policy table, and the gsam rows at attempts=11. |
 | *obs* | After a permafail is requeued by a code change and fails again, its `streak` keeps counting, so "streak 6" reads as six consecutive same-label failures when it is three plus three requeues. Ledger legibility only; no behaviour depends on it. | gsam: attempts 11, streak 6. |
 
