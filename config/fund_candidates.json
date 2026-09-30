@@ -139,7 +139,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.88,
-    "notes": "Monthly private credit/RE commentary; WAF blocks fetch (403)",
+    "notes": "Monthly PC/RE commentary; WAF 403, stays watchlist",
     "research_links": [
       {
         "url": "https://www.blackstone.com/insights/",
@@ -193,7 +193,7 @@
       "article_signals": 3
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-08-28T01:00:39Z",
+    "last_deep_analyzed_at": "2026-09-30T01:00:28Z",
     "quality": "MEDIUM",
     "topics": "private credit, private equity, real assets",
     "strategy_tags": [
@@ -1026,7 +1026,7 @@
     "rss_url": null,
     "official_domain": "www.blackrock.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "Confirmed genuine, free, open weekly commentary; trial score 0.34 still conflicts",
+    "notes": "Free weekly macro; archive is nav hub, trial 0.34",
     "research_links": [
       {
         "url": "https://www.blackrock.com/us/individual/insights/blackrock-investment-institute/weekly-commentary",
@@ -1114,7 +1114,7 @@
     "quality": "MEDIUM",
     "quality_score": 0.48,
     "topics": "macro, fixed income, equity, portfolio construction",
-    "last_deep_analyzed_at": "2026-08-29T01:10:00Z",
+    "last_deep_analyzed_at": "2026-09-30T01:00:28Z",
     "strategy_tags": [
       "macro",
       "multi_asset",
@@ -3434,7 +3434,7 @@
     "official_domain": "www.fulcrumasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-29T09:00:10.310889+08:00",
+    "last_discovered_at": "2026-09-30T09:00:08.589934+08:00",
     "status_since": "2026-08-22T09:03:32.572404+08:00",
     "last_deep_analyzed_at": "2026-09-28T01:01:31Z",
     "quality": "MEDIUM",
@@ -3549,7 +3549,7 @@
     "official_domain": "www.muzinich.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-29T09:00:10.697180+08:00",
+    "last_discovered_at": "2026-09-30T09:00:09.032430+08:00",
     "status_since": "2026-08-25T09:03:39.585223+08:00",
     "quality": "HIGH",
     "quality_score": 0.78,
@@ -3576,7 +3576,7 @@
     "official_domain": "www.cfm.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-29T09:00:10.895271+08:00"
+    "last_discovered_at": "2026-09-30T09:00:09.334004+08:00"
   },
   {
     "id": "northleaf-capital",
@@ -3709,7 +3709,7 @@
     "official_domain": "www.grahamcapital.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-29T09:00:11.030710+08:00",
+    "last_discovered_at": "2026-09-30T09:00:09.959081+08:00",
     "status_since": "2026-09-05T09:04:28.857065+08:00",
     "last_deep_analyzed_at": "2026-09-23T01:02:52Z",
     "quality": "HIGH",
