@@ -183,16 +183,9 @@ class TestAnalyzeWithFallback:
         def mock_openai(prompt, api_key, model="gpt-4.1-mini"):
             raise RuntimeError("down")
 
-        def mock_anthropic(prompt, api_key, model="claude-sonnet-4-6"):
-            raise RuntimeError("down")
-
         monkeypatch.setattr("analyze_articles._call_openai", mock_openai)
-        monkeypatch.setattr("analyze_articles._call_anthropic", mock_anthropic)
 
-        api_keys = {
-            "OPENAI_API_KEY": "fake",
-            "ANTHROPIC_API_KEY": "fake",
-        }
+        api_keys = {"OPENAI_API_KEY": "fake"}
 
         result = _analyze_with_fallback("content", api_keys)
         assert result is None

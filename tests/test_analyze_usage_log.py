@@ -29,10 +29,12 @@ class TestNormalizeUsage:
             "prompt_tokens": 4321, "completion_tokens": 890, "total_tokens": 5211})
         assert u["input_tokens"] == 4321 and u["output_tokens"] == 890
 
-    def test_anthropic_shape(self):
-        u = aa._normalize_usage("claude-sonnet-4-6", {
-            "input_tokens": 4321, "output_tokens": 890})
-        assert u["input_tokens"] == 4321 and u["output_tokens"] == 890
+    # test_anthropic_shape removed 2026-09-30 with the Anthropic client
+    # (audit A5). It was the only case exercising a second field naming
+    # (input_tokens/output_tokens rather than prompt_tokens/completion_tokens);
+    # test_unknown_payload_is_none_not_zero still covers a provider whose
+    # fields _USAGE_FIELDS does not know, which is what actually protects the
+    # accounting.
 
     def test_unknown_payload_is_none_not_zero(self):
         # A provider that renames its fields must surface as unknown, not free.
@@ -187,10 +189,22 @@ class TestProviderTotalIsRecorded:
             "prompt_tokens": 100, "completion_tokens": 20, "total_tokens": 120})
         assert u["provider_total_tokens"] == 120
 
-    def test_missing_provider_total_is_none(self):
-        # Anthropic sends no total; absence must not read as zero.
-        u = aa._normalize_usage("claude-sonnet-4-6", {
+    def test_missing_provider_total_is_none(self, monkeypatch):
+        """A provider that sends no total of its own: absence, not zero.
+
+        This used to pass "claude-sonnet-4-6", the one entry whose total_key
+        was None. That client was deleted on 2026-09-30 (audit A5) and the
+        test kept passing -- for the wrong reason, because an unknown model
+        returns all-None anyway, which test_unknown_payload_is_none_not_zero
+        already covers. Both remaining entries carry "total_tokens", so the
+        `if total_key else None` branch now needs an entry of its own to be
+        exercised at all.
+        """
+        monkeypatch.setitem(aa._USAGE_FIELDS, "no-total-provider",
+                            ("input_tokens", ("output_tokens",), None))
+        u = aa._normalize_usage("no-total-provider", {
             "input_tokens": 100, "output_tokens": 20})
+        assert u["input_tokens"] == 100 and u["output_tokens"] == 20, "the model IS known"
         assert u["provider_total_tokens"] is None
 
 

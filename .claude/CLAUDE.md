@@ -20,7 +20,7 @@ python3 fetch_articles.py --source <id> --dry-run # one source, no save
 Daily 4-stage pipeline (`run_pipeline.sh`):
 1. `fetch_articles.py` — scrape metadata (title/url/date), dedup, write `data/articles.jsonl`
 2. `fetch_content.py` — download + normalize full text → `content/*.txt`
-3. `analyze_articles.py` — CN+EN summaries; `MODEL_CHAIN` = **gpt-5.6-luna → gpt-4.1-mini**, both OpenAI. Gemini was removed 2026-09-21, so the chain has **one provider**: `_call_anthropic` exists but is not in `model_to_caller`, and no `ANTHROPIC_API_KEY` is configured, so there is no cross-provider fallback (audit A5)
+3. `analyze_articles.py` — CN+EN summaries; `MODEL_CHAIN` = **gpt-5.6-luna → gpt-4.1-mini**, both OpenAI. Gemini was removed 2026-09-21 and the unwired `_call_anthropic` on 2026-09-30 (audit A5), so summarisation has **one provider** and no cross-provider fallback. Adding one means a client, a `model_to_caller` entry, a `_USAGE_FIELDS` entry and a key — not just a model name. (The `ANTHROPIC_API_KEY` in `scripts/wrapper-*.sh` is for the Claude Code agent workflows, unrelated to this chain.)
 4. `publish.py` — render bilingual HTML dashboard + fund-profile cards
 
 Source-acquisition lifecycle (status machine in `config/fund_candidates.json`):

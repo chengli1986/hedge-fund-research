@@ -2,10 +2,10 @@
 
 Evidence gathered 2026-09-26, read-only; A5 and A6 added 2026-09-27 while
 fixing F2 and A1. Twenty-five findings and one observation. Fixed: F2, D4, A1, A6, A2, G1,
-G2, and -- in the 2026-09-30 batch below -- F1, D5, C1, A4, half of A5.
+G2, and -- in the 2026-09-30 batch below -- F1, D5, C1, A4, A5.
 Mitigated: A3 (see the deferred-unification section). Rejected on the
 evidence: G4, D6. Recorded without a fix by decision: G3. Nine remain
-open: A5 (the code half), B1, B2, C2, C3, D1, D2, E1, E2, E3. Stage 2 is healthy while this is written — 1,526 of 1,585 rows
+open: B1, B2, C2, C3, D1, D2, E1, E2, E3. Stage 2 is healthy while this is written — 1,526 of 1,585 rows
 have a body (96.3%), and of 89 rows ingested in the last week only 2 have
 none — so none of this is firefighting. Every item is about what the stage
 does when something changes, or about a mechanism that looks protective and
@@ -168,7 +168,7 @@ the pipeline does at night. Two outcomes were not what the audit predicted.
 | **D5** | **Fixed.** `failure` is now a required argument, so the `failure=None` branch and the two tests asserting a retirement production could not reach are gone. `MAX_CONTENT_ATTEMPTS` survives as the cap for a label with no `RETRY_POLICY` entry, and a new test (`test_every_content_label_has_a_retry_policy`) keeps that fallback from quietly becoming a road. |
 | **C1** | **Fixed as an invariant, not as a defect.** All 1,548 rows carrying a `content_path` have it equal to `content/<id>.txt`, so the field holds no information and the 10 rows without one are harmless. What matters is that the two readers disagree about whether to read it: stage 3 honours the stored value, `content_audit.py:174` derives its own. A guard test pins the invariant, plus a second test that the checker rejects a bad path before it is trusted against real data. |
 | **A4** | **Fixed.** `_validate_json_response` and its five tests deleted. No caller anywhere; stage 2 parses no JSON. |
-| **A5** | **Half fixed.** `.claude/CLAUDE.md` claimed `MODEL_CHAIN = Gemini 2.5 Pro → GPT-4.1 Mini → Claude Sonnet`; all three names are wrong and so is the provider count. Corrected to `gpt-5.6-luna → gpt-4.1-mini`, both OpenAI, with the single-provider fact stated. Two other claims in that file were stale too: "34 hedge funds" (42) and "714 passing" (2015). **Open:** `_call_anthropic` is a working client for a second provider that `model_to_caller` does not list, and no `ANTHROPIC_API_KEY` is configured, so wiring it today would only log "Skipping". Delete it or fund it — a resilience trade-off, not a cleanup. |
+| **A5** | **Fixed.** `.claude/CLAUDE.md` claimed `MODEL_CHAIN = Gemini 2.5 Pro → GPT-4.1 Mini → Claude Sonnet`; all three names are wrong and so is the provider count. Corrected to `gpt-5.6-luna → gpt-4.1-mini`, both OpenAI, with the single-provider fact stated. Two other claims in that file were stale too: "34 hedge funds" (42) and "714 passing" (2015). `_call_anthropic` was a working client for a second provider that `model_to_caller` never listed, with no `ANTHROPIC_API_KEY` configured, so wiring it would only have logged "Skipping". **Deleted 2026-09-30 by decision** (user, when offered delete or fund), together with `_anthropic_text`, the `claude-sonnet-4-6` entry in `_USAGE_FIELDS`, and the four tests that exercised them. The usage log holds no claude rows, and `_USAGE_FIELDS` is consulted at write time only — it already lacks entries for the gemini models that appear in the log — so nothing historical depends on it. The `ANTHROPIC_API_KEY` in `scripts/wrapper-*.sh` belongs to the Claude Code agent workflows and was not touched. Summarisation is now single-provider by decision rather than by accident. |
 
 ## ⑧ Observations from the 2026-09-30 email — checked, no action
 

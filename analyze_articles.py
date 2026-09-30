@@ -226,7 +226,6 @@ _USAGE_FIELDS = {
     # reasoning_tokens is a breakdown of completion_tokens, not an addition to
     # it (verified live: prompt + completion == total while reasoning was 58).
     "gpt-5.6-luna": ("prompt_tokens", ("completion_tokens",), "total_tokens"),
-    "claude-sonnet-4-6": ("input_tokens", ("output_tokens",), None),
 }
 
 _UNKNOWN_USAGE = {"input_tokens": None, "output_tokens": None,
@@ -325,18 +324,6 @@ def _openai_text(data: dict) -> str:
     return text
 
 
-def _anthropic_text(data: dict) -> str:
-    blocks = data.get("content") or []
-    if not blocks:
-        raise ValueError("anthropic returned no content blocks "
-                         f"(stop_reason={data.get('stop_reason')!r})")
-    first = blocks[0]
-    if "text" not in first:
-        raise ValueError(f"anthropic returned a {first.get('type')!r} block, not text "
-                         f"(stop_reason={data.get('stop_reason')!r})")
-    return first["text"]
-
-
 def _call_openai(prompt: str, api_key: str, model: str = "gpt-4.1-mini") -> tuple[str, dict, str]:
     """Call OpenAI API. Returns (text, usage_dict, model_name)."""
     resp = requests.post(
@@ -352,30 +339,6 @@ def _call_openai(prompt: str, api_key: str, model: str = "gpt-4.1-mini") -> tupl
     resp.raise_for_status()
     data = resp.json()
     text = _openai_text(data)
-    usage = data.get("usage", {})
-    return (text, usage, model)
-
-
-def _call_anthropic(prompt: str, api_key: str, model: str = "claude-sonnet-4-6") -> tuple[str, dict, str]:
-    """Call Anthropic API. Returns (text, usage_dict, model_name)."""
-    resp = requests.post(
-        "https://api.anthropic.com/v1/messages",
-        headers={
-            "Content-Type": "application/json",
-            "x-api-key": api_key,
-            "anthropic-version": "2023-06-01",
-        },
-        json={
-            "model": model,
-            "max_tokens": 4000,
-            "temperature": 0.4,
-            "messages": [{"role": "user", "content": prompt}],
-        },
-        timeout=120,
-    )
-    resp.raise_for_status()
-    data = resp.json()
-    text = _anthropic_text(data)
     usage = data.get("usage", {})
     return (text, usage, model)
 

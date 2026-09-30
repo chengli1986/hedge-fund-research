@@ -8,11 +8,13 @@ removed on 2026-09-21 and the fix went with it, while both surviving
 clients kept the same shape:
 
     _call_openai     data["choices"][0]["message"]["content"]
-    _call_anthropic  data["content"][0]["text"]
 
-Both are on the production path -- MODEL_CHAIN is two OpenAI models, and
-Anthropic is the configured fallback. Behaviour is unchanged: the chain
-still retries and still moves on. What changes is what the log says.
+That line about "Anthropic is the configured fallback" was wrong when it
+was written (audit A5): _call_anthropic was never in model_to_caller and
+no ANTHROPIC_API_KEY was ever configured. The client was deleted on
+2026-09-30, so MODEL_CHAIN's two OpenAI tiers are the whole chain and
+_call_openai is the only client this guards. Behaviour is unchanged: the
+chain still retries and still moves on. What changes is what the log says.
 """
 import json
 
@@ -71,26 +73,6 @@ class TestOpenAI:
         assert not isinstance(got.value, IndexError)
 
 
-class TestAnthropic:
-    OK = {"content": [{"type": "text", "text": "hello"}], "usage": {"input_tokens": 1}}
-
-    def test_a_normal_answer_still_comes_back(self, monkeypatch):
-        _post(monkeypatch, self.OK)
-        text, usage, model = aa._call_anthropic("p", "k")
-        assert text == "hello"
-
-    def test_no_content_blocks_names_the_stop_reason(self, monkeypatch):
-        _post(monkeypatch, {"content": [], "stop_reason": "max_tokens"})
-        with pytest.raises(ValueError, match="max_tokens"):
-            aa._call_anthropic("p", "k")
-
-    def test_a_block_that_is_not_text_names_its_type(self, monkeypatch):
-        _post(monkeypatch, {"content": [{"type": "tool_use", "id": "t1"}],
-                            "stop_reason": "tool_use"})
-        with pytest.raises(ValueError, match="tool_use"):
-            aa._call_anthropic("p", "k")
-
-
 class TestTheChainStillCopes:
     def test_a_shaped_failure_is_retried_and_moves_on_like_any_other(self, monkeypatch):
         """Unchanged behaviour: the chain logs, retries, tries the next model."""
@@ -101,7 +83,6 @@ class TestTheChainStillCopes:
             raise ValueError("openai returned no choices (id=chatcmpl-1)")
 
         monkeypatch.setattr(aa, "_call_openai", boom)
-        monkeypatch.setattr(aa, "_call_anthropic", boom)
         out = aa._analyze_with_fallback("body", {"OPENAI_API_KEY": "k"}, title="t",
                                         source="s", date="2026-09-27")
         assert out is None
