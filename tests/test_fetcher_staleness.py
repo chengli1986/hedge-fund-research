@@ -846,8 +846,12 @@ def test_the_probe_does_not_write_into_the_content_directory(monkeypatch, tmp_pa
     path is asserted directly, with tmp_path standing in for production.
     """
     sid = "fake-fund"
+    # Today, not a literal: a fixed date ages past the 30-day weekly threshold
+    # and the probe turns WARN -- the first draft of this test, dated
+    # 2026-09-30, would have started failing on its own on 2026-10-31.
+    today_iso = datetime.now(gfh.BJT).strftime("%Y-%m-%d")
     monkeypatch.setitem(sys.modules, "fetch_articles", _FakeFetchArticles(
-        {sid: lambda src: [{"title": "t", "url": "http://x/1", "date": "2026-09-30"}]}))
+        {sid: lambda src: [{"title": "t", "url": "http://x/1", "date": today_iso}]}))
     monkeypatch.setattr(_real_fetch_content, "CONTENT_DIR", tmp_path)
     written = []
 

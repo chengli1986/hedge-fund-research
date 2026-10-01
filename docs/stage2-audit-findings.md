@@ -64,7 +64,7 @@ coverage in the plan; worth its own pass later).
 | **D1** | In the traceable range, scheduled retries have rescued nothing. Of 47 articles that ever failed, 7 were later fetched successfully — all seven on 2026-09-15 at 09:55 and 11:25, daytime runs by hand after an extractor was fixed, not the nightly run. Confidence: medium — failure lines before 2026-09-15 carry no article id, so earlier fail→succeed pairs cannot be reconstructed. | 6 months of `logs/fetch_content.log`. |
 | **D2** | The retry policy cannot be replayed. The labelled ledger starts 2026-09-16 (48 records, 10 days) and a row keeps only its **last** failure, as a dict, not a list. This repo's own rule — replay history before choosing a threshold — cannot be applied here. | File inspection. |
 | **D4** | *(fixed 2026-09-27)* `body_too_short` is the classifier's catch-all *and* is marked `code_dependent`, so "we could not tell why" is recorded as "this depends on our code" and every such article is requeued whenever `fetch_content.py` changes. With A1 (40 of 44 extractors silent), that is the churn engine. | The other 8 labels' `code_dependent` flags match their semantics; this one and `pdf_not_usable` are the two judgement calls. |
-| **D5** | `mark_content_failure`'s `failure=None` branch is unreachable **in production**: its only production caller (`_record_content_failure`) always passes a labelled failure, so `MAX_CONTENT_ATTEMPTS = 5` and the "retire at max_attempts" rule it guards never run. *Corrected 2026-09-30: the original wording said "and in the tests", which is false* — `TestContentDeadLetterCap` calls `mark_content_failure(a)` with no failure and asserts the retirement. That makes it a sharper case, not a weaker one: two green tests assert a rule production cannot reach. | grep of every call site; tests/test_unit_fetch_content.py:268,275. |
+| **D5** | `mark_content_failure`'s `failure=None` branch is unreachable **in production**: its only production caller (`_record_content_failure`) always passes a labelled failure, so `MAX_CONTENT_ATTEMPTS = 5` and the "retire at max_attempts" rule it guards never run. *Corrected 2026-09-30: the original wording said "and in the tests", which is false* — `TestContentDeadLetterCap` calls `mark_content_failure(a)` with no failure and asserts the retirement. That makes it a sharper case, not a weaker one: two green tests assert a rule production cannot reach. | grep of every call site; `TestContentDeadLetterCap` in tests/test_unit_fetch_content.py (both tests removed in 2e648fc, see Batch 1). |
 | **D6** | `ATTEMPT_CEILING = 12` cannot change an outcome. Per-label caps are 3–5 and three labels retire at a streak of 2, so another gate always fires first; for a row already retired, the ceiling and `was_permafail` give the same answer. | The policy table, and the gsam rows at attempts=11. |
 | *obs* | After a permafail is requeued by a code change and fails again, its `streak` keeps counting, so "streak 6" reads as six consecutive same-label failures when it is three plus three requeues. Ledger legibility only; no behaviour depends on it. | gsam: attempts 11, streak 6. |
 
@@ -273,7 +273,7 @@ the pipeline does at night. Two outcomes were not what the audit predicted.
 | **D6** | **Rejected. The finding was wrong.** `ATTEMPT_CEILING = 12` is not redundant: `streak` resets whenever the label changes, so an article alternating labels (fetch_error, block, fetch_error…) holds streak at 1 forever and neither per-label cap ever fires. Simulated: it retires at attempt 12 and only because of the ceiling. 2 of the 10 articles with a failure history have changed label at least once. It is also *already* guarded — `test_alternating_labels_hit_the_lifetime_ceiling` goes red when the clause is deleted, which is how a live backstop came to be written up as dead code. |
 | **F1** | **Fixed.** The real gap was narrower than "F3 has no guard". Commit `53fcf4f` did two things at once: it added "all attempts failed" to `_ERROR_MESSAGE` *and* started scanning every captured message. The T. Rowe Price night is fixed by the pattern alone, because its last line matches the new pattern by itself — so the existing test passes either way. The shape that separates them is **an informative error followed by an uninformative last line** (`Playwright timeout…`, then `no article body found`): scanning gives `fetch_error` with the timeout as detail, last-message-only gives `unknown`. Two tests added, one for `_ERROR_MESSAGE` and one for `_PDF_MESSAGE`; both go red under the reverted scan. |
 | **D5** | **Fixed.** `failure` is now a required argument, so the `failure=None` branch and the two tests asserting a retirement production could not reach are gone. `MAX_CONTENT_ATTEMPTS` survives as the cap for a label with no `RETRY_POLICY` entry, and a new test (`test_every_content_label_has_a_retry_policy`) keeps that fallback from quietly becoming a road. |
-| **C1** | **Fixed as an invariant, not as a defect.** All 1,548 rows carrying a `content_path` have it equal to `content/<id>.txt`, so the field holds no information and the 10 rows without one are harmless. What matters is that the two readers disagree about whether to read it: stage 3 honours the stored value, `content_audit.py:174` derives its own. A guard test pins the invariant, plus a second test that the checker rejects a bad path before it is trusted against real data. |
+| **C1** | **Fixed as an invariant, not as a defect.** All 1,548 rows carrying a `content_path` have it equal to `content/<id>.txt`, so the field holds no information and the 10 rows without one are harmless. What matters is that the two readers disagree about whether to read it: stage 3 honours the stored value, `content_audit.audit_article` derives its own. A guard test pins the invariant, plus a second test that the checker rejects a bad path before it is trusted against real data. |
 | **A4** | **Fixed.** `_validate_json_response` and its five tests deleted. No caller anywhere; stage 2 parses no JSON. |
 | **A5** | **Fixed.** `.claude/CLAUDE.md` claimed `MODEL_CHAIN = Gemini 2.5 Pro → GPT-4.1 Mini → Claude Sonnet`; all three names are wrong and so is the provider count. Corrected to `gpt-5.6-luna → gpt-4.1-mini`, both OpenAI, with the single-provider fact stated. Two other claims in that file were stale too: "34 hedge funds" (42) and "714 passing" (2015). `_call_anthropic` was a working client for a second provider that `model_to_caller` never listed, with no `ANTHROPIC_API_KEY` configured, so wiring it would only have logged "Skipping". **Deleted 2026-09-30 by decision** (user, when offered delete or fund), together with `_anthropic_text`, the `claude-sonnet-4-6` entry in `_USAGE_FIELDS`, and the four tests that exercised them. The usage log holds no claude rows, and `_USAGE_FIELDS` is consulted at write time only — it already lacks entries for the gemini models that appear in the log — so nothing historical depends on it. The `ANTHROPIC_API_KEY` in `scripts/wrapper-*.sh` belongs to the Claude Code agent workflows and was not touched. Summarisation is now single-provider by decision rather than by accident. |
 
@@ -316,10 +316,23 @@ history rather than one page of listings.
 
 ## Where to start
 
-**D4 with A1.** They are two halves of one engine: the extractor says
-nothing → the failure lands in the catch-all → the catch-all is marked
-"depends on our code" → every article in it is requeued on every code
-change. Fixing either alone leaves the engine running.
+*Written 2026-09-26; done 2026-09-27.* **D4 with A1.** They are two halves
+of one engine: the extractor says nothing → the failure lands in the
+catch-all → the catch-all is marked "depends on our code" → every article in
+it is requeued on every code change. Fixing either alone leaves the engine
+running.
+
+*Next, as of 2026-10-01:* **B2** -- 26 of the 31 bodies under 500 characters
+were summarised, and six of the nine read by hand are not articles. It
+changes what reaches the page, so boundary samples go to a human before any
+rule changes.
+
+*Recorded on 2026-10-01 review, not fixed:* now that `duplicate_body` and
+`grounding_failed` are always declared by the code that decides them (G1/G2),
+`classify_analysis_decline` should never return either for a model's free
+text -- yet its rules for both are still there, so a model reason containing
+"same text as the already-summarised" would still be filed as
+`duplicate_body` and dropped from the page. Unlikely, and the inverse of G1.
 
 ## Corrections made during this audit
 

@@ -509,7 +509,7 @@ def test_stored_content_paths_are_derivable_from_the_id():
     equal to content/<id>.txt, so today the field holds no information. That
     is not a reason to relax -- it is the reason the invariant is safe to
     rely on, and two consumers already do. Stage 3's _resolve_content_path
-    honours the stored value; scripts/content_audit.py line 174 ignores it
+    honours the stored value; scripts/content_audit.py's audit_article ignores it
     and derives stored_dir/<id>.txt. The day a writer stores a different
     path, those two read different files and neither says so: the audit
     would compare last night's fetch against some other article's body.
