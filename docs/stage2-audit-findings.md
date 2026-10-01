@@ -156,57 +156,54 @@ refactor touching the 35 sources on the shared path cannot be shown to
 have changed nothing, and "it looked fine" is not the standard this
 pipeline holds elsewhere.
 
-## C2 re-derived, 2026-09-30 — the orphans have three causes, not two
+## C2 re-derived — and then corrected, 2026-10-01
 
-The original entry guessed from mtime clustering. Each of the 35 files was
-traced instead: its body fingerprinted against every referenced file, and its
-source URL recovered from `logs/fetch_content.log`, where the
-`fetching article page <url>` line precedes the `saved N chars to <id>.txt`
-line. 31 of 35 could be attributed that way. The id formula was self-checked
-against a live row before being trusted (`sha256("lazard-am:<url>")[:16]`
-reproduces that row's id exactly).
+**The 2026-09-30 version of this section was wrong about the cause.** It
+attributed the lost rows to the store race fixed on 2026-09-21
+(`_carry_over_unseen`). That mechanism cannot have done it: it drops rows
+*appended while a stage is working*, and these were rows dated June to
+August, already in every stage's read. The claim was written from a timing
+coincidence ("no orphan after 9-21") and never tested against the mechanism.
+It is withdrawn.
+
+What actually happened, established on 2026-10-01 while preparing to rebuild
+the 17 "only copy" rows:
+
+- Each of the 17 was recovered by id from old copies of the published page
+  in docs-site's history (`<article id="a-<id>">` carries title, date,
+  source and URL). All 17 were last on the page on 2026-09-13/14.
+- **All 17 are already in the store under a new URL**: same title, body
+  overlap 0.83-1.00 against a live row of the same source. They were not
+  only copies -- the byte fingerprint missed them because the site re-renders
+  the text slightly between fetches.
+- On 2026-09-14 a run of deliberate dedup fixes landed: `06e658e`
+  (lazard-am stored each article twice, once under its AEM repository path
+  `/content/lam/....html` and once under its public URL -- *"The existing 15
+  rows are merged separately"*), `5621d8d`, `8cacc65`, and `a8d9c6f`
+  (cohen-steers' `-fp` / `-inst` audience editions are one article). The
+  merge removed the duplicate rows from `articles.jsonl` and left their
+  `content/<old id>.txt` behind. 15 lazard orphans, 15 merged rows; 3
+  cohen-steers orphans, the audience editions.
+
+So the original 2026-09-26 guess -- "a host or slug migration that did not
+rename the file, the case CLAUDE.md warns about" -- was the right one, and the
+re-derivation replaced it with a wrong one. The pgim asymmetry noted on 09-30
+stands, and now has its explanation: pgim was never merged, lazard was.
 
 | Cause | Files | Disposition |
 | --- | --- | --- |
-| **A body already in the store under another id.** Byte-identical to a referenced file. | 16 | Redundant. Safe to delete. |
-| **The row is gone and this .txt is the only copy left.** Its URL appears in no stored row. 161 KB. | 17 | A decision, not a cleanup — see below. |
-| **Written by something that was not the nightly pipeline** — one is literally `content/test-amundi.txt`, one has no log trace and was written 2026-09-15 11:58 UTC, a daytime hour. | 2 | Audit C3, caught in the act. Safe to delete. |
+| Byte-identical to a file the store references | 16 | **Archived 2026-10-01** to `~/backups/gmia-orphans-2026-10-01/` with a manifest |
+| Written outside the nightly pipeline (one is `content/test-amundi.txt`) -- audit C3 | 2 | **Archived** with the 16 |
+| Left behind by the 2026-09-14 lazard / cohen-steers dedup merge; the article survives under its canonical URL | 17 | Not rebuilt -- restoring them would re-create exactly the duplicates the merge removed. Redundant. |
 
-**Why the rows went missing.** `jsonl_store.rewrite_rows` gained
-`_carry_over_unseen` on 2026-09-21, in a commit titled *"lock the article
-store, and stop losing a night's paid work"*: stages 2 and 3 read the store,
-work for minutes, then rewrite it from what they read, so a row appended in
-between was dropped. **No orphan file was written after 2026-09-21** — the
-newest is 2026-09-15. That is the strongest available evidence that this was
-the mechanism and that it has stopped. It is not proof for each of the 17
-individually: their rows are gone, the mechanism existed while they were
-written, and nothing has been lost since it was fixed.
+**What the fix for C2 actually is**, then: any operation that removes or
+re-ids rows must move or delete their content files in the same step, and
+the health report should count orphans *created since the last report*,
+not the standing total. That belongs with C3 (who owns writes into
+`content/`).
 
-Two details that rule out the obvious alternatives. There is no retention or
-pruning anywhere — the oldest stored row is dated 2015-08-01 — so age did not
-remove them. And `disk-cleaner` does not touch `content/`; it names GMIA only
-in a comment about Chromium.
-
-**A URL-scheme change is in the picture but is not the cause.** Lazard
-accounts for 15 of the 35. Its old URLs were
-`/content/lam/us/en_us/…/behind-the-headlines/june-26-2026.html`; every
-current row is `/us/en_us/…`. A scheme change alone gives new ids and leaves
-the old rows in place, which is exactly what pgim did — 19 rows with
-`/content/pgim/` URLs are still stored, from a source that has left
-`sources.json` entirely. Zero `/content/lam/` rows survive. The asymmetry is
-the point: lazard's old rows were removed, pgim's were not.
-
-**Still unexplained.** The 2026-09-26 audit counted 45 files; there are 35.
-Ten went away between then and now and nothing records what removed them. Not
-worth chasing — but it is why the disposition below should be a deliberate
-act with a note, rather than another silent change.
-
-**Open decision** on the 17. They are unreferenced, so keeping them changes
-nothing and deleting them changes nothing — unless the rows are rebuilt. That
-is feasible but not free: the id, the URL and the body are all recoverable,
-the title and date are not, though several lazard slugs carry their own date
-(`june-26-2026.html`). Restoring would put articles back on the published
-page that have been absent for weeks.
+Still unexplained: the 2026-09-26 count was 45, and ten files went away
+before 2026-09-30 with no record.
 
 ## Batch 1, 2026-09-30 — "looks protective, is not"
 
