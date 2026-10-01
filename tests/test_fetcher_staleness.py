@@ -133,6 +133,12 @@ class _FakeFetchContent:
         paths, self.extraction_paths = self.extraction_paths, []
         return paths
 
+    def isolated_content_dir(self, prefix="gmia-"):
+        # The real one, not a copy (audit C3): the probe must enter the same
+        # redirect production code provides. These fakes' fetchers write to
+        # /tmp directly, so what it redirects is the real module's global.
+        return _real_fetch_content.isolated_content_dir(prefix=prefix)
+
     def fetch_with_evidence(self, article, fetcher):
         # The real wrapper: it only needs `requests` and the real module's
         # logger, so the probe is exercised against the same evidence contract
@@ -826,3 +832,34 @@ def test_a_raised_non_transient_error_still_gets_no_retry(monkeypatch):
     result = gfh.probe_source({"id": sid, "frequency": "weekly"})
     assert result["status"] == "FAIL" and "ValueError" in result["reason"]
     assert calls["n"] == 1
+
+
+def test_the_probe_does_not_write_into_the_content_directory(monkeypatch, tmp_path):
+    """The probe's content step must redirect extractor writes (audit C3).
+
+    Most probe tests stub fetch_content with a fake whose fetchers write to
+    /tmp directly, so they cannot notice a missing redirect. The one that can
+    is test_probe_is_wired_to_the_real_extractor: it writes through the real
+    CONTENT_DIR, so without the redirect it lands in production content/ and
+    conftest's session-level detector errors -- an implicit guard, reported
+    as a session ERROR rather than as this behaviour failing. Here the same
+    path is asserted directly, with tmp_path standing in for production.
+    """
+    sid = "fake-fund"
+    monkeypatch.setitem(sys.modules, "fetch_articles", _FakeFetchArticles(
+        {sid: lambda src: [{"title": "t", "url": "http://x/1", "date": "2026-09-30"}]}))
+    monkeypatch.setattr(_real_fetch_content, "CONTENT_DIR", tmp_path)
+    written = []
+
+    def content_fetcher(article):
+        path = _real_fetch_content.CONTENT_DIR / f"{article['id']}.txt"
+        _real_fetch_content._atomic_write(path, b"x" * 500)
+        written.append(path)
+        return (path, "ok")
+
+    monkeypatch.setitem(_real_fetch_content.CONTENT_FETCHERS, sid, content_fetcher)
+    result = gfh._probe_once({"id": sid, "frequency": "weekly"})
+    assert written, "the content step did not run, so this proves nothing"
+    assert result["status"] == "OK", result
+    assert list(tmp_path.iterdir()) == [], "the probe wrote into the content directory"
+    assert _real_fetch_content.CONTENT_DIR == tmp_path, "CONTENT_DIR was not restored"

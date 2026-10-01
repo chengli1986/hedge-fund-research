@@ -41,7 +41,6 @@ import os
 import smtplib
 import statistics
 import sys
-import tempfile
 import time
 import traceback
 from datetime import datetime, timedelta, timezone
@@ -384,81 +383,76 @@ def _probe_once(source: dict) -> dict:
     # the first full-length one), pass on the first that yields
     # ≥MIN_CONTENT_LENGTH chars with a TERMINAL_OK status.
     probe_top_n = source.get("content_probe_top_n", CONTENT_PROBE_TOP_N)
-    original_content_dir = fetch_content.CONTENT_DIR
     chars = 0
     content_attempts: list[dict] = []
     content_success = False
     extraction_note = ""
     transient_exc_seen: Exception | None = None
     all_failures_transient = True  # only true if every attempt raised transient
-    try:
-        with tempfile.TemporaryDirectory(prefix="gmia-health-") as td:
-            fetch_content.CONTENT_DIR = Path(td)
-            for idx, article in enumerate(articles[:probe_top_n]):
-                probe_article = dict(article)
-                probe_article["id"] = f"healthprobe_{sid}_{idx}"
-                attempt: dict = {"index": idx, "url": article.get("url", "")}
-                # Per attempt, so a teaser that hit a fallback before the
-                # article that succeeded cannot taint the verdict.
-                fetch_content.drain_extraction_paths()
-                # Through the same wrapper stage 2 uses: 42 of the 44 fetchers
-                # catch every exception and return None, so a bare call
-                # cannot tell a Playwright timeout from a dead selector
-                # (wellington 2026-09-24: three 30s timeouts were reported as
-                # "selector regression" and the transient retry never ran).
-                # The wrapper keeps the fetcher's warnings and responses;
-                # failure_labels turns them into the label stage 2 would log.
-                outcome, evidence = fetch_content.fetch_with_evidence(
-                    probe_article, content_fetcher)
-                if outcome is None:
-                    label, detail = failure_labels.classify_content_failure(evidence)
-                    # Playwright details carry a multi-line call log; one line for the email.
-                    attempt["reason"] = f"returned None ({label}: {' '.join(detail.split())[:160]})"
-                    if _evidence_is_transient(evidence, label):
-                        transient_exc_seen = RuntimeError(attempt["reason"])
-                    else:
-                        all_failures_transient = False
-                    content_attempts.append(attempt)
-                    continue
-
-                path, status = outcome
-                if status not in TERMINAL_OK_STATUSES:
-                    attempt["reason"] = f"status={status!r}"
+    with fetch_content.isolated_content_dir(prefix="gmia-health-"):
+        for idx, article in enumerate(articles[:probe_top_n]):
+            probe_article = dict(article)
+            probe_article["id"] = f"healthprobe_{sid}_{idx}"
+            attempt: dict = {"index": idx, "url": article.get("url", "")}
+            # Per attempt, so a teaser that hit a fallback before the
+            # article that succeeded cannot taint the verdict.
+            fetch_content.drain_extraction_paths()
+            # Through the same wrapper stage 2 uses: 42 of the 44 fetchers
+            # catch every exception and return None, so a bare call
+            # cannot tell a Playwright timeout from a dead selector
+            # (wellington 2026-09-24: three 30s timeouts were reported as
+            # "selector regression" and the transient retry never ran).
+            # The wrapper keeps the fetcher's warnings and responses;
+            # failure_labels turns them into the label stage 2 would log.
+            outcome, evidence = fetch_content.fetch_with_evidence(
+                probe_article, content_fetcher)
+            if outcome is None:
+                label, detail = failure_labels.classify_content_failure(evidence)
+                # Playwright details carry a multi-line call log; one line for the email.
+                attempt["reason"] = f"returned None ({label}: {' '.join(detail.split())[:160]})"
+                if _evidence_is_transient(evidence, label):
+                    transient_exc_seen = RuntimeError(attempt["reason"])
+                else:
                     all_failures_transient = False
-                    content_attempts.append(attempt)
-                    continue
-
-                try:
-                    this_chars = len(path.read_text(encoding="utf-8"))
-                except Exception:
-                    this_chars = 0
-                if this_chars < fetch_content.MIN_CONTENT_LENGTH:
-                    attempt["reason"] = (
-                        f"too short: {this_chars} chars (threshold "
-                        f"{fetch_content.MIN_CONTENT_LENGTH})"
-                    )
-                    all_failures_transient = False
-                    content_attempts.append(attempt)
-                    continue
-
-                off_primary = sorted({p for p in evidence["extraction_paths"]
-                                      if p != "primary"})
-                if off_primary:
-                    extraction_note = (
-                        f"content selector matched nothing; text came from "
-                        f"{', '.join(off_primary)} (may include navigation, "
-                        f"cookie banners or related-article lists)"
-                    )
-                attempt["reason"] = f"ok ({this_chars} chars)"
                 content_attempts.append(attempt)
-                chars = this_chars
-                result["content_chars"] = chars
-                result["content_status"] = status
-                result["content_probe_index"] = idx
-                content_success = True
-                break
-    finally:
-        fetch_content.CONTENT_DIR = original_content_dir
+                continue
+
+            path, status = outcome
+            if status not in TERMINAL_OK_STATUSES:
+                attempt["reason"] = f"status={status!r}"
+                all_failures_transient = False
+                content_attempts.append(attempt)
+                continue
+
+            try:
+                this_chars = len(path.read_text(encoding="utf-8"))
+            except Exception:
+                this_chars = 0
+            if this_chars < fetch_content.MIN_CONTENT_LENGTH:
+                attempt["reason"] = (
+                    f"too short: {this_chars} chars (threshold "
+                    f"{fetch_content.MIN_CONTENT_LENGTH})"
+                )
+                all_failures_transient = False
+                content_attempts.append(attempt)
+                continue
+
+            off_primary = sorted({p for p in evidence["extraction_paths"]
+                                  if p != "primary"})
+            if off_primary:
+                extraction_note = (
+                    f"content selector matched nothing; text came from "
+                    f"{', '.join(off_primary)} (may include navigation, "
+                    f"cookie banners or related-article lists)"
+                )
+            attempt["reason"] = f"ok ({this_chars} chars)"
+            content_attempts.append(attempt)
+            chars = this_chars
+            result["content_chars"] = chars
+            result["content_status"] = status
+            result["content_probe_index"] = idx
+            content_success = True
+            break
 
     if not content_success:
         n_tried = len(content_attempts)
@@ -767,6 +761,10 @@ def pipeline_intake_anomalies(state_path=None) -> list[tuple[str, list[str]]]:
 
 
 ARTICLES_FILE = BASE_DIR / "data" / "articles.jsonl"
+CONTENT_DIR = BASE_DIR / "content"
+# An email row per orphan, up to this many: a mass event (a store rewritten
+# wrong, a migration gone sideways) should read as one alarm, not a wall.
+ORPHAN_ROWS_SHOWN = 20
 DECLINE_SAMPLE_REASONS = 2
 
 
@@ -837,6 +835,63 @@ def store_damage(path=None) -> int:
         return damaged
     except Exception:
         return 0
+
+
+def content_orphans(content_dir=None, data_path=None) -> list[str] | None:
+    """Ids of content/*.txt that no row in the article store names.
+
+    Audit C2. Every orphan traced on 2026-10-01 was left by an operation that
+    removed or re-id'd rows without moving their files -- the 2026-09-14
+    lazard / cohen-steers dedup merge alone left 17 -- and nothing counted
+    them, so 45 built up over five months. None when the store cannot be
+    read: an unreadable store would make every file look orphaned.
+    A damaged row's id cannot be read either, so its body will be listed
+    here too; DAMAGED ROWS reports the row itself.
+    """
+    try:
+        import jsonl_store
+        store = Path(data_path or ARTICLES_FILE)
+        if not store.is_file():
+            # jsonl_store reads a missing file as an empty store, which would
+            # list every body in content/ as an orphan.
+            return None
+        rows, _ = jsonl_store.read_rows(store)
+        ids = {r.get("id") for r in rows}
+        folder = Path(content_dir or CONTENT_DIR)
+        return sorted(p.stem for p in folder.glob("*.txt") if p.stem not in ids)
+    except Exception:
+        return None
+
+
+def new_orphans(current: list[str] | None, prev_state: dict) -> tuple[list[str], list[str]]:
+    """(orphans first seen this run, the list to store for next time).
+
+    Only what is new is reported, so a file nobody has dealt with yet does not
+    repeat in every email -- which is why C2 waited until the backlog was
+    cleared. When this run could not tell, the stored list is kept as it was:
+    resetting it would make the next readable run report every standing
+    orphan as new.
+    """
+    previous = prev_state.get("orphans") if isinstance(prev_state, dict) else None
+    previous = previous if isinstance(previous, list) else []
+    if current is None:
+        return [], previous
+    seen = set(previous)
+    return [o for o in current if o not in seen], current
+
+
+def orphan_details(ids: list[str], content_dir=None) -> list[dict]:
+    """Size and write time for each orphan, for the email."""
+    folder = Path(content_dir or CONTENT_DIR)
+    out = []
+    for i in ids:
+        try:
+            st = (folder / f"{i}.txt").stat()
+            out.append({"id": i, "bytes": st.st_size,
+                        "written": datetime.fromtimestamp(st.st_mtime, BJT).strftime("%Y-%m-%d %H:%M BJT")})
+        except OSError:
+            out.append({"id": i, "bytes": None, "written": "?"})
+    return out
 
 
 def recent_analysis_declines(data_path=None, since=None) -> list[tuple[str, list[dict]]]:
@@ -1006,7 +1061,8 @@ def pipeline_did_not_run(state_path=None) -> bool:
 def should_email(alerts: dict, zero_fetches: list, pipeline_stale: bool = False,
                  declines: list | None = None, quality: dict | None = None,
                  intake: list | None = None, damaged_rows: int = 0,
-                 corrupt_state: list | None = None, entrypoints: list | None = None) -> bool:
+                 corrupt_state: list | None = None, entrypoints: list | None = None,
+                 orphans: dict | None = None) -> bool:
     """Whether this run has anything worth sending.
 
     zero_fetches is part of the condition, not just part of the body: the email
@@ -1016,6 +1072,7 @@ def should_email(alerts: dict, zero_fetches: list, pipeline_stale: bool = False,
     return bool(alerts["failing"] or alerts["warning"] or alerts["recovered"]
                 or zero_fetches or pipeline_stale or declines or intake or damaged_rows
                 or corrupt_state or entrypoints
+                or (orphans is not None and orphans.get("new"))
                 or (quality is not None and quality.get("alerts")))
 
 
@@ -1096,6 +1153,7 @@ def render_html_email(
     damaged_rows: int = 0,
     corrupt_state: list | None = None,
     entrypoints: list | None = None,
+    orphans: dict | None = None,
 ) -> str:
     """HTML body with same visual idiom as gmia-trial-manager email."""
     sources_state = state.get("sources", {})
@@ -1202,6 +1260,25 @@ def render_html_email(
             '<tr><td style="padding:8px">config/inspection_state.json could not be parsed, so every '
             "source's consecutive_zero_count restarted that night and silence alerts were delayed. "
             'The copies hold the old counters; delete them once checked.</td></tr>'))
+    if orphans is not None and orphans.get("new"):
+        shown = orphans["new"][:ORPHAN_ROWS_SHOWN]
+        orphan_rows = "".join(
+            f'<tr><td style="padding:8px;font-family:monospace">{html.escape(o["id"])}</td>'
+            f'<td style="padding:8px">{o["bytes"] if o["bytes"] is not None else "?"} bytes</td>'
+            f'<td style="padding:8px">{html.escape(o["written"])}</td></tr>'
+            for o in shown)
+        if len(orphans["new"]) > len(shown):
+            orphan_rows += (f'<tr><td colspan="3" style="padding:8px">… and '
+                            f'{len(orphans["new"]) - len(shown)} more (state file lists them all)</td></tr>')
+        sections.append(section_table(
+            f"🗂️ NEW ORPHAN FILES ({len(orphans['new'])})", "#9a6700",
+            orphan_rows +
+            f'<tr><td colspan="3" style="padding:8px">Bodies in content/ that no row in '
+            f'data/articles.jsonl names ({orphans.get("total", len(orphans["new"]))} in total, '
+            f'{len(orphans["new"])} new since the last run). Usually a row was removed or given a '
+            f'new id without its file being moved with it. Check before deleting: if the row is '
+            f'gone, the file may be the only copy of that body. See audit C2 in '
+            f'docs/stage2-audit-findings.md.</td></tr>'))
     if damaged_rows:
         sections.append(section_table(
             f"🧨 DAMAGED ROWS ({damaged_rows})", "#cf222e",
@@ -1280,7 +1357,7 @@ def alerts_subject(alerts: dict, zero_fetches: list | None = None,
                    pipeline_stale: bool = False, declines: list | None = None,
                    quality: dict | None = None, intake: list | None = None,
                    damaged_rows: int = 0, corrupt_state: list | None = None,
-                   entrypoints: list | None = None) -> str:
+                   entrypoints: list | None = None, orphans: dict | None = None) -> str:
     """Subject line. Must name every condition that caused the send.
 
     zero_fetches is a send condition on its own, and it is the ONLY one that
@@ -1311,6 +1388,8 @@ def alerts_subject(alerts: dict, zero_fetches: list | None = None,
         parts.append(f"🗃️ state file was unreadable ({len(corrupt_state)} copy/copies)")
     if damaged_rows:
         parts.append(f"🧨 {damaged_rows} damaged row(s) in articles.jsonl")
+    if orphans is not None and orphans.get("new"):
+        parts.append(f"🗂️ {len(orphans['new'])} new orphan file(s) in content/")
     if intake:
         ids = ", ".join(sid for sid, _ in intake[:3])
         more = f" +{len(intake) - 3}" if len(intake) > 3 else ""
@@ -1476,6 +1555,7 @@ def main() -> int:
     zero_fetches = pipeline_zero_fetches()
     intake = pipeline_intake_anomalies()
     damaged_rows = store_damage()
+    current_orphans = content_orphans()
     # Both state files this script depends on: the fleet's (fetch_articles
     # keeps the copies) and its own (load_state keeps them).
     corrupt_state = sorted(set(corrupt_state_backups()) | set(corrupt_state_backups(STATE_FILE)))
@@ -1516,34 +1596,42 @@ def main() -> int:
 
     prev_state = load_state()
     alerts = classify_alerts(per_source, prev_state)
+    fresh_orphans, stored_orphans = new_orphans(current_orphans, prev_state)
+    orphans = ({"new": orphan_details(fresh_orphans), "total": len(current_orphans or [])}
+               if fresh_orphans else None)
+    if current_orphans is None:
+        print("🗂️ orphan check skipped: the article store could not be read")
+    elif fresh_orphans:
+        print(f"🗂️ NEW ORPHAN FILES ({len(fresh_orphans)} of {len(current_orphans)}): "
+              + ", ".join(fresh_orphans[:5]))
 
+    next_state = merge_into_state(prev_state, per_source)
+    next_state["orphans"] = stored_orphans
     if not args.dry_run and not args.test_email:
-        next_state = merge_into_state(prev_state, per_source)
         save_state(next_state)
     else:
-        next_state = merge_into_state(prev_state, per_source)
         print("[dry-run] state file NOT written")
 
     email_failed = False
     needs_alert = should_email(alerts, zero_fetches, pipeline_stale, declines=declines,
-                               quality=quality, intake=intake, damaged_rows=damaged_rows, corrupt_state=corrupt_state, entrypoints=entrypoints)
+                               quality=quality, intake=intake, damaged_rows=damaged_rows, corrupt_state=corrupt_state, entrypoints=entrypoints, orphans=orphans)
     if args.test_email:
         html_body = render_html_email(per_source, alerts, next_state, total_runtime_s,
                                       zero_fetches=zero_fetches, pipeline_stale=pipeline_stale,
                                       declines=declines, quality=quality, intake=intake,
-                                      damaged_rows=damaged_rows, corrupt_state=corrupt_state, entrypoints=entrypoints)
+                                      damaged_rows=damaged_rows, corrupt_state=corrupt_state, entrypoints=entrypoints, orphans=orphans)
         subject = alerts_subject(alerts, zero_fetches, pipeline_stale, declines=declines,
-                                 quality=quality, intake=intake, damaged_rows=damaged_rows, corrupt_state=corrupt_state, entrypoints=entrypoints)
+                                 quality=quality, intake=intake, damaged_rows=damaged_rows, corrupt_state=corrupt_state, entrypoints=entrypoints, orphans=orphans)
         email_failed = not send_email(html_body, f"[测试] {subject}", to=args.test_email)
     elif args.email and needs_alert and not args.dry_run:
         html_body = render_html_email(per_source, alerts, next_state, total_runtime_s,
                                       zero_fetches=zero_fetches,
                                       pipeline_stale=pipeline_stale,
                                       declines=declines, quality=quality, intake=intake,
-                                      damaged_rows=damaged_rows, corrupt_state=corrupt_state, entrypoints=entrypoints)
+                                      damaged_rows=damaged_rows, corrupt_state=corrupt_state, entrypoints=entrypoints, orphans=orphans)
         email_failed = not send_email(
             html_body, alerts_subject(alerts, zero_fetches, pipeline_stale, declines=declines,
-                                      quality=quality, intake=intake, damaged_rows=damaged_rows, corrupt_state=corrupt_state, entrypoints=entrypoints))
+                                      quality=quality, intake=intake, damaged_rows=damaged_rows, corrupt_state=corrupt_state, entrypoints=entrypoints, orphans=orphans))
     elif args.email and not needs_alert:
         print("All sources OK and no recoveries — email suppressed.")
 

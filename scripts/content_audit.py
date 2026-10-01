@@ -38,7 +38,6 @@ import importlib.util
 import json
 import re
 import sys
-import tempfile
 import time
 from collections import Counter
 from datetime import datetime, timedelta, timezone
@@ -150,17 +149,15 @@ def sample_articles(rows, configured, per_source: int = PER_SOURCE, content_dir:
 
 
 def _fetch_to_temp(article: dict, fetcher) -> tuple:
-    """(result, evidence, text) from a fetch into a temporary CONTENT_DIR."""
+    """(result, evidence, text) from a fetch into a temporary CONTENT_DIR.
+
+    The article keeps its real id, so without the redirect this would
+    overwrite the stored body with the re-fetch (audit C3)."""
     import fetch_content as fc
 
-    original_dir = fc.CONTENT_DIR
-    with tempfile.TemporaryDirectory(prefix="gmia-audit-") as tmp:
-        fc.CONTENT_DIR = Path(tmp)
-        try:
-            result, evidence = fc.fetch_with_evidence(dict(article), fetcher)
-            new = result[0].read_text(encoding="utf-8", errors="ignore") if result else ""
-        finally:
-            fc.CONTENT_DIR = original_dir
+    with fc.isolated_content_dir(prefix="gmia-audit-"):
+        result, evidence = fc.fetch_with_evidence(dict(article), fetcher)
+        new = result[0].read_text(encoding="utf-8", errors="ignore") if result else ""
     return result, evidence, new
 
 

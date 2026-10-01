@@ -18,6 +18,7 @@ Usage:
 """
 
 import argparse
+import contextlib
 import hashlib
 import inspect
 import json
@@ -30,7 +31,7 @@ import tempfile
 import time
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
-from typing import Optional
+from typing import Iterator, Optional
 
 import requests
 import jsonl_store
@@ -386,6 +387,39 @@ def _check_min_content_length(text: str, min_length: int = MIN_CONTENT_LENGTH) -
 APOLLO_MIN_CONTENT = 1500  # Filter "In this episode..." video/podcast preview cards
 MATTHEWS_MIN_CONTENT = 500  # Filter video/teaser pages whose only text is the ~300-char header lead
 
+
+
+@contextlib.contextmanager
+def isolated_content_dir(prefix: str = "gmia-") -> Iterator[Path]:
+    """Send every extractor's writes to a fresh temporary directory for the
+    duration of the block, and put CONTENT_DIR back afterwards -- also when the
+    block raises.
+
+    Writing the body is a side effect of calling an extractor: all of them do
+    `CONTENT_DIR / f"{article['id']}.txt"` and `_atomic_write` it, reading the
+    module global at call time. Only the nightly run should write there.
+    Anything else that calls an extractor -- the health probe, the weekly
+    content audit, compare_extractors -- has to redirect it, and until
+    2026-10-01 each did so with its own copy of "save the global, patch it,
+    restore it in a finally" (audit C3).
+
+    That matters more than the orphan files it was found through. The probe
+    fetches under made-up ids, so a missing redirect leaves stray files; the
+    audit and compare_extractors fetch under the article's REAL id, so a
+    missing redirect overwrites the stored body with tonight's re-fetch and
+    nothing reports it.
+
+    Not thread-safe, like the global it patches. Nesting is fine: each level
+    restores what it found.
+    """
+    global CONTENT_DIR
+    original = CONTENT_DIR
+    with tempfile.TemporaryDirectory(prefix=prefix) as tmp:
+        CONTENT_DIR = Path(tmp)
+        try:
+            yield CONTENT_DIR
+        finally:
+            CONTENT_DIR = original
 
 
 def _atomic_write(path: Path, data: bytes) -> None:

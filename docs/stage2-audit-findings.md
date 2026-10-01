@@ -2,10 +2,10 @@
 
 Evidence gathered 2026-09-26, read-only; A5 and A6 added 2026-09-27 while
 fixing F2 and A1. Twenty-five findings and one observation. Fixed: F2, D4, A1, A6, A2, G1,
-G2, and -- in the 2026-09-30 batch below -- F1, D5, C1, A4, A5.
+G2, and -- in the 2026-09-30 batch below -- F1, D5, C1, A4, A5; on 2026-10-01, C2 and C3.
 Mitigated: A3 (see the deferred-unification section). Rejected on the
-evidence: G4, D6. Recorded without a fix by decision: G3. Nine remain
-open: B1, B2, C2, C3, D1, D2, E1, E2, E3. Stage 2 is healthy while this is written — 1,526 of 1,585 rows
+evidence: G4, D6. Recorded without a fix by decision: G3. Seven remain
+open: B1, B2, D1, D2, E1, E2, E3. Stage 2 is healthy while this is written — 1,526 of 1,585 rows
 have a body (96.3%), and of 89 rows ingested in the last week only 2 have
 none — so none of this is firefighting. Every item is about what the stage
 does when something changes, or about a mechanism that looks protective and
@@ -204,6 +204,53 @@ not the standing total. That belongs with C3 (who owns writes into
 
 Still unexplained: the 2026-09-26 count was 45, and ten files went away
 before 2026-09-30 with no record.
+
+## C3 and C2 fixed together, 2026-10-01
+
+Two halves of one problem: C3 is who is allowed to write into `content/`,
+C2 is noticing when something got in anyway.
+
+**C3.** `fetch_content.isolated_content_dir()` is now the one way to call an
+extractor without writing into production. It replaces the two hand-rolled
+"save the global, patch it, restore it in a finally" blocks in the health
+probe and `content_audit` (`compare_extractors` inherits the latter). The probe
+block was moved, not rewritten: its body's AST is identical before and after.
+
+Measured while doing it, and more important than the orphans C3 was found
+through: `content_audit` and `compare_extractors` fetch under the article's
+**real** id, so a missing redirect there does not leave an orphan -- it
+overwrites the stored body with tonight's re-fetch, and nothing reports it.
+
+Neither redirect had a direct test. The audit's was stubbed out by
+compare_extractors' tests; the probe's was guarded only implicitly, by
+`test_probe_is_wired_to_the_real_extractor` writing through the real
+`CONTENT_DIR` and conftest's session-level detector erroring if it landed in
+production. Both now have behavioural tests, each red when its redirect is
+removed. Live check: the probe was run `--dry-run` against all 42 sources --
+41 real extractor writes, every one into the temporary directory; `content/`
+fingerprint (names, sizes, mtimes of 1,606 files) and the probe's state file
+were byte-identical before and after.
+
+Residual, not closed: a REPL or one-off script that calls an extractor
+without the context manager still writes to production, and under a real id
+that is an overwrite the orphan check below cannot see. `.claude/CLAUDE.md`
+now says so where a future caller will read it.
+
+**C2.** The health probe computes `content/*.txt` with no row in the store,
+remembers the list in its state file, and the email reports only orphans
+**new since the previous run** (section "🗂️ NEW ORPHAN FILES", a send
+condition, named in the subject). Decisions:
+
+- an unreadable *or missing* store returns None, not "every file is an
+  orphan" -- `jsonl_store` reads a missing file as an empty store;
+- when the list is unknown, the stored one is kept, so the next readable run
+  does not report the whole standing set as new;
+- at most 20 rows in the email, then "… and N more": a mass event should read
+  as one alarm.
+
+Four mutants, each killed: reporting the standing set every day, not storing
+what was reported, not making it a send condition, and taking a missing store
+at face value.
 
 ## Batch 1, 2026-09-30 — "looks protective, is not"
 
