@@ -252,6 +252,17 @@ Four mutants, each killed: reporting the standing set every day, not storing
 what was reported, not making it a send condition, and taking a missing store
 at face value.
 
+## Observation, 2026-10-01 — `_fetch_content_pgim` is dead code
+
+Counting write sites for C3: 42 sources map one-to-one onto 42 entries in
+`CONTENT_FETCHERS`, and fetch_content.py holds 46 `CONTENT_DIR / <id>.txt`
+statements in 45 functions -- the 42, plus `_fetch_content_pdf_url` (any
+article whose URL is a PDF, via `content_fetcher_for`), plus
+`_ark_metadata_fallback`, plus `_fetch_content_pgim`; gsam's function writes
+in two branches. pgim left `sources.json` and the dispatch table; its
+extractor did not leave the file, and nothing calls it. Not removed yet --
+noted so the next count does not mistake it for a live path.
+
 ## Batch 1, 2026-09-30 — "looks protective, is not"
 
 Six items picked because they share a shape and none of them changes what
