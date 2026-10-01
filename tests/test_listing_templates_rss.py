@@ -170,6 +170,10 @@ class TestFeedExtraFields:
     emitted neither, and on 2026-09-26 ark was switched to it with both
     fields declared droppable -- on the strength of a grep for
     `get("summary")` that missed `get("summary", "")`, the one consumer.
+
+    That consumer was removed on 2026-10-01 (audit E3): stage 3 declined all
+    29 metadata-only bodies. The template still carries the fields -- they
+    are stored with the row and cost nothing -- so these tests still hold.
     """
     SRC = {"id": "t", "url": "https://site.test/feed", "rss_url": "https://site.test/feed",
            "expected_hostname": "site.test", "max_articles": 10}

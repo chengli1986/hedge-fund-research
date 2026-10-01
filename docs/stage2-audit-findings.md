@@ -2,10 +2,10 @@
 
 Evidence gathered 2026-09-26, read-only; A5 and A6 added 2026-09-27 while
 fixing F2 and A1. Twenty-five findings and one observation. Fixed: F2, D4, A1, A6, A2, G1,
-G2, and -- in the 2026-09-30 batch below -- F1, D5, C1, A4, A5; on 2026-10-01, C2 and C3.
+G2, and -- in the 2026-09-30 batch below -- F1, D5, C1, A4, A5; on 2026-10-01, C2, C3 and E3.
 Mitigated: A3 (see the deferred-unification section). Rejected on the
-evidence: G4, D6. Recorded without a fix by decision: G3. Seven remain
-open: B1, B2, D1, D2, E1, E2, E3. Stage 2 is healthy while this is written — 1,526 of 1,585 rows
+evidence: G4, D6. Recorded without a fix by decision: G3. Six remain
+open: B1, B2, D1, D2, E1, E2. Stage 2 is healthy while this is written — 1,526 of 1,585 rows
 have a body (96.3%), and of 89 rows ingested in the last week only 2 have
 none — so none of this is firefighting. Every item is about what the stage
 does when something changes, or about a mechanism that looks protective and
@@ -204,6 +204,51 @@ not the standing total. That belongs with C3 (who owns writes into
 
 Still unexplained: the 2026-09-26 count was 45, and ten files went away
 before 2026-09-30 with no record.
+
+## Decisions of 2026-10-01 on what reaches the page (B2, E3)
+
+Asked of the user with boundary samples in hand; answers verbatim in intent:
+
+1. **Video, podcast, webinar and conference-session pages: title + link
+   only, never a summary** -- whatever the length of the description.
+2. **Event invitations: title + link only.**
+3. **E3: remove ARK's metadata fallback** (option A).
+
+Why the first answer needed asking: under 500 characters the data was
+clean -- all 21 stored bodies there are blurbs or teasers, 16 of them
+summarised -- but between 500 and 2,000 characters substantive show notes
+(ARK's "In The Know" episodes, Aberdeen and MSCI podcasts), invitations
+(Amundi webinars) and genuinely short articles (GSAM's "Market Monitor")
+sit side by side, and keyword markers both missed blurbs (12 of the 21
+under 500) and hit real articles ("Download the full" closes every GSAM
+monitor). A length rule could not express answer 1; it needs the page
+recognised for what it is.
+
+Displaying as title + link is already what happens to every declined or
+failed row: checked against the live page, all 28 permafail rows, all 29
+metadata-only rows and all 50 non-duplicate declines are on it, and only
+duplicate_body is hidden (by design, publish.py).
+
+**E3 done.** `_ark_metadata_fallback` deleted; a 403 or a challenge page
+from ARK is now an ordinary content failure, labelled blocked_by_bot_protection
+from the recorded response or the challenge hint. The 29 existing
+metadata-only rows are untouched -- already declined, already title + link,
+never re-asked. Tests go through `fetch_with_evidence` at
+`Session.request`, the level where responses are recorded; patching
+`requests.get` instead bypasses the recorder and a 403 reads as "unknown",
+which would be requeued on every code change. Both tests fail against the
+old code.
+
+Not covered by answer 3 and left alone: gsam has a fallback of the same
+kind (an API summary stored as the body when the page is client-rendered).
+It has never succeeded -- its 7 rows are permafail with "no API summary" --
+so it has never produced a body for stage 3 to decline. Same question,
+different source; not decided.
+
+**B1/B2/E2 next**: implement answers 1 and 2 by recognising media and event
+pages, trial-run on stored articles without touching production, and put
+the list of rows that would lose their summary in front of the user before
+anything ships.
 
 ## C3 and C2 fixed together, 2026-10-01
 

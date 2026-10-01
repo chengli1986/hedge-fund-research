@@ -687,11 +687,18 @@ def _fetch_content_man(article: dict) -> Optional[tuple[Path, str]]:
 # ---------------------------------------------------------------------------
 
 def _fetch_content_ark(article: dict) -> Optional[tuple[Path, str]]:
-    """Fetch ARK Invest article content with 403 fallback to metadata-only.
+    """Fetch ARK Invest article content from ark-invest.com.
 
-    Primary: fetch HTML article body from ark-invest.com.
-    Fallback: if 403 (Cloudflare IP block), save RSS summary as metadata-only
-    content so the analysis pipeline can still process it with reduced confidence.
+    Cloudflare blocks most ARK article pages from this server. Until
+    2026-10-01 a blocked page fell back to a "metadata_only" body built from
+    the feed's title, category and one-line summary. Stage 3 declined every
+    one of them -- 29 of 29: a title and a publisher blurb are not an article
+    -- so the fallback produced no summary, only a stored body nobody read and
+    the occasional model call that ended in a refusal. Removed by decision
+    (audit E3, option A): a blocked page is now an ordinary content failure,
+    labelled from the evidence (a 403 or a challenge page reads as
+    blocked_by_bot_protection), and the article still appears on the page as
+    title + link, exactly as before.
     """
     url = article["url"]
     log.info("  ARK: fetching article page %s", url)
@@ -701,8 +708,8 @@ def _fetch_content_ark(article: dict) -> Optional[tuple[Path, str]]:
         resp.raise_for_status()
     except requests.exceptions.HTTPError as e:
         if e.response is not None and e.response.status_code == 403:
-            # Cloudflare IP block — fall back to RSS summary as metadata-only
-            return _ark_metadata_fallback(article)
+            log.warning("  ARK: blocked (HTTP 403) at %s", url)
+            return None
         log.warning("  ARK: HTTP error fetching article: %s", e)
         return None
     except Exception as e:
@@ -714,7 +721,7 @@ def _fetch_content_ark(article: dict) -> Optional[tuple[Path, str]]:
     # were stored as a bare title until 2026-09-14. The trailing "For more
     # updates, follow us on X ..." line is dropped. (Articles, white papers and
     # "Stock Stories" videos are Cloudflare-challenged from this server; a
-    # challenge page matches nothing and falls to the metadata fallback.)
+    # challenge page matches nothing and is recorded as a failure.)
     text = _normalize_html(
         resp.text,
         ".single__content .wysiwyg p, article p, .post-content p, .entry-content p, .wp-block-paragraph",
@@ -724,42 +731,12 @@ def _fetch_content_ark(article: dict) -> Optional[tuple[Path, str]]:
 
     if not _check_min_content_length(text):
         log.warning("  ARK: extracted text too short (%d chars)", len(text))
-        return _ark_metadata_fallback(article)
+        return None
 
     content_path = CONTENT_DIR / f"{article['id']}.txt"
     _atomic_write(content_path, text.encode("utf-8"))
     log.info("  ARK: saved %d chars to %s", len(text), content_path.name)
     return (content_path, "ok")
-
-
-def _ark_metadata_fallback(article: dict) -> Optional[tuple[Path, str]]:
-    """Save RSS summary as metadata-only content for ARK articles.
-
-    Returns ("metadata_only") status so the analysis pipeline knows to use
-    a lighter prompt and lower confidence scoring.
-    """
-    summary = article.get("summary", "").strip()
-    title = article.get("title", "").strip()
-    category = article.get("category", "").strip()
-
-    if not summary and not title:
-        log.warning("  ARK: no metadata available for fallback on %s", article.get("id"))
-        return None
-
-    # Build metadata-only content from RSS fields
-    parts = []
-    if title:
-        parts.append(f"Title: {title}")
-    if category:
-        parts.append(f"Category: {category}")
-    if summary:
-        parts.append(f"Summary: {summary}")
-    text = "\n".join(parts)
-
-    content_path = CONTENT_DIR / f"{article['id']}.txt"
-    _atomic_write(content_path, text.encode("utf-8"))
-    log.info("  ARK: saved metadata-only (%d chars) to %s (source restricted)", len(text), content_path.name)
-    return (content_path, "metadata_only")
 
 
 def _fetch_content_bridgewater(article: dict) -> Optional[tuple[Path, str]]:

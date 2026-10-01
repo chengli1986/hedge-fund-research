@@ -232,10 +232,10 @@ def parse_feed(xml_text: str, source: dict, spec: dict) -> list[dict]:
             continue
         seen.add(url)
         date_raw = _feed_text(item, "pubDate", unescape=False)
-        # summary and category too: a feed carries them, and
-        # fetch_content._ark_metadata_fallback reads both -- ARK blocks its
-        # article pages, so for 74% of its rows that fallback body is the
-        # only content there is. Emitting them costs nothing for a feed that
+        # summary and category too: a feed carries them, and they are stored
+        # with the row. Their one consumer, ARK's metadata fallback, was
+        # removed on 2026-10-01 (audit E3) after stage 3 declined all 29
+        # bodies it built; emitting them still costs nothing for a feed that
         # has neither (fetch_source stores a listing field only when truthy).
         cats = [_norm_ws(html.unescape((c.text or ""))) for c in item.findall("category")]
         rows.append({"title": title, "url": url, "date": _feed_date(date_raw),

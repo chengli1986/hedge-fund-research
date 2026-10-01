@@ -51,13 +51,46 @@ def test_the_social_follow_line_and_author_bio_are_not_body(tmp_path, monkeypatc
     assert "follow us on X" not in text and "Cathie founded ARK" not in text
 
 
-def test_a_cloudflare_challenge_served_with_200_is_not_body(tmp_path, monkeypatch):
-    """Some ARK pages answer 200 with the challenge ("Enable JavaScript and
-    cookies to continue"); that must go to the metadata fallback, not be
-    stored as the article."""
+def _blocked_fetch(tmp_path, monkeypatch, status, html):
+    """Fake the server below requests.get, at Session.request, which is where
+    fetch_with_evidence records responses -- so the failure is labelled by the
+    same path production takes. Patching requests.get instead bypasses the
+    recorder and a 403 reads as "unknown"."""
+    import requests
+    import failure_labels
+
+    def fake_request(self, method, url, **kwargs):
+        resp = requests.models.Response()
+        resp.status_code, resp.url, resp._content = status, url, html.encode()
+        resp.headers["Content-Type"] = "text/html"
+        resp.reason = "Forbidden" if status == 403 else "OK"
+        return resp
+
+    monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
+    monkeypatch.setattr(requests.sessions.Session, "request", fake_request)
+    result, evidence = fc.fetch_with_evidence(
+        {"id": "ark-1", "url": "https://www.ark-invest.com/articles/x", "title": "t"}, fc._fetch_content_ark)
+    return result, failure_labels.classify_content_failure(evidence)[0]
+
+
+# Until 2026-10-01 both cases below went to _ark_metadata_fallback, which stored
+# the feed's title and blurb as a "metadata_only" body. Stage 3 declined all 29
+# such rows, so the fallback was removed (audit E3, option A): a blocked page is
+# a content failure, and the article is shown as title + link as before.
+
+def test_a_cloudflare_challenge_served_with_200_is_a_failure_not_a_body(tmp_path, monkeypatch):
     challenge = "<html><body><p>Enable JavaScript and cookies to continue</p></body></html>"
-    out, _ = _fetch(tmp_path, monkeypatch, challenge)
-    assert out[1] == "metadata_only"
+    result, label = _blocked_fetch(tmp_path, monkeypatch, 200, challenge)
+    assert result is None
+    assert label == "blocked_by_bot_protection"
+    assert list(tmp_path.iterdir()) == [], "nothing may be stored for a blocked page"
+
+
+def test_a_403_is_a_failure_not_a_metadata_body(tmp_path, monkeypatch):
+    result, label = _blocked_fetch(tmp_path, monkeypatch, 403, "<html><body>Just a moment...</body></html>")
+    assert result is None
+    assert label == "blocked_by_bot_protection"
+    assert list(tmp_path.iterdir()) == [], "nothing may be stored for a blocked page"
 
 
 def test_rss_titles_are_unescaped(monkeypatch):
