@@ -194,7 +194,7 @@ stands, and now has its explanation: pgim was never merged, lazard was.
 | --- | --- | --- |
 | Byte-identical to a file the store references | 16 | **Archived 2026-10-01** to `~/backups/gmia-orphans-2026-10-01/` with a manifest |
 | Written outside the nightly pipeline (one is `content/test-amundi.txt`) -- audit C3 | 2 | **Archived** with the 16 |
-| Left behind by the 2026-09-14 lazard / cohen-steers dedup merge; the article survives under its canonical URL | 17 | Not rebuilt -- restoring them would re-create exactly the duplicates the merge removed. Redundant. |
+| Left behind by the 2026-09-14 lazard / cohen-steers dedup merge; the article survives under its canonical URL | 17 | Not rebuilt -- restoring them would re-create exactly the duplicates the merge removed. **Archived 2026-10-01** with the others, after re-checking at move time that each has a live same-title row with body overlap >= 0.8 and a content file. `content/` now has **0 orphans**; the manifest lists all 35 with their survivor ids. |
 
 **What the fix for C2 actually is**, then: any operation that removes or
 re-ids rows must move or delete their content files in the same step, and
