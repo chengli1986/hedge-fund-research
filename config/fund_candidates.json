@@ -3434,7 +3434,7 @@
     "official_domain": "www.fulcrumasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-30T09:00:08.589934+08:00",
+    "last_discovered_at": "2026-10-01T09:00:11.231098+08:00",
     "status_since": "2026-08-22T09:03:32.572404+08:00",
     "last_deep_analyzed_at": "2026-09-28T01:01:31Z",
     "quality": "MEDIUM",
@@ -3549,7 +3549,7 @@
     "official_domain": "www.muzinich.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-30T09:00:09.032430+08:00",
+    "last_discovered_at": "2026-10-01T09:00:11.673943+08:00",
     "status_since": "2026-08-25T09:03:39.585223+08:00",
     "quality": "HIGH",
     "quality_score": 0.78,
@@ -3576,7 +3576,7 @@
     "official_domain": "www.cfm.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-30T09:00:09.334004+08:00"
+    "last_discovered_at": "2026-10-01T09:00:11.829237+08:00"
   },
   {
     "id": "northleaf-capital",
@@ -3709,7 +3709,7 @@
     "official_domain": "www.grahamcapital.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-09-30T09:00:09.959081+08:00",
+    "last_discovered_at": "2026-10-01T09:00:12.075600+08:00",
     "status_since": "2026-09-05T09:04:28.857065+08:00",
     "last_deep_analyzed_at": "2026-09-23T01:02:52Z",
     "quality": "HIGH",
@@ -3872,5 +3872,34 @@
     "quality_score": 0.55,
     "topics": "emerging markets, macro, equity, fixed income",
     "notes": "EM-focused insights; WAF 403, articles unverified"
+  },
+  {
+    "id": "hamilton-lane",
+    "name": "Hamilton Lane",
+    "homepage_url": "https://www.hamiltonlane.com",
+    "source": "manual",
+    "status": "discovered",
+    "strategy_tags": [
+      "private_equity",
+      "private_credit",
+      "real_assets"
+    ],
+    "research_url": "https://www.hamiltonlane.com/en-us/insight",
+    "official_domain": "www.hamiltonlane.com",
+    "research_links": [
+      {
+        "url": "https://www.hamiltonlane.com/en-us/insight",
+        "label": "Insights",
+        "path": "en-us/insight"
+      }
+    ],
+    "status_since": "2026-10-01T09:00:44.645418+08:00",
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-10-01T09:00:44.645365+08:00",
+    "last_deep_analyzed_at": "2026-10-01T01:00:58Z",
+    "quality": "MEDIUM",
+    "quality_score": 0.45,
+    "topics": "private equity, private credit, secondaries, venture",
+    "notes": "Insights page is nav hub; no dated index verified"
   }
 ]
