@@ -205,6 +205,33 @@ not the standing total. That belongs with C3 (who owns writes into
 Still unexplained: the 2026-09-26 count was 45, and ten files went away
 before 2026-09-30 with no record.
 
+## The uncovered area, reviewed 2026-10-02: the 8 browser-driven extractors
+
+Declared "weak coverage" in the plan and left out on 2026-09-26: session
+and timeout handling of the extractors that open their own browser --
+oaktree, aqr, cambridge, wellington, troweprice, pimco, aberdeen,
+capital_group. Read-only review; **no defect found, no change made.**
+
+| Question | Finding | Evidence |
+| --- | --- | --- |
+| Is the browser always closed? | Yes. All 8 run inside `with sync_playwright()`, which stops the browsers it launched on any exit, exception included. | 0 browser processes on the host the morning after a run (counted by process name -- a first count matched its own command line). |
+| Wait strategy | 5 already navigate with domcontentloaded/load; the 3 still on networkidle (oaktree, aqr, aberdeen) use `playwright_nav.goto_with_fallback`. By design, not drift -- the helper exists for the networkidle ones. | playwright_nav docstring; each goto call read. |
+| How often do they time out? | 8 timeouts in 543 fetches over the whole log: wellington 2, troweprice 6, the other six never. | fetch_content.log since 2026-03-31. |
+| Can one hung site sink the night? | Not on any record. Stage 2 since August: median 25 s, max 124 s. Whole pipeline, last five recorded runs: median 400 s, max 442 s, against cron-wrapper's 1,800 s; 0 timeouts, 0 non-zero exits. | fetch_content.log; ~/logs/ops-status.jsonl (holds runs from 2026-09-28 only). |
+
+Two theoretical risks, recorded and not acted on:
+
+- **Worst case per article** is about 33-69 s (troweprice: 2 x (30 s + 2 s)
+  + 5 s; the networkidle three: 30 s + 30 s fallback + 3 s). Two sites
+  hanging on ten pending articles each would approach the 1,800 s limit,
+  and stages 3 and 4 would not run that night. Never observed.
+- **On a forced kill** (`timeout --kill-after=30`), whether Playwright's
+  browser survives depends on how Playwright groups its processes --
+  not verified, because the pipeline has never been killed.
+
+Each extractor also launches a fresh browser per article (about 1-2 s
+each); a cost, not a defect, at 15-40 articles a night.
+
 ## Stage-3 grounding rules reviewed, 2026-10-02
 
 Prompted by the first grounding_failed row ever stored (lazard-am, a real
