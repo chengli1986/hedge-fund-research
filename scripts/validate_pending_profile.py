@@ -54,6 +54,15 @@ _MONEY_TOKEN_RE = re.compile(r"[\$¥€£]\s*(\d+(?:\.\d+)?)\s*([KMBT])\b", re.I
 _UNIT_MULT = {"k": 1e3, "m": 1e6, "b": 1e9, "t": 1e12}
 
 
+def _has_marker(text: str, marker: str) -> bool:
+    """Latin markers match as whole words ("clean/annual" is not "n/a");
+    CJK markers have no word boundaries and stay a substring test."""
+    if not marker.isascii():
+        return marker in text
+    return re.search(rf"(?<![a-z0-9]){re.escape(marker)}(?![a-z0-9])",
+                     text, re.I) is not None
+
+
 def _money_tokens(text: str) -> set[str]:
     """Normalised currency-figure tokens in `text`, e.g. {'190b', '2.2t'}.
     Currency symbol is ignored on purpose (we compare magnitudes, not FX)."""
@@ -157,10 +166,12 @@ def validate_profile(data: dict) -> dict:
     high_risk = False
     risk_hits: list[str] = []
     for k, v in data.items():
-        if not isinstance(v, str) or k.startswith("_"):
+        # *_source fields are citations, checked above as citations; a URL
+        # path like '/en/about' contains "n/a" and is not hedged prose.
+        if not isinstance(v, str) or k.startswith("_") or k.endswith("_source"):
             continue
         for marker in HIGH_RISK_MARKERS:
-            if marker.lower() in v.lower():
+            if _has_marker(v, marker):
                 risk_hits.append(f"{k}: '{marker}' → {v[:60]}")
                 high_risk = True
                 break

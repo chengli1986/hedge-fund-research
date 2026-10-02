@@ -140,3 +140,29 @@ def test_reportedly_marker_is_high_risk():
 def test_chinese_speculation_marker_is_high_risk():
     r = vpp.validate_profile(_profile(notable_zh="据传该基金规模业内最大。"))
     assert r["high_risk"]
+
+
+# ───────────── marker false positives (2026-10-02 full-audit #39) ─────────────
+# 'n/a' was a plain substring test over every string field, the *_source
+# citations included, so any URL with a '/en/a…' path ('/en/about',
+# '/en/asset-management') read as "n/a" and failed the profile outright.
+
+def test_a_citation_url_with_en_a_path_is_not_a_marker():
+    r = vpp.validate_profile(_profile(
+        aum_source="https://am.jpmorgan.com/us/en/asset-management/adv/about-us/"))
+    assert not r["high_risk"], r["issues"]
+
+
+def test_marker_inside_a_word_is_not_a_marker():
+    r = vpp.validate_profile(_profile(notable_en="A clean/annual review cycle; see the n/an index."))
+    assert not r["high_risk"], r["issues"]
+
+
+def test_standalone_na_in_prose_is_still_a_marker():
+    r = vpp.validate_profile(_profile(notable_en="Founding year n/a in public filings."))
+    assert r["high_risk"]
+
+
+def test_estimated_is_still_a_marker_at_a_word_boundary():
+    r = vpp.validate_profile(_profile(notable_en="AUM is estimated at $40B."))
+    assert r["high_risk"]
