@@ -518,8 +518,11 @@ def test_stored_content_paths_are_derivable_from_the_id():
     harmless for the same reason -- both readers can derive it -- so an
     absent path is not a disagreement here.
     """
+    if not ARTICLES_FILE.exists():
+        pytest.skip("data/articles.jsonl not present (gitignored)")
+
     rows = [json.loads(line) for line in
-            (REPO / "data" / "articles.jsonl").read_text().splitlines() if line.strip()]
+            ARTICLES_FILE.read_text().splitlines() if line.strip()]
     bad = _path_disagreements(rows)
     assert not bad, f"{len(bad)} rows whose content_path is not content/<id>.txt: {bad[:5]}"
 
