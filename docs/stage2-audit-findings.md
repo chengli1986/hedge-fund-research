@@ -5,7 +5,7 @@ fixing F2 and A1. Twenty-five findings and one observation. Fixed: F2, D4, A1, A
 G2, and -- in the 2026-09-30 batch below -- F1, D5, C1, A4, A5; on 2026-10-01, C2, C3 and E3.
 Mitigated: A3 (see the deferred-unification section). Rejected on the
 evidence: G4, D6. Recorded without a fix by decision: G3. Six remain
-open: B1, B2, D1, D2, E1, E2. Stage 2 is healthy while this is written — 1,526 of 1,585 rows
+open: B1, B2, D1, D2, E1, E2 -- B1, B2 and E2 kept as they are by decision on 2026-10-02; D1, D2 and E1 are record-only. Stage 2 is healthy while this is written — 1,526 of 1,585 rows
 have a body (96.3%), and of 89 rows ingested in the last week only 2 have
 none — so none of this is firefighting. Every item is about what the stage
 does when something changes, or about a mechanism that looks protective and
@@ -287,10 +287,27 @@ It has never succeeded -- its 7 rows are permafail with "no API summary" --
 so it has never produced a body for stage 3 to decline. Same question,
 different source; not decided.
 
-**B1/B2/E2 next**: implement answers 1 and 2 by recognising media and event
-pages, trial-run on stored articles without touching production, and put
-the list of rows that would lose their summary in front of the user before
-anything ships.
+**B1/B2/E2: trial run done, then kept as they are by decision (2026-10-02).**
+A prompt rule asking the model to mark media and event pages was tried on
+the 203 summarised bodies under 2,500 characters plus 25 long controls,
+in memory only (no store or usage-log writes; ~344k tokens). Results: 47
+media/event pages, all 47 checked by hand and correct; 41 further declines
+-- 8 media pages left untyped, 33 pages that are not the article itself
+(gated report previews, "download the PDF" pages, truncated excerpts,
+promotional copy); 4 media pages missed (robeco "EM to the core" episodes
+5 and 7 among them, while 1-4 and 6 were caught -- the judgement varies
+run to run); 1 of 25 controls declined, defensibly (an interview cut off
+mid-answer). New boundary found: podcast pages carrying a full transcript
+(metlife-im, 26,541 characters). Two follow-up questions -- withdraw the
+33 too, and exempt transcripts -- were answered on 2026-10-02 with "keep
+everything as it is": no summary is withdrawn and no rule ships. The
+trial's per-article results are kept in `docs/evidence/b2-media-trial-
+2026-10-01.{jsonl,tsv}` so this can resume without re-running it.
+
+Also kept as they are by the same decision: gsam's metadata fallback, the
+lazard-am weekly-column bodies (E2, not investigated), `_fetch_content_pgim`
+(dead code), and the two stale model descriptions on the docs-site index
+(global-news, skill-assessment-portal).
 
 ## C3 and C2 fixed together, 2026-10-01
 
