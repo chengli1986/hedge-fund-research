@@ -102,7 +102,10 @@ class TestGroundingCheckRules:
         assert any("speculat" in p for p in aa.check_grounding(r, self.BODY))
 
     @pytest.mark.parametrize("zh", ["根据标题，文章认为提款无需清仓。", "作者可能通过量化分析论证。",
-                                    "讨论可能还会延伸到资产配置。", "从标题来看，本文讨论税务。"])
+                                    "讨论可能还会延伸到资产配置。", "从标题来看，本文讨论税务。",
+                                    # "报告" counts only when it names the document itself
+                                    "该报告可能讨论了资产配置。", "本报告可能基于历史数据。",
+                                    "这份报告可能还涉及税务。"])
     def test_chinese_speculation_about_the_article_is_rejected(self, zh):
         r = dict(self.SUMMARY, summary_zh=zh)
         assert any("speculat" in p for p in aa.check_grounding(r, self.BODY))
@@ -116,6 +119,33 @@ class TestGroundingCheckRules:
         """False positives found when the first version ran over the corpus."""
         r = dict(self.SUMMARY, summary_zh=zh)
         assert aa.check_grounding(r, self.BODY) == []
+
+    @pytest.mark.parametrize("zh", [
+        # lazard-am 2026-10-02, "Are We on the Cusp of a Major Asset Allocation
+        # Shift?": a real 6,301-char article about this week's US jobs data. The
+        # model wrote this faithful sentence, "报告可能" matched, and the article
+        # lost its summary; asked again, the model reworded and passed.
+        "强劲的美国就业报告可能加剧通胀担忧、推高长期收益率。",
+        "周五的通胀报告或许偏强。",
+        "就业报告大概会显示劳动力市场降温。",
+    ])
+    def test_a_data_report_hedge_is_not_speculation(self, zh):
+        """In finance "报告" is usually a data release, not the article."""
+        r = dict(self.SUMMARY, summary_zh=zh)
+        assert aa.check_grounding(r, self.BODY) == []
+
+    @pytest.mark.parametrize("phrase", [
+        "A strong jobs report likely pushes long-term yields higher.",
+        "Friday's report probably shows a softer labour market.",
+    ])
+    def test_an_english_data_report_hedge_is_not_speculation(self, phrase):
+        r = dict(self.SUMMARY, summary_en=self.SUMMARY["summary_en"] + " " + phrase)
+        assert not any("speculat" in p for p in aa.check_grounding(r, self.BODY + " " + phrase))
+
+    def test_speculation_about_this_report_is_still_rejected(self):
+        r = dict(self.SUMMARY, summary_en=self.SUMMARY["summary_en"]
+                 + " This report likely argues that withdrawals come from the short book.")
+        assert any("speculat" in p for p in aa.check_grounding(r, self.BODY))
 
     def test_an_expected_market_effect_is_not_speculation(self):
         """kkr: "This regulatory change is expected to address the supply-demand imbalance"."""
@@ -321,6 +351,42 @@ class TestWordingOnlyRetry:
         assert out["insufficient_content"] is True and "grounding" in out["reason"]
         assert calls == ["gpt-5.6-luna", "gpt-5.6-luna"]      # retried once, no fall-through
 
+    # Speculation gets the same one re-ask since 2026-10-02 (lazard-am: the
+    # only speculation hit was a false positive the model reworded on a second
+    # try). Coverage failures still get none.
+    SPECULATIVE = dict(TestGroundingCheckRules.SUMMARY, summary_zh="作者可能通过量化分析论证。")
+
+    def test_a_speculation_only_rejection_is_retried_once_with_the_same_model(self, monkeypatch):
+        calls, prompts = self._chain(monkeypatch, {
+            "gpt-5.6-luna": [json.dumps(self.SPECULATIVE), json.dumps(self.GROUNDED)],
+            "gpt-4.1-mini": [json.dumps(self.GROUNDED)]})
+        out = aa._analyze_with_fallback(self.BODY, {"OPENAI_API_KEY": "k"})
+        assert not out.get("insufficient_content"), out
+        assert out["summary_en"] == self.GROUNDED["summary_en"]
+        assert calls == ["gpt-5.6-luna", "gpt-5.6-luna"]
+        assert "guessed at what the text" in prompts[1]
+        assert "provided text" not in prompts[1], "only the instruction for the problem found"
+
+    def test_a_second_speculation_is_final_and_labelled_for_requeue(self, monkeypatch):
+        calls, _ = self._chain(monkeypatch, {
+            "gpt-5.6-luna": [json.dumps(self.SPECULATIVE)],
+            "gpt-4.1-mini": [json.dumps(self.GROUNDED)]})
+        out = aa._analyze_with_fallback(self.BODY, {"OPENAI_API_KEY": "k"})
+        assert out["insufficient_content"] is True and "speculates" in out["reason"]
+        assert out["_label"] == aa.RULE_MADE_DECLINE
+        assert calls == ["gpt-5.6-luna", "gpt-5.6-luna"]
+
+    def test_speculation_with_a_coverage_failure_is_not_retried(self, monkeypatch):
+        """Content the article does not contain is not a wording accident."""
+        invented = dict(self.SPECULATIVE, summary_en="Copper miners in Chile expanded output while "
+                        "lithium refiners renegotiated offtake contracts with battery makers.")
+        calls, _ = self._chain(monkeypatch, {
+            "gpt-5.6-luna": [json.dumps(invented), json.dumps(self.GROUNDED)],
+            "gpt-4.1-mini": [json.dumps(self.GROUNDED)]})
+        out = aa._analyze_with_fallback(self.BODY, {"OPENAI_API_KEY": "k"})
+        assert out["insufficient_content"] is True and "coverage" in out["reason"]
+        assert calls == ["gpt-5.6-luna"], "a coverage failure must not get a second try"
+
     def test_a_retry_that_fails_to_parse_keeps_the_rejection(self, monkeypatch):
         calls, _ = self._chain(monkeypatch, {
             "gpt-5.6-luna": [json.dumps(self.WORDING), "not json at all"],
@@ -340,14 +406,19 @@ class TestWordingOnlyRetry:
         assert out["insufficient_content"] is True
         assert calls == ["gpt-5.6-luna"]
 
-    def test_wording_together_with_another_problem_is_not_retried(self, monkeypatch):
+    def test_wording_together_with_speculation_is_retried_with_both_instructions(self, monkeypatch):
+        """Until 2026-10-02 this pair was not retried: speculation counted as a
+        real problem. Both are now retryable; what still blocks a retry is a
+        coverage failure (test_a_coverage_failure_is_not_retried,
+        test_speculation_with_a_coverage_failure_is_not_retried)."""
         both = dict(self.WORDING, key_takeaway_en="The author probably argues for tax awareness.")
-        calls, _ = self._chain(monkeypatch, {
+        calls, prompts = self._chain(monkeypatch, {
             "gpt-5.6-luna": [json.dumps(both), json.dumps(self.GROUNDED)],
             "gpt-4.1-mini": [json.dumps(self.GROUNDED)]})
         out = aa._analyze_with_fallback(self.BODY, {"OPENAI_API_KEY": "k"})
-        assert out["insufficient_content"] is True
-        assert calls == ["gpt-5.6-luna"]
+        assert not out.get("insufficient_content"), out
+        assert calls == ["gpt-5.6-luna", "gpt-5.6-luna"]
+        assert "provided text" in prompts[1] and "guessed at what the text" in prompts[1]
 
     def test_the_retry_instruction_still_offers_the_refusal(self):
         assert "insufficient_content" in aa._WORDING_RETRY_INSTRUCTION

@@ -489,12 +489,20 @@ when where which while whom will with within without would your
 _SPECULATION_EN = re.compile(
     r"\bbased on (the )?(article'?s? |paper'?s? |report'?s? )?(title|headline|tags?|authors?)\b"
     r"|\b(title|headline) (suggests|implies|indicates)\b"
-    r"|\b(the )?(article|paper|piece|report|author|authors|analysis|discussion|it)\s+"
+    r"|\b(the )?(article|paper|piece|author|authors|analysis|discussion|it)\s+"
     r"(likely|probably|presumably|possibly)\b"
+    r"|\bthis report\s+(likely|probably|presumably|possibly)\b"
     r"|\b(likely|probably|presumably)\s+(argues?|discuss|discusses|explores?|examines?|"
     r"investigates?|uses?|covers?|addresses|extends?|delves?|focuses|contrasts?|highlights?)\b",
     re.IGNORECASE,
 )
+# "Report" / "报告" counts only when it names the document: "this report",
+# "该报告", "本报告", "这份报告". A bare "report" is usually a data release in
+# finance -- lazard-am 2026-10-02, a real 6,301-char article on this week's
+# jobs data, lost its summary to "强劲的美国就业报告可能加剧通胀担忧", a
+# faithful sentence. That was the rule's only hit since the check went live
+# on 2026-09-13, and none of the 1,562 stored summaries matches either form.
+#
 # The hedge must sit directly on the subject ("作者可能", "讨论可能还会"). A gap
 # means the summary is reporting the article's own view -- the first version
 # allowed six characters and flagged "文章警示可能出现衰退" and "作者认为这很
@@ -502,7 +510,7 @@ _SPECULATION_EN = re.compile(
 # the article conjecturing, not the model.
 _SPECULATION_ZH = re.compile(
     r"(根据|从|依据)(文章)?(的)?(标题|题目)"
-    r"|(文章|作者|报告|该文|本文|论文|讨论)(很|大|也|还)?(可能|大概|或许|想必)"
+    r"|(文章|作者|该文|本文|论文|讨论|(?:该|本|此|这份|这篇)报告)(很|大|也|还)?(可能|大概|或许|想必)"
 )
 # The summary describing its input rather than an article. Extended 2026-09-14:
 # two lazard-am summaries passed the first version by saying the same thing in
@@ -551,6 +559,35 @@ answer {"insufficient_content": true, "reason": "<what the text actually is>"}
 instead of summarising it."""
 
 
+# The speculation rule alone gets the same one re-ask (2026-10-02). Its only
+# hit since 2026-09-13 was a false positive on a real article -- lazard-am,
+# "强劲的美国就业报告可能..." -- and asked again, the model reworded and passed:
+# whether an article keeps its summary should not depend on one word choice.
+# A coverage failure is never retried: content the article does not contain
+# is the one problem a re-ask could paper over.
+_SPECULATION_PROBLEM = "speculates about the article"
+_SPECULATION_RETRY_INSTRUCTION = """
+
+IMPORTANT -- your previous answer was rejected: it guessed at what the text
+says ("likely", "probably", "based on the title", "文章可能") instead of stating
+what it does say. Write only what the text states, as statements of its
+content; a hedge the text itself makes about markets ("yields may rise") is
+fine. Do not add anything that is not in the text. If the text genuinely holds
+no article to summarise, answer {"insufficient_content": true, "reason":
+"<what the text actually is>"} instead of summarising it."""
+_RETRYABLE_PROBLEMS = (_WORDING_PROBLEM, _SPECULATION_PROBLEM)
+
+
+def _retry_instruction(problems: list[str]) -> str:
+    """The re-ask text for a rejection whose problems are all retryable."""
+    parts = []
+    if any(p.startswith(_WORDING_PROBLEM) for p in problems):
+        parts.append(_WORDING_RETRY_INSTRUCTION)
+    if any(p.startswith(_SPECULATION_PROBLEM) for p in problems):
+        parts.append(_SPECULATION_RETRY_INSTRUCTION)
+    return "".join(parts)
+
+
 def _content_words(text: str) -> set[str]:
     return {w[:_COVERAGE_STEM] for w in re.findall(r"[a-z]{4,}", (text or "").lower())
             if w not in _COVERAGE_STOPWORDS}
@@ -576,7 +613,7 @@ def check_grounding(result: dict, content: str) -> list[str]:
 
     if _SPECULATION_EN.search(en) or _SPECULATION_ZH.search(zh):
         hit = (_SPECULATION_EN.search(en) or _SPECULATION_ZH.search(zh)).group(0)
-        problems.append(f"speculates about the article ({hit!r})")
+        problems.append(f"{_SPECULATION_PROBLEM} ({hit!r})")
     if _NOT_AN_ARTICLE.search(en) or _NOT_AN_ARTICLE.search(zh):
         hit = (_NOT_AN_ARTICLE.search(en) or _NOT_AN_ARTICLE.search(zh)).group(0)
         problems.append(f"{_WORDING_PROBLEM}, not an article ({hit!r})")
@@ -662,15 +699,16 @@ def _analyze_with_fallback(
                     # likelier to invent an answer that happens to pass.
                     if not parsed.get("insufficient_content"):
                         problems = check_grounding(parsed, content[:MAX_CONTENT_CHARS])
-                        if problems and all(p.startswith(_WORDING_PROBLEM) for p in problems):
-                            # Wording only: the summary's content words are in
-                            # the article. One re-ask of the same model, which
-                            # may still decline; anything else it returns is
-                            # checked again below.
-                            log.warning("  %s: %s -- re-asking once without the input framing",
+                        if problems and all(p.startswith(_RETRYABLE_PROBLEMS) for p in problems):
+                            # Wording or speculation only: no coverage problem,
+                            # so the summary's content words are in the article.
+                            # One re-ask of the same model, which may still
+                            # decline; anything else it returns is checked
+                            # again below.
+                            log.warning("  %s: %s -- re-asking once",
                                         model_name, "; ".join(problems))
                             retry, retry_usage, retry_model = call(
-                                prompt + _WORDING_RETRY_INSTRUCTION, caller, api_key)
+                                prompt + _retry_instruction(problems), caller, api_key)
                             if retry is not None:
                                 parsed, usage, used_model = retry, retry_usage, retry_model
                                 problems = ([] if parsed.get("insufficient_content")
