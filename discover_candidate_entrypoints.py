@@ -377,7 +377,9 @@ def main() -> None:
         result = validate_candidate(c, weights, dry_run=args.dry_run)
         print(json.dumps(result, indent=2, ensure_ascii=False, default=str))
 
-        if result.get("error"):
+        # A needs_playwright result also carries error="shell_html"/"no_nav_links"
+        # (for the log); it is a routing outcome, handled below, not a failure.
+        if result.get("error") and not result.get("needs_playwright"):
             log.warning("Skipping %s due to error: %s", c["id"], result["error"])
             continue
 

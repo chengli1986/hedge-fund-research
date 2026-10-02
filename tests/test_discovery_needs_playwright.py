@@ -12,6 +12,8 @@ contaminating the candidate's quality signal.
 import importlib.util
 import json
 import sys
+
+import pytest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
@@ -143,3 +145,41 @@ def test_synthesize_fetchers_emits_needs_playwright_field(monkeypatch, tmp_path)
     monkeypatch.setattr(sf, "load_fetcher_ids", lambda: set())
     targets = sf.list_targets()
     assert targets[0]["needs_playwright"] is True
+
+
+# ── main() actually routes it (2026-10-02 full-audit #2) ──
+# The tests above check what validate_candidate *returns*. main() checked
+# result["error"] first and `continue`d, so the needs_playwright branch below it
+# was unreachable: no candidate ever got needs_playwright from this script and
+# shell-HTML funds sat in "screened", re-crawled every day.
+
+def _run_main(monkeypatch, result, status="screened"):
+    cands = [{"id": "f1", "name": "F1", "status": status}]
+    saved = {}
+    monkeypatch.setattr(disc, "load_weights", lambda *a, **k: {})
+    monkeypatch.setattr(disc, "load_candidates", lambda: cands)
+    monkeypatch.setattr(disc, "load_candidate_entrypoints", lambda: {})
+    monkeypatch.setattr(disc, "validate_candidate", lambda *a, **k: dict(result, id="f1"))
+    monkeypatch.setattr(disc, "save_candidates", lambda c: saved.setdefault("c", c))
+    monkeypatch.setattr(disc, "save_candidate_entrypoints", lambda d: None)
+    monkeypatch.setattr(sys, "argv", ["discover_candidate_entrypoints.py"])
+    disc.main()
+    return cands[0], saved
+
+
+@pytest.mark.parametrize("err", ["shell_html", "no_nav_links"])
+def test_main_routes_a_needs_playwright_result_to_inaccessible(monkeypatch, err):
+    c, saved = _run_main(monkeypatch, {"entrypoints": [], "fit_score": 0.0,
+                                       "needs_playwright": True, "error": err,
+                                       "shell_size": 900, "all_scored": []})
+    assert c["status"] == "inaccessible"
+    assert c["needs_playwright"] is True
+    assert "c" in saved
+
+
+def test_main_still_skips_a_plain_error(monkeypatch):
+    c, saved = _run_main(monkeypatch, {"entrypoints": [], "fit_score": 0.0,
+                                       "error": "fetch_failed", "all_scored": []})
+    assert c["status"] == "screened"
+    assert "needs_playwright" not in c
+    assert "c" not in saved
