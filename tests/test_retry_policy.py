@@ -38,10 +38,48 @@ def test_fetch_error_backs_off_and_waits():
     a = _art()
     assert _fail(a, "fetch_error") == "failed"
     assert datetime.fromisoformat(a["content_retry_after"]) == NOW + timedelta(days=1)
-    assert not fc.is_content_pending(a, now=NOW + timedelta(hours=12))
+    # Due on the retry_after date (BJT), whatever the time of day: "wait one
+    # day" means the next night's run. Until 2026-10-02 this compared to the
+    # second, and asserted not-pending at NOW + 12h -- midnight, already the
+    # next date.
+    assert not fc.is_content_pending(a, now=NOW + timedelta(hours=11, minutes=59))
+    assert fc.is_content_pending(a, now=NOW + timedelta(hours=12))
     assert fc.is_content_pending(a, now=NOW + timedelta(days=1, minutes=1))
     _fail(a, "fetch_error", now=NOW + timedelta(days=1))
     assert datetime.fromisoformat(a["content_retry_after"]) == NOW + timedelta(days=3)
+
+
+class TestDueByDateNotBySecond:
+    """2026-10-02. A failure stamped 03:49:36 was due "one day later" at
+    03:49:36, and the next night's stage 2, which starts anywhere between
+    03:49:21 and 03:50:00 BJT, often checked a few seconds early and skipped
+    it for a whole extra day: 11 of 68 one-day retries in the ledger came a
+    day late. The apollo podcast row waiting on 2026-10-02 was one of them.
+    Comparing dates makes "wait N days" mean "the run N nights later"."""
+    STAMP = datetime(2026, 10, 1, 3, 49, 36, tzinfo=BJT)
+
+    def _due(self, retry_after):
+        return _art(content_status="failed", content_retry_after=retry_after.isoformat(timespec="seconds"))
+
+    def test_the_next_nights_run_retries_even_if_it_starts_seconds_earlier(self):
+        row = self._due(self.STAMP + timedelta(days=1))
+        assert fc.is_content_pending(row, now=datetime(2026, 10, 2, 3, 49, 21, tzinfo=BJT))
+
+    def test_not_before_the_date(self):
+        row = self._due(self.STAMP + timedelta(days=1))
+        assert not fc.is_content_pending(row, now=datetime(2026, 10, 1, 23, 59, 59, tzinfo=BJT))
+
+    def test_the_date_is_taken_in_beijing_time(self):
+        """A UTC stamp of 2026-10-01 19:49 is 10-02 03:49 BJT: due on the 2nd."""
+        row = _art(content_status="failed", content_retry_after="2026-10-01T19:49:36+00:00")
+        assert fc.is_content_pending(row, now=datetime(2026, 10, 2, 3, 49, 0, tzinfo=BJT))
+        assert not fc.is_content_pending(row, now=datetime(2026, 10, 1, 23, 0, 0, tzinfo=BJT))
+
+    def test_a_stamp_without_a_zone_stays_due_as_before(self):
+        """No stored value lacks a zone (checked 2026-10-02); if one ever does,
+        keep the old outcome -- comparing it raised and the row counted as due."""
+        row = _art(content_status="failed", content_retry_after="2026-12-31T23:00:00")
+        assert fc.is_content_pending(row, now=NOW)
 
 
 def test_blocked_waits_a_week():

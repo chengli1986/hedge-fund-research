@@ -2479,7 +2479,17 @@ def is_content_pending(article: dict, source_filter: Optional[str] = None,
     retry_after = article.get("content_retry_after")
     if retry_after:
         try:
-            if datetime.fromisoformat(retry_after) > (now or datetime.now(BJT)):
+            due = datetime.fromisoformat(retry_after)
+            # Due on its date in BJT, not at its second: "wait one day" means
+            # the next night's run. The stamp is the moment this article
+            # failed, and the next stage 2 starts anywhere in a ~40 s window
+            # (03:49:21-03:50:00 BJT), so comparing to the second skipped it
+            # for an extra day whenever that run checked a few seconds early:
+            # 11 of 68 one-day retries in the ledger came a day late. A stamp
+            # without a zone keeps its old outcome -- comparing it raised and
+            # the row counted as due; none is stored (checked 2026-10-02).
+            if due.tzinfo is not None and (
+                    due.astimezone(BJT).date() > (now or datetime.now(BJT)).astimezone(BJT).date()):
                 return False
         except (TypeError, ValueError):
             pass
