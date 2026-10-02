@@ -205,6 +205,16 @@ not the standing total. That belongs with C3 (who owns writes into
 Still unexplained: the 2026-09-26 count was 45, and ten files went away
 before 2026-09-30 with no record.
 
+## Retry timing fixed, 2026-10-02 (`ca6e987`)
+
+First noted 2026-09-29 as "a one-day backoff behaves as two days" from two
+cases; measured on 2026-10-02 it is intermittent, not systematic: 11 of 68
+one-day retries in the ledger came a day late. Cause: `is_content_pending`
+compared `content_retry_after` to the second, the stamp is the moment the
+article failed, and the next stage 2 starts in a ~40 s window (03:49:21-
+03:50:00 BJT). Now compared by BJT date. Only behavioural edge: a failure in
+a late-night manual run is retried by the 03:45 nightly run hours later.
+
 ## The uncovered area, reviewed 2026-10-02: the 8 browser-driven extractors
 
 Declared "weak coverage" in the plan and left out on 2026-09-26: session
