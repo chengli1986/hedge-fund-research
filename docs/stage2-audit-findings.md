@@ -240,9 +240,12 @@ Gaps measured on 2026-10-02:
   computed from the article date ("into 2027" for "next year"). A hard
   number rule would reject about 4% of real articles.
 
-Open, for the user: raise or redesign coverage (needs the false-positive
-rate measured first), extend checks to takeaways and Chinese fields, and a
-number check as a report rather than a rejection.
+Offered to the user on 2026-10-02: (A) raise or redesign coverage, after
+measuring its false-positive rate; (B) extend checks to takeaways and the
+Chinese fields; (C) a number check as a report, not a rejection; (D) keep
+the rules as they are after 9ac726a. **Decided: D.** The gaps above are
+known and accepted; reopen with this section's measurements rather than
+from scratch.
 
 ## Decisions of 2026-10-01 on what reaches the page (B2, E3)
 
