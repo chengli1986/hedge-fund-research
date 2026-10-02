@@ -166,10 +166,28 @@ def test_graduate_refuses_when_pending_invalid(tmp_path):
     assert '"research-affiliates"' not in text
 
 
-def test_graduate_accepts_high_risk_only(tmp_path):
-    """validate_pending_profile distinguishes high_risk markers (unknown/unclear)
-    from hard violations (no currency symbol). high_risk should be ACCEPTED with
-    a warning, mirroring auto-promote Phase 4 policy."""
+def test_graduate_ignores_markers_in_private_fields(tmp_path):
+    """A marker in an underscore field (_confidence_notes, never published) is
+    not scanned by the validator, so it does not block graduation. (This test
+    used to be named ..._accepts_high_risk_only and claimed markers were soft;
+    they never were -- see test_graduate_rejects_an_uncertainty_marker_...)"""
     _setup(tmp_path, profile_overrides={"_confidence_notes": "AUM unknown as of 2026"})
     rc = gp.graduate("research-affiliates", base_dir=tmp_path)
     assert rc == 0  # high_risk in _confidence_notes only, not in required fields
+
+
+def test_graduate_rejects_an_uncertainty_marker_in_a_published_field(tmp_path):
+    """2026-10-03 decision: an uncertainty marker in a field that gets
+    published ("reportedly", "未知", ...) blocks graduation outright. The old
+    exemption (msg.startswith("high_risk_marker")) never matched the
+    validator's "high-risk uncertainty markers: ..." message, so markers have
+    always been hard in practice; the user chose to keep it that way and the
+    dead exemption was removed. Fixing that prefix instead would silently turn
+    the gate soft -- this test is what would catch it."""
+    _setup(tmp_path, profile_overrides={
+        "notable_en": "Reportedly the largest fundamental-index licensor."})
+    before = (tmp_path / "publish.py").read_text()
+    rc = gp.graduate("research-affiliates", base_dir=tmp_path)
+    assert rc == gp.EXIT_VALIDATION_FAILED
+    assert (tmp_path / "publish.py").read_text() == before
+    assert (tmp_path / "pending_profiles" / "research-affiliates.json").exists()

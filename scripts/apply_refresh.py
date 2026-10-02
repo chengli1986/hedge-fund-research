@@ -177,7 +177,8 @@ def apply_refresh(fund_id: str, *, base_dir: Path | None = None,
                                    "aum_source": draft.get("aum_source", ""),
                                    "founded_source": draft.get("founded_source", "")},
                                   current=current_profiles[fund_id])
-    hard = [m for m in result["issues"] if not m.startswith("high_risk_marker")]
+    # Every issue is hard, uncertainty markers included (2026-10-03 decision).
+    hard = list(result["issues"])
     if hard:
         sys.stderr.write(f"[apply_refresh] validation failed: {hard}\n")
         return EXIT_VALIDATION_FAILED

@@ -179,3 +179,22 @@ def test_apply_event_text_field_change(tmp_path):
     s1 = importlib.util.spec_from_file_location("pub_e1", tmp_path / "publish.py")
     m1 = importlib.util.module_from_spec(s1); s1.loader.exec_module(m1)
     assert m1.render()["apollo-global-management"]["desc_zh"] == new_desc
+
+
+def test_apply_rejects_an_uncertainty_marker(tmp_path):
+    """2026-10-03: markers are hard failures for refresh applies too (see
+    test_graduate_pending's twin). The removed exemption checked a prefix the
+    validator never emits."""
+    (tmp_path / "publish.py").write_text(PUBLISH_TEMPLATE)
+    _write_draft(tmp_path, "apollo-global-management",
+                 {"aum": "~$1.03T", "aum_source": "https://sec.gov/x",
+                  "notable_en": "ABF pioneer, reportedly."},
+                 [{"field": "aum", "old": "~$700B", "new": "~$1.03T",
+                   "reason": "Q1 2026 8-K", "source": "https://sec.gov/x"},
+                  {"field": "notable_en", "old": "ABF pioneer.",
+                   "new": "ABF pioneer, reportedly.",
+                   "reason": "press", "source": "https://sec.gov/x"}])
+    before = (tmp_path / "publish.py").read_text()
+    rc = ar.apply_refresh("apollo-global-management", base_dir=tmp_path)
+    assert rc == ar.EXIT_VALIDATION_FAILED
+    assert (tmp_path / "publish.py").read_text() == before

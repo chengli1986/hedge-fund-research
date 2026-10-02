@@ -131,10 +131,9 @@ def graduate(fund_id: str, *, base_dir: Path | None = None) -> int:
 
     vpp = _load_validate_module(base)
     result = vpp.validate_profile(profile)
-    hard_issues = [
-        msg for msg in result.get("issues", [])
-        if not msg.startswith("high_risk_marker")
-    ]
+    # Every issue is hard, uncertainty markers included (2026-10-03 decision;
+    # an exemption for them never matched the validator's message anyway).
+    hard_issues = list(result.get("issues", []))
     if hard_issues:
         sys.stderr.write(f"[graduate] validation failed: {hard_issues}\n")
         return EXIT_VALIDATION_FAILED
@@ -164,11 +163,8 @@ def graduate(fund_id: str, *, base_dir: Path | None = None) -> int:
     if validation_path.exists():
         validation_path.unlink()
 
-    high_risk = [m for m in result.get("issues", [])
-                 if m.startswith("high_risk_marker")]
-    suffix = f" (high_risk markers retained: {high_risk})" if high_risk else ""
     sys.stdout.write(
-        f"[graduate] {fund_id} graduated into publish._FUND_PROFILES{suffix}\n"
+        f"[graduate] {fund_id} graduated into publish._FUND_PROFILES\n"
         f"[graduate] cleaned up {pending_path.name}"
         + (f" + {validation_path.name}" if validation_path.exists() else "")
         + "\n"

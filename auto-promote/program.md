@@ -310,9 +310,9 @@ EOF
 - 退出码 `1` (validation 仍 fail) / `2` (已存在) / `3` (pending 文件丢了) / `4` (publish.py 格式异常) → **不重试，不阻塞**；继续 Phase 5（pending 文件保留在原地，等人工 graduate）；history 加 `auto_graduated: false` + `auto_graduate_error: "exit_code=<n>"`
 - 跳过（不满足条件）→ history 加 `auto_graduated: false` + `auto_graduate_skip_reason: "validation_ok=false"` 或 `"high_risk=true"`
 
-**Why this gate is conservative**：`graduate_pending.py` 内部只拦 hard_issues，**接受**纯
-high_risk markers 通过（设计上是给人工 invoke 留口子，假设人会自己核对）。Auto-mode 下没人核对，
-所以本步要在调用前自己加守门——only `ok=true AND high_risk=false` 才放行。
+**Why this gate is conservative**：`graduate_pending.py` 与 `apply_refresh.py` 对**任何** issue
+都拒绝，不确定性标记（high_risk）也是硬失败（2026-10-03 定；此前代码里的 high_risk 豁免因前缀
+对不上从未生效）。本步调用前仍自己守门——only `ok=true AND high_risk=false` 才放行——省一次必败调用。
 
 ### Phase 5 — 跑 contract test
 
