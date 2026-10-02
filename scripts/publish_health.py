@@ -468,11 +468,15 @@ def _read_json(path: Path, default):
 
 
 def _read_jsonl(path: Path) -> list[dict]:
+    # Per-line, via the store's own reader: one torn line (a cron SIGTERM
+    # mid-append) must cost that line, not the whole file -- reading it as []
+    # zeroed the trend with no stale flag. jsonl_store logs what it skipped.
+    import jsonl_store
     try:
-        return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()
-                if line.strip()]
-    except (OSError, json.JSONDecodeError):
+        rows, _ = jsonl_store.read_rows(path)
+    except OSError:
         return []
+    return rows
 
 
 def load_inputs(now: datetime) -> dict:

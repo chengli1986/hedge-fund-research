@@ -423,3 +423,19 @@ class TestTrendHover:
         """The date and count are ours, but escaping is not optional."""
         html = self._html()
         assert 'data-label="<' not in html
+
+
+class TestTornLine:
+    """2026-10-02 full-audit #32: _read_jsonl wrapped the whole file in one
+    try, so a single torn line -- the case jsonl_store documents for a cron
+    SIGTERM mid-append -- returned [] and zeroed the 30-day trend and every
+    per-source count. "rows" is not a REQUIRED_INPUT, so nothing said stale."""
+
+    def test_one_torn_line_keeps_the_other_rows(self, tmp_path):
+        p = tmp_path / "articles.jsonl"
+        p.write_text('{"id": "a"}\n{"id": "b"}\n{"id": "c", "ti\n', encoding="utf-8")
+        rows = ph._read_jsonl(p)
+        assert [r["id"] for r in rows] == ["a", "b"]
+
+    def test_a_missing_file_still_reads_empty(self, tmp_path):
+        assert ph._read_jsonl(tmp_path / "nope.jsonl") == []
