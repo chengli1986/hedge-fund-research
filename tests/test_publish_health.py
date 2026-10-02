@@ -267,6 +267,22 @@ class TestRender:
         assert "components.css" not in html and "<script src=" not in html
 
 
+class TestAuditReportLink:
+    """2026-10-02: the stage-1 and stage-2 audit report lives at its own static
+    page on docs-site; the health page is where a reader starts, so it links
+    there. The closing note also said stages 2-5 had not been audited, which
+    stopped being true when the stage-2 audit closed."""
+
+    def test_the_header_links_to_the_audit_report(self):
+        html = ph.render_html(_build())
+        assert 'href="/hedge-fund-research-audit.html"' in html
+
+    def test_the_page_no_longer_says_stage_2_is_unaudited(self):
+        html = ph.render_html(_build())
+        assert "第 2–5 阶段尚未做系统审计" not in html
+        assert "第 3–5 阶段尚未做系统审计" in html
+
+
 class TestSelfAudit:
     """Four defects found by auditing the page after it shipped.
 

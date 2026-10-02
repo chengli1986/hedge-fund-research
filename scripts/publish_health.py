@@ -425,7 +425,8 @@ def render_html(health: dict) -> str:
   <h1>GMIA 管线健康 · 第 1 阶段（抓文章列表）</h1>
   <div class="sub">生成于 {_esc(_bjt_words(health["generated_at"]))} BJT ·
     数据来自管线自身与健康探针，每晚 04:50 BJT 重建 ·
-    <a href="/hedge-fund-research.html">研报看板 →</a></div>
+    <a href="/hedge-fund-research.html">研报看板 →</a> ·
+    <a href="/hedge-fund-research-audit.html">审查报告 →</a></div>
   <div class="chips">{chips}</div>
 
   <h2>昨夜</h2>
@@ -448,8 +449,9 @@ def render_html(health: dict) -> str:
     · 模板覆盖：{_esc(coverage)}</div>
 
   <h2>其余阶段</h2>
-  <div class="ok" style="color:var(--muted)">第 2–5 阶段尚未做系统审计，面板结构已预留，
-    审完再填——为没审过的阶段现编指标，错的指标比没有更糟。</div>
+  <div class="ok" style="color:var(--muted)">第 2 阶段（抓正文）已完成审查，结论见
+    <a href="/hedge-fund-research-audit.html">审查报告</a>；它的指标还没有放进这块面板。
+    第 3–5 阶段尚未做系统审计，面板结构已预留，审完再填——为没审过的阶段现编指标，错的指标比没有更糟。</div>
 </div>
 </body>
 </html>
