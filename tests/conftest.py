@@ -122,6 +122,7 @@ def _no_network(request, monkeypatch):
     reaching real sites is their whole purpose.
     """
     if request.node.get_closest_marker("live") or request.node.get_closest_marker("nightly"):
+        yield
         return
     import socket
 
@@ -133,3 +134,38 @@ def _no_network(request, monkeypatch):
 
     monkeypatch.setattr(socket.socket, "connect", _blocked)
     monkeypatch.setattr(socket.socket, "connect_ex", _blocked)
+
+    # A browser is a separate process, so blocking socket.connect here does not
+    # stop it. Found 2026-10-02: test_sample_article_quality_tracks_js_only_count
+    # had launched a real Chromium against example.com on every run since
+    # 2026-07-01, when the trial manager gained a Playwright fallback the test
+    # never stubbed -- the page it fetched sent the code down another branch,
+    # and the test failed with a KeyError that hid the cause. Every launch in
+    # this codebase does `from playwright.sync_api import sync_playwright`
+    # inside the function (test_playwright_is_only_imported_inside_functions
+    # holds that), so replacing the attribute catches all of them; a test's
+    # own fake, set on the same attribute, still wins.
+    launches: list[str] = []
+    try:
+        import playwright.sync_api as _pw
+    except ImportError:
+        yield
+        return
+
+    def _no_browser(*args, **kwargs):
+        launches.append(request.node.nodeid)
+        raise RuntimeError(
+            "a unit test tried to launch a real browser — stub the Playwright "
+            "call, or mark the test `live`/`nightly` if it is meant to hit the real thing")
+
+    monkeypatch.setattr(_pw, "sync_playwright", _no_browser)
+    yield
+    # Checked after the test as well as raised during it: code under test
+    # often swallows a fetcher's exception and carries on as if the page were
+    # empty -- the trial manager's Playwright fallback does -- and then the
+    # RuntimeError above is never seen and the test passes for the wrong
+    # reason.
+    assert not launches, (
+        "a unit test tried to launch a real browser (the error may have been "
+        "swallowed by the code under test) — stub the Playwright call, or mark "
+        "the test `live`/`nightly`")

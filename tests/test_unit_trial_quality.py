@@ -1244,6 +1244,11 @@ def test_sample_article_quality_tracks_js_only_count(monkeypatch):
     monkeypatch.setattr(tm, "_get_article_links_for_sampling",
                         lambda trial: ["https://example.com/a1", "https://example.com/a2"])
     monkeypatch.setattr(tm, "_extract_article_text", lambda url, **k: None)
+    # The Playwright fallback arrived on 2026-07-01 (982d7e7) and this test was
+    # never told: from then on it launched a real Chromium against example.com,
+    # got that page's text, took the Haiku branch and failed with a KeyError
+    # that hid the cause. Every extraction route fails in this scenario.
+    monkeypatch.setattr(tm, "_extract_article_text_playwright", lambda url, **k: None)
     monkeypatch.setattr(tm, "_is_likely_js_only", lambda url, **k: True)
     monkeypatch.setattr(tm, "_call_haiku", lambda *a, **k: None)
 

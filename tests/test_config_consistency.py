@@ -522,3 +522,32 @@ def test_stored_content_paths_are_derivable_from_the_id():
             (REPO / "data" / "articles.jsonl").read_text().splitlines() if line.strip()]
     bad = _path_disagreements(rows)
     assert not bad, f"{len(bad)} rows whose content_path is not content/<id>.txt: {bad[:5]}"
+
+
+def _is_playwright_pkg(module: str) -> bool:
+    return module == "playwright" or module.startswith("playwright.")
+
+
+def test_playwright_is_only_imported_inside_functions():
+    """conftest's _no_network stops unit tests launching a real browser by
+    replacing playwright.sync_api.sync_playwright. That only works because
+    every launch imports it inside the function, at call time; a module-level
+    `from playwright.sync_api import sync_playwright` would hold the real
+    object and slip past. Found necessary 2026-10-02, when a unit test turned
+    out to have driven a real Chromium against example.com for three months.
+    """
+    import ast
+    offenders = []
+    for path in sorted(REPO.rglob("*.py")):
+        rel = path.relative_to(REPO)
+        if rel.parts[0] in {"tests", ".git", "docs"} or "site-packages" in rel.parts:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(rel))
+        for node in tree.body:
+            # The package itself, not modules that merely share the prefix
+            # (playwright_nav is this repo's own helper).
+            if isinstance(node, ast.ImportFrom) and _is_playwright_pkg(node.module or ""):
+                offenders.append(f"{rel}:{node.lineno}")
+            elif isinstance(node, ast.Import) and any(_is_playwright_pkg(a.name) for a in node.names):
+                offenders.append(f"{rel}:{node.lineno}")
+    assert not offenders, f"module-level playwright import bypasses the test guard: {offenders}"
