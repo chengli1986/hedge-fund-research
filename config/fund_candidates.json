@@ -3877,7 +3877,7 @@
     "name": "Hamilton Lane",
     "homepage_url": "https://www.hamiltonlane.com",
     "source": "manual",
-    "status": "inaccessible",
+    "status": "visitable",
     "strategy_tags": [
       "private_equity",
       "private_credit",
@@ -3892,7 +3892,7 @@
         "path": "en-us/insight"
       }
     ],
-    "status_since": "2026-10-02T09:00:52.820101+08:00",
+    "status_since": "2026-10-04T02:02:06.269423+08:00",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-10-01T09:00:44.645365+08:00",
     "last_deep_analyzed_at": "2026-10-01T01:00:58Z",
@@ -3915,6 +3915,8 @@
     },
     "screening_reason": "Insufficient article index signals",
     "fit_score": 0.97,
-    "last_validated_at": "2026-10-02T09:00:13.417659+08:00"
+    "last_validated_at": "2026-10-02T09:00:13.417659+08:00",
+    "synthesis_attempted_at": "2026-10-03T18:02:06.269398+00:00",
+    "synthesis_outcome": "success"
   }
 ]

@@ -3378,6 +3378,67 @@ def fetch_northleaf_capital(source: dict) -> list[dict]:
     return articles[:source.get("max_articles", 10)]
 
 
+def fetch_hamilton_lane(source: dict) -> list[dict]:
+    """Fetch insights from Hamilton Lane via its article-data JSON API.
+
+    The ``/en-us/insight`` page is a JS-rendered tile hub; its server HTML has
+    no dated index.  The tiles come from ``/api/<locale>/articledata/insight``
+    (plain GET, no auth), which returns ``{"Content": [...]}`` where each item
+    is either a single ``TileType="Article"`` tile or a ``"Chaptered"`` series
+    hub (Weekly Research Briefing, annual market overviews) whose individual
+    pieces sit under ``ChapteredArticles``.  Series hubs are flattened into
+    their children; the hub tile itself is not an article.
+
+    Video / Podcast tiles carry no body text and "Report/Premium Content"
+    tiles are form-gated downloads, so those types are skipped.
+    ``PublishDate`` is ISO 8601 (``2026-09-16T00:00:00``).
+    """
+    base_url = _site_base(source["url"])
+    expected_host = source.get("expected_hostname") or urlparse(source["url"]).hostname
+    # /en-us/insight -> /api/en-us/articledata/insight
+    path = urlparse(source["url"]).path.strip("/").split("/")
+    locale = path[0] if path and path[0] else "en-us"
+    api_url = f"{base_url}/api/{locale}/articledata/insight"
+    resp = requests.get(api_url, headers={**HEADERS, "Accept": "application/json"}, timeout=20)
+    resp.raise_for_status()
+    items = resp.json().get("Content") or []
+
+    tiles = []
+    for item in items:
+        if item.get("TileType") == "Chaptered":
+            tiles.extend(item.get("ChapteredArticles") or [])
+        else:
+            tiles.append(item)
+
+    skip_types = {"Video", "Podcast", "Report/Premium Content"}
+    articles = []
+    seen = set()
+    for tile in tiles:
+        if tile.get("TileType") != "Article":
+            continue
+        if (tile.get("Data") or {}).get("Type") in skip_types:
+            continue
+        href = tile.get("Url") or ""
+        title = re.sub(r"\s+", " ", tile.get("Headline") or "").strip()
+        if not href or not title:
+            continue
+        url = urljoin(base_url, href)
+        if not _validate_hostname(url, expected_host) or url in seen:
+            continue
+
+        date_raw = (tile.get("PublishDate") or "").strip()
+        seen.add(url)
+        articles.append({
+            "title": title,
+            "url": url,
+            "date": parse_date(date_raw) if date_raw else None,
+            "date_raw": date_raw,
+        })
+
+    articles.sort(key=lambda a: a["date"] or "", reverse=True)
+    return articles[:source.get("max_articles", 10)]
+
+
 # FETCHER_SYNTHESIS_INSERTION_POINT — auto-generated fetchers inserted above this line
 
 
@@ -3718,6 +3779,7 @@ FETCHERS = {
     "aberdeen": fetch_aberdeen,
     "research-affiliates": fetch_researchaffiliates,
     "pimco": fetch_pimco,
+    "hamilton-lane": fetch_hamilton_lane,
     "northleaf-capital": fetch_northleaf_capital,
     "mfs-investment-management": fetch_mfs_investment_management,
     "baillie-gifford": fetch_baillie_gifford,
