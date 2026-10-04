@@ -3434,7 +3434,7 @@
     "official_domain": "www.fulcrumasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-10-03T09:00:09.009422+08:00",
+    "last_discovered_at": "2026-10-04T09:00:07.312431+08:00",
     "status_since": "2026-08-22T09:03:32.572404+08:00",
     "last_deep_analyzed_at": "2026-09-28T01:01:31Z",
     "quality": "MEDIUM",
@@ -3548,7 +3548,7 @@
     "official_domain": "www.muzinich.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-10-03T09:00:09.404239+08:00",
+    "last_discovered_at": "2026-10-04T09:00:07.765304+08:00",
     "status_since": "2026-08-25T09:03:39.585223+08:00",
     "quality": "MEDIUM",
     "quality_score": 0.5,
@@ -3575,7 +3575,7 @@
     "official_domain": "www.cfm.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-10-03T09:00:09.630506+08:00"
+    "last_discovered_at": "2026-10-04T09:00:07.984651+08:00"
   },
   {
     "id": "northleaf-capital",
@@ -3645,11 +3645,11 @@
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-09-02T09:00:15.201191+08:00",
     "status_since": "2026-09-02T09:04:08.773409+08:00",
-    "last_deep_analyzed_at": "2026-09-02T01:02:13Z",
+    "last_deep_analyzed_at": "2026-10-04T01:00:20Z",
     "quality": "LOW",
     "quality_score": 0.35,
     "topics": "macro, multi-strategy, manager selection, blockchain venture capital",
-    "notes": "Mixed podcasts/PR; sampled articles thin marketing"
+    "notes": "Podcasts/sparse posts, no article index; stay rejected"
   },
   {
     "id": "carmignac",
@@ -3708,7 +3708,7 @@
     "official_domain": "www.grahamcapital.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-10-03T09:00:09.802200+08:00",
+    "last_discovered_at": "2026-10-04T09:00:08.528940+08:00",
     "status_since": "2026-09-05T09:04:28.857065+08:00",
     "last_deep_analyzed_at": "2026-10-02T01:00:42Z",
     "quality": "HIGH",
