@@ -9021,6 +9021,78 @@
       "avg_quality_score": 0.783
     }
   ],
-  "active_trials": [],
-  "last_summary_sent_date": "2026-09-01"
+  "active_trials": [
+    {
+      "id": "hamilton-lane",
+      "name": "Hamilton Lane",
+      "research_url": "https://www.hamiltonlane.com/en-us/insight",
+      "homepage_url": "https://www.hamiltonlane.com",
+      "fit_score": 0.97,
+      "quality": "MEDIUM",
+      "topics": "private equity, private credit, secondaries, venture",
+      "start_date": "2026-10-04",
+      "end_date": null,
+      "daily_checks": {
+        "2026-10-04": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/panda-diplomacy",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/fall-begins",
+            "https://www.hamiltonlane.com/en-us/insight/investing-in-efficiency-and-impact",
+            "https://www.hamiltonlane.com/en-us/insight/private-markets-allocations",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/scary-times",
+            "https://www.hamiltonlane.com/en-us/insight/what-sets-strong-private-market-opportunities-apart",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/summer-s-last-call",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/testing-leverage-points",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/enjoy-the-silence",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/the-other-office"
+          ],
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/panda-diplomacy",
+              "relevance": 0.7,
+              "depth": 0.6,
+              "extractable": 1.0,
+              "overall": 0.72,
+              "notes": "Weekly market commentary covering US-China talks, Treasury yields, earnings season, and economic data with macro perspective and portfolio implications."
+            },
+            {
+              "url": "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/fall-begins",
+              "relevance": 0.75,
+              "depth": 0.55,
+              "extractable": 0.7,
+              "overall": 0.66,
+              "notes": "Weekly briefing on energy markets, Fed policy, corporate earnings outlook, and election implications; text appears truncated at end."
+            },
+            {
+              "url": "https://www.hamiltonlane.com/en-us/insight/investing-in-efficiency-and-impact",
+              "relevance": 0.9,
+              "depth": 0.8,
+              "extractable": 0.6,
+              "overall": 0.8,
+              "notes": "Investment research on AI infrastructure opportunities, energy transition services, and circularity themes with deal flow data; text truncated mid-sentence."
+            }
+          ],
+          "avg_score": 0.727,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 1,
+          "date": "2026-10-04"
+        }
+      ]
+    }
+  ],
+  "last_summary_sent_date": "2026-10-04"
 }
