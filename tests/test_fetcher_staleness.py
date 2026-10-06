@@ -867,3 +867,18 @@ def test_the_probe_does_not_write_into_the_content_directory(monkeypatch, tmp_pa
     assert result["status"] == "OK", result
     assert list(tmp_path.iterdir()) == [], "the probe wrote into the content directory"
     assert _real_fetch_content.CONTENT_DIR == tmp_path, "CONTENT_DIR was not restored"
+
+
+def test_an_unreadable_body_is_reported_as_unreadable_not_as_short(monkeypatch):
+    """The probe read the fetched body with `except Exception: this_chars = 0`,
+    so a file it could not read was reported as "too short: 0 chars" -- a
+    measurement that was never taken, naming the wrong cause in the email
+    (full-audit finding, verified 2026-10-06)."""
+    sid = _install_fakes(monkeypatch, [{"title": "t", "url": "http://x/1",
+                                        "date": datetime.now(gfh.BJT).strftime("%Y-%m-%d")}])
+    import fetch_content as fake_fc
+    fake_fc.CONTENT_FETCHERS[sid] = lambda article: (Path("/nonexistent/gmia-probe/body.txt"), "ok")
+    result = gfh._probe_once({"id": sid, "frequency": "weekly"})
+    assert result["status"] == "FAIL", result
+    assert "could not read" in result["reason"], result["reason"]
+    assert "too short: 0 chars" not in result["reason"]

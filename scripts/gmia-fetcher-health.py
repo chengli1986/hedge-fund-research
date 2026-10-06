@@ -426,8 +426,16 @@ def _probe_once(source: dict) -> dict:
 
             try:
                 this_chars = len(path.read_text(encoding="utf-8"))
-            except Exception:
-                this_chars = 0
+            except Exception as exc:
+                # Said as what it is. This used to set this_chars = 0 and fall
+                # into "too short: 0 chars" -- a length nobody measured, naming
+                # the wrong cause in the email (full-audit finding, verified
+                # 2026-10-06). Not transient: a re-fetch writes the same file.
+                attempt["reason"] = (f"could not read the fetched body: "
+                                     f"{type(exc).__name__}: {' '.join(str(exc).split())[:120]}")
+                all_failures_transient = False
+                content_attempts.append(attempt)
+                continue
             if this_chars < fetch_content.MIN_CONTENT_LENGTH:
                 attempt["reason"] = (
                     f"too short: {this_chars} chars (threshold "
