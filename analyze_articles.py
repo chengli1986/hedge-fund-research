@@ -59,7 +59,15 @@ VALID_THEMES = {
 MODEL_CHAIN = ["gpt-5.6-luna", "gpt-4.1-mini"]
 OPENAI_MODELS = frozenset({"gpt-5.6-luna", "gpt-4.1-mini"})
 MAX_ATTEMPTS = 2
-MAX_CONTENT_CHARS = 15000
+# How much of an article the model reads. 15,000 until 2026-10-06: 305 of
+# 1,592 summarised articles were longer, the model saw on average 67% of them
+# (at worst 8%), and what it missed was often argument, not boilerplate.
+# Measured that day: luna read a 77,071-char article whole in 10.8 s against
+# the 120 s timeout, and its summary passed check_grounding; 80,000 costs about
+# 13% more tokens a month and covers 304 of the 305 (the one left is a
+# 187,062-char corporate responsibility report). The grounding check reads the
+# same slice, so a summary of the second half is checked against it.
+MAX_CONTENT_CHARS = 80000
 
 # Rendered from VALID_THEMES so the prompt and the allowlist cannot drift: a
 # theme added to the set but not shown to the model can never be chosen, and one
