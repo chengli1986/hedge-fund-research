@@ -9070,6 +9070,25 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-10-06": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/panda-diplomacy",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/fall-begins",
+            "https://www.hamiltonlane.com/en-us/insight/investing-in-efficiency-and-impact",
+            "https://www.hamiltonlane.com/en-us/insight/private-markets-allocations",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/scary-times",
+            "https://www.hamiltonlane.com/en-us/insight/what-sets-strong-private-market-opportunities-apart",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/summer-s-last-call",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/testing-leverage-points",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/enjoy-the-silence",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/the-other-office"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -9144,6 +9163,41 @@
           "js_only_checked": 0,
           "day": 2,
           "date": "2026-10-05"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/summer-s-last-call",
+              "relevance": 0.85,
+              "depth": 0.65,
+              "extractable": 0.75,
+              "overall": 0.75,
+              "notes": "Weekly market briefing covering AI/tech earnings (Nvidia), M&A activity, macro conditions, and Fed policy with forward-looking portfolio strategy implications."
+            },
+            {
+              "url": "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/testing-leverage-points",
+              "relevance": 0.8,
+              "depth": 0.6,
+              "extractable": 0.7,
+              "overall": 0.7,
+              "notes": "Weekly commentary on geopolitical leverage points (US-Canada trade war, Iran strait), sector rotation, and upcoming catalysts (Nvidia earnings, Jackson Hole)."
+            },
+            {
+              "url": "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/enjoy-the-silence",
+              "relevance": 0.75,
+              "depth": 0.55,
+              "extractable": 0.65,
+              "overall": 0.65,
+              "notes": "Weekly market briefing on low-volatility environment, M&A activity (Silver Lake/Workday, Stripe/OpenRouter), retail earnings calendar, and macro headwinds (energy, debt)."
+            }
+          ],
+          "avg_score": 0.7,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 3,
+          "date": "2026-10-06"
         }
       ]
     }
