@@ -26,7 +26,14 @@ CONTENT_FAILURE_LABELS = {
     "pdf_not_usable": "PDF 读不出来，或不是这篇文章",
     "fetch_error": "网络错误、超时、服务器 5xx 或程序异常",
     "unknown": "未能判定原因：抓取没成功，但证据不足以说明为什么",
+    "page_not_updated": "同一网址的新一期，网页还是上一期的内容（网站先改了列表日期），等它更新后再抓",
 }
+
+# A new issue at a reused URL whose page still shows the previous issue waits
+# this many nights for the site to update it (gsam, 2026-10-02: listing date
+# first, article days later). After that stage 2 stores the body and stage 3's
+# duplicate check decides, which is what happened before the wait existed.
+PAGE_UPDATE_WAIT_NIGHTS = 7
 
 # How a content failure is retried, by label.
 #   backoff_days: wait before the Nth retry (the last value repeats)
@@ -52,6 +59,10 @@ RETRY_POLICY = {
     # requeue is the only mechanism that has ever recovered an article
     # (audit D1: all 7 rescues were permafails re-queued after a fix).
     "unknown":                   {"backoff_days": [1], "max_attempts": 3, "code_dependent": True},
+    # Above the wait, so the label never retires an article: on the night after
+    # the last wait stage 2 stores the body instead (fetch_content._stale_issue).
+    "page_not_updated":          {"backoff_days": [1], "max_attempts": PAGE_UPDATE_WAIT_NIGHTS + 1,
+                                  "code_dependent": False},
 }
 
 ANALYSIS_DECLINE_LABELS = {

@@ -2386,6 +2386,40 @@ def _record_content_failure(article: dict, evidence: dict) -> dict:
     return failure
 
 
+def _stale_issue(article: dict, text: str, articles: list[dict]) -> Optional[dict]:
+    """The earlier issue at this article's URL whose text it repeats, or None.
+
+    A reused URL carries a series (gsam's "Corporate Pension Monthly", loomis
+    monthlies, troweprice's weekly): stage 1 makes a new row per issue. On
+    2026-10-02 gsam's listing showed the new issue days before the page did,
+    so the new row was stored with the September text, stage 3 hid it as a
+    duplicate, and the real issue was never fetched. Holding such a body back
+    lets the next night's fetch get the updated page. "Repeats" is
+    text_identity.same_document -- the definition stage 3's duplicate check
+    uses -- so nothing passes here that stage 3 would hide anyway. After
+    PAGE_UPDATE_WAIT_NIGHTS the wait is over and the body is stored as before.
+    """
+    import failure_labels
+    import text_identity
+
+    failure = article.get("content_failure") or {}
+    if (failure.get("label") == "page_not_updated"
+            and int(failure.get("streak", 0)) >= failure_labels.PAGE_UPDATE_WAIT_NIGHTS):
+        return None
+    for other in articles:
+        if (other.get("id") == article.get("id") or other.get("url") != article.get("url")
+                or other.get("source_id") != article.get("source_id")
+                or other.get("content_status") not in ("ok", "metadata_only")):
+            continue
+        try:
+            other_text = (CONTENT_DIR / f"{other['id']}.txt").read_text(encoding="utf-8")
+        except OSError:
+            continue
+        if text_identity.same_document(text, other_text, article.get("title", ""), other.get("title", "")):
+            return other
+    return None
+
+
 def content_fetcher_for(article: dict):
     """The content fetcher for an article: a PDF URL is read as a PDF whatever
     its source; otherwise the source's own fetcher."""
@@ -2612,6 +2646,20 @@ def main() -> int:
         result, evidence = fetch_with_evidence(a, content_fetcher_for(a))
         if evidence["exception"]:
             log.error("Unexpected error fetching %s (%s): %s", a["id"], a["title"], evidence["exception"])
+
+        if result is not None:
+            try:
+                fetched_text = result[0].read_text(encoding="utf-8")
+            except OSError:
+                fetched_text = None
+            stale = _stale_issue(a, fetched_text, articles) if fetched_text is not None else None
+            if stale is not None:
+                result[0].unlink(missing_ok=True)
+                evidence = {**evidence, "hints": [(
+                    "page_not_updated",
+                    f"same text as the earlier issue {stale.get('id')} ({stale.get('date')}) at this URL; "
+                    f"the page has not been updated yet")]}
+                result = None
 
         if result is not None:
             content_path, status = result

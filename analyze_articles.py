@@ -27,6 +27,7 @@ from typing import Optional
 import requests
 
 import failure_labels
+import text_identity
 
 import jsonl_store
 
@@ -791,8 +792,7 @@ _SUMMARY_FIELDS = ("summary_en", "summary_zh", "key_takeaway_en", "key_takeaway_
 
 def _body_key(source_id: str, text: str) -> tuple[str, str]:
     """Identity of a stored body within its source, ignoring whitespace."""
-    normalised = re.sub(r"\s+", " ", text).strip()
-    return source_id, hashlib.sha256(normalised.encode("utf-8")).hexdigest()
+    return source_id, text_identity.body_hash(text)
 
 
 def _published_bodies(articles: list[dict]) -> dict[tuple[str, str], dict]:
@@ -818,32 +818,16 @@ def _published_bodies(articles: list[dict]) -> dict[tuple[str, str], dict]:
     return owners
 
 
-# A re-published document is rarely byte-identical: janus-henderson's "Charts
-# for the beach 2026" came back 13 characters longer than the stored copy and
-# was summarised a second time (2026-09-17). Similarity is measured as Jaccard
-# over 8-character shingles, and ONLY between articles of the same source that
-# carry the same title -- without that, ares' 1,489-char boilerplate-heavy
-# pieces score 0.89 against a dozen unrelated ones, and gmo's quarterly
-# forecasts (one template, different numbers) score 0.90 against each other.
-#
-# Measured on the store, same source + same title:
-#   1.00 loomis monthly update, 1.00 janus chart deck  -> duplicates
-#   0.79 franklin survey page still being filled in    -> kept
-#   0.35 kkr, 0.33 gsam, 0.30 loomis, 0.18 gsam, 0.14 troweprice -> real issues
-# so 0.85 sits far above every genuine issue seen and below both duplicates.
-DUPLICATE_JACCARD = 0.85
+# What counts as "the same document" -- the shingle Jaccard, its 0.85 bar, the
+# same-title condition and the measurements behind them -- lives in
+# text_identity.py, because stage 2 asks the same question (page_not_updated)
+# and the two stages must not answer it differently.
+DUPLICATE_JACCARD = text_identity.DUPLICATE_JACCARD
 NEAR_DUPLICATE_WATCH = 0.6          # logged and kept, so the borderline stays visible
-SHINGLE = 8
-MIN_COMPARABLE_CHARS = 400          # below this a ratio says nothing
-
-
-def _shingles(text: str) -> set:
-    compact = re.sub(r"[^0-9a-z]", "", (text or "").lower())[:20000]
-    return {compact[i:i + SHINGLE] for i in range(max(len(compact) - SHINGLE + 1, 0))}
-
-
-def _title_key(title: str) -> str:
-    return re.sub(r"[^a-z0-9]", "", (title or "").lower())
+SHINGLE = text_identity.SHINGLE
+MIN_COMPARABLE_CHARS = text_identity.MIN_COMPARABLE_CHARS
+_shingles = text_identity.shingles
+_title_key = text_identity.title_key
 
 
 def published_index(articles: list[dict], bodies: dict[str, str] | None = None) -> dict:

@@ -20,6 +20,7 @@
 | `body_rendered_client_side` | 正文由浏览器脚本渲染 | 抓取器显式提示（gsam：HTML 无正文且无 API 简介） |
 | `pdf_not_usable` | PDF 读不出或不是这篇 | 抓取器显式提示（标题词重合 <75%、PDF 响应无效） |
 | `fetch_error` | 网络/超时/5xx/程序异常 | 5xx、异常、日志中的 timeout/failed 等 |
+| `page_not_updated` | 同一网址的新一期，网页还是上一期的内容 | 抓到的正文和**同一网址上另一期**按 `text_identity.same_document` 判为同一份（与第 3 阶段判重复同一口径）；每晚重试，最多等 `PAGE_UPDATE_WAIT_NIGHTS`（7）晚，之后照常保存、交给第 3 阶段 |
 
 ### 第 3 阶段：AI 拒绝摘要 → `analysis_label`
 
@@ -84,6 +85,19 @@ bridgewater 的抽取器在正文里搜 `"terms of use"` 等词来判断「这�
 改法：只保留**强信号**（`subscribe to read` / `register to continue` / `log in to read` 等
 6 个明确要求登录的短语），命中时上报 `access_denied`；`disclaimer` / `privacy policy` /
 `terms of use` / cookie 类措辞**不再参与判定**。
+
+## 3c. 案例（2026-10-06）：网站先改日期、后换内容，新一期被当成重复
+
+gsam 的《Corporate Pension Monthly》每期都在同一个网址。10-02 列表上出现了新一期，
+第 2 阶段去抓时页面**还是 8 月数据那期**（"In August … 112.2%"），第 3 阶段发现正文和已发布的
+09-02 那期一字不差，判 `duplicate_body` 隐藏——之后再没人去抓。10-06 再看，页面已经换成
+"In September … 114.2%"，库里却从来没有这一期。
+
+- 根因：重复判定只问"是不是和已有的一样"，没问"这一期的页面更新了没有"
+- 修法：第 2 阶段遇到和同一网址上一期相同的正文，记 `page_not_updated`、先不存、第二天再抓；
+  "相同"的定义抽到 `text_identity.py`，两个阶段共用，避免第 2 阶段放行、第 3 阶段又隐藏
+- 同期另外 4 条"同网址的重复"逐条实抓核对：3 条确实是同一篇改了日期（janus×2、kkr），
+  1 条（loomis 月报）内容变了但页面本身只是几百字的预告
 
 ## 4. 排查同类问题时的检查清单
 
