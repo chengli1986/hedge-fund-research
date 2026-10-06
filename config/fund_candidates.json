@@ -3427,20 +3427,20 @@
     "status": "seed",
     "strategy_tags": [
       "macro",
-      "quant",
-      "multi_asset"
+      "multi_asset",
+      "fixed_income"
     ],
     "rss_url": "https://fulcrumasset.com/feed/",
     "official_domain": "www.fulcrumasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-10-05T09:00:09.562132+08:00",
+    "last_discovered_at": "2026-10-06T09:00:08.436458+08:00",
     "status_since": "2026-08-22T09:03:32.572404+08:00",
-    "last_deep_analyzed_at": "2026-09-28T01:01:31Z",
-    "quality": "MEDIUM",
-    "quality_score": 0.6,
-    "topics": "macro, quant, multi-asset, commodities, central bank analysis",
-    "notes": "PDF-gated, genuine macro/quant research; reconfirmed 09-28"
+    "last_deep_analyzed_at": "2026-10-06T01:00:39Z",
+    "quality": "HIGH",
+    "quality_score": 0.8,
+    "topics": "macro, multi-asset, alternative credit, FX",
+    "notes": "Quant macro/LLM research, ~monthly; latest 2026-08"
   },
   {
     "id": "mfs-investment-management",
@@ -3548,7 +3548,7 @@
     "official_domain": "www.muzinich.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-10-05T09:00:09.933495+08:00",
+    "last_discovered_at": "2026-10-06T09:00:08.788579+08:00",
     "status_since": "2026-08-25T09:03:39.585223+08:00",
     "quality": "MEDIUM",
     "quality_score": 0.5,
@@ -3575,7 +3575,7 @@
     "official_domain": "www.cfm.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-10-05T09:00:10.059321+08:00"
+    "last_discovered_at": "2026-10-06T09:00:09.002545+08:00"
   },
   {
     "id": "northleaf-capital",
@@ -3688,7 +3688,7 @@
     "screening_reason": "Login/paywall detected",
     "fit_score": 0.97,
     "last_validated_at": "2026-09-05T09:00:30.624474+08:00",
-    "last_deep_analyzed_at": "2026-09-05T01:02:36Z",
+    "last_deep_analyzed_at": "2026-10-06T01:00:39Z",
     "quality": "LOW",
     "quality_score": 0.35,
     "topics": "ESG stewardship, sustainable investing, corporate governance",
@@ -3708,7 +3708,7 @@
     "official_domain": "www.grahamcapital.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-10-05T09:00:10.579603+08:00",
+    "last_discovered_at": "2026-10-06T09:00:09.154429+08:00",
     "status_since": "2026-09-05T09:04:28.857065+08:00",
     "last_deep_analyzed_at": "2026-10-02T01:00:42Z",
     "quality": "HIGH",
