@@ -3434,7 +3434,7 @@
     "official_domain": "www.fulcrumasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-10-06T09:00:08.436458+08:00",
+    "last_discovered_at": "2026-10-07T09:00:08.916226+08:00",
     "status_since": "2026-08-22T09:03:32.572404+08:00",
     "last_deep_analyzed_at": "2026-10-06T01:00:39Z",
     "quality": "HIGH",
@@ -3548,7 +3548,7 @@
     "official_domain": "www.muzinich.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-10-06T09:00:08.788579+08:00",
+    "last_discovered_at": "2026-10-07T09:00:09.228892+08:00",
     "status_since": "2026-08-25T09:03:39.585223+08:00",
     "quality": "MEDIUM",
     "quality_score": 0.5,
@@ -3575,7 +3575,7 @@
     "official_domain": "www.cfm.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-10-06T09:00:09.002545+08:00"
+    "last_discovered_at": "2026-10-07T09:00:09.450567+08:00"
   },
   {
     "id": "northleaf-capital",
@@ -3708,7 +3708,7 @@
     "official_domain": "www.grahamcapital.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-10-06T09:00:09.154429+08:00",
+    "last_discovered_at": "2026-10-07T09:00:09.580740+08:00",
     "status_since": "2026-09-05T09:04:28.857065+08:00",
     "last_deep_analyzed_at": "2026-10-02T01:00:42Z",
     "quality": "HIGH",
@@ -3918,5 +3918,49 @@
     "last_validated_at": "2026-10-02T09:00:13.417659+08:00",
     "synthesis_attempted_at": "2026-10-03T18:02:06.269398+00:00",
     "synthesis_outcome": "success"
+  },
+  {
+    "id": "rbc-bluebay",
+    "name": "RBC BlueBay Asset Management",
+    "homepage_url": "https://www.rbcbluebay.com/en/institutional/what-we-think/insights/",
+    "source": "manual",
+    "status": "discovered",
+    "strategy_tags": [
+      "fixed_income",
+      "macro",
+      "private_credit"
+    ],
+    "research_url": "https://www.rbcbluebay.com/en/institutional/what-we-think/insights/",
+    "official_domain": "www.rbcbluebay.com",
+    "research_links": [
+      {
+        "url": "https://www.rbcbluebay.com/en/institutional/what-we-think/insights/",
+        "label": "What we think",
+        "path": "en/institutional/what-we-think/insights"
+      },
+      {
+        "url": "https://www.rbcbluebay.com/en/institutional/what-we-think/insights/french-society-needs-to-embrace-change-or-its-politicians-wont/",
+        "label": "",
+        "path": "en/institutional/what-we-think/insights/french-society-needs-to-embrace-change-or-its-politicians-wont"
+      },
+      {
+        "url": "https://www.rbcbluebay.com/en/institutional/what-we-think/insights/inflation-back-to-the-70s/",
+        "label": "Inflation: Back to the 70s?",
+        "path": "en/institutional/what-we-think/insights/inflation-back-to-the-70s"
+      },
+      {
+        "url": "https://www.rbcbluebay.com/en/institutional/what-we-think/insights/securitized-credit-a-versatile-spectrum-of-portfolio-roles/",
+        "label": "Securitized credit: a versatile spectrum of portfolio roles",
+        "path": "en/institutional/what-we-think/insights/securitized-credit-a-versatile-spectrum-of-portfolio-roles"
+      },
+      {
+        "url": "https://www.rbcbluebay.com/en/institutional/what-we-think/insights/polinas-perspective-shooting-for-the-moon-strategic-rivalry-in-a-fragile-world/",
+        "label": "Polina’s Perspective: Shooting for the moon - strategic rivalry in a fragile world",
+        "path": "en/institutional/what-we-think/insights/polinas-perspective-shooting-for-the-moon-strategic-rivalry-in-a-fragile-world"
+      }
+    ],
+    "status_since": "2026-10-07T09:00:46.436030+08:00",
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-10-07T09:00:46.435991+08:00"
   }
 ]
