@@ -410,6 +410,7 @@ def _probe_once(source: dict) -> dict:
                 label, detail = failure_labels.classify_content_failure(evidence)
                 # Playwright details carry a multi-line call log; one line for the email.
                 attempt["reason"] = f"returned None ({label}: {' '.join(detail.split())[:160]})"
+                attempt["label"] = label
                 if _evidence_is_transient(evidence, label):
                     transient_exc_seen = RuntimeError(attempt["reason"])
                 else:
@@ -470,6 +471,19 @@ def _probe_once(source: dict) -> dict:
         summary = "; ".join(
             f"#{a['index']}={a['reason']}" for a in content_attempts
         )
+        if content_attempts and all(a.get("label") == "media_without_text"
+                                    for a in content_attempts):
+            # Every attempt saw a media player: the content mix, not the
+            # fetcher (matthews-asia 2026-10-07, six videos in a row). FAIL
+            # made this job exit 1 and the liveness audit repeat it as BAIL
+            # daily; a WARN still reaches the email after a 3-run streak.
+            # Any other label in the mix keeps the FAIL below.
+            result["status"] = "WARN"
+            result["reason"] = (
+                f"content mix: all top {n_tried} articles are video/media pages "
+                f"(media_without_text), no full-text article to probe: {summary}"
+            )
+            return result
         result["status"] = "FAIL"
         result["reason"] = (
             f"all top {n_tried} articles failed content probe: {summary}"

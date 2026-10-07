@@ -882,3 +882,52 @@ def test_an_unreadable_body_is_reported_as_unreadable_not_as_short(monkeypatch):
     assert result["status"] == "FAIL", result
     assert "could not read" in result["reason"], result["reason"]
     assert "too short: 0 chars" not in result["reason"]
+
+
+# ── all-media content mix is WARN, not FAIL (matthews-asia 2026-10-07) ─────────
+#
+# Matthews' newest six items were all video pages (each one detected as a
+# media player with a short description): the extractor was fine, the content
+# mix was not. FAIL made the health job exit 1 and the liveness audit report it
+# a second time as BAIL, every day the mix lasted. Only an all-media result is
+# downgraded; one attempt with any other label keeps the FAIL, since
+# body_too_short / selector_miss / fetch_error are what a broken fetcher shows.
+
+def _patch_labels(monkeypatch, labels):
+    import failure_labels
+    seq = iter(labels)
+    monkeypatch.setattr(failure_labels, "classify_content_failure",
+                        lambda evidence: (next(seq), "extracted text too short"))
+
+
+def _three_none(monkeypatch):
+    today_iso = datetime.now(gfh.BJT).strftime("%Y-%m-%d")
+    return _install_per_article_fakes(
+        monkeypatch,
+        [{"title": c, "url": f"http://a/{i}", "date": today_iso}
+         for i, c in enumerate("abc", 1)],
+        outcomes={f"http://a/{i}": (lambda art: None) for i in (1, 2, 3)},
+    )
+
+
+def test_probe_warns_when_every_attempt_is_a_media_page(monkeypatch):
+    sid = _three_none(monkeypatch)
+    _patch_labels(monkeypatch, ["media_without_text"] * 3)
+    result = gfh._probe_once({"id": sid, "frequency": "weekly"})
+    assert result["status"] == "WARN", result
+    assert "media_without_text" in result["reason"]
+    assert "video" in result["reason"] or "media" in result["reason"]
+
+
+def test_probe_still_fails_when_one_attempt_is_not_media(monkeypatch):
+    sid = _three_none(monkeypatch)
+    _patch_labels(monkeypatch, ["media_without_text", "body_too_short", "media_without_text"])
+    result = gfh._probe_once({"id": sid, "frequency": "weekly"})
+    assert result["status"] == "FAIL", result
+
+
+def test_probe_still_fails_when_no_attempt_is_media(monkeypatch):
+    sid = _three_none(monkeypatch)
+    _patch_labels(monkeypatch, ["selector_miss"] * 3)
+    result = gfh._probe_once({"id": sid, "frequency": "weekly"})
+    assert result["status"] == "FAIL", result
