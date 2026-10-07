@@ -62,6 +62,9 @@ FATAL_CODES = {"insufficient_quota", "credit_balance_exhausted", "billing_hard_l
 
 class FatalAPIError(Exception):
     """Every later call would fail the same way: stop the run."""
+    def __init__(self, message, billed=None):
+        super().__init__(message)
+        self.billed: list[tuple[dict, bool]] = billed if billed is not None else []
 
 
 def _error_code(exc: requests.HTTPError) -> str:
@@ -118,7 +121,7 @@ def classify(row: dict, api_key: str, call=aa._call_openai, sleep=time.sleep,
             raw, usage, _model = call(prompt, api_key, model=MODEL)
         except requests.HTTPError as exc:
             if is_fatal(exc):
-                raise FatalAPIError(f"{exc.response.status_code} {_error_code(exc) or exc}") from exc
+                raise FatalAPIError(f"{exc.response.status_code} {_error_code(exc) or exc}", billed=billed) from exc
             last = f"HTTP {exc.response.status_code if exc.response is not None else '?'}"
             sleep(5 * (attempt + 1))
             continue
@@ -203,7 +206,7 @@ def run(path: Path, api_key: str, backup: Path | None, limit: int = 0, workers: 
             return row, *classify(row, api_key, call=call, sleep=sleep, stop=stop)
         except FatalAPIError as exc:
             stop.set()
-            return row, None, f"fatal: {exc}", []
+            return row, None, f"fatal: {exc}", exc.billed
 
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = [pool.submit(work, r) for r in todo]
