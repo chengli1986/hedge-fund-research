@@ -2369,14 +2369,30 @@ def fetch_metlife_im(source: dict) -> list[dict]:
     return articles[:max_articles]
 
 
+# Top-level /us/news-and-insights/<slug> pages are read only from this
+# publication date on: the section also holds the back catalogue, and Ares
+# re-edits old pieces (lastmod moves, the page's own date does not).
+ARES_TOP_LEVEL_SINCE = "2026-06-01"
+# share-print-tag values that are not articles: video/interview stubs.
+ARES_SKIPPED_TAGS = {"media"}
+ARES_TOP_LEVEL_SCAN = 30
+
+
 def fetch_ares_management(source: dict) -> list[dict]:
-    """Fetch articles from Ares Management Perspectives (sitemap + page scrape).
+    """Fetch articles from Ares Management insights (sitemap + page scrape).
 
     The /perspectives listing is gated by an interactive country+role attestation
     modal that's impractical to bypass programmatically. We parse sitemap.xml
-    (publicly accessible) for /us/news-and-insights/perspectives/* URLs sorted by
-    lastmod desc, then fetch each article HTML to extract real title and the
-    publish date from <span class="share-print-date">.
+    (publicly accessible) for article URLs sorted by lastmod desc, then fetch
+    each article HTML to extract real title and the publish date from
+    <span class="share-print-date">.
+
+    Two URL shapes. /us/news-and-insights/perspectives/<slug> as before, and,
+    since Ares stopped publishing under /perspectives/ after 2026-08-27, the
+    top level /us/news-and-insights/<slug>. Top-level pages need a page date
+    on or after ARES_TOP_LEVEL_SINCE and a share-print-tag other than Media;
+    hubs without a date (In the Gaps, whose PDFs are marked confidential) are
+    skipped rather than dated by lastmod.
     """
     base_url = _site_base(source["url"])
     sitemap_url = f"{base_url}/sitemap.xml"
@@ -2387,50 +2403,67 @@ def fetch_ares_management(source: dict) -> list[dict]:
     resp.raise_for_status()
 
     pattern = re.compile(
-        rf"<loc>({re.escape(base_url)}/us/news-and-insights/perspectives/[^<]+)</loc>"
+        rf"<loc>({re.escape(base_url)}/us/news-and-insights/(perspectives/)?[^/<]+)</loc>"
         r"\s*<lastmod>([^<]+)</lastmod>",
         re.IGNORECASE,
     )
-    entries = pattern.findall(resp.text)
-    entries.sort(key=lambda x: x[1], reverse=True)
+    perspectives: list[tuple[str, str]] = []
+    top_level: list[tuple[str, str]] = []
+    for url, section, lastmod in pattern.findall(resp.text):
+        (perspectives if section else top_level).append((url, lastmod))
+    perspectives.sort(key=lambda x: x[1], reverse=True)
+    # A page published on or after the floor was last modified on or after it.
+    top_level = [e for e in top_level if e[1][:10] >= ARES_TOP_LEVEL_SINCE]
+    top_level.sort(key=lambda x: x[1], reverse=True)
+
+    def _read(url: str, lastmod: str, is_top_level: bool) -> Optional[dict]:
+        if not _validate_hostname(url, expected_host):
+            return None
+        art_resp = requests.get(url, headers=HEADERS, timeout=15)
+        if art_resp.status_code != 200:
+            return None
+        art_soup = BeautifulSoup(art_resp.text, "html.parser")
+        h1 = art_soup.find("h1")
+        title = h1.get_text(strip=True) if h1 else ""
+        if not title:
+            og = art_soup.find("meta", property="og:title")
+            if og:
+                title = (og.get("content") or "").strip()
+        if not title:
+            return None
+
+        date_el = art_soup.select_one("span.share-print-date")
+        date_raw = date_el.get_text(strip=True) if date_el else ""
+        parsed_date = parse_date(date_raw) if date_raw else None
+        if is_top_level:
+            tag_el = art_soup.select_one(".share-print-tag")
+            tag = tag_el.get_text(strip=True).lower() if tag_el else ""
+            if tag in ARES_SKIPPED_TAGS:
+                return None
+            if not parsed_date or parsed_date < ARES_TOP_LEVEL_SINCE:
+                return None
+        if not parsed_date:
+            parsed_date = parse_date(lastmod[:10])
+            if not date_raw:
+                date_raw = lastmod[:10]
+        return {"title": title, "url": url, "date": parsed_date, "date_raw": date_raw}
 
     articles: list[dict] = []
-    for url, lastmod in entries[: max_articles * 2]:
-        if not _validate_hostname(url, expected_host):
-            continue
-        try:
-            art_resp = requests.get(url, headers=HEADERS, timeout=15)
-            if art_resp.status_code != 200:
+    for entries, scan, is_top_level in ((perspectives, max_articles * 2, False),
+                                        (top_level, ARES_TOP_LEVEL_SCAN, True)):
+        found = 0
+        for url, lastmod in entries[:scan]:
+            try:
+                art = _read(url, lastmod, is_top_level)
+            except Exception:
                 continue
-            art_soup = BeautifulSoup(art_resp.text, "html.parser")
-            h1 = art_soup.find("h1")
-            title = h1.get_text(strip=True) if h1 else ""
-            if not title:
-                og = art_soup.find("meta", property="og:title")
-                if og:
-                    title = (og.get("content") or "").strip()
-            if not title:
-                continue
+            if art:
+                articles.append(art)
+                found += 1
+                if found >= max_articles:
+                    break
 
-            date_el = art_soup.select_one("span.share-print-date")
-            date_raw = date_el.get_text(strip=True) if date_el else ""
-            parsed_date = parse_date(date_raw) if date_raw else None
-            if not parsed_date:
-                parsed_date = parse_date(lastmod[:10])
-                if not date_raw:
-                    date_raw = lastmod[:10]
-
-            articles.append({
-                "title": title,
-                "url": url,
-                "date": parsed_date,
-                "date_raw": date_raw,
-            })
-            if len(articles) >= max_articles:
-                break
-        except Exception:
-            continue
-
+    articles.sort(key=lambda a: a["date"] or "", reverse=True)
     return articles[:max_articles]
 
 
