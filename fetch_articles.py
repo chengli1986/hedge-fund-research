@@ -4148,7 +4148,9 @@ def main() -> None:
         if source != sources[-1]:
             time.sleep(2)
 
-    if all_new:
+    if all_new and args.dry_run:
+        log.info("Dry run: %d new articles found, not saved", len(all_new))
+    elif all_new:
         log.info("Saved %d new articles to %s", len(all_new), DATA_FILE)
     else:
         log.info("No new articles found.")

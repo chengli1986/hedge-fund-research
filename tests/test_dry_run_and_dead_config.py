@@ -71,6 +71,25 @@ class TestDryRunReportsThisRun:
         self._run(monkeypatch, [{"title": "T", "url": "https://x/a", "date": "2026-09-21"}])
         assert not list(state.parent.glob("*.corrupt-*")), "a dry run wrote a backup file"
 
+    def test_a_dry_run_does_not_claim_it_saved(self, state, monkeypatch, caplog):
+        """2026-10-07: an ares dry run logged "Saved 1 new articles to
+        .../articles.jsonl" while writing nothing -- with the worktree's data/
+        symlinked to production, that line alone looked like a production write."""
+        import logging
+        with caplog.at_level(logging.INFO):
+            self._run(monkeypatch, [{"title": "T", "url": "https://x/a", "date": "2026-09-21"}])
+        assert not (state.parent / "articles.jsonl").exists()
+        assert "Saved" not in caplog.text
+        assert "not saved" in caplog.text and "1 new" in caplog.text
+
+    def test_a_real_run_still_says_it_saved(self, state, monkeypatch, caplog):
+        import logging
+        with caplog.at_level(logging.INFO):
+            self._run(monkeypatch, [{"title": "T", "url": "https://x/a", "date": "2026-09-21"}],
+                      dry=False)
+        assert (state.parent / "articles.jsonl").exists()
+        assert "Saved 1 new articles" in caplog.text
+
     def test_a_real_run_records_and_reads_the_same_numbers(self, state, monkeypatch):
         self._run(monkeypatch, [{"title": "T", "url": "https://x/a", "date": "2026-09-21"}], dry=False)
         assert json.loads(state.read_text())["gsam"]["last_article_count"] == 1
