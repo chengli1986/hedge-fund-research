@@ -9089,6 +9089,25 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-10-07": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/out-of-the-sandbox",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/panda-diplomacy",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/fall-begins",
+            "https://www.hamiltonlane.com/en-us/insight/investing-in-efficiency-and-impact",
+            "https://www.hamiltonlane.com/en-us/insight/private-markets-allocations",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/scary-times",
+            "https://www.hamiltonlane.com/en-us/insight/what-sets-strong-private-market-opportunities-apart",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/summer-s-last-call",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/testing-leverage-points",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/enjoy-the-silence"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -9198,6 +9217,25 @@
           "js_only_checked": 0,
           "day": 3,
           "date": "2026-10-06"
+        },
+        {
+          "sampled": 1,
+          "articles": [
+            {
+              "url": "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/out-of-the-sandbox",
+              "relevance": 0.4,
+              "depth": 0.2,
+              "extractable": 0.6,
+              "overall": 0.36,
+              "notes": "Promotional link to podcast discussion about private markets; minimal substantive content, mostly metadata and disclaimers"
+            }
+          ],
+          "avg_score": 0.36,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 4,
+          "date": "2026-10-07"
         }
       ]
     }
