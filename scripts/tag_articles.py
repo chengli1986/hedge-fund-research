@@ -35,6 +35,7 @@ Safety:
     python3 scripts/tag_articles.py --limit 100 --backup DIR
     python3 scripts/tag_articles.py --backup DIR
     python3 scripts/tag_articles.py --backup DIR --retag-before 2026-10-08T12:00:00+08:00
+    python3 scripts/tag_articles.py --nightly      # run_pipeline.sh Stage 3b (since 2026-10-08)
 """
 from __future__ import annotations
 
@@ -196,7 +197,7 @@ def flush(path: Path, done: dict[str, dict]) -> int:
 
 def run(path: Path, api_key: str, backup: Path | None, limit: int = 0, workers: int = 3,
         dry_run: bool = False, retag_before: str | None = None, only_series: bool = False,
-        also_types: tuple[str, ...] = (), call=aa._call_openai, sleep=time.sleep, log_usage=aa._append_usage_log) -> int:
+        also_types: tuple[str, ...] = (), fresh_snapshot: bool = False, call=aa._call_openai, sleep=time.sleep, log_usage=aa._append_usage_log) -> int:
     rows, damaged = jsonl_store.read_rows(path)
     if damaged:
         print(f"{damaged} damaged row(s) in the store; refusing to rewrite it")
@@ -214,7 +215,7 @@ def run(path: Path, api_key: str, backup: Path | None, limit: int = 0, workers: 
         raise SystemExit("--backup DIR is required for a real run")
     backup.mkdir(parents=True, exist_ok=True)
     snapshot = backup / "articles.jsonl.before"
-    if not snapshot.exists():
+    if fresh_snapshot or not snapshot.exists():
         shutil.copy2(path, snapshot)
     report = backup / "report.jsonl"
 
@@ -274,6 +275,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--workers", type=int, default=3)
     ap.add_argument("--backup", type=Path, help="directory for the store snapshot and the report")
+    ap.add_argument("--nightly", action="store_true",
+                    help="run_pipeline.sh Stage 3b: tag what is untagged, backup in logs/tag-nightly "
+                         "with the snapshot retaken every run")
     ap.add_argument("--only-series", action="store_true",
                     help="only articles in a column-like group (taxonomy.series_index)")
     ap.add_argument("--also-type", action="append", default=[], metavar="TYPE",
@@ -282,10 +286,12 @@ def main(argv: list[str] | None = None) -> int:
                     help="also re-tag articles whose tags_at is earlier than this (BJT ISO, e.g. "
                          "2026-10-08T12:00:00+08:00); rerun with the same value to resume")
     args = ap.parse_args(argv)
+    if args.nightly:
+        args.backup = aa.BASE_DIR / "logs" / "tag-nightly"
     key = "" if args.dry_run else aa._load_api_keys()["OPENAI_API_KEY"]
     return run(aa.DATA_FILE, key, args.backup, limit=args.limit, workers=args.workers,
                dry_run=args.dry_run, retag_before=args.retag_before, only_series=args.only_series,
-               also_types=tuple(args.also_type))
+               also_types=tuple(args.also_type), fresh_snapshot=args.nightly)
 
 
 if __name__ == "__main__":

@@ -122,6 +122,18 @@ class TestParseLlmOutput:
         assert result is not None
         assert result["themes"] == ["AI/Tech", "Macro/Rates"]
 
+    def test_a_theme_not_copied_exactly_is_dropped_not_guessed(self):
+        # The old matcher filed any word that started like a theme part under
+        # that theme: "Employment" and "Emissions" -> China/EM (prefix "em"),
+        # "Airlines" -> AI/Tech ("ai"), "Digital Infrastructure" -> Crypto/Digital.
+        data = {
+            "summary_en": "x", "summary_zh": "x",
+            "themes": ["Employment", "Airlines", "Digital Infrastructure", "Emissions", "macro/rates"],
+            "key_takeaway_en": "x", "key_takeaway_zh": "x",
+        }
+        result = _parse_llm_output(json.dumps(data))
+        assert result["themes"] == ["Macro/Rates"]      # only a case-insensitive exact copy survives
+
     def test_themes_as_dict_list_without_name_field_skipped(self):
         data = {
             "summary_en": "x", "summary_zh": "x",

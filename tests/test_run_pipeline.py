@@ -16,7 +16,7 @@ import pytest
 SCRIPT = Path(__file__).resolve().parent.parent / "run_pipeline.sh"
 
 
-def _run(tmp_path, publish_rc=0, analyze_rc=0, validator=None):
+def _run(tmp_path, publish_rc=0, analyze_rc=0, validator=None, tag_rc=0):
     home = tmp_path / "home"
     repo = home / "hedge-fund-research"
     (repo / "scripts").mkdir(parents=True)
@@ -32,6 +32,7 @@ def _run(tmp_path, publish_rc=0, analyze_rc=0, validator=None):
     }
     for name, rc in stubs.items():
         (repo / name).write_text(f"import sys; sys.exit({rc})\n")
+    (repo / "scripts" / "tag_articles.py").write_text(f"import sys; sys.exit({tag_rc})\n")
     (repo / "scripts" / "check_dashboard_html.py").write_text(
         f"open({str(marker)!r}, 'w').write('ran')\n")
     env = dict(os.environ, HOME=str(home))
@@ -96,3 +97,18 @@ def test_a_publish_failure_skips_stage5(tmp_path):
 def test_an_analysis_failure_still_publishes_and_checks(tmp_path):
     rc, out, stage5 = _run(tmp_path, analyze_rc=1)
     assert rc == 1 and "Stage3:analyze" in out and stage5
+
+
+def test_articles_left_untagged_are_logged_not_alerted(tmp_path):
+    rc, out, stage5 = _run(tmp_path, tag_rc=1)
+    assert rc == 0 and "left some articles untagged" in out and stage5
+
+
+def test_a_tagging_stop_alerts_but_the_page_is_still_published(tmp_path):
+    rc, out, stage5 = _run(tmp_path, tag_rc=2)
+    assert rc == 1 and "Stage3b:tag" in out and stage5
+
+
+def test_tagging_runs_even_when_analysis_failed(tmp_path):
+    rc, out, _ = _run(tmp_path, analyze_rc=1, tag_rc=2)
+    assert "Stage3:analyze" in out and "Stage3b:tag" in out

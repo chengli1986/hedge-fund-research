@@ -221,3 +221,12 @@ def test_also_type_adds_articles_outside_any_series(store, tmp_path):
     assert _run(path, tmp_path, call, only_series=True, also_types=("event",),
                 retag_before="2026-01-01T00:00:00+08:00") == 0
     assert len(call.calls) == 1 and _read(path)["id2"]["tags"] == ["research", "us"]
+
+
+
+def test_a_nightly_run_retakes_the_snapshot_each_time(store, tmp_path):
+    path = store([_row(1), _row(2, tags=["research", "us"])])
+    (tmp_path / "bk").mkdir()
+    (tmp_path / "bk" / "articles.jsonl.before").write_text("last night's\n")
+    _run(path, tmp_path, _caller([GOOD]), fresh_snapshot=True)
+    assert "last night" not in (tmp_path / "bk" / "articles.jsonl.before").read_text()

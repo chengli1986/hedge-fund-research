@@ -126,13 +126,42 @@ class TestIndexOnly:
         assert 'class="index-chip">Index</span>' in result
 
 
-class TestThemeGrouping:
-    def test_theme_grouping(self) -> None:
-        result = generate_html(SAMPLE_ARTICLES)
-        assert "AI/Tech" in result
-        assert "China/EM" in result
-        assert "Equities/Value" in result
-        assert "filter-pill" in result
+class TestTagsView:
+    """2026-10-08: the Themes view (one primary theme per article) became a
+    Tags view over the 41-tag taxonomy, filtered by intersection."""
+    TAGGED = dict(SAMPLE_ARTICLES[0], id="tg1", tags=["research", "us", "equities", "ai_tech", "no_such_tag"])
+
+    def test_cards_carry_clickable_chips_type_first_and_unknown_ids_skipped(self) -> None:
+        import re
+        html = generate_html([self.TAGGED])
+        card = html[html.index('id="a-tg1"'):]
+        chips = re.findall(r'class="tv-chip[^"]*" data-tag="([^"]+)"', card[:card.index("</article>")])
+        assert chips == ["research", "us", "equities", "ai_tech"]
+        assert "AI &amp; technology" in card and "AI 与科技" in card
+
+    def test_pool_articles_carry_their_known_tags(self) -> None:
+        import re
+        tag = re.search(r'<article[^>]*id="a-tg1"[^>]*>', generate_html([self.TAGGED])).group(0)
+        assert 'data-tags="research us equities ai_tech"' in tag
+
+    def test_an_untagged_article_has_no_chips(self) -> None:
+        html = generate_html([dict(SAMPLE_ARTICLES[1])])
+        card = html[html.index('id="a-bbb222"'):]
+        assert 'data-tags=""' in card[:400] and "tv-chip" not in card[:card.index("</article>")]
+
+    def test_the_rail_lists_all_41_tags_and_the_tags_view_is_the_default(self) -> None:
+        import json, re
+        html = generate_html([self.TAGGED])
+        data = json.loads(re.search(r'<script type="application/json" id="taxonomy-data">(.*?)</script>', html, re.S).group(1))
+        assert [g["key"] for g in data["groups"]] == ["article_type", "regions", "assets", "topics", "methods"]
+        assert sum(len(g["tags"]) for g in data["groups"]) == 41
+        assert '<div class="view-panel active" id="view-tags">' in html
+        assert 'data-view="tags"' in html and "populateViewFromPool('tags')" in html
+
+    def test_no_theme_section_or_filter_is_left(self) -> None:
+        html = generate_html(SAMPLE_ARTICLES)
+        for gone in ("filter-pill\"", "data-themes=", 'id="view-themes"', "filterSingleTheme(", "theme-group\""):
+            assert gone not in html, gone
 
 
 class TestBulletinLayout:
@@ -191,8 +220,9 @@ class TestArticlePool:
         )
 
     def test_pool_articles_carry_filter_data_attributes(self) -> None:
-        """Each pool article carries data-source-id, data-date, data-themes
-        so view-switching JS can move the right articles into the right views."""
+        """Each pool article carries data-source-id and data-date so
+        view-switching JS can move the right articles into the right views
+        (data-tags: TestTagsView)."""
         result = generate_html(SAMPLE_ARTICLES)
         import re
         tag = re.search(r'<article[^>]*id="a-aaa111"[^>]*>', result)
@@ -200,8 +230,6 @@ class TestArticlePool:
         tag_str = tag.group(0)
         assert 'data-source-id="man-group"' in tag_str
         assert f'data-date="{_date_str(8)}"' in tag_str
-        assert 'data-themes="ai-tech equities-value"' in tag_str or \
-               'data-themes="equities-value ai-tech"' in tag_str
 
     def test_theme_clusters_reference_article_ids(self) -> None:
         """Themes view clusters carry data-article-ids referencing pool items
@@ -792,68 +820,6 @@ class TestLatestDateIsShownAsPublished:
             assert _display_date({"date": "2026-09-30", "date_raw": hostile}) == "2026-09-30"
         assert _MONTH_ONLY_RAW.match("Sep 2026")
         assert _MONTH_ONLY_RAW.match("September 2026")
-
-
-class TestThemeCountsAreUnambiguous:
-    """2026-09-16: every theme showed two different numbers on one page --
-    AI/Tech was "260" on its cluster card and "398" on the filter pill and in
-    the sidebar, with nothing saying why. The two counts measure different
-    things on purpose (a cluster card holds the articles whose FIRST theme is
-    this one -- the prompts ask the model to put the main theme first -- while
-    the pill and the sidebar count every article tagged with it), so the fix is
-    to say which is which, and to show the difference where the smaller number
-    appears.
-    """
-    ARTICLES = [
-        dict(SAMPLE_ARTICLES[0], id="t1", themes=["AI/Tech", "Equities/Value"]),
-        dict(SAMPLE_ARTICLES[0], id="t2", themes=["AI/Tech"]),
-        dict(SAMPLE_ARTICLES[0], id="t3", themes=["Equities/Value", "AI/Tech"]),
-    ]
-
-    def _counts(self, html, theme="AI/Tech"):
-        import re
-        card = re.search(rf'<h2>{re.escape(theme)} <span class="cluster-count">(\d+)', html)
-        pill = re.search(rf'class="filter-pill"[^>]*>\s*{re.escape(theme)} <span>(\d+)</span>', html)
-        side = re.search(rf'<h3>{re.escape(theme)} <span class="count">\((\d+)\)', html)
-        return card, pill, side
-
-    def test_the_cluster_card_says_its_count_is_the_primary_theme(self):
-        html = generate_html(self.ARTICLES)
-        card, pill, side = self._counts(html)
-        assert card and pill and side
-        assert (int(card.group(1)), int(pill.group(1)), int(side.group(1))) == (2, 3, 3)
-        head = html[card.start():card.start() + 400]
-        assert "primary" in head and "主线" in head, "the smaller number is not explained"
-
-    def test_the_cluster_card_shows_how_many_more_are_tagged(self):
-        html = generate_html(self.ARTICLES)
-        card, _, _ = self._counts(html)
-        head = html[card.start():card.start() + 400]
-        assert "+1" in head and ("also tagged" in head and "另有提及" in head)
-
-    def test_a_theme_with_no_extra_mentions_shows_no_remainder(self):
-        only = [dict(SAMPLE_ARTICLES[0], id="t1", themes=["AI/Tech"])]
-        html = generate_html(only)
-        card, _, _ = self._counts(html)
-        head = html[card.start():card.start() + 400]
-        assert "also tagged" not in head and "+0" not in head
-
-    def test_the_pill_and_the_sidebar_say_they_count_every_tagged_article(self):
-        import re
-        html = generate_html(self.ARTICLES)
-        pill = re.search(r'class="filter-pill"[^>]*title="([^"]*)"[^>]*>\s*AI/Tech', html)
-        side = re.search(r'<div class="theme-group"[^>]*title="([^"]*)"', html)
-        assert pill and "tagged" in pill.group(1)
-        assert side and "tagged" in side.group(1)
-
-    def test_the_pill_count_matches_the_rows_that_filter_shows(self):
-        """The pill filters timeline rows by data-themes, so its number must be
-        the number of rows carrying that slug -- not the cluster count."""
-        import re
-        html = generate_html(self.ARTICLES)
-        rows = len(re.findall(r'data-themes="[^"]*ai-tech', html))
-        pill = re.search(r'class="filter-pill"[^>]*>\s*AI/Tech <span>(\d+)</span>', html)
-        assert int(pill.group(1)) == rows == 3
 
 
 class TestHeaderShowsDataRecency:

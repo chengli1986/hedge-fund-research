@@ -81,6 +81,19 @@ else
   echo "WARN: Stage 1 failed — skipping Stage 2 and Stage 3"
 fi
 
+# Stage 3b: tag every summarised article that has no tags yet (taxonomy.py,
+# the method accepted 2026-10-08). Runs even when an earlier stage failed:
+# yesterday's summaries can still be tagged. Exit 1 = some articles got no
+# valid answer; they stay untagged and are retried tomorrow, so it is logged,
+# not alerted. Anything else (2 = quota/billing/auth stop) alerts.
+python3 scripts/tag_articles.py --nightly
+tag_rc=$?
+if [[ $tag_rc -eq 1 ]]; then
+  echo "WARN: Stage 3b left some articles untagged; they are retried next run"
+elif [[ $tag_rc -ne 0 ]]; then
+  failed_stages+=("Stage3b:tag")
+fi
+
 # Stage 4: publish always runs — shows whatever data is available
 # but mark output as degraded if any prerequisite failed
 if [[ ${#failed_stages[@]} -gt 0 ]]; then

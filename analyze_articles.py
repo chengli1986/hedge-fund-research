@@ -443,26 +443,19 @@ def _parse_llm_output(raw: str) -> Optional[dict]:
     if not required.issubset(data.keys()):
         return None
 
-    # Filter themes to valid set only
+    # Keep only themes on the allowlist, copied exactly (case aside). Until
+    # 2026-10-08 a prefix match "corrected" near misses and misfiled them:
+    # "Employment"/"Emissions" -> China/EM, "Airlines" -> AI/Tech, "Digital
+    # Infrastructure" -> Crypto/Digital (measured). A wrong label is dropped.
     if isinstance(data["themes"], list):
-        # Fuzzy match themes: "Macro" → "Macro/Rates", "Oil" → "Oil/Energy", etc.
+        by_lower = {v.lower(): v for v in VALID_THEMES}
         matched_themes = []
         for t in data["themes"]:
             # Gemini sometimes returns {"name": "AI/Tech", "rationale": "..."} instead of strings
             if isinstance(t, dict):
                 t = t.get("name") or t.get("theme") or t.get("label") or ""
-            if not isinstance(t, str) or not t:
-                continue
-            if t in VALID_THEMES:
-                matched_themes.append(t)
-            else:
-                # Try partial match on first part before /
-                t_lower = t.lower().strip()
-                for valid in VALID_THEMES:
-                    parts = valid.lower().split("/")
-                    if t_lower in parts or any(t_lower.startswith(p) for p in parts):
-                        matched_themes.append(valid)
-                        break
+            if isinstance(t, str) and t.strip().lower() in by_lower:
+                matched_themes.append(by_lower[t.strip().lower()])
         data["themes"] = list(dict.fromkeys(matched_themes))  # deduplicate, preserve order
     else:
         data["themes"] = []

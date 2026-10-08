@@ -19,6 +19,9 @@ import argparse
 import os
 import sys
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import taxonomy  # noqa: E402
+
 BJT = timezone(timedelta(hours=8))
 
 # Matches a month-granularity label such as "Aug 2026" / "August 2026" — and
@@ -594,6 +597,187 @@ def _slugify_theme(theme: str) -> str:
     return "-".join(part for part in slug.split("-") if part)
 
 
+# ── Tags view (replaced the Themes view on 2026-10-08) ──
+# Every article carries 1-11 tags from taxonomy.py (scripts/tag_articles.py,
+# run nightly as Stage 3b). The view filters by intersection: each tag's count
+# says how many articles would remain if it were added (docs/tag-taxonomy.md,
+# question 5). Colours per group, as on the approved mockup.
+TAG_GROUP_COLORS = {"article_type": "#fcd34d", "regions": "#86efac", "assets": "#7dd3fc",
+                    "topics": "#f9a8d4", "methods": "#c4b5fd"}
+ALT_STRATEGY_TAGS = ("macro_trend", "long_short", "event_rv", "multistrat_arp")
+TAGS_VIEW_INITIAL = 50
+
+
+def _tag_chips(a: dict) -> str:
+    """Clickable chips for an article's tags, type first; unknown ids are skipped."""
+    chips = []
+    for t in a.get("tags") or []:
+        group = taxonomy.ALL_TAGS.get(t)
+        if group is None:
+            continue
+        en, zh, _ = taxonomy.GROUPS[group][2][t]
+        chips.append(f'<button type="button" class="tv-chip{" tv-type" if group == "article_type" else ""}" '
+                     f'data-tag="{t}" style="--gc:{TAG_GROUP_COLORS[group]}">'
+                     f'<span class="lang-en">{_esc(en)}</span><span class="lang-zh" style="display:none">{_esc(zh)}</span></button>')
+    return f'<div class="tv-chips">{"".join(chips)}</div>' if chips else ""
+
+
+def _taxonomy_payload() -> dict:
+    """Group and tag names for the rail, in taxonomy order."""
+    return {"groups": [{"key": g, "en": en, "zh": zh, "color": TAG_GROUP_COLORS[g],
+                        "tags": [{"id": t, "en": te, "zh": tz, "alt": t in ALT_STRATEGY_TAGS}
+                                 for t, (te, tz, _) in tags.items()]}
+                       for g, (en, zh, tags) in taxonomy.GROUPS.items()]}
+
+
+TAGS_VIEW_CSS = """
+/* ── Tags view ── */
+.tv-layout { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 18px; align-items: start; }
+aside.tv-railbox { position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto; }
+#tv-rail { padding: 4px 12px 10px; }
+.tv-grp { border-bottom: 1px solid rgba(38,50,71,.72); padding-block: 4px; }
+.tv-grp:last-child { border-bottom: 0; }
+.tv-grp summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 8px 2px; font-weight: 600; font-size: .86rem; }
+.tv-grp summary::-webkit-details-marker { display: none; }
+.tv-grp summary .dot { width: 8px; height: 8px; border-radius: 999px; background: var(--gc); }
+.tv-grp summary .car { margin-left: auto; color: var(--text-muted); transition: transform .15s; }
+.tv-grp[open] summary .car { transform: rotate(90deg); }
+.tv-sub { font-size: .7rem; color: var(--text-muted); letter-spacing: .05em; text-transform: uppercase; margin: 6px 4px 2px; }
+.tv-tag { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; font: inherit; font-size: .82rem; background: none; border: 1px solid transparent; border-radius: 999px; padding: 4px 10px; color: var(--text); cursor: pointer; margin-block: 1px; }
+.tv-tag:hover { background: var(--surface2); }
+.tv-tag:focus-visible { outline: 2px solid var(--accent); }
+.tv-tag .n { margin-left: auto; font-size: .72rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.tv-tag.on { border-color: var(--accent); background: rgba(125,211,252,.1); }
+.tv-tag.on .n { color: var(--accent); }
+.tv-tag.zero { opacity: .35; }
+.tv-top { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 12px 16px 4px; }
+.tv-search { flex: 1 1 280px; position: relative; }
+.tv-search input { width: 100%; font: inherit; font-size: .86rem; padding: 8px 14px 8px 34px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface2); color: var(--text); }
+.tv-search input::placeholder { color: var(--text-muted); }
+.tv-search input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 8px rgba(125,211,252,.15); }
+.tv-search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; stroke: var(--text-muted); fill: none; }
+.tv-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-height: 30px; padding: 4px 16px 8px; }
+.tv-count { font-size: .8rem; color: var(--text-muted); }
+.tv-count b { color: var(--text); font-size: .95rem; font-variant-numeric: tabular-nums; }
+.tv-pill { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: .75rem; padding: 4px 8px 4px 11px; border-radius: 999px; border: 1px solid var(--accent); background: rgba(125,211,252,.1); color: var(--text); cursor: pointer; }
+.tv-pill .x { color: var(--text-muted); font-size: .9rem; line-height: 1; }
+.tv-clear { font: inherit; font-size: .75rem; background: none; border: 0; color: var(--accent); cursor: pointer; }
+.tv-and { font-size: .72rem; color: var(--text-muted); }
+#tv-list { padding: 0 16px 6px; }
+#tv-list .pool-article { border-bottom: 1px solid rgba(38,50,71,.72); padding: 11px 0; }
+.tv-empty { padding: 40px 0; color: var(--text-muted); text-align: center; font-size: .86rem; }
+.tv-more-wrap { text-align: center; padding: 6px 0 14px; }
+.tv-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 7px 0 2px 0; }
+.tv-chip { font: inherit; font-size: .72rem; padding: 3px 10px 3px 8px; border-radius: 999px; background: var(--pill); color: var(--text-muted); border: 1px solid var(--border); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.tv-chip::before { content: ""; width: 6px; height: 6px; border-radius: 999px; background: var(--gc); }
+.tv-chip.tv-type { color: var(--gc); border-color: rgba(252,211,77,.4); }
+.tv-chip:hover, .tv-chip.on { color: var(--text); border-color: var(--accent); background: rgba(125,211,252,.1); }
+.tv-ft { display: none; }
+@media (max-width: 860px) {
+  .tv-layout { grid-template-columns: minmax(0, 1fr); }
+  aside.tv-railbox { position: static; max-height: none; display: none; }
+  aside.tv-railbox.show { display: block; }
+  .tv-ft { display: inline-flex; font: inherit; font-size: .78rem; padding: 6px 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface2); color: var(--text); cursor: pointer; }
+}
+"""
+
+TAGS_VIEW_JS = r"""
+/* ── Tags view ──
+ * Articles stay single DOM nodes: the matching ones are moved from the pool
+ * into #tv-list in date order (data-seq), the rest go back to the pool.
+ * Counts: how many articles would remain if that tag were added. Older
+ * articles count only while "Show older" is on, as everywhere else. */
+const TAXO = (() => {
+  const el = document.getElementById('taxonomy-data');
+  try { return JSON.parse(el.textContent); } catch (e) { return {groups: []}; }
+})();
+const TAGINFO = {};
+TAXO.groups.forEach(g => g.tags.forEach(t => { TAGINFO[t.id] = Object.assign({group: g.key, color: g.color}, t); }));
+const tvSel = new Set();
+let tvQ = '';
+let tvLimit = TV_INITIAL;
+const tvEsc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const tvName = id => { const t = TAGINFO[id]; return t ? (langZh ? t.zh : t.en) : id; };
+function tvTags(a) {
+  if (!a._tv) a._tv = new Set((a.dataset.tags || '').split(' ').filter(Boolean));
+  return a._tv;
+}
+function tvHay(a) {
+  if (a._hay === undefined) {
+    const names = [...tvTags(a)].map(id => TAGINFO[id] ? TAGINFO[id].zh + ' ' + TAGINFO[id].en : '').join(' ');
+    /* Summaries of recent articles live in the details island, not the DOM,
+       until a row is opened; older articles ship without them. */
+    const d = (typeof ARTICLE_DETAILS === 'object' && ARTICLE_DETAILS[a.id]) || {};
+    a._hay = (a.textContent + ' ' + names + ' ' + (d.bd_en || '') + ' ' + (d.bd_zh || '')).toLowerCase();
+  }
+  return a._hay;
+}
+function tvRender() {
+  const pool = document.getElementById('article-pool');
+  const list = document.getElementById('tv-list');
+  if (!pool || !list) return;
+  const hideOlder = document.body.classList.contains('hide-older');
+  const words = tvQ ? tvQ.split(/\s+/) : [];
+  const base = [...document.querySelectorAll('article.pool-article')].filter(a =>
+    !(hideOlder && a.dataset.age === 'older') && words.every(w => tvHay(a).includes(w)));
+  const shown = base.filter(a => [...tvSel].every(t => tvTags(a).has(t)))
+    .sort((x, y) => (parseInt(x.dataset.seq, 10) || 0) - (parseInt(y.dataset.seq, 10) || 0));
+  const n = {};
+  shown.forEach(a => tvTags(a).forEach(t => { n[t] = (n[t] || 0) + 1; }));
+  document.getElementById('tv-rail').innerHTML = TAXO.groups.map((g, gi) => {
+    const btn = t => {
+      const c = tvSel.has(t.id) ? shown.length : (n[t.id] || 0);
+      return '<button type="button" class="tv-tag' + (tvSel.has(t.id) ? ' on' : '') + (c === 0 && !tvSel.has(t.id) ? ' zero' : '') +
+        '" data-tvtag="' + t.id + '" aria-pressed="' + tvSel.has(t.id) + '">' + tvEsc(langZh ? t.zh : t.en) + '<span class="n">' + c + '</span></button>';
+    };
+    const main = g.tags.filter(t => !t.alt).map(btn).join('');
+    const alt = g.tags.filter(t => t.alt);
+    const open = document.querySelector('.tv-grp[data-g="' + g.key + '"]');
+    const isOpen = open ? open.open : gi < 4;
+    return '<details class="tv-grp" data-g="' + g.key + '" style="--gc:' + g.color + '"' + (isOpen ? ' open' : '') + '><summary><span class="dot"></span>' +
+      tvEsc(langZh ? g.zh : g.en) + '<span class="car">&rsaquo;</span></summary>' + main +
+      (alt.length ? '<div class="tv-sub">' + (langZh ? '另类策略' : 'Alternative strategies') + '</div>' + alt.map(btn).join('') : '') + '</details>';
+  }).join('');
+  document.getElementById('tv-count').innerHTML = langZh ? ('共 <b>' + shown.length + '</b> 篇') : ('<b>' + shown.length + '</b> articles');
+  document.getElementById('tv-active').innerHTML = tvSel.size ? [...tvSel].map((t, i) =>
+    (i ? '<span class="tv-and">' + (langZh ? '且' : 'and') + '</span>' : '') +
+    '<button type="button" class="tv-pill" data-tvtag="' + t + '">' + tvEsc(tvName(t)) + '<span class="x">&times;</span></button>').join('') +
+    '<button type="button" class="tv-clear" id="tv-clear">' + (langZh ? '全部清除' : 'Clear all') + '</button>' : '';
+  const keep = new Set(shown.slice(0, tvLimit));
+  [...list.querySelectorAll('article.pool-article')].forEach(a => { if (!keep.has(a)) pool.appendChild(a); });
+  shown.slice(0, tvLimit).forEach(a => { a.style.display = ''; a.classList.remove('timeline-extra'); list.appendChild(a); });
+  document.querySelectorAll('.tv-chip').forEach(c => c.classList.toggle('on', tvSel.has(c.dataset.tag)));
+  const empty = document.getElementById('tv-empty');
+  empty.style.display = shown.length ? 'none' : '';
+  empty.textContent = langZh ? '没有同时符合这些条件的文章。试着取消一个标签。' : 'No article matches all of these. Try removing a tag.';
+  const more = document.getElementById('tv-more');
+  more.style.display = shown.length > tvLimit ? '' : 'none';
+  more.textContent = (langZh ? '显示更多（还有 ' : 'Show more (') + (shown.length - tvLimit) + (langZh ? ' 篇）' : ' remaining)');
+  bindRowToggles();
+}
+function tvToggle(id) {
+  if (tvSel.has(id)) tvSel.delete(id); else tvSel.add(id);
+  tvLimit = TV_INITIAL;
+  tvRender();
+}
+document.addEventListener('click', e => {
+  const r = e.target.closest('[data-tvtag]');
+  if (r) { tvToggle(r.dataset.tvtag); return; }
+  const chip = e.target.closest('.tv-chip');
+  if (chip) {
+    const active = document.querySelector('.view-btn.active');
+    if (!active || active.dataset.view !== 'tags') { tvSel.clear(); tvSel.add(chip.dataset.tag); tvLimit = TV_INITIAL; switchView('tags'); window.scrollTo(0, 0); }
+    else tvToggle(chip.dataset.tag);
+    return;
+  }
+  if (e.target.closest('#tv-clear')) { tvSel.clear(); tvLimit = TV_INITIAL; tvRender(); }
+  if (e.target.closest('#tv-more')) { tvLimit += TV_INITIAL; tvRender(); }
+  if (e.target.closest('#tv-ft')) document.getElementById('tv-railbox').classList.toggle('show');
+});
+document.getElementById('tv-q').addEventListener('input', e => { tvQ = e.target.value.trim().toLowerCase(); tvLimit = TV_INITIAL; tvRender(); });
+"""
+
+
 def _article_card(a: dict, show_takeaway: bool = False) -> tuple[str, dict | None]:
     """Render a single article as a timeline row.
 
@@ -616,10 +800,6 @@ def _article_card(a: dict, show_takeaway: bool = False) -> tuple[str, dict | Non
         takeaway_zh = _esc(a.get("key_takeaway_zh", ""))
         summary_en = _esc(a.get("summary_en", ""))
         summary_zh = _esc(a.get("summary_zh", ""))
-        theme_tags = "".join(
-            f'<button class="theme-tag" onclick="filterSingleTheme(\'{_slugify_theme(t)}\')">{_esc(t)}</button>'
-            for t in a.get("themes", [])
-        )
         toggle = '<button class="row-toggle" type="button">Open</button>'
         # Shell only — body injected by JS hydrateArticleDetails() on first open
         summary_html = (
@@ -631,7 +811,6 @@ def _article_card(a: dict, show_takeaway: bool = False) -> tuple[str, dict | Non
         details_payload = {
             "tk_en": takeaway_en, "tk_zh": takeaway_zh,
             "bd_en": summary_en, "bd_zh": summary_zh,
-            "tags": theme_tags,
         }
         # Inline takeaway for cluster view
         inline_takeaway = ""
@@ -669,6 +848,7 @@ def _article_card(a: dict, show_takeaway: bool = False) -> tuple[str, dict | Non
     <span class="row-spacer"></span>
     {toggle}
   </div>
+  {_tag_chips(a)}
   {inline_takeaway if show_takeaway else ""}
   {summary_html}"""
     return html, details_payload
@@ -737,37 +917,6 @@ def generate_html(articles: list[dict]) -> str:
         return "older" if d and d < older_cutoff else "recent"
     older_count = sum(1 for a in sorted_articles if _age_of(a) == "older")
 
-    # ── Theme grouping (all articles, for sidebar) ──
-    themes: dict[str, list[dict]] = defaultdict(list)
-    for a in sorted_articles:
-        if a.get("summarized") and a.get("themes"):
-            for t in a["themes"]:
-                themes[t].append(a)
-    sorted_themes = sorted(themes.items(), key=lambda x: len(x[1]), reverse=True)
-
-    # ── Theme clusters: assign each article to ONE primary theme ──
-    primary_clusters: dict[str, list[dict]] = defaultdict(list)
-    assigned_ids: set[str] = set()
-    # First pass: assign themed articles to first theme only
-    for a in sorted_articles:
-        article_themes = a.get("themes", [])
-        if article_themes:
-            primary_clusters[article_themes[0]].append(a)
-            assigned_ids.add(a.get("id", ""))
-    # Second pass: unthemed go to General
-    for a in sorted_articles:
-        if a.get("id", "") not in assigned_ids:
-            primary_clusters["General"].append(a)
-
-    # Sort clusters: by count desc, General always last
-    cluster_order = sorted(
-        [(k, v) for k, v in primary_clusters.items() if k != "General"],
-        key=lambda x: len(x[1]),
-        reverse=True,
-    )
-    if "General" in primary_clusters:
-        cluster_order.append(("General", primary_clusters["General"]))
-
     # ── Build the unified article pool (single source of truth) ──
     # Every article gets rendered EXACTLY ONCE here, carrying data-* attributes
     # so the view-switching JS can move the card into whichever view is active.
@@ -783,9 +932,6 @@ def generate_html(articles: list[dict]) -> str:
     for seq, a in enumerate(sorted_articles):
         sid = a.get("source_id", "unknown")
         aid = a.get("id", "")
-        theme_slugs = " ".join(
-            _slugify_theme(t) for t in a.get("themes", [])
-        ) if a.get("themes") else "unthemed"
         card_html, details_payload = _article_card(a, show_takeaway=True)
         # Articles older than RECENT_DAYS are folded behind "Show older" by CSS;
         # their LLM analysis bodies are also excluded from the JSON island to
@@ -802,7 +948,7 @@ def generate_html(articles: list[dict]) -> str:
             f'data-date="{_esc(a.get("date", ""))}" '
             f'data-seq="{seq}" '
             f'data-age="{_age_of(a)}" '
-            f'data-themes="{theme_slugs}">'
+            f'data-tags="{_esc(" ".join(t for t in (a.get("tags") or []) if t in taxonomy.ALL_TAGS))}">'
             f'{card_html}</article>'
         )
         # Older articles ship as strings in a JSON island rather than as DOM.
@@ -831,88 +977,13 @@ def generate_html(articles: list[dict]) -> str:
         f'{details_json}</script>'
     )
 
-    # ── Build cluster HTML (Themes view) ──
-    cluster_parts = []
-    for theme_name, cluster_arts in cluster_order:
-        # A card holds the articles whose FIRST theme is this one (the prompts
-        # ask the model to put the main theme first); the filter pill and the
-        # sidebar count every article tagged with it. Both numbers are on the
-        # same page under the same name, so each says what it counts and the
-        # card carries the difference (2026-09-16: AI/Tech read 260 and 398
-        # with nothing explaining either).
-        tagged_here = len(themes.get(theme_name, []))
-        also_tagged = max(tagged_here - len(cluster_arts), 0)
-        extra_html = (
-            f'<span class="cluster-extra">+{also_tagged} '
-            f'<span class="lang-en">also tagged</span>'
-            f'<span class="lang-zh" style="display:none">另有提及</span></span>'
-        ) if also_tagged else ""
-        source_set = set(a.get("source_id", "") for a in cluster_arts)
-        cross_fund = len(source_set) >= 2
-        new_count = sum(1 for a in cluster_arts if _is_new(a))
-        slug = _slugify_theme(theme_name) if theme_name != "General" else "general"
-        cross_badge = '<span class="cross-fund-badge">Cross-fund</span>' if cross_fund else ""
-        new_badge = f'<span class="new-badge">{new_count} new</span>' if new_count else ""
-        fund_names = ", ".join(sorted(
-            set(_esc(a.get("source_name", "")) for a in cluster_arts)
-        ))
-
-        if theme_name == "General":
-            # Compact table for unthemed articles
-            table_rows = []
-            for a in cluster_arts:
-                sid = a.get("source_id", "unknown")
-                color = BADGE_COLORS.get(sid, "#8b949e")
-                takeaway_en = _esc(a.get("key_takeaway_en", ""))
-                takeaway_zh = _esc(a.get("key_takeaway_zh", ""))
-                tooltip = f' title="{takeaway_en}"' if takeaway_en else ""
-                table_rows.append(
-                    f'<tr><td class="ct-date">{_esc(_display_date(a))}</td>'
-                    f'<td><span class="badge" style="background:{color}">{_esc(a.get("source_name", ""))}</span></td>'
-                    f'<td><a href="{_esc(a.get("url", "#"))}" target="_blank" rel="noopener"{tooltip}>{_esc(a.get("title", ""))}</a></td></tr>'
-                )
-            table_html = "\n".join(table_rows)
-            cluster_parts.append(
-                f"""<section class="cluster general-cluster" data-cluster="{slug}">
-  <div class="cluster-head">
-    <h2>{_esc(theme_name)} <span class="cluster-count">{len(cluster_arts)}</span></h2>
-    <div class="cluster-meta"><span class="lang-en">Uncategorized articles — hover for takeaway</span><span class="lang-zh" style="display:none">未分类文章 — 悬停查看摘要</span></div>
-  </div>
-  <table class="compact-table">{table_html}</table>
-</section>"""
-            )
-        else:
-            # Full cluster card — articles injected by JS via data-article-ids
-            article_ids = " ".join(_esc(a.get("id", "")) for a in cluster_arts)
-            cluster_parts.append(
-                f"""<section class="cluster" data-cluster="{slug}">
-  <div class="cluster-head">
-    <div>
-      <h2>{_esc(theme_name)} <span class="cluster-count">{len(cluster_arts)} <span class="lang-en">primary</span><span class="lang-zh" style="display:none">主线</span></span> {extra_html} {cross_badge} {new_badge}</h2>
-      <div class="cluster-meta">{fund_names}</div>
-    </div>
-  </div>
-  <div class="cluster-articles" data-article-ids="{article_ids}"></div>
-</section>"""
-            )
-    clusters_html = "\n".join(cluster_parts)
-
-    # ── Timeline rows (existing bulletin view) ──
-    theme_filters = []
-    for theme_name, theme_arts in sorted_themes:
-        theme_filters.append(
-            f'<button class="filter-pill" data-theme="{_slugify_theme(theme_name)}" '
-            f'title="{len(theme_arts)} articles tagged {_esc(theme_name)} (any position) · '
-            f'标注该主题的全部文章" onclick="toggleThemeFilter(this)">'
-            f'{_esc(theme_name)} <span>{len(theme_arts)}</span></button>'
-        )
-    unthemed_count = sum(1 for a in sorted_articles if not a.get("themes"))
-    if unthemed_count > 0:
-        theme_filters.append(
-            f'<button class="filter-pill" data-theme="unthemed" onclick="toggleThemeFilter(this)">'
-            f'General <span>{unthemed_count}</span></button>'
-        )
-    theme_filters_html = "".join(theme_filters) if theme_filters else '<span class="muted">Themes appear after analysis.</span>'
+    # ── Tags view: group and tag names for the rail (counts are computed in JS) ──
+    taxonomy_island = (
+        '<script type="application/json" id="taxonomy-data">'
+        + json.dumps(_taxonomy_payload(), ensure_ascii=False).replace("</", "<\\/")
+        + '</script>'
+    )
+    tags_js = TAGS_VIEW_JS.replace("TV_INITIAL", str(TAGS_VIEW_INITIAL))
 
     # ── Timeline view: empty wrapper; articles injected by JS on view activation ──
     load_more_btn = ""
@@ -1027,23 +1098,6 @@ def generate_html(articles: list[dict]) -> str:
 </section>"""
         )
     fund_grid_html = "\n".join(fund_cards)
-
-    # ── Sidebar theme tracker ──
-    theme_sections = []
-    for theme_name, theme_arts in sorted_themes:
-        items = "\n".join(
-            f'<li><span class="badge" style="background:{BADGE_COLORS.get(a.get("source_id", ""), "#8b949e")}">{_esc(a.get("source_name", ""))}</span>'
-            f' <a href="{_esc(a.get("url", "#"))}" target="_blank" rel="noopener">{_esc(a.get("title", ""))}</a></li>'
-            for a in theme_arts
-        )
-        theme_sections.append(
-            f"""<div class="theme-group" data-theme="{_slugify_theme(theme_name)}"
-     title="{len(theme_arts)} articles tagged {_esc(theme_name)} (any position) · 标注该主题的全部文章">
-  <h3>{_esc(theme_name)} <span class="count">({len(theme_arts)})</span></h3>
-  <ul>{items}</ul>
-</div>"""
-        )
-    themes_html = "\n".join(theme_sections) if theme_sections else '<p class="muted">No themes available yet.</p>'
 
     # ── Sources view ──
     sources_view_html = _build_sources_view(sources)
@@ -1398,6 +1452,7 @@ body.hide-older article.pool-article[data-age="older"] {{ display: none !importa
 }}
 .sc-link:hover {{ opacity: 1; text-decoration: none; background: var(--surface2); }}
 .sources-aum-note {{ font-size: 0.73rem; color: var(--text-muted); margin-top: 14px; text-align: right; opacity: 0.7; }}
+{TAGS_VIEW_CSS}
 </style>
 <noscript>
 <style>
@@ -1417,7 +1472,7 @@ body.hide-older article.pool-article[data-age="older"] {{ display: none !importa
     <div>
       <a href="/" style="font-size:0.82rem;color:var(--text-muted);text-decoration:none;">&larr; <span class="lang-en">Back to Infrastructure</span><span class="lang-zh" style="display:none">返回基础设施</span></a>
       <h1><span class="lang-en">Hedge Fund Research Insights</span><span class="lang-zh" style="display:none">对冲基金研究洞察</span></h1>
-      <div class="deck"><span class="lang-en">Cross-fund research aggregator — scan by theme, timeline, or fund.</span><span class="lang-zh" style="display:none">跨基金研究聚合 — 按主题、时间线或基金浏览。</span></div>
+      <div class="deck"><span class="lang-en">Cross-fund research aggregator — filter by tags, or scan by timeline or fund.</span><span class="lang-zh" style="display:none">跨基金研究聚合 — 按标签筛选（多选取交集），或按时间线、基金浏览。</span></div>
       <div class="stats">
         <span>{total} articles</span>
         <span>{new_this_week} new this week</span>
@@ -1447,16 +1502,33 @@ body.hide-older article.pool-article[data-age="older"] {{ display: none !importa
 
 <div class="container">
   <div class="view-bar">
-    <button class="view-btn active" data-view="themes" onclick="switchView('themes')"><span class="lang-en">Themes</span><span class="lang-zh" style="display:none">主题</span></button>
+    <button class="view-btn active" data-view="tags" onclick="switchView('tags')"><span class="lang-en">Tags</span><span class="lang-zh" style="display:none">标签</span></button>
     <button class="view-btn" data-view="timeline" onclick="switchView('timeline')"><span class="lang-en">Timeline</span><span class="lang-zh" style="display:none">时间线</span></button>
     <button class="view-btn" data-view="funds" onclick="switchView('funds')"><span class="lang-en">Funds</span><span class="lang-zh" style="display:none">基金</span></button>
     <button class="view-btn" data-view="sources" onclick="switchView('sources')"><span class="lang-en">Sources</span><span class="lang-zh" style="display:none">来源介绍</span></button>
   </div>
 
-  <!-- ═══ THEMES VIEW (default) ═══ -->
-  <div class="view-panel active" id="view-themes">
-    <div class="cluster-grid">
-      {clusters_html}
+  <!-- ═══ TAGS VIEW (default) ═══ -->
+  <div class="view-panel active" id="view-tags">
+    <div class="tv-layout">
+      <aside class="rail tv-railbox" id="tv-railbox">
+        <div class="rail-head"><h2><span class="lang-en">Tags</span><span class="lang-zh" style="display:none">标签</span></h2>
+          <span class="rail-copy"><span class="lang-en">5 groups · 41 tags</span><span class="lang-zh" style="display:none">5 组 · 41 个</span></span></div>
+        <div id="tv-rail"></div>
+      </aside>
+      <section class="rail">
+        <div class="rail-head"><h2><span class="lang-en">Articles</span><span class="lang-zh" style="display:none">文章</span></h2>
+          <span class="rail-copy"><span class="lang-en">Newest first · several tags = all of them</span><span class="lang-zh" style="display:none">新的在前 · 多选时取交集</span></span></div>
+        <div class="tv-top">
+          <label class="tv-search" for="tv-q"><svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input id="tv-q" type="search" autocomplete="off" placeholder="Search title, fund, takeaway or tag · 搜索标题、机构、要点或标签"></label>
+          <button type="button" class="tv-ft" id="tv-ft"><span class="lang-en">Filter tags</span><span class="lang-zh" style="display:none">筛选标签</span></button>
+        </div>
+        <div class="tv-bar"><span class="tv-count" id="tv-count"></span><span id="tv-active"></span></div>
+        <div id="tv-list"></div>
+        <div class="tv-empty" id="tv-empty" style="display:none"></div>
+        <div class="tv-more-wrap"><button type="button" class="btn-load-more" id="tv-more" style="display:none"></button></div>
+      </section>
     </div>
   </div>
 
@@ -1470,9 +1542,6 @@ body.hide-older article.pool-article[data-age="older"] {{ display: none !importa
             <div class="rail-copy"><span class="lang-en">Chronological feed — expand rows to inspect.</span><span class="lang-zh" style="display:none">按时间排序 — 展开查看详情。</span></div>
           </div>
         </div>
-        <div class="filter-bar">
-          {theme_filters_html}
-        </div>
         {timeline_html}
         {load_more_btn}
       </section>
@@ -1481,10 +1550,6 @@ body.hide-older article.pool-article[data-age="older"] {{ display: none !importa
         <section class="rail sidebar-section">
           <h2 class="section-title"><span class="lang-en">Funds</span><span class="lang-zh" style="display:none">基金</span></h2>
           <div class="fund-stack">{fund_grid_html}</div>
-        </section>
-        <section class="rail sidebar-section">
-          <h2 class="section-title"><span class="lang-en">Themes</span><span class="lang-zh" style="display:none">主题</span></h2>
-          <div class="theme-stack">{themes_html}</div>
         </section>
       </aside>
     </div>
@@ -1516,10 +1581,10 @@ body.hide-older article.pool-article[data-age="older"] {{ display: none !importa
 
 {details_island}
 {older_island}
+{taxonomy_island}
 
 <script>
 let langZh = false;
-const activeThemes = new Set();
 
 /* ── View switching ──
  * Each article card lives in #article-pool and is moved into the active view's
@@ -1554,7 +1619,9 @@ function populateViewFromPool(viewName) {{
       target.appendChild(a);
     }});
     updateLoadMoreCount();
-  }} else if (viewName === 'themes' || viewName === 'funds') {{
+  }} else if (viewName === 'tags') {{
+    tvRender();
+  }} else if (viewName === 'funds') {{
     panel.querySelectorAll('.cluster-articles[data-article-ids]').forEach(target => {{
       const ids = (target.dataset.articleIds || '').split(' ').filter(Boolean);
       ids.forEach(id => {{
@@ -1586,6 +1653,8 @@ function toggleLang() {{
   langZh = !langZh;
   document.querySelectorAll('.lang-en').forEach(el => el.style.display = langZh ? 'none' : '');
   document.querySelectorAll('.lang-zh').forEach(el => el.style.display = langZh ? '' : 'none');
+  const active = document.querySelector('.view-btn.active');
+  if (active && active.dataset.view === 'tags') tvRender();
 }}
 
 /* Older articles are not in the initial DOM — they arrive as HTML strings in
@@ -1614,7 +1683,7 @@ function ensureOlderLoaded() {{
      toolbar button. switchView() rebuilds the view from the pool and rebinds
      row toggles, which is exactly what the freshly injected nodes need. */
   const activeBtn = document.querySelector('.view-btn.active');
-  switchView(activeBtn ? activeBtn.dataset.view : 'themes');
+  switchView(activeBtn ? activeBtn.dataset.view : 'tags');
 }}
 
 function toggleOlder() {{
@@ -1639,6 +1708,8 @@ function toggleOlder() {{
   /* If timeline view is active, refresh the Load-more counter — older rows
      becoming visible changes the "remaining hidden" set. */
   if (typeof updateLoadMoreCount === 'function') updateLoadMoreCount();
+  const activeView = document.querySelector('.view-btn.active');
+  if (activeView && activeView.dataset.view === 'tags') tvRender();
 }}
 
 /* ── Row toggle (Open/Close) + lazy <details> hydration ──
@@ -1686,8 +1757,7 @@ function hydrateArticleDetails(article) {{
     '<div class="summary-copy lang-zh" style="display:none">' +
       '<p class="takeaway"><strong>要点:</strong> ' + d.tk_zh + '</p>' +
       '<p>' + d.bd_zh + '</p>' +
-    '</div>' +
-    '<div class="theme-tags">' + d.tags + '</div>'
+    '</div>'
   );
   details.dataset.hydrated = 'true';
   // Apply current lang state so newly-injected lang-en/lang-zh follow the
@@ -1722,24 +1792,6 @@ function bindRowToggles() {{
 }}
 bindRowToggles();
 
-/* ── Timeline filters ── */
-function applyThemeFilters() {{
-  /* Filter pills live inside the Timeline rail, so the selector below is
-     intentionally scoped to .timeline-wrap. Themes/Funds views are already
-     grouped by cluster; they do not need runtime filtering. */
-  document.querySelectorAll('.timeline-wrap article.pool-article').forEach(row => {{
-    const rowThemes = (row.dataset.themes || '').split(' ').filter(Boolean);
-    const matches = activeThemes.size === 0 || rowThemes.some(theme => activeThemes.has(theme));
-    row.classList.toggle('hidden-by-filter', !matches);
-  }});
-  document.querySelectorAll('.theme-group').forEach(group => {{
-    const theme = group.dataset.theme;
-    const matches = activeThemes.size === 0 || activeThemes.has(theme);
-    group.classList.toggle('hidden-by-filter', !matches);
-  }});
-  updateLoadMoreCount();
-}}
-
 function updateLoadMoreCount() {{
   const btn = document.querySelector('.btn-load-more');
   if (!btn || btn.style.display === 'none') return;
@@ -1753,33 +1805,6 @@ function updateLoadMoreCount() {{
   }}
 }}
 
-function toggleThemeFilter(button) {{
-  const theme = button.dataset.theme;
-  if (activeThemes.has(theme)) {{
-    activeThemes.delete(theme);
-    button.classList.remove('active');
-  }} else {{
-    activeThemes.add(theme);
-    button.classList.add('active');
-  }}
-  applyThemeFilters();
-}}
-
-function clearThemeFilters() {{
-  activeThemes.clear();
-  document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
-  applyThemeFilters();
-}}
-
-function filterSingleTheme(theme) {{
-  clearThemeFilters();
-  activeThemes.add(theme);
-  document.querySelectorAll('.filter-pill').forEach(b => {{
-    if (b.dataset.theme === theme) b.classList.add('active');
-  }});
-  applyThemeFilters();
-}}
-
 function showAll() {{
   document.querySelectorAll('.timeline-wrap article.pool-article').forEach(el => {{
     el.style.display = '';
@@ -1790,8 +1815,9 @@ function showAll() {{
   bindRowToggles();
 }}
 
-/* Populate the default (themes) view on initial page load. */
-populateViewFromPool('themes');
+{tags_js}
+/* Populate the default (tags) view on initial page load. */
+populateViewFromPool('tags');
 bindRowToggles();
 </script>
 
