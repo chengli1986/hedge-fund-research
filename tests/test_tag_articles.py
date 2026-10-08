@@ -16,8 +16,11 @@ ta = importlib.util.module_from_spec(spec)
 sys.modules["tag_articles"] = ta
 spec.loader.exec_module(ta)
 
-GOOD = {"article_type": "research", "regions": ["us"], "assets": ["equities"],
-        "topics": ["ai_tech"], "methods": []}
+BODY = ("Equity markets rallied as investors rotated into large technology names this quarter. "
+        "Spending on artificial intelligence data centres by the hyperscalers kept accelerating through June. ") * 5
+GOOD = {"article_type": "research", "regions": ["us"], "assets": ["equities"], "topics": ["ai_tech"], "methods": [],
+        "evidence": {"equities": "Equity markets rallied as investors rotated into large technology names",
+                     "ai_tech": "Spending on artificial intelligence data centres by the hyperscalers kept accelerating"}}
 
 
 def _row(i, **kw):
@@ -37,7 +40,7 @@ def store(tmp_path, monkeypatch):
 
     def make(rows):
         for r in rows:
-            (tmp_path / "content" / f"{r['id']}.txt").write_text("body " * 50, encoding="utf-8")
+            (tmp_path / "content" / f"{r['id']}.txt").write_text(BODY, encoding="utf-8")
         path.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
         return path
     return make
@@ -145,7 +148,7 @@ def test_an_empty_content_path_is_filled_and_a_set_one_is_left_alone(store, tmp_
     bare = _row(1)
     del bare["content_path"]           # the real 10 rows lack the key (not null)
     path = store([bare, _row(2, content_path="content/elsewhere.txt")])
-    (tmp_path / "content" / "elsewhere.txt").write_text("body " * 50, encoding="utf-8")
+    (tmp_path / "content" / "elsewhere.txt").write_text(BODY, encoding="utf-8")
     assert _run(path, tmp_path, _caller([GOOD])) == 0
     after = _read(path)
     assert after["id1"]["content_path"] == "content/id1.txt"
@@ -186,3 +189,14 @@ def test_without_retag_older_tags_are_left_alone(store, tmp_path):
     call = _caller([GOOD])
     assert _run(path, tmp_path, call) == 0
     assert call.calls == []
+
+
+def test_a_tag_whose_passage_is_not_in_the_article_is_dropped(store, tmp_path):
+    path = store([_row(1)])
+    made_up = dict(GOOD, assets=["equities", "govt_bonds"],
+                   evidence=dict(GOOD["evidence"], govt_bonds="Treasury yields fell sharply as investors bought duration"))
+    assert _run(path, tmp_path, _caller([made_up])) == 0
+    assert _read(path)["id1"]["tags"] == ["research", "us", "equities", "ai_tech"]
+    report = [json.loads(l) for l in (tmp_path / "bk" / "report.jsonl").read_text().splitlines()]
+    assert "govt_bonds: passage not in document" in report[0]["outcome"]
+    assert set(report[0]["evidence"]) == {"equities", "ai_tech"}

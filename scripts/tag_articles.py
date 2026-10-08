@@ -18,6 +18,9 @@ reading `themes` until the page and the nightly run switch over together.
 Safety:
 - an answer is stored only if taxonomy.validate() accepts it; an invalid one
   is retried, then the article is left untagged and listed in the report;
+- each asset/topic/method tag must come with a passage taxonomy.check_evidence()
+  finds in the document, else that tag is dropped (named in the report, which
+  also keeps the passages; the store gets only the tags);
 - a quota/billing or auth error stops the whole run at once -- every later
   call would fail the same way (2026-10-07: the account ran out of credit
   mid-pilot and every following call returned 429 credit_balance_exhausted);
@@ -112,17 +115,19 @@ def build_prompt(row: dict, text: str) -> str:
 
 
 def classify(row: dict, api_key: str, call=aa._call_openai, sleep=time.sleep,
-             stop: threading.Event | None = None) -> tuple[list[str] | None, str, list[tuple[dict, bool]]]:
-    """Tag one article. Returns (tags or None, outcome, [(usage, parsed_ok) per billed call]).
+             stop: threading.Event | None = None) -> tuple[list[str] | None, str, list[tuple[dict, bool]], dict]:
+    """Tag one article. Returns (tags or None, outcome, [(usage, parsed_ok) per billed call],
+    evidence {tag: passage} for the tags kept).
 
-    Raises FatalAPIError on quota/billing/auth errors."""
+    Tags whose evidence passage is not in the document are dropped and named in
+    the outcome. Raises FatalAPIError on quota/billing/auth errors."""
     text = aa._resolve_content_path(row).read_text(encoding="utf-8")
     prompt = build_prompt(row, text)
     billed: list[tuple[dict, bool]] = []
     last = "no attempt"
     for attempt in range(ATTEMPTS):
         if stop is not None and stop.is_set():
-            return None, "skipped: run stopped", billed
+            return None, "skipped: run stopped", billed, {}
         try:
             raw, usage, _model = call(prompt, api_key, model=MODEL)
         except requests.HTTPError as exc:
@@ -142,9 +147,12 @@ def classify(row: dict, api_key: str, call=aa._call_openai, sleep=time.sleep,
             errs = [f"not JSON: {exc}"]
         billed.append((usage, not errs))
         if not errs:
-            return taxonomy.flatten(answer), "tagged", billed
+            kept, dropped = taxonomy.check_evidence(answer, text[:aa.MAX_CONTENT_CHARS])
+            evidence = {t: answer["evidence"][t] for g in taxonomy.EVIDENCE_GROUPS for t in kept[g]}
+            outcome = "tagged" + (f" (dropped {'; '.join(dropped)})" if dropped else "")
+            return taxonomy.flatten(kept), outcome, billed, evidence
         last = "invalid: " + "; ".join(errs)
-    return None, f"failed after {ATTEMPTS} attempts: {last}", billed
+    return None, f"failed after {ATTEMPTS} attempts: {last}", billed, {}
 
 
 def apply_tags(row: dict, tags: list[str]) -> None:
@@ -212,12 +220,12 @@ def run(path: Path, api_key: str, backup: Path | None, limit: int = 0, workers: 
             return row, *classify(row, api_key, call=call, sleep=sleep, stop=stop)
         except FatalAPIError as exc:
             stop.set()
-            return row, None, f"fatal: {exc}", exc.billed
+            return row, None, f"fatal: {exc}", exc.billed, {}
 
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = [pool.submit(work, r) for r in todo]
         for i, fut in enumerate(as_completed(futures), 1):
-            row, tags, outcome, billed = fut.result()
+            row, tags, outcome, billed, evidence = fut.result()
             for usage, ok in billed:
                 log_usage(row["id"], MODEL, usage, parsed=ok)
                 tokens[0] += usage.get("prompt_tokens") or 0
@@ -234,7 +242,8 @@ def run(path: Path, api_key: str, backup: Path | None, limit: int = 0, workers: 
                 counts["failed"] += 1
             with report.open("a", encoding="utf-8") as f:
                 f.write(json.dumps({"id": row["id"], "source_id": row.get("source_id"),
-                                    "outcome": outcome, "tags": tags}, ensure_ascii=False) + "\n")
+                                    "outcome": outcome, "tags": tags, "evidence": evidence},
+                                   ensure_ascii=False) + "\n")
             if len(done) >= SAVE_EVERY:
                 flush(path, done)
             print(f"  {i}/{len(todo)} {row.get('source_id', '')[:18]:18} {outcome[:50]:50} "

@@ -11,8 +11,14 @@ in three rounds, the last two only on 'ai_tech' / 'infrastructure'. Round 4
 (2026-10-08) followed a failed acceptance check (33/50): background tagged as a
 topic, govt_bonds on Fed or stock/bond pieces, passing-mention methods. The
 deletion test now applies to every tag, and fewer tags are allowed.
+Round 5 (2026-10-08, 36/50): every asset/topic/method tag must quote a
+passage that check_evidence() finds in the document, or it is dropped (the
+model tagged AI on a data-centre piece with zero AI mentions); a war's market
+impact counts as geopolitics (user's call).
 """
 from __future__ import annotations
+
+import re
 
 GROUPS = {
  "article_type": ("Article type", "文章类型", {
@@ -50,7 +56,7 @@ GROUPS = {
   "monetary_policy": ("Monetary policy & rates", "货币政策与利率", "Central-bank decisions, rate cuts/hikes, rate path, central-bank leadership and independence, QE/QT."),
   "growth_inflation": ("Growth & inflation", "经济增长与通胀", "Growth, recession risk, labour market, inflation, consumption, the business cycle. Not for a piece on a market, sector or strategy that cites growth or inflation as one input among others."),
   "fiscal": ("Fiscal policy & public debt", "财政与政府债务", "Deficits, government borrowing, debt sustainability, budgets, tax cuts or fiscal stimulus at the national level. Must have at least a full paragraph on it; one slide or one sentence on public debt does not count."),
-  "geopolitics_trade": ("Geopolitics & trade", "地缘政治与贸易", "War and conflict, sanctions, tariffs, trade wars, supply-chain realignment, great-power rivalry, political effects of elections. The piece must analyse the conflict, policy or trade relationship itself. Not for an article that names a war or tariffs only as the trigger of a market move it is really about ('stocks fell on Middle East tensions')."),
+  "geopolitics_trade": ("Geopolitics & trade", "地缘政治与贸易", "War and conflict, sanctions, tariffs, trade wars, supply-chain realignment, great-power rivalry, political effects of elections. Includes articles whose subject is how a war or conflict (e.g. the Iran war, Russia-Ukraine) affects markets, oil, sectors or portfolios: a war is geopolitics even when the piece analyses its market impact rather than the conflict itself. Not for an article that names a war or tariffs in a sentence or two as background ('stocks fell on Middle East tensions') and is really about something else."),
   "esg_climate": ("ESG & climate", "ESG 与气候", "Climate risk, energy transition, emissions, sustainable investing, governance, impact investing. Not for a piece that mentions sustainability or energy efficiency in passing."),
   "healthcare": ("Healthcare & biotech", "医疗与生物科技", "Pharma, biotech, medical devices, healthcare services, life-sciences investing."),
   "retirement": ("Retirement & pensions", "退休与养老", "Retirement saving, pension plans, 401(k)/IRA, retirement income. A pension fund discussing asset allocation gets this only if the pension angle is specific."),
@@ -80,8 +86,9 @@ def instruction() -> str:
              "a passing mention does not count.",
              "Deletion test, for every tag: if every sentence about that subject were deleted, would the "
              "article's main argument still stand? If yes, do not tag it.",
-             "Background is not a topic: a war, an oil-price move, a Fed decision or a growth number that is "
-             "named only as the cause or context of what the article is really about does not get its own tag.",
+             "Background is not a topic: an oil-price move, a Fed decision or a growth number that is named only "
+             "in passing as the cause or context of what the article is really about does not get its own tag. "
+             "(Exception: an article whose subject is the market impact of a war gets 'geopolitics_trade'.)",
              "Fewer tags are normal. Assets, topics and methods may each be empty, and most articles need "
              "3 to 5 tags in total. Do not fill a group just because it allows more.",
              "Use only the ids below, copied exactly.", ""]
@@ -91,8 +98,14 @@ def instruction() -> str:
         lines.append(f"{key} ({en}) - choose {n}:")
         lines += [f'  - "{tid}": {d}' for tid, (_, _, d) in tags.items()]
         lines.append("")
-    lines.append('Respond with ONLY a JSON object: {"article_type": "<id>", "regions": [...], '
-                 '"assets": [...], "topics": [...], "methods": [...]}')
+    lines += ["Evidence: for EVERY tag in assets, topics and methods, copy one passage of 10 to 40 words "
+              "from the document, word for word and contiguous (no '...', no paraphrase, no translation), "
+              "that shows the article analyses that subject. A tag whose passage is not found in the "
+              "document is removed automatically, so if you cannot find such a passage, do not use the tag.",
+              "",
+              'Respond with ONLY a JSON object: {"article_type": "<id>", "regions": [...], '
+              '"assets": [...], "topics": [...], "methods": [...], '
+              '"evidence": {"<tag id>": "<passage copied from the document>", ...}}']
     return "\n".join(lines)
 
 
@@ -124,7 +137,44 @@ def validate(d: object) -> list[str]:
     regions = d.get("regions")
     if isinstance(regions, list) and "global" in regions and len(regions) > 1:
         errs.append("global combined with another region")
+    ev = d.get("evidence", {})
+    if not isinstance(ev, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in ev.items()):
+        errs.append("evidence malformed")
     return errs
+
+
+EVIDENCE_GROUPS = ("assets", "topics", "methods")
+MIN_EVIDENCE_WORDS = 6
+
+
+def _letters(s: str) -> str:
+    """Lower-case letters and digits only. Punctuation, curly quotes, dashes,
+    line breaks and spaces cannot make a real quote miss -- including words the
+    scraper glued together ('Inflation outlookThe fight...', T. Rowe Price)."""
+    return re.sub(r"[\W_]+", "", s.lower())
+
+
+def check_evidence(d: dict, text: str) -> tuple[dict, list[str]]:
+    """Drop every asset/topic/method tag whose evidence passage is not in `text`.
+
+    Returns (answer without those tags, ["tag: reason", ...]). Type and regions
+    need no evidence. The model was told unsupported tags are removed, so
+    dropping (not retrying) is the intended outcome; 0 tags in a group is legal."""
+    body = _letters(text)
+    ev = d.get("evidence") or {}
+    kept, dropped = dict(d), []
+    for g in EVIDENCE_GROUPS:
+        keep = []
+        for tid in d[g]:
+            passage = ev.get(tid) or ""
+            if len(re.findall(r"\w+", passage)) < MIN_EVIDENCE_WORDS:
+                dropped.append(f"{tid}: no passage" if not passage.strip() else f"{tid}: passage too short")
+            elif _letters(passage) not in body:
+                dropped.append(f"{tid}: passage not in document")
+            else:
+                keep.append(tid)
+        kept[g] = keep
+    return kept, dropped
 
 
 def flatten(d: dict) -> list[str]:
