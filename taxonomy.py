@@ -217,9 +217,11 @@ def series_note(row: dict, index: dict[tuple[str, str], list[str]]) -> str:
     shown = dates[-SERIES_SHOW:]
     return (f"Series context: this source has published {len(dates)} articles whose titles start with "
             f"\"{key[1]}\", dated {', '.join(shown)}{' (latest shown)' if len(dates) > len(shown) else ''}. "
-            "If these dates follow a regular cycle, this article is an issue of a fixed-cycle series: "
-            "use 'periodic' for a monthly/weekly series, 'quarterly' for a quarterly one, 'annual_outlook' "
-            "for a yearly or half-yearly outlook series -- even when this issue is about a sudden event. "
-            "If the dates are irregular, or the shared prefix is only a brand or division name over "
-            "unrelated pieces, ignore this and judge the article on its own.")
+            "This article is an issue of a series if the dates follow a regular cycle, OR if the prefix is "
+            "the name of a recurring column or newsletter ('Quick view', 'Chart to watch', 'Quick thoughts') "
+            "even when its dates are irregular. For a series use 'periodic' (monthly/weekly or irregular "
+            "columns), 'quarterly' (a quarterly or half-yearly review), or 'annual_outlook' (an outlook "
+            "published once or twice a year) -- even when this issue is about a sudden event. Ignore this "
+            "only when the prefix is a broad subject, brand or division name ('Emerging markets', "
+            "'Wealth Management') over unrelated pieces.")
 
