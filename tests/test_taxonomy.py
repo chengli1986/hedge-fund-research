@@ -106,6 +106,24 @@ def test_a_recurring_title_series_is_named_with_its_dates():
 
 
 def test_series_prefix_splits_on_separators_but_not_inside_words():
-    assert tx.series_key(_r("s", "Quick take: Engineered carbon", "x"))[1] == "quick take"
-    assert tx.series_key(_r("s", "Global Advisory – June", "x"))[1] == "global advisory"
-    assert tx.series_key(_r("s", "GMO 7-Year Asset Class Forecast: July", "x"))[1] == "gmo 7-year asset class forecast"
+    assert tx._title_prefix("Quick take: Engineered carbon") == "quick take"
+    assert tx._title_prefix("Global Advisory \u2013 June") == "global advisory"
+    assert tx._title_prefix("GMO 7-Year Asset Class Forecast: July") == "gmo 7-year asset class forecast"
+    assert tx._title_prefix("July FOMC Recap\u2014More Bark Than Bite?") == "fomc recap"
+    assert tx._title_prefix("June CPI report: A welcome sigh") == "cpi report"     # leading month dropped
+
+
+def _u(src, url, date, title):
+    return {"source_id": src, "url": url, "date": date, "title": title}
+
+
+def test_columns_whose_titles_differ_are_found_by_their_web_address():
+    jpm = [_u("jpmam", f"https://am.jpmorgan.com/us/market-updates/on-the-minds-of-investors/q{i}/", f"2026-07-0{i}", f"Question {i}?")
+           for i in (1, 2, 3)]
+    man = [_u("man-group", f"https://www.man.com/insights/views-from-the-floor-2026-{d}-mar", f"2026-03-{d}", t)
+           for d, t in (("10", "A Crude Awakening"), ("17", "Gold"), ("24", "Fool Me Twice"))]
+    site = [_u("wellington", f"https://w.com/en/insights/piece-number-{w}", "2026-05-01", w) for w in ("a b c", "d e f", "g h i")]
+    idx = tx.series_index(jpm + man + site)
+    assert '"/on-the-minds-of-investors/"' in tx.series_note(jpm[0], idx)
+    assert '"views-from-the"' in tx.series_note(man[0], idx)
+    assert tx.series_note(site[0], idx) == ""      # '/insights/' is the whole site, not a column

@@ -90,15 +90,15 @@ def is_fatal(exc: Exception) -> bool:
 
 
 def candidates(rows: list[dict], retag_before: str | None = None,
-               only: set[tuple[str, str]] | None = None) -> list[dict]:
+               only=None) -> list[dict]:
     """Summarised, with a readable body, and not yet tagged -- or, with retag_before,
     tagged before that time (so a stopped re-tag resumes with the same value).
-    With `only`, just the articles whose taxonomy.series_key is in it."""
+    With `only` (a predicate on the row), just the rows it accepts."""
     out = []
     for r in rows:
         if not r.get("summarized"):
             continue
-        if only is not None and taxonomy.series_key(r) not in only:
+        if only is not None and not only(r):
             continue
         if r.get("tags") and not (retag_before and (r.get("tags_at") or "") < retag_before):
             continue
@@ -195,13 +195,16 @@ def flush(path: Path, done: dict[str, dict]) -> int:
 
 
 def run(path: Path, api_key: str, backup: Path | None, limit: int = 0, workers: int = 3,
-        dry_run: bool = False, retag_before: str | None = None, only_series: bool = False, call=aa._call_openai, sleep=time.sleep, log_usage=aa._append_usage_log) -> int:
+        dry_run: bool = False, retag_before: str | None = None, only_series: bool = False,
+        also_types: tuple[str, ...] = (), call=aa._call_openai, sleep=time.sleep, log_usage=aa._append_usage_log) -> int:
     rows, damaged = jsonl_store.read_rows(path)
     if damaged:
         print(f"{damaged} damaged row(s) in the store; refusing to rewrite it")
         return 1
     index = taxonomy.series_index([r for r in rows if r.get("summarized")])
-    todo = candidates(rows, retag_before, set(index) if only_series else None)
+    only = (lambda r: bool(taxonomy.series_note(r, index)) or (r.get("tags") or [None])[0] in also_types) \
+        if only_series else None
+    todo = candidates(rows, retag_before, only)
     if limit:
         todo = todo[:limit]
     print(f"{len(todo)} article(s) to tag (model={MODEL}, workers={workers})", flush=True)
@@ -272,14 +275,17 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--workers", type=int, default=3)
     ap.add_argument("--backup", type=Path, help="directory for the store snapshot and the report")
     ap.add_argument("--only-series", action="store_true",
-                    help="only articles in a recurring title series (taxonomy.series_index)")
+                    help="only articles in a column-like group (taxonomy.series_index)")
+    ap.add_argument("--also-type", action="append", default=[], metavar="TYPE",
+                    help="with --only-series, also articles whose current type is TYPE")
     ap.add_argument("--retag-before", metavar="ISO_TIME",
                     help="also re-tag articles whose tags_at is earlier than this (BJT ISO, e.g. "
                          "2026-10-08T12:00:00+08:00); rerun with the same value to resume")
     args = ap.parse_args(argv)
     key = "" if args.dry_run else aa._load_api_keys()["OPENAI_API_KEY"]
     return run(aa.DATA_FILE, key, args.backup, limit=args.limit, workers=args.workers,
-               dry_run=args.dry_run, retag_before=args.retag_before, only_series=args.only_series)
+               dry_run=args.dry_run, retag_before=args.retag_before, only_series=args.only_series,
+               also_types=tuple(args.also_type))
 
 
 if __name__ == "__main__":

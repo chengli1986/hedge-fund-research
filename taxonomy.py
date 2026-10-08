@@ -19,13 +19,14 @@ impact counts as geopolitics (user's call).
 from __future__ import annotations
 
 import re
+from urllib.parse import urlparse
 
 GROUPS = {
  "article_type": ("Article type", "文章类型", {
   "annual_outlook": ("Annual outlook", "年度展望", "Annual or mid-year outlooks, 'top themes for next year', published once or twice a year. A long-horizon forecast refreshed every month is 'periodic'."),
   "quarterly": ("Quarterly report", "季度报告", "Quarterly outlooks, quarterly reviews, quarterly allocation views."),
-  "periodic": ("Monthly/weekly commentary", "月度/周度点评", "Commentary published on a fixed cycle: monthly/weekly reports, numbered newsletters ('Edition 51'), short recurring branded series ('Quick takes', 'Chart of the week', 'Weekly market recap'). A fixed-cycle piece that discusses a sudden event is still this; a piece in such a series is not 'research' just because it makes one argument. A long-horizon forecast refreshed every month (e.g. a 7-year asset-class forecast) is this. Podcast episodes and interviews are 'interview' even when numbered."),
-  "event": ("Event commentary", "事件快评", "Ad-hoc commentary reacting to a sudden event: war, sell-off, surprise central-bank move, election result, black swan. Not if it belongs to a fixed-cycle series."),
+  "periodic": ("Monthly/weekly commentary", "月度/周度点评", "Commentary published on a fixed cycle: monthly/weekly reports, numbered newsletters ('Edition 51'), short recurring branded series ('Quick takes', 'Chart of the week', 'Weekly market recap'). A fixed-cycle piece that discusses a sudden event is still this; a piece in such a series is not 'research' just because it makes one argument. A long-horizon forecast refreshed every month (e.g. a 7-year asset-class forecast) is this, and so is a note on a scheduled data release or meeting (monthly CPI or jobs report, FOMC/ECB meeting recap). Podcast episodes and interviews are 'interview' even when numbered."),
+  "event": ("Event commentary", "事件快评", "Ad-hoc commentary reacting to a sudden event: war, sell-off, surprise central-bank move, election result, black swan. Not if it belongs to a fixed-cycle series; a scheduled data release or central-bank meeting is not a sudden event ('periodic')."),
   "research": ("Thematic research", "专题研究", "One-off in-depth analysis of a question, with data and argument."),
   "interview": ("Interview & podcast", "访谈与播客", "Interviews, conversations, podcast transcripts, webinar replays, including numbered podcast series and episodes that discuss an outlook."),
   "education": ("Investor education", "投资者教育", "Primers, explainers, 'how to' guides, saving and planning advice. If it presents original research findings, use 'research'."),
@@ -184,44 +185,97 @@ def flatten(d: dict) -> list[str]:
 
 SERIES_MIN = 3
 SERIES_SHOW = 12
+_MONTH = (r"(?:january|february|march|april|may|june|july|august|september|october|november|december"
+          r"|jan|feb|mar|apr|jun|jul|aug|sep|sept|oct|nov|dec)")
+# Directory names that hold a whole site or a subject, not one column.
+GENERIC_DIRS = {
+    "insights", "insight", "article", "articles", "blog", "news", "library", "archive", "perspectives",
+    "perspective", "research", "research-library", "research-and-insights", "blog-post", "paper", "papers",
+    "publications", "views-news", "ic-article", "market-insights", "news-and-insights", "investment-insights",
+    "investment-research", "equities", "equity", "fixed-income", "multi-asset", "real-estate", "etf",
+    "education", "institute", "report-survey", "white-papers", "working-paper", "journal-article",
+    "outlooks-and-market-updates", "investment-perspectives", "newsroom", "media", "video-library",
+    "practicelab", "series", "verdadcap", "en", "us", "en-us", "en-int",
+    # seen on the 2026-10 data: a whole-site path, sub-brands, subjects
+    "insights-and-research", "clearbridge-investments", "royce-investment-partners", "western-asset",
+    "tax-aware-investing", "real-estate-private-markets", "multi-asset-solutions",
+    "memo",  # Oaktree memos: an essay series, each piece is research
+}
 
 
-def series_key(row: dict) -> tuple[str, str]:
-    """(source, title prefix before the first ':', ' - ', ' | ' or ' – ').
+def _title_prefix(title: str) -> str:
+    """Title up to the first ':', ' - ', '|', en or em dash; a leading month (and
+    year) dropped, so 'June CPI report' and 'July CPI report' are one series."""
+    p = re.split(r"\s*[:\u2013\u2014|]\s*|\s+-\s+", title or "")[0].strip()
+    p = re.sub(rf"^{_MONTH}\b\.?\s+(?:\d{{4}}\s+)?", "", p, flags=re.I)
+    return " ".join(p.lower().split())
 
-    A whole title counts as its own prefix, so a source that reuses one title
-    every month ('Market Monitor') groups too."""
-    prefix = re.split(r"\s*[:–|]\s+|\s+-\s+", row.get("title") or "")[0]
-    return row.get("source_id") or "", " ".join(prefix.lower().split())
+
+def _url_parts(url: str) -> tuple[str, list[str]]:
+    """(last directory, word tokens of the last path segment without numbers or a leading month)."""
+    segs = [x for x in urlparse(url or "").path.lower().split("/") if x]
+    if not segs:
+        return "", []
+    toks = [t for t in re.split(r"[-_.]+", segs[-1]) if t and not t.isdigit() and t not in ("html", "htm", "pdf")]
+    while toks and re.fullmatch(_MONTH, toks[0]):
+        toks = toks[1:]
+    d = segs[-2] if len(segs) >= 2 else ""
+    return ("" if d in GENERIC_DIRS or re.fullmatch(r"[\d-]+", d) else d), toks
 
 
-def series_index(rows: list[dict]) -> dict[tuple[str, str], list[str]]:
-    """Dates of every (source, prefix) group with at least SERIES_MIN articles.
+def series_keys(row: dict) -> list[tuple[str, str, str]]:
+    """Every way `row` could belong to a column: by title prefix, by the first
+    three words of its URL slug ('views-from-the-floor-2026-24-mar', Man; titles
+    differ every week), and by a column-named URL directory
+    ('/on-the-minds-of-investors/', J.P. Morgan)."""
+    src = row.get("source_id") or ""
+    d, toks = _url_parts(row.get("url") or "")
+    keys = [(src, "title", _title_prefix(row.get("title") or ""))]
+    if len(toks) >= 3:
+        keys.append((src, "slug", "-".join(toks[:3])))
+    if d:
+        keys.append((src, "dir", d))
+    return [k for k in keys if k[2]]
+
+
+def series_index(rows: list[dict]) -> dict[tuple[str, str, str], list[str]]:
+    """Dates of every column-like group (any series_keys kind) with at least SERIES_MIN articles.
 
     The model sees one article at a time and cannot tell that a war-focused
-    'Investment Strategy Insights' is the monthly issue of a series (gate 3,
-    2026-10-08: 3 of 9 errors); these dates let it see the cadence."""
-    groups: dict[tuple[str, str], list[str]] = {}
+    issue belongs to a monthly or weekly column (gate 3, 2026-10-08: 3 of 9
+    errors, then 6 of 10 once titles were covered); these dates let it see
+    the cadence. Whether a group really is a column is left to the model."""
+    groups: dict[tuple[str, str, str], list[str]] = {}
     for r in rows:
-        if r.get("title") and r.get("date"):
-            groups.setdefault(series_key(r), []).append(str(r["date"])[:10])
+        if r.get("date"):
+            for k in series_keys(r):
+                groups.setdefault(k, []).append(str(r["date"])[:10])
     return {k: sorted(v) for k, v in groups.items() if len(v) >= SERIES_MIN}
 
 
-def series_note(row: dict, index: dict[tuple[str, str], list[str]]) -> str:
-    """A line for the prompt naming the series' dates, or '' if it has none."""
-    key = series_key(row)
-    dates = index.get(key)
-    if not dates:
-        return ""
-    shown = dates[-SERIES_SHOW:]
-    return (f"Series context: this source has published {len(dates)} articles whose titles start with "
-            f"\"{key[1]}\", dated {', '.join(shown)}{' (latest shown)' if len(dates) > len(shown) else ''}. "
-            "This article is an issue of a series if the dates follow a regular cycle, OR if the prefix is "
-            "the name of a recurring column or newsletter ('Quick view', 'Chart to watch', 'Quick thoughts') "
-            "even when its dates are irregular. For a series use 'periodic' (monthly/weekly or irregular "
-            "columns), 'quarterly' (a quarterly or half-yearly review), or 'annual_outlook' (an outlook "
-            "published once or twice a year) -- even when this issue is about a sudden event. Ignore this "
-            "only when the prefix is a broad subject, brand or division name ('Emerging markets', "
-            "'Wealth Management') over unrelated pieces.")
+_SERIES_WHAT = {"title": "titles start with \"{}\"", "slug": "web addresses start with \"{}\"",
+                "dir": "web addresses sit under \"/{}/\""}
+
+
+def series_note(row: dict, index: dict[tuple[str, str, str], list[str]]) -> str:
+    """A line for the prompt naming the column's dates, or '' if it is in none.
+
+    Title groups are preferred, then slug, then directory."""
+    for key in series_keys(row):
+        dates = index.get(key)
+        if not dates:
+            continue
+        shown = dates[-SERIES_SHOW:]
+        return (f"Series context: this source has published {len(dates)} articles whose "
+                f"{_SERIES_WHAT[key[1]].format(key[2])}, dated {', '.join(shown)}"
+                f"{' (latest shown)' if len(dates) > len(shown) else ''}. "
+                "This article is an issue of a series if the dates follow a regular cycle, OR if the shared "
+                "name is a recurring column or newsletter ('Quick view', 'Chart to watch', 'On the Minds of "
+                "Investors', 'Views from the Floor') even when its dates are irregular. For a series use "
+                "'periodic' (monthly/weekly or irregular columns), 'quarterly' (a quarterly or half-yearly "
+                "review), or 'annual_outlook' (an outlook published once or twice a year) -- even when this "
+                "issue is about a sudden event. Ignore this only when the shared name is a broad subject, "
+                "brand or division name ('Emerging markets', 'Wealth Management', 'equity') over unrelated "
+                "pieces, or when this article is an interview or podcast (keep 'interview').")
+    return ""
 

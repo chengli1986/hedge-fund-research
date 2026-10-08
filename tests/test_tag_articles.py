@@ -211,3 +211,13 @@ def test_the_prompt_names_the_series_and_only_series_limits_the_run(store, tmp_p
     assert len(call.calls) == 3
     assert all("Series context" in p and "2026-01-05, 2026-02-05, 2026-03-05" in p for p in call.calls)
     assert "tags" not in _read(path)["id4"]
+
+
+def test_also_type_adds_articles_outside_any_series(store, tmp_path):
+    rows = [_row(1, title="One-off", tags=["event", "us"], tags_at="2025-12-01T00:00:00+08:00"),
+            _row(2, title="Other one-off", tags=["research", "us"], tags_at="2025-12-01T00:00:00+08:00")]
+    path = store(rows)
+    call = _caller([GOOD])
+    assert _run(path, tmp_path, call, only_series=True, also_types=("event",),
+                retag_before="2026-01-01T00:00:00+08:00") == 0
+    assert len(call.calls) == 1 and _read(path)["id2"]["tags"] == ["research", "us"]
