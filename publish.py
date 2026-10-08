@@ -555,6 +555,9 @@ def _display_date(a: dict) -> str:
     page led with "2026-08-31". Prefer the original label when it has no day.
     """
     raw = (a.get("date_raw") or "").strip()
+    # scripts/refine_dates.py found the day on the article page or in its URL.
+    if a.get("date_basis") in ("page", "url"):
+        return a.get("date") or ""
     if _MONTH_ONLY_RAW.match(raw):
         return raw
     return a.get("date") or ""

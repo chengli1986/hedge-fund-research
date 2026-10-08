@@ -66,6 +66,12 @@ failed_stages=()
 
 # Stage 1: fetch metadata (source identity validated internally)
 if python3 fetch_articles.py; then
+  # Stage 1b: a listing that shows only "October 2026" is stored as the month's
+  # last day; read the real day from the article page (scripts/refine_dates.py,
+  # 2026-10-08). Best effort: a failure costs only a less precise date.
+  if ! python3 scripts/refine_dates.py; then
+    echo "WARN: Stage 1b (date refinement) failed; month-only dates stay at the month end"
+  fi
   # Stage 2: fetch + validate + normalize content (depends on Stage 1)
   if python3 fetch_content.py; then
     # Stage 3: LLM analysis (depends on Stage 2)

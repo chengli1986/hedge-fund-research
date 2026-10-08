@@ -8,7 +8,7 @@ Playwright (Chromium) for JS/CSR sites; multi-model LLM chain for summaries.
 
 ## Develop / Test
 ```bash
-python3 -m pytest tests/ -q                       # 2150 passed, 16 deselected
+python3 -m pytest tests/ -q                       # 2165 passed, 16 deselected
 bash run_pipeline.sh                              # full 4-stage pipeline
 python3 fetch_articles.py --list                  # list configured sources
 python3 fetch_articles.py --source <id> --dry-run # one source, no save
@@ -19,6 +19,7 @@ python3 fetch_articles.py --source <id> --dry-run # one source, no save
 ## Architecture
 Daily 4-stage pipeline (`run_pipeline.sh`):
 1. `fetch_articles.py` — scrape metadata (title/url/date), dedup, write `data/articles.jsonl`
+1b. `scripts/refine_dates.py` — a month-only listing date (`date_raw` "October 2026", stored as the month end) gets the day from the article page (datePublished etc., only inside that month and ≤ first-seen+7d) or URL, else first-seen/month-end; sets `date`, `date_listed`, `date_basis`. **Never touches `date_raw`**: fetch_articles reads it to treat the listing's next "October 2026" as the same article, not a new issue. Warn-only.
 2. `fetch_content.py` — download + normalize full text → `content/*.txt`
 3. `analyze_articles.py` — CN+EN summaries; `MODEL_CHAIN` = **gpt-5.6-luna → gpt-4.1-mini**, both OpenAI. Gemini was removed 2026-09-21 and the unwired `_call_anthropic` on 2026-09-30 (audit A5), so summarisation has **one provider** and no cross-provider fallback. Adding one means a client, a `model_to_caller` entry, a `_USAGE_FIELDS` entry and a key — not just a model name. (The `ANTHROPIC_API_KEY` in `scripts/wrapper-*.sh` is for the Claude Code agent workflows, unrelated to this chain.)
 3b. `scripts/tag_articles.py --nightly` — tags every summarised article that has none (41-tag `taxonomy.py`; each asset/topic/method tag must quote the text or is dropped; series dates in the prompt). Exit 1 = some left untagged, retried next night; 2 = quota/auth stop, alerts. Re-tag after a definition change: `--retag-before <ISO>` (+ `--only-series --also-type event` for type-only fixes).
