@@ -1,4 +1,4 @@
-"""Build docs-site/pages/hedge-fund-research-audit.html (static report, 2026-10-02)."""
+"""Build docs-site/pages/hedge-fund-research-audit.html (static report, 2026-10-02; stage 3 added 2026-10-08)."""
 import html
 REPO = "https://github.com/chengli1986/hedge-fund-research"
 def c(*hs):  # commit links
@@ -16,7 +16,7 @@ def mistakes(items):
     return ("<div class='tablewrap'><table class='mis'><thead><tr><th>我的错误</th><th>怎么发现、怎么处理</th></tr></thead><tbody>"
             + "".join(f"<tr><td>{a}</td><td>{b}</td></tr>" for a, b in items) + "</tbody></table></div>")
 
-FIX, KEEP, REJ, PART, REC = "fix", "keep", "rej", "part", "rec"
+FIX, KEEP, REJ, PART, REC, TODO = "fix", "keep", "rej", "part", "rec", "todo"
 
 S1 = [
  ("A1", "第 2 阶段整晚一篇正文都没抓到，流程也照样报“全部成功”", "能返回失败了；判据改为“今晚首次尝试的文章来自 ≥2 个源，且全场 0 成功”——回放 186 次历史运行：0 误报", FIX, "已修", c("3d07d11","90754ee")),
@@ -65,8 +65,29 @@ S2 = [
  ("G4", "给“拒绝摘要”加一个“视频页”分类", "实测一篇都拦不到（AI 写的理由里没有“video”）——驳回", REJ, "驳回", "—"),
 ]
 
+S3 = [
+ ("A1", "AI 写摘要只读文章前 1.5 万字：1592 篇里 305 篇更长，平均只读到 67%，最少的只读到 8%，漏掉的常常是论证本身", "上限改为 8 万字（覆盖 305 篇里的 304 篇，费用约多 13%）；305 篇全部按全文重写摘要", FIX, "已修", c("2fea5ac", "5c96dd6")),
+ ("A2", "约 1100 篇早期 Gemini 写的摘要，从没经过现在的防编造检查", "305 篇长文已随 A1 重写；其余 913 篇做数字核对：原文里找不到的数字占 5%，luna 摘要是 4%，几乎都是改写造成的。只重写了 1 篇（Verdad，数字出自图表）", KEEP, "按决定不重写", "—"),
+ ("A3", "防编造规则把一篇真文章（“就业报告可能……”）误判成 AI 瞎猜", "改判据，并给一次重写机会", FIX, "已修", c("9ac726a")),
+ ("A4", "防编造规则本身：上线以来从没抓到过一次真编造、误拦过 2 篇真文章；对“整篇瞎编”只能识破 26%", "测量数据记入审计文档，按你的决定维持现状", KEEP, "保持现状", c("df0cd8c")),
+ ("B1", "15 个主题标签没有定义、混了四种维度（地区、资产、话题、文章类型）；每篇只归一个“首要主题”；早期摘要抽样 9% 的首要主题明显错", "重新设计成 5 组 41 个标签、多选取交集；1627 篇按全文重贴，五轮验收后通过（详见下文）", FIX, "已修", c("dc23f47", "ff75477")),
+ ("B2", "读取主题时按前缀“纠错”：Employment、Emissions 被归到“中国/新兴市场”，Airlines 归到“AI/科技”（实测）", "只收与清单完全相同的标签，猜错的直接丢弃（红测试在先）", FIX, "已修", c("cd24132")),
+ ("B3", "新标签要能每天给新文章贴上，网页也要能用", "每晚新增“贴标签”一步；网页改为标签视图，旧主题字段再写一个月作回退", FIX, "已上线", c("cd24132")),
+ ("C1", "写摘要程序的出错与计费处理（10-07 OpenAI 预付余额曾用尽）", "新写的贴标签脚本遇到余额/鉴权错误会立即停、已完成的保留；写摘要程序本身的这条路径还没系统审查", TODO, "未审", c("dc23f47")),
+ ("C2", "backfill_themes.py：给旧主题补数据的脚本", "旧主题 2026-11-08 停写后作废，届时一并删除", TODO, "待处理", "—"),
+]
+
+ROUNDS = [
+ ("1", "10-07", "33 / 50", "把背景当话题（一句“冲突推高油价”就贴地缘政治）、政府债贴得太宽、方法组顺带一提就贴", "“删除测试”推广到所有标签，背景不算话题，少贴是正常的", c("9637082")),
+ ("2", "10-08", "36 / 50", "全文 0 次提到 AI 仍贴 AI（一篇讲数据中心选址的）、0 次提到国债仍贴政府债", "每个资产/话题/方法标签必须附一段原文，程序核对确实在原文里，否则删掉；你定：战争对市场的影响算地缘政治", c("8b06e8b")),
+ ("3", "10-08", "41 / 50", "9 处错里 4 处是文章类型：固定栏目的某一期讲突发事件，被判成“事件快评”", "提示里列出同一栏目的往期日期，让 AI 看出周期", c("3dfa095", "1ada1da")),
+ ("4", "10-08", "40 / 50", "标题看不出的栏目（J.P. Morgan 周刊 39 期标题各不相同）、标题以月份开头的 CPI/议息点评", "也按网址目录、网址开头、去掉月份的标题识别栏目；按日程发布的数据/议息点评归月度点评", c("8ca3940")),
+ ("5", "10-08", "<b>45 / 50 通过</b>", "剩 5 处零散错误，无共同原因", "—", c("ff75477")),
+]
+
 CARDS = [("16 项", "第 1 阶段 · 全部修复"), ("25 项", "第 2 阶段 · 全部有结论"),
-         ("1520 → 2078", "测试条数 · 全部通过"), ("19 / 42", "抓列表用声明式模板的源")]
+         ("9 项 · 7 有结论", "第 3 阶段 · 进行中"),
+         ("1520 → 2165", "测试条数 · 全部通过")]
 
 STAGE1 = f"""
 <h2>一、总体结论</h2>
@@ -157,6 +178,75 @@ STAGE2 = f"""
      "✅ gsam 7 篇：因代码改动重抓一次后照常重新放弃"])}
 """
 
+def rounds_table(items):
+    return ("<div class='tablewrap'><table><thead><tr><th>轮次</th><th>日期</th><th>新抽 50 篇</th>"
+            "<th>主要错在哪</th><th>怎么改的</th><th>提交</th></tr></thead><tbody>"
+            + "".join(f"<tr><td class='id'>{a}</td><td class='cm'>{b}</td><td class='st fix'>{c_}</td><td>{d}</td><td>{e}</td><td class='cm'>{f}</td></tr>"
+                      for a, b, c_, d, e, f in items) + "</tbody></table></div>")
+
+
+STAGE3 = f"""
+<h2>一、总体结论</h2>
+<div class="box">
+<p>2026-10-06 开始。审查对象是第 3 阶段“写摘要”，以及摘要里附带的主题分类。<b>9 项，7 项有了结论，2 项还没做</b>（C1 出错与计费、C2 旧补数据脚本）。测试从 2087 条增加到 2165 条（10-08），全部通过。</p>
+<p>这一阶段最大的一块不是修 bug，而是<b>主题分类整体重做</b>：旧主题没有定义、维度混杂、每篇只能归一个，网页又按它分栏，读者用它“第一时间定位”文章并不可靠。重做按你的要求一个问题一个问题地定，做完再用独立抽样验收。</p>
+<p>反复出现的毛病是：<b>只看了我关心的那一类就以为整体没问题</b>——试跑时只盯 AI 标签，其它标签贴多了没发现，第一次验收才暴露；修栏目问题时只看了标题，第二次验收才发现大量栏目只能从网址看出来。</p>
+</div>
+<div class="cards small">
+ <div class="card"><div class="v g">5</div><div class="l">已修好 / 已上线</div></div>
+ <div class="card"><div class="v y">2</div><div class="l">按你的决定保持现状</div></div>
+ <div class="card"><div class="v r">2</div><div class="l">还没做</div></div>
+</div>
+<p class="muted">（A2、A4 各算一项“保持现状”；B1–B3 三项合起来就是下文的标签重设计。）</p>
+
+<h2>二、9 项问题的结局</h2>
+{table(S3)}
+
+<h2>三、主题分类重设计</h2>
+{ul([
+ "<b>6 个问题逐一定案</b>（10-06 到 10-07）：①纯标签、多选取交集、按组摆放、加搜索框 ②—④ 5 组 41 个标签及每个的定义（文章类型 7、地区 6、资产 11、话题 9、方法 8），每篇类型 1 个、地区 1–2 个、资产/话题 0–3 个、方法 0–2 个 ⑤ 网页样子（先给样板，字体配色与研报页统一）⑥ 老文章全部按全文重贴、三道验收关 · " + doc("docs/tag-taxonomy.md", "标签规格"),
+ "<b>AI 标签的规则由你定</b>：讲 AI 带来的电力、水、数据中心需求算 AI；只讲基础设施、不讲 AI 需求的不算",
+ "<b>三道验收关</b>：①机器检查 100% 合格 ②每个标签的篇数是否合理 ③每轮新抽 50 篇（7 种类型都有），由 5 个独立评审读全文判，≥45 篇无错标、无漏核心标签才算过，两可的边界标签不算错。每轮换新样本，避免只对着老题目调",
+ "<b>每轮贴标签都能核对</b>：每个标签附的原文摘录、被删的原因都留在备份目录的报告里；每次重贴前备份文章库，重贴后核对除标签外 0 处改动",
+])}
+{rounds_table(ROUNDS)}
+<p class="muted">第 3 关的标准是你定的；第四轮后你也指出 45/50 接近 90 分、要求偏高，约定：到 45 算过，差一点但剩余错误零散、没有共同原因也算过。最终一轮正好 45。全部重贴和验证的 OpenAI 费用合计约 7 美元（估算）。</p>
+
+<h2>四、上线（10-08）</h2>
+{ul([
+ "<b>网页</b>：默认“标签”页——左侧 5 组标签、多选取交集、数字表示再加这个标签还剩几篇、搜索含标题/要点/近期摘要/标签名、每张卡片上的标签可点；时间线、基金、来源、中英切换、显示更旧都保留 · " + c("cd24132"),
+ "<b>每晚</b>：写完摘要后新增一步贴标签，沿用验收通过的同一套做法（单独一次调用、附原文、列栏目日期）。没有并进写摘要的那次调用：并进去等于换了提示词，要重新验收",
+ "<b>网页的筛选逻辑在浏览器里跑</b>，所以第一次加了真开浏览器的测试；4 种故意改坏都能被它抓到",
+])}
+
+<h2>五、审查范围以外顺带做的</h2>
+{ul([
+ "<b>只写到月份的日期</b>（列表上只有“2026 年 10 月”）：改为去文章页面读真实发布日期。292 篇里 239 篇从页面读到、9 篇从网址读到，其余用第一次抓到的日期或月末；网页上不再有未来日期。原始的月份字段保留不动——抓取程序靠它认出“同一篇文章”，否则第二天会被当成新的一期重复收录（测试锁住）。这属于第 1 阶段 · " + c("c399770"),
+ "<b>Ares</b>：8-27 起新文章不再放在原来的栏目路径下，改为也读顶层文章 · " + c("3c634a6"),
+ "<b>健康检查</b>：抽查的几篇全是视频页时，报“提醒”而不是“失败” · " + c("ae3a16d"),
+ "<b>整仓自动审查</b>的一条：贴标签脚本因余额耗尽停下时，已经花掉的调用也要记账 · " + c("1eeef71"),
+])}
+
+<h2>六、我自己犯过、已经纠正的错</h2>
+{mistakes([
+ ("说“10 篇 MetLife 没有全文”", "只看了账本里的路径字段；你让我复查后发现文件都在，程序本来就会按编号找到。更正后 10 篇照常重贴"),
+ ("试跑时只盯 AI 一个标签", "其它标签贴多了没发现，第一次验收 33/50 才暴露。之后每轮都由独立评审看全部标签"),
+ ("说 AI 标签有 18 篇", "实际 17 篇，向你更正"),
+ ("“附原文”的第一版按词比对", "网页抓下来的字常粘在一起（如“outlookThe”），正确标签在 100 篇里误删 22 篇；改成去掉空格和标点比对后降到 6 篇"),
+ ("栏目提示第一版写了“日期不规律就忽略”", "反而把 26 篇“Quick View”这类不定期小栏目从“月度点评”推开了；改成“有栏目名就算栏目”后重贴"),
+ ("一条测试没把要测的规则单独隔离出来", "故意改坏那条规则测试照样通过（另一条规则替它挡住了）；换成只有这条规则能挡住的样例"),
+])}
+
+<h2>七、遗留</h2>
+{ul([
+ "<b>C1</b> 写摘要程序的出错与计费处理：下一项要审的",
+ "<b>C2</b> 2026-11-08 停写旧主题字段，同时删除 backfill_themes.py",
+ "附的原文对不上时现在直接删标签，PDF 类正文（图表文字很乱）会误删（如 GMO 新兴市场债季报的“政府债”“外汇”）；应改成换一段原文重试一次",
+ "10-09 凌晨是新步骤第一次跟着每晚流程跑，需要看结果",
+ "第 6 题约定你在样板页上抽看 10–20 篇",
+])}
+"""
+
 AUTO = f"""
 <h2>一、这是什么</h2>
 <div class="box">
@@ -237,11 +327,11 @@ ul{padding-left:20px}li{margin:6px 0}
 .tabs label{display:inline-block;padding:8px 14px;margin:0 6px 6px 0;border:1px solid var(--border);
 border-radius:8px;background:var(--surface);color:var(--muted);cursor:pointer;font-size:13px}
 .tabs .panel{display:none}
-#t1:checked~.bar label[for=t1],#t2:checked~.bar label[for=t2],#t3:checked~.bar label[for=t3],#t4:checked~.bar label[for=t4]{
+#t1:checked~.bar label[for=t1],#t2:checked~.bar label[for=t2],#t3:checked~.bar label[for=t3],#t4:checked~.bar label[for=t4],#t5:checked~.bar label[for=t5]{
 border-color:var(--blue);color:var(--text);background:var(--surface2)}
-#t1:checked~#p1,#t2:checked~#p2,#t3:checked~#p3,#t4:checked~#p4{display:block}
+#t1:checked~#p1,#t2:checked~#p2,#t3:checked~#p3,#t4:checked~#p4,#t5:checked~#p5{display:block}
 #t1:focus-visible~.bar label[for=t1],#t2:focus-visible~.bar label[for=t2],
-#t3:focus-visible~.bar label[for=t3],#t4:focus-visible~.bar label[for=t4]{outline:2px solid var(--blue)}
+#t3:focus-visible~.bar label[for=t3],#t4:focus-visible~.bar label[for=t4],#t5:focus-visible~.bar label[for=t5]{outline:2px solid var(--blue)}
 .tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;font-size:13px;min-width:760px}
 table.mis{min-width:560px}
@@ -251,7 +341,8 @@ tr:hover td{background:var(--surface2)}
 td.id{font-weight:600;white-space:nowrap}
 td.st{white-space:nowrap;font-weight:600}
 .st.fix{color:var(--green)}.st.keep{color:var(--yellow)}.st.rej{color:var(--purple)}
-.st.part{color:var(--blue)}.st.rec{color:var(--muted)}
+.st.part{color:var(--blue)}.st.rec{color:var(--muted)}.st.todo{color:var(--red)}
+.card .v.r{color:var(--red)}
 td.cm{white-space:nowrap}
 a.sha{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;margin-right:4px}
 """
@@ -266,8 +357,8 @@ page = f"""<!DOCTYPE html>
 </head>
 <body>
 <div class="wrap">
-  <h1>GMIA 管线审查报告 · 第 1、2 阶段</h1>
-  <div class="sub">整理于 2026-10-02 BJT，10-06 更新 · 静态快照，新一轮审查完成后更新 ·
+  <h1>GMIA 管线审查报告 · 第 1–3 阶段</h1>
+  <div class="sub">整理于 2026-10-02 BJT，10-08 更新（第 3 阶段进行中）· 静态快照，审查有进展时更新 ·
     <a href="/hedge-fund-research-health.html">← 管线健康</a> ·
     <a href="/hedge-fund-research.html">研报看板</a> ·
     <a href="{REPO}">GitHub 仓库</a></div>
@@ -277,11 +368,13 @@ page = f"""<!DOCTYPE html>
     <input type="radio" name="tab" id="t2">
     <input type="radio" name="tab" id="t3">
     <input type="radio" name="tab" id="t4">
+    <input type="radio" name="tab" id="t5">
     <div class="bar">
-      <label for="t1">第 1 阶段：抓文章列表</label><label for="t2">第 2 阶段：抓文章正文</label><label for="t4">整仓自动审查（10-03）</label><label for="t3">审查方法与证据</label>
+      <label for="t1">第 1 阶段：抓文章列表</label><label for="t2">第 2 阶段：抓文章正文</label><label for="t5">第 3 阶段：写摘要与分类</label><label for="t4">整仓自动审查（10-03）</label><label for="t3">审查方法与证据</label>
     </div>
     <div class="panel" id="p1">{STAGE1}</div>
     <div class="panel" id="p2">{STAGE2}</div>
+    <div class="panel" id="p5">{STAGE3}</div>
     <div class="panel" id="p4">{AUTO}</div>
     <div class="panel" id="p3">{METHOD}</div>
   </div>
@@ -291,4 +384,4 @@ page = f"""<!DOCTYPE html>
 """
 import sys
 open(sys.argv[1], "w", encoding="utf-8").write(page)
-print("written", len(page.encode()), "bytes; stage1 rows", len(S1), "stage2 rows", len(S2))
+print("written", len(page.encode()), "bytes; stage1 rows", len(S1), "stage2 rows", len(S2), "stage3 rows", len(S3))
