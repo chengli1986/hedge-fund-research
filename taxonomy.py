@@ -180,3 +180,46 @@ def check_evidence(d: dict, text: str) -> tuple[dict, list[str]]:
 def flatten(d: dict) -> list[str]:
     """A validated answer as the stored list: article type first, then the rest in group order."""
     return [d["article_type"]] + [t for g in LIST_GROUPS for t in d[g]]
+
+
+SERIES_MIN = 3
+SERIES_SHOW = 12
+
+
+def series_key(row: dict) -> tuple[str, str]:
+    """(source, title prefix before the first ':', ' - ', ' | ' or ' – ').
+
+    A whole title counts as its own prefix, so a source that reuses one title
+    every month ('Market Monitor') groups too."""
+    prefix = re.split(r"\s*[:–|]\s+|\s+-\s+", row.get("title") or "")[0]
+    return row.get("source_id") or "", " ".join(prefix.lower().split())
+
+
+def series_index(rows: list[dict]) -> dict[tuple[str, str], list[str]]:
+    """Dates of every (source, prefix) group with at least SERIES_MIN articles.
+
+    The model sees one article at a time and cannot tell that a war-focused
+    'Investment Strategy Insights' is the monthly issue of a series (gate 3,
+    2026-10-08: 3 of 9 errors); these dates let it see the cadence."""
+    groups: dict[tuple[str, str], list[str]] = {}
+    for r in rows:
+        if r.get("title") and r.get("date"):
+            groups.setdefault(series_key(r), []).append(str(r["date"])[:10])
+    return {k: sorted(v) for k, v in groups.items() if len(v) >= SERIES_MIN}
+
+
+def series_note(row: dict, index: dict[tuple[str, str], list[str]]) -> str:
+    """A line for the prompt naming the series' dates, or '' if it has none."""
+    key = series_key(row)
+    dates = index.get(key)
+    if not dates:
+        return ""
+    shown = dates[-SERIES_SHOW:]
+    return (f"Series context: this source has published {len(dates)} articles whose titles start with "
+            f"\"{key[1]}\", dated {', '.join(shown)}{' (latest shown)' if len(dates) > len(shown) else ''}. "
+            "If these dates follow a regular cycle, this article is an issue of a fixed-cycle series: "
+            "use 'periodic' for a monthly/weekly series, 'quarterly' for a quarterly one, 'annual_outlook' "
+            "for a yearly or half-yearly outlook series -- even when this issue is about a sudden event. "
+            "If the dates are irregular, or the shared prefix is only a brand or division name over "
+            "unrelated pieces, ignore this and judge the article on its own.")
+

@@ -87,3 +87,25 @@ def test_words_the_scraper_glued_together_still_match():
     kept, _ = tx.check_evidence(_ans(growth_inflation="The fight against inflation looks increasingly difficult as a "
                                                       "manufacturing revival. Central banks"), text)
     assert kept["topics"] == ["growth_inflation"]
+
+
+
+def _r(src, title, date):
+    return {"source_id": src, "title": title, "date": date}
+
+
+def test_a_recurring_title_series_is_named_with_its_dates():
+    rows = [_r("metlife-im", f"Investment Strategy Insights: issue {m}", f"2026-0{m}-08") for m in (4, 5, 6)]
+    rows += [_r("other", "Investment Strategy Insights: elsewhere", "2026-07-01"),       # other source
+             _r("metlife-im", "Two of a kind - A", "2026-01-01"), _r("metlife-im", "Two of a kind - B", "2026-02-01")]
+    idx = tx.series_index(rows)
+    note = tx.series_note(rows[0], idx)
+    assert "3 articles" in note and "2026-04-08, 2026-05-08, 2026-06-08" in note
+    assert tx.series_note(rows[3], idx) == ""          # a different source is not the same series
+    assert tx.series_note(rows[4], idx) == ""          # two issues are not a series
+
+
+def test_series_prefix_splits_on_separators_but_not_inside_words():
+    assert tx.series_key(_r("s", "Quick take: Engineered carbon", "x"))[1] == "quick take"
+    assert tx.series_key(_r("s", "Global Advisory – June", "x"))[1] == "global advisory"
+    assert tx.series_key(_r("s", "GMO 7-Year Asset Class Forecast: July", "x"))[1] == "gmo 7-year asset class forecast"

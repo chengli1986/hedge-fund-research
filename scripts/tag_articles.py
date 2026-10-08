@@ -89,12 +89,16 @@ def is_fatal(exc: Exception) -> bool:
     return exc.response.status_code == 429 and _error_code(exc) in FATAL_CODES
 
 
-def candidates(rows: list[dict], retag_before: str | None = None) -> list[dict]:
+def candidates(rows: list[dict], retag_before: str | None = None,
+               only: set[tuple[str, str]] | None = None) -> list[dict]:
     """Summarised, with a readable body, and not yet tagged -- or, with retag_before,
-    tagged before that time (so a stopped re-tag resumes with the same value)."""
+    tagged before that time (so a stopped re-tag resumes with the same value).
+    With `only`, just the articles whose taxonomy.series_key is in it."""
     out = []
     for r in rows:
         if not r.get("summarized"):
+            continue
+        if only is not None and taxonomy.series_key(r) not in only:
             continue
         if r.get("tags") and not (retag_before and (r.get("tags_at") or "") < retag_before):
             continue
@@ -106,23 +110,25 @@ def candidates(rows: list[dict], retag_before: str | None = None) -> list[dict]:
     return out
 
 
-def build_prompt(row: dict, text: str) -> str:
+def build_prompt(row: dict, text: str, series: str = "") -> str:
     return ("You are a senior investment analyst classifying a research article.\n\n"
             f"Title: {aa.fence_safe(row.get('title', ''), limit=aa.MAX_TITLE_CHARS)}\n"
-            f"Source: {row.get('source_id', '')}\nDate: {row.get('date', '')}\n\n"
+            f"Source: {row.get('source_id', '')}\nDate: {row.get('date', '')}\n"
+            f"{aa.fence_safe(series) + chr(10) if series else ''}\n"
             f"<<<BEGIN COPIED DOCUMENT>>>\n{aa.fence_safe(text[:aa.MAX_CONTENT_CHARS])}\n<<<END COPIED DOCUMENT>>>\n\n"
             f"{taxonomy.instruction()}")
 
 
 def classify(row: dict, api_key: str, call=aa._call_openai, sleep=time.sleep,
-             stop: threading.Event | None = None) -> tuple[list[str] | None, str, list[tuple[dict, bool]], dict]:
+             stop: threading.Event | None = None,
+             series: str = "") -> tuple[list[str] | None, str, list[tuple[dict, bool]], dict]:
     """Tag one article. Returns (tags or None, outcome, [(usage, parsed_ok) per billed call],
     evidence {tag: passage} for the tags kept).
 
     Tags whose evidence passage is not in the document are dropped and named in
     the outcome. Raises FatalAPIError on quota/billing/auth errors."""
     text = aa._resolve_content_path(row).read_text(encoding="utf-8")
-    prompt = build_prompt(row, text)
+    prompt = build_prompt(row, text, series)
     billed: list[tuple[dict, bool]] = []
     last = "no attempt"
     for attempt in range(ATTEMPTS):
@@ -189,12 +195,13 @@ def flush(path: Path, done: dict[str, dict]) -> int:
 
 
 def run(path: Path, api_key: str, backup: Path | None, limit: int = 0, workers: int = 3,
-        dry_run: bool = False, retag_before: str | None = None, call=aa._call_openai, sleep=time.sleep, log_usage=aa._append_usage_log) -> int:
+        dry_run: bool = False, retag_before: str | None = None, only_series: bool = False, call=aa._call_openai, sleep=time.sleep, log_usage=aa._append_usage_log) -> int:
     rows, damaged = jsonl_store.read_rows(path)
     if damaged:
         print(f"{damaged} damaged row(s) in the store; refusing to rewrite it")
         return 1
-    todo = candidates(rows, retag_before)
+    index = taxonomy.series_index([r for r in rows if r.get("summarized")])
+    todo = candidates(rows, retag_before, set(index) if only_series else None)
     if limit:
         todo = todo[:limit]
     print(f"{len(todo)} article(s) to tag (model={MODEL}, workers={workers})", flush=True)
@@ -217,7 +224,8 @@ def run(path: Path, api_key: str, backup: Path | None, limit: int = 0, workers: 
 
     def work(row):
         try:
-            return row, *classify(row, api_key, call=call, sleep=sleep, stop=stop)
+            return row, *classify(row, api_key, call=call, sleep=sleep, stop=stop,
+                                  series=taxonomy.series_note(row, index))
         except FatalAPIError as exc:
             stop.set()
             return row, None, f"fatal: {exc}", exc.billed, {}
@@ -263,13 +271,15 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--workers", type=int, default=3)
     ap.add_argument("--backup", type=Path, help="directory for the store snapshot and the report")
+    ap.add_argument("--only-series", action="store_true",
+                    help="only articles in a recurring title series (taxonomy.series_index)")
     ap.add_argument("--retag-before", metavar="ISO_TIME",
                     help="also re-tag articles whose tags_at is earlier than this (BJT ISO, e.g. "
                          "2026-10-08T12:00:00+08:00); rerun with the same value to resume")
     args = ap.parse_args(argv)
     key = "" if args.dry_run else aa._load_api_keys()["OPENAI_API_KEY"]
     return run(aa.DATA_FILE, key, args.backup, limit=args.limit, workers=args.workers,
-               dry_run=args.dry_run, retag_before=args.retag_before)
+               dry_run=args.dry_run, retag_before=args.retag_before, only_series=args.only_series)
 
 
 if __name__ == "__main__":

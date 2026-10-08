@@ -200,3 +200,14 @@ def test_a_tag_whose_passage_is_not_in_the_article_is_dropped(store, tmp_path):
     report = [json.loads(l) for l in (tmp_path / "bk" / "report.jsonl").read_text().splitlines()]
     assert "govt_bonds: passage not in document" in report[0]["outcome"]
     assert set(report[0]["evidence"]) == {"equities", "ai_tech"}
+
+
+
+def test_the_prompt_names_the_series_and_only_series_limits_the_run(store, tmp_path):
+    rows = [_row(i, title=f"Monthly Letter: issue {i}", date=f"2026-0{i}-05") for i in (1, 2, 3)] + [_row(4, title="One-off")]
+    path = store(rows)
+    call = _caller([GOOD])
+    assert _run(path, tmp_path, call, only_series=True) == 0
+    assert len(call.calls) == 3
+    assert all("Series context" in p and "2026-01-05, 2026-02-05, 2026-03-05" in p for p in call.calls)
+    assert "tags" not in _read(path)["id4"]
