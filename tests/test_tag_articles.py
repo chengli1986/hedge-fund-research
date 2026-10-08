@@ -164,3 +164,25 @@ def test_a_real_run_needs_a_backup_directory(store, tmp_path):
     with pytest.raises(SystemExit):
         ta.run(path, "k", None, call=_caller([GOOD]), sleep=lambda s: None, log_usage=lambda *a, **k: None)
     assert "tags" not in _read(path)["id1"]
+
+
+def test_retag_redoes_older_tags_and_resumes_without_redoing_new_ones(store, tmp_path):
+    path = store([_row(1, tags=["research", "us"], tags_at="2025-12-01T20:00:00+08:00"),
+                  _row(2, tags=["research", "us"], tags_at="2026-03-01T13:00:00+08:00"),
+                  _row(3)])
+    call = _caller([GOOD])
+    assert _run(path, tmp_path, call, retag_before="2026-01-01T00:00:00+08:00") == 0
+    after = _read(path)
+    assert len(call.calls) == 2                                   # id1 (old) and id3 (untagged)
+    assert after["id1"]["tags"] == taxonomy.flatten(GOOD)
+    assert after["id2"]["tags"] == ["research", "us"]             # already re-done: kept
+    again = _caller([GOOD])
+    assert _run(path, tmp_path, again, retag_before="2026-01-01T00:00:00+08:00") == 0
+    assert again.calls == []                                      # resume: nothing left
+
+
+def test_without_retag_older_tags_are_left_alone(store, tmp_path):
+    path = store([_row(1, tags=["research", "us"], tags_at="2025-12-01T20:00:00+08:00")])
+    call = _caller([GOOD])
+    assert _run(path, tmp_path, call) == 0
+    assert call.calls == []

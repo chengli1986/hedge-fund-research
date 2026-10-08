@@ -22,6 +22,8 @@ Safety:
   call would fail the same way (2026-10-07: the account ran out of credit
   mid-pilot and every following call returned 429 credit_balance_exhausted);
 - already-tagged articles are skipped, so a stopped run resumes where it left off;
+  --retag-before T re-tags those tagged before T (after a definition change;
+  2026-10-08 round 4), and resumes the same way when rerun with the same T;
 - the store is copied to --backup before the first write, and writes go through
   jsonl_store under its lock, SAVE_EVERY articles at a time, re-reading the
   store inside the lock so work written meanwhile by another job is kept.
@@ -29,6 +31,7 @@ Safety:
     python3 scripts/tag_articles.py --dry-run
     python3 scripts/tag_articles.py --limit 100 --backup DIR
     python3 scripts/tag_articles.py --backup DIR
+    python3 scripts/tag_articles.py --backup DIR --retag-before 2026-10-08T12:00:00+08:00
 """
 from __future__ import annotations
 
@@ -83,11 +86,14 @@ def is_fatal(exc: Exception) -> bool:
     return exc.response.status_code == 429 and _error_code(exc) in FATAL_CODES
 
 
-def candidates(rows: list[dict]) -> list[dict]:
-    """Summarised, not yet tagged, with a readable body."""
+def candidates(rows: list[dict], retag_before: str | None = None) -> list[dict]:
+    """Summarised, with a readable body, and not yet tagged -- or, with retag_before,
+    tagged before that time (so a stopped re-tag resumes with the same value)."""
     out = []
     for r in rows:
-        if not r.get("summarized") or r.get("tags"):
+        if not r.get("summarized"):
+            continue
+        if r.get("tags") and not (retag_before and (r.get("tags_at") or "") < retag_before):
             continue
         try:
             if aa._resolve_content_path(r).is_file():
@@ -175,12 +181,12 @@ def flush(path: Path, done: dict[str, dict]) -> int:
 
 
 def run(path: Path, api_key: str, backup: Path | None, limit: int = 0, workers: int = 3,
-        dry_run: bool = False, call=aa._call_openai, sleep=time.sleep, log_usage=aa._append_usage_log) -> int:
+        dry_run: bool = False, retag_before: str | None = None, call=aa._call_openai, sleep=time.sleep, log_usage=aa._append_usage_log) -> int:
     rows, damaged = jsonl_store.read_rows(path)
     if damaged:
         print(f"{damaged} damaged row(s) in the store; refusing to rewrite it")
         return 1
-    todo = candidates(rows)
+    todo = candidates(rows, retag_before)
     if limit:
         todo = todo[:limit]
     print(f"{len(todo)} article(s) to tag (model={MODEL}, workers={workers})", flush=True)
@@ -248,9 +254,13 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--workers", type=int, default=3)
     ap.add_argument("--backup", type=Path, help="directory for the store snapshot and the report")
+    ap.add_argument("--retag-before", metavar="ISO_TIME",
+                    help="also re-tag articles whose tags_at is earlier than this (BJT ISO, e.g. "
+                         "2026-10-08T12:00:00+08:00); rerun with the same value to resume")
     args = ap.parse_args(argv)
     key = "" if args.dry_run else aa._load_api_keys()["OPENAI_API_KEY"]
-    return run(aa.DATA_FILE, key, args.backup, limit=args.limit, workers=args.workers, dry_run=args.dry_run)
+    return run(aa.DATA_FILE, key, args.backup, limit=args.limit, workers=args.workers,
+               dry_run=args.dry_run, retag_before=args.retag_before)
 
 
 if __name__ == "__main__":
