@@ -307,7 +307,7 @@ EOF
 
 **判定**：
 - 退出码 `0` → auto-graduated；Phase 6 commit 须包含 `publish.py` 改动，history 加 `auto_graduated: true`
-- 退出码 `1` (validation 仍 fail) / `2` (已存在) / `3` (pending 文件丢了) / `4` (publish.py 格式异常) → **不重试，不阻塞**；继续 Phase 5（pending 文件保留在原地，等人工 graduate）；history 加 `auto_graduated: false` + `auto_graduate_error: "exit_code=<n>"`
+- 退出码 `1` (validation 仍 fail) / `2` (已存在) / `3` (pending 文件丢了) / `4` (publish.py 格式异常，或改写后的 publish.py 试运行/试渲染没通过——此时 publish.py 原样未动) → **不重试，不阻塞**；继续 Phase 5（pending 文件保留在原地，等人工 graduate）；history 加 `auto_graduated: false` + `auto_graduate_error: "exit_code=<n>"`
 - 跳过（不满足条件）→ history 加 `auto_graduated: false` + `auto_graduate_skip_reason: "validation_ok=false"` 或 `"high_risk=true"`
 
 **Why this gate is conservative**：`graduate_pending.py` 与 `apply_refresh.py` 对**任何** issue

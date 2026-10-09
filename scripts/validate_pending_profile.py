@@ -28,6 +28,7 @@ REQUIRED_FIELDS = ("id", "founded", "aum", "hq", "type_en", "type_zh",
 # the model's parametric memory (which is where the PineBridge ~$190B and the
 # Ares ~$450B confabulations came from). No source → not auto-graduatable.
 EVIDENCE_FIELDS = {"aum": "aum_source", "founded": "founded_source"}
+MARKUP_FREE_FIELDS = ("founded", "aum", "hq")
 
 HIGH_RISK_MARKERS = ("unknown", "unclear", "tbd", "n/a", "n.a.", "unverified",
                      "reportedly", "rumored", "circa", "estimated",
@@ -93,6 +94,17 @@ def validate_profile(data: dict) -> dict:
             missing.append(key)
     if missing:
         issues.append(f"missing required fields: {missing}")
+
+    # A non-string value is written into publish.py as a Python literal: true
+    # is a NameError there, 5 an AttributeError at render (stage-4 audit P1).
+    for key in REQUIRED_FIELDS:
+        if key in data and not isinstance(data[key], str):
+            issues.append(f"{key} must be a string, got {type(data[key]).__name__}: {data[key]!r}")
+    # founded/aum/hq are short facts; markup in them has no business on the
+    # card (they are escaped at render too — this stops it at the door).
+    for key in MARKUP_FREE_FIELDS:
+        if isinstance(data.get(key), str) and re.search(r"[<>]", data[key]):
+            issues.append(f"{key} contains markup characters < or >: {data[key]!r}")
 
     aum = str(data.get("aum", "")).strip()
     if aum:

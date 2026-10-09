@@ -1,7 +1,12 @@
 """Render + send the monthly profile-refresh summary email.
 
-render_summary() is pure (testable); send() does SMTP via ~/.stock-monitor.env.
-Notification only — callers must not let this affect their exit code.
+render_summary() is pure (testable); send() does SMTP with the SMTP_USER /
+SMTP_PASS / MAIL_TO the wrapper reads from ~/.stock-monitor.env. The host
+defaults to smtp.163.com like every other GMIA mail: that file has no
+SMTP_HOST, and until the stage-4 audit (2026-10-09) all seven monthly runs
+logged "SMTP env missing; skip" and nobody heard what the refresh changed.
+Notification only — callers must not let this affect their exit code; the
+non-zero exit when nothing was sent is for the wrapper's log line.
 """
 from __future__ import annotations
 import argparse, html, os, smtplib, sys
@@ -24,14 +29,14 @@ def render_summary(*, applied: list[str], flagged: list[str], alert_only: bool) 
 
 
 def send(subject: str, html_body: str) -> bool:
-    host = os.environ.get("SMTP_HOST"); user = os.environ.get("SMTP_USER")
+    host = os.environ.get("SMTP_HOST") or "smtp.163.com"; user = os.environ.get("SMTP_USER")
     pw = os.environ.get("SMTP_PASS"); to = os.environ.get("MAIL_TO", user)
     if not all([host, user, pw, to]):
         sys.stderr.write("[send_refresh_summary] SMTP env missing; skip\n"); return False
     msg = MIMEText(html_body, "html", "utf-8")
     msg["Subject"] = subject; msg["From"] = user; msg["To"] = to
     msg["MIME-Version"] = "1.0"
-    with smtplib.SMTP_SSL(host, int(os.environ.get("SMTP_PORT", "465"))) as s:
+    with smtplib.SMTP_SSL(host, int(os.environ.get("SMTP_PORT", "465")), timeout=30) as s:
         s.login(user, pw); s.sendmail(user, [to], msg.as_string())
     return True
 
@@ -47,9 +52,14 @@ def main() -> int:
     flagged = [x.strip() for x in a.flagged.split("\n") if x.strip()]
     alert_only = a.alert_only == "1"
     html_body = render_summary(applied=applied, flagged=flagged, alert_only=alert_only)
-    send(f"GMIA Profile Refresh — {len(applied)} applied / {len(flagged)} flagged", html_body)
-    print(f"[send_refresh_summary] rendered ({len(applied)+len(flagged)} items), alert_only={alert_only}")
-    return 0
+    try:
+        sent = send(f"GMIA Profile Refresh — {len(applied)} applied / {len(flagged)} flagged", html_body)
+    except (OSError, smtplib.SMTPException) as e:
+        sys.stderr.write(f"[send_refresh_summary] send failed: {type(e).__name__}: {e}\n")
+        sent = False
+    print(f"[send_refresh_summary] rendered ({len(applied)+len(flagged)} items), "
+          f"alert_only={alert_only}, sent={sent}")
+    return 0 if sent else 1
 
 
 if __name__ == "__main__":
