@@ -355,8 +355,9 @@ def run(path: Path, api_key: str, backup: Path | None, limit: int = 0, workers: 
                 counts["skipped"] += 1
             else:
                 counts["failed"] += 1
-                # Not counted only when no call was answered and the last fault
-                # was one that clears up by itself (R4).
+                # Not counted only when no call was answered and every fault that
+                # night cleared up by itself: classify() keeps the TRANSIENT prefix
+                # only then (R4, tightened in T3).
                 if billed or not outcome.startswith(f"failed after {ATTEMPTS} attempts: {TRANSIENT}"):
                     failed.add(row["id"])
             with report.open("a", encoding="utf-8") as f:
