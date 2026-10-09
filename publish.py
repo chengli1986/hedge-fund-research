@@ -78,6 +78,7 @@ BADGE_COLORS: dict[str, str] = {
 }
 
 INITIAL_VISIBLE = 20
+WEEK_DAYS = 7     # header "this week": today and the 6 days before (BJT)
 RECENT_DAYS = 90  # Articles older than this are folded behind a "Show older" toggle
                   # AND excluded from the inline article-details JSON island.
                   # Tightened 180 → 90 on 2026-05-29 to keep initial JSON parse cost
@@ -584,6 +585,16 @@ def _effective_date(a: dict, today: str) -> str:
     return min(candidates)
 
 
+def _fetched_day(a: dict) -> str:
+    """BJT date the row was first collected, "" when unknown."""
+    raw = a.get("fetched_at") or ""
+    try:
+        stamp = datetime.fromisoformat(raw)
+    except ValueError:
+        return ""
+    return (stamp if stamp.tzinfo else stamp.replace(tzinfo=BJT)).astimezone(BJT).strftime("%Y-%m-%d")
+
+
 def _dateable(a: dict, today: str) -> bool:
     """Whether we can say when this article appeared at all.
 
@@ -865,6 +876,27 @@ def _article_card(a: dict, show_takeaway: bool = False) -> tuple[str, dict | Non
     return html, details_payload
 
 
+def shown_articles(articles: list[dict], source_ids: set[str]) -> list[dict]:
+    """The rows the page shows, in their given order.
+
+    The one rule the stage-5 checker shares with this file (it recounts every
+    number on the page with code of its own, but must hide the same rows):
+    - a source that has left sources.json (demoted/retired, e.g. pgim on
+      2026-07) keeps its history in articles.jsonl but is not shown; showing
+      it made the page render 40 funds while the header counted 39;
+    - a body already shown under the article that owns it: stage 3 labelled the
+      row duplicate_body, and rendering it title-only would put the same
+      document on the page twice (janus-henderson, 2026-09-17). Every other
+      decline stays visible -- ark-invest's blocked pages are real articles
+      with no body, and the user's call on 2026-09-15 was to keep them as
+      title+link.
+    An empty source_ids (no sources.json) filters nothing, as before.
+    """
+    return [a for a in articles
+            if (not source_ids or a.get("source_id") in source_ids)
+            and a.get("analysis_label") != "duplicate_body"]
+
+
 def generate_html(articles: list[dict]) -> str:
     """Generate the full HTML dashboard string from a list of article dicts."""
     sources = _load_sources()
@@ -878,22 +910,13 @@ def generate_html(articles: list[dict]) -> str:
         reverse=True,
     )
 
-    # Drop articles whose source has left sources.json (demoted/retired, e.g.
-    # pgim on 2026-07). Their history stays in articles.jsonl; showing them made
-    # the page render 40 funds while the header counted the 39 registered ones.
-    if sources:
-        sorted_articles = [a for a in sorted_articles if a.get("source_id") in sources]
-
-    # A body already shown under the article that owns it: stage 3 labelled this
-    # row duplicate_body, and rendering it title-only would put the same
-    # document on the page twice (janus-henderson, 2026-09-17). Every other
-    # decline stays visible -- ark-invest's blocked pages are real articles with
-    # no body, and the user's call on 2026-09-15 was to keep them as title+link.
-    sorted_articles = [a for a in sorted_articles if a.get("analysis_label") != "duplicate_body"]
+    sorted_articles = shown_articles(sorted_articles, set(sources))
 
     # Stats
     total = len(sorted_articles)
-    week_ago = (datetime.now(BJT) - timedelta(days=7)).strftime("%Y-%m-%d")
+    # "This week" is today and the six days before it. It was today minus 7
+    # through today -- eight days -- until the stage-4 audit (2026-10-09).
+    week_ago = (datetime.now(BJT) - timedelta(days=WEEK_DAYS - 1)).strftime("%Y-%m-%d")
     # Upper bound matters: month-granularity dates normalise to the month end,
     # so without it the current month's articles all counted as "new this week"
     # (46 shown vs 41 real, 2026-08-10 audit).
@@ -907,6 +930,11 @@ def generate_html(articles: list[dict]) -> str:
         return _dateable(a, today_str) and week_ago <= _effective_date(a, today_str) <= today_str
 
     new_this_week = sum(1 for a in sorted_articles if _is_new(a))
+    # Collected this week, whatever the publish date: a source caught up after
+    # a few failed nights, a hand backfill, or a page a fund only now listed.
+    # The header shows both (user's call, 2026-10-09): "100 added this week,
+    # 74 of them published this week" -- the second is a subset of the first.
+    added_this_week = sum(1 for a in sorted_articles if week_ago <= _fetched_day(a) <= today_str)
     production_source_count = len(sources)
 
     # The header used to carry only the render time, so a rebuild with no new
@@ -1484,10 +1512,10 @@ body.hide-older article.pool-article[data-age="older"] {{ display: none !importa
       <a href="/" style="font-size:0.82rem;color:var(--text-muted);text-decoration:none;">&larr; <span class="lang-en">Back to Infrastructure</span><span class="lang-zh" style="display:none">返回基础设施</span></a>
       <h1><span class="lang-en">Hedge Fund Research Insights</span><span class="lang-zh" style="display:none">对冲基金研究洞察</span></h1>
       <div class="deck"><span class="lang-en">Cross-fund research aggregator — filter by tags, or scan by timeline or fund.</span><span class="lang-zh" style="display:none">跨基金研究聚合 — 按标签筛选（多选取交集），或按时间线、基金浏览。</span></div>
-      <div class="stats">
-        <span>{total} articles</span>
-        <span>{new_this_week} new this week</span>
-        <span>{production_source_count} funds tracked</span>
+      <div class="stats" data-built="{today_str}">
+        <span><span class="lang-en"><b data-stat="total">{total}</b> articles</span><span class="lang-zh" style="display:none">共 {total} 篇</span></span>
+        <span><span class="lang-en"><b data-stat="added-week">{added_this_week}</b> added this week, <b data-stat="published-week">{new_this_week}</b> of them published this week</span><span class="lang-zh" style="display:none">本周新收录 {added_this_week}，其中本周发表 {new_this_week}</span></span>
+        <span><span class="lang-en"><b data-stat="funds">{production_source_count}</b> funds tracked</span><span class="lang-zh" style="display:none">跟踪 {production_source_count} 家基金</span></span>
         <span title="Newest article on the page; the page itself was built at {now}">
           <span class="lang-en">Data through {data_through}</span>
           <span class="lang-zh" style="display:none">数据截至 {data_through}</span>
@@ -1850,20 +1878,6 @@ bindRowToggles();
 PUBLISHED_MODE = 0o664
 
 
-def _staged_copy(target: Path, write) -> tuple[Path, Path]:
-    """Write the content beside `target`; return (temp path, real target).
-
-    Renaming onto a symlink would replace the link with a plain file, so the
-    real path is resolved here and is what the caller renames onto (a
-    /var/www page has been a symlink before).
-    """
-    real = Path(os.path.realpath(target))
-    tmp = real.with_name(f".{real.name}.tmp{os.getpid()}")
-    write(tmp)
-    os.chmod(tmp, PUBLISHED_MODE)     # a 0600 temp file would be unreadable to nginx
-    return tmp, real
-
-
 def publish_html(output_file: Path, html_content: str) -> Path:
     """Write HTML and gzipped HTML to the configured output path.
 
@@ -1871,6 +1885,13 @@ def publish_html(output_file: Path, html_content: str) -> Path:
     both were written: an in-place write left nginx serving a truncated 4MB
     page if anything failed mid-write, and briefly served an .html and a .gz
     that disagreed.
+
+    Stage-4 audit (2026-10-09) closed the two gaps left: the second rename
+    failing left html v2 beside gz v1 -- readers are served the .gz, so they
+    got the old page while every check read the new .html -- and a temp file
+    whose write failed half way was never registered, so it stayed behind.
+    Temp names are now registered before writing, and the old pair is kept
+    until both renames succeed; if the second fails, the first is put back.
     """
     output_file.parent.mkdir(parents=True, exist_ok=True)
     gzip_path = output_file.with_suffix(output_file.suffix + ".gz")
@@ -1879,21 +1900,60 @@ def publish_html(output_file: Path, html_content: str) -> Path:
         with gzip.open(path, "wt", encoding="utf-8") as f:
             f.write(html_content)
 
-    staged = []
+    staged: list[tuple[Path, Path]] = []
+    kept: list[tuple[Path, Path]] = []      # (copy of the old file, target)
     try:
-        staged.append(_staged_copy(output_file, lambda p: p.write_text(html_content, encoding="utf-8")))
-        staged.append(_staged_copy(gzip_path, write_gz))
-        for tmp, target in staged:
-            os.replace(tmp, target)
+        for target, write in ((output_file, lambda p: p.write_text(html_content, encoding="utf-8")),
+                              (gzip_path, write_gz)):
+            real = Path(os.path.realpath(target))
+            tmp = real.with_name(f".{real.name}.tmp{os.getpid()}")
+            staged.append((tmp, real))
+            write(tmp)
+            os.chmod(tmp, PUBLISHED_MODE)    # a 0600 temp file would be unreadable to nginx
+        for _, real in staged:
+            if real.exists():
+                old = real.with_name(f".{real.name}.old{os.getpid()}")
+                os.link(real, old)
+                kept.append((old, real))
+        done: list[Path] = []
+        try:
+            for tmp, real in staged:
+                os.replace(tmp, real)
+                done.append(real)
+        except OSError:
+            for old, real in kept:
+                if real in done:
+                    os.replace(old, real)
+            raise
     finally:
         for tmp, _ in staged:
             tmp.unlink(missing_ok=True)
+        for old, _ in kept:
+            old.unlink(missing_ok=True)
     return gzip_path
 
 
 # publish.py exit code when the dashboard was written but the docs-site sync
 # failed. run_pipeline.sh records it as Stage4:docs-sync and still runs Stage 5.
 DOCS_SYNC_FAILED = 3
+# The page failed the stage-5 checks before going live: nothing was written,
+# the previous page stays up. run_pipeline.sh records Stage4:precheck.
+PRECHECK_FAILED = 4
+
+
+def _precheck(html_content: str, articles: list[dict]) -> list[str]:
+    """Run scripts/check_dashboard_html.py's checks on the page before it is
+    written (stage-4 audit P6: stage 5 only ever saw the page once it was
+    live). Returns one line per failed check."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "_check_dashboard_html", BASE_DIR / "scripts" / "check_dashboard_html.py")
+    chk = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(chk)
+    ids = set(_load_sources())
+    counts = chk.recount(articles, ids, chk.built_date(html_content)) if ids else None
+    result = chk.check_dashboard(html_content, ids, counts=counts)
+    return [f"{c['check']}: {c['detail']}" for c in result["checks"] if not c["passed"]]
 DOCS_PAGE_RELPATH = "pages/hedge-fund-research.html"
 
 
@@ -1914,6 +1974,17 @@ def sync_docs_site(docs_repo: Path, html_content: str,
         rejected push is carried by the next successful one.
     An absent docs-site (a dev machine) is not a failure.
     """
+    try:
+        return _sync_docs_site(docs_repo, html_content, relpath)
+    except Exception as e:   # noqa: BLE001 -- any failure here is "page live, sync failed"
+        # A PermissionError copying the page used to escape as exit 1, which
+        # run_pipeline.sh reads as "not published" and skips stage 5 although
+        # the page was already live (stage-4 audit P9).
+        print(f"ERROR: docs-site sync failed: {type(e).__name__}: {e}", file=sys.stderr)
+        return False
+
+
+def _sync_docs_site(docs_repo: Path, html_content: str, relpath: str) -> bool:
     import subprocess
 
     page = docs_repo / relpath
@@ -1967,6 +2038,13 @@ def main() -> int:
 
     articles = load_articles()
     html_content = generate_html(articles)
+
+    problems = _precheck(html_content, articles)
+    if problems:
+        print("ERROR: the new page failed its checks; the live page is left as it was:", file=sys.stderr)
+        for line in problems:
+            print(f"  ✗ {line}", file=sys.stderr)
+        return PRECHECK_FAILED
 
     output_file = Path(args.output)
     gzip_path = publish_html(output_file, html_content)

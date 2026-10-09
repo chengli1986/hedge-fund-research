@@ -108,18 +108,24 @@ if [[ ${#failed_stages[@]} -gt 0 ]]; then
 fi
 # Exit 3 = the dashboard was written but the docs-site sync (commit/push)
 # failed: an alert, not a reason to skip Stage 5 -- the page is live.
+# Exit 4 = the new page failed the stage-5 checks before going live; nothing
+# was written and yesterday's page is still up (stage-4 audit 2026-10-09).
 python3 publish.py
 publish_rc=$?
 if [[ $publish_rc -eq 3 ]]; then
   failed_stages+=("Stage4:docs-sync")
+elif [[ $publish_rc -eq 4 ]]; then
+  failed_stages+=("Stage4:precheck")
 elif [[ $publish_rc -ne 0 ]]; then
   failed_stages+=("Stage4:publish")
 fi
 
-# Stage 5: dashboard HTML sanity check (post-publish render audit). Catches
-# missing fund sections, duplicate sections, empty h2s, duplicate style attrs.
+# Stage 5: the same checks as publish.py's pre-check, on the live file:
+# every fund has its section, the numbers match a recount of the data, the
+# data islands parse, the scripts parse, the .gz is this page, and the file
+# was written by this run. Skipped when nothing new was published.
 # Failure is reported as a stage failure so cron-wrapper alerts.
-if [[ ! " ${failed_stages[*]} " =~ " Stage4:publish " ]]; then
+if [[ ! " ${failed_stages[*]} " =~ " Stage4:publish " && ! " ${failed_stages[*]} " =~ " Stage4:precheck " ]]; then
   if ! python3 scripts/check_dashboard_html.py --written-after "$PIPELINE_START_EPOCH"; then
     failed_stages+=("Stage5:dashboard-sanity")
     echo "WARN: dashboard HTML sanity check failed — page may be broken at /var/www/overview/hedge-fund-research.html"
