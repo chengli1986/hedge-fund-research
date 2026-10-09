@@ -404,7 +404,9 @@ def _call_openai(prompt: str, api_key: str, model: str = "gpt-4.1-mini") -> tupl
     except EmptyAnswer as exc:
         exc.usage, exc.model = data.get("usage") or {}, model
         raise
-    usage = data.get("usage", {})
+    # "usage": null is a present key: .get(k, {}) returned None and every
+    # caller that adds the token counts raised (second stage-3 review R2).
+    usage = data.get("usage") or {}
     return (text, usage, model)
 
 
@@ -780,6 +782,14 @@ def _analyze_with_fallback(
                             # again below.
                             log.warning("  %s: %s -- re-asking once",
                                         model_name, "; ".join(problems))
+                            # Kept before the re-ask, not after it: a re-ask
+                            # that raises (timeout, refusal) left it unset and
+                            # the article fell through to the weaker tier
+                            # (second stage-3 review R6).
+                            rejected = {"insufficient_content": True,
+                                        "reason": grounding_reason(problems),
+                                        "_label": RULE_MADE_DECLINE,
+                                        "_model": used_model, "_usage": usage}
                             retry, retry_usage, retry_model = call(
                                 prompt + _retry_instruction(problems), caller, api_key)
                             if retry is None:
@@ -791,10 +801,6 @@ def _analyze_with_fallback(
                                 # never passes to the next, weaker tier.
                                 log.warning("  %s: re-ask did not parse (attempt %d)",
                                             model_name, attempt)
-                                rejected = {"insufficient_content": True,
-                                            "reason": grounding_reason(problems),
-                                            "_label": RULE_MADE_DECLINE,
-                                            "_model": used_model, "_usage": usage}
                                 continue
                             parsed, usage, used_model = retry, retry_usage, retry_model
                             problems = ([] if parsed.get("insufficient_content")
@@ -1098,7 +1104,10 @@ def main() -> int:
     # partial failure is not an outage: those articles keep their unsummarised
     # state and are retried next run, and their cost is already visible in
     # logs/analyze-usage.jsonl.
-    if stopped or (asked and not answered):
+    if stopped:
+        log.error("STAGE STOPPED: %d article(s) sent to the models, %d answered", asked, answered)
+        return 1
+    if asked and not answered:
         log.error("TOTAL ANALYSIS OUTAGE: %d article(s) sent to the models, none answered",
                   asked)
         return 1

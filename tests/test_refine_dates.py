@@ -154,3 +154,51 @@ def test_a_page_date_weeks_after_we_first_saw_the_article_is_not_believed(tmp_pa
     p = _store(tmp_path, [_row(1, date="2026-06-30", date_raw="June 2026", fetched_at="2026-06-12T04:00:00+08:00")])
     rd.run(p, get=_page('<script>{"datePublished":"2026-06-28T00:00:00Z"}</script>'), report=None, today=TODAY)
     assert (_read(p)["r1"]["date"], _read(p)["r1"]["date_basis"]) == ("2026-06-12", "first_seen")
+
+
+def _fetch(stored, listing, source=None):
+    src = {"id": "baillie-gifford", "name": "BG", "short_name": "BG", "method": "api", "url": "https://x/",
+           "expected_hostname": ""}
+    src.update(source or {})
+    mp = pytest.MonkeyPatch()
+    mp.setitem(fa.FETCHERS, src["id"], lambda s: [dict(r) for r in listing])
+    mp.setattr(fa, "record_quality_metrics", lambda *a, **k: None)
+    try:
+        return fa.fetch_source(src, {r["id"] for r in stored}, dry_run=True,
+                               existing_keys=fa.title_date_keys(stored), existing_rows=stored)
+    finally:
+        mp.undo()
+
+
+BG_URL = "https://www.bailliegifford.com/en/uk/insights/ic-article/2026-q3-em-enough-is-not-enough-10065229/"
+
+
+def test_an_edited_title_on_a_refined_row_is_still_that_article():
+    """2026-10-09: refine_dates moved the row to 09-07, the listing still said September
+    (09-30) and the site had renamed it, so it was ingested again as a new issue."""
+    stored = [{"id": fa.article_id("baillie-gifford", BG_URL), "source_id": "baillie-gifford",
+               "title": "EM: enough is not enough", "url": BG_URL, "date": "2026-09-07",
+               "date_raw": "September 2026", "date_listed": "2026-09-30", "date_basis": "page"}]
+    listing = [{"title": "Emerging markets: enough is not enough", "url": BG_URL,
+                "date": "2026-09-30", "date_raw": "September 2026"}]
+    assert _fetch(stored, listing) == []
+
+
+def test_a_renamed_slug_of_a_refined_row_is_still_that_article():
+    """title_date_keys catches slug renames by (title, date); the date it held was
+    the listing's, which refine_dates replaced."""
+    stored = [{"id": fa.article_id("baillie-gifford", BG_URL), "source_id": "baillie-gifford",
+               "title": "EM: enough is not enough", "url": BG_URL, "date": "2026-09-07",
+               "date_raw": "September 2026", "date_listed": "2026-09-30", "date_basis": "page"}]
+    listing = [{"title": "EM: enough is not enough", "url": BG_URL.replace("10065229", "10065230"),
+                "date": "2026-09-30", "date_raw": "September 2026"}]
+    assert _fetch(stored, listing) == []
+
+
+def test_a_later_month_on_a_refined_row_is_still_a_new_issue():
+    """The fix must not swallow a real next issue at a reused URL."""
+    stored = [{"id": fa.article_id("baillie-gifford", BG_URL), "source_id": "baillie-gifford",
+               "title": "Monthly letter", "url": BG_URL, "date": "2026-09-07",
+               "date_raw": "September 2026", "date_listed": "2026-09-30", "date_basis": "page"}]
+    listing = [{"title": "Monthly letter", "url": BG_URL, "date": "2026-10-31", "date_raw": "October 2026"}]
+    assert [a["date"] for a in _fetch(stored, listing)] == ["2026-10-31"]

@@ -349,3 +349,211 @@ def test_n2_a_crash_outside_the_loop_alerts_rather_than_warns(monkeypatch):
 def test_n2_the_script_exits_through_entry():
     src = SCRIPT.read_text()
     assert "sys.exit(entry())" in src.split('if __name__ == "__main__":')[1]
+
+
+# ---- Second review of the stage-3 code (2026-10-09, R2-R10) ---------------
+
+def _empty_usage():
+    return _Resp(200, {"choices": [{"message": {"content": json.dumps(TAG_GOOD)}}], "usage": None})
+
+
+def test_r2_usage_null_does_not_lose_the_tagging_batch(tagstore, tmp_path, api):
+    """S7 fixed the usage logger; the tagger's token tally still did usage.get()."""
+    path = tagstore([_trow(1)])
+    api["script"] = [_empty_usage()]
+    assert _trun(path, tmp_path) == 0
+    assert _tread(path)["t1"]["tags"] == taxonomy.flatten(TAG_GOOD)
+
+
+def test_r2_call_openai_returns_a_dict_for_usage_null(api):
+    api["script"] = [_empty_usage()]
+    assert aa._call_openai("p", "k")[1] == {}
+
+
+def _quota():
+    http(429, "insufficient_quota").raise_for_status()
+
+
+def test_r3_an_article_given_up_on_a_quota_night_is_still_announced(tagstore, tmp_path, capsys):
+    path = tagstore([_trow(1, tag_failures=ta.MAX_TAG_NIGHTS - 1), _trow(2)])
+
+    def call(prompt, key, model):
+        if "Title: T2" in prompt:
+            _quota()
+        return json.dumps(TOO_MANY), dict(USAGE), model
+    assert _trun(path, tmp_path, workers=1, call=call) == 2
+    assert _tread(path)["t1"]["tag_failures"] == ta.MAX_TAG_NIGHTS
+    assert "GAVE UP" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("fail", [
+    lambda: (_ for _ in ()).throw(requests.ConnectionError("reset")),
+    lambda: (_ for _ in ()).throw(requests.Timeout("slow")),
+    lambda: http(503, "server_error").raise_for_status(),
+    lambda: http(429, "rate_limit_exceeded").raise_for_status(),
+], ids=["network", "timeout", "http-503", "rate-limit"])
+def test_r4_a_night_of_passing_faults_is_not_a_failed_night(tagstore, tmp_path, fail):
+    """A fault that clears up by itself says nothing about the article."""
+    path = tagstore([_trow(1, tag_failures=ta.MAX_TAG_NIGHTS - 1)])
+
+    def call(prompt, key, model):
+        fail()
+    assert _trun(path, tmp_path, call=call) == 1
+    assert _tread(path)["t1"]["tag_failures"] == ta.MAX_TAG_NIGHTS - 1
+
+
+@pytest.mark.parametrize("fail", [
+    lambda: http(400, "context_length_exceeded").raise_for_status(),
+    lambda: (_ for _ in ()).throw(RuntimeError("local bug")),
+], ids=["http-400", "local-exception"])
+def test_r4_a_fault_that_comes_back_every_night_still_counts(tagstore, tmp_path, fail):
+    """Not counting it would retry it silently forever, with exit 1 only logged."""
+    path = tagstore([_trow(1, tag_failures=ta.MAX_TAG_NIGHTS - 1)])
+
+    def call(prompt, key, model):
+        fail()
+    assert _trun(path, tmp_path, call=call) == ta.GAVE_UP_RC
+
+
+def test_r4_a_bad_answer_then_a_timeout_is_a_failed_night(tagstore, tmp_path):
+    path = tagstore([_trow(1)])
+    seq = iter([json.dumps(TOO_MANY)])
+
+    def call(prompt, key, model):
+        raw = next(seq, None)
+        if raw is None:
+            raise requests.Timeout("slow")
+        return raw, dict(USAGE), model
+    assert _trun(path, tmp_path, call=call) == 1
+    assert _tread(path)["t1"]["tag_failures"] == 1
+
+
+def test_r5_a_store_that_breaks_mid_run_stops_the_paid_calls(tagstore, tmp_path, monkeypatch):
+    import threading
+    import time
+    path = tagstore([_trow(i) for i in range(8)])
+    calls = []
+    broke = threading.Event()
+
+    def call(prompt, key, model):
+        calls.append(1)
+        if len(calls) > 1:              # in flight when the write fails, as on a real run
+            broke.wait(5)
+            time.sleep(0.2)
+        return json.dumps(TAG_GOOD), dict(USAGE), model
+
+    def broken(*a, **k):
+        broke.set()
+        raise RuntimeError("1 damaged row(s) in the store; stopping without writing")
+    monkeypatch.setattr(ta, "SAVE_EVERY", 1)
+    monkeypatch.setattr(ta, "flush", broken)
+    with pytest.raises(RuntimeError):
+        _trun(path, tmp_path, workers=1, call=call)
+    assert len(calls) <= 2                       # the one saved, at most one already in flight
+
+
+WORDING = dict(SUMMARY, summary_en="The provided text says the Federal Reserve kept interest rates unchanged.")
+
+
+def test_r6_a_reask_that_errors_keeps_the_rejection_from_the_weaker_tier(monkeypatch, tmp_path):
+    monkeypatch.setattr(aa, "USAGE_LOG_FILE", tmp_path / "usage.jsonl")
+    models = []
+
+    def post(url, headers=None, json=None, timeout=None):
+        models.append(json["model"])
+        if len(models) == 1:
+            return ok(__import__("json").dumps(WORDING))
+        raise requests.Timeout("slow")
+    monkeypatch.setattr(aa.requests, "post", post)
+    r = aa._analyze_with_fallback(LATIN, {"OPENAI_API_KEY": "k"}, article_id="x")
+    assert r is not None and r["insufficient_content"] is True
+    assert set(models) == {aa.MODEL_CHAIN[0]}
+
+
+def test_r7_a_consecutive_stop_after_some_answers_does_not_say_none_answered(store, monkeypatch, caplog):
+    store([_art(i) for i in range(5)], bodies={f"a{i}": LATIN + f" Note {i}." * 3 for i in range(5)})
+    answers = iter([dict(SUMMARY, _model="m", _usage={})])
+    monkeypatch.setattr(aa, "_analyze_with_fallback", lambda *a, **k: next(answers, None))
+    with caplog.at_level("ERROR"):
+        assert aa.main() == 1
+    assert "none answered" not in caplog.text
+    assert "1 answered" in caplog.text
+
+
+@pytest.mark.parametrize("text,passage", [
+    ("Credit spreads widened as the ﬁnancial conditions index tightened sharply over the quarter.",
+     "the financial conditions index tightened sharply over the quarter"),
+    ("Credit spreads widened as the financial conditions index tightened sharply over the quarter.",
+     "the ﬁnancial conditions index tightened sharply over the quarter"),
+    ("美联储维持利率不变，市场对降息的预期明显回落，美国国债收益率随之上行。",
+     "市场对降息的预期明显回落，美国国债收益率随之上行"),
+], ids=["ligature-in-text", "ligature-in-passage", "chinese"])
+def test_r10_a_correct_quote_is_kept(text, passage):
+    answer = dict(TAG_GOOD, assets=["govt_bonds"], topics=[], evidence={"govt_bonds": passage})
+    kept, dropped = taxonomy.check_evidence(answer, text)
+    assert kept["assets"] == ["govt_bonds"], dropped
+
+
+def test_r10_a_two_character_chinese_quote_is_still_too_short():
+    answer = dict(TAG_GOOD, assets=["govt_bonds"], topics=[], evidence={"govt_bonds": "国债"})
+    kept, dropped = taxonomy.check_evidence(answer, "美联储维持利率不变，美国国债收益率上行。")
+    assert kept["assets"] == [] and dropped == ["govt_bonds: passage too short"]
+
+
+def test_r10_a_misquoted_passage_is_asked_for_once_more(tagstore, tmp_path):
+    """A tag whose passage is not in the text gets one re-quote request, not a silent drop."""
+    path = tagstore([_trow(1)])
+    wrong = dict(TAG_GOOD, evidence=dict(TAG_GOOD["evidence"],
+                                         ai_tech="Hyperscalers doubled their spending on AI chips this year"))
+    prompts = []
+
+    def call(prompt, key, model):
+        prompts.append(prompt)
+        if len(prompts) == 1:
+            return json.dumps(wrong), dict(USAGE), model
+        return json.dumps({"evidence": {"ai_tech": TAG_GOOD["evidence"]["ai_tech"]}}), dict(USAGE), model
+    logged = []
+    assert _trun(path, tmp_path, logged, call=call) == 0
+    assert _tread(path)["t1"]["tags"] == taxonomy.flatten(TAG_GOOD)
+    assert "ai_tech" in prompts[1] and len(prompts) == 2
+    assert [p for _, p in logged] == [True, True]
+
+
+def test_r10_a_requote_that_is_still_wrong_drops_the_tag(tagstore, tmp_path):
+    path = tagstore([_trow(1)])
+    wrong = dict(TAG_GOOD, evidence=dict(TAG_GOOD["evidence"],
+                                         ai_tech="Hyperscalers doubled their spending on AI chips this year"))
+    replies = iter([json.dumps(wrong), json.dumps({"evidence": {"ai_tech": "still not a quote from this text at all"}})])
+    assert _trun(path, tmp_path, call=lambda p, k, model: (next(replies), dict(USAGE), model)) == 0
+    assert "ai_tech" not in _tread(path)["t1"]["tags"]
+
+
+def _misquote_then(second):
+    wrong = dict(TAG_GOOD, evidence=dict(TAG_GOOD["evidence"],
+                                         ai_tech="Hyperscalers doubled their spending on AI chips this year"))
+    n = []
+
+    def call(prompt, key, model):
+        n.append(1)
+        if len(n) == 1:
+            return json.dumps(wrong), dict(USAGE), model
+        return second()
+    return call
+
+
+def test_r10_a_quota_error_on_the_requote_still_stops_the_run(tagstore, tmp_path):
+    path = tagstore([_trow(1)])
+    assert _trun(path, tmp_path, call=_misquote_then(_quota)) == 2
+
+
+def test_r10_a_refused_requote_is_billed_and_drops_the_tag(tagstore, tmp_path):
+    path = tagstore([_trow(1)])
+
+    def refuse():
+        exc = aa.EmptyAnswer("no content")
+        exc.usage, exc.model = dict(USAGE), "m"
+        raise exc
+    logged = []
+    assert _trun(path, tmp_path, logged, call=_misquote_then(refuse)) == 0
+    assert "ai_tech" not in _tread(path)["t1"]["tags"]
+    assert [p for _, p in logged] == [True, False]

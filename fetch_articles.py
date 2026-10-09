@@ -183,14 +183,19 @@ def title_date_keys(rows, title_only_sources=frozenset()) -> dict[tuple[str, str
     Sources in title_only_sources (sources.json "dedupe_on_title") match on
     title alone, stored under the date slot "*": Cohen & Steers republishes a
     piece per audience on later dates ("-fp", "-inst", "-global").
+
+    A row whose month-only date scripts/refine_dates.py replaced is also keyed
+    under the listing's date (date_listed): that is what the listing shows.
     """
     keys: dict[tuple[str, str, str], str] = {}
     for r in rows:
-        title, date = _title_key(r.get("title", "")), r.get("date")
+        title = _title_key(r.get("title", ""))
+        dates = {r.get("date"), r.get("date_listed")}
         if r.get("source_id") in title_only_sources:
-            date = "*"
-        if title and date:
-            keys.setdefault((r.get("source_id", ""), title, date), r.get("id", ""))
+            dates = {"*"}
+        for date in dates:
+            if title and date:
+                keys.setdefault((r.get("source_id", ""), title, date), r.get("id", ""))
     return keys
 
 
@@ -3996,6 +4001,12 @@ def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False,
             title_changed = bool(stored and _title_key(art.get("title", ""))
                                  != _title_key(stored.get("title", "")))
             stored_date = (stored or {}).get("date")
+            # scripts/refine_dates.py replaces a month-only listing date with the
+            # real day and keeps the listing's in date_listed. The listing keeps
+            # showing the month, so compare against what it showed: with the
+            # refined day, an edited title read as a new issue at the same URL
+            # (2026-10-09, Baillie Gifford "EM: enough is not enough" stored twice).
+            listed_date = (stored or {}).get("date_listed") or stored_date
             skip_reason = ""
             if not stored:
                 skip_reason = "already stored"
@@ -4003,7 +4014,7 @@ def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False,
                 skip_reason = "listing row has no date, so there is no issue key to store it under"
             elif not stored_date:
                 skip_reason = "the stored article has no date to compare against"
-            elif date == stored_date:
+            elif date in (stored_date, listed_date):
                 skip_reason = ("same date as the stored article — an edited title is still that article"
                                if title_changed else "same title and same date")
             elif (not title_changed and stored_date[:7] == date[:7]

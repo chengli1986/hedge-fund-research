@@ -28,7 +28,7 @@ def _art(i, tags, days=3, **kw):
 
 
 ARTICLES = [
-    _art(1, ["research", "us", "equities", "ai_tech"]),
+    _art(1, ["research", "us", "equities", "ai_tech"], summary_en="S&P 500 earnings beat; the Fed's path is unchanged"),
     _art(2, ["research", "us", "govt_bonds"], summary_en="the strait of hormuz closed"),
     _art(3, ["event", "global", "commodities", "geopolitics_trade"]),
     _art(4, ["research", "europe", "equities"], days=200),          # older than RECENT_DAYS
@@ -100,3 +100,28 @@ def test_a_chip_in_another_view_opens_the_tags_view_on_that_tag(page):
     page.click('.timeline-wrap #a-t3 .tv-chip[data-tag="geopolitics_trade"]')
     assert page.get_attribute(".view-btn.active", "data-view") == "tags"
     assert _listed(page) == ["a-t3"]
+
+
+@pytest.mark.parametrize("q,expected", [
+    ("s&p", ["a-t1"]),                 # the summary is HTML-escaped in the island
+    ("fed's", ["a-t1"]),
+    ("analysis", []),                  # the row's own buttons and labels are not content
+    ("open", []),
+    ("amp", []),                       # nor are the entities the escaping left behind
+    ("x27", []),
+])
+def test_search_reads_the_text_not_the_markup(page, q, expected):
+    """Second stage-3 review R8: 'analysis' matched every article, 'S&P' none."""
+    page.reload()
+    page.fill("#tv-q", q)
+    assert _listed(page) == expected
+
+
+def test_older_articles_arrive_in_the_language_the_reader_chose(page):
+    """Second stage-3 review R9: after CN, "Show older" injected English rows."""
+    page.reload()
+    page.click("text=CN / EN")
+    page.click("#btn-show-older")
+    assert page.is_hidden('#a-t4 .tv-chip[data-tag="europe"] .lang-en')
+    assert page.is_visible('#a-t4 .tv-chip[data-tag="europe"] .lang-zh')
+    assert page.errors == []

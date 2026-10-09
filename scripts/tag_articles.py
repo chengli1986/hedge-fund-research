@@ -64,7 +64,11 @@ SAVE_EVERY = 25
 ATTEMPTS = 3
 # Nights an article may fail before it is no longer asked (stage-3 audit N1):
 # an answer that breaks the rules three nights running will break them on the
-# fourth. The night it is given up the run exits GAVE_UP_RC, which
+# fourth. A night that only met faults which clear up by themselves (network,
+# timeout, 5xx, a plain 429) says nothing about the article and neither counts
+# nor clears (second stage-3 review R4). Everything else counts: an invalid
+# answer, a refusal, a 4xx, a local error -- those come back every night, and
+# not counting them would retry them silently forever. The night it is given up the run exits GAVE_UP_RC, which
 # run_pipeline.sh alerts on, so a person looks at it once; after that it is
 # skipped quietly. Clearing `tag_failures` puts it back in the queue.
 MAX_TAG_NIGHTS = 3
@@ -80,8 +84,16 @@ FatalAPIError = aa.FatalAPIError
 _error_code = aa._error_code
 is_fatal = aa.is_fatal
 
+TRANSIENT = "transient "
 RETRY_NOTE = ("\n\nYour previous answer was rejected: {errors}. Answer again with the same JSON "
               "shape, fixing exactly that and keeping to every limit above.\n")
+# A valid answer whose quote for a tag is not in the text (the model paraphrased
+# or misremembered it) gets one request for another passage before the tag is
+# dropped: 93 of the round-2 backfill's tags were lost this way (2026-10-08b).
+REQUOTE_NOTE = ("\n\nYour answer was accepted, but the evidence for these tags is not in the "
+                "document word for word: {tags}. For each, copy a passage of at least "
+                f"{taxonomy.MIN_EVIDENCE_WORDS} words exactly as it appears in the document, or leave "
+                'the tag out. Answer with JSON only: {{"evidence": {{"<tag id>": "<passage>"}}}}\n')
 
 
 def candidates(rows: list[dict], retag_before: str | None = None,
@@ -144,11 +156,12 @@ def classify(row: dict, api_key: str, call=aa._call_openai, sleep=time.sleep,
         except requests.HTTPError as exc:
             if is_fatal(exc):
                 raise FatalAPIError(f"{exc.response.status_code} {_error_code(exc) or exc}", billed=billed) from exc
-            last = f"HTTP {exc.response.status_code if exc.response is not None else '?'}"
+            status = exc.response.status_code if exc.response is not None else None
+            last = (TRANSIENT if status is None or status == 429 or status >= 500 else "") + f"HTTP {status or '?'}"
             sleep(5 * (attempt + 1))
             continue
         except requests.RequestException as exc:
-            last = type(exc).__name__
+            last = TRANSIENT + type(exc).__name__
             sleep(5 * (attempt + 1))
             continue
         try:
@@ -158,12 +171,47 @@ def classify(row: dict, api_key: str, call=aa._call_openai, sleep=time.sleep,
             errs = [f"not JSON: {exc}"]
         billed.append((usage, not errs))
         if not errs:
-            kept, dropped = taxonomy.check_evidence(answer, text[:aa.MAX_CONTENT_CHARS])
+            doc = text[:aa.MAX_CONTENT_CHARS]
+            kept, dropped = taxonomy.check_evidence(answer, doc)
+            misquoted = [d.split(":")[0] for d in dropped if d.endswith(": passage not in document")]
+            if misquoted and not (stop is not None and stop.is_set()):
+                answer = _requote(answer, misquoted, prompt, api_key, call, billed)
+                kept, dropped = taxonomy.check_evidence(answer, doc)
             evidence = {t: answer["evidence"][t] for g in taxonomy.EVIDENCE_GROUPS for t in kept[g]}
             outcome = "tagged" + (f" (dropped {'; '.join(dropped)})" if dropped else "")
             return taxonomy.flatten(kept), outcome, billed, evidence
         last = "invalid: " + "; ".join(errs)
     return None, f"failed after {ATTEMPTS} attempts: {last}", billed, {}
+
+
+def _requote(answer: dict, tags: list[str], prompt: str, api_key: str, call,
+             billed: list[tuple[dict, bool]]) -> dict:
+    """One request for other passages for `tags`; the answer with whatever came back.
+
+    Only the evidence of those tags can change. A failed call keeps the answer as
+    it was, so those tags are dropped as before; a quota/auth error still stops."""
+    try:
+        raw, usage, _model = call(prompt + REQUOTE_NOTE.format(tags=", ".join(tags)), api_key, model=MODEL)
+    except aa.EmptyAnswer as exc:
+        billed.append((exc.usage, False))
+        return answer
+    except requests.HTTPError as exc:
+        if is_fatal(exc):
+            raise FatalAPIError(f"{exc.response.status_code} {_error_code(exc) or exc}", billed=billed) from exc
+        return answer
+    except requests.RequestException:
+        return answer
+    try:
+        new = json.loads(aa.strip_code_fences(raw)).get("evidence")
+    except (ValueError, AttributeError):
+        new = None
+    ok = isinstance(new, dict)
+    billed.append((usage, ok))
+    if not ok:
+        return answer
+    evidence = dict(answer["evidence"])
+    evidence.update({t: new[t] for t in tags if isinstance(new.get(t), str)})
+    return dict(answer, evidence=evidence)
 
 
 def apply_tags(row: dict, tags: list[str]) -> None:
@@ -275,24 +323,36 @@ def run(path: Path, api_key: str, backup: Path | None, limit: int = 0, workers: 
                 counts["skipped"] += 1
             else:
                 counts["failed"] += 1
-                failed.add(row["id"])
+                # Not counted only when no call was answered and the last fault
+                # was one that clears up by itself (R4).
+                if billed or not outcome.startswith(f"failed after {ATTEMPTS} attempts: {TRANSIENT}"):
+                    failed.add(row["id"])
             with report.open("a", encoding="utf-8") as f:
                 f.write(json.dumps({"id": row["id"], "source_id": row.get("source_id"),
                                     "outcome": outcome, "tags": tags, "evidence": evidence},
                                    ensure_ascii=False) + "\n")
             if len(done) >= SAVE_EVERY:
-                flush(path, done, failed, gave_up)
+                try:
+                    flush(path, done, failed, gave_up)
+                except Exception:
+                    # Leaving the `with` waits for every queued article, each a
+                    # paid call whose result would be thrown away (R5).
+                    stop.set()
+                    raise
             print(f"  {i}/{len(todo)} {row.get('source_id', '')[:18]:18} {outcome[:50]:50} "
                   f"in={tokens[0]:,} out={tokens[1]:,} ({time.time() - started:.0f}s)", flush=True)
     flush(path, done, failed, gave_up)
     print(f"done in {time.time() - started:.0f}s: {counts['tagged']} tagged, {counts['failed']} failed, "
           f"{counts['skipped']} skipped; tokens in={tokens[0]:,} out={tokens[1]:,}")
+    # Printed before the quota stop: the night an article is given up is the only
+    # night it is announced, and exit 2 used to return first (R3).
+    if gave_up:
+        print(f"GAVE UP after {MAX_TAG_NIGHTS} failed nights (no longer asked; clear tag_failures "
+              f"to retry): {', '.join(gave_up)}")
     if fatal:
         print(f"STOPPED: {fatal} -- fix it and run again; tagged articles are kept and will be skipped")
         return 2
     if gave_up:
-        print(f"GAVE UP after {MAX_TAG_NIGHTS} failed nights (no longer asked; clear tag_failures "
-              f"to retry): {', '.join(gave_up)}")
         return GAVE_UP_RC
     return 1 if counts["failed"] else 0
 

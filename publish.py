@@ -705,13 +705,21 @@ function tvTags(a) {
   if (!a._tv) a._tv = new Set((a.dataset.tags || '').split(' ').filter(Boolean));
   return a._tv;
 }
+/* The island holds HTML-escaped text ("S&amp;P"); DOMParser decodes it
+   without running scripts or loading images. */
+const tvParser = new DOMParser();
+const tvPlain = html => html ? tvParser.parseFromString(html, 'text/html').body.textContent : '';
 function tvHay(a) {
   if (a._hay === undefined) {
     const names = [...tvTags(a)].map(id => TAGINFO[id] ? TAGINFO[id].zh + ' ' + TAGINFO[id].en : '').join(' ');
-    /* Summaries of recent articles live in the details island, not the DOM,
+    /* Only what the article says: the row's own buttons and labels ("Open",
+       "Analysis") matched every article (second stage-3 review R8).
+       Summaries of recent articles live in the details island, not the DOM,
        until a row is opened; older articles ship without them. */
+    const own = [...a.querySelectorAll('.badge, .date, .headline, .inline-takeaway')].map(e => e.textContent).join(' ');
     const d = (typeof ARTICLE_DETAILS === 'object' && ARTICLE_DETAILS[a.id]) || {};
-    a._hay = (a.textContent + ' ' + names + ' ' + (d.bd_en || '') + ' ' + (d.bd_zh || '')).toLowerCase();
+    a._hay = [own, names, tvPlain(d.tk_en), tvPlain(d.tk_zh), tvPlain(d.bd_en), tvPlain(d.bd_zh)]
+      .join(' ').toLowerCase();
   }
   return a._hay;
 }
@@ -1652,10 +1660,14 @@ function switchView(name) {{
   bindRowToggles();
 }}
 
+function applyLang(root) {{
+  root.querySelectorAll('.lang-en').forEach(el => el.style.display = langZh ? 'none' : '');
+  root.querySelectorAll('.lang-zh').forEach(el => el.style.display = langZh ? '' : 'none');
+}}
+
 function toggleLang() {{
   langZh = !langZh;
-  document.querySelectorAll('.lang-en').forEach(el => el.style.display = langZh ? 'none' : '');
-  document.querySelectorAll('.lang-zh').forEach(el => el.style.display = langZh ? '' : 'none');
+  applyLang(document);
   const active = document.querySelector('.view-btn.active');
   if (active && active.dataset.view === 'tags') tvRender();
 }}
@@ -1680,6 +1692,9 @@ function ensureOlderLoaded() {{
   }}
   const holder = document.createElement('div');
   holder.innerHTML = parts.join('');
+  /* The rows are rendered in English; a reader who switched to CN before
+     asking for them got English chips and takeaways (second stage-3 review R9). */
+  applyLang(holder);
   while (holder.firstChild) pool.appendChild(holder.firstChild);
   __olderLoaded = true;
   /* There is no `currentView` global — the active view is recorded on the

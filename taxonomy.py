@@ -19,6 +19,7 @@ impact counts as geopolitics (user's call).
 from __future__ import annotations
 
 import re
+import unicodedata
 from urllib.parse import urlparse
 
 GROUPS = {
@@ -151,8 +152,20 @@ MIN_EVIDENCE_WORDS = 6
 def _letters(s: str) -> str:
     """Lower-case letters and digits only. Punctuation, curly quotes, dashes,
     line breaks and spaces cannot make a real quote miss -- including words the
-    scraper glued together ('Inflation outlookThe fight...', T. Rowe Price)."""
-    return re.sub(r"[\W_]+", "", s.lower())
+    scraper glued together ('Inflation outlookThe fight...', T. Rowe Price).
+    NFKC first: PDF text keeps ligatures ('ﬁnancial'), which the model writes
+    out as two letters (second stage-3 review R10)."""
+    return re.sub(r"[\W_]+", "", unicodedata.normalize("NFKC", s).lower())
+
+
+_CJK = r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]"
+
+
+def _evidence_words(passage: str) -> int:
+    """Words in a passage, two CJK characters counting as one: a Chinese
+    sentence has no spaces, so \\w+ read a whole quote as a single word."""
+    cjk = len(re.findall(_CJK, passage))
+    return len(re.findall(r"\w+", re.sub(_CJK, " ", passage))) + cjk // 2
 
 
 def check_evidence(d: dict, text: str) -> tuple[dict, list[str]]:
@@ -168,7 +181,7 @@ def check_evidence(d: dict, text: str) -> tuple[dict, list[str]]:
         keep = []
         for tid in d[g]:
             passage = ev.get(tid) or ""
-            if len(re.findall(r"\w+", passage)) < MIN_EVIDENCE_WORDS:
+            if _evidence_words(passage) < MIN_EVIDENCE_WORDS:
                 dropped.append(f"{tid}: no passage" if not passage.strip() else f"{tid}: passage too short")
             elif _letters(passage) not in body:
                 dropped.append(f"{tid}: passage not in document")
