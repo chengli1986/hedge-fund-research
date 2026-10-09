@@ -168,8 +168,9 @@ class TestMainWiresArticleId:
         import inspect
 
         tree = ast.parse(inspect.getsource(aa))
+        # main() hands each article to _analyze_one (since 2026-10-09).
         main_fn = next(n for n in ast.walk(tree)
-                       if isinstance(n, ast.FunctionDef) and n.name == "main")
+                       if isinstance(n, ast.FunctionDef) and n.name == "_analyze_one")
         calls = [n for n in ast.walk(main_fn)
                  if isinstance(n, ast.Call)
                  and getattr(n.func, "id", "") == "_analyze_with_fallback"]

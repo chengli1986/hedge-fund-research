@@ -118,8 +118,14 @@ def main(argv: list[str] | None = None) -> int:
     for i, row in enumerate(todo, 1):
         text = aa._resolve_content_path(row).read_text(encoding="utf-8")
         before = {k: row.get(k) for k in SUMMARY_FIELDS}
-        result = aa._analyze_with_fallback(text, keys, title=row.get("title", ""), source=row.get("source_id", ""),
-                                           date=row.get("date", ""), metadata_only=False, article_id=row["id"])
+        try:
+            result = aa._analyze_with_fallback(text, keys, title=row.get("title", ""), source=row.get("source_id", ""),
+                                               date=row.get("date", ""), metadata_only=False, article_id=row["id"])
+        except aa.FatalAPIError as exc:
+            # quota/auth: every later call fails the same way; keep what was done
+            flush()
+            print(f"STOPPED: {exc} -- replaced so far are saved; rerun to continue")
+            return 2
         outcome = apply_result(row, result)
         outcomes[row["id"]] = outcome
         with report.open("a", encoding="utf-8") as f:

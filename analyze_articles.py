@@ -275,12 +275,20 @@ def _append_usage_log(article_id_: str, model: str, usage: dict, path=None,
     and dropping it would understate the total.
     """
     path = USAGE_LOG_FILE if path is None else path
+    try:
+        counts = _normalize_usage(model, usage)
+    except Exception as e:
+        # A payload the normaliser chokes on is booked as unknown, not dropped:
+        # "usage": null made this raise out of call() and a parsed summary was
+        # thrown away and bought again (stage-3 audit S7).
+        log.warning("  usage payload unreadable (%s): %r", e, usage)
+        counts = dict(_UNKNOWN_USAGE)
     row = {
         "at": datetime.now(BJT).isoformat(timespec="seconds"),
         "article_id": article_id_,
         "model": model,
         "parsed": parsed,
-        **_normalize_usage(model, usage),
+        **counts,
     }
     try:
         with open(path, "a") as f:
@@ -318,17 +326,61 @@ _OPENAI_PARAMS = {
 # Behaviour is unchanged: these raise, the chain retries and moves on. Only
 # the sentence in the log changes.
 
+class EmptyAnswer(ValueError):
+    """An HTTP 200 that carries no text (a refusal, no choices).
+
+    The call was billed -- the response has a usage block -- so the caller
+    books it before moving on. Raised as an exception it used to escape
+    before the usage log line and was never counted (stage-3 audit S3), and
+    in tag_articles it was not caught at all and ended the run (N2).
+    """
+    def __init__(self, message: str, usage: dict | None = None, model: str = ""):
+        super().__init__(message)
+        self.usage = usage or {}
+        self.model = model
+
+
+# Error codes OpenAI returns when retrying cannot help: every later call on
+# this key would fail the same way, so the run stops (shared with
+# scripts/tag_articles.py; 2026-10-07 the account ran out of credit mid-pilot).
+FATAL_CODES = {"insufficient_quota", "credit_balance_exhausted", "billing_hard_limit_reached",
+               "invalid_api_key", "account_deactivated"}
+
+
+class FatalAPIError(Exception):
+    """Every later call would fail the same way: stop the run."""
+    def __init__(self, message, billed=None):
+        super().__init__(message)
+        self.billed: list[tuple[dict, bool]] = billed if billed is not None else []
+
+
+def _error_code(exc: requests.HTTPError) -> str:
+    try:
+        err = exc.response.json().get("error") or {}
+        return str(err.get("code") or err.get("type") or "")
+    except Exception:
+        return ""
+
+
+def is_fatal(exc: Exception) -> bool:
+    if not isinstance(exc, requests.HTTPError) or exc.response is None:
+        return False
+    if exc.response.status_code in (401, 403):
+        return True
+    return exc.response.status_code == 429 and _error_code(exc) in FATAL_CODES
+
+
 def _openai_text(data: dict) -> str:
     choices = data.get("choices") or []
     if not choices:
-        raise ValueError(f"openai returned no choices (id={data.get('id')}, "
+        raise EmptyAnswer(f"openai returned no choices (id={data.get('id')}, "
                          f"keys={sorted(data)})")
     message = choices[0].get("message") or {}
     text = message.get("content")
     if text is None:
         refusal = message.get("refusal")
         reason = choices[0].get("finish_reason")
-        raise ValueError(f"openai returned no content: refusal={refusal!r}, "
+        raise EmptyAnswer(f"openai returned no content: refusal={refusal!r}, "
                          f"finish_reason={reason!r}")
     return text
 
@@ -347,7 +399,11 @@ def _call_openai(prompt: str, api_key: str, model: str = "gpt-4.1-mini") -> tupl
     )
     resp.raise_for_status()
     data = resp.json()
-    text = _openai_text(data)
+    try:
+        text = _openai_text(data)
+    except EmptyAnswer as exc:
+        exc.usage, exc.model = data.get("usage") or {}, model
+        raise
     usage = data.get("usage", {})
     return (text, usage, model)
 
@@ -441,6 +497,11 @@ def _parse_llm_output(raw: str) -> Optional[dict]:
     # Validate required fields
     required = {"summary_en", "summary_zh", "themes", "key_takeaway_en", "key_takeaway_zh"}
     if not required.issubset(data.keys()):
+        return None
+    # Present is not enough: an empty field has no words for check_grounding's
+    # coverage test to reject, so "" passed and was published (audit S4).
+    if not all(isinstance(data[k], str) and data[k].strip()
+               for k in ("summary_en", "summary_zh", "key_takeaway_en", "key_takeaway_zh")):
         return None
 
     # Keep only themes on the allowlist, copied exactly (case aside). Until
@@ -637,6 +698,10 @@ MIN_METADATA_DESCRIPTION_CHARS = 150
 # How many articles are processed between writes of the store (audit A3).
 SAVE_EVERY = 5
 
+# Articles in a row on which every model failed before the stage gives up for
+# the night (stage-3 audit S2).
+MAX_CONSECUTIVE_UNANSWERED = 3
+
 
 def is_title_only(content: str) -> bool:
     body = "\n".join(line for line in (content or "").splitlines()
@@ -676,7 +741,12 @@ def _analyze_with_fallback(
 
     def call(model_prompt: str, caller, api_key: str):
         """One model call: raw -> parsed, booked at the HTTP boundary."""
-        raw_text, usage, used_model = caller(model_prompt, api_key)
+        try:
+            raw_text, usage, used_model = caller(model_prompt, api_key)
+        except EmptyAnswer as exc:
+            # Billed, with nothing to parse: book it as unparsed, then retry.
+            _append_usage_log(article_id, exc.model, exc.usage, parsed=False)
+            raise
         parsed = _parse_llm_output(raw_text)
         # Book the call here -- a response that fails to parse burned the same
         # tokens as one that succeeds. An exception never got a usage payload,
@@ -691,6 +761,7 @@ def _analyze_with_fallback(
             log.info("  Skipping %s (no API key)", model_name)
             continue
 
+        rejected = None
         for attempt in range(1, MAX_ATTEMPTS + 1):
             try:
                 log.info("  Trying %s (attempt %d/%d)", model_name, attempt, MAX_ATTEMPTS)
@@ -711,10 +782,23 @@ def _analyze_with_fallback(
                                         model_name, "; ".join(problems))
                             retry, retry_usage, retry_model = call(
                                 prompt + _retry_instruction(problems), caller, api_key)
-                            if retry is not None:
-                                parsed, usage, used_model = retry, retry_usage, retry_model
-                                problems = ([] if parsed.get("insufficient_content")
-                                            else check_grounding(parsed, content[:MAX_CONTENT_CHARS]))
+                            if retry is None:
+                                # Junk instead of an answer says nothing about the
+                                # article: this model's next attempt gets a clean
+                                # try rather than the wording-only problem becoming
+                                # a decline (audit S5). The rejection is kept, and
+                                # returned if this model has no attempt left: it
+                                # never passes to the next, weaker tier.
+                                log.warning("  %s: re-ask did not parse (attempt %d)",
+                                            model_name, attempt)
+                                rejected = {"insufficient_content": True,
+                                            "reason": grounding_reason(problems),
+                                            "_label": RULE_MADE_DECLINE,
+                                            "_model": used_model, "_usage": usage}
+                                continue
+                            parsed, usage, used_model = retry, retry_usage, retry_model
+                            problems = ([] if parsed.get("insufficient_content")
+                                        else check_grounding(parsed, content[:MAX_CONTENT_CHARS]))
                         if problems:
                             log.warning("  %s: summary rejected by grounding check: %s",
                                         model_name, "; ".join(problems))
@@ -725,8 +809,17 @@ def _analyze_with_fallback(
                     parsed["_usage"] = usage
                     return parsed
                 log.warning("  %s: failed to parse output (attempt %d)", model_name, attempt)
+            except requests.HTTPError as e:
+                # Quota or auth: the next attempt, the next tier (same key) and
+                # every later article would fail the same way (audit S2).
+                if is_fatal(e):
+                    raise FatalAPIError(f"{e.response.status_code} {_error_code(e) or e}") from e
+                log.warning("  %s: error (attempt %d): %s", model_name, attempt, e)
             except Exception as e:
                 log.warning("  %s: error (attempt %d): %s", model_name, attempt, e)
+        if rejected is not None:
+            log.warning("  %s: summary rejected by grounding check: %s", model_name, rejected["reason"])
+            return rejected
 
     return None
 
@@ -927,84 +1020,54 @@ def main() -> int:
     success_count = 0
     fail_count = 0
     insufficient_count = 0
+    asked = answered = consecutive_unanswered = processed = 0
+    stopped = ""
     published = published_index(articles)
 
     for a in pending:
+        processed += 1
         try:
-            content_path = _resolve_content_path(a)
-        except ValueError as e:
-            log.warning("Invalid content path for %s: %s", a["id"], e)
-            a["content_status"] = "failed"
-            fail_count += 1
-            continue
-        if not content_path.exists():
-            log.warning("Content file missing for %s: %s", a["id"], content_path)
-            a["content_status"] = "failed"
-            fail_count += 1
-            continue
+            outcome = _analyze_one(a, api_keys, published)
+        except FatalAPIError as e:
+            # Quota or auth: every remaining article would fail the same way.
+            # What was done is saved below; the rest stays pending for the
+            # next run (audit S2).
+            stopped = f"quota/auth error, run stopped: {e}"
+            log.error("  %s", stopped)
+            break
+        finally:
+            # Saved in batches, not once after the loop: the pipeline runs under a
+            # 30-minute cron timeout, and a run killed at minute 29 used to throw
+            # away every summary it had generated -- each already charged to the
+            # API account -- and buy them again the next night (audit A3). One
+            # rewrite per article would mean writing 1,700 rows twenty times a
+            # night, hence a batch. Counted here, in `finally`, so an article
+            # that ends early (no body) still counts (audit S8).
+            if processed % SAVE_EVERY == 0:
+                save_articles(articles)
 
-        content = content_path.read_text(encoding="utf-8")
-        is_metadata = a.get("content_status") == "metadata_only"
-        level = "metadata-only" if is_metadata else "full"
-        log.info("Analyzing (%s): %s — %s", level, a.get("source_id", "?"), a.get("title", "?"))
-
-        owner = duplicate_owner(published, a.get("source_id", ""), a.get("title", ""), content)
-        if owner is not None and owner.get("id") != a["id"]:
-            result = {"insufficient_content": True, "_model": None,
-                      "reason": duplicate_reason(owner),
-                      "_label": "duplicate_body"}
-        elif is_metadata and is_title_only(content):
-            result = {"insufficient_content": True, "_model": None,
-                      "reason": TITLE_ONLY_REASON,
-                      "_label": "title_only"}
-        else:
-            result = _analyze_with_fallback(
-                content,
-                api_keys,
-                title=a.get("title", ""),
-                source=a.get("source_id", ""),
-                date=a.get("date", ""),
-                metadata_only=is_metadata,
-                article_id=a["id"],
-            )
-
-        if result is not None and result.get("insufficient_content"):
-            _record_insufficient(a, result)
-            insufficient_count += 1
-            log.warning("  Not summarised (%s): %s", a["id"], result["reason"])
-        elif result is not None:
-            a["summary_en"] = result["summary_en"]
-            a["summary_zh"] = result["summary_zh"]
-            a["themes"] = result["themes"]
-            a["key_takeaway_en"] = result["key_takeaway_en"]
-            a["key_takeaway_zh"] = result["key_takeaway_zh"]
-            a["summarized"] = True
-            # Register it so a second copy later in the SAME run is caught too
-            # (both halves: the exact hash and the same-title similarity list).
-            published["exact"].setdefault(_body_key(a.get("source_id", ""), content), a)
-            published["by_title"].setdefault(
-                (a.get("source_id", ""), _title_key(a.get("title", ""))), []).append((a, content))
-            a.pop("analysis_status", None)
-            a.pop("analysis_reason", None)
-            a.pop("analysis_label", None)
-            a.pop("analysis_code_version", None)
-            a["analysis_model"] = result["_model"]
-            if is_metadata:
-                a["analysis_confidence"] = "low"
+        if outcome == "ok":
             success_count += 1
-            log.info("  Success (%s): %d themes", result["_model"], len(result["themes"]))
+        elif outcome in ("model_declined", "rule"):
+            insufficient_count += 1
         else:
-            log.error("  All models failed for %s", a["id"])
             fail_count += 1
-
-        # Saved in batches, not once after the loop: the pipeline runs under a
-        # 30-minute cron timeout, and a run killed at minute 29 used to throw
-        # away every summary it had generated -- each already charged to the
-        # API account -- and buy them again the next night (audit A3). One
-        # rewrite per article would mean writing 1,700 rows twenty times a
-        # night, hence a batch.
-        if (success_count + insufficient_count + fail_count) % SAVE_EVERY == 0:
-            save_articles(articles)
+        if outcome == "unanswered":
+            asked += 1
+            consecutive_unanswered += 1
+        elif outcome in ("ok", "model_declined"):
+            asked += 1
+            answered += 1
+            consecutive_unanswered = 0
+        if consecutive_unanswered >= MAX_CONSECUTIVE_UNANSWERED:
+            # Every model failed on this many articles in a row: an outage, not
+            # bad luck. A stalled network costs MAX_ATTEMPTS x tiers x 120 s an
+            # article, and the whole pipeline has 30 minutes -- stop here so
+            # Stages 3b and 4 still run (audit S2).
+            stopped = (f"{consecutive_unanswered} articles in a row got no answer from any model; "
+                       f"stage stopped, the rest stays pending")
+            log.error("  %s", stopped)
+            break
 
     save_articles(articles)
     log.info("Analysis complete: %d ok, %d failed, %d not summarised (insufficient content)",
@@ -1015,25 +1078,112 @@ def main() -> int:
     print(f"{'='*60}")
     print(f"Pending: {len(pending)} | Success: {success_count} | Failed: {fail_count}"
           f" | Not summarised (insufficient content): {insufficient_count}")
+    if stopped:
+        print(f"STOPPED: {stopped}")
     print()
 
-    # Articles were waiting and not one was summarised: quota exhaustion, or
-    # all three MODEL_CHAIN tiers down. Until 2026-09-11 main() returned None
+    if stopped.startswith("quota/auth"):
+        return 2
+    # Articles went to the models and not one got an answer: quota exhaustion,
+    # or every MODEL_CHAIN tier down. Until 2026-09-11 main() returned None
     # here too, so the process exited 0 and run_pipeline.sh's
     # `if python3 analyze_articles.py` guard saw a clean run -- the same shape
     # fixed for stage 1 in 9f6e291.
+    #
+    # Counted over the articles that were SENT to a model: a duplicate or
+    # title-only decline is decided without one, and counting it as an answer
+    # let a night with a dead key exit 0 (audit S1).
     #
     # An empty pending list is the normal quiet case and stays silent, and a
     # partial failure is not an outage: those articles keep their unsummarised
     # state and are retried next run, and their cost is already visible in
     # logs/analyze-usage.jsonl.
-    # A decline is a handled outcome: only "nothing answered at all" is an outage.
-    if pending and success_count == 0 and insufficient_count == 0:
-        log.error("TOTAL ANALYSIS OUTAGE: %d article(s) pending, none summarised",
-                  len(pending))
+    if stopped or (asked and not answered):
+        log.error("TOTAL ANALYSIS OUTAGE: %d article(s) sent to the models, none answered",
+                  asked)
         return 1
     return 0
 
+
+def _analyze_one(a: dict, api_keys: dict, published: dict) -> str:
+    """Summarise or decline one pending article, in place.
+
+    Returns "ok", "model_declined" or "rule" (both counted as not summarised),
+    "unanswered" (every model failed; retried next run) or "no_body".
+    Raises FatalAPIError on a quota/auth error.
+    """
+    try:
+        content_path = _resolve_content_path(a)
+    except ValueError as e:
+        log.warning("Invalid content path for %s: %s", a["id"], e)
+        a["content_status"] = "failed"
+        return "no_body"
+    try:
+        content = content_path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        log.warning("Content file missing for %s: %s", a["id"], content_path)
+        a["content_status"] = "failed"
+        return "no_body"
+    except (OSError, UnicodeDecodeError) as e:
+        # Back to stage 2, which rewrites the file. Unguarded, one such file
+        # crashed this run, and every later one, at the same article (audit S6).
+        log.warning("Content file unreadable for %s: %s", a["id"], e)
+        a["content_status"] = "failed"
+        return "no_body"
+
+    is_metadata = a.get("content_status") == "metadata_only"
+    level = "metadata-only" if is_metadata else "full"
+    log.info("Analyzing (%s): %s — %s", level, a.get("source_id", "?"), a.get("title", "?"))
+
+    asked_model = False
+    owner = duplicate_owner(published, a.get("source_id", ""), a.get("title", ""), content)
+    if owner is not None and owner.get("id") != a["id"]:
+        result = {"insufficient_content": True, "_model": None,
+                  "reason": duplicate_reason(owner),
+                  "_label": "duplicate_body"}
+    elif is_metadata and is_title_only(content):
+        result = {"insufficient_content": True, "_model": None,
+                  "reason": TITLE_ONLY_REASON,
+                  "_label": "title_only"}
+    else:
+        asked_model = True
+        result = _analyze_with_fallback(
+            content,
+            api_keys,
+            title=a.get("title", ""),
+            source=a.get("source_id", ""),
+            date=a.get("date", ""),
+            metadata_only=is_metadata,
+            article_id=a["id"],
+        )
+
+    if result is not None and result.get("insufficient_content"):
+        _record_insufficient(a, result)
+        log.warning("  Not summarised (%s): %s", a["id"], result["reason"])
+        return "model_declined" if asked_model else "rule"
+    if result is None:
+        log.error("  All models failed for %s", a["id"])
+        return "unanswered"
+    a["summary_en"] = result["summary_en"]
+    a["summary_zh"] = result["summary_zh"]
+    a["themes"] = result["themes"]
+    a["key_takeaway_en"] = result["key_takeaway_en"]
+    a["key_takeaway_zh"] = result["key_takeaway_zh"]
+    a["summarized"] = True
+    # Register it so a second copy later in the SAME run is caught too
+    # (both halves: the exact hash and the same-title similarity list).
+    published["exact"].setdefault(_body_key(a.get("source_id", ""), content), a)
+    published["by_title"].setdefault(
+        (a.get("source_id", ""), _title_key(a.get("title", ""))), []).append((a, content))
+    a.pop("analysis_status", None)
+    a.pop("analysis_reason", None)
+    a.pop("analysis_label", None)
+    a.pop("analysis_code_version", None)
+    a["analysis_model"] = result["_model"]
+    if is_metadata:
+        a["analysis_confidence"] = "low"
+    log.info("  Success (%s): %d themes", result["_model"], len(result["themes"]))
+    return "ok"
 
 if __name__ == "__main__":
     # sys.exit, not a bare call: main()'s return value was discarded, so the

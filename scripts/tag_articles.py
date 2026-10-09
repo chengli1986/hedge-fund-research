@@ -62,32 +62,26 @@ MODEL = aa.MODEL_CHAIN[0]
 TAG_FIELDS = ("tags", "tags_model", "tags_at")
 SAVE_EVERY = 25
 ATTEMPTS = 3
-# Error codes OpenAI returns when retrying cannot help.
-FATAL_CODES = {"insufficient_quota", "credit_balance_exhausted", "billing_hard_limit_reached",
-               "invalid_api_key", "account_deactivated"}
+# Nights an article may fail before it is no longer asked (stage-3 audit N1):
+# an answer that breaks the rules three nights running will break them on the
+# fourth. The night it is given up the run exits GAVE_UP_RC, which
+# run_pipeline.sh alerts on, so a person looks at it once; after that it is
+# skipped quietly. Clearing `tag_failures` puts it back in the queue.
+MAX_TAG_NIGHTS = 3
+GAVE_UP_RC = 3
+# Anything that is not about one article -- a damaged store, a crash outside the
+# per-article loop. Exit 1 means "some articles untagged, retried tomorrow" and
+# run_pipeline.sh only logs it; an uncaught traceback also exits 1, so these
+# used to read as that harmless case (stage-3 audit N2).
+BROKEN_RC = 4
+# Quota/auth detection is shared with Stage 3 (analyze_articles).
+FATAL_CODES = aa.FATAL_CODES
+FatalAPIError = aa.FatalAPIError
+_error_code = aa._error_code
+is_fatal = aa.is_fatal
 
-
-class FatalAPIError(Exception):
-    """Every later call would fail the same way: stop the run."""
-    def __init__(self, message, billed=None):
-        super().__init__(message)
-        self.billed: list[tuple[dict, bool]] = billed if billed is not None else []
-
-
-def _error_code(exc: requests.HTTPError) -> str:
-    try:
-        err = exc.response.json().get("error") or {}
-        return str(err.get("code") or err.get("type") or "")
-    except Exception:
-        return ""
-
-
-def is_fatal(exc: Exception) -> bool:
-    if not isinstance(exc, requests.HTTPError) or exc.response is None:
-        return False
-    if exc.response.status_code in (401, 403):
-        return True
-    return exc.response.status_code == 429 and _error_code(exc) in FATAL_CODES
+RETRY_NOTE = ("\n\nYour previous answer was rejected: {errors}. Answer again with the same JSON "
+              "shape, fixing exactly that and keeping to every limit above.\n")
 
 
 def candidates(rows: list[dict], retag_before: str | None = None,
@@ -102,6 +96,8 @@ def candidates(rows: list[dict], retag_before: str | None = None,
         if only is not None and not only(r):
             continue
         if r.get("tags") and not (retag_before and (r.get("tags_at") or "") < retag_before):
+            continue
+        if not r.get("tags") and int(r.get("tag_failures") or 0) >= MAX_TAG_NIGHTS:
             continue
         try:
             if aa._resolve_content_path(r).is_file():
@@ -136,7 +132,15 @@ def classify(row: dict, api_key: str, call=aa._call_openai, sleep=time.sleep,
         if stop is not None and stop.is_set():
             return None, "skipped: run stopped", billed, {}
         try:
-            raw, usage, _model = call(prompt, api_key, model=MODEL)
+            raw, usage, _model = call(prompt + (RETRY_NOTE.format(errors=last[len("invalid: "):])
+                                                if last.startswith("invalid: ") else ""),
+                                      api_key, model=MODEL)
+        except aa.EmptyAnswer as exc:
+            # A refusal: billed, nothing to read. Uncaught, it ended the whole
+            # run (audit N2).
+            billed.append((exc.usage, False))
+            last = f"no answer: {exc}"[:200]
+            continue
         except requests.HTTPError as exc:
             if is_fatal(exc):
                 raise FatalAPIError(f"{exc.response.status_code} {_error_code(exc) or exc}", billed=billed) from exc
@@ -172,19 +176,30 @@ def apply_tags(row: dict, tags: list[str]) -> None:
             row["content_path"] = str(p.relative_to(aa.BASE_DIR))
 
 
-def flush(path: Path, done: dict[str, dict]) -> int:
-    """Write the tag fields of `done` onto the store as it is now. Returns rows written."""
-    if not done:
+def flush(path: Path, done: dict[str, dict], failed: set[str] | None = None,
+          gave_up: list[str] | None = None) -> int:
+    """Write the tag fields of `done` onto the store as it is now. Returns rows written.
+
+    Rows in `failed` get their `tag_failures` night count raised; ids that reach
+    MAX_TAG_NIGHTS are appended to `gave_up`. A tagged row's count is cleared."""
+    failed = failed if failed is not None else set()
+    if not done and not failed:
         return 0
     written = 0
     with jsonl_store.file_lock(path):
         fresh, bad = jsonl_store._read_locked(path)
         if bad:
-            raise SystemExit(f"{bad} damaged row(s) in the store; stopping without writing")
+            raise RuntimeError(f"{bad} damaged row(s) in the store; stopping without writing")
         for f in fresh:
+            if f.get("id") in failed:
+                f["tag_failures"] = int(f.get("tag_failures") or 0) + 1
+                if f["tag_failures"] == MAX_TAG_NIGHTS and gave_up is not None:
+                    gave_up.append(f["id"])
+                continue
             src = done.get(f.get("id"))
             if src is None:
                 continue
+            f.pop("tag_failures", None)
             for k in TAG_FIELDS:
                 f[k] = src[k]
             if not f.get("content_path") and src.get("content_path"):
@@ -192,6 +207,7 @@ def flush(path: Path, done: dict[str, dict]) -> int:
             written += 1
         jsonl_store._rewrite_locked(path, fresh, None)
     done.clear()
+    failed.clear()
     return written
 
 
@@ -201,7 +217,7 @@ def run(path: Path, api_key: str, backup: Path | None, limit: int = 0, workers: 
     rows, damaged = jsonl_store.read_rows(path)
     if damaged:
         print(f"{damaged} damaged row(s) in the store; refusing to rewrite it")
-        return 1
+        return BROKEN_RC
     index = taxonomy.series_index([r for r in rows if r.get("summarized")])
     only = (lambda r: bool(taxonomy.series_note(r, index)) or (r.get("tags") or [None])[0] in also_types) \
         if only_series else None
@@ -221,6 +237,8 @@ def run(path: Path, api_key: str, backup: Path | None, limit: int = 0, workers: 
 
     stop = threading.Event()
     done: dict[str, dict] = {}
+    failed: set[str] = set()
+    gave_up: list[str] = []
     counts = {"tagged": 0, "failed": 0, "skipped": 0}
     tokens = [0, 0]
     fatal: str | None = None
@@ -233,6 +251,11 @@ def run(path: Path, api_key: str, backup: Path | None, limit: int = 0, workers: 
         except FatalAPIError as exc:
             stop.set()
             return row, None, f"fatal: {exc}", exc.billed, {}
+        except Exception as exc:
+            # One article's surprise must not take the others down with it:
+            # fut.result() re-raised it in the main loop, unsaved work was lost,
+            # and the traceback's exit 1 read as "some left untagged" (N2).
+            return row, None, f"failed: {type(exc).__name__}: {exc}"[:300], [], {}
 
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = [pool.submit(work, r) for r in todo]
@@ -252,20 +275,25 @@ def run(path: Path, api_key: str, backup: Path | None, limit: int = 0, workers: 
                 counts["skipped"] += 1
             else:
                 counts["failed"] += 1
+                failed.add(row["id"])
             with report.open("a", encoding="utf-8") as f:
                 f.write(json.dumps({"id": row["id"], "source_id": row.get("source_id"),
                                     "outcome": outcome, "tags": tags, "evidence": evidence},
                                    ensure_ascii=False) + "\n")
             if len(done) >= SAVE_EVERY:
-                flush(path, done)
+                flush(path, done, failed, gave_up)
             print(f"  {i}/{len(todo)} {row.get('source_id', '')[:18]:18} {outcome[:50]:50} "
                   f"in={tokens[0]:,} out={tokens[1]:,} ({time.time() - started:.0f}s)", flush=True)
-    flush(path, done)
+    flush(path, done, failed, gave_up)
     print(f"done in {time.time() - started:.0f}s: {counts['tagged']} tagged, {counts['failed']} failed, "
           f"{counts['skipped']} skipped; tokens in={tokens[0]:,} out={tokens[1]:,}")
     if fatal:
         print(f"STOPPED: {fatal} -- fix it and run again; tagged articles are kept and will be skipped")
         return 2
+    if gave_up:
+        print(f"GAVE UP after {MAX_TAG_NIGHTS} failed nights (no longer asked; clear tag_failures "
+              f"to retry): {', '.join(gave_up)}")
+        return GAVE_UP_RC
     return 1 if counts["failed"] else 0
 
 
@@ -294,5 +322,15 @@ def main(argv: list[str] | None = None) -> int:
                also_types=tuple(args.also_type), fresh_snapshot=args.nightly)
 
 
+def entry() -> int:
+    """main() with any uncaught error turned into BROKEN_RC, not the traceback's 1."""
+    try:
+        return main()
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        return BROKEN_RC
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(entry())

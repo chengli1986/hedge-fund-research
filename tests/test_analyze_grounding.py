@@ -388,12 +388,16 @@ class TestWordingOnlyRetry:
         assert calls == ["gpt-5.6-luna"], "a coverage failure must not get a second try"
 
     def test_a_retry_that_fails_to_parse_keeps_the_rejection(self, monkeypatch):
+        """The junk re-ask earns this model's next attempt (stage-3 audit S5,
+        test_stage3_error_handling); with none left the rejection stands and
+        the weaker tier is never asked."""
         calls, _ = self._chain(monkeypatch, {
             "gpt-5.6-luna": [json.dumps(self.WORDING), "not json at all"],
             "gpt-4.1-mini": [json.dumps(self.GROUNDED)]})
         out = aa._analyze_with_fallback(self.BODY, {"OPENAI_API_KEY": "k"})
         assert out["insufficient_content"] is True and "grounding" in out["reason"]
-        assert calls == ["gpt-5.6-luna", "gpt-5.6-luna"]
+        assert out["_label"] == aa.RULE_MADE_DECLINE
+        assert "gpt-4.1-mini" not in calls and calls[:2] == ["gpt-5.6-luna", "gpt-5.6-luna"]
 
     def test_a_coverage_failure_is_not_retried(self, monkeypatch):
         """Coverage failing means the summary is not in the text at all --
