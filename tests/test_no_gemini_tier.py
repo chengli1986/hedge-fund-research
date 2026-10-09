@@ -13,7 +13,6 @@ import inspect
 from pathlib import Path
 
 import analyze_articles as aa
-import backfill_themes as bt
 
 REPO = Path(__file__).resolve().parent.parent
 
@@ -29,7 +28,7 @@ def test_gemini_caller_and_accounting_are_gone():
 
 
 def test_no_google_endpoint_or_key_in_stage3_sources():
-    for rel in ("analyze_articles.py", "backfill_themes.py"):
+    for rel in ("analyze_articles.py",):
         src = (REPO / rel).read_text(encoding="utf-8")
         for tok in ("generativelanguage", "GEMINI_API_KEY", "_call_gemini"):
             assert tok not in src, f"{rel} still mentions {tok}"
@@ -42,10 +41,3 @@ def test_a_google_key_alone_runs_nothing(monkeypatch):
     monkeypatch.setattr(aa, "_call_openai", boom)
     assert aa._analyze_with_fallback("body", {"GEMINI_API_KEY": "k"}, article_id="x") is None
 
-
-def test_backfill_calls_openai_with_the_openai_key(monkeypatch):
-    seen = {}
-    monkeypatch.setattr(aa, "_call_openai",
-                        lambda prompt, api_key, model="gpt-4.1-mini": (seen.update(key=api_key, model=model), ("{}", {}, model))[1])
-    bt._call_model("p", {"OPENAI_API_KEY": "ok", "GEMINI_API_KEY": "nope"})
-    assert seen == {"key": "ok", "model": aa.MODEL_CHAIN[0]}
