@@ -349,9 +349,11 @@ FATAL_CODES = {"insufficient_quota", "credit_balance_exhausted", "billing_hard_l
 
 class FatalAPIError(Exception):
     """Every later call would fail the same way: stop the run."""
-    def __init__(self, message, billed=None):
+    def __init__(self, message, billed=None, result=None):
         super().__init__(message)
         self.billed: list[tuple[dict, bool]] = billed if billed is not None else []
+        # What was already paid for and is good, kept by the caller (tag_articles T5).
+        self.result = result
 
 
 def _error_code(exc: requests.HTTPError) -> str:
@@ -918,8 +920,8 @@ def _published_bodies(articles: list[dict]) -> dict[tuple[str, str], dict]:
     return owners
 
 
-# What counts as "the same document" -- the shingle Jaccard, its 0.85 bar, the
-# same-title condition and the measurements behind them -- lives in
+# What counts as "the same document" -- the shingle Jaccard, its bars for the
+# same and for another title, and the measurements behind them -- lives in
 # text_identity.py, because stage 2 asks the same question (page_not_updated)
 # and the two stages must not answer it differently.
 DUPLICATE_JACCARD = text_identity.DUPLICATE_JACCARD
@@ -936,7 +938,7 @@ def published_index(articles: list[dict], bodies: dict[str, str] | None = None) 
     bodies is for tests; in production the text comes from each article's
     stored content file.
     """
-    index = {"exact": {}, "by_title": {}}
+    index = {"exact": {}, "by_source": {}}
     for a in articles:
         if not a.get("summarized"):
             continue
@@ -949,32 +951,41 @@ def published_index(articles: list[dict], bodies: dict[str, str] | None = None) 
                 text = _resolve_content_path(a).read_text(encoding="utf-8")
             except (OSError, ValueError):
                 continue
-        index["exact"].setdefault(_body_key(a.get("source_id", ""), text), a)
-        key = (a.get("source_id", ""), _title_key(a.get("title", "")))
-        index["by_title"].setdefault(key, []).append((a, text))
+        register_published(index, a, text)
     return index
 
 
+def register_published(index: dict, article: dict, text: str) -> None:
+    """Add one published article, so a later copy -- in this run too -- is caught."""
+    source = article.get("source_id", "")
+    index["exact"].setdefault(_body_key(source, text), article)
+    index["by_source"].setdefault(source, []).append((article, text))
+
+
 def duplicate_owner(index: dict, source_id: str, title: str, text: str) -> dict | None:
-    """The already-published article this body repeats, or None."""
+    """The already-published article this body repeats, or None.
+
+    Shingles are built per comparison and not kept: all 1,600 published
+    bodies at once took 1.2 GB.
+    """
+    if not text_identity.normalised(text or ""):
+        return None
     owner = index["exact"].get(_body_key(source_id, text))
     if owner is not None:
         return owner
-    if len(re.sub(r"\s+", " ", text or "").strip()) < MIN_COMPARABLE_CHARS:
-        return None
-    mine = _shingles(text)
-    if not mine:
-        return None
-    for other, other_text in index["by_title"].get((source_id, _title_key(title)), []):
-        theirs = _shingles(other_text)
-        if not theirs:
+    mine = None
+    for other, other_text in index["by_source"].get(source_id, []):
+        bar = text_identity.similarity_bar(text, title, other.get("title", ""))
+        if bar is None:
             continue
-        jaccard = len(mine & theirs) / len(mine | theirs)
-        if jaccard >= DUPLICATE_JACCARD:
+        if mine is None:
+            mine = _shingles(text)
+        jaccard = text_identity.jaccard(mine, _shingles(other_text))
+        if jaccard >= bar:
             return other
         if jaccard >= NEAR_DUPLICATE_WATCH:
-            log.info("  near-duplicate kept (jaccard %.2f): %r vs already-published %s",
-                     jaccard, title, other.get("id"))
+            log.info("  near-duplicate kept (jaccard %.2f, bar %.2f): %r vs already-published %s",
+                     jaccard, bar, title, other.get("id"))
     return None
 
 
@@ -1179,11 +1190,7 @@ def _analyze_one(a: dict, api_keys: dict, published: dict) -> str:
     a["key_takeaway_en"] = result["key_takeaway_en"]
     a["key_takeaway_zh"] = result["key_takeaway_zh"]
     a["summarized"] = True
-    # Register it so a second copy later in the SAME run is caught too
-    # (both halves: the exact hash and the same-title similarity list).
-    published["exact"].setdefault(_body_key(a.get("source_id", ""), content), a)
-    published["by_title"].setdefault(
-        (a.get("source_id", ""), _title_key(a.get("title", ""))), []).append((a, content))
+    register_published(published, a, content)
     a.pop("analysis_status", None)
     a.pop("analysis_reason", None)
     a.pop("analysis_label", None)

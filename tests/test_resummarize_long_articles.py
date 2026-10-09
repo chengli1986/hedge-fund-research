@@ -37,3 +37,66 @@ def test_a_partial_answer_keeps_the_old_summary():
     row = dict(OLD)
     assert rs.apply_result(row, dict(NEW, summary_zh="")).startswith("kept") and row == OLD
     assert rs.apply_result(row, dict(NEW, themes=[])).startswith("kept") and row == OLD
+
+
+# ---- Third review (2026-10-09) ----------------------------------------------
+
+import json  # noqa: E402
+
+import pytest  # noqa: E402
+
+import analyze_articles as aa  # noqa: E402
+
+LONG = "Credit markets " * 1200          # longer than OLD_LIMIT
+
+
+@pytest.fixture
+def store(tmp_path, monkeypatch):
+    (tmp_path / "content").mkdir()
+    rows = [dict(OLD, id=f"r{i}", source_id="s", title=f"T{i}", summarized=True, content_status="ok")
+            for i in range(3)]
+    for r in rows:
+        (tmp_path / "content" / f"{r['id']}.txt").write_text(LONG, encoding="utf-8")
+    path = tmp_path / "articles.jsonl"
+    path.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
+    monkeypatch.setattr(aa, "DATA_FILE", path)
+    monkeypatch.setattr(aa, "BASE_DIR", tmp_path)
+    monkeypatch.setattr(aa, "CONTENT_DIR", tmp_path / "content")
+    monkeypatch.setattr(aa, "_load_api_keys", lambda: {"OPENAI_API_KEY": "k"})
+    return path
+
+
+def _rows(path):
+    return {r["id"]: r for r in (json.loads(l) for l in path.read_text().splitlines() if l)}
+
+
+def test_an_interrupted_run_keeps_the_summaries_already_paid_for(store, tmp_path, monkeypatch):
+    """Ctrl-C after the first answer: the report said "replaced" but the store kept the old one."""
+    answers = iter([dict(NEW)])
+
+    def analyze(*a, **k):
+        r = next(answers, None)
+        if r is None:
+            raise KeyboardInterrupt
+        return r
+    monkeypatch.setattr(aa, "_analyze_with_fallback", analyze)
+    with pytest.raises(KeyboardInterrupt):
+        rs.main(["--backup", str(tmp_path / "bk")])
+    assert _rows(store)["r0"]["summary_en"] == "new en"
+
+
+def test_a_row_hidden_meanwhile_does_not_get_the_new_summary(store, tmp_path, monkeypatch):
+    """The nightly run marked it duplicate_body while this tool was asking the model."""
+    def analyze(*a, **k):
+        rows = _rows(store)
+        rows["r0"].update(summarized=False, analysis_label="duplicate_body")
+        for f in rs.SUMMARY_FIELDS[:4]:
+            rows["r0"].pop(f, None)
+        rows["r0"]["themes"] = []
+        store.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows.values()))
+        return dict(NEW)
+    monkeypatch.setattr(rs, "candidates", lambda rows: [r for r in rows if r["id"] == "r0"])
+    monkeypatch.setattr(aa, "_analyze_with_fallback", analyze)
+    rs.main(["--backup", str(tmp_path / "bk")])
+    r0 = _rows(store)["r0"]
+    assert r0["summarized"] is False and "summary_en" not in r0 and r0["themes"] == []

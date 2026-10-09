@@ -42,6 +42,7 @@ import random
 import pytest
 
 import analyze_articles as aa
+import text_identity
 
 def _body(seed: int, sentences: int = 60) -> str:
     """Prose with a large shingle vocabulary, like a real 7,000-char article.
@@ -60,6 +61,17 @@ def _body(seed: int, sentences: int = 60) -> str:
 
 
 BASE = _body(1)
+
+
+def _variant(changed: int) -> str:
+    """BASE with its first `changed` sentences rewritten: 2 -> J 0.95, 5 -> 0.87."""
+    alt = _body(9).split(". ")
+    return ". ".join(alt[:changed] + BASE.split(". ")[changed:])
+
+
+def _jaccard(a: str, b: str) -> float:
+    mine, theirs = text_identity.shingles(a), text_identity.shingles(b)
+    return len(mine & theirs) / len(mine | theirs)
 
 
 def _art(i, title, source="janus-henderson", **kw):
@@ -87,13 +99,58 @@ class TestNearDuplicateDetection:
         published = aa.published_index([_art(1, "Market Monitor", source="gsam")], {"a1": BASE})
         assert aa.duplicate_owner(published, "gsam", "Market Monitor", other) is None
 
-    def test_a_different_title_at_the_same_source_is_not_compared(self):
-        """ares' short boilerplate-heavy pieces score 0.89 against everything;
-        gmo's quarterly forecasts share one template."""
-        published = aa.published_index([_art(1, "Content is Everywhere", source="ares-management")],
+    def test_a_short_body_under_another_title_is_not_compared(self):
+        """gmo's 7-Year Forecasts: one 1,360-char template, different numbers,
+        0.80-0.82 against each other under different titles."""
+        short = BASE[:2000]
+        published = aa.published_index([_art(1, "GMO 7-Year Forecast: April", source="gmo")],
+                                       {"a1": short})
+        assert aa.duplicate_owner(published, "gmo", "GMO 7-Year Forecast: August",
+                                  short + " credit7.") is None
+
+    def test_a_retitled_copy_is_a_duplicate(self):
+        """2026-10-09: Baillie Gifford retitled "EM: enough is not enough" (J 0.998)
+        and it was summarised twice; brookfield, cohen-steers, wellington and
+        principal carried the same body under two titles (0.95-0.996)."""
+        published = aa.published_index([_art(1, "EM: enough is not enough", source="baillie-gifford")],
                                        {"a1": BASE})
-        assert aa.duplicate_owner(published, "ares-management", "What Is Infrastructure?",
-                                  BASE + " credit7 spread3 issuance9.") is None
+        retitled = _variant(2)
+        assert _jaccard(BASE, retitled) > 0.94
+        owner = aa.duplicate_owner(published, "baillie-gifford",
+                                   "Emerging markets: enough is not enough", retitled)
+        assert owner is not None and owner["id"] == "a1"
+
+    def test_a_retitled_body_needs_the_higher_bar(self):
+        """Between DUPLICATE_JACCARD and RETITLED_JACCARD: a duplicate under the
+        same title, not under another one."""
+        near = _variant(5)
+        assert aa.DUPLICATE_JACCARD < _jaccard(BASE, near) < text_identity.RETITLED_JACCARD
+        published = aa.published_index([_art(1, "Credit Quarterly", source="brookfield")], {"a1": BASE})
+        assert aa.duplicate_owner(published, "brookfield", "Credit Quarterly", near) is not None
+        assert aa.duplicate_owner(published, "brookfield", "Credit Quarterly: New terms", near) is None
+
+    def test_a_retitled_copy_later_in_the_same_run_is_caught(self):
+        published = aa.published_index([], {})
+        aa.register_published(published, _art(1, "Credit Quarterly: New normal?", source="brookfield"), BASE)
+        assert aa.duplicate_owner(published, "brookfield", "Credit Quarterly: New terms",
+                                  _variant(1)) is not None
+
+    def test_cjk_articles_are_compared_on_their_own_text(self):
+        """title_key and shingles kept only [0-9a-z]: every Japanese title had
+        the key "" and two different Japanese bodies were compared on the
+        English footer they share."""
+        footer = " This material is for professional investors only. " * 12
+        one = "日本株の見通しは企業統治改革と賃上げに支えられ、引き続き堅調である。" * 6 + footer
+        two = "円相場は日銀の政策修正観測を背景に、ボラティリティが高まっている。" * 6 + footer
+        published = aa.published_index([_art(1, "日本株の見通し", source="verdad")], {"a1": one})
+        assert aa.duplicate_owner(published, "verdad", "円相場の展望", two) is None
+        assert aa.duplicate_owner(published, "verdad", "日本株の見通し", two) is None
+        assert aa.duplicate_owner(published, "verdad", "日本株の見通し", one + "追記。") is not None
+
+    def test_empty_bodies_are_not_the_same_document(self):
+        assert text_identity.same_document("", "", "T", "T") is False
+        published = aa.published_index([_art(1, "T")], {"a1": ""})
+        assert aa.duplicate_owner(published, "janus-henderson", "T", "") is None
 
     def test_another_source_with_the_same_title_is_not_compared(self):
         published = aa.published_index([_art(1, "Market Monitor", source="gsam")], {"a1": BASE})

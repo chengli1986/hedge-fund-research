@@ -80,6 +80,13 @@ def test_a_near_identical_page_under_the_same_title_also_waits(tmp_path, monkeyp
     assert row["content_failure"]["label"] == "page_not_updated"
 
 
+def test_a_retitled_listing_whose_page_still_shows_the_last_issue_waits(tmp_path, monkeypatch):
+    """The listing renamed the issue but the page still carries the old text."""
+    row, _ = _run(tmp_path, monkeypatch, _new(title="Corporate Pension Monthly: October"),
+                  AUGUST * 4 + " Oct.", prev_text=AUGUST * 4)
+    assert row["content_failure"]["label"] == "page_not_updated"
+
+
 def test_the_same_text_at_another_url_is_left_to_stage_3(tmp_path, monkeypatch):
     """Two URLs with one body is stage 3's duplicate case, not a stale page."""
     row, _ = _run(tmp_path, monkeypatch, _new(), AUGUST, prev_url=URL + "-archive")
@@ -108,6 +115,9 @@ def test_the_policy_outlasts_the_wait():
     (AUGUST + " x", AUGUST, "T", "U"),                   # near, different title
     (SEPTEMBER, AUGUST, "T", "T"),                       # different issue
     ("short text", "short text!", "T", "T"),             # too short to compare
+    (AUGUST * 4 + " x", AUGUST * 4, "T", "U"),           # near, retitled, long enough
+    ("", "", "T", "T"),                                  # nothing to compare
+    ("日本株の見通し。" * 80, "円相場の展望。" * 80, "", ""),   # CJK text is compared on itself
 ])
 def test_same_document_agrees_with_stage_3s_duplicate_check(text, other, title, other_title):
     """One definition, two callers: the pair verdict must match duplicate_owner."""

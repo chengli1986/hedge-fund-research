@@ -109,12 +109,31 @@ def main(argv: list[str] | None = None) -> int:
                 raise SystemExit(f"{bad} damaged row(s) appeared in the store; stopping")
             for f in fresh:
                 if f.get("id") in pending_ids:
+                    if not f.get("summarized"):
+                        # hidden meanwhile (e.g. the nightly run found it a
+                        # duplicate): a summary would contradict that
+                        print(f"  {f['id']}: no longer summarised, new summary not written")
+                        continue
                     for k in SUMMARY_FIELDS + ("analysis_resummarized_at",):
                         if k in by_id[f["id"]]:
                             f[k] = by_id[f["id"]][k]
             jsonl_store._rewrite_locked(aa.DATA_FILE, fresh, None)
         pending_ids.clear()
 
+    try:
+        rc = _loop(todo, keys, report, old, outcomes, pending_ids, flush, started)
+    finally:
+        # Ctrl-C or any error: up to SAVE_EVERY summaries are paid for and
+        # already reported as replaced; write them before going.
+        flush()
+    if rc:
+        return rc
+    replaced = sum(1 for o in outcomes.values() if o == "replaced")
+    print(f"done in {time.time() - started:.0f}s: {replaced} replaced, {len(outcomes) - replaced} kept")
+    return 0
+
+
+def _loop(todo, keys, report, old, outcomes, pending_ids, flush, started) -> int:
     for i, row in enumerate(todo, 1):
         text = aa._resolve_content_path(row).read_text(encoding="utf-8")
         before = {k: row.get(k) for k in SUMMARY_FIELDS}
@@ -122,8 +141,8 @@ def main(argv: list[str] | None = None) -> int:
             result = aa._analyze_with_fallback(text, keys, title=row.get("title", ""), source=row.get("source_id", ""),
                                                date=row.get("date", ""), metadata_only=False, article_id=row["id"])
         except aa.FatalAPIError as exc:
-            # quota/auth: every later call fails the same way; keep what was done
-            flush()
+            # quota/auth: every later call fails the same way; what was done
+            # is written by the caller
             print(f"STOPPED: {exc} -- replaced so far are saved; rerun to continue")
             return 2
         outcome = apply_result(row, result)
@@ -138,9 +157,6 @@ def main(argv: list[str] | None = None) -> int:
         if len(pending_ids) >= SAVE_EVERY:
             flush()
         print(f"  {i}/{len(todo)} {row.get('source_id')} {outcome[:60]}  ({time.time() - started:.0f}s)", flush=True)
-    flush()
-    replaced = sum(1 for o in outcomes.values() if o == "replaced")
-    print(f"done in {time.time() - started:.0f}s: {replaced} replaced, {len(outcomes) - replaced} kept")
     return 0
 
 

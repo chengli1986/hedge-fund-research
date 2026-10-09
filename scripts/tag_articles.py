@@ -84,7 +84,17 @@ FatalAPIError = aa.FatalAPIError
 _error_code = aa._error_code
 is_fatal = aa.is_fatal
 
+# A night of only these faults says nothing about the article and is not
+# counted toward MAX_TAG_NIGHTS (R4). Anything else -- a 4xx, a request that
+# cannot even be built (InvalidHeader: a key with a newline), a refusal, an
+# invalid answer -- comes back every night and must count, or exit 1 (logged
+# only) would hide it for good.
 TRANSIENT = "transient "
+PASSING_ERRORS = (requests.ConnectionError, requests.Timeout, requests.exceptions.ChunkedEncodingError)
+
+
+def _passing_status(status: int | None) -> bool:
+    return status is None or status in (408, 429) or status >= 500
 RETRY_NOTE = ("\n\nYour previous answer was rejected: {errors}. Answer again with the same JSON "
               "shape, fixing exactly that and keeping to every limit above.\n")
 # A valid answer whose quote for a tag is not in the text (the model paraphrased
@@ -92,8 +102,9 @@ RETRY_NOTE = ("\n\nYour previous answer was rejected: {errors}. Answer again wit
 # dropped: 93 of the round-2 backfill's tags were lost this way (2026-10-08b).
 REQUOTE_NOTE = ("\n\nYour answer was accepted, but the evidence for these tags is not in the "
                 "document word for word: {tags}. For each, copy a passage of at least "
-                f"{taxonomy.MIN_EVIDENCE_WORDS} words exactly as it appears in the document, or leave "
-                'the tag out. Answer with JSON only: {{"evidence": {{"<tag id>": "<passage>"}}}}\n')
+                f"{taxonomy.MIN_EVIDENCE_WORDS} words exactly as it appears in the document that by "
+                "itself shows the article is about that tag, or give null if there is none and the "
+                'tag goes. Answer with JSON only: {{"evidence": {{"<tag id>": "<passage>" or null}}}}\n')
 
 
 def candidates(rows: list[dict], retag_before: str | None = None,
@@ -140,6 +151,7 @@ def classify(row: dict, api_key: str, call=aa._call_openai, sleep=time.sleep,
     prompt = build_prompt(row, text, series)
     billed: list[tuple[dict, bool]] = []
     last = "no attempt"
+    passing = True          # every fault so far clears up by itself
     for attempt in range(ATTEMPTS):
         if stop is not None and stop.is_set():
             return None, "skipped: run stopped", billed, {}
@@ -157,11 +169,13 @@ def classify(row: dict, api_key: str, call=aa._call_openai, sleep=time.sleep,
             if is_fatal(exc):
                 raise FatalAPIError(f"{exc.response.status_code} {_error_code(exc) or exc}", billed=billed) from exc
             status = exc.response.status_code if exc.response is not None else None
-            last = (TRANSIENT if status is None or status == 429 or status >= 500 else "") + f"HTTP {status or '?'}"
+            passing = passing and _passing_status(status)
+            last = (TRANSIENT if passing else "") + f"HTTP {status or '?'}"
             sleep(5 * (attempt + 1))
             continue
         except requests.RequestException as exc:
-            last = TRANSIENT + type(exc).__name__
+            passing = passing and isinstance(exc, PASSING_ERRORS)
+            last = (TRANSIENT if passing else "") + type(exc).__name__
             sleep(5 * (attempt + 1))
             continue
         try:
@@ -174,11 +188,18 @@ def classify(row: dict, api_key: str, call=aa._call_openai, sleep=time.sleep,
             doc = text[:aa.MAX_CONTENT_CHARS]
             kept, dropped = taxonomy.check_evidence(answer, doc)
             misquoted = [d.split(":")[0] for d in dropped if d.endswith(": passage not in document")]
+            fatal = None
             if misquoted and not (stop is not None and stop.is_set()):
-                answer = _requote(answer, misquoted, prompt, api_key, call, billed)
+                try:
+                    answer = _requote(answer, misquoted, prompt, api_key, call, billed)
+                except FatalAPIError as exc:
+                    fatal = exc          # the answer is paid for: keep its good tags
                 kept, dropped = taxonomy.check_evidence(answer, doc)
             evidence = {t: answer["evidence"][t] for g in taxonomy.EVIDENCE_GROUPS for t in kept[g]}
             outcome = "tagged" + (f" (dropped {'; '.join(dropped)})" if dropped else "")
+            if fatal is not None:
+                raise FatalAPIError(str(fatal), billed=billed,
+                                    result=(taxonomy.flatten(kept), outcome, evidence)) from fatal
             return taxonomy.flatten(kept), outcome, billed, evidence
         last = "invalid: " + "; ".join(errs)
     return None, f"failed after {ATTEMPTS} attempts: {last}", billed, {}
@@ -210,7 +231,14 @@ def _requote(answer: dict, tags: list[str], prompt: str, api_key: str, call,
     if not ok:
         return answer
     evidence = dict(answer["evidence"])
-    evidence.update({t: new[t] for t in tags if isinstance(new.get(t), str)})
+    # A passage already quoted for another tag is the cheapest rescue of a tag
+    # the text does not support; null withdraws the tag.
+    cited = {taxonomy._letters(p) for t, p in evidence.items() if t not in tags and isinstance(p, str)}
+    for t in tags:
+        if isinstance(new.get(t), str) and taxonomy._letters(new[t]) not in cited:
+            evidence[t] = new[t]
+        elif t in new:
+            evidence.pop(t, None)
     return dict(answer, evidence=evidence)
 
 
@@ -298,13 +326,15 @@ def run(path: Path, api_key: str, backup: Path | None, limit: int = 0, workers: 
                                   series=taxonomy.series_note(row, index))
         except FatalAPIError as exc:
             stop.set()
-            return row, None, f"fatal: {exc}", exc.billed, {}
+            tags, _outcome, evidence = exc.result or (None, "", {})
+            return row, tags, f"fatal: {exc}", exc.billed, evidence
         except Exception as exc:
             # One article's surprise must not take the others down with it:
             # fut.result() re-raised it in the main loop, unsaved work was lost,
             # and the traceback's exit 1 read as "some left untagged" (N2).
             return row, None, f"failed: {type(exc).__name__}: {exc}"[:300], [], {}
 
+    broken: Exception | None = None
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = [pool.submit(work, r) for r in todo]
         for i, fut in enumerate(as_completed(futures), 1):
@@ -313,6 +343,8 @@ def run(path: Path, api_key: str, backup: Path | None, limit: int = 0, workers: 
                 log_usage(row["id"], MODEL, usage, parsed=ok)
                 tokens[0] += usage.get("prompt_tokens") or 0
                 tokens[1] += usage.get("completion_tokens") or 0
+            if broken is not None:
+                continue        # only booking the calls that were in flight (T4)
             if outcome.startswith("fatal"):
                 fatal = fatal or outcome
             if tags is not None:
@@ -334,13 +366,16 @@ def run(path: Path, api_key: str, backup: Path | None, limit: int = 0, workers: 
             if len(done) >= SAVE_EVERY:
                 try:
                     flush(path, done, failed, gave_up)
-                except Exception:
-                    # Leaving the `with` waits for every queued article, each a
-                    # paid call whose result would be thrown away (R5).
+                except Exception as exc:
+                    # Stop the queued articles, each a paid call whose result
+                    # could not be saved (R5); the ones in flight are still
+                    # booked before the error is raised (T4).
                     stop.set()
-                    raise
+                    broken = exc
             print(f"  {i}/{len(todo)} {row.get('source_id', '')[:18]:18} {outcome[:50]:50} "
                   f"in={tokens[0]:,} out={tokens[1]:,} ({time.time() - started:.0f}s)", flush=True)
+    if broken is not None:
+        raise broken
     flush(path, done, failed, gave_up)
     print(f"done in {time.time() - started:.0f}s: {counts['tagged']} tagged, {counts['failed']} failed, "
           f"{counts['skipped']} skipped; tokens in={tokens[0]:,} out={tokens[1]:,}")

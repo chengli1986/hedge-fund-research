@@ -35,6 +35,14 @@ spec.loader.exec_module(ta)
 
 LATIN = ("The Federal Reserve kept interest rates unchanged while inflation expectations moderated "
          "across bond markets and equity valuations stretched further this quarter. ") * 20
+
+
+def _distinct(i):
+    """LATIN plus enough text of its own that the duplicate check (which also
+    compares retitled bodies) sees a different article."""
+    return LATIN + " ".join(f"item{i}x{k}" for k in range(400))
+
+
 SUMMARY = {"summary_en": "The Federal Reserve kept interest rates unchanged while inflation expectations moderated.",
            "summary_zh": "美联储维持利率不变，通胀预期回落。", "themes": ["Macro/Rates"],
            "key_takeaway_en": "Rates unchanged; inflation expectations moderated across bond markets.",
@@ -148,7 +156,7 @@ def test_s1_a_night_where_only_rule_made_declines_happen_is_quiet(store, api):
 @pytest.mark.parametrize("resp", [http(401, "invalid_api_key"),
                                   http(429, "insufficient_quota")])
 def test_s2_quota_or_auth_stops_the_run_at_the_first_call(store, api, resp):
-    store([_art(i) for i in range(3)], bodies={f"a{i}": LATIN + f" Note {i}." * 3 for i in range(3)})
+    store([_art(i) for i in range(3)], bodies={f"a{i}": _distinct(i) for i in range(3)})
     api["script"] = [resp]
     assert aa.main() == 2
     assert len(api["calls"]) == 1
@@ -157,7 +165,7 @@ def test_s2_quota_or_auth_stops_the_run_at_the_first_call(store, api, resp):
 
 def test_s2_quota_running_out_mid_run_keeps_what_was_done_and_alerts(store, api):
     # distinct bodies: identical ones would be declined as duplicates, with no call
-    store([_art(i) for i in range(3)], bodies={f"a{i}": LATIN + f" Note {i}." * 3 for i in range(3)})
+    store([_art(i) for i in range(3)], bodies={f"a{i}": _distinct(i) for i in range(3)})
     api["script"] = [ok(json.dumps(SUMMARY)), http(429, "insufficient_quota")]
     assert aa.main() == 2
     assert [r.get("summarized", False) for r in _rows().values()] == [True, False, False]
@@ -171,7 +179,7 @@ def test_s2_a_plain_rate_limit_is_retried_not_fatal(store, api):
 
 
 def test_s2_consecutive_unanswered_articles_stop_the_stage(store, monkeypatch):
-    store([_art(i) for i in range(6)], bodies={f"a{i}": LATIN + f" Note {i}." * 3 for i in range(6)})
+    store([_art(i) for i in range(6)], bodies={f"a{i}": _distinct(i) for i in range(6)})
     seen = []
     monkeypatch.setattr(aa, "_analyze_with_fallback", lambda *a, **k: seen.append(k["article_id"]))
     assert aa.main() == 1
@@ -228,7 +236,7 @@ def test_s7_usage_null_is_logged_as_unknown_and_never_raises(tmp_path):
 # ---- S8 -------------------------------------------------------------------
 
 def test_s8_a_missing_body_still_counts_towards_the_batch_save(store, monkeypatch):
-    bodies = {f"a{i}": LATIN + f" Note {i}." * 3 for i in range(4)}
+    bodies = {f"a{i}": _distinct(i) for i in range(4)}
     store([_art(i) for i in range(5)], bodies=dict(bodies, a4=None))
     monkeypatch.setattr(aa, "_analyze_with_fallback", lambda *a, **k: dict(SUMMARY, _model="m", _usage={}))
     saves = []
@@ -471,7 +479,7 @@ def test_r6_a_reask_that_errors_keeps_the_rejection_from_the_weaker_tier(monkeyp
 
 
 def test_r7_a_consecutive_stop_after_some_answers_does_not_say_none_answered(store, monkeypatch, caplog):
-    store([_art(i) for i in range(5)], bodies={f"a{i}": LATIN + f" Note {i}." * 3 for i in range(5)})
+    store([_art(i) for i in range(5)], bodies={f"a{i}": _distinct(i) for i in range(5)})
     answers = iter([dict(SUMMARY, _model="m", _usage={})])
     monkeypatch.setattr(aa, "_analyze_with_fallback", lambda *a, **k: next(answers, None))
     with caplog.at_level("ERROR"):
@@ -557,3 +565,97 @@ def test_r10_a_refused_requote_is_billed_and_drops_the_tag(tagstore, tmp_path):
     assert _trun(path, tmp_path, logged, call=_misquote_then(refuse)) == 0
     assert "ai_tech" not in _tread(path)["t1"]["tags"]
     assert [p for _, p in logged] == [True, False]
+
+
+# ---- Third review (2026-10-09) ----------------------------------------------
+
+def test_t3_a_local_request_error_counts_every_night(tagstore, tmp_path):
+    """InvalidHeader (a key with a newline in it) is a RequestException that no
+    retry can clear; labelled transient, it was retried silently forever."""
+    path = tagstore([_trow(1, tag_failures=ta.MAX_TAG_NIGHTS - 1)])
+
+    def call(prompt, key, model):
+        raise requests.exceptions.InvalidHeader("Invalid leading whitespace in header value")
+    assert _trun(path, tmp_path, call=call) == ta.GAVE_UP_RC
+
+
+@pytest.mark.parametrize("later", [
+    lambda: (_ for _ in ()).throw(requests.Timeout("slow")),
+    lambda: http(503, "server_error").raise_for_status(),
+], ids=["timeouts", "http-503"])
+def test_t3_a_lasting_fault_is_not_washed_out_by_later_passing_ones(tagstore, tmp_path, later):
+    path = tagstore([_trow(1)])
+    faults = iter([lambda: http(400, "context_length_exceeded").raise_for_status()])
+
+    def call(prompt, key, model):
+        next(faults, later)()
+    assert _trun(path, tmp_path, call=call) == 1
+    assert _tread(path)["t1"]["tag_failures"] == 1
+
+
+def test_t3_a_request_timeout_from_the_server_is_passing(tagstore, tmp_path):
+    path = tagstore([_trow(1, tag_failures=ta.MAX_TAG_NIGHTS - 1)])
+
+    def call(prompt, key, model):
+        http(408, "timeout").raise_for_status()
+    assert _trun(path, tmp_path, call=call) == 1
+    assert _tread(path)["t1"]["tag_failures"] == ta.MAX_TAG_NIGHTS - 1
+
+
+def test_t4_calls_in_flight_when_the_store_breaks_are_still_booked(tagstore, tmp_path, monkeypatch):
+    import threading
+    import time
+    path = tagstore([_trow(i) for i in range(6)])
+    calls = []
+    broke = threading.Event()
+
+    def call(prompt, key, model):
+        calls.append(1)
+        if len(calls) > 1:
+            broke.wait(5)
+            time.sleep(0.2)
+        return json.dumps(TAG_GOOD), dict(USAGE), model
+
+    def broken(*a, **k):
+        broke.set()
+        raise RuntimeError("1 damaged row(s) in the store; stopping without writing")
+    monkeypatch.setattr(ta, "SAVE_EVERY", 1)
+    monkeypatch.setattr(ta, "flush", broken)
+    logged = []
+    with pytest.raises(RuntimeError):
+        _trun(path, tmp_path, logged, workers=3, call=call)
+    assert len(logged) == len(calls)
+
+
+def test_t5_a_quota_stop_on_the_requote_keeps_the_good_tags(tagstore, tmp_path):
+    """The first answer was paid for and its other tags were fine."""
+    path = tagstore([_trow(1)])
+    logged = []
+    assert _trun(path, tmp_path, logged, call=_misquote_then(_quota)) == 2
+    tags = _tread(path)["t1"]["tags"]
+    assert "equities" in tags and "ai_tech" not in tags
+    assert [p for _, p in logged] == [True]
+
+
+def test_t6_a_requoted_passage_already_cited_for_another_tag_does_not_rescue(tagstore, tmp_path):
+    """Any sentence of the text would pass "is it in the document"; the one
+    already quoted for another tag is the cheapest such rescue."""
+    path = tagstore([_trow(1)])
+    reused = {"evidence": {"ai_tech": TAG_GOOD["evidence"]["equities"]}}
+    assert _trun(path, tmp_path, call=_misquote_then(lambda: (json.dumps(reused), dict(USAGE), "m"))) == 0
+    assert "ai_tech" not in _tread(path)["t1"]["tags"]
+
+
+def test_t6_the_requote_note_lets_the_model_withdraw_the_tag():
+    assert "give null if there is none" in ta.REQUOTE_NOTE
+
+
+def test_t9_a_requote_reply_cannot_change_the_evidence_of_other_tags(tagstore, tmp_path):
+    path = tagstore([_trow(1)])
+    reply = {"evidence": {"ai_tech": TAG_GOOD["evidence"]["ai_tech"],
+                          "equities": "a passage that is nowhere in the document at all"}}
+    path_report = tmp_path / "bk" / "report.jsonl"
+    assert _trun(path, tmp_path, call=_misquote_then(lambda: (json.dumps(reply), dict(USAGE), "m"))) == 0
+    assert _tread(path)["t1"]["tags"] == taxonomy.flatten(TAG_GOOD)
+    ev = json.loads(path_report.read_text().splitlines()[-1])["evidence"]
+    assert ev["equities"] == TAG_GOOD["evidence"]["equities"]
