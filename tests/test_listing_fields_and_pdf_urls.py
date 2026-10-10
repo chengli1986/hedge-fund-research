@@ -64,7 +64,9 @@ def test_every_article_field_a_content_fetcher_reads_is_stored():
     written_by_fetch_source = {"id", "source_id", "source_name", "title", "url", "date", "date_raw",
                                "fetched_at", "summarized"}
     pipeline_managed = {"content_status", "content_path", "content_attempts", "content_permafailed_at",
-                        "content_failure", "content_retry_after"}
+                        "content_failure", "content_retry_after",
+                        # scripts/refine_dates.py and fill_date_from_page (stage-4 audit)
+                        "date_basis", "date_listed"}
     missing = read - written_by_fetch_source - set(fa.LISTING_FIELDS_KEPT) - pipeline_managed
     assert missing == set(), f"content fetchers read fields that are never stored: {missing}"
 

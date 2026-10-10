@@ -114,6 +114,76 @@ def note_failure_hint(label: str, detail: str) -> None:
     _failure_hints.append((label, detail))
 
 
+# The publication date an article page states, for rows whose listing gave
+# none (Capital Group: no date at all; de-shaw: a year only). Noted by the
+# extractors that read such pages, drained per article by fetch_with_evidence,
+# applied by fill_date_from_page (stage-4 audit, items 7/15). Capital Group's
+# date is only in the rendered page -- a plain download is a 7KB shell -- so
+# it is read here, where the page is rendered anyway.
+_page_dates: list[str] = []
+
+# Date fields only, never body text. Capital Group writes the day first
+# ("04-06-2026 12:00"; "30-09-2026" proves the order).
+_PAGE_DATE_DMY = [
+    re.compile(r'<meta\b[^>]*\bname="article-date"[^>]*\bcontent="(\d{1,2})-(\d{1,2})-(20\d\d)', re.I),
+    re.compile(r'<meta\b[^>]*\bcontent="(\d{1,2})-(\d{1,2})-(20\d\d)[^"]*"[^>]*\bname="article-date"', re.I),
+]
+_PAGE_DATE_YMD = [
+    re.compile(r'<meta\b[^>]*\bproperty="article:published_time"[^>]*\bcontent="(20\d\d)-(\d\d)-(\d\d)', re.I),
+    re.compile(r'<meta\b[^>]*\bcontent="(20\d\d)-(\d\d)-(\d\d)[^"]*"[^>]*\bproperty="article:published_time"', re.I),
+]
+# A page date this long after we first saw the row is not when it was
+# published (same bound as scripts/refine_dates.py).
+PAGE_DATE_MAX_DAYS_AFTER_SEEN = 7
+
+
+def page_date(html: str) -> Optional[str]:
+    """YYYY-MM-DD from the page's date metadata, or None."""
+    found = [(y, m, d) for pat in _PAGE_DATE_DMY for d, m, y in pat.findall(html or "")]
+    found += [(y, m, d) for pat in _PAGE_DATE_YMD for y, m, d in pat.findall(html or "")]
+    for y, m, d in found:
+        try:
+            return datetime(int(y), int(m), int(d)).strftime("%Y-%m-%d")
+        except ValueError:
+            continue
+    return None
+
+
+def note_page_date(html: str) -> None:
+    day = page_date(html)
+    if day:
+        _page_dates.append(day)
+
+
+def fill_date_from_page(article: dict, day: Optional[str], today: str) -> bool:
+    """Give an undated or year-only row the page's date; True if it changed.
+
+    date_raw stays as the listing showed it and the old date moves to
+    date_listed: fetch_articles compares the next listing against both, so the
+    same piece is not read as a new issue (refine_dates.py does the same).
+    """
+    if not day or article.get("date_basis"):
+        return False
+    date = (article.get("date") or "").strip()
+    raw = (article.get("date_raw") or "").strip()
+    if date:
+        if not (re.fullmatch(r"20\d\d", raw) and date == f"{raw}-01-01" and day[:4] == raw):
+            return False
+    latest = today
+    try:
+        seen = datetime.fromisoformat(article.get("fetched_at") or "")
+        cap = (seen.astimezone(BJT) if seen.tzinfo else seen) + timedelta(days=PAGE_DATE_MAX_DAYS_AFTER_SEEN)
+        latest = min(latest, cap.strftime("%Y-%m-%d"))
+    except ValueError:
+        pass
+    if day > latest:
+        return False
+    article["date_listed"] = article.get("date")
+    article["date"] = day
+    article["date_basis"] = "page"
+    return True
+
+
 # Which path each _normalize_html call took, in call order: "primary",
 # "fallback:<selector>" or "whole-page". A dead selector used to be invisible:
 # the fallback returned navigation, cookie banners or a list of other
@@ -1488,6 +1558,7 @@ def _fetch_content_de_shaw(article: dict) -> Optional[tuple[Path, str]]:
         log.error("  D. E. Shaw: fetch failed: %s", e)
         return None
 
+    note_page_date(resp.text)
     soup = BeautifulSoup(resp.text, "html.parser")
     for tag in soup.select("nav, footer, header, script, style, aside"):
         tag.decompose()
@@ -1756,6 +1827,7 @@ def _fetch_content_capital_group(article: dict) -> Optional[tuple[Path, str]]:
         log.error("  Capital Group: Playwright fetch failed: %s", e)
         return None
 
+    note_page_date(html)
     text = _normalize_html(html, ".cmp-text p")
 
     if not _check_min_content_length(text):
@@ -2334,6 +2406,7 @@ def fetch_with_evidence(article: dict, fetcher) -> tuple[Optional[tuple[Path, st
 
     drain_extraction_paths()
     _failure_hints.clear()
+    _page_dates.clear()
     responses: list[dict] = []
     original_request = requests.sessions.Session.request
 
@@ -2363,8 +2436,10 @@ def fetch_with_evidence(article: dict, fetcher) -> tuple[Optional[tuple[Path, st
         requests.sessions.Session.request = original_request
         log.removeHandler(capture)
     evidence = {"exception": exception, "messages": capture.messages, "responses": responses,
-                "extraction_paths": drain_extraction_paths(), "hints": list(_failure_hints)}
+                "extraction_paths": drain_extraction_paths(), "hints": list(_failure_hints),
+                "page_date": _page_dates[0] if _page_dates else None}
     _failure_hints.clear()
+    _page_dates.clear()
     return result, evidence
 
 
@@ -2641,6 +2716,7 @@ def main() -> int:
     success_count = 0
     fail_count = 0
     permafail_count = 0  # articles retired to permafail THIS run
+    dated_count = 0      # undated / year-only rows the article page dated
 
     for a in pending:
         result, evidence = fetch_with_evidence(a, content_fetcher_for(a))
@@ -2669,6 +2745,9 @@ def main() -> int:
             a.pop("content_failure", None)
             a.pop("content_retry_after", None)
             a.pop("content_permafailed_at", None)
+            if fill_date_from_page(a, evidence.get("page_date"), datetime.now(BJT).strftime("%Y-%m-%d")):
+                dated_count += 1
+                log.info("  Dated from the article page: %s -> %s (%s)", a["id"], a["date"], a["title"])
             success_count += 1
         else:
             failure = _record_content_failure(a, evidence)
@@ -2692,7 +2771,8 @@ def main() -> int:
     print(f"{'='*60}")
     print(f"Pending: {len(pending)} | Success: {success_count} | Failed: {fail_count}"
           f" | Retired(permafail): {permafail_count}"
-          f" | re-tried after a code change: {code_change_retries}")
+          f" | re-tried after a code change: {code_change_retries}"
+          f" | dated from the page: {dated_count}")
     print()
 
     # Stage 1 and stage 3 both fail the run when nothing at all worked; stage 2
