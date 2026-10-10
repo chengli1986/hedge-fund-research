@@ -175,3 +175,17 @@ def test_sources_cards_fit_a_phone(browser, feed_path):
     widest = pg.eval_on_selector_all(".source-card", "e => Math.max(...e.map(x => x.getBoundingClientRect().right))")
     assert widest <= 390
     pg.close()
+
+
+def test_an_undated_topic_page_is_called_a_topic_page():
+    """Bridgewater's three undated rows are topic hubs ("Explore a selection of
+    our insights"), listing 11-14 pieces with their own dates; the hub has none.
+    sources.json says so for the source, and the row says "Topic page"."""
+    assert publish._load_sources()["bridgewater"].get("undated_rows_are") == "topic_pages"
+    page = publish.generate_html([_art(1, sid="bridgewater", date=None, date_raw=""),
+                                  _art(2, sid="capital-group", date=None, date_raw=""),
+                                  _art(3, sid="bridgewater", days=2)])
+    hub, undated, dated = _row(page, "d001"), _row(page, "d002"), _row(page, "d003")
+    assert "专题页" in hub and "Topic page" in hub and "日期未知" not in hub
+    assert "日期未知" in undated and "专题页" not in undated
+    assert "专题页" not in dated

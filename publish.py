@@ -809,7 +809,7 @@ document.getElementById('tv-q').addEventListener('input', e => { tvQ = e.target.
 
 
 def _article_card(a: dict, show_takeaway: bool = False, *, url_reused: bool = False,
-                  dated_title: bool = False) -> tuple[str, dict | None]:
+                  dated_title: bool = False, topic_page: bool = False) -> tuple[str, dict | None]:
     """Render a single article as a timeline row.
 
     Returns (html, details_payload). For summarized articles the <details>
@@ -821,6 +821,8 @@ def _article_card(a: dict, show_takeaway: bool = False, *, url_reused: bool = Fa
     url_reused: a newer row has the same url (a weekly page the fund
     overwrites), so this link now opens the latest issue. dated_title: other
     rows of this source carry the same title; the date joins the headline.
+    topic_page: the source's undated rows are topic hubs (sources.json
+    "undated_rows_are": "topic_pages"), which have no date of their own.
     """
     sid = a.get("source_id", "unknown")
     color = BADGE_COLORS.get(sid, "#8b949e")
@@ -866,6 +868,11 @@ def _article_card(a: dict, show_takeaway: bool = False, *, url_reused: bool = Fa
     display_date = _display_date(a)
     if display_date:
         date_html = _esc(display_date)
+    elif topic_page:
+        # Bridgewater's undated rows are topic hubs listing 11-14 dated pieces;
+        # the hub itself was never published on a day (stage-4 follow-up).
+        date_html = ('<span class="lang-en">Topic page</span>'
+                     '<span class="lang-zh" style="display:none">专题页</span>')
     else:
         # No date anywhere (Capital Group's pages carry none in the listing):
         # say so rather than leave a blank column.
@@ -1007,7 +1014,8 @@ def generate_html(articles: list[dict]) -> str:
         seen_urls.add(url_key)
         card_html, details_payload = _article_card(
             a, show_takeaway=True, url_reused=url_reused,
-            dated_title=title_counts[(a.get("source_id"), a.get("title"))] > 1)
+            dated_title=title_counts[(a.get("source_id"), a.get("title"))] > 1,
+            topic_page=sources.get(sid, {}).get("undated_rows_are") == "topic_pages")
         # Articles older than RECENT_DAYS are folded behind "Show older" by CSS;
         # their LLM analysis bodies are also excluded from the JSON island to
         # keep initial parse cost flat. Clicking Open on a revealed older article
