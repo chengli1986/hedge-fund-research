@@ -142,7 +142,7 @@ def test_failing_tests_roll_both_files_back_and_commit_nothing(tmp_path):
     head = _git(repo, "rev-parse", "HEAD").strip()
 
     r = _run(repo, env)
-    assert r.returncode == 0, r.stdout + r.stderr
+    assert r.returncode == 1, r.stdout + r.stderr   # needs a person: cron-wrapper alerts
 
     assert ((repo / "publish.py").read_bytes(), (repo / "config" / "sources.json").read_bytes()) == before
     assert _git(repo, "rev-parse", "HEAD").strip() == head
@@ -204,7 +204,7 @@ def test_tracked_changes_during_the_agent_run_stop_the_apply(tmp_path, edit, com
     script = ("#!/usr/bin/env bash\n" + edit + "\n"
               "cat > pending_profiles/kkr.refresh.json <<'EOF'\n" + json.dumps(DRAFT) + "\nEOF\n")
     repo, env = _sandbox(tmp_path, tests_pass=True, claude_script=script)
-    assert _run(repo, env).returncode == 0
+    assert _run(repo, env).returncode == 1   # needs a person: cron-wrapper alerts
     s = _summary(repo)
     assert s["applied"] == "" and "changed while the agent ran" in s["flagged"]
     assert '"aum": "~$800B"' not in (repo / "publish.py").read_text()
@@ -218,14 +218,14 @@ def test_a_change_made_by_someone_else_meanwhile_is_not_overwritten(tmp_path):
     script = ("#!/usr/bin/env bash\nsed -i 's/Global alternatives leader/Global leader/' config/sources.json\n"
               "cat > pending_profiles/kkr.refresh.json <<'EOF'\n" + json.dumps(DRAFT) + "\nEOF\n")
     repo, env = _sandbox(tmp_path, tests_pass=True, claude_script=script)
-    assert _run(repo, env).returncode == 0
+    assert _run(repo, env).returncode == 1   # needs a person: cron-wrapper alerts
     assert "Global leader" in (repo / "config" / "sources.json").read_text()
     assert _summary(repo)["applied"] == ""
 
 
 def test_other_jobs_committing_their_state_files_do_not_stop_the_refresh(tmp_path):
     script = ("#!/usr/bin/env bash\necho '{}' > config/trial-state.json && git add config/trial-state.json "
-              "&& git commit -qm 'trial: update state'\n"
+              "&& git commit -qm 'trial: update state' && git push -q\n"
               "cat > pending_profiles/kkr.refresh.json <<'EOF'\n" + json.dumps(DRAFT) + "\nEOF\n")
     repo, env = _sandbox(tmp_path, tests_pass=True, claude_script=script)
     assert _run(repo, env).returncode == 0
@@ -240,7 +240,7 @@ def test_a_rollback_does_not_overwrite_another_writer(tmp_path):
             "    p.write_text(p.read_text() + '# written by another job\\n')\n"
             "    assert False\n")
     repo, env = _sandbox(tmp_path, tests_pass=False, gate=gate)
-    assert _run(repo, env).returncode == 0
+    assert _run(repo, env).returncode == 1   # needs a person: cron-wrapper alerts
     assert "# written by another job" in (repo / "publish.py").read_text()
     assert "another writer" in _summary(repo)["flagged"]
 
@@ -259,7 +259,7 @@ def test_uncommitted_edits_in_the_two_files_stop_the_run(tmp_path):
     with (repo / "publish.py").open("a") as f:
         f.write("# PERSON WIP\n")
     head = _git(repo, "rev-parse", "HEAD").strip()
-    assert _run(repo, env).returncode == 0
+    assert _run(repo, env).returncode == 1   # needs a person: cron-wrapper alerts
     assert _git(repo, "rev-parse", "HEAD").strip() == head
     assert "# PERSON WIP" in (repo / "publish.py").read_text()
     assert "uncommitted changes" in _summary(repo)["flagged"]
@@ -271,7 +271,30 @@ def test_the_summary_names_what_changed_and_the_parked_draft(tmp_path):
     repo, env = _sandbox(tmp_path, tests_pass=True, claude_script=script)
     with (repo / "tests" / "test_gate.py").open("a") as f:      # unrelated dirt from before the run
         f.write("# dirty\n")
-    assert _run(repo, env).returncode == 0
+    assert _run(repo, env).returncode == 1   # needs a person: cron-wrapper alerts
     flagged = _summary(repo)["flagged"]
     assert "committed: publish.py" in flagged and "test_gate.py" not in flagged
     assert "kkr (not applied" in flagged
+
+
+def test_a_draft_that_changes_nothing_is_refused_not_reported_as_applied(tmp_path):
+    same = dict(DRAFT, change_log=[dict(DRAFT["change_log"][0], new="~$758B")])
+    script = ("#!/usr/bin/env bash\ncat > pending_profiles/kkr.refresh.json <<'EOF'\n"
+              + json.dumps(same) + "\nEOF\n")
+    repo, env = _sandbox(tmp_path, tests_pass=True, claude_script=script)
+    head = _git(repo, "rev-parse", "HEAD").strip()
+    assert _run(repo, env).returncode == 0
+    assert _summary(repo)["applied"] == "" and "apply_refresh rc=1" in _summary(repo)["flagged"]
+    assert _git(repo, "rev-parse", "HEAD").strip() == head
+
+
+def test_older_unpushed_commits_are_not_pushed_with_the_refresh(tmp_path):
+    repo, env = _sandbox(tmp_path, tests_pass=True)
+    (repo / "notes.txt").write_text("local only\n")
+    _git(repo, "add", "notes.txt")
+    _git(repo, "commit", "-q", "-m", "local, unpushed")
+    remote_before = _git(repo, "rev-parse", "origin/main").strip()
+    r = _run(repo, env)
+    assert r.returncode == 1
+    assert _git(tmp_path / "remote.git", "rev-parse", "main").strip() == remote_before
+    assert "NOT pushed" in _summary(repo)["flagged"]

@@ -170,7 +170,8 @@ def recount(articles: list[dict], source_ids: set[str], today: date | None) -> d
                 fetched = None
         if fetched and first <= fetched <= today:
             added += 1
-        stored = (a.get("date") or "").strip()
+        stored = a.get("date") if isinstance(a.get("date"), str) else ""
+        stored = stored.strip()
         try:
             day = date.fromisoformat(stored[:10]) if stored else None
         except ValueError:
@@ -194,7 +195,12 @@ def _node_check(scripts: list[str]) -> list[str]:
         for i, body in enumerate(scripts):
             f = Path(tmp) / f"s{i}.js"
             f.write_text(body, encoding="utf-8")
-            r = subprocess.run([node, "--check", str(f)], capture_output=True, text=True, timeout=60)
+            try:
+                r = subprocess.run([node, "--check", str(f)], capture_output=True, text=True, timeout=60)
+            except subprocess.TimeoutExpired:
+                # A problem the check reports, not a crash read as "publish failed".
+                bad.append(f"script {i}: node --check did not finish in 60s")
+                continue
             if r.returncode != 0:
                 err = [ln for ln in r.stderr.splitlines() if "Error" in ln]
                 bad.append(f"script {i}: {(err or ['parse error'])[0][:120]}")

@@ -3935,8 +3935,9 @@ def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False,
     # later from its article page (stage 2, de-shaw's year-only "2026" ->
     # 2026-10-08) keeps the listing's value in date_listed. Against `date`, the
     # next listing looked 280 days backwards and every later batch was refused
-    # (pre-merge review, 2026-10-10). refine_dates rows are unaffected: their
-    # date_listed is the month end, never earlier than their date.
+    # (pre-merge review, 2026-10-10). Only ever more lenient than `date`:
+    # refine_dates rows keep the listing's month end (or, for older rows, a
+    # first-of-month) there, which a listing showing the same month matches.
     stored_head = max((r.get("date_listed") or r.get("date") or "" for r in (existing_rows or [])
                        if r.get("source_id") == source_id), default="")
     if len(listing_dates) >= LISTING_HEAD_MIN_DATES and stored_head:

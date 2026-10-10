@@ -16,6 +16,7 @@ Fe  a passage with no letters passed the evidence check
 """
 import importlib.util
 import json
+import json as _json
 import subprocess
 import sys
 import time
@@ -88,23 +89,47 @@ def test_f1_unparsable_answers_and_4xx_count(store, api, bad):
     assert _rows()["a2"]["analysis_failures"] == 1
 
 
-def test_f1_a_night_nobody_was_answered_charges_no_article(store, api):
+def test_f1_a_night_nobody_was_answered_never_gives_up(store, api, capsys):
     """A model retired or a parameter rejected fails every request the same
-    way: three articles a night would be retired for the service's fault."""
+    way: counts may rise, but nothing is retired until the service is proven."""
     store([_art(i) for i in range(3)], bodies={f"a{i}": _distinct(i) for i in range(3)})
     api["script"] = [http(404, "model_not_found")]
-    assert aa.main() == 1
-    assert not any("analysis_failures" in r for r in _rows().values())
+    for _ in range(aa.MAX_ANALYSIS_NIGHTS + 2):
+        aa.main()
+    assert all(r.get("analysis_failures") == aa.MAX_ANALYSIS_NIGHTS - 1 for r in _rows().values())
+    assert "GAVE UP" not in capsys.readouterr().out
 
 
-def test_f1_an_article_alone_whose_answers_never_parse_is_still_given_up(store, api, capsys):
-    """An answer came back, so the service works and the article is the
-    problem -- even on the quiet nights when it is the only one pending."""
+def test_f1_three_bad_articles_at_the_front_no_longer_block_new_ones(store, monkeypatch, capsys, tmp_path):
+    """From zero failures, in store order: night 1 they stop the stage before
+    the new article; from night 2 they go last, the new one is asked first,
+    and once the service is proven they are given up (full re-review: they
+    stayed at zero and blocked every new article forever)."""
+    monkeypatch.setattr(aa, "USAGE_LOG_FILE", tmp_path / "usage.jsonl")
+    monkeypatch.setattr(aa.requests, "post", lambda url, headers=None, json=None, timeout=None:
+                        ok("not json") if "BADMARK" in json["messages"][0]["content"] else ok(_json.dumps(SUMMARY)))
+    store([_art(i) for i in range(3)], bodies={f"a{i}": _distinct(i) + " BADMARK" for i in range(3)})
+    summarised = []
+    for night in range(aa.MAX_ANALYSIS_NIGHTS):
+        _with_good_neighbour(None, night)
+        aa.main()
+        summarised.append({r["id"] for r in _rows().values() if r.get("summarized")})
+    rows = _rows()
+    assert "a100" not in summarised[0] and "a100" in summarised[1], summarised
+    assert all(rows[f"a{i}"]["analysis_failures"] == aa.MAX_ANALYSIS_NIGHTS for i in range(3))
+    assert "GAVE UP" in capsys.readouterr().out
+
+
+def test_f1_an_article_alone_is_given_up_once_another_one_is_answered(store, api, capsys):
     store([_art(1)])
     api["script"] = [ok("not json")]
-    rcs = [aa.main() for _ in range(aa.MAX_ANALYSIS_NIGHTS)]
-    assert _rows()["a1"]["analysis_failures"] == aa.MAX_ANALYSIS_NIGHTS
-    assert rcs[-1] != 0 and "GAVE UP" in capsys.readouterr().out
+    for _ in range(aa.MAX_ANALYSIS_NIGHTS + 1):
+        aa.main()
+    assert _rows()["a1"]["analysis_failures"] == aa.MAX_ANALYSIS_NIGHTS - 1      # alone: not proven
+    _with_good_neighbour(None, 0)
+    api["script"] = [ok(json.dumps(SUMMARY)), ok("not json")]
+    assert aa.main() == aa.GAVE_UP_RC
+    assert "GAVE UP" in capsys.readouterr().out
 
 
 def test_f1_a_refusal_counts_even_for_an_article_alone(store, api):
@@ -129,7 +154,8 @@ def test_f1_a_batch_save_never_carries_a_count_the_night_may_take_back(store, ap
                                                  real(arts, path)))
     aa.main()
     assert len(saved) >= 2, "the batch save after the 5th article did not happen"
-    assert all(v is None for snap in saved for v in snap), saved
+    # Counts are written once the night is judged: in the final save only.
+    assert all(v is None for snap in saved[:-1] for v in snap), saved
 
 
 def test_f1_articles_that_failed_before_go_to_the_back_of_the_queue(store, api):
@@ -372,14 +398,6 @@ def test_f4_an_interrupt_while_recording_books_nothing_twice(tagstore, tmp_path)
     with pytest.raises(KeyboardInterrupt):
         ta.run(path, "k", tmp_path / "bk", sleep=lambda s: None, workers=1, call=call, log_usage=log_usage)
     assert len(booked) == len(set(booked)), booked
-
-
-def test_f1_several_articles_all_answered_unusably_charges_no_one(store, api):
-    """Every model returning output cut at its token cap is the service's fault."""
-    store([_art(i) for i in range(3)], bodies={f"a{i}": _distinct(i) for i in range(3)})
-    api["script"] = [ok("not json")]
-    aa.main()
-    assert not any("analysis_failures" in r for r in _rows().values())
 
 
 def test_f5_a_refused_reask_is_an_answer_like_junk(api):

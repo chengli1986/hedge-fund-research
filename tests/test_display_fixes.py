@@ -208,3 +208,16 @@ def test_load_more_appears_when_older_rows_are_shown_on_a_quiet_feed(browser, tm
                                    "e => e.filter(x => x.offsetParent !== null).length") == 25
     assert pg.errors == []
     pg.close()
+
+
+def test_show_older_does_not_fold_an_expanded_timeline(browser, feed_path):
+    """It rebuilt the timeline and dropped back to 20 rows (full re-review)."""
+    pg = _open(browser, feed_path)
+    pg.click('.view-btn[data-view="timeline"]')
+    pg.click("#tl-more")
+    pg.click("#btn-show-older")
+    visible = pg.eval_on_selector_all("#view-timeline article.pool-article",
+                                      "e => e.filter(x => x.offsetParent !== null).length")
+    assert visible == RECENT + OLDER and pg.is_hidden("#tl-more")
+    assert pg.errors == []
+    pg.close()

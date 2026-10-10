@@ -102,7 +102,7 @@ if [[ -n "$DIRTY_AT_START" ]]; then
     --flagged "not run: publish.py/sources.json had uncommitted changes at the start ($(echo $DIRTY_AT_START)) -- commit or revert them first" \
     --alert-only "$ALERT_ONLY" >>logs/profile-refresh.log 2>&1 || echo "[profile-refresh] summary email WARN (not sent)"
   rm -rf "$BACKUP_DIR"
-  exit 0
+  exit 1
 fi
 
 # 1) agent generates pending_profiles/*.refresh.json (only for funds that changed).
@@ -119,13 +119,18 @@ timeout --kill-after=30 3000 "$CLAUDE_BIN" --print --dangerously-skip-permission
   > logs/profile-refresh-agent.log 2>&1 || echo "[profile-refresh] agent exit $? (max-turns ok)"
 
 APPLIED=(); FLAGGED=()
+# What needs a person now, not just a read of the summary: makes the wrapper
+# exit 1 so cron-wrapper alerts even if the summary mail does not go out.
+SERIOUS=()
 AGENT_TOUCHED=0
 if [[ "$(tracked_state)" != "$STATE_BEFORE" ]]; then
   # The agent writes drafts, nothing else: an edit of its own to publish.py
   # went live with the next publish and was swept into the refresh commit.
   # This cannot tell the agent from a person or job working in the same
   # checkout, so nothing is overwritten: the run applies nothing, commits
-  # nothing, and says what changed.
+  # nothing, and says what changed. It is a guard against mistakes, NOT a
+  # security boundary: an agent running with --dangerously-skip-permissions
+  # could hide an edit from git (skip-worktree) or write elsewhere entirely.
   AGENT_TOUCHED=1
   changed="$( { git diff --name-only "$HEAD_BEFORE" HEAD -- "${PROTECTED[@]}" 2>/dev/null | sed 's/^/committed: /'
                comm -13 <(printf '%s\n' "$EDITED_BEFORE") <(edited_files) | cut -d' ' -f1 | sed '/^$/d; s/^/edited: /'; } \
@@ -200,16 +205,30 @@ if [[ "$ALERT_ONLY" != "1" && ${#APPLIED[@]} -gt 0 ]]; then
     # 3 = page written, docs-site sync failed: the page is fine, keep going.
     if [[ $publish_rc -ne 0 && $publish_rc -ne 3 ]]; then
       restore_profiles "publish.py exit $publish_rc"
-      python3 publish.py >>logs/profile-refresh.log 2>&1 \
-        || FLAGGED+=("republishing the restored page failed too: see logs/profile-refresh.log")
+      python3 publish.py >>logs/profile-refresh.log 2>&1
+      republish_rc=$?
+      if [[ $republish_rc -eq 3 ]]; then
+        FLAGGED+=("restored page republished, but its docs-site copy failed to sync")
+      elif [[ $republish_rc -ne 0 ]]; then
+        SERIOUS+=("republishing the restored page failed too (exit $republish_rc): see logs/profile-refresh.log")
+      fi
     else
       [[ $publish_rc -eq 3 ]] && FLAGGED+=("page published, but the docs-site copy failed to sync (publish.py exit 3): see logs/profile-refresh.log")
       # pathspec: commit these two files only, never whatever else is staged
-      git add -- publish.py config/sources.json \
-        && git commit -q -m "chore(profiles): monthly AUM/event refresh ($(date -u +%Y-%m-%d))" \
-             -- publish.py config/sources.json \
-        && git push -q \
-        || FLAGGED+=("commit/push of the applied refresh failed: files changed but not in git")
+      # (no separate `git add`: a failed commit left sources.json staged, and
+      # the next month refused to start). Push only when this commit is the
+      # one thing ahead of the remote: a bare push carried any older local
+      # commit along with it.
+      if git diff --quiet HEAD -- publish.py config/sources.json; then
+        FLAGGED+=("applied drafts changed nothing in publish.py/sources.json; nothing committed")
+      elif ! git commit -q -m "chore(profiles): monthly AUM/event refresh ($(date -u +%Y-%m-%d))" \
+             -- publish.py config/sources.json; then
+        SERIOUS+=("commit of the applied refresh failed: publish.py/sources.json changed but not committed")
+      elif [[ "$(git rev-list --count '@{u}..HEAD' 2>/dev/null)" != "1" ]]; then
+        SERIOUS+=("refresh committed locally but NOT pushed: other unpushed commits are ahead of the remote")
+      elif ! git push -q; then
+        SERIOUS+=("refresh committed locally but the push failed")
+      fi
     fi
   fi
 fi
@@ -224,6 +243,7 @@ fi
 set +u   # an unset reference inside the env file must not end the run here
 source "$HOME/.stock-monitor.env" 2>/dev/null || true
 set -u
+FLAGGED+=(${SERIOUS[@]+"${SERIOUS[@]}"})
 applied_str="$(printf '%s\n' ${APPLIED[@]+"${APPLIED[@]}"})"
 flagged_str="$(printf '%s\n' ${FLAGGED[@]+"${FLAGGED[@]}"})"
 SMTP_USER="${SMTP_USER:-}" SMTP_PASS="${SMTP_PASS:-}" MAIL_TO="${MAIL_TO:-}" \
@@ -232,3 +252,7 @@ python3 scripts/send_refresh_summary.py \
   --alert-only "$ALERT_ONLY" >>logs/profile-refresh.log 2>&1 || echo "[profile-refresh] summary email WARN (not sent)"
 
 echo "[profile-refresh] done: applied=${#APPLIED[@]} flagged=${#FLAGGED[@]} alert_only=$ALERT_ONLY"
+if [[ ${#SERIOUS[@]} -gt 0 || $AGENT_TOUCHED -eq 1 || "${FLAGGED[*]-}" == *"RESTORE FAILED"* \
+      || "${FLAGGED[*]-}" == *"rolled back"* ]]; then
+  exit 1
+fi

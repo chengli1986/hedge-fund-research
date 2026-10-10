@@ -178,6 +178,11 @@ def apply_refresh(fund_id: str, *, base_dir: Path | None = None,
             sys.stderr.write(f"[apply_refresh] change_log[{field}].old {c.get('old')!r} does not match "
                              f"publish.py ({current.get(field)!r}) — route to human\n")
             return EXIT_VALIDATION_FAILED
+        if new_val.strip() == str(current.get(field, "")).strip():
+            # "Verified unchanged" is not a change: it was reported as applied,
+            # then the commit found nothing and flagged a false failure.
+            sys.stderr.write(f"[apply_refresh] change_log[{field}]: new equals the current value\n")
+            return EXIT_VALIDATION_FAILED
         merged[field] = new_val
         checked_log.append({**c, "old": current.get(field, "")})
         changed_fields.add(field)

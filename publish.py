@@ -585,7 +585,7 @@ def _effective_date(a: dict, today: str) -> str:
     for those, and nothing can be newer than today, so: the earliest of the
     three.
     """
-    date = (a.get("date") or "").strip()
+    date = _stored_day(a)
     if not date:
         return ""
     candidates = [date, today]
@@ -608,6 +608,25 @@ def _fetched_day(a: dict) -> str:
     return (stamp if stamp.tzinfo else stamp.replace(tzinfo=BJT)).astimezone(BJT).strftime("%Y-%m-%d")
 
 
+def _stored_day(a: dict) -> str:
+    """The stored date as YYYY-MM-DD, "" when it is not one.
+
+    Read the way the stage-5 recount reads it (date.fromisoformat(date[:10])):
+    compared as raw text, "n/a" or "October 2026" sorted after every real day,
+    "2026-10-10T23:00" was not <= "2026-10-10", and the two counts of
+    "published this week" disagreed -- the pre-check then held the page back.
+    A non-string date crashed the render (full re-review, 2026-10-10)."""
+    raw = a.get("date")
+    if not isinstance(raw, str):
+        return ""
+    day = raw.strip()[:10]
+    try:
+        datetime.strptime(day, "%Y-%m-%d")
+    except ValueError:
+        return ""
+    return day
+
+
 def _dateable(a: dict, today: str) -> bool:
     """Whether we can say when this article appeared at all.
 
@@ -615,7 +634,8 @@ def _dateable(a: dict, today: str) -> bool:
     counting it as new, or letting it set "data through", claims knowledge we
     do not have. Ordering still shows it (capped at today); the counts skip it.
     """
-    return (a.get("date") or "") <= today or bool(a.get("fetched_at"))
+    day = _stored_day(a)
+    return bool(day) and (day <= today or bool(_fetched_day(a)))
 
 
 def _slugify_theme(theme: str) -> str:
@@ -1699,6 +1719,10 @@ function returnArticlesToPool() {{
   }});
 }}
 
+/* The reader pressed "Load more": rebuilding the timeline (Show older injects
+   rows and switches view again) must not fold it back to 20 rows. */
+let tlExpanded = false;
+
 function populateViewFromPool(viewName) {{
   const pool = document.getElementById('article-pool');
   if (!pool) return;
@@ -1708,7 +1732,7 @@ function populateViewFromPool(viewName) {{
   if (viewName === 'timeline') {{
     const target = panel.querySelector('.timeline-wrap');
     if (!target) return;
-    const initialVisible = parseInt(target.dataset.initialVisible || '20', 10);
+    const initialVisible = tlExpanded ? Infinity : parseInt(target.dataset.initialVisible || '20', 10);
     /* Pool DOM order is scrambled after any themes/funds hydration, so sort
        by data-seq (baked-in global date-descending rank) to restore the feed. */
     Array.from(pool.querySelectorAll('article.pool-article'))
@@ -1920,6 +1944,7 @@ function updateLoadMoreCount() {{
 }}
 
 function showAll() {{
+  tlExpanded = true;
   document.querySelectorAll('.timeline-wrap article.pool-article').forEach(el => {{
     el.style.display = '';
     el.classList.remove('timeline-extra');

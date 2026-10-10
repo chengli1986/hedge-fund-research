@@ -222,4 +222,18 @@ def test_the_data_date_in_the_header_is_escaped():
     row["date"] = row["date"] + '<img src=x onerror="alert(1)">'
     html = publish.generate_html(ARTICLES + [row])
     header = html[html.index('<div class="stats"'):html.index('</div>', html.index('<div class="stats"'))]
-    assert "onerror" in header and '<img src=x onerror' not in header
+    # The stored date is now read as YYYY-MM-DD first (as the stage-5 recount
+    # reads it), so the markup never reaches the header; it is escaped as well.
+    assert '<img src=x onerror' not in header and f"Data through {_day(1)}" in header
+
+
+@pytest.mark.parametrize("bad", ["n/a", "October 2026", 20261001, "2026-10-10T23:00:00"])
+def test_a_date_that_is_not_plain_iso_counts_the_same_on_the_page_and_in_the_check(bad):
+    """Compared as raw text these made the page and the recount disagree on
+    "published this week" (the pre-check then froze the page); an int crashed."""
+    row = _art(9, "gmo", 1, 1)
+    row["date"] = bad if bad != "2026-10-10T23:00:00" else _day(0) + "T23:00:00"
+    row.pop("fetched_at")
+    articles = ARTICLES + [row]
+    html = publish.generate_html(articles)
+    assert publish._precheck(html, articles) == []

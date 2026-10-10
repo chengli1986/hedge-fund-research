@@ -203,6 +203,13 @@ TEXT_FIELDS = ("desc_zh", "notable_en", "notable_zh", "type_en", "type_zh")
 MAX_TEXT_DIFF_RATIO = 0.5
 EVENT_KEYWORDS = ("acqui", "merg", "take-private", "delist", "rename", "rebrand",
                   "spun out", "spin-off", "并购", "收购", "退市", "私有化", "改名", "更名", "合并")
+# Whole words for the English stems: as plain substrings "merg" matched
+# "emerging", so "emerging-markets push" lifted the rewrite cap (full re-review,
+# 2026-10-10). Chinese terms have no word boundaries and stay substrings.
+_EVENT_RE = re.compile(
+    r"\b(?:acqui\w*|merg(?:e|ed|er|ers|ing)\b|take-private|delist\w*|renam\w*|rebrand\w*"
+    r"|spun out|spin-off|spinoff)"
+    r"|并购|收购|退市|私有化|改名|更名|合并", re.I)
 
 
 def _diff_ratio(old: str, new: str) -> float:
@@ -244,7 +251,7 @@ def validate_refresh(data: dict, *, current: dict) -> dict:
                 issues.append(f"change_log[{field}]: missing/weak source (need URL/domain)")
             if field in TEXT_FIELDS:
                 reason = str(c.get("reason", "")).lower()
-                has_event = any(k in reason for k in EVENT_KEYWORDS)
+                has_event = bool(_EVENT_RE.search(reason))
                 ratio = _diff_ratio(str(c.get("old", "")), str(c.get("new", "")))
                 if not has_event and ratio > MAX_TEXT_DIFF_RATIO:
                     issues.append(

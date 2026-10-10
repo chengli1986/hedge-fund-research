@@ -360,3 +360,15 @@ def test_a_line_separator_inside_a_value_is_written_not_refused(repo, char):
                           "reason": "r", "source": SRC}])
     assert ar.apply_refresh("kkr", base_dir=repo) == 0
     assert _profiles(repo)["kkr"]["notable_en"] == "LBO pioneers."
+
+
+@pytest.mark.parametrize("reason,lifts", [("emerging-markets push", False), ("submerged", False),
+                                          ("merger with X", True), ("acquired by Y", True), ("更名", True)])
+def test_only_a_real_corporate_event_lifts_the_rewrite_cap(reason, lifts):
+    """"merg" matched "emerging" as a substring (full re-review, 2026-10-10)."""
+    cur = {"notable_en": "AHL Diversified ~15% annualized since 1990s; significant positive returns."}
+    new = "Completely different paragraph about something else entirely, rewritten wholesale."
+    res = vpp.validate_refresh({**cur, "notable_en": new, "id": "x",
+                                "change_log": [{"field": "notable_en", "old": cur["notable_en"], "new": new,
+                                                "reason": reason, "source": SRC}]}, current=cur)
+    assert any("diff too large" in i for i in res["issues"]) is (not lifts)

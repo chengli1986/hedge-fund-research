@@ -94,7 +94,8 @@ fi
 # yesterday's summaries can still be tagged. Exit 1 = some articles got no
 # valid answer; they stay untagged and are retried tomorrow, so it is logged,
 # not alerted. Anything else alerts: 2 = quota/billing/auth stop, 3 = an
-# article failed its third night and is no longer asked (once per article).
+# article failed its third night and is no longer asked (once per article),
+# 4 = damaged store or a crash outside the per-article loop.
 python3 scripts/tag_articles.py --nightly
 tag_rc=$?
 if [[ $tag_rc -eq 1 ]]; then

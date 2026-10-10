@@ -732,12 +732,16 @@ MAX_ANALYSIS_NIGHTS = 3
 GAVE_UP_RC = 3
 PASSING = "passing"          # a fault that clears up by itself
 COUNTED = "counted"          # a request refused (4xx, local error): comes back tomorrow
-BAD_ANSWER = "bad_answer"    # the model answered, unusably (junk, refusal): about this article
-# A night on which no article got an answer charges COUNTED faults to nobody --
-# a retired model or a rejected parameter refuses every request the same way --
-# but BAD_ANSWER still counts: an answer came back, so the service worked and
-# the article is the problem, even when it is the only one pending (35 recent
-# nights had one or two; pre-merge re-review, 2026-10-10).
+BAD_ANSWER = "bad_answer"    # the model answered, unusably (junk, refusal)
+# Every night with a COUNTED or BAD_ANSWER fault counts. Giving up, though,
+# needs proof the service works: it only happens on a night on which some
+# article WAS answered. On a night nobody was answered (a retired model, a
+# rejected parameter, output cut at a token cap -- or simply three bad
+# articles at the front) a count stops at MAX_ANALYSIS_NIGHTS - 1. Failed
+# rows go to the back of the queue, so from the next night a fresh article is
+# asked first and supplies that proof. Earlier versions exempted such nights
+# from counting altogether, which left three bad articles at the head at zero
+# forever, blocking every new one (full re-review, 2026-10-10).
 _PASSING_ERRORS = (requests.ConnectionError, requests.Timeout, requests.exceptions.ChunkedEncodingError)
 
 
@@ -766,7 +770,7 @@ def _analyze_with_fallback(
 
     Returns result dict with _model and _usage metadata, or None if all fail.
     When metadata_only=True, uses a lighter prompt for RSS-summary-level content.
-    `faults`, when given, gets PASSING or COUNTED for every attempt that ended
+    `faults`, when given, gets PASSING, COUNTED or BAD_ANSWER for every attempt that ended
     without an answer, so the caller can tell a bad night from a bad article.
     """
     faults = [] if faults is None else faults
@@ -1147,19 +1151,15 @@ def main() -> int:
             log.error("  %s", stopped)
             break
 
-    # Nobody answered and several were asked: the service (a retired model, a
-    # rejected parameter, output cut at a token cap) -- charge no one. One
-    # article asked and answered unusably: likely the article, even alone.
     nobody_answered = bool(asked) and not answered
-    systemic = nobody_answered and len(unanswered) > 1
     for art, faults in unanswered:
-        if systemic:
-            continue
-        charged = BAD_ANSWER in faults or (COUNTED in faults and not nobody_answered)
-        if not charged:
-            continue
-        art["analysis_failures"] = int(art.get("analysis_failures") or 0) + 1
-        if art["analysis_failures"] >= MAX_ANALYSIS_NIGHTS:
+        if not (BAD_ANSWER in faults or COUNTED in faults):
+            continue                     # only passing faults: says nothing about the article
+        count = int(art.get("analysis_failures") or 0) + 1
+        if nobody_answered:
+            count = min(count, MAX_ANALYSIS_NIGHTS - 1)
+        art["analysis_failures"] = count
+        if count >= MAX_ANALYSIS_NIGHTS:
             gave_up.append(art["id"])
     save_articles(articles)
     log.info("Analysis complete: %d ok, %d failed, %d not summarised (insufficient content)",
