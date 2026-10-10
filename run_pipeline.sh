@@ -74,7 +74,9 @@ if python3 fetch_articles.py; then
   fi
   # Stage 2: fetch + validate + normalize content (depends on Stage 1)
   if python3 fetch_content.py; then
-    # Stage 3: LLM analysis (depends on Stage 2)
+    # Stage 3: LLM analysis (depends on Stage 2). Any non-zero alerts: 1 = no
+    # answers / stage stopped, 2 = quota or auth, 3 = an article given up after
+    # MAX_ANALYSIS_NIGHTS failed nights (announced once).
     if ! python3 analyze_articles.py; then
       failed_stages+=("Stage3:analyze")
     fi
@@ -92,7 +94,8 @@ fi
 # yesterday's summaries can still be tagged. Exit 1 = some articles got no
 # valid answer; they stay untagged and are retried tomorrow, so it is logged,
 # not alerted. Anything else alerts: 2 = quota/billing/auth stop, 3 = an
-# article failed its third night and is no longer asked (once per article).
+# article failed its third night and is no longer asked (once per article),
+# 4 = damaged store or a crash outside the per-article loop.
 python3 scripts/tag_articles.py --nightly
 tag_rc=$?
 if [[ $tag_rc -eq 1 ]]; then
@@ -108,18 +111,24 @@ if [[ ${#failed_stages[@]} -gt 0 ]]; then
 fi
 # Exit 3 = the dashboard was written but the docs-site sync (commit/push)
 # failed: an alert, not a reason to skip Stage 5 -- the page is live.
+# Exit 4 = the new page failed the stage-5 checks before going live; nothing
+# was written and yesterday's page is still up (stage-4 audit 2026-10-09).
 python3 publish.py
 publish_rc=$?
 if [[ $publish_rc -eq 3 ]]; then
   failed_stages+=("Stage4:docs-sync")
+elif [[ $publish_rc -eq 4 ]]; then
+  failed_stages+=("Stage4:precheck")
 elif [[ $publish_rc -ne 0 ]]; then
   failed_stages+=("Stage4:publish")
 fi
 
-# Stage 5: dashboard HTML sanity check (post-publish render audit). Catches
-# missing fund sections, duplicate sections, empty h2s, duplicate style attrs.
+# Stage 5: the same checks as publish.py's pre-check, on the live file:
+# every fund has its section, the numbers match a recount of the data, the
+# data islands parse, the scripts parse, the .gz is this page, and the file
+# was written by this run. Skipped when nothing new was published.
 # Failure is reported as a stage failure so cron-wrapper alerts.
-if [[ ! " ${failed_stages[*]} " =~ " Stage4:publish " ]]; then
+if [[ ! " ${failed_stages[*]} " =~ " Stage4:publish " && ! " ${failed_stages[*]} " =~ " Stage4:precheck " ]]; then
   if ! python3 scripts/check_dashboard_html.py --written-after "$PIPELINE_START_EPOCH"; then
     failed_stages+=("Stage5:dashboard-sanity")
     echo "WARN: dashboard HTML sanity check failed — page may be broken at /var/www/overview/hedge-fund-research.html"

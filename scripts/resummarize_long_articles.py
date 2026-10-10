@@ -111,8 +111,13 @@ def main(argv: list[str] | None = None) -> int:
                 if f.get("id") in pending_ids:
                     if not f.get("summarized"):
                         # hidden meanwhile (e.g. the nightly run found it a
-                        # duplicate): a summary would contradict that
+                        # duplicate): a summary would contradict that. Not
+                        # "replaced" then, in the report or the total (2026-10-10).
                         print(f"  {f['id']}: no longer summarised, new summary not written")
+                        outcomes[f["id"]] = "not written: hidden meanwhile"
+                        with report.open("a", encoding="utf-8") as fh:
+                            fh.write(json.dumps({"id": f["id"], "source_id": f.get("source_id"),
+                                                 "outcome": outcomes[f["id"]]}, ensure_ascii=False) + "\n")
                         continue
                     for k in SUMMARY_FIELDS + ("analysis_resummarized_at",):
                         if k in by_id[f["id"]]:
@@ -161,4 +166,5 @@ def _loop(todo, keys, report, old, outcomes, pending_ids, flush, started) -> int
 
 
 if __name__ == "__main__":
+    aa.configure_logging()      # this is stage-3 work: its log lines belong in analyze_articles.log
     sys.exit(main())

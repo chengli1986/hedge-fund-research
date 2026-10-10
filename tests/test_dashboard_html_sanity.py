@@ -28,10 +28,28 @@ def _fund_section(sid: str, count: int = 5, accent: str = "#abcdef") -> str:
             f'</div></section>')
 
 
+_ISLANDS = ('<script type="application/json" id="article-details-data">{}</script>'
+            '<script type="application/json" id="taxonomy-data">{"groups": []}</script>'
+            '<script>function ok() { return 1; }</script>')
+
+
 def _build_html(sections: list[str]) -> str:
     return f"""<!DOCTYPE html><html><body>
 {"".join(sections)}
+{_ISLANDS}
 </body></html>"""
+
+
+def _counts(per_source: dict[str, int]) -> dict:
+    """A recount matching sections built by _fund_section (header checks off:
+    these synthetic pages carry no header, so header_stats is expected to fail
+    and is filtered out by _failed_except_header)."""
+    return {"total": 0, "per_source": per_source, "added_week": 0, "published_week": 0,
+            "funds": len(per_source)}
+
+
+def _failed(result) -> set[str]:
+    return {c["check"] for c in result["checks"] if not c["passed"]} - {"header_stats"}
 
 
 def test_extract_fund_section_ids_basic():
@@ -66,9 +84,9 @@ def test_find_empty_h2():
 
 def test_check_passes_for_clean_dashboard():
     expected = {"aqr", "man-group", "bridgewater"}
-    sections = [_fund_section(s) for s in expected]
-    result = cdh.check_dashboard(_build_html(sections), expected)
-    assert result["ok"] is True
+    sections = [_fund_section(s, count=0) for s in expected]
+    result = cdh.check_dashboard(_build_html(sections), expected, counts=_counts({}))
+    assert _failed(result) == set(), result["checks"]
 
 
 def test_check_flags_missing_sections():
@@ -81,13 +99,14 @@ def test_check_flags_missing_sections():
     assert "fund_section_count" in failed
 
 
-def test_check_tolerates_off_by_one():
-    """publish.py skips funds with 0 articles, so off-by-one is normal."""
+def test_one_missing_section_is_no_longer_tolerated():
+    """It used to be ("publish.py skips funds with 0 articles"), but publish.py
+    renders every source, and the stage-4 audit (2026-10-09) removed a whole
+    fund from a real page and watched this pass."""
     expected = {f"fund-{i}" for i in range(10)}
-    rendered = [_fund_section(f"fund-{i}") for i in range(9)]  # one fund had 0 articles
+    rendered = [_fund_section(f"fund-{i}") for i in range(9)]
     result = cdh.check_dashboard(_build_html(rendered), expected)
-    fund_count_check = [c for c in result["checks"] if c["check"] == "fund_section_count"][0]
-    assert fund_count_check["passed"] is True
+    assert "fund_section_count" in _failed(result)
 
 
 def test_check_flags_unknown_source_ids():
@@ -110,13 +129,18 @@ def test_check_flags_duplicate_section():
     assert "no_duplicate_sections" in failed
 
 
-def test_check_flags_zero_article_section():
-    expected = {"aqr"}
-    rendered = [_fund_section("aqr", count=0)]
-    result = cdh.check_dashboard(_build_html(rendered), expected)
-    assert result["ok"] is False
-    failed = {c["check"] for c in result["checks"] if not c["passed"]}
-    assert "non_empty_sections" in failed
+def test_a_zero_article_section_passes_when_the_data_has_none():
+    """A new source with nothing collected yet is not an alarm (it was: every
+    new source alerted on its first night)."""
+    result = cdh.check_dashboard(_build_html([_fund_section("aqr", count=0)]), {"aqr"},
+                                 counts=_counts({}))
+    assert "section_article_counts" not in _failed(result)
+
+
+def test_a_section_count_that_disagrees_with_the_data_fails():
+    result = cdh.check_dashboard(_build_html([_fund_section("aqr", count=0)]), {"aqr"},
+                                 counts=_counts({"aqr": 3}))
+    assert "section_article_counts" in _failed(result)
 
 
 def test_check_flags_duplicate_style_attrs():
@@ -249,7 +273,7 @@ class TestAnEmptySourceListIsNotAPass:
 
     def test_the_dev_escape_hatch_still_works(self, tmp_path, monkeypatch):
         rc = self._main(tmp_path, monkeypatch,
-                        "<html><body><h2><span>x</span></h2></body></html>",
+                        f"<html><body><h2><span>x</span></h2>{_ISLANDS}</body></html>",
                         extra=("--allow-missing-sources",))
         assert rc == 0
 
@@ -258,8 +282,8 @@ class TestAnEmptySourceListIsNotAPass:
         # green tick; it is what a human would act on.
         chk = cdh
         result = chk.check_dashboard("<html><body></body></html>", {"aqr", "gmo"})
-        non_empty = [c for c in result["checks"] if c["check"] == "non_empty_sections"]
-        assert non_empty and not non_empty[0]["passed"], result["checks"]
+        assert not result["ok"]
+        assert "fund_section_count" in _failed(result), result["checks"]
 
 
 def test_run_pipeline_hands_the_checker_its_start_time():

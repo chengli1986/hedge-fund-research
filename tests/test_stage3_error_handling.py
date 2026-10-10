@@ -474,7 +474,10 @@ def test_r6_a_reask_that_errors_keeps_the_rejection_from_the_weaker_tier(monkeyp
         raise requests.Timeout("slow")
     monkeypatch.setattr(aa.requests, "post", post)
     r = aa._analyze_with_fallback(LATIN, {"OPENAI_API_KEY": "k"}, article_id="x")
-    assert r is not None and r["insufficient_content"] is True
+    # The weaker tier is still never asked. Since 2026-10-10 a rejection that no
+    # re-ask ever answered is not a decline either: the article waits for the
+    # next run (it used to be returned as grounding_failed).
+    assert r is None
     assert set(models) == {aa.MODEL_CHAIN[0]}
 
 

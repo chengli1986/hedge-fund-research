@@ -28,6 +28,7 @@ REQUIRED_FIELDS = ("id", "founded", "aum", "hq", "type_en", "type_zh",
 # the model's parametric memory (which is where the PineBridge ~$190B and the
 # Ares ~$450B confabulations came from). No source → not auto-graduatable.
 EVIDENCE_FIELDS = {"aum": "aum_source", "founded": "founded_source"}
+MARKUP_FREE_FIELDS = ("founded", "aum", "hq")
 
 HIGH_RISK_MARKERS = ("unknown", "unclear", "tbd", "n/a", "n.a.", "unverified",
                      "reportedly", "rumored", "circa", "estimated",
@@ -93,6 +94,17 @@ def validate_profile(data: dict) -> dict:
             missing.append(key)
     if missing:
         issues.append(f"missing required fields: {missing}")
+
+    # A non-string value is written into publish.py as a Python literal: true
+    # is a NameError there, 5 an AttributeError at render (stage-4 audit P1).
+    for key in REQUIRED_FIELDS:
+        if key in data and not isinstance(data[key], str):
+            issues.append(f"{key} must be a string, got {type(data[key]).__name__}: {data[key]!r}")
+    # founded/aum/hq are short facts; markup in them has no business on the
+    # card (they are escaped at render too — this stops it at the door).
+    for key in MARKUP_FREE_FIELDS:
+        if isinstance(data.get(key), str) and re.search(r"[<>]", data[key]):
+            issues.append(f"{key} contains markup characters < or >: {data[key]!r}")
 
     aum = str(data.get("aum", "")).strip()
     if aum:
@@ -191,6 +203,13 @@ TEXT_FIELDS = ("desc_zh", "notable_en", "notable_zh", "type_en", "type_zh")
 MAX_TEXT_DIFF_RATIO = 0.5
 EVENT_KEYWORDS = ("acqui", "merg", "take-private", "delist", "rename", "rebrand",
                   "spun out", "spin-off", "并购", "收购", "退市", "私有化", "改名", "更名", "合并")
+# Whole words for the English stems: as plain substrings "merg" matched
+# "emerging", so "emerging-markets push" lifted the rewrite cap (full re-review,
+# 2026-10-10). Chinese terms have no word boundaries and stay substrings.
+_EVENT_RE = re.compile(
+    r"\b(?:acqui\w*|merg(?:e|ed|er|ers|ing)\b|take-private|delist\w*|renam\w*|rebrand\w*"
+    r"|spun out|spin-off|spinoff)"
+    r"|并购|收购|退市|私有化|改名|更名|合并", re.I)
 
 
 def _diff_ratio(old: str, new: str) -> float:
@@ -232,7 +251,7 @@ def validate_refresh(data: dict, *, current: dict) -> dict:
                 issues.append(f"change_log[{field}]: missing/weak source (need URL/domain)")
             if field in TEXT_FIELDS:
                 reason = str(c.get("reason", "")).lower()
-                has_event = any(k in reason for k in EVENT_KEYWORDS)
+                has_event = bool(_EVENT_RE.search(reason))
                 ratio = _diff_ratio(str(c.get("old", "")), str(c.get("new", "")))
                 if not has_event and ratio > MAX_TEXT_DIFF_RATIO:
                     issues.append(

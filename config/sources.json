@@ -41,6 +41,7 @@
         "Karen Karniol-Tambour"
       ],
       "expected_hostname": "bridgewater.com",
+      "undated_rows_are": "topic_pages",
       "fetch_shape": "card_list"
     },
     {

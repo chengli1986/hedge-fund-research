@@ -100,3 +100,18 @@ def test_a_row_hidden_meanwhile_does_not_get_the_new_summary(store, tmp_path, mo
     rs.main(["--backup", str(tmp_path / "bk")])
     r0 = _rows(store)["r0"]
     assert r0["summarized"] is False and "summary_en" not in r0 and r0["themes"] == []
+
+
+def test_a_row_hidden_meanwhile_is_not_counted_as_replaced(store, tmp_path, monkeypatch, capsys):
+    """Stage-3 health check Fd: flush skipped it, the report and the total still said replaced."""
+    def analyze(*a, **k):
+        rows = _rows(store)
+        rows["r0"].update(summarized=False, analysis_label="duplicate_body")
+        store.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows.values()))
+        return dict(NEW)
+    monkeypatch.setattr(rs, "candidates", lambda rows: [r for r in rows if r["id"] == "r0"])
+    monkeypatch.setattr(aa, "_analyze_with_fallback", analyze)
+    rs.main(["--backup", str(tmp_path / "bk")])
+    assert "0 replaced" in capsys.readouterr().out
+    report = [json.loads(l) for l in (tmp_path / "bk" / "report.jsonl").read_text().splitlines()]
+    assert report[-1]["id"] == "r0" and report[-1]["outcome"] != "replaced"

@@ -3,6 +3,41 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+import os
+
+try:    # captured before _no_network replaces it for every test
+    from playwright.sync_api import sync_playwright as _real_sync_playwright
+except ImportError:
+    _real_sync_playwright = None
+
+
+# ---------------------------------------------------------------------------
+# Tests that need a real browser (page JavaScript: Tags view, Load more, the
+# phone layout) take the `chromium` fixture. Where no browser is installed
+# they skip -- except in CI (GitHub sets CI=true), where a skip is a failure:
+# CI installed no browser and every browser test skipped on every run, green,
+# until the stage-4 audit (2026-10-09) read the log.
+# ---------------------------------------------------------------------------
+
+def browser_unavailable(reason: str):
+    if os.environ.get("CI"):
+        pytest.fail(f"CI must run the browser tests, but: {reason}", pytrace=False)
+    pytest.skip(reason)
+
+
+@pytest.fixture(scope="module")
+def chromium():
+    if _real_sync_playwright is None:
+        browser_unavailable("playwright is not installed")
+    with _real_sync_playwright() as p:
+        try:
+            browser = p.chromium.launch()
+        except Exception as exc:
+            browser_unavailable(f"chromium unavailable: {exc}")
+        yield browser
+        browser.close()
+
+
 def pytest_configure(config):
     config.addinivalue_line("markers", "live: tests that hit live websites")
     config.addinivalue_line("markers", "nightly: nightly regression tests")
@@ -39,6 +74,7 @@ PRODUCTION_DIRS = ("logs", "config", "data", "content", "pending_profiles")
 PRODUCTION_PATHS: dict[str, Path] = {}
 
 _REDIRECTED = (("analyze_articles", "USAGE_LOG_FILE"),
+               ("analyze_articles", "TAG_USAGE_LOG_FILE"),
                ("fetch_articles", "INSPECTION_STATE_FILE"),
                ("fetch_content", "CONTENT_FAILURE_LOG"))
 

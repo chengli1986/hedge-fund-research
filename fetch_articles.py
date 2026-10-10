@@ -88,9 +88,10 @@ HEADERS = {
 # observed, so 3 or 10 would give the same result on today's 42 sources. The
 # number is a guess with a safety margin, not a measurement -- do not cite it
 # as one. The real discriminator between "a new issue" and "the same document
-# re-dated" is the BODY, and stage 3 applies it: _published_bodies is checked
-# BEFORE any model call, so a wrongly ingested issue costs a fetch, is labelled
-# duplicate_body and is never published. Date proposes; content decides.
+# re-dated" is the BODY, and stage 3 applies it: duplicate_owner (over
+# published_index) is checked BEFORE any model call, so a wrongly ingested
+# issue costs a fetch, is labelled duplicate_body and is never published. Date
+# proposes; content decides.
 ISSUE_MIN_GAP_DAYS = 5
 
 # A listing whose newest item is more than this many days older than the newest
@@ -3930,7 +3931,14 @@ def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False,
     # days newer, so any backwards movement is abnormal; the grace window is
     # wide enough that only something like the incident reaches it.
     listing_dates = sorted((a.get("date") for a in raw_articles if a.get("date")), reverse=True)
-    stored_head = max((r.get("date") or "" for r in (existing_rows or [])
+    # Compared with what the listing SHOWED for each stored row: a row dated
+    # later from its article page (stage 2, de-shaw's year-only "2026" ->
+    # 2026-10-08) keeps the listing's value in date_listed. Against `date`, the
+    # next listing looked 280 days backwards and every later batch was refused
+    # (pre-merge review, 2026-10-10). Only ever more lenient than `date`:
+    # refine_dates rows keep the listing's month end (or, for older rows, a
+    # first-of-month) there, which a listing showing the same month matches.
+    stored_head = max((r.get("date_listed") or r.get("date") or "" for r in (existing_rows or [])
                        if r.get("source_id") == source_id), default="")
     if len(listing_dates) >= LISTING_HEAD_MIN_DATES and stored_head:
         gap = _date_gap_days(listing_dates[0], stored_head)

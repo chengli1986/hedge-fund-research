@@ -14,13 +14,15 @@ Exit codes:
     1 — validation failed (gate or change_log)
     3 — pending_profiles/<id>.refresh.json not found
     4 — fund-id NOT present in publish._FUND_PROFILES (use graduate_pending)
-    5 — publish.py format unexpected
+    5 — publish.py format unexpected, or the rewritten publish.py / sources.json
+        failed its checks (publish.py is then untouched)
 """
 from __future__ import annotations
 
 import argparse
 import importlib.util
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -33,46 +35,10 @@ EXIT_DRAFT_NOT_FOUND = 3
 EXIT_NOT_PRESENT = 4
 EXIT_FORMAT_UNEXPECTED = 5
 
-PROFILE_FIELDS = ("founded", "aum", "hq", "type_en", "type_zh",
-                  "desc_zh", "notable_en", "notable_zh")
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import profile_edit  # noqa: E402
 
-
-def _find_entry_block(source: str, fund_id: str) -> tuple[int, int] | None:
-    """Return (start, end) char span of the existing `"<id>": { ... },` entry
-    in _FUND_PROFILES, or None if absent. `end` includes the trailing comma and
-    newline so the span can be cleanly replaced."""
-    key = json.dumps(fund_id)
-    m = re.search(rf'^[ \t]*{re.escape(key)}\s*:\s*\{{', source, re.M)
-    if not m:
-        return None
-    start = m.start()
-    open_pos = source.index("{", m.end() - 1)
-    depth, i = 1, open_pos + 1
-    while i < len(source) and depth > 0:
-        ch = source[i]
-        if ch == "{":
-            depth += 1
-        elif ch == "}":
-            depth -= 1
-            if depth == 0:
-                break
-        i += 1
-    if depth != 0:
-        raise ValueError("unbalanced braces locating entry")
-    end = i + 1
-    if source[end:end + 1] == ",":
-        end += 1
-    nl = source.find("\n", end)
-    if nl != -1:
-        end = nl + 1
-    return start, end
-
-
-def _load_publish_profiles(base: Path) -> dict:
-    spec = importlib.util.spec_from_file_location("_pub_for_apply", base / "publish.py")
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return dict(mod._FUND_PROFILES)
+PROFILE_FIELDS = profile_edit.PROFILE_FIELDS
 
 
 def _load_validate_module(base: Path):
@@ -85,42 +51,65 @@ def _load_validate_module(base: Path):
     return mod
 
 
-def _format_entry(fund_id: str, profile: dict) -> str:
-    """publish.py-style 5-line compact entry (matches graduate_pending)."""
-    def lit(s: str) -> str:
-        return json.dumps(s, ensure_ascii=False)
-    return (
-        f'    {lit(fund_id)}: {{\n'
-        f'        "founded": {lit(profile["founded"])}, '
-        f'"aum": {lit(profile["aum"])}, '
-        f'"hq": {lit(profile["hq"])},\n'
-        f'        "type_en": {lit(profile["type_en"])}, '
-        f'"type_zh": {lit(profile["type_zh"])},\n'
-        f'        "desc_zh": {lit(profile["desc_zh"])},\n'
-        f'        "notable_en": {lit(profile["notable_en"])},\n'
-        f'        "notable_zh": {lit(profile["notable_zh"])},\n'
-        f'    }},\n'
-    )
+# Currency kept: validate_pending_profile._money_tokens drops the symbol on
+# purpose (it compares magnitudes), which let a card at "~€700B" agree with a
+# description at "$700B" (pre-merge review, 2026-10-10).
+_MONEY_WITH_CURRENCY = re.compile(r"([\$¥€£])\s*(\d+(?:\.\d+)?)\s*([KMBT])\b", re.I)
 
 
-def _sync_sources_aum(base: Path, fund_id: str, old_aum: str, new_aum: str) -> bool:
-    """If config/sources.json[fund_id].description embeds old_aum, replace it with
-    new_aum in place (preserving file formatting). Returns True if changed."""
+def money_figures(text: str) -> set[tuple[str, str, str]]:
+    """{(currency symbol, number, unit)} in `text`, e.g. {('$', '190', 'B')}."""
+    return {(c, n, u.upper()) for c, n, u in _MONEY_WITH_CURRENCY.findall(text or "")}
+
+
+def _aum_agrees(aum: str, description: str, vpp=None) -> bool:
+    """The card's AUM and the one written into the English description agree:
+    the description carries the AUM verbatim, shares its figure in the same
+    currency ("$18T+" for "~$18T+ benchmarked"), or carries no money figure."""
+    if aum and aum in description:
+        return True
+    figures = money_figures(description)
+    return not figures or bool(figures & money_figures(aum))
+
+
+def _synced_sources_text(base: Path, fund_id: str, old_aum: str, new_aum: str, vpp) -> str | None:
+    """sources.json text with the fund's description moved from old_aum to
+    new_aum (formatting preserved), or None when nothing there changes.
+
+    old_aum is publish.py's current value, never the draft's word for it: a
+    wrong or tilde-less draft `old` used to leave the two AUMs disagreeing or
+    write "~~$800B" (stage-4 audit P3). Raises ValueError when the result
+    would still disagree, so a description in an unexpected form goes to a
+    human instead of being half-updated.
+    """
     src_path = base / "config" / "sources.json"
-    if not src_path.exists() or not old_aum:
-        return False
-    text = src_path.read_text()
-    data = json.loads(text)
-    target = next((s for s in data.get("sources", [])
-                   if s.get("id") == fund_id and old_aum in s.get("description", "")), None)
+    if not src_path.exists():
+        return None
+    text = src_path.read_text(encoding="utf-8")
+    target = next((s for s in json.loads(text).get("sources", []) if s.get("id") == fund_id), None)
     if target is None:
-        return False
-    enc_old = json.dumps(target["description"], ensure_ascii=False)
-    enc_new = json.dumps(target["description"].replace(old_aum, new_aum), ensure_ascii=False)
-    if enc_old not in text:
-        return False
-    src_path.write_text(text.replace(enc_old, enc_new, 1))
-    return True
+        return None
+    description = target.get("description", "")
+    updated = description.replace(old_aum, new_aum) if old_aum and old_aum in description else description
+    if not _aum_agrees(new_aum, updated, vpp):
+        raise ValueError(f"sources.json description would disagree with AUM {new_aum!r}: {description!r}")
+    if updated == description:
+        return None
+    enc_old = json.dumps(description, ensure_ascii=False)
+    if text.count(enc_old) != 1:
+        raise ValueError(f"cannot locate {fund_id}'s description in sources.json exactly once")
+    return text.replace(enc_old, json.dumps(updated, ensure_ascii=False), 1)
+
+
+def _write_atomic(path: Path, text: str) -> None:
+    path = Path(os.path.realpath(path))      # never replace a symlink with a file
+    tmp = path.with_name(f".{path.name}.tmp{os.getpid()}")
+    try:
+        tmp.write_text(text, encoding="utf-8")
+        os.chmod(tmp, path.stat().st_mode & 0o7777)
+        os.replace(tmp, path)
+    finally:
+        tmp.unlink(missing_ok=True)
 
 
 def _archive_draft(draft_path: Path) -> None:
@@ -144,21 +133,31 @@ def apply_refresh(fund_id: str, *, base_dir: Path | None = None,
         sys.stderr.write(f"[apply_refresh] draft JSON malformed: {e}\n")
         return EXIT_VALIDATION_FAILED
 
-    current_profiles = _load_publish_profiles(base)
-    if fund_id not in current_profiles:
+    source = publish_path.read_text(encoding="utf-8")
+    try:
+        current_profiles = profile_edit.read_profiles(source)
+        span = profile_edit.entry_span(source, fund_id)
+    except (SyntaxError, ValueError) as e:
+        sys.stderr.write(f"[apply_refresh] publish.py format unexpected: {e}\n")
+        return EXIT_FORMAT_UNEXPECTED
+    if fund_id not in current_profiles or span is None:
         sys.stderr.write(f"[apply_refresh] {fund_id!r} not in _FUND_PROFILES "
                          f"(use graduate_pending for new funds)\n")
         return EXIT_NOT_PRESENT
+    current = current_profiles[fund_id]
 
     # change_log is the single source of truth for what changes and to what.
     # Build `merged` from each entry's `new` (not from optional top-level keys),
     # so a draft can never silently "apply" a field while publish.py keeps the
-    # old value. Also guards malformed change_log shapes.
+    # old value. Each entry's `old` must match publish.py: the gate below
+    # measures the change against the real current text, never the draft's
+    # account of it (old == new used to wave a full rewrite through).
     change_log = draft.get("change_log", [])
     if not isinstance(change_log, list):
         sys.stderr.write("[apply_refresh] change_log must be a list\n")
         return EXIT_VALIDATION_FAILED
-    merged = dict(current_profiles[fund_id])
+    merged = dict(current)
+    checked_log = []
     changed_fields: set[str] = set()
     for c in change_log:
         if not isinstance(c, dict):
@@ -168,39 +167,64 @@ def apply_refresh(fund_id: str, *, base_dir: Path | None = None,
         if not field or new_val is None:
             sys.stderr.write(f"[apply_refresh] change_log entry missing field/new: {c}\n")
             return EXIT_VALIDATION_FAILED
+        if field not in PROFILE_FIELDS:
+            sys.stderr.write(f"[apply_refresh] change_log: {field!r} is not a profile field\n")
+            return EXIT_VALIDATION_FAILED
+        if not isinstance(new_val, str):
+            sys.stderr.write(f"[apply_refresh] change_log[{field}].new must be a string, "
+                             f"got {type(new_val).__name__}: {new_val!r}\n")
+            return EXIT_VALIDATION_FAILED
+        if not isinstance(c.get("old"), str) or c["old"].strip() != str(current.get(field, "")).strip():
+            sys.stderr.write(f"[apply_refresh] change_log[{field}].old {c.get('old')!r} does not match "
+                             f"publish.py ({current.get(field)!r}) — route to human\n")
+            return EXIT_VALIDATION_FAILED
+        if new_val.strip() == str(current.get(field, "")).strip():
+            # "Verified unchanged" is not a change: it was reported as applied,
+            # then the commit found nothing and flagged a false failure.
+            sys.stderr.write(f"[apply_refresh] change_log[{field}]: new equals the current value\n")
+            return EXIT_VALIDATION_FAILED
         merged[field] = new_val
+        checked_log.append({**c, "old": current.get(field, "")})
         changed_fields.add(field)
 
     vpp = _load_validate_module(base)
     result = vpp.validate_refresh({**merged, "id": fund_id,
-                                   "change_log": change_log,
+                                   "change_log": checked_log,
                                    "aum_source": draft.get("aum_source", ""),
                                    "founded_source": draft.get("founded_source", "")},
-                                  current=current_profiles[fund_id])
+                                  current=current)
     # Every issue is hard, uncertainty markers included (2026-10-03 decision).
     hard = list(result["issues"])
     if hard:
         sys.stderr.write(f"[apply_refresh] validation failed: {hard}\n")
         return EXIT_VALIDATION_FAILED
 
-    source = publish_path.read_text()
-    span = _find_entry_block(source, fund_id)
-    if span is None:
-        sys.stderr.write("[apply_refresh] could not locate entry block\n")
+    sources_path = base / "config" / "sources.json"
+    try:
+        new_sources = (_synced_sources_text(base, fund_id, current["aum"], merged["aum"], vpp)
+                       if "aum" in changed_fields else None)
+        start, end = span
+        new_source = source[:start] + profile_edit.format_entry(fund_id, merged) + source[end:]
+        profile_edit.replace_checked(publish_path, new_source,
+                                     {**current_profiles, fund_id: merged}, dry_run=dry_run)
+    except ValueError as e:
+        sys.stderr.write(f"[apply_refresh] {fund_id}: {e} — publish.py untouched\n")
         return EXIT_FORMAT_UNEXPECTED
-    start, end = span
-    new_source = source[:start] + _format_entry(fund_id, merged) + source[end:]
 
     if dry_run:
         sys.stdout.write(f"[apply_refresh] DRY-RUN {fund_id}: would change "
                          f"{sorted(changed_fields)}\n")
         return EXIT_OK
 
-    publish_path.write_text(new_source)
-    aum_change = next((c for c in change_log if c["field"] == "aum"), None)
-    if aum_change:
-        _sync_sources_aum(base, fund_id, aum_change.get("old", ""),
-                          aum_change.get("new", ""))
+    if new_sources is not None:
+        try:
+            _write_atomic(sources_path, new_sources)
+        except OSError as e:
+            # publish.py already moved; put it back so the two never disagree.
+            _write_atomic(publish_path, source)
+            sys.stderr.write(f"[apply_refresh] {fund_id}: writing sources.json failed ({e}); "
+                             f"publish.py restored\n")
+            return EXIT_FORMAT_UNEXPECTED
     _archive_draft(draft_path)
     sys.stdout.write(f"[apply_refresh] {fund_id}: applied {sorted(changed_fields)}\n")
     return EXIT_OK

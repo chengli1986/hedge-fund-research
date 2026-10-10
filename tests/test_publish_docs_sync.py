@@ -97,6 +97,7 @@ def test_an_absent_docs_site_is_not_a_failure(tmp_path):
 
 
 def test_main_exits_docs_sync_failed_when_the_sync_fails(tmp_path, monkeypatch):
+    monkeypatch.setattr(publish, "_precheck", lambda html, articles: [])   # checked in test_dashboard_prepublish
     monkeypatch.setattr(publish, "load_articles", lambda: [])
     monkeypatch.setattr(publish, "generate_html", lambda articles: "<html></html>")
     monkeypatch.setattr(publish, "sync_docs_site", lambda repo, html: False)
@@ -106,6 +107,7 @@ def test_main_exits_docs_sync_failed_when_the_sync_fails(tmp_path, monkeypatch):
 
 
 def test_main_exits_zero_when_all_is_well(tmp_path, monkeypatch):
+    monkeypatch.setattr(publish, "_precheck", lambda html, articles: [])   # checked in test_dashboard_prepublish
     monkeypatch.setattr(publish, "load_articles", lambda: [])
     monkeypatch.setattr(publish, "generate_html", lambda articles: "<html></html>")
     monkeypatch.setattr(publish, "sync_docs_site", lambda repo, html: True)

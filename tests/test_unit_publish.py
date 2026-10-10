@@ -639,7 +639,7 @@ class TestNewThisWeekBounds:
              "url": "https://man.com/r", "date": _date_str(2), "summarized": False},
         ]
         html = generate_html(arts)
-        assert "1 new this week" in html, "only the genuinely recent article counts"
+        assert 'data-stat="published-week">1<' in html, "only the genuinely recent article counts"
 
 
 class TestUnregisteredSourcesFiltered:
@@ -829,8 +829,8 @@ class TestHeaderShowsDataRecency:
     answers "is the page stale?" -- but the data date is what a reader needs.
     """
     def _header(self, html):
-        start = html.index('<div class="stats">')
-        return html[start:start + 900]
+        start = html.index('<div class="stats"')
+        return html[start:html.index("</div>", start)]
 
     def _data_through(self, html):
         import re
@@ -1034,7 +1034,8 @@ class TestFutureDatedArticles:
         rows = [self._row(1, _date_str(-20), date_raw="September 2026"),
                 self._row(2, _date_str(0))]
         html = generate_html(rows)
-        head = html[html.index('<div class="stats">'):][:600]
+        start = html.index('<div class="stats"')
+        head = html[start:html.index("</div>", start)]
         assert _date_str(-20) not in head
 
     def test_a_future_row_is_never_ordered_ahead_of_today(self):
@@ -1055,7 +1056,7 @@ class TestFutureDatedArticles:
                           date_raw="September 2026", themes=["AI/Tech"]),
                 self._row(2, _date_str(2), themes=["AI/Tech"])]
         html = generate_html(rows)
-        header = re.search(r"(\d+) new this week", html)
+        header = re.search(r'data-stat="published-week">(\d+)<', html)
         badge = re.search(r'<span class="new-badge">(\d+) new</span>', html)
         assert header and int(header.group(1)) == 1, header and header.group(0)
         assert badge is None or int(badge.group(1)) == 1, badge and badge.group(0)

@@ -53,7 +53,7 @@ def _write_draft(tmp_path, fund_id, fields, change_log):
 def test_find_entry_block_locates_existing(tmp_path):
     (tmp_path / "publish.py").write_text(PUBLISH_TEMPLATE)
     src = (tmp_path / "publish.py").read_text()
-    span = ar._find_entry_block(src, "apollo-global-management")
+    span = ar.profile_edit.entry_span(src, "apollo-global-management")
     assert span is not None
     start, end = span
     block = src[start:end]
@@ -64,7 +64,7 @@ def test_find_entry_block_locates_existing(tmp_path):
 def test_find_entry_block_missing_returns_none(tmp_path):
     (tmp_path / "publish.py").write_text(PUBLISH_TEMPLATE)
     src = (tmp_path / "publish.py").read_text()
-    assert ar._find_entry_block(src, "verdad-capital") is None
+    assert ar.profile_edit.entry_span(src, "verdad-capital") is None
 
 
 def test_apply_updates_only_changelog_fields(tmp_path):

@@ -79,10 +79,26 @@ _URL_YMD = re.compile(r"/(20\d\d)[/-](\d{1,2})[/-](\d{1,2})(?:[/?#-]|$)")
 _URL_YDM = re.compile(r"-(20\d\d)-(\d{1,2})-([A-Za-z]{3,9})(?:[/?#]|$)")   # Man: ...-2026-6-oct
 
 
+def _month_boundary(date: str) -> bool:
+    """A stored date on the 1st or the last day of its month: what a month-only
+    label was normalised to (parse_date), as opposed to a real day."""
+    try:
+        d = datetime.strptime(date[:10], "%Y-%m-%d")
+    except ValueError:
+        return False
+    return d.day == 1 or d.day == calendar.monthrange(d.year, d.month)[1]
+
+
 def candidates(rows: list[dict]) -> list[dict]:
+    """Month-only labels whose stored date is still the normalised month boundary.
+
+    The label alone is not enough: Wellington shows "August 2026" but its
+    <date datetime> attribute carries the day, which the fetcher stores. Taking
+    those as month-only replaced 7 real days with a fallback (08-17 -> 08-31,
+    stage-3 health check 2026-10-10)."""
     return [r for r in rows
             if fa._MONTH_ONLY_RE.match((r.get("date_raw") or "").strip())
-            and not r.get("date_basis") and len(r.get("date") or "") >= 7]
+            and not r.get("date_basis") and _month_boundary(r.get("date") or "")]
 
 
 def _iso(y: int, m: int, d: int) -> str | None:

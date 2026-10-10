@@ -12,7 +12,7 @@ import html
 import gzip
 import json
 import re
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import argparse
@@ -27,6 +27,7 @@ BJT = timezone(timedelta(hours=8))
 # Matches a month-granularity label such as "Aug 2026" / "August 2026" — and
 # deliberately NOT "August 4, 2026", which carries a real day.
 _MONTH_ONLY_RAW = re.compile(r"^[A-Za-z]{3,9}\.?\s+\d{4}$")
+_YEAR_ONLY_RAW = re.compile(r"^\d{4}$")
 BASE_DIR = Path(__file__).resolve().parent
 DATA_FILE = BASE_DIR / "data" / "articles.jsonl"
 SOURCES_FILE = BASE_DIR / "config" / "sources.json"
@@ -78,6 +79,7 @@ BADGE_COLORS: dict[str, str] = {
 }
 
 INITIAL_VISIBLE = 20
+WEEK_DAYS = 7     # header "this week": today and the 6 days before (BJT)
 RECENT_DAYS = 90  # Articles older than this are folded behind a "Show older" toggle
                   # AND excluded from the inline article-details JSON island.
                   # Tightened 180 → 90 on 2026-05-29 to keep initial JSON parse cost
@@ -471,9 +473,12 @@ def _build_sources_view(sources: dict[str, dict]) -> str:
         desc_en = html.escape(src.get("description", ""))
         desc_zh = html.escape(profile.get("desc_zh", ""))
 
-        founded = profile.get("founded", "—")
-        aum = profile.get("aum", "—")
-        hq = profile.get("hq", "—")
+        # Escaped like every other field: the monthly refresh writes these
+        # from web pages, and an `<img onerror>` here ran on the page (P4).
+        founded = html.escape(str(profile.get("founded", "—")))
+        aum = html.escape(str(profile.get("aum", "—")))
+        hq_raw = str(profile.get("hq", "—"))
+        hq = html.escape(hq_raw)
         type_en = html.escape(profile.get("type_en", ""))
         type_zh = html.escape(profile.get("type_zh", ""))
         notable_en = html.escape(profile.get("notable_en", ""))
@@ -483,9 +488,9 @@ def _build_sources_view(sources: dict[str, dict]) -> str:
             f'<span class="sc-tag">{html.escape(_STRATEGY_LABELS.get(t, t))}</span>'
             for t in src.get("strategy_tags", [])
         )
-        flag_svgs = "".join(_FLAG_SVGS[c] for c in _hq_to_flags(str(hq)))
+        flag_svgs = "".join(_FLAG_SVGS[c] for c in _hq_to_flags(hq_raw))
         flags_html = (
-            f'<span class="sc-flags" title="{html.escape(str(hq))}">{flag_svgs}</span>'
+            f'<span class="sc-flags" title="{hq}">{flag_svgs}</span>'
             if flag_svgs else ""
         )
         badge_text = "#0b1220" if color in ("#7dd3fc", "#86efac") else "#fff"
@@ -555,10 +560,16 @@ def _display_date(a: dict) -> str:
     page led with "2026-08-31". Prefer the original label when it has no day.
     """
     raw = (a.get("date_raw") or "").strip()
-    # scripts/refine_dates.py found the day on the article page or in its URL.
-    if a.get("date_basis") in ("page", "url"):
+    # scripts/refine_dates.py found the day on the article page or in its URL;
+    # "listing": the listing's own datetime attribute gave it (Wellington),
+    # restored after refine_dates had overwritten it (2026-10-10).
+    if a.get("date_basis") in ("page", "url", "listing"):
         return a.get("date") or ""
     if _MONTH_ONLY_RAW.match(raw):
+        return raw
+    # A year-only label is stored as YYYY-01-01 (it sorts at the end of that
+    # year); showing "2026-01-01" named a day nobody published on (de-shaw).
+    if _YEAR_ONLY_RAW.match(raw):
         return raw
     return a.get("date") or ""
 
@@ -574,14 +585,46 @@ def _effective_date(a: dict, today: str) -> str:
     for those, and nothing can be newer than today, so: the earliest of the
     three.
     """
-    date = (a.get("date") or "").strip()
+    date = _stored_day(a)
     if not date:
         return ""
     candidates = [date, today]
-    fetched = (a.get("fetched_at") or "")[:10]
-    if len(fetched) == 10:
+    # The BJT day, as the header's "added this week" and the stage-5 recount
+    # read it: a UTC stamp sliced as text named the previous day, the two
+    # counts disagreed and the pre-check held the page back (pre-merge review).
+    fetched = _fetched_day(a)
+    if fetched:
         candidates.append(fetched)
     return min(candidates)
+
+
+def _fetched_day(a: dict) -> str:
+    """BJT date the row was first collected, "" when unknown."""
+    raw = a.get("fetched_at") or ""
+    try:
+        stamp = datetime.fromisoformat(raw)
+    except (TypeError, ValueError):
+        return ""
+    return (stamp if stamp.tzinfo else stamp.replace(tzinfo=BJT)).astimezone(BJT).strftime("%Y-%m-%d")
+
+
+def _stored_day(a: dict) -> str:
+    """The stored date as YYYY-MM-DD, "" when it is not one.
+
+    Read the way the stage-5 recount reads it (date.fromisoformat(date[:10])):
+    compared as raw text, "n/a" or "October 2026" sorted after every real day,
+    "2026-10-10T23:00" was not <= "2026-10-10", and the two counts of
+    "published this week" disagreed -- the pre-check then held the page back.
+    A non-string date crashed the render (full re-review, 2026-10-10)."""
+    raw = a.get("date")
+    if not isinstance(raw, str):
+        return ""
+    day = raw.strip()[:10]
+    try:
+        datetime.strptime(day, "%Y-%m-%d")
+    except ValueError:
+        return ""
+    return day
 
 
 def _dateable(a: dict, today: str) -> bool:
@@ -591,7 +634,8 @@ def _dateable(a: dict, today: str) -> bool:
     counting it as new, or letting it set "data through", claims knowledge we
     do not have. Ordering still shows it (capped at today); the counts skip it.
     """
-    return (a.get("date") or "") <= today or bool(a.get("fetched_at"))
+    day = _stored_day(a)
+    return bool(day) and (day <= today or bool(_fetched_day(a)))
 
 
 def _slugify_theme(theme: str) -> str:
@@ -789,7 +833,8 @@ document.getElementById('tv-q').addEventListener('input', e => { tvQ = e.target.
 """
 
 
-def _article_card(a: dict, show_takeaway: bool = False) -> tuple[str, dict | None]:
+def _article_card(a: dict, show_takeaway: bool = False, *, url_reused: bool = False,
+                  dated_title: bool = False, topic_page: bool = False) -> tuple[str, dict | None]:
     """Render a single article as a timeline row.
 
     Returns (html, details_payload). For summarized articles the <details>
@@ -797,6 +842,12 @@ def _article_card(a: dict, show_takeaway: bool = False) -> tuple[str, dict | Non
     into details_payload so the caller can inject it into a single JSON data
     island and hydrate lazily on first open. This trims ~50% of HTML size and
     cuts initial DOM construction cost from ~6000 to ~3000 nodes.
+
+    url_reused: a newer row has the same url (a weekly page the fund
+    overwrites), so this link now opens the latest issue. dated_title: other
+    rows of this source carry the same title; the date joins the headline.
+    topic_page: the source's undated rows are topic hubs (sources.json
+    "undated_rows_are": "topic_pages"), which have no date of their own.
     """
     sid = a.get("source_id", "unknown")
     color = BADGE_COLORS.get(sid, "#8b949e")
@@ -840,6 +891,20 @@ def _article_card(a: dict, show_takeaway: bool = False) -> tuple[str, dict | Non
     # Showing that verbatim puts "2026-08-31" at the top of the page on 08-10, so
     # prefer the original label when it carries no day.
     display_date = _display_date(a)
+    if display_date:
+        date_html = _esc(display_date)
+    elif topic_page:
+        # Bridgewater's undated rows are topic hubs listing 11-14 dated pieces;
+        # the hub itself was never published on a day (stage-4 follow-up).
+        date_html = ('<span class="lang-en">Topic page</span>'
+                     '<span class="lang-zh" style="display:none">专题页</span>')
+    else:
+        # No date anywhere (Capital Group's pages carry none in the listing):
+        # say so rather than leave a blank column.
+        date_html = ('<span class="lang-en">Undated</span>'
+                     '<span class="lang-zh" style="display:none">日期未知</span>')
+    if dated_title and display_date:
+        title = f"{title} · {_esc(display_date)}"
 
     # The publisher withdrew the original (research-affiliates unpublished 8
     # pieces; blue-owl refuses one). The body and summary stay -- they were
@@ -850,12 +915,17 @@ def _article_card(a: dict, show_takeaway: bool = False) -> tuple[str, dict | Non
                    '<span class="lang-en">original removed</span>'
                    '<span class="lang-zh" style="display:none">原文已下架</span></span>'
                    ) if a.get("url_status") == "gone" else ""
+    reused_marker = ('<span class="gone-note url-reused" title="The fund publishes every issue at this '
+                     'address; the link opens the latest one">'
+                     '<span class="lang-en">link now shows the latest issue</span>'
+                     '<span class="lang-zh" style="display:none">原文网址已更新为最新一期</span></span>'
+                     ) if url_reused else ""
 
     html = f"""<div class="row-main">
     <span class="badge" style="background:{color}">{source_name}</span>
-    <span class="date">{_esc(display_date)}</span>
+    <span class="date">{date_html}</span>
     <a class="headline" href="{url}" target="_blank" rel="noopener">{title}</a>
-    {gone_marker}
+    {gone_marker}{reused_marker}
     <span class="row-spacer"></span>
     {toggle}
   </div>
@@ -863,6 +933,27 @@ def _article_card(a: dict, show_takeaway: bool = False) -> tuple[str, dict | Non
   {inline_takeaway if show_takeaway else ""}
   {summary_html}"""
     return html, details_payload
+
+
+def shown_articles(articles: list[dict], source_ids: set[str]) -> list[dict]:
+    """The rows the page shows, in their given order.
+
+    The one rule the stage-5 checker shares with this file (it recounts every
+    number on the page with code of its own, but must hide the same rows):
+    - a source that has left sources.json (demoted/retired, e.g. pgim on
+      2026-07) keeps its history in articles.jsonl but is not shown; showing
+      it made the page render 40 funds while the header counted 39;
+    - a body already shown under the article that owns it: stage 3 labelled the
+      row duplicate_body, and rendering it title-only would put the same
+      document on the page twice (janus-henderson, 2026-09-17). Every other
+      decline stays visible -- ark-invest's blocked pages are real articles
+      with no body, and the user's call on 2026-09-15 was to keep them as
+      title+link.
+    An empty source_ids (no sources.json) filters nothing, as before.
+    """
+    return [a for a in articles
+            if (not source_ids or a.get("source_id") in source_ids)
+            and a.get("analysis_label") != "duplicate_body"]
 
 
 def generate_html(articles: list[dict]) -> str:
@@ -878,22 +969,13 @@ def generate_html(articles: list[dict]) -> str:
         reverse=True,
     )
 
-    # Drop articles whose source has left sources.json (demoted/retired, e.g.
-    # pgim on 2026-07). Their history stays in articles.jsonl; showing them made
-    # the page render 40 funds while the header counted the 39 registered ones.
-    if sources:
-        sorted_articles = [a for a in sorted_articles if a.get("source_id") in sources]
-
-    # A body already shown under the article that owns it: stage 3 labelled this
-    # row duplicate_body, and rendering it title-only would put the same
-    # document on the page twice (janus-henderson, 2026-09-17). Every other
-    # decline stays visible -- ark-invest's blocked pages are real articles with
-    # no body, and the user's call on 2026-09-15 was to keep them as title+link.
-    sorted_articles = [a for a in sorted_articles if a.get("analysis_label") != "duplicate_body"]
+    sorted_articles = shown_articles(sorted_articles, set(sources))
 
     # Stats
     total = len(sorted_articles)
-    week_ago = (datetime.now(BJT) - timedelta(days=7)).strftime("%Y-%m-%d")
+    # "This week" is today and the six days before it. It was today minus 7
+    # through today -- eight days -- until the stage-4 audit (2026-10-09).
+    week_ago = (datetime.now(BJT) - timedelta(days=WEEK_DAYS - 1)).strftime("%Y-%m-%d")
     # Upper bound matters: month-granularity dates normalise to the month end,
     # so without it the current month's articles all counted as "new this week"
     # (46 shown vs 41 real, 2026-08-10 audit).
@@ -907,6 +989,11 @@ def generate_html(articles: list[dict]) -> str:
         return _dateable(a, today_str) and week_ago <= _effective_date(a, today_str) <= today_str
 
     new_this_week = sum(1 for a in sorted_articles if _is_new(a))
+    # Collected this week, whatever the publish date: a source caught up after
+    # a few failed nights, a hand backfill, or a page a fund only now listed.
+    # The header shows both (user's call, 2026-10-09): "100 added this week,
+    # 74 of them published this week" -- the second is a subset of the first.
+    added_this_week = sum(1 for a in sorted_articles if week_ago <= _fetched_day(a) <= today_str)
     production_source_count = len(sources)
 
     # The header used to carry only the render time, so a rebuild with no new
@@ -940,10 +1027,20 @@ def generate_html(articles: list[dict]) -> str:
     pool_parts: list[str] = []
     older_parts: list[str] = []
     details_by_aid: dict[str, dict] = {}
+    # 21 urls carry several issues (2026-10-09): only the newest row's link
+    # still opens the issue it describes. sorted_articles is newest first.
+    seen_urls: set[str] = set()
+    title_counts = Counter((a.get("source_id"), a.get("title")) for a in sorted_articles)
     for seq, a in enumerate(sorted_articles):
         sid = a.get("source_id", "unknown")
         aid = a.get("id", "")
-        card_html, details_payload = _article_card(a, show_takeaway=True)
+        url_key = a.get("url") or ""
+        url_reused = bool(url_key) and url_key in seen_urls
+        seen_urls.add(url_key)
+        card_html, details_payload = _article_card(
+            a, show_takeaway=True, url_reused=url_reused,
+            dated_title=title_counts[(a.get("source_id"), a.get("title"))] > 1,
+            topic_page=sources.get(sid, {}).get("undated_rows_are") == "topic_pages")
         # Articles older than RECENT_DAYS are folded behind "Show older" by CSS;
         # their LLM analysis bodies are also excluded from the JSON island to
         # keep initial parse cost flat. Clicking Open on a revealed older article
@@ -997,11 +1094,20 @@ def generate_html(articles: list[dict]) -> str:
     tags_js = TAGS_VIEW_JS.replace("TV_INITIAL", str(TAGS_VIEW_INITIAL))
 
     # ── Timeline view: empty wrapper; articles injected by JS on view activation ──
+    # Counts only what a click opens: older rows stay folded behind "Show
+    # older" (the button said 1686 where 851 would open, stage-4 audit). The
+    # script recounts on every view switch and older toggle.
+    # Rendered whenever there could be more than one screen, hidden when the
+    # recent rows fit on it: with 20 or fewer recent rows the button was not
+    # rendered at all, and older rows shown later could never be opened.
     load_more_btn = ""
+    remaining = max(total - older_count - INITIAL_VISIBLE, 0)
     if total > INITIAL_VISIBLE:
+        hidden = "" if remaining else ' style="display:none"'
         load_more_btn = (
-            f'<button class="btn-load-more" onclick="showAll()">'
-            f'Load more ({total - INITIAL_VISIBLE} remaining)</button>'
+            f'<button class="btn-load-more" id="tl-more" type="button" onclick="showAll()"{hidden}>'
+            f'<span class="lang-en">Load more ({remaining} remaining)</span>'
+            f'<span class="lang-zh" style="display:none">加载更多（还有 {remaining} 篇）</span></button>'
         )
     timeline_html = (
         f'<div class="timeline-wrap" '
@@ -1163,7 +1269,8 @@ a:hover {{ text-decoration: underline; }}
 .header h1 {{ margin: 0; font-size: 1.6rem; letter-spacing: 0.02em; }}
 .deck {{ margin-top: 4px; color: var(--text-muted); font-size: 0.88rem; }}
 .stats {{ display: flex; flex-wrap: wrap; gap: 8px; color: var(--text-muted); font-size: 0.8rem; margin-top: 10px; }}
-.stats span {{ padding: 4px 8px; border: 1px solid var(--border); background: rgba(15, 23, 39, 0.75); border-radius: 999px; }}
+/* Direct children only: the lang-en/lang-zh spans inside drew a second pill. */
+.stats > span {{ padding: 4px 8px; border: 1px solid var(--border); background: rgba(15, 23, 39, 0.75); border-radius: 999px; }}
 .header-actions {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }}
 .btn-toggle {{
   background: var(--surface2); color: var(--text); border: 1px solid var(--border);
@@ -1423,12 +1530,14 @@ body.hide-older article.pool-article[data-age="older"] {{ display: none !importa
   .inline-takeaway {{ margin-left: 0; }}
   .fund-links li {{ grid-template-columns: 1fr; }}
   .view-bar {{ overflow-x: auto; }}
-  .sources-grid {{ grid-template-columns: 1fr; }}
 }}
 /* ── Sources (fund profile) view ── */
 .sources-intro {{ color: var(--text-muted); font-size: 0.84rem; margin-bottom: 16px; line-height: 1.5; }}
 .sources-grid {{
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(430px, 1fr)); gap: 16px;
+  /* min(..., 100%): a 430px floor made every card 430px wide on a 390px phone.
+     The mobile rule meant to stop that sat in the @media block above, which
+     this later rule overrode (stage-4 audit). */
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(min(430px, 100%), 1fr)); gap: 16px;
 }}
 .source-card {{
   background: rgba(17,24,39,0.84); border: 1px solid var(--border);
@@ -1484,13 +1593,13 @@ body.hide-older article.pool-article[data-age="older"] {{ display: none !importa
       <a href="/" style="font-size:0.82rem;color:var(--text-muted);text-decoration:none;">&larr; <span class="lang-en">Back to Infrastructure</span><span class="lang-zh" style="display:none">返回基础设施</span></a>
       <h1><span class="lang-en">Hedge Fund Research Insights</span><span class="lang-zh" style="display:none">对冲基金研究洞察</span></h1>
       <div class="deck"><span class="lang-en">Cross-fund research aggregator — filter by tags, or scan by timeline or fund.</span><span class="lang-zh" style="display:none">跨基金研究聚合 — 按标签筛选（多选取交集），或按时间线、基金浏览。</span></div>
-      <div class="stats">
-        <span>{total} articles</span>
-        <span>{new_this_week} new this week</span>
-        <span>{production_source_count} funds tracked</span>
+      <div class="stats" data-built="{today_str}">
+        <span><span class="lang-en"><b data-stat="total">{total}</b> articles</span><span class="lang-zh" style="display:none">共 <b>{total}</b> 篇</span></span>
+        <span><span class="lang-en"><b data-stat="added-week">{added_this_week}</b> added this week, <b data-stat="published-week">{new_this_week}</b> of them published this week</span><span class="lang-zh" style="display:none">本周新收录 <b>{added_this_week}</b>，其中本周发表 <b>{new_this_week}</b></span></span>
+        <span><span class="lang-en"><b data-stat="funds">{production_source_count}</b> funds tracked</span><span class="lang-zh" style="display:none">跟踪 <b>{production_source_count}</b> 家基金</span></span>
         <span title="Newest article on the page; the page itself was built at {now}">
-          <span class="lang-en">Data through {data_through}</span>
-          <span class="lang-zh" style="display:none">数据截至 {data_through}</span>
+          <span class="lang-en">Data through {_esc(data_through)}</span>
+          <span class="lang-zh" style="display:none">数据截至 {_esc(data_through)}</span>
         </span>
         <span class="muted">
           <span class="lang-en">page built {now}</span>
@@ -1610,6 +1719,10 @@ function returnArticlesToPool() {{
   }});
 }}
 
+/* The reader pressed "Load more": rebuilding the timeline (Show older injects
+   rows and switches view again) must not fold it back to 20 rows. */
+let tlExpanded = false;
+
 function populateViewFromPool(viewName) {{
   const pool = document.getElementById('article-pool');
   if (!pool) return;
@@ -1619,7 +1732,7 @@ function populateViewFromPool(viewName) {{
   if (viewName === 'timeline') {{
     const target = panel.querySelector('.timeline-wrap');
     if (!target) return;
-    const initialVisible = parseInt(target.dataset.initialVisible || '20', 10);
+    const initialVisible = tlExpanded ? Infinity : parseInt(target.dataset.initialVisible || '20', 10);
     /* Pool DOM order is scrambled after any themes/funds hydration, so sort
        by data-seq (baked-in global date-descending rank) to restore the feed. */
     Array.from(pool.querySelectorAll('article.pool-article'))
@@ -1810,13 +1923,20 @@ function bindRowToggles() {{
 }}
 bindRowToggles();
 
+/* The timeline's own button, by id: '.btn-load-more' first matched the Tags
+   view's #tv-more, so the count never updated and the button never went away.
+   Counts only rows a click would show: older rows stay hidden while
+   body.hide-older is set. */
 function updateLoadMoreCount() {{
-  const btn = document.querySelector('.btn-load-more');
-  if (!btn || btn.style.display === 'none') return;
-  const hidden = document.querySelectorAll('.timeline-extra:not(.hidden-by-filter)');
-  const remaining = Array.from(hidden).filter(el => el.style.display === 'none').length;
+  const btn = document.getElementById('tl-more');
+  if (!btn) return;
+  const hideOlder = document.body.classList.contains('hide-older');
+  const remaining = Array.from(document.querySelectorAll('#view-timeline .timeline-extra'))
+    .filter(el => el.style.display === 'none' && !(hideOlder && el.dataset.age === 'older')).length;
   if (remaining > 0) {{
-    btn.textContent = 'Load more (' + remaining + ' remaining)';
+    btn.innerHTML = '<span class="lang-en">Load more (' + remaining + ' remaining)</span>'
+      + '<span class="lang-zh">加载更多（还有 ' + remaining + ' 篇）</span>';
+    applyLang(btn);
     btn.style.display = '';
   }} else {{
     btn.style.display = 'none';
@@ -1824,12 +1944,12 @@ function updateLoadMoreCount() {{
 }}
 
 function showAll() {{
+  tlExpanded = true;
   document.querySelectorAll('.timeline-wrap article.pool-article').forEach(el => {{
     el.style.display = '';
     el.classList.remove('timeline-extra');
   }});
-  const btn = document.querySelector('.btn-load-more');
-  if (btn) btn.style.display = 'none';
+  updateLoadMoreCount();
   bindRowToggles();
 }}
 
@@ -1850,20 +1970,6 @@ bindRowToggles();
 PUBLISHED_MODE = 0o664
 
 
-def _staged_copy(target: Path, write) -> tuple[Path, Path]:
-    """Write the content beside `target`; return (temp path, real target).
-
-    Renaming onto a symlink would replace the link with a plain file, so the
-    real path is resolved here and is what the caller renames onto (a
-    /var/www page has been a symlink before).
-    """
-    real = Path(os.path.realpath(target))
-    tmp = real.with_name(f".{real.name}.tmp{os.getpid()}")
-    write(tmp)
-    os.chmod(tmp, PUBLISHED_MODE)     # a 0600 temp file would be unreadable to nginx
-    return tmp, real
-
-
 def publish_html(output_file: Path, html_content: str) -> Path:
     """Write HTML and gzipped HTML to the configured output path.
 
@@ -1871,6 +1977,13 @@ def publish_html(output_file: Path, html_content: str) -> Path:
     both were written: an in-place write left nginx serving a truncated 4MB
     page if anything failed mid-write, and briefly served an .html and a .gz
     that disagreed.
+
+    Stage-4 audit (2026-10-09) closed the two gaps left: the second rename
+    failing left html v2 beside gz v1 -- readers are served the .gz, so they
+    got the old page while every check read the new .html -- and a temp file
+    whose write failed half way was never registered, so it stayed behind.
+    Temp names are now registered before writing, and the old pair is kept
+    until both renames succeed; if the second fails, the first is put back.
     """
     output_file.parent.mkdir(parents=True, exist_ok=True)
     gzip_path = output_file.with_suffix(output_file.suffix + ".gz")
@@ -1879,21 +1992,60 @@ def publish_html(output_file: Path, html_content: str) -> Path:
         with gzip.open(path, "wt", encoding="utf-8") as f:
             f.write(html_content)
 
-    staged = []
+    staged: list[tuple[Path, Path]] = []
+    kept: list[tuple[Path, Path]] = []      # (copy of the old file, target)
     try:
-        staged.append(_staged_copy(output_file, lambda p: p.write_text(html_content, encoding="utf-8")))
-        staged.append(_staged_copy(gzip_path, write_gz))
-        for tmp, target in staged:
-            os.replace(tmp, target)
+        for target, write in ((output_file, lambda p: p.write_text(html_content, encoding="utf-8")),
+                              (gzip_path, write_gz)):
+            real = Path(os.path.realpath(target))
+            tmp = real.with_name(f".{real.name}.tmp{os.getpid()}")
+            staged.append((tmp, real))
+            write(tmp)
+            os.chmod(tmp, PUBLISHED_MODE)    # a 0600 temp file would be unreadable to nginx
+        for _, real in staged:
+            if real.exists():
+                old = real.with_name(f".{real.name}.old{os.getpid()}")
+                os.link(real, old)
+                kept.append((old, real))
+        done: list[Path] = []
+        try:
+            for tmp, real in staged:
+                os.replace(tmp, real)
+                done.append(real)
+        except OSError:
+            for old, real in kept:
+                if real in done:
+                    os.replace(old, real)
+            raise
     finally:
         for tmp, _ in staged:
             tmp.unlink(missing_ok=True)
+        for old, _ in kept:
+            old.unlink(missing_ok=True)
     return gzip_path
 
 
 # publish.py exit code when the dashboard was written but the docs-site sync
 # failed. run_pipeline.sh records it as Stage4:docs-sync and still runs Stage 5.
 DOCS_SYNC_FAILED = 3
+# The page failed the stage-5 checks before going live: nothing was written,
+# the previous page stays up. run_pipeline.sh records Stage4:precheck.
+PRECHECK_FAILED = 4
+
+
+def _precheck(html_content: str, articles: list[dict]) -> list[str]:
+    """Run scripts/check_dashboard_html.py's checks on the page before it is
+    written (stage-4 audit P6: stage 5 only ever saw the page once it was
+    live). Returns one line per failed check."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "_check_dashboard_html", BASE_DIR / "scripts" / "check_dashboard_html.py")
+    chk = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(chk)
+    ids = set(_load_sources())
+    counts = chk.recount(articles, ids, chk.built_date(html_content)) if ids else None
+    result = chk.check_dashboard(html_content, ids, counts=counts)
+    return [f"{c['check']}: {c['detail']}" for c in result["checks"] if not c["passed"]]
 DOCS_PAGE_RELPATH = "pages/hedge-fund-research.html"
 
 
@@ -1914,6 +2066,17 @@ def sync_docs_site(docs_repo: Path, html_content: str,
         rejected push is carried by the next successful one.
     An absent docs-site (a dev machine) is not a failure.
     """
+    try:
+        return _sync_docs_site(docs_repo, html_content, relpath)
+    except Exception as e:   # noqa: BLE001 -- any failure here is "page live, sync failed"
+        # A PermissionError copying the page used to escape as exit 1, which
+        # run_pipeline.sh reads as "not published" and skips stage 5 although
+        # the page was already live (stage-4 audit P9).
+        print(f"ERROR: docs-site sync failed: {type(e).__name__}: {e}", file=sys.stderr)
+        return False
+
+
+def _sync_docs_site(docs_repo: Path, html_content: str, relpath: str) -> bool:
     import subprocess
 
     page = docs_repo / relpath
@@ -1967,6 +2130,13 @@ def main() -> int:
 
     articles = load_articles()
     html_content = generate_html(articles)
+
+    problems = _precheck(html_content, articles)
+    if problems:
+        print("ERROR: the new page failed its checks; the live page is left as it was:", file=sys.stderr)
+        for line in problems:
+            print(f"  ✗ {line}", file=sys.stderr)
+        return PRECHECK_FAILED
 
     output_file = Path(args.output)
     gzip_path = publish_html(output_file, html_content)

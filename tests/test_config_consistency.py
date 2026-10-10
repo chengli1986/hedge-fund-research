@@ -338,6 +338,24 @@ def test_every_source_has_fund_profile():
     )
 
 
+def _new_profile_drafts(pending: Path) -> list[Path]:
+    """Drafts of NEW funds (graduate_pending's input), the only full profiles here.
+
+    <id>.refresh.json is a monthly change-log delta for an existing fund (only
+    the fields that changed), and validate_profile reads it as a full profile
+    with every field missing: one rejected refresh draft left behind failed this
+    test -- and the monthly refresh's own test gate -- every month after
+    (pre-merge review, 2026-10-10)."""
+    return [p for p in sorted(pending.glob("*.json"))
+            if not p.name.endswith((".validation.json", ".refresh.json"))]
+
+
+def test_refresh_drafts_are_not_read_as_new_profiles(tmp_path):
+    for name in ("acme.json", "acme.validation.json", "kkr.refresh.json"):
+        (tmp_path / name).write_text("{}")
+    assert [p.name for p in _new_profile_drafts(tmp_path)] == ["acme.json"]
+
+
 def test_pending_profiles_pass_validator():
     """Every pending_profiles/<id>.json must pass the hard checks in
     scripts/validate_pending_profile.py.
@@ -353,9 +371,7 @@ def test_pending_profiles_pass_validator():
     from validate_pending_profile import validate_profile  # type: ignore
 
     failures = []
-    for path in sorted(PENDING_DIR.glob("*.json")):
-        if path.name.endswith(".validation.json"):
-            continue
+    for path in _new_profile_drafts(PENDING_DIR):
         try:
             data = json.loads(path.read_text())
         except json.JSONDecodeError as exc:
@@ -554,3 +570,51 @@ def test_playwright_is_only_imported_inside_functions():
             elif isinstance(node, ast.Import) and any(_is_playwright_pkg(a.name) for a in node.names):
                 offenders.append(f"{rel}:{node.lineno}")
     assert not offenders, f"module-level playwright import bypasses the test guard: {offenders}"
+
+
+# ---------------------------------------------------------------------------
+# The card's AUM (publish._FUND_PROFILES) and the AUM written into the English
+# description (sources.json) are kept in step by the monthly refresh, which
+# trusted the draft's word for the old value until the stage-4 audit (P3): a
+# wrong or tilde-less `old` left the two disagreeing, or wrote "~~$800B". On
+# 2026-10-09 all 25 descriptions that carry a figure agreed with their card.
+# The check is written out here on purpose rather than imported from
+# apply_refresh, so a mistake in that rule cannot also blind this test.
+# ---------------------------------------------------------------------------
+
+_MONEY = re.compile(r"([$€£¥])\s*(\d+(?:\.\d+)?)\s*([KMBT])\b", re.I)
+
+
+def _figures(text: str) -> set:
+    """Money figures WITH their currency: "~€700B" and "$700B" are not the same AUM."""
+    return {(c, n, u.upper()) for c, n, u in _MONEY.findall(text)}
+
+
+def test_card_aum_agrees_with_the_aum_in_the_description():
+    import ast
+    tree = ast.parse((REPO / "publish.py").read_text(encoding="utf-8"))
+    node = next(n.value for n in tree.body
+                if isinstance(n, (ast.Assign, ast.AnnAssign))
+                and "_FUND_PROFILES" in ast.unparse(n.targets[0] if isinstance(n, ast.Assign) else n.target))
+    profiles = ast.literal_eval(node)
+    descriptions = {s["id"]: s.get("description", "")
+                    for s in json.loads(SOURCES_FILE.read_text())["sources"]}
+    bad, checked = [], 0
+    for fid, profile in profiles.items():
+        desc, aum = descriptions.get(fid, ""), profile["aum"]
+        figures = _figures(desc)
+        if not figures:
+            continue
+        checked += 1
+        if aum in desc or figures & _figures(aum):
+            continue
+        bad.append(f"{fid}: card {aum!r} vs description {desc[:90]!r}")
+    assert checked >= 20, f"only {checked} descriptions carry a figure — did the format change?"
+    assert not bad, "card AUM and description AUM disagree:\n" + "\n".join(bad)
+
+
+def test_no_doubled_approximation_mark():
+    """'~~$800B' is what a tilde-less draft `old` produced (stage-4 audit P3);
+    the agreement check above reads it as fine, since '~$800B' is inside it."""
+    text = (REPO / "publish.py").read_text(encoding="utf-8") + SOURCES_FILE.read_text()
+    assert "~~" not in text

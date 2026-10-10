@@ -13,7 +13,8 @@ Exit codes:
     1 — validation failed (missing fields or hard violations)
     2 — fund-id already present in publish._FUND_PROFILES
     3 — pending_profiles/<fund-id>.json not found
-    4 — publish.py format unexpected (could not locate _FUND_PROFILES dict)
+    4 — publish.py format unexpected (could not locate _FUND_PROFILES dict), or
+        the rewritten publish.py failed its trial run (publish.py untouched)
 
 Why this exists: lifecycle gap that bit KKR (5-12 8a6b574) and Research
 Affiliates (5-15 a05699f) — both needed manual publish.py edits to graduate
@@ -26,7 +27,6 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
-import re
 import sys
 from pathlib import Path
 
@@ -38,8 +38,10 @@ EXIT_ALREADY_PRESENT = 2
 EXIT_PENDING_NOT_FOUND = 3
 EXIT_FORMAT_UNEXPECTED = 4
 
-PROFILE_FIELDS = ("founded", "aum", "hq", "type_en", "type_zh",
-                  "desc_zh", "notable_en", "notable_zh")
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import profile_edit  # noqa: E402
+
+PROFILE_FIELDS = profile_edit.PROFILE_FIELDS
 
 
 def _load_validate_module(base_dir: Path):
@@ -54,61 +56,6 @@ def _load_validate_module(base_dir: Path):
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
-
-
-def _find_fund_profiles_block(source: str) -> tuple[int, int]:
-    """Return (insert_pos, close_brace_pos) for the _FUND_PROFILES dict literal.
-
-    insert_pos = where to splice the new entry (just before closing `}` line).
-    close_brace_pos = position of the closing `}` itself, for sanity.
-
-    Raises ValueError if the dict literal can't be located.
-    """
-    m = re.search(r"_FUND_PROFILES\s*(?::\s*dict\[[^\]]+\])?\s*=\s*\{",
-                  source)
-    if not m:
-        raise ValueError("could not locate _FUND_PROFILES dict declaration")
-
-    open_brace_pos = source.index("{", m.start())
-    depth = 1
-    i = open_brace_pos + 1
-    while i < len(source) and depth > 0:
-        ch = source[i]
-        if ch == "{":
-            depth += 1
-        elif ch == "}":
-            depth -= 1
-            if depth == 0:
-                break
-        i += 1
-    if depth != 0:
-        raise ValueError("unbalanced braces in _FUND_PROFILES dict literal")
-
-    # i now points at the closing `}` of the outer dict
-    # Walk back to the start of that line so we splice cleanly
-    line_start = source.rfind("\n", 0, i) + 1
-    return line_start, i
-
-
-def _format_entry(fund_id: str, profile: dict) -> str:
-    """Build the publish.py-style entry text, matching the existing 5-line
-    compact format used for all 22 funds."""
-    def lit(s: str) -> str:
-        # JSON-escape via json.dumps to handle quotes/backslashes safely
-        return json.dumps(s, ensure_ascii=False)
-
-    return (
-        f'    {lit(fund_id)}: {{\n'
-        f'        "founded": {lit(profile["founded"])}, '
-        f'"aum": {lit(profile["aum"])}, '
-        f'"hq": {lit(profile["hq"])},\n'
-        f'        "type_en": {lit(profile["type_en"])}, '
-        f'"type_zh": {lit(profile["type_zh"])},\n'
-        f'        "desc_zh": {lit(profile["desc_zh"])},\n'
-        f'        "notable_en": {lit(profile["notable_en"])},\n'
-        f'        "notable_zh": {lit(profile["notable_zh"])},\n'
-        f'    }},\n'
-    )
 
 
 def graduate(fund_id: str, *, base_dir: Path | None = None) -> int:
@@ -138,9 +85,14 @@ def graduate(fund_id: str, *, base_dir: Path | None = None) -> int:
         sys.stderr.write(f"[graduate] validation failed: {hard_issues}\n")
         return EXIT_VALIDATION_FAILED
 
-    source = publish_path.read_text()
-    if re.search(rf'^\s*{re.escape(json.dumps(fund_id))}\s*:\s*\{{',
-                 source, re.M):
+    source = publish_path.read_text(encoding="utf-8")
+    try:
+        current_profiles = profile_edit.read_profiles(source)
+        insert_pos = profile_edit.insert_position(source)
+    except (SyntaxError, ValueError) as e:
+        sys.stderr.write(f"[graduate] publish.py format unexpected: {e}\n")
+        return EXIT_FORMAT_UNEXPECTED
+    if fund_id in current_profiles:
         sys.stderr.write(
             f"[graduate] {fund_id!r} already in publish._FUND_PROFILES — "
             f"refusing to overwrite (delete the existing entry first if you "
@@ -148,15 +100,13 @@ def graduate(fund_id: str, *, base_dir: Path | None = None) -> int:
         )
         return EXIT_ALREADY_PRESENT
 
+    entry = {k: profile[k] for k in PROFILE_FIELDS}
     try:
-        insert_pos, _close_pos = _find_fund_profiles_block(source)
+        new_source = source[:insert_pos] + profile_edit.format_entry(fund_id, entry) + source[insert_pos:]
+        profile_edit.replace_checked(publish_path, new_source, {**current_profiles, fund_id: entry})
     except ValueError as e:
-        sys.stderr.write(f"[graduate] {e}\n")
+        sys.stderr.write(f"[graduate] {fund_id}: {e} — publish.py untouched\n")
         return EXIT_FORMAT_UNEXPECTED
-
-    entry = _format_entry(fund_id, profile)
-    new_source = source[:insert_pos] + entry + source[insert_pos:]
-    publish_path.write_text(new_source)
 
     # Cleanup pending + validation companion only after successful write
     pending_path.unlink()
