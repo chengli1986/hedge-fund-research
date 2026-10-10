@@ -137,7 +137,11 @@ def load_articles(path: Path = None) -> list[dict] | None:
     if not path.exists():
         return None
     rows = []
-    for line in path.read_text(encoding="utf-8").splitlines():
+    # Split on "\n" only, as publish.load_articles reads the file line by line:
+    # splitlines() also breaks at U+2028/U+0085, which json.dumps(ensure_ascii=
+    # False) writes raw, and one such title cost a row and a nightly false alarm
+    # (pre-merge review, 2026-10-10).
+    for line in path.read_text(encoding="utf-8").split("\n"):
         if line.strip():
             try:
                 rows.append(json.loads(line))
@@ -162,7 +166,7 @@ def recount(articles: list[dict], source_ids: set[str], today: date | None) -> d
             try:
                 stamp = datetime.fromisoformat(a["fetched_at"])
                 fetched = (stamp if stamp.tzinfo else stamp.replace(tzinfo=BJT)).astimezone(BJT).date()
-            except ValueError:
+            except (TypeError, ValueError):
                 fetched = None
         if fetched and first <= fetched <= today:
             added += 1
@@ -275,9 +279,13 @@ def check_dashboard(html: str, expected_ids: set[str], *,
         islands = _islands(html)
         dom = len(re.findall(r'<article id="a-', _strip_scripts(html)))   # cards, not the CSS comment that names <article>
         try:
-            older = len(json.loads(islands["older-articles-data"])) if "older-articles-data" in islands else 0
+            entries = json.loads(islands["older-articles-data"]) if "older-articles-data" in islands else []
         except json.JSONDecodeError:
-            older = 0     # reported by data_islands below
+            entries = []  # reported by data_islands below
+        # An entry counts only if it is a card: the array's length alone passed
+        # a page whose older cards were all emptied to "" (pre-merge review).
+        older = sum(1 for e in entries if isinstance(e, str)
+                    and re.match(r'<article id="a-[^"]+"', e) and e.rstrip().endswith("</article>"))
         add("article_cards", dom + older == counts["total"],
             f"{dom} cards + {older} older = {dom + older}, data has {counts['total']}")
 

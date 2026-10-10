@@ -348,39 +348,46 @@ def run(path: Path, api_key: str, backup: Path | None, limit: int = 0, workers: 
             return row, None, f"failed: {type(exc).__name__}: {exc}"[:300], [], {}
 
     broken: Exception | None = None
+
+    def record(result) -> tuple[dict, str]:
+        """Book, apply and report one finished article (no flush, no print)."""
+        nonlocal fatal
+        row, tags, outcome, billed, evidence = result
+        for usage, ok in billed:
+            log_usage(row["id"], MODEL, usage, parsed=ok)
+            tokens[0] += usage.get("prompt_tokens") or 0
+            tokens[1] += usage.get("completion_tokens") or 0
+        if broken is not None:
+            return row, outcome     # only booking the calls that were in flight (T4)
+        if outcome.startswith("fatal"):
+            fatal = fatal or outcome
+        if tags is not None:
+            apply_tags(row, tags)
+            done[row["id"]] = row
+            counts["tagged"] += 1
+        elif outcome.startswith(("skipped", "fatal")):
+            counts["skipped"] += 1
+        else:
+            counts["failed"] += 1
+            # Not counted only when no call was answered and every fault that
+            # night cleared up by itself: classify() keeps the TRANSIENT prefix
+            # only then (R4, tightened in T3).
+            if billed or not outcome.startswith(f"failed after {ATTEMPTS} attempts: {TRANSIENT}"):
+                failed.add(row["id"])
+        with report.open("a", encoding="utf-8") as f:
+            f.write(json.dumps({"id": row["id"], "source_id": row.get("source_id"),
+                                "outcome": outcome, "tags": tags, "evidence": evidence},
+                               ensure_ascii=False) + "\n")
+        return row, outcome
+
     pool = ThreadPoolExecutor(max_workers=workers)
     futures: list = []
-    seen: set = set()
+    handled: set = set()
     try:
         futures = [pool.submit(work, r) for r in todo]
         for i, fut in enumerate(as_completed(futures), 1):
-            seen.add(fut)
-            row, tags, outcome, billed, evidence = fut.result()
-            for usage, ok in billed:
-                log_usage(row["id"], MODEL, usage, parsed=ok)
-                tokens[0] += usage.get("prompt_tokens") or 0
-                tokens[1] += usage.get("completion_tokens") or 0
-            if broken is not None:
-                continue        # only booking the calls that were in flight (T4)
-            if outcome.startswith("fatal"):
-                fatal = fatal or outcome
-            if tags is not None:
-                apply_tags(row, tags)
-                done[row["id"]] = row
-                counts["tagged"] += 1
-            elif outcome.startswith(("skipped", "fatal")):
-                counts["skipped"] += 1
-            else:
-                counts["failed"] += 1
-                # Not counted only when no call was answered and every fault that
-                # night cleared up by itself: classify() keeps the TRANSIENT prefix
-                # only then (R4, tightened in T3).
-                if billed or not outcome.startswith(f"failed after {ATTEMPTS} attempts: {TRANSIENT}"):
-                    failed.add(row["id"])
-            with report.open("a", encoding="utf-8") as f:
-                f.write(json.dumps({"id": row["id"], "source_id": row.get("source_id"),
-                                    "outcome": outcome, "tags": tags, "evidence": evidence},
-                                   ensure_ascii=False) + "\n")
+            row, outcome = record(fut.result())
+            handled.add(fut)
             if len(done) >= SAVE_EVERY:
                 try:
                     flush(path, done, failed, gave_up)
@@ -397,19 +404,23 @@ def run(path: Path, api_key: str, backup: Path | None, limit: int = 0, workers: 
         # replaced waited for every queued article -- each a paid call -- and
         # then skipped the final flush, so a manual run interrupted at article
         # 5 of 30 made 30 calls and saved nothing (2026-10-10; T8 fixed the same
-        # shape in resummarize). Stop the queue, book what was in flight, save
-        # what is finished, then go.
+        # shape in resummarize). Stop the queue, let the calls in flight finish
+        # and record them like any other result -- paid for, so kept -- save,
+        # announce a give-up (the only night it is announced), then go.
         stop.set()
         pool.shutdown(wait=True, cancel_futures=True)
         for fut in futures:
-            if fut not in seen and fut.done() and not fut.cancelled():
-                for usage, ok in fut.result()[3]:
-                    log_usage(fut.result()[0]["id"], MODEL, usage, parsed=ok)
+            if fut not in handled and fut.done() and not fut.cancelled():
+                record(fut.result())
+                handled.add(fut)
         if broken is None:
             try:
                 flush(path, done, failed, gave_up)
             except Exception as exc:
                 print(f"could not save the finished articles: {type(exc).__name__}: {exc}")
+        if gave_up:
+            print(f"GAVE UP after {MAX_TAG_NIGHTS} failed nights (no longer asked; clear tag_failures "
+                  f"to retry): {', '.join(gave_up)}")
         raise
     pool.shutdown(wait=True)
     if broken is not None:

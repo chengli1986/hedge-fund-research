@@ -37,8 +37,10 @@ def generate_html(articles):
 
 
 if __name__ == "__main__":
+    import os, sys
     generate_html([])
     print("published")
+    sys.exit(int(os.environ.get("FAKE_PUBLISH_RC", "0")))
 '''
 
 SOURCES = {"sources": [{"id": "kkr", "description": "Global alternatives leader (~$758B AUM)."}],
@@ -61,7 +63,7 @@ def _git(cwd, *args):
     return subprocess.run(["git", "-C", str(cwd), *args], capture_output=True, text=True, check=True).stdout
 
 
-def _sandbox(tmp_path: Path, tests_pass: bool) -> tuple[Path, dict]:
+def _sandbox(tmp_path: Path, tests_pass: bool, gate: str = "", claude_script: str = "") -> tuple[Path, dict]:
     repo = tmp_path / "repo"
     for d in ("config", "scripts", "pending_profiles", "logs", "tests", "auto-promote"):
         (repo / d).mkdir(parents=True)
@@ -72,7 +74,11 @@ def _sandbox(tmp_path: Path, tests_pass: bool) -> tuple[Path, dict]:
         shutil.copy(REPO / "scripts" / f, repo / "scripts" / f)
     (repo / "scripts" / "send_refresh_summary.py").write_text(SUMMARY_STUB)
     (repo / "auto-promote" / "refresh-program.md").write_text("refresh the profiles\n")
-    (repo / "tests" / "test_gate.py").write_text(f"def test_gate():\n    assert {tests_pass}\n")
+    (repo / "tests" / "test_gate.py").write_text(gate or f"def test_gate():\n    assert {tests_pass}\n")
+    # The real conftest, with its guard that fails a run which changes logs/,
+    # config/, pending_profiles/...: a gate tested without it passed here while
+    # failing every real run (pre-merge review, 2026-10-10).
+    shutil.copy(REPO / "tests" / "conftest.py", repo / "tests" / "conftest.py")
     (repo / ".gitignore").write_text("logs/\npending_profiles/\n__pycache__/\n")
     _git(repo.parent, "init", "-q", "-b", "main", str(repo))
     _git(repo, "config", "user.email", "t@example.com")
@@ -85,8 +91,8 @@ def _sandbox(tmp_path: Path, tests_pass: bool) -> tuple[Path, dict]:
     _git(repo, "push", "-q", "-u", "origin", "main")
 
     claude = tmp_path / "claude"
-    claude.write_text("#!/usr/bin/env bash\ncat > pending_profiles/kkr.refresh.json <<'EOF'\n"
-                      + json.dumps(DRAFT) + "\nEOF\n")
+    claude.write_text(claude_script or ("#!/usr/bin/env bash\ncat > pending_profiles/kkr.refresh.json <<'EOF'\n"
+                                        + json.dumps(DRAFT) + "\nEOF\n"))
     claude.chmod(0o755)
     home = tmp_path / "home"
     home.mkdir()
@@ -162,3 +168,63 @@ def test_wrapper_never_touches_the_production_tree(tmp_path, tests_pass):
     repo, env = _sandbox(tmp_path, tests_pass=tests_pass)
     _run(repo, env)
     assert [p.read_bytes() for p in watched] == before
+
+
+# ── pre-merge review, 2026-10-10 ─────────────────────────────────────────────
+
+def _summary(repo):
+    return json.loads((repo / "logs" / "summary.json").read_text())
+
+
+def test_the_test_gate_passes_under_the_real_conftest(tmp_path):
+    """pytest's output went to logs/ inside the repo, which the conftest guard
+    fingerprints: every real run failed its own gate and rolled back."""
+    repo, env = _sandbox(tmp_path, tests_pass=True)
+    assert _run(repo, env).returncode == 0
+    assert _summary(repo)["applied"].strip() == "kkr", _summary(repo)
+    assert (tmp_path / "home" / "logs" / "profile-refresh-pytest.log").exists()
+
+
+def test_a_rejected_draft_is_parked_not_left_to_fail_next_month(tmp_path):
+    bad = dict(DRAFT, change_log=[dict(DRAFT["change_log"][0], old="~$700B")])     # old != publish.py
+    script = ("#!/usr/bin/env bash\ncat > pending_profiles/kkr.refresh.json <<'EOF'\n"
+              + json.dumps(bad) + "\nEOF\n")
+    repo, env = _sandbox(tmp_path, tests_pass=True, claude_script=script)
+    assert _run(repo, env).returncode == 0
+    assert not (repo / "pending_profiles" / "kkr.refresh.json").exists()
+    assert (repo / "pending_profiles" / "flagged" / "kkr.refresh.json").exists()
+    assert "apply_refresh rc=1" in _summary(repo)["flagged"]
+
+
+def test_an_agent_that_edits_publish_py_itself_is_undone_and_reported(tmp_path):
+    script = ("#!/usr/bin/env bash\nsed -i 's/~\\$758B/<b>~$9T<\\/b>/' publish.py\n"
+              "cat > pending_profiles/kkr.refresh.json <<'EOF'\n" + json.dumps(DRAFT) + "\nEOF\n")
+    repo, env = _sandbox(tmp_path, tests_pass=True, claude_script=script)
+    before = (repo / "publish.py").read_text()
+    head = _git(repo, "rev-parse", "HEAD").strip()
+    assert _run(repo, env).returncode == 0
+    assert (repo / "publish.py").read_text() == before
+    assert _git(repo, "rev-parse", "HEAD").strip() == head
+    s = _summary(repo)
+    assert s["applied"] == "" and "agent changed tracked files" in s["flagged"]
+
+
+def test_a_rollback_does_not_overwrite_another_writer(tmp_path):
+    """Another job changes publish.py after the apply; the tests then fail."""
+    gate = ("from pathlib import Path\n"
+            "def test_gate():\n"
+            "    p = Path(__file__).resolve().parent.parent / 'publish.py'\n"
+            "    p.write_text(p.read_text() + '# written by another job\\n')\n"
+            "    assert False\n")
+    repo, env = _sandbox(tmp_path, tests_pass=False, gate=gate)
+    assert _run(repo, env).returncode == 0
+    assert "# written by another job" in (repo / "publish.py").read_text()
+    assert "another writer" in _summary(repo)["flagged"]
+
+
+def test_a_failed_docs_site_sync_is_reported(tmp_path):
+    repo, env = _sandbox(tmp_path, tests_pass=True)
+    env["FAKE_PUBLISH_RC"] = "3"
+    assert _run(repo, env).returncode == 0
+    s = _summary(repo)
+    assert s["applied"].strip() == "kkr" and "docs-site copy failed" in s["flagged"]

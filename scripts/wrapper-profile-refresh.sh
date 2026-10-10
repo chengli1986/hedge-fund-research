@@ -12,6 +12,12 @@
 #   commit took whatever else happened to be staged in this shared tree).
 #   PROFILE_REFRESH_REPO / PROFILE_REFRESH_LOCK exist so tests can run this
 #   against a throwaway repo; cron never sets them.
+#   Pre-merge review (2026-10-10): pytest's own output went to logs/ inside the
+#   repo, which tests/conftest.py fingerprints -- so the gate failed on every
+#   real run; the agent could edit publish.py itself, after which the "backup"
+#   was taken; a rollback copied the backup over whatever another job had
+#   written meanwhile; and a rejected draft left in pending_profiles/ failed
+#   the suite every month after.
 set -uo pipefail
 
 REPO="${PROFILE_REFRESH_REPO:-/home/ubuntu/hedge-fund-research}"
@@ -42,6 +48,21 @@ trap cleanup EXIT
 
 cd "$REPO" || exit 1
 mkdir -p logs
+# Outside the repo: the suite fails any run that changes a file under logs/,
+# config/, data/, content/ or pending_profiles/ (conftest _no_production_writes).
+TEST_LOG="${PROFILE_REFRESH_TEST_LOG:-$HOME/logs/profile-refresh-pytest.log}"
+mkdir -p "$(dirname "$TEST_LOG")"
+
+# What the agent must not touch: everything tracked outside pending_profiles/
+# and logs/. Taken BEFORE it runs, so its own edits cannot become the baseline.
+BACKUP_DIR="$(mktemp -d "$REPO/logs/profile-refresh-backup.XXXXXX")" \
+  && cp -p publish.py config/sources.json "$BACKUP_DIR/" \
+  || { echo "[profile-refresh] could not back up publish.py/sources.json; nothing run"; exit 1; }
+tracked_state() {
+  git status --porcelain --untracked-files=no -- . ':(exclude)pending_profiles' ':(exclude)logs' 2>/dev/null
+  git diff --no-ext-diff -- . ':(exclude)pending_profiles' ':(exclude)logs' 2>/dev/null | sha256sum
+}
+STATE_BEFORE="$(tracked_state)"
 # IMPORTANT preamble: headless agents load ~/.claude/CLAUDE.md, whose "session
 # start = daily log recap" ritual derails this run — the agent tries to read the
 # out-of-repo daily-log dir, gets sandbox-blocked, and stalls asking the user a
@@ -66,35 +87,57 @@ timeout --kill-after=30 3000 "$CLAUDE_BIN" --print --dangerously-skip-permission
   --max-turns 120 "$PROMPT" \
   > logs/profile-refresh-agent.log 2>&1 || echo "[profile-refresh] agent exit $? (max-turns ok)"
 
+APPLIED=(); FLAGGED=()
+AGENT_TOUCHED=0
+if [[ "$(tracked_state)" != "$STATE_BEFORE" ]]; then
+  # The agent writes drafts, nothing else. Its own edit of publish.py went
+  # live with the next publish and was swept into the next refresh commit.
+  AGENT_TOUCHED=1
+  changed="$(git status --porcelain --untracked-files=no -- . ':(exclude)pending_profiles' ':(exclude)logs' | tr '\n' ' ')"
+  cp -p "$BACKUP_DIR/publish.py" publish.py; cp -p "$BACKUP_DIR/sources.json" config/sources.json
+  FLAGGED+=("agent changed tracked files itself (${changed:-diff only}); publish.py/sources.json restored, nothing applied -- check the rest by hand")
+fi
+
 # 2) apply each draft. apply_refresh.py gates internally via validate_refresh:
 #    rc=0 => gate passed (applied, or "would apply" under --dry-run)
 #    rc=1 => gate failed (route to human); other rc => skip + flag
-#    The two files it may rewrite are copied first, so a run that fails its
-#    tests or its publish can be put back exactly as it was.
-BACKUP_DIR="$(mktemp -d "$REPO/logs/profile-refresh-backup.XXXXXX")" \
-  && cp -p publish.py config/sources.json "$BACKUP_DIR/" \
-  || { echo "[profile-refresh] could not back up publish.py/sources.json; nothing applied"; exit 1; }
-
-APPLIED=(); FLAGGED=()
 shopt -s nullglob
-for draft in pending_profiles/*.refresh.json; do
-  fid="$(basename "$draft" .refresh.json)"
-  python3 scripts/apply_refresh.py "$fid" $DRY_RUN_FLAG >>logs/profile-refresh.log 2>&1
-  rc=$?
-  if [[ $rc -eq 0 ]]; then
-    APPLIED+=("$fid")
-  else
-    FLAGGED+=("$fid (apply_refresh rc=$rc)")
-  fi
-done
+if [[ $AGENT_TOUCHED -eq 0 ]]; then
+  for draft in pending_profiles/*.refresh.json; do
+    fid="$(basename "$draft" .refresh.json)"
+    python3 scripts/apply_refresh.py "$fid" $DRY_RUN_FLAG >>logs/profile-refresh.log 2>&1
+    rc=$?
+    if [[ $rc -eq 0 ]]; then
+      APPLIED+=("$fid")
+    else
+      FLAGGED+=("$fid (apply_refresh rc=$rc)")
+    fi
+  done
+fi
+# A rejected draft left in pending_profiles/ is retried and rejected again every
+# month, and the suite reads that directory: park it where a person looks.
+if [[ "$ALERT_ONLY" != "1" ]]; then
+  mkdir -p pending_profiles/flagged
+  for draft in pending_profiles/*.refresh.json; do
+    mv -f "$draft" pending_profiles/flagged/
+  done
+fi
+APPLIED_STATE="$(sha256sum publish.py config/sources.json 2>/dev/null)"
 
 # Put publish.py + sources.json back, and move this run's drafts out of
 # applied/ into rolled_back/ (not back into pending_profiles/, where next
 # month's loop would apply them again unseen).
 restore_profiles() {
   local why="$1" fid restored=1
-  cp -p "$BACKUP_DIR/publish.py" publish.py && cp -p "$BACKUP_DIR/sources.json" config/sources.json \
-    || restored=0
+  if [[ "$(sha256sum publish.py config/sources.json 2>/dev/null)" != "$APPLIED_STATE" ]]; then
+    # Someone else (auto-promote, a person) wrote these files after the apply:
+    # copying the backup over them would delete that work.
+    restored=0
+    why="$why; publish.py/sources.json changed by another writer meanwhile, not overwritten"
+  else
+    cp -p "$BACKUP_DIR/publish.py" publish.py && cp -p "$BACKUP_DIR/sources.json" config/sources.json \
+      || restored=0
+  fi
   mkdir -p pending_profiles/rolled_back
   for fid in ${APPLIED[@]+"${APPLIED[@]}"}; do
     mv -f "pending_profiles/applied/$fid.refresh.json" pending_profiles/rolled_back/ 2>/dev/null
@@ -111,7 +154,7 @@ restore_profiles() {
 
 # 3) for real runs that applied something: tests, publish, commit, push.
 if [[ "$ALERT_ONLY" != "1" && ${#APPLIED[@]} -gt 0 ]]; then
-  python3 -m pytest tests/ -q -x -p no:cacheprovider >>logs/profile-refresh.log 2>&1
+  python3 -m pytest tests/ -q -x -p no:cacheprovider >>"$TEST_LOG" 2>&1
   test_rc=$?
   if [[ $test_rc -ne 0 ]]; then
     restore_profiles "tests failed (pytest rc=$test_rc)"
@@ -124,6 +167,7 @@ if [[ "$ALERT_ONLY" != "1" && ${#APPLIED[@]} -gt 0 ]]; then
       python3 publish.py >>logs/profile-refresh.log 2>&1 \
         || FLAGGED+=("republishing the restored page failed too: see logs/profile-refresh.log")
     else
+      [[ $publish_rc -eq 3 ]] && FLAGGED+=("page published, but the docs-site copy failed to sync (publish.py exit 3): see logs/profile-refresh.log")
       # pathspec: commit these two files only, never whatever else is staged
       git add -- publish.py config/sources.json \
         && git commit -q -m "chore(profiles): monthly AUM/event refresh ($(date -u +%Y-%m-%d))" \

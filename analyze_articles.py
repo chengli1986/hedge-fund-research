@@ -803,9 +803,12 @@ def _analyze_with_fallback(
             continue
 
         rejected = None
-        reask_unanswered = False     # the last re-ask raised: nothing was judged
+        # Whether any re-ask of this model came back at all. A rejection that
+        # no re-ask ever answered was never judged: the re-ask timed out and
+        # the next attempt's first call failed too (or timed out again), so it
+        # must not become a grounding_failed decline (2026-10-10, twice).
+        reask_answered = False
         for attempt in range(1, MAX_ATTEMPTS + 1):
-            reask_unanswered = False
             try:
                 log.info("  Trying %s (attempt %d/%d)", model_name, attempt, MAX_ATTEMPTS)
                 parsed, usage, used_model = call(prompt, caller, api_key)
@@ -831,10 +834,9 @@ def _analyze_with_fallback(
                                         "reason": grounding_reason(problems),
                                         "_label": RULE_MADE_DECLINE,
                                         "_model": used_model, "_usage": usage}
-                            reask_unanswered = True
                             retry, retry_usage, retry_model = call(
                                 prompt + _retry_instruction(problems), caller, api_key)
-                            reask_unanswered = False
+                            reask_answered = True
                             if retry is None:
                                 # Junk instead of an answer says nothing about the
                                 # article: this model's next attempt gets a clean
@@ -873,11 +875,10 @@ def _analyze_with_fallback(
             except Exception as e:
                 log.warning("  %s: error (attempt %d): %s", model_name, attempt, e)
                 faults.append(COUNTED)
-        if rejected is not None and reask_unanswered:
-            # The last re-ask never got an answer (a timeout, a 5xx): nothing
-            # was judged, so this is not a rejection -- the article stays
-            # pending for the next run, and the weaker tier is still not asked.
-            # Two timeouts used to retire it as grounding_failed (2026-10-10).
+        if rejected is not None and not reask_answered:
+            # No re-ask ever got an answer (a timeout, a 5xx): nothing was
+            # judged, so this is not a rejection -- the article stays pending
+            # for the next run, and the weaker tier is still not asked.
             log.warning("  %s: re-ask got no answer; left for the next run", model_name)
             return None
         if rejected is not None:
@@ -1057,7 +1058,11 @@ def main() -> int:
 
     api_keys = _load_api_keys()
     articles = load_articles()
-    pending = [a for a in articles if _should_analyze(a)]
+    # Articles that already failed a night go last: three of them at the front
+    # stopped the stage before any new article was asked, three nights running
+    # (pre-merge review, 2026-10-10). Stable sort: store order otherwise.
+    pending = sorted((a for a in articles if _should_analyze(a)),
+                     key=lambda a: int(a.get("analysis_failures") or 0) > 0)
 
     log.info("Found %d articles pending analysis (of %d total)", len(pending), len(articles))
 
@@ -1074,10 +1079,14 @@ def main() -> int:
     gave_up: list[str] = []
     published = published_index(articles)
 
+    counted: list[tuple[dict, int | None]] = []     # (article, failures before tonight)
     for a in pending:
         processed += 1
+        before_failures = a.get("analysis_failures")
         try:
             outcome = _analyze_one(a, api_keys, published)
+            if a.get("analysis_failures") != before_failures:
+                counted.append((a, before_failures))
         except FatalAPIError as e:
             # Quota or auth: every remaining article would fail the same way.
             # What was done is saved below; the rest stays pending for the
@@ -1121,6 +1130,18 @@ def main() -> int:
             log.error("  %s", stopped)
             break
 
+    if asked and not answered and counted:
+        # Not one article got an answer tonight: a model retired, a parameter
+        # rejected, a dead key that is not reported as such -- the fault is the
+        # service's, not these articles'. Charging them would retire articles in
+        # threes, night after night (pre-merge review, 2026-10-10).
+        for art, prev in counted:
+            if prev is None:
+                art.pop("analysis_failures", None)
+            else:
+                art["analysis_failures"] = prev
+        gave_up.clear()
+        log.warning("  no article answered tonight; failure counts left as they were")
     save_articles(articles)
     log.info("Analysis complete: %d ok, %d failed, %d not summarised (insufficient content)",
              success_count, fail_count, insufficient_count)

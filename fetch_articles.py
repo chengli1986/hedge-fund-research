@@ -3931,7 +3931,13 @@ def fetch_source(source: dict, existing_ids: set[str], dry_run: bool = False,
     # days newer, so any backwards movement is abnormal; the grace window is
     # wide enough that only something like the incident reaches it.
     listing_dates = sorted((a.get("date") for a in raw_articles if a.get("date")), reverse=True)
-    stored_head = max((r.get("date") or "" for r in (existing_rows or [])
+    # Compared with what the listing SHOWED for each stored row: a row dated
+    # later from its article page (stage 2, de-shaw's year-only "2026" ->
+    # 2026-10-08) keeps the listing's value in date_listed. Against `date`, the
+    # next listing looked 280 days backwards and every later batch was refused
+    # (pre-merge review, 2026-10-10). refine_dates rows are unaffected: their
+    # date_listed is the month end, never earlier than their date.
+    stored_head = max((r.get("date_listed") or r.get("date") or "" for r in (existing_rows or [])
                        if r.get("source_id") == source_id), default="")
     if len(listing_dates) >= LISTING_HEAD_MIN_DATES and stored_head:
         gap = _date_gap_days(listing_dates[0], stored_head)

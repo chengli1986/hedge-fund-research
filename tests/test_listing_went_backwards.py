@@ -127,3 +127,21 @@ def test_the_refusal_is_recorded_for_the_health_email(monkeypatch):
     fa.fetch_source(dict(SRC), {r["id"] for r in stored}, dry_run=False,
                     existing_keys=fa.title_date_keys(stored), existing_rows=stored)
     assert seen.get("refusal") == "listing_head_moved_back", seen
+
+
+def test_a_row_dated_from_its_page_is_compared_by_what_the_listing_showed(monkeypatch):
+    """de-shaw lists only years ("2026" -> 2026-01-01); stage 2 now dates each
+    piece from its page (date 2026-10-08, date_listed 2026-01-01). Comparing the
+    listing with `date` read every later listing as 280 days backwards and
+    refused all of de-shaw from then on (pre-merge review, 2026-10-10)."""
+    listing = ["2026-01-01"] * 2 + ["2025-01-01"] * 4 + ["2024-01-01"] * 4
+    stored = _stored("2025-01-01", "2024-01-01")
+    stored.append({"id": fa.article_id("acadian-asset", _url("2026-p")), "source_id": "acadian-asset",
+                   "url": _url("2026-p"), "title": "Page-dated", "date": "2026-10-08",
+                   "date_listed": "2026-01-01", "date_raw": "2026", "date_basis": "page"})
+    monkeypatch.setitem(fa.FETCHERS, "acadian-asset",
+                        lambda s: [{"title": f"Piece {i}", "url": _url(f"{d}-{i}"), "date": d}
+                                   for i, d in enumerate(listing)])
+    monkeypatch.setattr(fa, "record_quality_metrics", lambda *a, **k: None)
+    got = fa.fetch_source(dict(SRC), {r["id"] for r in stored}, dry_run=True, existing_rows=stored)
+    assert got, "the listing was refused as having moved backwards"

@@ -316,3 +316,47 @@ def test_entry_span_ignores_braces_inside_strings():
     block = src[start:end]
     assert block.startswith('    "apollo": {') and block.endswith("},\n")
     assert '"kkr"' not in block and TRICKY.replace("\\", "\\\\").replace('"', '\\"') in block
+
+
+# ── pre-merge review, 2026-10-10 ─────────────────────────────────────────────
+
+def test_a_currency_change_the_description_does_not_follow_is_refused(repo):
+    """Card "~€800B" against a description at "$758B": the figures used to be
+    compared without their currency symbol."""
+    data = json.loads((repo / "config" / "sources.json").read_text())
+    data["sources"][1]["description"] = "Global investment firm ($800B AUM)."
+    (repo / "config" / "sources.json").write_text(json.dumps(data, indent=2))
+    before = _snapshot(repo)
+    _draft(repo, "kkr", [{"field": "aum", "old": "~$758B", "new": "~€800B",
+                          "reason": "Q2", "source": SRC}], aum_source=SRC)
+    assert ar.apply_refresh("kkr", base_dir=repo) != 0
+    assert _snapshot(repo) == before
+
+
+def test_aum_agreement_reads_the_currency():
+    assert ar._aum_agrees("~$700B", "Platform ($700B AUM).")
+    assert not ar._aum_agrees("~€700B", "Platform ($700B AUM).")
+
+
+def test_writes_keep_a_symlinked_file_a_symlink(tmp_path):
+    real = tmp_path / "real.json"
+    real.write_text("old")
+    link = tmp_path / "link.json"
+    link.symlink_to(real)
+    ar._write_atomic(link, "new")
+    assert link.is_symlink() and real.read_text() == "new"
+
+
+@pytest.mark.parametrize("char", [" ", "\u0085", "\x0c"])
+def test_a_line_separator_inside_a_value_is_written_not_refused(repo, char):
+    """splitlines() also splits at U+2028/U+0085/form feed: the trial run's JSON
+    line was cut in two and every such draft was refused (exit 5)."""
+    _draft(repo, "apollo", [{"field": "notable_en", "old": "ABF pioneer.", "new": f"ABF{char}pioneer.",
+                             "reason": "r", "source": SRC}])
+    assert ar.apply_refresh("apollo", base_dir=repo) == 0
+    assert _profiles(repo)["apollo"]["notable_en"] == f"ABF{char}pioneer."
+    # and the entry after it is still found once the separator is in the file
+    _draft(repo, "kkr", [{"field": "notable_en", "old": "LBO pioneer.", "new": "LBO pioneers.",
+                          "reason": "r", "source": SRC}])
+    assert ar.apply_refresh("kkr", base_dir=repo) == 0
+    assert _profiles(repo)["kkr"]["notable_en"] == "LBO pioneers."

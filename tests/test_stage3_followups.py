@@ -47,40 +47,62 @@ rd = _load("refine_dates_f", "scripts/refine_dates.py")
 
 # ── F1: a give-up cap for articles that fail the same way every night ─────────
 
-def _nights(n, capsys):
-    out = []
-    for _ in range(n):
-        rc = aa.main()
-        out.append((rc, capsys.readouterr().out))
-    return out
+def _with_good_neighbour(rows, night):
+    """Add a fresh article that will be summarised tonight: a night on which no
+    article is answered at all is the service's fault and is not counted."""
+    good = _art(100 + night)
+    path = aa.DATA_FILE
+    current = [json.loads(l) for l in path.read_text().splitlines() if l] if path.exists() else rows
+    (aa.CONTENT_DIR / f"{good['id']}.txt").write_text(_distinct(100 + night), encoding="utf-8")
+    path.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in current + [good]))
 
 
 def test_f1_a_deterministic_failure_is_given_up_after_max_nights(store, api, capsys):
-    store([_art(1)])
-    api["script"] = [http(400, "invalid_prompt")]
-    nights = _nights(aa.MAX_ANALYSIS_NIGHTS, capsys)
+    store([_art(1)], bodies={"a1": _distinct(1)})
+    outs = []
+    for night in range(aa.MAX_ANALYSIS_NIGHTS):
+        _with_good_neighbour(None, night)
+        # night 1: a1 is first in the store; after that it has failed, so it goes last
+        api["script"] = ([http(400, "invalid_prompt")] * (2 * aa.MAX_ATTEMPTS) + [ok(json.dumps(SUMMARY))]
+                         if night == 0 else [ok(json.dumps(SUMMARY)), http(400, "invalid_prompt")])
+        outs.append((aa.main(), capsys.readouterr().out))
     assert _rows()["a1"]["analysis_failures"] == aa.MAX_ANALYSIS_NIGHTS
-    assert "GAVE UP" in nights[-1][1] and all("GAVE UP" not in o for _, o in nights[:-1])
-    assert all(rc != 0 for rc, _ in nights)
+    assert "GAVE UP" in outs[-1][1] and all("GAVE UP" not in o for _, o in outs[:-1])
+    assert outs[-1][0] == aa.GAVE_UP_RC and all(rc == 0 for rc, _ in outs[:-1])
     assert aa._should_analyze(_rows()["a1"]) is False
-    calls = len(api["calls"])
-    assert aa.main() == 0 and len(api["calls"]) == calls        # not asked again
 
 
 def test_f1_the_give_up_night_alerts_even_when_others_were_summarised(store, api, capsys):
     store([_art(1, analysis_failures=aa.MAX_ANALYSIS_NIGHTS - 1), _art(2)],
           bodies={"a1": _distinct(1), "a2": _distinct(2)})
-    api["script"] = [http(400, "invalid_prompt")] * (2 * aa.MAX_ATTEMPTS) + [ok(json.dumps(SUMMARY))]
+    api["script"] = [ok(json.dumps(SUMMARY)), http(400, "invalid_prompt")]
     assert aa.main() == aa.GAVE_UP_RC
     assert "GAVE UP" in capsys.readouterr().out and _rows()["a2"]["summarized"] is True
 
 
-@pytest.mark.parametrize("script", [[ok("not json")], [http(400, "invalid_prompt")]])
-def test_f1_unparsable_answers_and_4xx_count(store, api, script):
-    store([_art(1)])
-    api["script"] = script
+@pytest.mark.parametrize("bad", [ok("not json"), http(400, "invalid_prompt")])
+def test_f1_unparsable_answers_and_4xx_count(store, api, bad):
+    store([_art(1), _art(2)], bodies={"a1": _distinct(1), "a2": _distinct(2)})
+    api["script"] = [ok(json.dumps(SUMMARY)), bad]          # a1 answered (it is first), a2 fails
     aa.main()
-    assert _rows()["a1"]["analysis_failures"] == 1
+    assert _rows()["a2"]["analysis_failures"] == 1
+
+
+def test_f1_a_night_nobody_was_answered_charges_no_article(store, api):
+    """A model retired or a parameter rejected fails every request the same
+    way: three articles a night would be retired for the service's fault."""
+    store([_art(i) for i in range(3)], bodies={f"a{i}": _distinct(i) for i in range(3)})
+    api["script"] = [http(404, "model_not_found")]
+    assert aa.main() == 1
+    assert not any("analysis_failures" in r for r in _rows().values())
+
+
+def test_f1_articles_that_failed_before_go_to_the_back_of_the_queue(store, api):
+    rows = [_art(i, analysis_failures=1) for i in range(3)] + [_art(9)]
+    store(rows, bodies={f"a{i}": _distinct(i) for i in (0, 1, 2, 9)})
+    api["script"] = [ok(json.dumps(SUMMARY)), http(400, "invalid_prompt")]
+    aa.main()
+    assert _rows()["a9"]["summarized"] is True
 
 
 @pytest.mark.parametrize("script", [[http(503, "server_error")], [requests.Timeout("slow")],
@@ -119,6 +141,21 @@ def test_f5_two_timed_out_reasks_leave_the_article_pending(api):
     assert aa._analyze_with_fallback(LATIN, {"OPENAI_API_KEY": "k"}, article_id="x", faults=faults) is None
     assert len(api["calls"]) == 4, "the weaker tier must not be asked"
     assert faults and all(f == aa.PASSING for f in faults)
+
+
+@pytest.mark.parametrize("second", [requests.Timeout("slow"), http(503, "server_error")])
+def test_f5_a_timed_out_reask_then_a_failed_attempt_is_not_a_rejection(api, second):
+    """The re-ask times out, then the next attempt's first call fails too: no
+    re-ask ever answered, so nothing was judged."""
+    api["script"] = [ok(json.dumps(WORDING)), requests.Timeout("slow"), second, second]
+    assert aa._analyze_with_fallback(LATIN, {"OPENAI_API_KEY": "k"}, article_id="x") is None
+
+
+def test_f5_reasks_that_came_back_as_junk_still_end_in_a_rejection(api):
+    """Answered, if badly: the rejection was judged and stands (audit S5)."""
+    api["script"] = [ok(json.dumps(WORDING)), ok("not json"), ok(json.dumps(WORDING)), ok("not json")]
+    r = aa._analyze_with_fallback(LATIN, {"OPENAI_API_KEY": "k"}, article_id="x")
+    assert r is not None and r["_label"] == aa.RULE_MADE_DECLINE
 
 
 def test_f5_a_reask_that_answers_badly_is_still_a_rejection(api):
@@ -211,7 +248,27 @@ def test_f4_ctrl_c_cancels_the_queue_and_saves_the_finished(tagstore, tmp_path):
     assert len(calls) <= at_interrupt[0] + workers, (at_interrupt, len(calls))
     assert len(calls) < 30
     tagged = [r for r in _tread(path).values() if r.get("tags")]
-    assert len(tagged) >= 4, "finished articles must be saved"
+    # Every call that came back is paid for: its tags must be saved, the ones in
+    # flight at the interrupt included (pre-merge review: they were dropped).
+    assert len(tagged) == len(calls), (len(tagged), len(calls))
+
+
+def test_f4_a_give_up_reached_before_the_interrupt_is_still_announced(tagstore, tmp_path, capsys):
+    path = tagstore([_trow(i, tag_failures=ta.MAX_TAG_NIGHTS - 1) for i in range(3)])
+
+    def bad(prompt, key, model):
+        time.sleep(0.01)
+        return json.dumps(TOO_MANY), dict(USAGE), model
+    seen = []
+
+    def log_usage(*a, **k):
+        seen.append(1)
+        if len(seen) == ta.ATTEMPTS * 2:          # after the second article's calls
+            raise KeyboardInterrupt
+    with pytest.raises(KeyboardInterrupt):
+        ta.run(path, "k", tmp_path / "bk", sleep=lambda s: None, workers=1, call=bad, log_usage=log_usage)
+    gave_up = [r["id"] for r in _tread(path).values() if r.get("tag_failures") == ta.MAX_TAG_NIGHTS]
+    assert gave_up and "GAVE UP" in capsys.readouterr().out
 
 
 # ── F6: re-tagging gives up too ──────────────────────────────────────────────

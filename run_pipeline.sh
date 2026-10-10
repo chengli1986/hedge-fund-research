@@ -74,7 +74,9 @@ if python3 fetch_articles.py; then
   fi
   # Stage 2: fetch + validate + normalize content (depends on Stage 1)
   if python3 fetch_content.py; then
-    # Stage 3: LLM analysis (depends on Stage 2)
+    # Stage 3: LLM analysis (depends on Stage 2). Any non-zero alerts: 1 = no
+    # answers / stage stopped, 2 = quota or auth, 3 = an article given up after
+    # MAX_ANALYSIS_NIGHTS failed nights (announced once).
     if ! python3 analyze_articles.py; then
       failed_stages+=("Stage3:analyze")
     fi

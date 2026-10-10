@@ -23,6 +23,7 @@ import argparse
 import importlib.util
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -50,14 +51,25 @@ def _load_validate_module(base: Path):
     return mod
 
 
-def _aum_agrees(aum: str, description: str, vpp) -> bool:
+# Currency kept: validate_pending_profile._money_tokens drops the symbol on
+# purpose (it compares magnitudes), which let a card at "~€700B" agree with a
+# description at "$700B" (pre-merge review, 2026-10-10).
+_MONEY_WITH_CURRENCY = re.compile(r"([\$¥€£])\s*(\d+(?:\.\d+)?)\s*([KMBT])\b", re.I)
+
+
+def money_figures(text: str) -> set[tuple[str, str, str]]:
+    """{(currency symbol, number, unit)} in `text`, e.g. {('$', '190', 'B')}."""
+    return {(c, n, u.upper()) for c, n, u in _MONEY_WITH_CURRENCY.findall(text or "")}
+
+
+def _aum_agrees(aum: str, description: str, vpp=None) -> bool:
     """The card's AUM and the one written into the English description agree:
-    the description carries the AUM verbatim, shares its figure ("$18T+" for
-    "~$18T+ benchmarked"), or carries no money figure at all."""
+    the description carries the AUM verbatim, shares its figure in the same
+    currency ("$18T+" for "~$18T+ benchmarked"), or carries no money figure."""
     if aum and aum in description:
         return True
-    figures = vpp._money_tokens(description)
-    return not figures or bool(figures & vpp._money_tokens(aum))
+    figures = money_figures(description)
+    return not figures or bool(figures & money_figures(aum))
 
 
 def _synced_sources_text(base: Path, fund_id: str, old_aum: str, new_aum: str, vpp) -> str | None:
@@ -90,6 +102,7 @@ def _synced_sources_text(base: Path, fund_id: str, old_aum: str, new_aum: str, v
 
 
 def _write_atomic(path: Path, text: str) -> None:
+    path = Path(os.path.realpath(path))      # never replace a symlink with a file
     tmp = path.with_name(f".{path.name}.tmp{os.getpid()}")
     try:
         tmp.write_text(text, encoding="utf-8")

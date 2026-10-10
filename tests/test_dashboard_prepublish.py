@@ -186,3 +186,40 @@ def test_run_pipeline_reads_the_precheck_exit_and_skips_stage_5():
         "exit 4 from publish.py is not recorded as Stage4:precheck")
     stage5 = [ln for ln in script.splitlines() if "Stage4:publish" in ln and "failed_stages[*]" in ln]
     assert stage5 and all("Stage4:precheck" in ln for ln in stage5), stage5
+
+
+# ── pre-merge review, 2026-10-10 ─────────────────────────────────────────────
+
+def test_the_checker_reads_the_data_file_line_by_line_like_publish(tmp_path):
+    """U+2028 inside a title: splitlines() cut that row in two and stage 5
+    counted one article fewer than the page, every night."""
+    rows = [_art(1, "gmo", 1, 1, title="Line separator"), _art(2, "gmo", 2, 2)]
+    path = tmp_path / "a.jsonl"
+    path.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
+    assert len(cdh.load_articles(path)) == len(rows)
+
+
+def test_a_utc_timestamp_does_not_make_the_page_and_the_check_disagree():
+    """fetched_at in UTC, the evening before (BJT) the first day of the week."""
+    first = (NOW - timedelta(days=publish.WEEK_DAYS - 1)).date()
+    utc_evening = datetime.combine(first, datetime.min.time()) - timedelta(hours=4)
+    row = _art(9, "gmo", publish.WEEK_DAYS - 1, 0)
+    row["fetched_at"] = utc_evening.strftime("%Y-%m-%dT%H:%M:%S") + "Z"
+    articles = ARTICLES + [row]
+    html = publish.generate_html(articles)
+    assert publish._precheck(html, articles) == []
+
+
+def test_emptied_older_cards_fail(page):
+    m = re.search(r'id="older-articles-data">(.*?)</script>', page, flags=re.S)
+    emptied = json.dumps([""] * len(json.loads(m.group(1).replace("<\\/", "</"))))
+    broken = page.replace(m.group(1), emptied, 1)
+    assert "article_cards" in _failed(_check(broken))
+
+
+def test_the_data_date_in_the_header_is_escaped():
+    row = _art(9, "gmo", 1, 0)            # yesterday's date, so it is the newest: "Data through"
+    row["date"] = row["date"] + '<img src=x onerror="alert(1)">'
+    html = publish.generate_html(ARTICLES + [row])
+    header = html[html.index('<div class="stats"'):html.index('</div>', html.index('<div class="stats"'))]
+    assert "onerror" in header and '<img src=x onerror' not in header

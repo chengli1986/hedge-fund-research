@@ -41,9 +41,12 @@ def _profiles_node(source: str) -> ast.Dict:
 
 
 def _offset(source: str, lineno: int, col: int) -> int:
-    """Character offset of an ast (lineno, col_offset); col_offset counts UTF-8 bytes."""
-    lines = source.splitlines(keepends=True)
-    before = sum(len(line) for line in lines[:lineno - 1])
+    """Character offset of an ast (lineno, col_offset); col_offset counts UTF-8 bytes.
+
+    Lines split on "\n" only, as the parser counts them: splitlines() also
+    breaks at U+2028/U+0085/form feed, which a string literal may contain."""
+    lines = source.split("\n")
+    before = sum(len(line) + 1 for line in lines[:lineno - 1])
     return before + len(lines[lineno - 1].encode("utf-8")[:col].decode("utf-8"))
 
 
@@ -141,7 +144,7 @@ def replace_checked(publish_path: Path, new_source: str, expected: dict, *,
         if run.returncode != 0:
             tail = (run.stderr.strip().splitlines() or ["no output"])[-1]
             raise ValueError(f"rewritten publish.py failed its trial run: {tail}")
-        lines = run.stdout.strip().splitlines()
+        lines = run.stdout.strip("\n").split("\n")   # not splitlines(): U+2028 is inside JSON strings
         try:
             got = json.loads(lines[-1]) if lines else None
         except json.JSONDecodeError:

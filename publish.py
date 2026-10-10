@@ -589,8 +589,11 @@ def _effective_date(a: dict, today: str) -> str:
     if not date:
         return ""
     candidates = [date, today]
-    fetched = (a.get("fetched_at") or "")[:10]
-    if len(fetched) == 10:
+    # The BJT day, as the header's "added this week" and the stage-5 recount
+    # read it: a UTC stamp sliced as text named the previous day, the two
+    # counts disagreed and the pre-check held the page back (pre-merge review).
+    fetched = _fetched_day(a)
+    if fetched:
         candidates.append(fetched)
     return min(candidates)
 
@@ -600,7 +603,7 @@ def _fetched_day(a: dict) -> str:
     raw = a.get("fetched_at") or ""
     try:
         stamp = datetime.fromisoformat(raw)
-    except ValueError:
+    except (TypeError, ValueError):
         return ""
     return (stamp if stamp.tzinfo else stamp.replace(tzinfo=BJT)).astimezone(BJT).strftime("%Y-%m-%d")
 
@@ -1074,11 +1077,15 @@ def generate_html(articles: list[dict]) -> str:
     # Counts only what a click opens: older rows stay folded behind "Show
     # older" (the button said 1686 where 851 would open, stage-4 audit). The
     # script recounts on every view switch and older toggle.
+    # Rendered whenever there could be more than one screen, hidden when the
+    # recent rows fit on it: with 20 or fewer recent rows the button was not
+    # rendered at all, and older rows shown later could never be opened.
     load_more_btn = ""
-    remaining = total - older_count - INITIAL_VISIBLE
-    if remaining > 0:
+    remaining = max(total - older_count - INITIAL_VISIBLE, 0)
+    if total > INITIAL_VISIBLE:
+        hidden = "" if remaining else ' style="display:none"'
         load_more_btn = (
-            f'<button class="btn-load-more" id="tl-more" type="button" onclick="showAll()">'
+            f'<button class="btn-load-more" id="tl-more" type="button" onclick="showAll()"{hidden}>'
             f'<span class="lang-en">Load more ({remaining} remaining)</span>'
             f'<span class="lang-zh" style="display:none">加载更多（还有 {remaining} 篇）</span></button>'
         )
@@ -1571,8 +1578,8 @@ body.hide-older article.pool-article[data-age="older"] {{ display: none !importa
         <span><span class="lang-en"><b data-stat="added-week">{added_this_week}</b> added this week, <b data-stat="published-week">{new_this_week}</b> of them published this week</span><span class="lang-zh" style="display:none">本周新收录 <b>{added_this_week}</b>，其中本周发表 <b>{new_this_week}</b></span></span>
         <span><span class="lang-en"><b data-stat="funds">{production_source_count}</b> funds tracked</span><span class="lang-zh" style="display:none">跟踪 <b>{production_source_count}</b> 家基金</span></span>
         <span title="Newest article on the page; the page itself was built at {now}">
-          <span class="lang-en">Data through {data_through}</span>
-          <span class="lang-zh" style="display:none">数据截至 {data_through}</span>
+          <span class="lang-en">Data through {_esc(data_through)}</span>
+          <span class="lang-zh" style="display:none">数据截至 {_esc(data_through)}</span>
         </span>
         <span class="muted">
           <span class="lang-en">page built {now}</span>

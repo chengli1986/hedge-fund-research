@@ -189,3 +189,22 @@ def test_an_undated_topic_page_is_called_a_topic_page():
     assert "专题页" in hub and "Topic page" in hub and "日期未知" not in hub
     assert "日期未知" in undated and "专题页" not in undated
     assert "专题页" not in dated
+
+
+def test_load_more_appears_when_older_rows_are_shown_on_a_quiet_feed(browser, tmp_path):
+    """15 recent rows fit on one screen, so the button was not rendered at all;
+    after "Show older", rows past the first 20 could never be opened."""
+    path = tmp_path / "quiet.html"
+    path.write_text(publish.generate_html([_art(i, days=1 + i) for i in range(15)]
+                                          + [_art(200 + i, days=200 + i) for i in range(10)]),
+                    encoding="utf-8")
+    pg = _open(browser, path)
+    pg.click('.view-btn[data-view="timeline"]')
+    assert pg.is_hidden("#tl-more")
+    pg.click("#btn-show-older")
+    assert pg.inner_text("#tl-more") == "Load more (5 remaining)"
+    pg.click("#tl-more")
+    assert pg.eval_on_selector_all("#view-timeline article.pool-article",
+                                   "e => e.filter(x => x.offsetParent !== null).length") == 25
+    assert pg.errors == []
+    pg.close()
