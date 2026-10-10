@@ -9146,6 +9146,25 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-10-10": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.hamiltonlane.com/en-us/insight/mexico-industrial-real-estate",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/out-of-the-sandbox",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/panda-diplomacy",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/fall-begins",
+            "https://www.hamiltonlane.com/en-us/insight/investing-in-efficiency-and-impact",
+            "https://www.hamiltonlane.com/en-us/insight/private-markets-allocations",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/scary-times",
+            "https://www.hamiltonlane.com/en-us/insight/what-sets-strong-private-market-opportunities-apart",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/summer-s-last-call",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/testing-leverage-points"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -9301,6 +9320,14 @@
           "js_only_checked": 0,
           "day": 6,
           "date": "2026-10-09"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 7,
+          "date": "2026-10-10"
         }
       ]
     }
