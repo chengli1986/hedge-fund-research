@@ -437,3 +437,11 @@ def test_f5_a_refused_reask_is_an_answer_like_junk(api):
     api["script"] = [ok(json.dumps(WORDING)), refusal(), requests.Timeout("slow"), requests.Timeout("slow")]
     r = aa._analyze_with_fallback(LATIN, {"OPENAI_API_KEY": "k"}, article_id="x")
     assert r is not None and r["_label"] == aa.RULE_MADE_DECLINE
+
+
+def test_f1_a_several_night_outage_keeps_alerting_without_new_articles(store, api):
+    """Rows only MARKED on an outage night are not proven bad: the next
+    outage night must alert again, new articles or not."""
+    store([_art(i) for i in range(2)], bodies={f"a{i}": _distinct(i) for i in range(2)})
+    api["script"] = [http(400, "invalid_request_error")]
+    assert [aa.main() for _ in range(3)] == [1, 1, 1]

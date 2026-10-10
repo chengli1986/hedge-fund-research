@@ -1159,10 +1159,12 @@ def main() -> int:
             break
 
     nobody_answered = bool(asked) and not answered
-    # Unanswered rows that had never been in trouble: only they say anything
-    # about tonight's service. A quiet night that re-asked only known-bad rows
-    # is not an outage (no new articles: 09-14, 09-21, 10-05).
-    fresh_unanswered = sum(1 for art, _ in unanswered if not _known_trouble(art))
+    # Unanswered rows never yet proven bad (no counted failure): only they say
+    # anything about tonight's service. A quiet night that re-asked only rows
+    # with counted failures is not an outage (no new articles: 09-14, 09-21,
+    # 10-05). The unanswered-mark is NOT proof -- it is set on outage nights --
+    # so a several-night 4xx outage keeps alerting (round-5 verification).
+    fresh_unanswered = sum(1 for art, _ in unanswered if not int(art.get("analysis_failures") or 0))
     tonight = datetime.now(BJT).strftime("%Y-%m-%d")
     for art, faults in unanswered:
         if not (BAD_ANSWER in faults or COUNTED in faults):
