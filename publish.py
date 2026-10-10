@@ -12,7 +12,7 @@ import html
 import gzip
 import json
 import re
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import argparse
@@ -27,6 +27,7 @@ BJT = timezone(timedelta(hours=8))
 # Matches a month-granularity label such as "Aug 2026" / "August 2026" — and
 # deliberately NOT "August 4, 2026", which carries a real day.
 _MONTH_ONLY_RAW = re.compile(r"^[A-Za-z]{3,9}\.?\s+\d{4}$")
+_YEAR_ONLY_RAW = re.compile(r"^\d{4}$")
 BASE_DIR = Path(__file__).resolve().parent
 DATA_FILE = BASE_DIR / "data" / "articles.jsonl"
 SOURCES_FILE = BASE_DIR / "config" / "sources.json"
@@ -472,9 +473,12 @@ def _build_sources_view(sources: dict[str, dict]) -> str:
         desc_en = html.escape(src.get("description", ""))
         desc_zh = html.escape(profile.get("desc_zh", ""))
 
-        founded = profile.get("founded", "—")
-        aum = profile.get("aum", "—")
-        hq = profile.get("hq", "—")
+        # Escaped like every other field: the monthly refresh writes these
+        # from web pages, and an `<img onerror>` here ran on the page (P4).
+        founded = html.escape(str(profile.get("founded", "—")))
+        aum = html.escape(str(profile.get("aum", "—")))
+        hq_raw = str(profile.get("hq", "—"))
+        hq = html.escape(hq_raw)
         type_en = html.escape(profile.get("type_en", ""))
         type_zh = html.escape(profile.get("type_zh", ""))
         notable_en = html.escape(profile.get("notable_en", ""))
@@ -484,9 +488,9 @@ def _build_sources_view(sources: dict[str, dict]) -> str:
             f'<span class="sc-tag">{html.escape(_STRATEGY_LABELS.get(t, t))}</span>'
             for t in src.get("strategy_tags", [])
         )
-        flag_svgs = "".join(_FLAG_SVGS[c] for c in _hq_to_flags(str(hq)))
+        flag_svgs = "".join(_FLAG_SVGS[c] for c in _hq_to_flags(hq_raw))
         flags_html = (
-            f'<span class="sc-flags" title="{html.escape(str(hq))}">{flag_svgs}</span>'
+            f'<span class="sc-flags" title="{hq}">{flag_svgs}</span>'
             if flag_svgs else ""
         )
         badge_text = "#0b1220" if color in ("#7dd3fc", "#86efac") else "#fff"
@@ -560,6 +564,10 @@ def _display_date(a: dict) -> str:
     if a.get("date_basis") in ("page", "url"):
         return a.get("date") or ""
     if _MONTH_ONLY_RAW.match(raw):
+        return raw
+    # A year-only label is stored as YYYY-01-01 (it sorts at the end of that
+    # year); showing "2026-01-01" named a day nobody published on (de-shaw).
+    if _YEAR_ONLY_RAW.match(raw):
         return raw
     return a.get("date") or ""
 
@@ -800,7 +808,8 @@ document.getElementById('tv-q').addEventListener('input', e => { tvQ = e.target.
 """
 
 
-def _article_card(a: dict, show_takeaway: bool = False) -> tuple[str, dict | None]:
+def _article_card(a: dict, show_takeaway: bool = False, *, url_reused: bool = False,
+                  dated_title: bool = False) -> tuple[str, dict | None]:
     """Render a single article as a timeline row.
 
     Returns (html, details_payload). For summarized articles the <details>
@@ -808,6 +817,10 @@ def _article_card(a: dict, show_takeaway: bool = False) -> tuple[str, dict | Non
     into details_payload so the caller can inject it into a single JSON data
     island and hydrate lazily on first open. This trims ~50% of HTML size and
     cuts initial DOM construction cost from ~6000 to ~3000 nodes.
+
+    url_reused: a newer row has the same url (a weekly page the fund
+    overwrites), so this link now opens the latest issue. dated_title: other
+    rows of this source carry the same title; the date joins the headline.
     """
     sid = a.get("source_id", "unknown")
     color = BADGE_COLORS.get(sid, "#8b949e")
@@ -851,6 +864,15 @@ def _article_card(a: dict, show_takeaway: bool = False) -> tuple[str, dict | Non
     # Showing that verbatim puts "2026-08-31" at the top of the page on 08-10, so
     # prefer the original label when it carries no day.
     display_date = _display_date(a)
+    if display_date:
+        date_html = _esc(display_date)
+    else:
+        # No date anywhere (Capital Group's pages carry none in the listing):
+        # say so rather than leave a blank column.
+        date_html = ('<span class="lang-en">Undated</span>'
+                     '<span class="lang-zh" style="display:none">日期未知</span>')
+    if dated_title and display_date:
+        title = f"{title} · {_esc(display_date)}"
 
     # The publisher withdrew the original (research-affiliates unpublished 8
     # pieces; blue-owl refuses one). The body and summary stay -- they were
@@ -861,12 +883,17 @@ def _article_card(a: dict, show_takeaway: bool = False) -> tuple[str, dict | Non
                    '<span class="lang-en">original removed</span>'
                    '<span class="lang-zh" style="display:none">原文已下架</span></span>'
                    ) if a.get("url_status") == "gone" else ""
+    reused_marker = ('<span class="gone-note url-reused" title="The fund publishes every issue at this '
+                     'address; the link opens the latest one">'
+                     '<span class="lang-en">link now shows the latest issue</span>'
+                     '<span class="lang-zh" style="display:none">原文网址已更新为最新一期</span></span>'
+                     ) if url_reused else ""
 
     html = f"""<div class="row-main">
     <span class="badge" style="background:{color}">{source_name}</span>
-    <span class="date">{_esc(display_date)}</span>
+    <span class="date">{date_html}</span>
     <a class="headline" href="{url}" target="_blank" rel="noopener">{title}</a>
-    {gone_marker}
+    {gone_marker}{reused_marker}
     <span class="row-spacer"></span>
     {toggle}
   </div>
@@ -968,10 +995,19 @@ def generate_html(articles: list[dict]) -> str:
     pool_parts: list[str] = []
     older_parts: list[str] = []
     details_by_aid: dict[str, dict] = {}
+    # 21 urls carry several issues (2026-10-09): only the newest row's link
+    # still opens the issue it describes. sorted_articles is newest first.
+    seen_urls: set[str] = set()
+    title_counts = Counter((a.get("source_id"), a.get("title")) for a in sorted_articles)
     for seq, a in enumerate(sorted_articles):
         sid = a.get("source_id", "unknown")
         aid = a.get("id", "")
-        card_html, details_payload = _article_card(a, show_takeaway=True)
+        url_key = a.get("url") or ""
+        url_reused = bool(url_key) and url_key in seen_urls
+        seen_urls.add(url_key)
+        card_html, details_payload = _article_card(
+            a, show_takeaway=True, url_reused=url_reused,
+            dated_title=title_counts[(a.get("source_id"), a.get("title"))] > 1)
         # Articles older than RECENT_DAYS are folded behind "Show older" by CSS;
         # their LLM analysis bodies are also excluded from the JSON island to
         # keep initial parse cost flat. Clicking Open on a revealed older article
@@ -1025,11 +1061,16 @@ def generate_html(articles: list[dict]) -> str:
     tags_js = TAGS_VIEW_JS.replace("TV_INITIAL", str(TAGS_VIEW_INITIAL))
 
     # ── Timeline view: empty wrapper; articles injected by JS on view activation ──
+    # Counts only what a click opens: older rows stay folded behind "Show
+    # older" (the button said 1686 where 851 would open, stage-4 audit). The
+    # script recounts on every view switch and older toggle.
     load_more_btn = ""
-    if total > INITIAL_VISIBLE:
+    remaining = total - older_count - INITIAL_VISIBLE
+    if remaining > 0:
         load_more_btn = (
-            f'<button class="btn-load-more" onclick="showAll()">'
-            f'Load more ({total - INITIAL_VISIBLE} remaining)</button>'
+            f'<button class="btn-load-more" id="tl-more" type="button" onclick="showAll()">'
+            f'<span class="lang-en">Load more ({remaining} remaining)</span>'
+            f'<span class="lang-zh" style="display:none">加载更多（还有 {remaining} 篇）</span></button>'
         )
     timeline_html = (
         f'<div class="timeline-wrap" '
@@ -1191,7 +1232,8 @@ a:hover {{ text-decoration: underline; }}
 .header h1 {{ margin: 0; font-size: 1.6rem; letter-spacing: 0.02em; }}
 .deck {{ margin-top: 4px; color: var(--text-muted); font-size: 0.88rem; }}
 .stats {{ display: flex; flex-wrap: wrap; gap: 8px; color: var(--text-muted); font-size: 0.8rem; margin-top: 10px; }}
-.stats span {{ padding: 4px 8px; border: 1px solid var(--border); background: rgba(15, 23, 39, 0.75); border-radius: 999px; }}
+/* Direct children only: the lang-en/lang-zh spans inside drew a second pill. */
+.stats > span {{ padding: 4px 8px; border: 1px solid var(--border); background: rgba(15, 23, 39, 0.75); border-radius: 999px; }}
 .header-actions {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }}
 .btn-toggle {{
   background: var(--surface2); color: var(--text); border: 1px solid var(--border);
@@ -1451,12 +1493,14 @@ body.hide-older article.pool-article[data-age="older"] {{ display: none !importa
   .inline-takeaway {{ margin-left: 0; }}
   .fund-links li {{ grid-template-columns: 1fr; }}
   .view-bar {{ overflow-x: auto; }}
-  .sources-grid {{ grid-template-columns: 1fr; }}
 }}
 /* ── Sources (fund profile) view ── */
 .sources-intro {{ color: var(--text-muted); font-size: 0.84rem; margin-bottom: 16px; line-height: 1.5; }}
 .sources-grid {{
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(430px, 1fr)); gap: 16px;
+  /* min(..., 100%): a 430px floor made every card 430px wide on a 390px phone.
+     The mobile rule meant to stop that sat in the @media block above, which
+     this later rule overrode (stage-4 audit). */
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(min(430px, 100%), 1fr)); gap: 16px;
 }}
 .source-card {{
   background: rgba(17,24,39,0.84); border: 1px solid var(--border);
@@ -1513,9 +1557,9 @@ body.hide-older article.pool-article[data-age="older"] {{ display: none !importa
       <h1><span class="lang-en">Hedge Fund Research Insights</span><span class="lang-zh" style="display:none">对冲基金研究洞察</span></h1>
       <div class="deck"><span class="lang-en">Cross-fund research aggregator — filter by tags, or scan by timeline or fund.</span><span class="lang-zh" style="display:none">跨基金研究聚合 — 按标签筛选（多选取交集），或按时间线、基金浏览。</span></div>
       <div class="stats" data-built="{today_str}">
-        <span><span class="lang-en"><b data-stat="total">{total}</b> articles</span><span class="lang-zh" style="display:none">共 {total} 篇</span></span>
-        <span><span class="lang-en"><b data-stat="added-week">{added_this_week}</b> added this week, <b data-stat="published-week">{new_this_week}</b> of them published this week</span><span class="lang-zh" style="display:none">本周新收录 {added_this_week}，其中本周发表 {new_this_week}</span></span>
-        <span><span class="lang-en"><b data-stat="funds">{production_source_count}</b> funds tracked</span><span class="lang-zh" style="display:none">跟踪 {production_source_count} 家基金</span></span>
+        <span><span class="lang-en"><b data-stat="total">{total}</b> articles</span><span class="lang-zh" style="display:none">共 <b>{total}</b> 篇</span></span>
+        <span><span class="lang-en"><b data-stat="added-week">{added_this_week}</b> added this week, <b data-stat="published-week">{new_this_week}</b> of them published this week</span><span class="lang-zh" style="display:none">本周新收录 <b>{added_this_week}</b>，其中本周发表 <b>{new_this_week}</b></span></span>
+        <span><span class="lang-en"><b data-stat="funds">{production_source_count}</b> funds tracked</span><span class="lang-zh" style="display:none">跟踪 <b>{production_source_count}</b> 家基金</span></span>
         <span title="Newest article on the page; the page itself was built at {now}">
           <span class="lang-en">Data through {data_through}</span>
           <span class="lang-zh" style="display:none">数据截至 {data_through}</span>
@@ -1838,13 +1882,20 @@ function bindRowToggles() {{
 }}
 bindRowToggles();
 
+/* The timeline's own button, by id: '.btn-load-more' first matched the Tags
+   view's #tv-more, so the count never updated and the button never went away.
+   Counts only rows a click would show: older rows stay hidden while
+   body.hide-older is set. */
 function updateLoadMoreCount() {{
-  const btn = document.querySelector('.btn-load-more');
-  if (!btn || btn.style.display === 'none') return;
-  const hidden = document.querySelectorAll('.timeline-extra:not(.hidden-by-filter)');
-  const remaining = Array.from(hidden).filter(el => el.style.display === 'none').length;
+  const btn = document.getElementById('tl-more');
+  if (!btn) return;
+  const hideOlder = document.body.classList.contains('hide-older');
+  const remaining = Array.from(document.querySelectorAll('#view-timeline .timeline-extra'))
+    .filter(el => el.style.display === 'none' && !(hideOlder && el.dataset.age === 'older')).length;
   if (remaining > 0) {{
-    btn.textContent = 'Load more (' + remaining + ' remaining)';
+    btn.innerHTML = '<span class="lang-en">Load more (' + remaining + ' remaining)</span>'
+      + '<span class="lang-zh">加载更多（还有 ' + remaining + ' 篇）</span>';
+    applyLang(btn);
     btn.style.display = '';
   }} else {{
     btn.style.display = 'none';
@@ -1856,8 +1907,7 @@ function showAll() {{
     el.style.display = '';
     el.classList.remove('timeline-extra');
   }});
-  const btn = document.querySelector('.btn-load-more');
-  if (btn) btn.style.display = 'none';
+  updateLoadMoreCount();
   bindRowToggles();
 }}
 

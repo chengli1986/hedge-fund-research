@@ -100,7 +100,7 @@ def test_recount_numbers(page):
 def test_header_shows_both_weekly_numbers(page):
     stats = cdh.header_stats(page)
     assert stats == {"total": 5, "added-week": 3, "published-week": 2, "funds": len(_ids())}
-    assert "本周新收录 3" in page and "其中本周发表 2" in page
+    assert "本周新收录 <b>3</b>" in page and "其中本周发表 <b>2</b>" in page
 
 
 # ── the damage the old check let through ──────────────────────────────────────
