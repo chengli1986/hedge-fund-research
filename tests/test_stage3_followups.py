@@ -372,3 +372,17 @@ def test_f4_an_interrupt_while_recording_books_nothing_twice(tagstore, tmp_path)
     with pytest.raises(KeyboardInterrupt):
         ta.run(path, "k", tmp_path / "bk", sleep=lambda s: None, workers=1, call=call, log_usage=log_usage)
     assert len(booked) == len(set(booked)), booked
+
+
+def test_f1_several_articles_all_answered_unusably_charges_no_one(store, api):
+    """Every model returning output cut at its token cap is the service's fault."""
+    store([_art(i) for i in range(3)], bodies={f"a{i}": _distinct(i) for i in range(3)})
+    api["script"] = [ok("not json")]
+    aa.main()
+    assert not any("analysis_failures" in r for r in _rows().values())
+
+
+def test_f5_a_refused_reask_is_an_answer_like_junk(api):
+    api["script"] = [ok(json.dumps(WORDING)), refusal(), requests.Timeout("slow"), requests.Timeout("slow")]
+    r = aa._analyze_with_fallback(LATIN, {"OPENAI_API_KEY": "k"}, article_id="x")
+    assert r is not None and r["_label"] == aa.RULE_MADE_DECLINE

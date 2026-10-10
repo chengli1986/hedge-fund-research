@@ -251,3 +251,27 @@ def test_a_failed_docs_site_sync_is_reported(tmp_path):
     assert _run(repo, env).returncode == 0
     s = _summary(repo)
     assert s["applied"].strip() == "kkr" and "docs-site copy failed" in s["flagged"]
+
+
+def test_uncommitted_edits_in_the_two_files_stop_the_run(tmp_path):
+    """They were applied on top of, committed and pushed as "the refresh"."""
+    repo, env = _sandbox(tmp_path, tests_pass=True)
+    with (repo / "publish.py").open("a") as f:
+        f.write("# PERSON WIP\n")
+    head = _git(repo, "rev-parse", "HEAD").strip()
+    assert _run(repo, env).returncode == 0
+    assert _git(repo, "rev-parse", "HEAD").strip() == head
+    assert "# PERSON WIP" in (repo / "publish.py").read_text()
+    assert "uncommitted changes" in _summary(repo)["flagged"]
+
+
+def test_the_summary_names_what_changed_and_the_parked_draft(tmp_path):
+    script = ("#!/usr/bin/env bash\necho '# x' >> publish.py && git commit -qm 'agent edit' -- publish.py\n"
+              "cat > pending_profiles/kkr.refresh.json <<'EOF'\n" + json.dumps(DRAFT) + "\nEOF\n")
+    repo, env = _sandbox(tmp_path, tests_pass=True, claude_script=script)
+    with (repo / "tests" / "test_gate.py").open("a") as f:      # unrelated dirt from before the run
+        f.write("# dirty\n")
+    assert _run(repo, env).returncode == 0
+    flagged = _summary(repo)["flagged"]
+    assert "committed: publish.py" in flagged and "test_gate.py" not in flagged
+    assert "kkr (not applied" in flagged

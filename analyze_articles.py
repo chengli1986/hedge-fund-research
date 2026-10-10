@@ -816,6 +816,7 @@ def _analyze_with_fallback(
         # attempt's answered re-ask says nothing about a later one.
         reask_answered = False
         for attempt in range(1, MAX_ATTEMPTS + 1):
+            in_reask = False
             try:
                 log.info("  Trying %s (attempt %d/%d)", model_name, attempt, MAX_ATTEMPTS)
                 parsed, usage, used_model = call(prompt, caller, api_key)
@@ -842,8 +843,10 @@ def _analyze_with_fallback(
                                         "reason": grounding_reason(problems),
                                         "_label": RULE_MADE_DECLINE,
                                         "_model": used_model, "_usage": usage}
+                            in_reask = True
                             retry, retry_usage, retry_model = call(
                                 prompt + _retry_instruction(problems), caller, api_key)
+                            in_reask = False
                             reask_answered = True
                             if retry is None:
                                 # Junk instead of an answer says nothing about the
@@ -883,6 +886,8 @@ def _analyze_with_fallback(
             except EmptyAnswer as e:
                 log.warning("  %s: no answer text (attempt %d): %s", model_name, attempt, e)
                 faults.append(BAD_ANSWER)
+                if in_reask:
+                    reask_answered = True      # a refusal is an answer, as junk is
             except Exception as e:
                 log.warning("  %s: error (attempt %d): %s", model_name, attempt, e)
                 faults.append(COUNTED)
@@ -1142,8 +1147,14 @@ def main() -> int:
             log.error("  %s", stopped)
             break
 
+    # Nobody answered and several were asked: the service (a retired model, a
+    # rejected parameter, output cut at a token cap) -- charge no one. One
+    # article asked and answered unusably: likely the article, even alone.
     nobody_answered = bool(asked) and not answered
+    systemic = nobody_answered and len(unanswered) > 1
     for art, faults in unanswered:
+        if systemic:
+            continue
         charged = BAD_ANSWER in faults or (COUNTED in faults and not nobody_answered)
         if not charged:
             continue

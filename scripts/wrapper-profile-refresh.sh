@@ -71,6 +71,18 @@ tracked_state() {
   git diff --no-ext-diff HEAD -- "${PROTECTED[@]}" 2>/dev/null | sha256sum
 }
 STATE_BEFORE="$(tracked_state)"
+HEAD_BEFORE="$(git rev-parse HEAD 2>/dev/null)"
+# Each uncommitted protected file with a fingerprint, so the summary can name
+# what changed DURING the run rather than dirt that was already there.
+edited_files() {
+  git diff --name-only HEAD -- "${PROTECTED[@]}" 2>/dev/null | while IFS= read -r f; do
+    printf '%s %s\n' "$f" "$(sha256sum < "$f" 2>/dev/null | cut -c1-16)"
+  done | sort
+}
+EDITED_BEFORE="$(edited_files)"
+# Uncommitted edits already in the two files would be applied on top of,
+# committed and pushed as "the refresh" (pre-merge re-review, 2026-10-10).
+DIRTY_AT_START="$(git status --porcelain --untracked-files=no -- publish.py config/sources.json 2>/dev/null)"
 # IMPORTANT preamble: headless agents load ~/.claude/CLAUDE.md, whose "session
 # start = daily log recap" ritual derails this run — the agent tries to read the
 # out-of-repo daily-log dir, gets sandbox-blocked, and stalls asking the user a
@@ -81,6 +93,17 @@ STATE_BEFORE="$(tracked_state)"
 PROMPT="IMPORTANT: Skip daily log recap and session start routines. Go straight to the task below.
 
 $(cat auto-promote/refresh-program.md)"
+
+if [[ -n "$DIRTY_AT_START" ]]; then
+  echo "[profile-refresh] publish.py/sources.json have uncommitted changes; not run"
+  set +u; source "$HOME/.stock-monitor.env" 2>/dev/null || true; set -u
+  SMTP_USER="${SMTP_USER:-}" SMTP_PASS="${SMTP_PASS:-}" MAIL_TO="${MAIL_TO:-}" \
+  python3 scripts/send_refresh_summary.py --applied "" \
+    --flagged "not run: publish.py/sources.json had uncommitted changes at the start ($(echo $DIRTY_AT_START)) -- commit or revert them first" \
+    --alert-only "$ALERT_ONLY" >>logs/profile-refresh.log 2>&1 || echo "[profile-refresh] summary email WARN (not sent)"
+  rm -rf "$BACKUP_DIR"
+  exit 0
+fi
 
 # 1) agent generates pending_profiles/*.refresh.json (only for funds that changed).
 #    --dangerously-skip-permissions is REQUIRED: this repo is not trust-accepted
@@ -104,7 +127,9 @@ if [[ "$(tracked_state)" != "$STATE_BEFORE" ]]; then
   # checkout, so nothing is overwritten: the run applies nothing, commits
   # nothing, and says what changed.
   AGENT_TOUCHED=1
-  changed="$(git status --porcelain --untracked-files=no -- "${PROTECTED[@]}" | tr '\n' ' ')"
+  changed="$( { git diff --name-only "$HEAD_BEFORE" HEAD -- "${PROTECTED[@]}" 2>/dev/null | sed 's/^/committed: /'
+               comm -13 <(printf '%s\n' "$EDITED_BEFORE") <(edited_files) | cut -d' ' -f1 | sed '/^$/d; s/^/edited: /'; } \
+             | sort -u | tr '\n' ' ')"
   FLAGGED+=("tracked files changed while the agent ran (by the agent or someone else: ${changed:-committed}); nothing applied or overwritten -- check by hand")
 fi
 
@@ -129,6 +154,7 @@ fi
 if [[ "$ALERT_ONLY" != "1" ]]; then
   mkdir -p pending_profiles/flagged
   for draft in pending_profiles/*.refresh.json; do
+    [[ $AGENT_TOUCHED -eq 1 ]] && FLAGGED+=("$(basename "$draft" .refresh.json) (not applied; draft kept in pending_profiles/flagged/)")
     mv -f "$draft" pending_profiles/flagged/
   done
 fi
