@@ -2,7 +2,8 @@
 
 Every count on the rail and every list the reader sees is computed by
 tvRender() at run time; asserting on the generated HTML would only prove the
-data is there. Skipped where Chromium is not installed.
+data is there. Skipped where Chromium is not installed, except in CI
+(conftest's `chromium` fixture).
 """
 from datetime import datetime, timedelta, timezone
 
@@ -10,7 +11,6 @@ import pytest
 
 import publish
 
-sync_api = pytest.importorskip("playwright.sync_api")
 BJT = timezone(timedelta(hours=8))
 
 
@@ -36,21 +36,16 @@ ARTICLES = [
 
 
 @pytest.fixture(scope="module")
-def page(tmp_path_factory):
+def page(tmp_path_factory, chromium):
     path = tmp_path_factory.mktemp("page") / "p.html"
     path.write_text(publish.generate_html(ARTICLES), encoding="utf-8")
-    with sync_api.sync_playwright() as p:
-        try:
-            browser = p.chromium.launch()
-        except Exception as exc:                      # no browser binary on this machine
-            pytest.skip(f"chromium unavailable: {exc}")
-        pg = browser.new_page()
-        errors = []
-        pg.on("pageerror", lambda e: errors.append(str(e)))
-        pg.goto(path.as_uri())
-        pg.errors = errors
-        yield pg
-        browser.close()
+    pg = chromium.new_page()
+    errors = []
+    pg.on("pageerror", lambda e: errors.append(str(e)))
+    pg.goto(path.as_uri())
+    pg.errors = errors
+    yield pg
+    pg.close()
 
 
 def _count(pg):

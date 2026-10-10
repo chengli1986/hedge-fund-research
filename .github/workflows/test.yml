@@ -17,5 +17,9 @@ jobs:
         run: |
           pip install pytest
           pip install -r requirements.txt
+      # The browser tests (page JavaScript) need Chromium. Without it they
+      # skipped on every run; conftest now fails them when CI is set.
+      - name: Install Chromium for the browser tests
+        run: python -m playwright install --with-deps chromium
       - name: Run tests
         run: pytest tests/ -v

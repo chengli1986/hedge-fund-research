@@ -106,22 +106,14 @@ def test_a_year_only_row_shows_the_year_and_sorts_at_the_end_of_it():
 
 # ── in a browser: the timeline button and the phone layout ───────────────────
 
-sync_api = pytest.importorskip("playwright.sync_api")
-
 RECENT, OLDER = 25, 3
 FEED = ([_art(i, days=1 + i % 40) for i in range(RECENT)]
         + [_art(100 + i, days=200 + i) for i in range(OLDER)])
 
 
 @pytest.fixture(scope="module")
-def browser():
-    with sync_api.sync_playwright() as p:
-        try:
-            b = p.chromium.launch()
-        except Exception as exc:                      # no browser binary on this machine
-            pytest.skip(f"chromium unavailable: {exc}")
-        yield b
-        b.close()
+def browser(chromium):
+    return chromium
 
 
 @pytest.fixture(scope="module")
