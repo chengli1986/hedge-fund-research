@@ -8,7 +8,7 @@ Playwright (Chromium) for JS/CSR sites; multi-model LLM chain for summaries.
 
 ## Develop / Test
 ```bash
-python3 -m pytest tests/ -q                       # 2407 collected, 16 deselected (a fresh clone skips ~14 that need gitignored data/fixtures)
+python3 -m pytest tests/ -q                       # 2416 collected, 16 deselected (a fresh clone skips ~14 that need gitignored data/fixtures)
 bash run_pipeline.sh                              # full 4-stage pipeline
 python3 fetch_articles.py --list                  # list configured sources
 python3 fetch_articles.py --source <id> --dry-run # one source, no save
