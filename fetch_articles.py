@@ -88,9 +88,10 @@ HEADERS = {
 # observed, so 3 or 10 would give the same result on today's 42 sources. The
 # number is a guess with a safety margin, not a measurement -- do not cite it
 # as one. The real discriminator between "a new issue" and "the same document
-# re-dated" is the BODY, and stage 3 applies it: _published_bodies is checked
-# BEFORE any model call, so a wrongly ingested issue costs a fetch, is labelled
-# duplicate_body and is never published. Date proposes; content decides.
+# re-dated" is the BODY, and stage 3 applies it: duplicate_owner (over
+# published_index) is checked BEFORE any model call, so a wrongly ingested
+# issue costs a fetch, is labelled duplicate_body and is never published. Date
+# proposes; content decides.
 ISSUE_MIN_GAP_DAYS = 5
 
 # A listing whose newest item is more than this many days older than the newest

@@ -120,7 +120,10 @@ def candidates(rows: list[dict], retag_before: str | None = None,
             continue
         if r.get("tags") and not (retag_before and (r.get("tags_at") or "") < retag_before):
             continue
-        if not r.get("tags") and int(r.get("tag_failures") or 0) >= MAX_TAG_NIGHTS:
+        # Given up applies to a re-tag as well: a tagged row that keeps failing
+        # under --retag-before was asked again on every run, the count climbing
+        # past MAX_TAG_NIGHTS where `==` never fired again (2026-10-10).
+        if int(r.get("tag_failures") or 0) >= MAX_TAG_NIGHTS:
             continue
         try:
             if aa._resolve_content_path(r).is_file():
@@ -268,8 +271,9 @@ def flush(path: Path, done: dict[str, dict], failed: set[str] | None = None,
             raise RuntimeError(f"{bad} damaged row(s) in the store; stopping without writing")
         for f in fresh:
             if f.get("id") in failed:
-                f["tag_failures"] = int(f.get("tag_failures") or 0) + 1
-                if f["tag_failures"] == MAX_TAG_NIGHTS and gave_up is not None:
+                before = int(f.get("tag_failures") or 0)
+                f["tag_failures"] = before + 1
+                if before < MAX_TAG_NIGHTS <= f["tag_failures"] and gave_up is not None:
                     gave_up.append(f["id"])
                 continue
             src = done.get(f.get("id"))
@@ -287,9 +291,18 @@ def flush(path: Path, done: dict[str, dict], failed: set[str] | None = None,
     return written
 
 
+def _log_usage(article_id: str, model: str, usage: dict, parsed: bool | None = None) -> None:
+    """Stage 3b's own book (aa.TAG_USAGE_LOG_FILE, read at call time); these
+    calls used to land unmarked in the stage-3 log (2026-10-10)."""
+    aa._append_usage_log(article_id, model, usage, path=aa.TAG_USAGE_LOG_FILE, parsed=parsed, stage="tag")
+
+
 def run(path: Path, api_key: str, backup: Path | None, limit: int = 0, workers: int = 3,
         dry_run: bool = False, retag_before: str | None = None, only_series: bool = False,
-        also_types: tuple[str, ...] = (), fresh_snapshot: bool = False, call=aa._call_openai, sleep=time.sleep, log_usage=aa._append_usage_log) -> int:
+        also_types: tuple[str, ...] = (), fresh_snapshot: bool = False, call=aa._call_openai, sleep=time.sleep,
+        log_usage=None) -> int:
+    if log_usage is None:
+        log_usage = _log_usage
     rows, damaged = jsonl_store.read_rows(path)
     if damaged:
         print(f"{damaged} damaged row(s) in the store; refusing to rewrite it")
@@ -335,9 +348,13 @@ def run(path: Path, api_key: str, backup: Path | None, limit: int = 0, workers: 
             return row, None, f"failed: {type(exc).__name__}: {exc}"[:300], [], {}
 
     broken: Exception | None = None
-    with ThreadPoolExecutor(max_workers=workers) as pool:
+    pool = ThreadPoolExecutor(max_workers=workers)
+    futures: list = []
+    seen: set = set()
+    try:
         futures = [pool.submit(work, r) for r in todo]
         for i, fut in enumerate(as_completed(futures), 1):
+            seen.add(fut)
             row, tags, outcome, billed, evidence = fut.result()
             for usage, ok in billed:
                 log_usage(row["id"], MODEL, usage, parsed=ok)
@@ -375,6 +392,26 @@ def run(path: Path, api_key: str, backup: Path | None, limit: int = 0, workers: 
                     broken = exc
             print(f"  {i}/{len(todo)} {row.get('source_id', '')[:18]:18} {outcome[:50]:50} "
                   f"in={tokens[0]:,} out={tokens[1]:,} ({time.time() - started:.0f}s)", flush=True)
+    except BaseException:
+        # Ctrl-C (or anything unexpected in this loop): the `with` block this
+        # replaced waited for every queued article -- each a paid call -- and
+        # then skipped the final flush, so a manual run interrupted at article
+        # 5 of 30 made 30 calls and saved nothing (2026-10-10; T8 fixed the same
+        # shape in resummarize). Stop the queue, book what was in flight, save
+        # what is finished, then go.
+        stop.set()
+        pool.shutdown(wait=True, cancel_futures=True)
+        for fut in futures:
+            if fut not in seen and fut.done() and not fut.cancelled():
+                for usage, ok in fut.result()[3]:
+                    log_usage(fut.result()[0]["id"], MODEL, usage, parsed=ok)
+        if broken is None:
+            try:
+                flush(path, done, failed, gave_up)
+            except Exception as exc:
+                print(f"could not save the finished articles: {type(exc).__name__}: {exc}")
+        raise
+    pool.shutdown(wait=True)
     if broken is not None:
         raise broken
     flush(path, done, failed, gave_up)

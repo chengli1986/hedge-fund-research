@@ -560,8 +560,10 @@ def _display_date(a: dict) -> str:
     page led with "2026-08-31". Prefer the original label when it has no day.
     """
     raw = (a.get("date_raw") or "").strip()
-    # scripts/refine_dates.py found the day on the article page or in its URL.
-    if a.get("date_basis") in ("page", "url"):
+    # scripts/refine_dates.py found the day on the article page or in its URL;
+    # "listing": the listing's own datetime attribute gave it (Wellington),
+    # restored after refine_dates had overwritten it (2026-10-10).
+    if a.get("date_basis") in ("page", "url", "listing"):
         return a.get("date") or ""
     if _MONTH_ONLY_RAW.match(raw):
         return raw

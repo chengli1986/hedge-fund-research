@@ -147,6 +147,10 @@ def validate(d: object) -> list[str]:
 
 EVIDENCE_GROUPS = ("assets", "topics", "methods")
 MIN_EVIDENCE_WORDS = 6
+# Letters and digits a passage must keep after _letters: "_ _ _ _ _ _" counted
+# as six words, reduced to "", and "" is in every body (stage-3 health check,
+# 2026-10-10). 12 = six two-character CJK words, the shortest real passage.
+MIN_EVIDENCE_LETTERS = 12
 
 
 def _letters(s: str) -> str:
@@ -173,7 +177,13 @@ def check_evidence(d: dict, text: str) -> tuple[dict, list[str]]:
 
     Returns (answer without those tags, ["tag: reason", ...]). Type and regions
     need no evidence. The model was told unsupported tags are removed, so
-    dropping (not retrying) is the intended outcome; 0 tags in a group is legal."""
+    dropping (not retrying) is the intended outcome; 0 tags in a group is legal.
+
+    One passage may support two tags here (a sentence about AI data centres
+    is evidence for ai_tech and for infrastructure: 57 kept tags did so on
+    2026-10-10). Only a re-quote may not borrow a passage another tag already
+    cites (tag_articles._requote, T6): there, reuse is the cheapest way to
+    rescue a tag the text does not support."""
     body = _letters(text)
     ev = d.get("evidence") or {}
     kept, dropped = dict(d), []
@@ -181,7 +191,7 @@ def check_evidence(d: dict, text: str) -> tuple[dict, list[str]]:
         keep = []
         for tid in d[g]:
             passage = ev.get(tid) or ""
-            if _evidence_words(passage) < MIN_EVIDENCE_WORDS:
+            if _evidence_words(passage) < MIN_EVIDENCE_WORDS or len(_letters(passage)) < MIN_EVIDENCE_LETTERS:
                 dropped.append(f"{tid}: no passage" if not passage.strip() else f"{tid}: passage too short")
             elif _letters(passage) not in body:
                 dropped.append(f"{tid}: passage not in document")

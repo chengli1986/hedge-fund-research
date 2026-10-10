@@ -25,7 +25,10 @@ import json, collections
 from datetime import datetime, timedelta, timezone
 BJT = timezone(timedelta(hours=8))
 cut = (datetime.now(BJT) - timedelta(hours=18)).isoformat()
-rows = [json.loads(l) for l in open("logs/analyze-usage.jsonl")]
+# Summary calls only. Stage 3b books in logs/tag-usage.jsonl since 2026-10-10;
+# rows before that date carry no "stage" and include tagging calls.
+rows = [r for r in (json.loads(l) for l in open("logs/analyze-usage.jsonl"))
+        if r.get("stage", "summary") == "summary"]
 recent = [r for r in rows if r["at"] >= cut]
 if not recent:
     print("  ⚠ 最近 18 小时没有任何调用记录 —— 管线可能没跑")
