@@ -58,9 +58,17 @@ mkdir -p "$(dirname "$TEST_LOG")"
 BACKUP_DIR="$(mktemp -d "$REPO/logs/profile-refresh-backup.XXXXXX")" \
   && cp -p publish.py config/sources.json "$BACKUP_DIR/" \
   || { echo "[profile-refresh] could not back up publish.py/sources.json; nothing run"; exit 1; }
+# Committed AND uncommitted content of every tracked file the agent has no
+# business touching. Excluded: its own drafts and logs, and the state files
+# other jobs commit on their own schedule. HEAD's tree is part of it, so an
+# agent that commits its edit is caught too (pre-merge re-review, 2026-10-10).
+PROTECTED=(. ':(exclude)pending_profiles' ':(exclude)logs' ':(exclude)config/fund_candidates.json'
+           ':(exclude)config/trial-state.json' ':(exclude)config/inspection_state.json')
 tracked_state() {
-  git status --porcelain --untracked-files=no -- . ':(exclude)pending_profiles' ':(exclude)logs' 2>/dev/null
-  git diff --no-ext-diff -- . ':(exclude)pending_profiles' ':(exclude)logs' 2>/dev/null | sha256sum
+  # ls-tree takes no ":(exclude)" pathspec (it fails and prints nothing, which
+  # hid a committed edit), so filter its listing instead.
+  git ls-tree -r HEAD | grep -vE $'\t(pending_profiles/|logs/|config/(fund_candidates|trial-state|inspection_state)\\.json$)' | sha256sum
+  git diff --no-ext-diff HEAD -- "${PROTECTED[@]}" 2>/dev/null | sha256sum
 }
 STATE_BEFORE="$(tracked_state)"
 # IMPORTANT preamble: headless agents load ~/.claude/CLAUDE.md, whose "session
@@ -90,12 +98,14 @@ timeout --kill-after=30 3000 "$CLAUDE_BIN" --print --dangerously-skip-permission
 APPLIED=(); FLAGGED=()
 AGENT_TOUCHED=0
 if [[ "$(tracked_state)" != "$STATE_BEFORE" ]]; then
-  # The agent writes drafts, nothing else. Its own edit of publish.py went
-  # live with the next publish and was swept into the next refresh commit.
+  # The agent writes drafts, nothing else: an edit of its own to publish.py
+  # went live with the next publish and was swept into the refresh commit.
+  # This cannot tell the agent from a person or job working in the same
+  # checkout, so nothing is overwritten: the run applies nothing, commits
+  # nothing, and says what changed.
   AGENT_TOUCHED=1
-  changed="$(git status --porcelain --untracked-files=no -- . ':(exclude)pending_profiles' ':(exclude)logs' | tr '\n' ' ')"
-  cp -p "$BACKUP_DIR/publish.py" publish.py; cp -p "$BACKUP_DIR/sources.json" config/sources.json
-  FLAGGED+=("agent changed tracked files itself (${changed:-diff only}); publish.py/sources.json restored, nothing applied -- check the rest by hand")
+  changed="$(git status --porcelain --untracked-files=no -- "${PROTECTED[@]}" | tr '\n' ' ')"
+  FLAGGED+=("tracked files changed while the agent ran (by the agent or someone else: ${changed:-committed}); nothing applied or overwritten -- check by hand")
 fi
 
 # 2) apply each draft. apply_refresh.py gates internally via validate_refresh:

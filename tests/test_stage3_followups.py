@@ -28,7 +28,7 @@ import analyze_articles as aa
 import publish
 import taxonomy
 from test_stage3_error_handling import (LATIN, SUMMARY, TAG_BODY, TAG_GOOD, TOO_MANY, USAGE, _art,  # noqa: F401
-                                        _distinct, _rows, _tread, _trow, api, http, ok, store, ta,
+                                        _distinct, _rows, _tread, _trow, api, http, ok, refusal, store, ta,
                                         tagstore)
 
 REPO = Path(__file__).resolve().parent.parent
@@ -97,6 +97,41 @@ def test_f1_a_night_nobody_was_answered_charges_no_article(store, api):
     assert not any("analysis_failures" in r for r in _rows().values())
 
 
+def test_f1_an_article_alone_whose_answers_never_parse_is_still_given_up(store, api, capsys):
+    """An answer came back, so the service works and the article is the
+    problem -- even on the quiet nights when it is the only one pending."""
+    store([_art(1)])
+    api["script"] = [ok("not json")]
+    rcs = [aa.main() for _ in range(aa.MAX_ANALYSIS_NIGHTS)]
+    assert _rows()["a1"]["analysis_failures"] == aa.MAX_ANALYSIS_NIGHTS
+    assert rcs[-1] != 0 and "GAVE UP" in capsys.readouterr().out
+
+
+def test_f1_a_refusal_counts_even_for_an_article_alone(store, api):
+    """A refusal is an answer (HTTP 200, no text): the service worked."""
+    store([_art(1)])
+    api["script"] = [refusal()]
+    aa.main()
+    assert _rows()["a1"]["analysis_failures"] == 1
+
+
+def test_f1_a_batch_save_never_carries_a_count_the_night_may_take_back(store, api, monkeypatch):
+    # Title-only rows are declined without a model call, so the 3-in-a-row stop
+    # does not end the night before the batch save after the 5th article.
+    title_only = {1, 2, 4}
+    rows = [_art(i, content_status="metadata_only") if i in title_only else _art(i) for i in range(6)]
+    store(rows, bodies={f"a{i}": ("Title: x" if i in title_only else _distinct(i)) for i in range(6)})
+    api["script"] = [http(404, "model_not_found")]
+    saved = []
+    real = aa.save_articles
+    monkeypatch.setattr(aa, "save_articles",
+                        lambda arts, path=None: (saved.append([a.get("analysis_failures") for a in arts]),
+                                                 real(arts, path)))
+    aa.main()
+    assert len(saved) >= 2, "the batch save after the 5th article did not happen"
+    assert all(v is None for snap in saved for v in snap), saved
+
+
 def test_f1_articles_that_failed_before_go_to_the_back_of_the_queue(store, api):
     rows = [_art(i, analysis_failures=1) for i in range(3)] + [_art(9)]
     store(rows, bodies={f"a{i}": _distinct(i) for i in (0, 1, 2, 9)})
@@ -148,6 +183,14 @@ def test_f5_a_timed_out_reask_then_a_failed_attempt_is_not_a_rejection(api, seco
     """The re-ask times out, then the next attempt's first call fails too: no
     re-ask ever answered, so nothing was judged."""
     api["script"] = [ok(json.dumps(WORDING)), requests.Timeout("slow"), second, second]
+    assert aa._analyze_with_fallback(LATIN, {"OPENAI_API_KEY": "k"}, article_id="x") is None
+
+
+def test_f5_an_earlier_answered_reask_does_not_judge_a_later_rejection(api):
+    """Attempt 1's re-ask came back (junk), attempt 2's re-ask timed out: the
+    rejection that stands is attempt 2's, and nobody answered it."""
+    api["script"] = [ok(json.dumps(WORDING)), ok("not json"),
+                     ok(json.dumps(WORDING)), requests.Timeout("slow")]
     assert aa._analyze_with_fallback(LATIN, {"OPENAI_API_KEY": "k"}, article_id="x") is None
 
 
@@ -249,8 +292,10 @@ def test_f4_ctrl_c_cancels_the_queue_and_saves_the_finished(tagstore, tmp_path):
     assert len(calls) < 30
     tagged = [r for r in _tread(path).values() if r.get("tags")]
     # Every call that came back is paid for: its tags must be saved, the ones in
-    # flight at the interrupt included (pre-merge review: they were dropped).
-    assert len(tagged) == len(calls), (len(tagged), len(calls))
+    # flight at the interrupt included (pre-merge review: they were dropped) --
+    # all but the one being recorded when Ctrl-C landed, which is not recorded
+    # twice (re-review: that booked its calls twice).
+    assert len(tagged) == len(calls) - 1, (len(tagged), len(calls))
 
 
 def test_f4_a_give_up_reached_before_the_interrupt_is_still_announced(tagstore, tmp_path, capsys):
@@ -297,3 +342,33 @@ def test_fe_a_passage_without_letters_is_not_evidence():
     answer = dict(TAG_GOOD, evidence=dict(TAG_GOOD["evidence"], equities="_ _ _ _ _ _ _ _ _ _"))
     kept, dropped = taxonomy.check_evidence(answer, TAG_BODY)
     assert "equities" not in kept["assets"] and any(d.startswith("equities") for d in dropped)
+
+
+def test_f4_a_failing_report_write_still_saves_what_is_tagged(tagstore, tmp_path):
+    """record() raising used to be retried by the cleanup, raise again, and skip
+    the save of every article already tagged."""
+    path = tagstore([_trow(1), _trow(2)])
+    bk = tmp_path / "bk"
+    bk.mkdir()
+    (bk / "report.jsonl").mkdir()                     # every report write fails
+    with pytest.raises(OSError):
+        ta.run(path, "k", bk, sleep=lambda s: None, workers=1, log_usage=lambda *a, **k: None,
+               call=lambda p, k, model: (json.dumps(TAG_GOOD), dict(USAGE), model))
+    assert any(r.get("tags") for r in _tread(path).values())
+
+
+def test_f4_an_interrupt_while_recording_books_nothing_twice(tagstore, tmp_path):
+    path = tagstore([_trow(1), _trow(2)])
+    booked = []
+
+    def log_usage(article_id, *a, **k):
+        booked.append(article_id)
+        if len(booked) == 1:
+            raise KeyboardInterrupt
+
+    def call(p, k, model):
+        time.sleep(0.01)
+        return json.dumps(TAG_GOOD), dict(USAGE), model
+    with pytest.raises(KeyboardInterrupt):
+        ta.run(path, "k", tmp_path / "bk", sleep=lambda s: None, workers=1, call=call, log_usage=log_usage)
+    assert len(booked) == len(set(booked)), booked

@@ -196,17 +196,40 @@ def test_a_rejected_draft_is_parked_not_left_to_fail_next_month(tmp_path):
     assert "apply_refresh rc=1" in _summary(repo)["flagged"]
 
 
-def test_an_agent_that_edits_publish_py_itself_is_undone_and_reported(tmp_path):
-    script = ("#!/usr/bin/env bash\nsed -i 's/~\\$758B/<b>~$9T<\\/b>/' publish.py\n"
+@pytest.mark.parametrize("edit,commits", [
+    ("sed -i 's/~\\$758B/<b>~$9T<\\/b>/' publish.py", False),                       # the agent edits
+    ("echo '# x' >> publish.py && git commit -qam 'agent edit'", True),               # ... and commits
+])
+def test_tracked_changes_during_the_agent_run_stop_the_apply(tmp_path, edit, commits):
+    script = ("#!/usr/bin/env bash\n" + edit + "\n"
               "cat > pending_profiles/kkr.refresh.json <<'EOF'\n" + json.dumps(DRAFT) + "\nEOF\n")
     repo, env = _sandbox(tmp_path, tests_pass=True, claude_script=script)
-    before = (repo / "publish.py").read_text()
-    head = _git(repo, "rev-parse", "HEAD").strip()
     assert _run(repo, env).returncode == 0
-    assert (repo / "publish.py").read_text() == before
-    assert _git(repo, "rev-parse", "HEAD").strip() == head
     s = _summary(repo)
-    assert s["applied"] == "" and "agent changed tracked files" in s["flagged"]
+    assert s["applied"] == "" and "changed while the agent ran" in s["flagged"]
+    assert '"aum": "~$800B"' not in (repo / "publish.py").read_text()
+    assert _git(repo, "rev-parse", "origin/main").strip() != _git(repo, "rev-parse", "HEAD").strip() or not commits, \
+        "the wrapper pushed the agent's commit"
+
+
+def test_a_change_made_by_someone_else_meanwhile_is_not_overwritten(tmp_path):
+    """The check cannot tell the agent from a person: it must never copy the
+    backup over what is there."""
+    script = ("#!/usr/bin/env bash\nsed -i 's/Global alternatives leader/Global leader/' config/sources.json\n"
+              "cat > pending_profiles/kkr.refresh.json <<'EOF'\n" + json.dumps(DRAFT) + "\nEOF\n")
+    repo, env = _sandbox(tmp_path, tests_pass=True, claude_script=script)
+    assert _run(repo, env).returncode == 0
+    assert "Global leader" in (repo / "config" / "sources.json").read_text()
+    assert _summary(repo)["applied"] == ""
+
+
+def test_other_jobs_committing_their_state_files_do_not_stop_the_refresh(tmp_path):
+    script = ("#!/usr/bin/env bash\necho '{}' > config/trial-state.json && git add config/trial-state.json "
+              "&& git commit -qm 'trial: update state'\n"
+              "cat > pending_profiles/kkr.refresh.json <<'EOF'\n" + json.dumps(DRAFT) + "\nEOF\n")
+    repo, env = _sandbox(tmp_path, tests_pass=True, claude_script=script)
+    assert _run(repo, env).returncode == 0
+    assert _summary(repo)["applied"].strip() == "kkr", _summary(repo)
 
 
 def test_a_rollback_does_not_overwrite_another_writer(tmp_path):

@@ -731,7 +731,13 @@ MAX_CONSECUTIVE_UNANSWERED = 3
 MAX_ANALYSIS_NIGHTS = 3
 GAVE_UP_RC = 3
 PASSING = "passing"          # a fault that clears up by itself
-COUNTED = "counted"          # one that will come back tomorrow
+COUNTED = "counted"          # a request refused (4xx, local error): comes back tomorrow
+BAD_ANSWER = "bad_answer"    # the model answered, unusably (junk, refusal): about this article
+# A night on which no article got an answer charges COUNTED faults to nobody --
+# a retired model or a rejected parameter refuses every request the same way --
+# but BAD_ANSWER still counts: an answer came back, so the service worked and
+# the article is the problem, even when it is the only one pending (35 recent
+# nights had one or two; pre-merge re-review, 2026-10-10).
 _PASSING_ERRORS = (requests.ConnectionError, requests.Timeout, requests.exceptions.ChunkedEncodingError)
 
 
@@ -803,10 +809,11 @@ def _analyze_with_fallback(
             continue
 
         rejected = None
-        # Whether any re-ask of this model came back at all. A rejection that
-        # no re-ask ever answered was never judged: the re-ask timed out and
-        # the next attempt's first call failed too (or timed out again), so it
-        # must not become a grounding_failed decline (2026-10-10, twice).
+        # Whether the re-ask for the CURRENT `rejected` came back at all. A
+        # rejection whose re-ask never answered was never judged (the re-ask
+        # timed out, then the next attempt failed too), so it must not become a
+        # grounding_failed decline. Reset with every new rejection: an earlier
+        # attempt's answered re-ask says nothing about a later one.
         reask_answered = False
         for attempt in range(1, MAX_ATTEMPTS + 1):
             try:
@@ -830,6 +837,7 @@ def _analyze_with_fallback(
                             # that raises (timeout, refusal) left it unset and
                             # the article fell through to the weaker tier
                             # (second stage-3 review R6).
+                            reask_answered = False
                             rejected = {"insufficient_content": True,
                                         "reason": grounding_reason(problems),
                                         "_label": RULE_MADE_DECLINE,
@@ -846,7 +854,7 @@ def _analyze_with_fallback(
                                 # never passes to the next, weaker tier.
                                 log.warning("  %s: re-ask did not parse (attempt %d)",
                                             model_name, attempt)
-                                faults.append(COUNTED)
+                                faults.append(BAD_ANSWER)
                                 continue
                             parsed, usage, used_model = retry, retry_usage, retry_model
                             problems = ([] if parsed.get("insufficient_content")
@@ -861,7 +869,7 @@ def _analyze_with_fallback(
                     parsed["_usage"] = usage
                     return parsed
                 log.warning("  %s: failed to parse output (attempt %d)", model_name, attempt)
-                faults.append(COUNTED)
+                faults.append(BAD_ANSWER)
             except requests.HTTPError as e:
                 # Quota or auth: the next attempt, the next tier (same key) and
                 # every later article would fail the same way (audit S2).
@@ -872,6 +880,9 @@ def _analyze_with_fallback(
             except requests.RequestException as e:
                 log.warning("  %s: error (attempt %d): %s", model_name, attempt, e)
                 faults.append(PASSING if isinstance(e, _PASSING_ERRORS) else COUNTED)
+            except EmptyAnswer as e:
+                log.warning("  %s: no answer text (attempt %d): %s", model_name, attempt, e)
+                faults.append(BAD_ANSWER)
             except Exception as e:
                 log.warning("  %s: error (attempt %d): %s", model_name, attempt, e)
                 faults.append(COUNTED)
@@ -1079,14 +1090,17 @@ def main() -> int:
     gave_up: list[str] = []
     published = published_index(articles)
 
-    counted: list[tuple[dict, int | None]] = []     # (article, failures before tonight)
+    # Unanswered articles and what failed them. Counts are written after the
+    # loop, once the night can be judged: a batch save never carries a count
+    # that the "nobody answered" rule would take back.
+    unanswered: list[tuple[dict, list[str]]] = []
     for a in pending:
         processed += 1
-        before_failures = a.get("analysis_failures")
+        faults: list[str] = []
         try:
-            outcome = _analyze_one(a, api_keys, published)
-            if a.get("analysis_failures") != before_failures:
-                counted.append((a, before_failures))
+            outcome = _analyze_one(a, api_keys, published, faults=faults)
+            if outcome == "unanswered":
+                unanswered.append((a, faults))
         except FatalAPIError as e:
             # Quota or auth: every remaining article would fail the same way.
             # What was done is saved below; the rest stays pending for the
@@ -1111,9 +1125,7 @@ def main() -> int:
             insufficient_count += 1
         else:
             fail_count += 1
-        if outcome == "gave_up":
-            gave_up.append(a["id"])
-        if outcome in ("unanswered", "gave_up"):
+        if outcome == "unanswered":
             asked += 1
             consecutive_unanswered += 1
         elif outcome in ("ok", "model_declined"):
@@ -1130,18 +1142,14 @@ def main() -> int:
             log.error("  %s", stopped)
             break
 
-    if asked and not answered and counted:
-        # Not one article got an answer tonight: a model retired, a parameter
-        # rejected, a dead key that is not reported as such -- the fault is the
-        # service's, not these articles'. Charging them would retire articles in
-        # threes, night after night (pre-merge review, 2026-10-10).
-        for art, prev in counted:
-            if prev is None:
-                art.pop("analysis_failures", None)
-            else:
-                art["analysis_failures"] = prev
-        gave_up.clear()
-        log.warning("  no article answered tonight; failure counts left as they were")
+    nobody_answered = bool(asked) and not answered
+    for art, faults in unanswered:
+        charged = BAD_ANSWER in faults or (COUNTED in faults and not nobody_answered)
+        if not charged:
+            continue
+        art["analysis_failures"] = int(art.get("analysis_failures") or 0) + 1
+        if art["analysis_failures"] >= MAX_ANALYSIS_NIGHTS:
+            gave_up.append(art["id"])
     save_articles(articles)
     log.info("Analysis complete: %d ok, %d failed, %d not summarised (insufficient content)",
              success_count, fail_count, insufficient_count)
@@ -1186,12 +1194,12 @@ def main() -> int:
     return 0
 
 
-def _analyze_one(a: dict, api_keys: dict, published: dict) -> str:
+def _analyze_one(a: dict, api_keys: dict, published: dict, faults: list | None = None) -> str:
     """Summarise or decline one pending article, in place.
 
     Returns "ok", "model_declined" or "rule" (both counted as not summarised),
-    "unanswered" (every model failed; retried next run), "gave_up" (failed its
-    MAX_ANALYSIS_NIGHTS-th night; no longer asked) or "no_body".
+    "unanswered" (every model failed; retried next run; `faults` says why) or
+    "no_body".
     Raises FatalAPIError on a quota/auth error.
     """
     try:
@@ -1218,7 +1226,7 @@ def _analyze_one(a: dict, api_keys: dict, published: dict) -> str:
     log.info("Analyzing (%s): %s — %s", level, a.get("source_id", "?"), a.get("title", "?"))
 
     asked_model = False
-    faults: list[str] = []
+    faults = [] if faults is None else faults
     owner = duplicate_owner(published, a.get("source_id", ""), a.get("title", ""), content)
     if owner is not None and owner.get("id") != a["id"]:
         result = {"insufficient_content": True, "_model": None,
@@ -1247,10 +1255,6 @@ def _analyze_one(a: dict, api_keys: dict, published: dict) -> str:
         return "model_declined" if asked_model else "rule"
     if result is None:
         log.error("  All models failed for %s", a["id"])
-        if any(f == COUNTED for f in faults):
-            a["analysis_failures"] = int(a.get("analysis_failures") or 0) + 1
-            if a["analysis_failures"] >= MAX_ANALYSIS_NIGHTS:
-                return "gave_up"
         return "unanswered"
     a["summary_en"] = result["summary_en"]
     a["summary_zh"] = result["summary_zh"]

@@ -386,8 +386,12 @@ def run(path: Path, api_key: str, backup: Path | None, limit: int = 0, workers: 
     try:
         futures = [pool.submit(work, r) for r in todo]
         for i, fut in enumerate(as_completed(futures), 1):
-            row, outcome = record(fut.result())
+            # Marked before recording: if record() raises (a report write, an
+            # interrupt), the cleanup below must not record it a second time --
+            # that booked the same calls twice, or raised again and skipped the
+            # save (pre-merge re-review, 2026-10-10).
             handled.add(fut)
+            row, outcome = record(fut.result())
             if len(done) >= SAVE_EVERY:
                 try:
                     flush(path, done, failed, gave_up)
@@ -411,8 +415,11 @@ def run(path: Path, api_key: str, backup: Path | None, limit: int = 0, workers: 
         pool.shutdown(wait=True, cancel_futures=True)
         for fut in futures:
             if fut not in handled and fut.done() and not fut.cancelled():
-                record(fut.result())
                 handled.add(fut)
+                try:
+                    record(fut.result())
+                except Exception as exc:
+                    print(f"could not record a finished article: {type(exc).__name__}: {exc}")
         if broken is None:
             try:
                 flush(path, done, failed, gave_up)
