@@ -463,6 +463,11 @@ def grounding_reason(problems: list[str]) -> str:
 TITLE_ONLY_REASON = "metadata holds only a title; nothing to summarise"
 
 
+def _known_trouble(article: dict) -> bool:
+    """Failed a night before, or went unanswered on a night nobody was."""
+    return int(article.get("analysis_failures") or 0) > 0 or bool(article.get("analysis_unanswered_at"))
+
+
 def _should_analyze(article: dict) -> bool:
     """Return True if article is eligible for analysis."""
     if article.get("summarized"):
@@ -733,16 +738,19 @@ GAVE_UP_RC = 3
 PASSING = "passing"          # a fault that clears up by itself
 COUNTED = "counted"          # a request refused (4xx, local error): comes back tomorrow
 BAD_ANSWER = "bad_answer"    # the model answered, unusably (junk, refusal)
-# Every night with a COUNTED or BAD_ANSWER fault counts. Giving up, though,
-# needs proof the service works: it only happens on a night on which some
-# article WAS answered. On a night nobody was answered (a retired model, a
-# rejected parameter, output cut at a token cap -- or simply three bad
-# articles at the front) a count stops at MAX_ANALYSIS_NIGHTS - 1. Failed
-# rows go to the back of the queue, so from the next night a fresh article is
-# asked first and supplies that proof. Earlier versions exempted such nights
-# from counting altogether, which left three bad articles at the head at zero
-# forever, blocking every new one (full re-review, 2026-10-10).
-_PASSING_ERRORS = (requests.ConnectionError, requests.Timeout, requests.exceptions.ChunkedEncodingError)
+# A night counts against an article only when some article WAS answered that
+# night: the service demonstrably works, so the fault is this article's. On a
+# night nobody was answered (a retired model, a rejected parameter, output cut
+# at a token cap -- or simply three bad articles at the head) nothing counts;
+# the unanswered rows are only marked (`analysis_unanswered_at`) so that, like
+# rows that have failed before, they go to the back of the next night's queue
+# and a fresh article is asked first. Without that mark three bad articles at
+# the head stayed there, uncounted, blocking every new one; counting outage
+# nights instead left survivors one bad night from a give-up (2026-10-10).
+# A 200 whose body is not JSON (a proxy's error page) or will not decode is the
+# connection's problem, not the article's (full re-review, 2026-10-10).
+_PASSING_ERRORS = (requests.ConnectionError, requests.Timeout, requests.exceptions.ChunkedEncodingError,
+                   requests.exceptions.JSONDecodeError, requests.exceptions.ContentDecodingError)
 
 
 def _http_passing(exc: requests.HTTPError) -> bool:
@@ -1081,8 +1089,7 @@ def main() -> int:
     # Articles that already failed a night go last: three of them at the front
     # stopped the stage before any new article was asked, three nights running
     # (pre-merge review, 2026-10-10). Stable sort: store order otherwise.
-    pending = sorted((a for a in articles if _should_analyze(a)),
-                     key=lambda a: int(a.get("analysis_failures") or 0) > 0)
+    pending = sorted((a for a in articles if _should_analyze(a)), key=_known_trouble)
 
     log.info("Found %d articles pending analysis (of %d total)", len(pending), len(articles))
 
@@ -1152,14 +1159,19 @@ def main() -> int:
             break
 
     nobody_answered = bool(asked) and not answered
+    # Unanswered rows that had never been in trouble: only they say anything
+    # about tonight's service. A quiet night that re-asked only known-bad rows
+    # is not an outage (no new articles: 09-14, 09-21, 10-05).
+    fresh_unanswered = sum(1 for art, _ in unanswered if not _known_trouble(art))
+    tonight = datetime.now(BJT).strftime("%Y-%m-%d")
     for art, faults in unanswered:
         if not (BAD_ANSWER in faults or COUNTED in faults):
             continue                     # only passing faults: says nothing about the article
-        count = int(art.get("analysis_failures") or 0) + 1
         if nobody_answered:
-            count = min(count, MAX_ANALYSIS_NIGHTS - 1)
-        art["analysis_failures"] = count
-        if count >= MAX_ANALYSIS_NIGHTS:
+            art["analysis_unanswered_at"] = tonight
+            continue
+        art["analysis_failures"] = int(art.get("analysis_failures") or 0) + 1
+        if art["analysis_failures"] >= MAX_ANALYSIS_NIGHTS:
             gave_up.append(art["id"])
     save_articles(articles)
     log.info("Analysis complete: %d ok, %d failed, %d not summarised (insufficient content)",
@@ -1193,10 +1205,16 @@ def main() -> int:
     # partial failure is not an outage: those articles keep their unsummarised
     # state and are retried next run, and their cost is already visible in
     # logs/analyze-usage.jsonl.
-    if stopped:
+    if (stopped or nobody_answered) and not fresh_unanswered:
+        # Only rows already known to fail went unanswered: they are judged on a
+        # night a fresh article proves the service, and a give-up below must
+        # not be hidden behind exit 1.
+        log.warning("  only previously failed articles went unanswered (%d sent, %d answered)",
+                    asked, answered)
+    elif stopped:
         log.error("STAGE STOPPED: %d article(s) sent to the models, %d answered", asked, answered)
         return 1
-    if asked and not answered:
+    elif asked and not answered:
         log.error("TOTAL ANALYSIS OUTAGE: %d article(s) sent to the models, none answered",
                   asked)
         return 1
@@ -1274,6 +1292,7 @@ def _analyze_one(a: dict, api_keys: dict, published: dict, faults: list | None =
     a["key_takeaway_zh"] = result["key_takeaway_zh"]
     a["summarized"] = True
     a.pop("analysis_failures", None)
+    a.pop("analysis_unanswered_at", None)
     register_published(published, a, content)
     a.pop("analysis_status", None)
     a.pop("analysis_reason", None)

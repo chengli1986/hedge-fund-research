@@ -114,7 +114,10 @@ fi
 #    tool returned "Permission denied", so it produced zero drafts. Same fix
 #    synthesis got in 9776a45. apply_refresh.py still gates every write, and the
 #    monthly cron runs ALERT_ONLY-gated, so auto-approving tool use here is bounded.
-timeout --kill-after=30 3000 "$CLAUDE_BIN" --print --dangerously-skip-permissions \
+# 2700 s, not 3000: cron-wrapper kills the whole run at 3600 s, and apply +
+# the test suite + publish (with its pre-check) + commit must fit in what is
+# left -- a kill between apply and commit left both files modified.
+timeout --kill-after=30 2700 "$CLAUDE_BIN" --print --dangerously-skip-permissions \
   --max-turns 120 "$PROMPT" \
   > logs/profile-refresh-agent.log 2>&1 || echo "[profile-refresh] agent exit $? (max-turns ok)"
 

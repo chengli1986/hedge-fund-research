@@ -89,55 +89,87 @@ def test_f1_unparsable_answers_and_4xx_count(store, api, bad):
     assert _rows()["a2"]["analysis_failures"] == 1
 
 
-def test_f1_a_night_nobody_was_answered_never_gives_up(store, api, capsys):
+def test_f1_a_night_nobody_was_answered_counts_nothing_and_only_marks(store, api, capsys):
     """A model retired or a parameter rejected fails every request the same
-    way: counts may rise, but nothing is retired until the service is proven."""
+    way: nothing counts against the articles, however many nights it lasts."""
     store([_art(i) for i in range(3)], bodies={f"a{i}": _distinct(i) for i in range(3)})
     api["script"] = [http(404, "model_not_found")]
-    for _ in range(aa.MAX_ANALYSIS_NIGHTS + 2):
-        aa.main()
-    assert all(r.get("analysis_failures") == aa.MAX_ANALYSIS_NIGHTS - 1 for r in _rows().values())
+    rcs = [aa.main() for _ in range(aa.MAX_ANALYSIS_NIGHTS + 2)]
+    rows = _rows().values()
+    assert not any("analysis_failures" in r for r in rows)
+    assert all(r.get("analysis_unanswered_at") for r in rows)
+    assert rcs[0] == 1, "the first such night is an outage alert"
     assert "GAVE UP" not in capsys.readouterr().out
+
+
+def test_f1_a_quiet_night_that_only_re_asks_known_bad_rows_is_not_an_outage(store, api, caplog):
+    """No new articles (09-14, 09-21, 10-05) and a row that failed before:
+    "TOTAL ANALYSIS OUTAGE" every such night was a false alarm."""
+    store([_art(1, analysis_failures=1)])
+    api["script"] = [ok("not json")]
+    with caplog.at_level("ERROR"):
+        assert aa.main() == 0
+    assert "OUTAGE" not in caplog.text and "STOPPED" not in caplog.text
+    assert _rows()["a1"]["analysis_failures"] == 1          # not judged tonight
 
 
 def test_f1_three_bad_articles_at_the_front_no_longer_block_new_ones(store, monkeypatch, capsys, tmp_path):
     """From zero failures, in store order: night 1 they stop the stage before
-    the new article; from night 2 they go last, the new one is asked first,
-    and once the service is proven they are given up (full re-review: they
-    stayed at zero and blocked every new article forever)."""
+    the new article (nobody answered: marked, not counted); from night 2 they
+    go last, a fresh article is asked first and answered, and they are judged
+    and finally given up -- with exit 3, not hidden behind a stop's exit 1."""
     monkeypatch.setattr(aa, "USAGE_LOG_FILE", tmp_path / "usage.jsonl")
     monkeypatch.setattr(aa.requests, "post", lambda url, headers=None, json=None, timeout=None:
                         ok("not json") if "BADMARK" in json["messages"][0]["content"] else ok(_json.dumps(SUMMARY)))
     store([_art(i) for i in range(3)], bodies={f"a{i}": _distinct(i) + " BADMARK" for i in range(3)})
-    summarised = []
-    for night in range(aa.MAX_ANALYSIS_NIGHTS):
+    summarised, rcs = [], []
+    for night in range(aa.MAX_ANALYSIS_NIGHTS + 1):
         _with_good_neighbour(None, night)
-        aa.main()
+        rcs.append(aa.main())
         summarised.append({r["id"] for r in _rows().values() if r.get("summarized")})
     rows = _rows()
     assert "a100" not in summarised[0] and "a100" in summarised[1], summarised
     assert all(rows[f"a{i}"]["analysis_failures"] == aa.MAX_ANALYSIS_NIGHTS for i in range(3))
-    assert "GAVE UP" in capsys.readouterr().out
+    assert rcs[-1] == aa.GAVE_UP_RC and "GAVE UP" in capsys.readouterr().out
 
 
-def test_f1_an_article_alone_is_given_up_once_another_one_is_answered(store, api, capsys):
+def test_f1_an_article_alone_is_judged_only_on_nights_another_one_is_answered(store, api, capsys):
     store([_art(1)])
     api["script"] = [ok("not json")]
     for _ in range(aa.MAX_ANALYSIS_NIGHTS + 1):
         aa.main()
-    assert _rows()["a1"]["analysis_failures"] == aa.MAX_ANALYSIS_NIGHTS - 1      # alone: not proven
-    _with_good_neighbour(None, 0)
-    api["script"] = [ok(json.dumps(SUMMARY)), ok("not json")]
-    assert aa.main() == aa.GAVE_UP_RC
-    assert "GAVE UP" in capsys.readouterr().out
+    assert "analysis_failures" not in _rows()["a1"]                 # alone: never proven
+    for night in range(aa.MAX_ANALYSIS_NIGHTS):
+        _with_good_neighbour(None, night)
+        api["script"] = [ok(json.dumps(SUMMARY)), ok("not json")]
+        rc = aa.main()
+    assert rc == aa.GAVE_UP_RC and "GAVE UP" in capsys.readouterr().out
 
 
-def test_f1_a_refusal_counts_even_for_an_article_alone(store, api):
-    """A refusal is an answer (HTTP 200, no text): the service worked."""
-    store([_art(1)])
-    api["script"] = [refusal()]
+def test_f1_a_refusal_counts_when_the_service_is_proven(store, api):
+    """A refusal is an answer (HTTP 200, no text), counted like junk."""
+    store([_art(1), _art(2)], bodies={"a1": _distinct(1), "a2": _distinct(2)})
+    api["script"] = [ok(json.dumps(SUMMARY)), refusal()]
     aa.main()
-    assert _rows()["a1"]["analysis_failures"] == 1
+    assert _rows()["a2"]["analysis_failures"] == 1
+
+
+def test_f1_a_proxy_error_page_is_a_passing_fault(store, api):
+    """A 200 whose body is not JSON: requests raises its JSONDecodeError (a
+    RequestException), which counted against the article."""
+    store([_art(1), _art(2)], bodies={"a1": _distinct(1), "a2": _distinct(2)})
+
+    class HtmlPage:
+        status_code = 200
+
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            raise requests.exceptions.JSONDecodeError("Expecting value", "<html>", 0)
+    api["script"] = [ok(json.dumps(SUMMARY)), HtmlPage()]
+    aa.main()
+    assert "analysis_failures" not in _rows()["a2"]
 
 
 def test_f1_a_batch_save_never_carries_a_count_the_night_may_take_back(store, api, monkeypatch):
@@ -176,10 +208,11 @@ def test_f1_a_night_of_passing_faults_does_not_count(store, api, script):
 
 
 def test_f1_a_success_clears_the_count(store, api):
-    store([_art(1, analysis_failures=2)])
+    store([_art(1, analysis_failures=2, analysis_unanswered_at="2026-10-09")])
     api["script"] = [ok(json.dumps(SUMMARY))]
     assert aa.main() == 0
-    assert _rows()["a1"]["summarized"] is True and "analysis_failures" not in _rows()["a1"]
+    row = _rows()["a1"]
+    assert row["summarized"] is True and "analysis_failures" not in row and "analysis_unanswered_at" not in row
 
 
 def test_f1_given_up_articles_no_longer_block_the_ones_behind(store, api):
