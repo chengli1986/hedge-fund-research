@@ -240,13 +240,20 @@ def check_fetch(now: datetime) -> dict:
 
 def decide_synthesis(now: datetime, last: Optional[datetime],
                      bail_labels: list[str],
-                     threshold_days: float = 9) -> tuple[str, Optional[float], str]:
+                     threshold_days: float = 9,
+                     agent_exit: Optional[int] = None) -> tuple[str, Optional[float], str]:
     """Pure synthesis verdict. A fresh heartbeat WINS: a lock-bail marker only
     matters when the heartbeat is genuinely stale (it then explains *why*). This
     stops a pre-fix lock-bail line lingering in a rotated log from masking a
-    healthy recent session. Returns (status, age_days, detail)."""
+    healthy recent session. But a fresh heartbeat only proves the wrapper ran:
+    the newest session's ``agent_exit`` must be 0 too (2026-10-11 the agent
+    exited 1 on an expired Claude login and this printed OK). None = a
+    heartbeat that predates the field. Returns (status, age_days, detail)."""
     status, age = classify_staleness(now, last, threshold_days)
     if status == OK:
+        if agent_exit:
+            return BAIL, age, (f"last session {age:.1f}d ago, but the agent exited "
+                               f"{agent_exit} (see gmia-fetcher-synthesis.log)")
         return OK, age, f"last session {age:.1f}d ago"
     if bail_labels:
         return BAIL, age, ("weekly run bailed without working ("
@@ -257,9 +264,13 @@ def decide_synthesis(now: datetime, last: Optional[datetime],
 
 def check_synthesis(now: datetime) -> dict:
     hist = _read_jsonl(SYNTHESIS_HISTORY)
-    last = newest_dt(hist, "timestamp")
+    beats = [r for r in hist if r.get("id") == "_heartbeat"]
+    last = newest_dt(beats, "timestamp")
+    newest = [r for r in beats if parse_iso(str(r.get("timestamp", ""))) == last]
+    agent_exit = newest[-1].get("agent_exit") if newest else None
     bail = scan_markers(_read_log_tail("gmia-fetcher-synthesis"), LOCK_BAIL_MARKERS)
-    status, age, detail = decide_synthesis(now, last, bail, threshold_days=9)
+    status, age, detail = decide_synthesis(now, last, bail, threshold_days=9,
+                                           agent_exit=agent_exit)
     return _verdict("fetcher-synthesis", status, detail, age)
 
 

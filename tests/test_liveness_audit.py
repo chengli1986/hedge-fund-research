@@ -237,6 +237,44 @@ def test_synthesis_stale_without_marker_is_plain_stale():
     assert status == la.STALE
 
 
+def test_synthesis_fresh_heartbeat_with_failed_agent_is_not_ok():
+    # 2026-10-11: Claude's login had expired, the agent exited 1 at once, the
+    # wrapper still wrote its heartbeat, and the audit printed
+    # "fetcher-synthesis OK". A fresh heartbeat only proves the wrapper ran.
+    last = NOW - timedelta(hours=5)
+    status, age, detail = la.decide_synthesis(NOW, last, [], threshold_days=9,
+                                              agent_exit=1)
+    assert status == la.BAIL and "exited 1" in detail
+
+
+def test_synthesis_fresh_heartbeat_with_clean_agent_stays_ok():
+    last = NOW - timedelta(days=2)
+    for code in (0, None):     # None = a heartbeat that predates the field
+        status, _, _ = la.decide_synthesis(NOW, last, [], threshold_days=9,
+                                           agent_exit=code)
+        assert status == la.OK
+
+
+def test_check_synthesis_judges_the_newest_heartbeat(tmp_path, monkeypatch):
+    # An older failed session must not taint a later clean one; the newest
+    # heartbeat decides, whatever candidate rows sit around it.
+    hb = tmp_path / "fetcher-synthesis-history.jsonl"
+    rows = [
+        {"id": "_heartbeat", "timestamp": (NOW - timedelta(days=8)).isoformat(), "agent_exit": 1},
+        {"id": "_heartbeat", "timestamp": (NOW - timedelta(days=1)).isoformat(), "agent_exit": 0},
+        {"id": "x", "attempted_at": NOW.isoformat(), "outcome": "failed"},
+    ]
+    hb.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    monkeypatch.setattr(la, "SYNTHESIS_HISTORY", hb)
+    monkeypatch.setattr(la, "_read_log_tail", lambda *a, **k: "")
+    assert la.check_synthesis(NOW)["status"] == la.OK
+    rows.append({"id": "_heartbeat", "timestamp": (NOW - timedelta(hours=2)).isoformat(),
+                 "agent_exit": 1})
+    hb.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    v = la.check_synthesis(NOW)
+    assert v["status"] == la.BAIL, v
+
+
 def test_check_synthesis_reads_logs_heartbeat(tmp_path, monkeypatch):
     # Bug B (path): the heartbeat is written to ~/logs/, but check_synthesis read
     # repo config/ (which does not exist) → blind to healthy sessions → fell
