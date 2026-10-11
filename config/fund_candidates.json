@@ -3880,7 +3880,7 @@
     "name": "Hamilton Lane",
     "homepage_url": "https://www.hamiltonlane.com",
     "source": "manual",
-    "status": "visitable",
+    "status": "promoted",
     "strategy_tags": [
       "private_equity",
       "private_credit",
@@ -3895,14 +3895,14 @@
         "path": "en-us/insight"
       }
     ],
-    "status_since": "2026-10-04T02:02:06.269423+08:00",
+    "status_since": "2026-10-11T09:01:02.967972+08:00",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-10-01T09:00:44.645365+08:00",
     "last_deep_analyzed_at": "2026-10-09T01:00:26Z",
     "quality": "MEDIUM",
     "quality_score": 0.45,
     "topics": "private equity, private credit, secondaries, venture",
-    "notes": "Hub page only; Chart of the Week may be index",
+    "notes": "RECOMMEND: trial passed (8/7 days with articles, quality=0.71)",
     "is_publicly_accessible": false,
     "has_article_index": false,
     "last_screened_at": "2026-10-02T09:00:10.871680+08:00",

@@ -9019,9 +9019,7 @@
       "total_articles": 82,
       "days_with_articles": 8,
       "avg_quality_score": 0.783
-    }
-  ],
-  "active_trials": [
+    },
     {
       "id": "hamilton-lane",
       "name": "Hamilton Lane",
@@ -9031,7 +9029,7 @@
       "quality": "MEDIUM",
       "topics": "private equity, private credit, secondaries, venture",
       "start_date": "2026-10-04",
-      "end_date": null,
+      "end_date": "2026-10-11",
       "daily_checks": {
         "2026-10-04": {
           "accessible": true,
@@ -9165,10 +9163,29 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-10-11": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.hamiltonlane.com/en-us/insight/mexico-industrial-real-estate",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/out-of-the-sandbox",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/panda-diplomacy",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/fall-begins",
+            "https://www.hamiltonlane.com/en-us/insight/investing-in-efficiency-and-impact",
+            "https://www.hamiltonlane.com/en-us/insight/private-markets-allocations",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/scary-times",
+            "https://www.hamiltonlane.com/en-us/insight/what-sets-strong-private-market-opportunities-apart",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/summer-s-last-call",
+            "https://www.hamiltonlane.com/en-us/insight/weekly-research-briefing/testing-leverage-points"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -9329,8 +9346,12 @@
           "day": 7,
           "date": "2026-10-10"
         }
-      ]
+      ],
+      "total_articles": 80,
+      "days_with_articles": 8,
+      "avg_quality_score": 0.707
     }
   ],
+  "active_trials": [],
   "last_summary_sent_date": "2026-10-04"
 }
