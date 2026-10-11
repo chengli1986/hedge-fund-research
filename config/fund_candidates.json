@@ -3986,9 +3986,6 @@
     "quality": "HIGH",
     "quality_score": 0.75,
     "topics": "fixed income, macro, credit, EM",
-    "notes": "RECOMMEND: Active macro/credit research, data-rich",
-    "synthesis_attempted_at": "2026-10-10T18:00:05.309365+00:00",
-    "synthesis_outcome": "failed",
-    "synthesis_failure_reason": "agent 未在本次 session 记录尝试（run_start=2026-10-10T18:00:01），由 backfill 判失败；详见 gmia-fetcher-synthesis.log"
+    "notes": "RECOMMEND: Active macro/credit research, data-rich"
   }
 ]

@@ -108,6 +108,26 @@ $(cat "$PROGRAM_MD")
 "
 
 CLAUDE_BIN="${CLAUDE_BIN:-/home/ubuntu/.npm-global/bin/claude}"
+
+# ── Preflight: make sure Claude answers before starting the agent ──
+# The backfill below charges every untouched target a failure (3 = rejected).
+# That is right when the agent ran and skipped a target, but on 2026-10-11 the
+# agent never ran ("OAuth session expired and could not be refreshed") and
+# rbc-bluebay was still charged. If Claude cannot answer, stop here: no agent,
+# no backfill, a heartbeat with the failing exit code, and a non-zero exit so
+# cron-wrapper alerts.
+PREFLIGHT_OUTPUT=$(echo "Reply with the single word OK." | "$CLAUDE_BIN" --print --max-turns 1 2>&1)
+PREFLIGHT_EXIT=$?
+if [ "$PREFLIGHT_EXIT" -ne 0 ]; then
+    echo "$LOG_PREFIX ERROR: Claude preflight failed (exit $PREFLIGHT_EXIT); agent not started, no target charged a failure:"
+    echo "$PREFLIGHT_OUTPUT" | head -5
+    python3 "$REPO_DIR/scripts/write_session_heartbeat.py" \
+        --targets-count "$TARGET_COUNT" \
+        --reconcile-appended 0 \
+        --agent-exit "$PREFLIGHT_EXIT"
+    exit 1
+fi
+
 echo "$LOG_PREFIX Invoking Claude Code agent ($("$CLAUDE_BIN" --version 2>/dev/null | head -1))..."
 echo "$PROMPT" | "$CLAUDE_BIN" --print \
     --dangerously-skip-permissions \

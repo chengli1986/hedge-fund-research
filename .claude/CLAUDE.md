@@ -8,7 +8,7 @@ Playwright (Chromium) for JS/CSR sites; multi-model LLM chain for summaries.
 
 ## Develop / Test
 ```bash
-python3 -m pytest tests/ -q                       # 2425 collected, 16 deselected (a fresh clone skips ~14 that need gitignored data/fixtures)
+python3 -m pytest tests/ -q                       # 2429 collected, 16 deselected (a fresh clone skips ~14 that need gitignored data/fixtures)
 bash run_pipeline.sh                              # full 4-stage pipeline
 python3 fetch_articles.py --list                  # list configured sources
 python3 fetch_articles.py --source <id> --dry-run # one source, no save
@@ -28,7 +28,7 @@ Daily 4-stage pipeline (`run_pipeline.sh`):
 Source-acquisition lifecycle (status machine in `config/fund_candidates.json`):
 - Candidate discovery (daily): crawl seed funds → rule screen → entrypoint scoring → LLM quality judge → email report → guard (revert illegal agent status changes) → `detect_stalled_candidates.py` (auto-route candidates stuck >= 3d: seed w/ research_url → discovered; screen_failed → inaccessible+needs_playwright)
 - Trial manager (`gmia-trial-manager.py`): 3-day live trial, ≤3 concurrent (`MAX_CONCURRENT_TRIALS`); double-gate — quantity (articles on ≥2/3 days) + quality (Haiku sampling avg ≥0.5). PASS→promoted, 0 articles→inaccessible, low quality→watchlist
-- Fetcher synthesis (weekly): agent writes Playwright fetchers for `inaccessible` candidates; auto-rejects after `MAX_SYNTHESIS_FAILURES=3`
+- Fetcher synthesis (weekly): agent writes Playwright fetchers for `inaccessible` candidates; auto-rejects after `MAX_SYNTHESIS_FAILURES=3`; untouched planned targets are backfilled as failed, but only after a Claude preflight answers — a session where Claude cannot start (2026-10-11 OAuth expiry) charges no failure, writes a heartbeat with the exit code and exits 1
 - Auto-promote (daily): wires `promoted` candidates into production + auto-graduates their fund profile through the validation gate
 - Profile refresh (monthly): agent web-verifies time-sensitive facts (AUM / M&A / rebrand), evidence-gated apply; static facts (founders/history) untouched
 
