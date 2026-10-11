@@ -42,3 +42,14 @@ def tag_note(candidate: dict, marker: str) -> None:
     (matches the on-disk convention used by guard_candidate_status.py)."""
     existing = candidate.get("notes") or ""
     candidate["notes"] = (marker + " " + existing)[:300]
+
+
+def awaiting_auto_promote(candidates: list[dict], production_ids: set[str]) -> list[str]:
+    """Ids the discovery report lists as "Awaiting Auto-Promote".
+
+    The rule wrapper-auto-promote.sh wires by: status "promoted" and not yet
+    in config/sources.json. A trial-history "pass" is not enough -- PineBridge
+    passed in May, was rejected in July, and kept showing as awaiting.
+    """
+    return [c["id"] for c in candidates
+            if c.get("status") == "promoted" and c["id"] not in production_ids]

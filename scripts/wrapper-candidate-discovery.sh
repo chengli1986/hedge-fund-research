@@ -217,7 +217,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 sys.path.insert(0, os.environ.get("REPO_DIR", "."))
-from status_util import days_since
+from status_util import awaiting_auto_promote, days_since
 from detect_stalled_candidates import DEFAULT_THRESHOLD_DAYS as STALL_THRESHOLD_DAYS
 
 BJT = timezone(timedelta(hours=8))
@@ -241,21 +241,17 @@ active_trial_info = {t["id"]: t for t in trial_data.get("active_trials", [])}
 # Classify candidates into groups
 cand_map = {c["id"]: c for c in candidates}
 
-# Trial PASS but human hasn't promoted to sources.json yet.
-# Exclude watchlist — those are intentionally held back and won't be auto-promoted.
-pass_pending_ids = {
-    h["id"] for h in trial_data.get("history", [])
-    if h.get("outcome") == "pass"
-    and h["id"] not in production_ids
-    and cand_map.get(h["id"], {}).get("status") != "watchlist"
-}
+# Waiting for tonight's auto-promote: the rule wrapper-auto-promote.sh wires
+# by (status "promoted", not yet in sources.json), not "has a trial pass" --
+# PineBridge passed in May, was rejected in July and was still listed here.
+pass_pending_ids = set(awaiting_auto_promote(candidates, production_ids))
 _pass_history = {h["id"]: h for h in trial_data.get("history", []) if h.get("outcome") == "pass"}
 pass_pending = []
 for cid in pass_pending_ids:
     if cid not in cand_map:
         continue
     c = dict(cand_map[cid])
-    h = _pass_history[cid]
+    h = _pass_history.get(cid, {})
     c["_trial_days"] = h.get("days_with_articles", 0)
     c["_trial_quality"] = h.get("avg_quality_score", 0.0)
     c["_trial_articles"] = h.get("total_articles", 0)

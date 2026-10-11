@@ -128,55 +128,41 @@ class TestScreenPage:
 
 
 # ---------------------------------------------------------------------------
-# pass_pending classification (mirrors wrapper-candidate-discovery.sh logic)
+# "Awaiting Auto-Promote" in the discovery report
 # ---------------------------------------------------------------------------
 
-class TestPassPendingClassification:
-    """Verify that funds with outcome=pass and not in production are shown
-    in the 'Trial Passed — Promote?' section, not in Queue."""
+class TestAwaitingAutoPromote:
+    """The report counted every trial-history "pass" not in production and not
+    on the watchlist. PineBridge passed on 2026-05-26 and was rejected on
+    2026-07-27 (its site moved to metlife-im), so it sat in "Awaiting
+    Auto-Promote" -- and in "Rejected" -- in the reports after that (the
+    2026-10-11 report said 2; only hamilton-lane was waiting). The old test
+    here re-implemented the rule instead of calling it, and its copy had
+    already drifted from the wrapper's. Now both use status_util's rule: what
+    wrapper-auto-promote.sh wires is status "promoted" and not in production.
+    """
 
-    def _classify(self, candidates, production_ids, history, active_trial_ids=None):
-        active_trial_ids = active_trial_ids or set()
-        cand_map = {c["id"]: c for c in candidates}
-        pass_pending_ids = {
-            h["id"] for h in history
-            if h.get("outcome") == "pass" and h["id"] not in production_ids
-        }
-        queue = [
-            c for c in candidates
-            if c["status"] == "visitable"
-            and c["id"] not in production_ids
-            and c["id"] not in active_trial_ids
-            and c["id"] not in pass_pending_ids
-        ]
-        pass_pending = [
-            cand_map[cid] for cid in pass_pending_ids if cid in cand_map
-        ]
-        return queue, pass_pending
+    PROD = {"man-group"}
 
-    def test_pass_outcome_not_in_production_goes_to_pass_pending(self):
-        candidates = [{"id": "alpha", "status": "visitable", "name": "Alpha"}]
-        history = [{"id": "alpha", "outcome": "pass"}]
-        queue, pass_pending = self._classify(candidates, set(), history)
-        assert any(c["id"] == "alpha" for c in pass_pending)
-        assert not any(c["id"] == "alpha" for c in queue)
+    def _ids(self, *candidates):
+        from status_util import awaiting_auto_promote
+        return awaiting_auto_promote(list(candidates), self.PROD)
 
-    def test_pass_outcome_already_in_production_excluded_from_pass_pending(self):
-        candidates = [{"id": "alpha", "status": "visitable", "name": "Alpha"}]
-        history = [{"id": "alpha", "outcome": "pass"}]
-        queue, pass_pending = self._classify(candidates, {"alpha"}, history)
-        assert not any(c["id"] == "alpha" for c in pass_pending)
-        assert not any(c["id"] == "alpha" for c in queue)
+    def test_a_promoted_candidate_not_yet_in_production_is_waiting(self):
+        assert self._ids({"id": "hamilton-lane", "status": "promoted"}) == ["hamilton-lane"]
 
-    def test_fail_outcome_stays_out_of_pass_pending(self):
-        candidates = [{"id": "beta", "status": "visitable", "name": "Beta"}]
-        history = [{"id": "beta", "outcome": "fail"}]
-        queue, pass_pending = self._classify(candidates, set(), history)
-        assert not any(c["id"] == "beta" for c in pass_pending)
-        assert any(c["id"] == "beta" for c in queue)
+    def test_one_already_in_production_is_not(self):
+        assert self._ids({"id": "man-group", "status": "promoted"}) == []
 
-    def test_validated_no_trial_goes_to_queue(self):
-        candidates = [{"id": "gamma", "status": "visitable", "name": "Gamma"}]
-        queue, pass_pending = self._classify(candidates, set(), history=[])
-        assert any(c["id"] == "gamma" for c in queue)
-        assert not any(c["id"] == "gamma" for c in pass_pending)
+    def test_a_rejected_candidate_that_once_passed_is_not(self):
+        assert self._ids({"id": "pinebridge", "status": "rejected"}) == []
+
+    def test_watchlist_and_queue_are_not(self):
+        assert self._ids({"id": "a", "status": "watchlist"},
+                         {"id": "b", "status": "visitable"},
+                         {"id": "c", "status": "inaccessible"}) == []
+
+    def test_the_report_uses_this_rule(self):
+        wrapper = (Path(__file__).resolve().parent.parent
+                   / "scripts" / "wrapper-candidate-discovery.sh").read_text()
+        assert "awaiting_auto_promote(candidates, production_ids)" in wrapper
