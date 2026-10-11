@@ -148,12 +148,18 @@ shopt -s nullglob
 if [[ $AGENT_TOUCHED -eq 0 ]]; then
   for draft in pending_profiles/*.refresh.json; do
     fid="$(basename "$draft" .refresh.json)"
-    python3 scripts/apply_refresh.py "$fid" $DRY_RUN_FLAG >>logs/profile-refresh.log 2>&1
+    # stderr kept apart for a moment so the summary can say WHY a draft was
+    # refused (it said "rc=1" and nothing else); it still lands in the log.
+    reason_file="$(mktemp)"
+    python3 scripts/apply_refresh.py "$fid" $DRY_RUN_FLAG >>logs/profile-refresh.log 2>"$reason_file"
     rc=$?
+    cat "$reason_file" >>logs/profile-refresh.log
+    reason="$(grep -o '\[apply_refresh\].*' "$reason_file" | tail -1 | cut -c1-300)"
+    rm -f "$reason_file"
     if [[ $rc -eq 0 ]]; then
       APPLIED+=("$fid")
     else
-      FLAGGED+=("$fid (apply_refresh rc=$rc)")
+      FLAGGED+=("$fid (apply_refresh rc=$rc)${reason:+: ${reason#\[apply_refresh\] }}")
     fi
   done
 fi
@@ -252,6 +258,7 @@ flagged_str="$(printf '%s\n' ${FLAGGED[@]+"${FLAGGED[@]}"})"
 SMTP_USER="${SMTP_USER:-}" SMTP_PASS="${SMTP_PASS:-}" MAIL_TO="${MAIL_TO:-}" \
 python3 scripts/send_refresh_summary.py \
   --applied "$applied_str" --flagged "$flagged_str" \
+  --drafts-dir pending_profiles --sources config/sources.json \
   --alert-only "$ALERT_ONLY" >>logs/profile-refresh.log 2>&1 || echo "[profile-refresh] summary email WARN (not sent)"
 
 echo "[profile-refresh] done: applied=${#APPLIED[@]} flagged=${#FLAGGED[@]} alert_only=$ALERT_ONLY"

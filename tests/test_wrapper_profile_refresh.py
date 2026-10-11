@@ -194,6 +194,8 @@ def test_a_rejected_draft_is_parked_not_left_to_fail_next_month(tmp_path):
     assert not (repo / "pending_profiles" / "kkr.refresh.json").exists()
     assert (repo / "pending_profiles" / "flagged" / "kkr.refresh.json").exists()
     assert "apply_refresh rc=1" in _summary(repo)["flagged"]
+    # ... and says why, in apply_refresh's own words
+    assert "does not match publish.py" in _summary(repo)["flagged"], _summary(repo)["flagged"]
 
 
 @pytest.mark.parametrize("edit,commits", [
@@ -298,3 +300,17 @@ def test_older_unpushed_commits_are_not_pushed_with_the_refresh(tmp_path):
     assert r.returncode == 1
     assert _git(tmp_path / "remote.git", "rev-parse", "main").strip() == remote_before
     assert "NOT pushed" in _summary(repo)["flagged"]
+
+
+def test_the_summary_can_show_what_an_applied_draft_changed(tmp_path):
+    """The summary reads the archived draft for field / old -> new / source."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("srs_real", REPO / "scripts" / "send_refresh_summary.py")
+    srs = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(srs)
+    repo, env = _sandbox(tmp_path, tests_pass=True)
+    assert _run(repo, env).returncode == 0
+    details = srs.load_details(["kkr"], repo / "pending_profiles")
+    html = srs.render_summary(applied=["kkr"], flagged=[], alert_only=False, details=details,
+                              names=srs.load_names(repo / "config" / "sources.json"))
+    assert "~$758B → ~$800B" in html and "https://www.sec.gov/x" in html
