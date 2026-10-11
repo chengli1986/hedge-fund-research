@@ -706,6 +706,14 @@ def test_probe_warns_when_extraction_fell_back_to_main(monkeypatch):
     assert "selector" in result["reason"]
 
 
+def test_probe_ok_when_a_lead_page_is_read_from_its_linked_pdf(monkeypatch):
+    # metlife/matthews/apollo teaser pages: the selector misses by design and
+    # the body is the article's own PDF -- not a redesign.
+    sid = _install_path_fakes(monkeypatch, {"http://a/1": {"paths": ["miss", "linked_pdf"], "chars": 500}})
+    result = gfh._probe_once({"id": sid, "frequency": "weekly"})
+    assert result["status"] == "OK", result
+
+
 def test_probe_judges_only_the_attempt_that_succeeded(monkeypatch):
     """A short teaser that happened to hit the fallback before the real article
     must not taint a clean extraction -- the drain has to happen per attempt."""

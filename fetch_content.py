@@ -1738,6 +1738,7 @@ def _linked_article_pdf(link, page_url: str, title: str, label: str, cookies=Non
         note_failure_hint("pdf_not_usable", f"linked PDF does not match the title: {pdf_url}")
         return ""
     log.info("  %s: article body read from linked PDF %s", label, pdf_url)
+    _extraction_paths.append("linked_pdf")
     return text
 
 

@@ -15,6 +15,26 @@ from __future__ import annotations
 import re
 from urllib.parse import urlsplit
 
+def unexpected_paths(paths: list[str]) -> list[str]:
+    """Extraction paths that mean a dead selector or a generic fallback.
+
+    "primary" is the source's own selector. "linked_pdf" (fetch_content
+    `_linked_article_pdf`) means the article's own PDF was read: metlife,
+    matthews and apollo lead pages are a short excerpt plus a Download
+    button by design, so their selector "miss" directly followed by
+    "linked_pdf" is the designed route, not a redesign (2026-10-11: the
+    weekly audit flagged an identical metlife pension body as drift).
+    """
+    out = []
+    for i, p in enumerate(paths):
+        if p in ("primary", "linked_pdf"):
+            continue
+        if p == "miss" and paths[i + 1:i + 2] == ["linked_pdf"]:
+            continue
+        out.append(p)
+    return out
+
+
 CONTENT_FAILURE_LABELS = {
     "blocked_by_bot_protection": "网站防护拦截（403 / Cloudflare 验证页）",
     "access_denied": "站方拒绝这一篇（撤下、需登录或地区限制）——返回的是网站自己的拒绝页，不是防护验证页",
@@ -187,9 +207,9 @@ def classify_content_failure(evidence: dict) -> tuple[str, str]:
     if evidence.get("exception"):
         return "fetch_error", str(evidence["exception"])[:300]
 
-    paths = evidence.get("extraction_paths") or []
-    if any(p != "primary" for p in paths):
-        return "selector_miss", f"extraction took {', '.join(sorted(set(p for p in paths if p != 'primary')))}"
+    off = unexpected_paths(evidence.get("extraction_paths") or [])
+    if off:
+        return "selector_miss", f"extraction took {', '.join(sorted(set(off)))}"
 
     if page is None and error_message:
         return "fetch_error", error_message[:300]

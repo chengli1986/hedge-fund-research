@@ -91,3 +91,20 @@ def test_a_page_with_a_read_more_body_does_not_fetch_the_pdf(tmp_path, monkeypat
 ])
 def test_title_recognition(title, head, expected):
     assert fc._pdf_matches_title(head, title) is expected
+
+
+# --- the PDF route is recorded (content_audit 2026-10-11 false "redesign") ---
+# The pension page's read-more selector never matches by design, so the
+# extractor noted "miss" and then read the PDF without saying so; the weekly
+# audit saw only the miss and reported a site redesign for an identical body.
+def test_reading_the_linked_pdf_is_recorded_as_a_path(tmp_path, monkeypatch):
+    fc.drain_extraction_paths()
+    out, _ = _run(tmp_path, monkeypatch, _page(), PDF)
+    assert out is not None
+    assert fc.drain_extraction_paths() == ["miss", "linked_pdf"]
+
+
+def test_a_rejected_pdf_is_not_recorded_as_read(tmp_path, monkeypatch):
+    fc.drain_extraction_paths()
+    _run(tmp_path, monkeypatch, _page(), "Private Credit Quarterly Review " * 50)
+    assert "linked_pdf" not in fc.drain_extraction_paths()

@@ -190,7 +190,7 @@ def audit_article(article: dict, fetcher, stored_dir: Path | None = None,
                    findings=[label if label in LOST_FINDINGS else "now_failing"])
         return out
     findings = ["flaky_fetch"] if flaky else []
-    if any(p != "primary" for p in evidence["extraction_paths"]):
+    if failure_labels.unexpected_paths(evidence["extraction_paths"]):
         findings.append("extraction_drift")
     if result[1] == "ok":
         findings += compare_bodies(stored, new)

@@ -446,8 +446,8 @@ def _probe_once(source: dict) -> dict:
                 content_attempts.append(attempt)
                 continue
 
-            off_primary = sorted({p for p in evidence["extraction_paths"]
-                                  if p != "primary"})
+            off_primary = sorted(set(failure_labels.unexpected_paths(
+                evidence["extraction_paths"])))
             if off_primary:
                 extraction_note = (
                     f"content selector matched nothing; text came from "

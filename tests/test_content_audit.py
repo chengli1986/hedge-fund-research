@@ -119,6 +119,27 @@ class TestAuditArticle:
 
         assert "extraction_drift" in ca.audit_article(r, fetcher, stored_dir=tmp_path)["findings"]
 
+    def _with_paths(self, tmp_path, paths):
+        r = self._stored(tmp_path)
+
+        def fetcher(a):
+            import fetch_content as fc
+            p = fc.CONTENT_DIR / f"{a['id']}.txt"; p.write_text(BODY)
+            fc._extraction_paths.extend(paths)
+            return (p, "ok")
+
+        return ca.audit_article(r, fetcher, stored_dir=tmp_path)["findings"]
+
+    def test_a_selector_miss_answered_by_the_linked_pdf_is_not_drift(self, tmp_path):
+        # metlife's monthly Pension Funding Status: a "Download" lead whose body
+        # is the PDF, read so by design since 2026-09-15 (2026-10-11 false alarm).
+        assert self._with_paths(tmp_path, ["miss", "linked_pdf"]) == []
+        assert self._with_paths(tmp_path, ["primary", "linked_pdf"]) == []
+
+    def test_a_miss_or_fallback_not_answered_by_the_pdf_is_still_drift(self, tmp_path):
+        assert "extraction_drift" in self._with_paths(tmp_path, ["miss"])
+        assert "extraction_drift" in self._with_paths(tmp_path, ["fallback:main", "linked_pdf"])
+
     def test_a_fetch_that_now_fails_carries_its_label(self, tmp_path):
         r = self._stored(tmp_path)
 

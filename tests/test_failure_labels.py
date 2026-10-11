@@ -109,6 +109,13 @@ class TestContentFailure:
         e = ev(responses=[resp(200)], extraction_paths=["fallback:main"])
         assert fl.classify_content_failure(e)[0] == "selector_miss"
 
+    def test_a_read_pdf_alone_is_not_selector_miss(self):
+        # "linked_pdf" records that the article's PDF was read; when the text
+        # then proves too short that is not a dead selector.
+        e = ev(responses=[resp(200)], extraction_paths=["primary", "linked_pdf"],
+               messages=["Apollo: extracted text too short (300 chars, min 500)"])
+        assert fl.classify_content_failure(e)[0] == "body_too_short"
+
     def test_a_short_page_with_a_media_player_is_media_without_text(self):
         # matthews/apollo/robeco video and podcast pages
         e = ev(responses=[resp(200, media=True)], extraction_paths=["primary"],
