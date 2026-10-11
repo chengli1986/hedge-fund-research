@@ -3434,7 +3434,7 @@
     "official_domain": "www.fulcrumasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-10-10T09:00:09.533697+08:00",
+    "last_discovered_at": "2026-10-11T09:00:07.917328+08:00",
     "status_since": "2026-08-22T09:03:32.572404+08:00",
     "last_deep_analyzed_at": "2026-10-06T01:00:39Z",
     "quality": "HIGH",
@@ -3543,18 +3543,20 @@
     "status": "seed",
     "strategy_tags": [
       "fixed_income",
-      "emerging_markets"
+      "private_credit",
+      "emerging_markets",
+      "macro"
     ],
     "official_domain": "www.muzinich.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-10-10T09:00:09.887288+08:00",
+    "last_discovered_at": "2026-10-11T09:00:08.248739+08:00",
     "status_since": "2026-08-25T09:03:39.585223+08:00",
     "quality": "MEDIUM",
-    "quality_score": 0.5,
-    "topics": "credit, high yield, emerging markets",
-    "notes": "Weekly credit commentary; sampled article gated/thin",
-    "last_deep_analyzed_at": "2026-10-02T01:00:42Z"
+    "quality_score": 0.62,
+    "topics": "credit, high yield, EM, CLOs, macro",
+    "notes": "Weekly credit comment; short pieces, T&C gate",
+    "last_deep_analyzed_at": "2026-10-11T01:00:53Z"
   },
   {
     "id": "capital-fund-management",
@@ -3575,7 +3577,7 @@
     "official_domain": "www.cfm.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-10-10T09:00:10.008714+08:00"
+    "last_discovered_at": "2026-10-11T09:00:08.435556+08:00"
   },
   {
     "id": "northleaf-capital",
@@ -3702,19 +3704,20 @@
     "status": "seed",
     "strategy_tags": [
       "macro",
-      "quant"
+      "quant",
+      "multi_asset"
     ],
     "rss_url": "https://www.grahamcapital.com/feed/",
     "official_domain": "www.grahamcapital.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-10-10T09:00:10.167765+08:00",
+    "last_discovered_at": "2026-10-11T09:00:08.633379+08:00",
     "status_since": "2026-09-05T09:04:28.857065+08:00",
-    "last_deep_analyzed_at": "2026-10-02T01:00:42Z",
-    "quality": "HIGH",
-    "quality_score": 0.8,
-    "topics": "macro, quant, trend-following, volatility",
-    "notes": "RECOMMEND: Long-form macro/quant blog, ungated"
+    "last_deep_analyzed_at": "2026-10-11T01:00:53Z",
+    "quality": "MEDIUM",
+    "quality_score": 0.6,
+    "topics": "macro, trend-following, quant, volatility",
+    "notes": "Quant/macro primers; no dates listed, some login"
   },
   {
     "id": "candriam",
@@ -3983,6 +3986,9 @@
     "quality": "HIGH",
     "quality_score": 0.75,
     "topics": "fixed income, macro, credit, EM",
-    "notes": "RECOMMEND: Active macro/credit research, data-rich"
+    "notes": "RECOMMEND: Active macro/credit research, data-rich",
+    "synthesis_attempted_at": "2026-10-10T18:00:05.309365+00:00",
+    "synthesis_outcome": "failed",
+    "synthesis_failure_reason": "agent 未在本次 session 记录尝试（run_start=2026-10-10T18:00:01），由 backfill 判失败；详见 gmia-fetcher-synthesis.log"
   }
 ]
