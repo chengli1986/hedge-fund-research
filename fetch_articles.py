@@ -2930,38 +2930,52 @@ def fetch_principal_am(source: dict) -> list[dict]:
                 break
             page.wait_for_timeout(1000)
 
-        if token["v"]:
-            endpoint = f"https://{org}.org.coveo.com/rest/search/v2?organizationId={org}"
-            body = {
-                "q": "",
-                "numberOfResults": 25,
-                "sortCriteria": "date descending",
-                "searchHub": "web-search",
-                "locale": "en-US",
-                "aq": "@level1==Insights",
-                # The site identity the Coveo index is keyed on: derived from
-                # the configured URL so a domain move stays a config edit
-                # (audit B6, 2026-09-16 -- the hardcoded-host guard could not
-                # see a bare hostname literal until that day).
-                "context": {"region": "8", "hostname": urlsplit(source["url"]).netloc},
-            }
-            try:
-                res = page.evaluate(
-                    '''async ({endpoint, auth, body}) => {
-                        const r = await fetch(endpoint, {
-                            method: 'POST',
-                            headers: {'Authorization': auth, 'Content-Type': 'application/json', 'Accept': 'application/json'},
-                            body: JSON.stringify(body),
-                        });
-                        return r.ok ? await r.text() : null;
-                    }''',
-                    {"endpoint": endpoint, "auth": token["v"], "body": body},
-                )
-                if res:
-                    raw_results = json.loads(res).get("results", [])
-            except Exception:
-                raw_results = []
+        # Every way of finding nothing raises with its reason (code review
+        # 2026-10-10): these three exits used to return [] silently, so the
+        # zero showed up in the health email with no cause. fetch_source
+        # logs the message and still records the zero metric.
+        if not token["v"]:
+            browser.close()
+            raise RuntimeError("Principal AM: no Coveo search token seen in ~12s "
+                               "(search box never fired querySuggest)")
+        endpoint = f"https://{org}.org.coveo.com/rest/search/v2?organizationId={org}"
+        body = {
+            "q": "",
+            "numberOfResults": 25,
+            "sortCriteria": "date descending",
+            "searchHub": "web-search",
+            "locale": "en-US",
+            "aq": "@level1==Insights",
+            # The site identity the Coveo index is keyed on: derived from
+            # the configured URL so a domain move stays a config edit
+            # (audit B6, 2026-09-16 -- the hardcoded-host guard could not
+            # see a bare hostname literal until that day).
+            "context": {"region": "8", "hostname": urlsplit(source["url"]).netloc},
+        }
+        try:
+            res = page.evaluate(
+                '''async ({endpoint, auth, body}) => {
+                    const r = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {'Authorization': auth, 'Content-Type': 'application/json', 'Accept': 'application/json'},
+                        body: JSON.stringify(body),
+                    });
+                    return {status: r.status, text: r.ok ? await r.text() : null};
+                }''',
+                {"endpoint": endpoint, "auth": token["v"], "body": body},
+            )
+        except Exception as e:
+            browser.close()
+            raise RuntimeError(f"Principal AM: Coveo search call failed: {e}") from e
         browser.close()
+        if not res or res.get("text") is None:
+            raise RuntimeError(f"Principal AM: Coveo search returned HTTP "
+                               f"{(res or {}).get('status')}")
+        try:
+            raw_results = json.loads(res["text"]).get("results", [])
+        except (json.JSONDecodeError, AttributeError) as e:
+            raise RuntimeError(f"Principal AM: Coveo answer is not search JSON: "
+                               f"{res['text'][:120]!r}") from e
 
     articles = []
     seen: set[str] = set()
