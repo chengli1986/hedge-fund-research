@@ -1,5 +1,6 @@
 """Unit tests for publish.py — Stage 4 HTML dashboard."""
 
+import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import pytest
@@ -820,6 +821,47 @@ class TestLatestDateIsShownAsPublished:
             assert _display_date({"date": "2026-09-30", "date_raw": hostile}) == "2026-09-30"
         assert _MONTH_ONLY_RAW.match("Sep 2026")
         assert _MONTH_ONLY_RAW.match("September 2026")
+
+
+class TestInjectedIslandsAreEscaped:
+    """Code review 2026-10-10 flagged ``holder.innerHTML = parts.join('')``
+    (older articles) and ``insertAdjacentHTML`` (lazy details) as stored XSS
+    "if the Python generator does not HTML-escape". It does: both islands hold
+    markup built by _article_card, which escapes every scraped/LLM string. These
+    pin that. Each field gets its own marker and the escaped marker must be
+    found, so a field that silently stops reaching the island fails here
+    instead of passing vacuously (the date_raw test above was once vacuous).
+    """
+
+    HOSTILE = '<img src=x onerror=alert(1)><script>alert(2)</script>'
+
+    def _page(self, days_old):
+        a = {"id": "a1", "source_id": "gmo", "url": "https://www.gmo.com/x",
+             "date": _date_str(days_old), "summarized": True, "themes": ["Macro/Rates"],
+             "tags": ["us"]}
+        for f in ("title", "source_name", "summary_en", "summary_zh",
+                  "key_takeaway_en", "key_takeaway_zh"):
+            a[f] = f"{f.upper()}{self.HOSTILE}"
+        return generate_html([a])
+
+    @staticmethod
+    def _island(page, island_id):
+        raw = page.split(f'id="{island_id}">', 1)[1].split("</script>", 1)[0]
+        return json.loads(raw.replace("<\\/", "</"))
+
+    def test_older_articles_island_is_escaped(self):
+        markup = "".join(self._island(self._page(200), "older-articles-data"))
+        for f in ("title", "source_name", "key_takeaway_en", "key_takeaway_zh"):
+            assert f"{f.upper()}&lt;img" in markup, f"{f} did not reach the older-articles island"
+        assert "<img" not in markup and "<script" not in markup
+
+    def test_details_island_is_escaped(self):
+        # Older articles' details are left out of this island by design, so a
+        # recent article carries the summaries and takeaways here.
+        payload = json.dumps(self._island(self._page(10), "article-details-data"), ensure_ascii=False)
+        for f in ("summary_en", "summary_zh", "key_takeaway_en", "key_takeaway_zh"):
+            assert f"{f.upper()}&lt;img" in payload, f"{f} did not reach the details island"
+        assert "<img" not in payload and "<script" not in payload
 
 
 class TestHeaderShowsDataRecency:
