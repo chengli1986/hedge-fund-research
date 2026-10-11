@@ -2301,6 +2301,41 @@ def _fetch_content_northleaf_capital(article: dict) -> Optional[tuple[Path, str]
     return (content_path, "ok")
 
 
+def _fetch_content_hamilton_lane(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Hamilton Lane insight content via requests (SSR).
+
+    The listing comes from the `/api/<locale>/articledata/insight` JSON API
+    (see fetch_articles), but the article pages themselves are server-rendered
+    HTML. There is no `<article>` wrapper, so `main p` is the selector; plain
+    `p` would also pick up the "related insights" tile blurbs and the
+    investor-portal login prompt that sit outside `<main>`. The body ends with
+    the firm's standard disclaimer paragraph, which is left in.
+
+    Verified live 2026-10-11: 15.4K chars on "Mexico Industrial Real Estate",
+    15.6K / 18.6K on two Weekly Research Briefings, 1.6K on the short
+    "Out of the Sandbox" briefing (a podcast pointer) — all clear
+    MIN_CONTENT_LENGTH.
+    """
+    url = article["url"]
+    log.info("  Hamilton Lane: fetching article page %s", url)
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Hamilton Lane: fetch failed: %s", e)
+        return None
+
+    text = _normalize_html(resp.text, "main p")
+    if not _check_min_content_length(text):
+        log.warning("  Hamilton Lane: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Hamilton Lane: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -2344,6 +2379,7 @@ CONTENT_FETCHERS = {
     "baillie-gifford": _fetch_content_baillie_gifford,
     "mfs-investment-management": _fetch_content_mfs,
     "northleaf-capital": _fetch_content_northleaf_capital,
+    "hamilton-lane": _fetch_content_hamilton_lane,
 }
 
 

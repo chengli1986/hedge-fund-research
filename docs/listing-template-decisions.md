@@ -76,7 +76,7 @@ being worth building.
 | jpmam | AEM model.json |
 | mfs-investment-management | Solr endpoint with params; entity-in-title fixed on the hand-written side first |
 
-## HAND-WRITTEN — the listing needs code (14)
+## HAND-WRITTEN — the listing needs code (15)
 
 | source | why |
 | --- | --- |
@@ -94,6 +94,7 @@ being worth building.
 | robeco | URL regex `/insights/\d{4}/\d{2}/`, dd-mm-yyyy dates |
 | matthews-asia | **A/B agrees today.** Its fetcher rejoins titles split across an `h4` and the following `p`; two different pieces were once both stored as "China Innovation:". Losing it corrupts data silently |
 | franklin-templeton | **A/B agrees today.** It requires a date so undated hub/collection tiles never become rows, and re-sorts by date. Neither is exercised right now |
+| hamilton-lane | an api_json endpoint, but the tiles need code: "Chaptered" series hubs (Weekly Research Briefing, annual overviews) are flattened into their `ChapteredArticles` and the hub itself dropped, and Video / Podcast / "Report/Premium Content" tiles are skipped. The api_json template has no knob for either; without them hubs and text-less tiles would become rows |
 
 ## HAND-WRITTEN — the source is a different kind of thing (9)
 

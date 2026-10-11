@@ -1033,6 +1033,24 @@
         "date": "div.m-listing-item--news__date"
       },
       "listing_template_active": true
+    },
+    {
+      "id": "hamilton-lane",
+      "strategy_tags": [
+        "private_equity",
+        "private_credit",
+        "real_assets"
+      ],
+      "name": "Hamilton Lane",
+      "short_name": "Hamilton Lane",
+      "url": "https://www.hamiltonlane.com/en-us/insight",
+      "method": "api",
+      "frequency": "weekly",
+      "description": "Conshohocken, PA-based investment solutions firm working exclusively in private markets since its 1991 founding; ~$147B of discretionary AUM plus ~$914B of non-discretionary assets under supervision (~$1.06T combined, as of 2026-06-30). Designs and oversees private markets programs for institutions — customized managed accounts, primaries, secondaries, direct equity, direct credit, infrastructure/real assets, real estate and venture/growth — plus evergreen funds for private wealth, informed by its proprietary private markets data and technology.",
+      "notable_authors": [],
+      "expected_hostname": "hamiltonlane.com",
+      "max_articles": 10,
+      "fetch_shape": "api_json"
     }
   ]
 }
