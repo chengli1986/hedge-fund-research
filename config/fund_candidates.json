@@ -3434,7 +3434,7 @@
     "official_domain": "www.fulcrumasset.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-10-11T09:00:07.917328+08:00",
+    "last_discovered_at": "2026-10-12T09:00:10.017199+08:00",
     "status_since": "2026-08-22T09:03:32.572404+08:00",
     "last_deep_analyzed_at": "2026-10-06T01:00:39Z",
     "quality": "HIGH",
@@ -3550,7 +3550,7 @@
     "official_domain": "www.muzinich.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-10-11T09:00:08.248739+08:00",
+    "last_discovered_at": "2026-10-12T09:00:10.347145+08:00",
     "status_since": "2026-08-25T09:03:39.585223+08:00",
     "quality": "MEDIUM",
     "quality_score": 0.62,
@@ -3577,7 +3577,7 @@
     "official_domain": "www.cfm.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-10-11T09:00:08.435556+08:00"
+    "last_discovered_at": "2026-10-12T09:00:10.633037+08:00"
   },
   {
     "id": "northleaf-capital",
@@ -3711,7 +3711,7 @@
     "official_domain": "www.grahamcapital.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-10-11T09:00:08.633379+08:00",
+    "last_discovered_at": "2026-10-12T09:00:10.807489+08:00",
     "status_since": "2026-09-05T09:04:28.857065+08:00",
     "last_deep_analyzed_at": "2026-10-11T01:00:53Z",
     "quality": "MEDIUM",
@@ -3827,11 +3827,11 @@
       "macro"
     ],
     "status_since": "2026-09-11T09:07:45.215654+08:00",
-    "last_deep_analyzed_at": "2026-10-02T01:00:42Z",
+    "last_deep_analyzed_at": "2026-10-12T01:00:37Z",
     "quality": "HIGH",
     "quality_score": 0.75,
     "topics": "real assets, infrastructure, macro, real estate",
-    "notes": "RECOMMEND: Real assets research; 403 to bots, may need PW"
+    "notes": "RECOMMEND: ~weekly real assets/macro; bot 403, needs PW"
   },
   {
     "id": "nexpoint",
