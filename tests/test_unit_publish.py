@@ -456,10 +456,11 @@ class TestOlderArticleFolding:
         import re
         island = result.split('id="older-articles-data">', 1)[1].split("</script>", 1)[0]
         for aid in ("old1", "old2"):
-            assert re.search(rf'<article[^>]*id=\\"a-{aid}\\"[^>]*>', island) \
-                or re.search(rf'<article[^>]*id="a-{aid}"[^>]*>', island), \
-                f"{aid} missing from the deferred-articles island"
-            assert 'data-age=' in island and 'older' in island, (
+            tag = re.search(rf'<article[^>]*id=\\"a-{aid}\\"[^>]*>', island) \
+                or re.search(rf'<article[^>]*id="a-{aid}"[^>]*>', island)
+            assert tag, f"{aid} missing from the deferred-articles island"
+            # This article's own tag, not anywhere in the island (code review 2026-10-12).
+            assert re.search(r'data-age=\\?"older\\?"', tag.group(0)), (
                 f"{aid} should still carry data-age=older inside the island"
             )
             assert f'id="a-{aid}"' not in result.split('id="older-articles-data"')[0], (
@@ -1052,6 +1053,7 @@ class TestFutureDatedArticles:
     """
     def _row(self, i, date, fetched=None, **kw):
         row = dict(SAMPLE_ARTICLES[0], id=f"f{i}", title=f"Piece {i}", date=date, **kw)
+        row.pop("fetched_at", None)          # only what this test passes, never the template's
         if fetched:
             row["fetched_at"] = fetched
         return row

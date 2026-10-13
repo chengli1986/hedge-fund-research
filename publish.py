@@ -477,7 +477,7 @@ def _build_sources_view(sources: dict[str, dict]) -> str:
         name = html.escape(src.get("name", sid))
         short = html.escape(src.get("short_name", sid))
         url = html.escape(src.get("url", "#"))
-        hostname = html.escape(src.get("expected_hostname", url))
+        hostname = html.escape(src.get("expected_hostname", src.get("url", "#")))
         desc_en = html.escape(src.get("description", ""))
         desc_zh = html.escape(profile.get("desc_zh", ""))
 
@@ -1054,7 +1054,9 @@ def generate_html(articles: list[dict]) -> str:
         # keep initial parse cost flat. Clicking Open on a revealed older article
         # shows a bilingual "see source above" notice (handled in JS hydrate).
         if details_payload is not None and _age_of(a) != "older":
-            details_by_aid[f"a-{_esc(aid)}"] = details_payload
+            # Keyed by the raw id: the browser decodes the escaped id="" attribute,
+            # and the JS looks this up by element.id.
+            details_by_aid[f"a-{aid}"] = details_payload
         # data-seq = position in the global date-descending order. The timeline
         # view sorts by it because pool DOM order is scrambled after any
         # themes/funds hydration (returnArticlesToPool appends in document order).

@@ -191,3 +191,10 @@ def test_graduate_rejects_an_uncertainty_marker_in_a_published_field(tmp_path):
     assert rc == gp.EXIT_VALIDATION_FAILED
     assert (tmp_path / "publish.py").read_text() == before
     assert (tmp_path / "pending_profiles" / "research-affiliates.json").exists()
+
+
+# code review 2026-10-12: the message asked exists() after the unlink.
+def test_the_cleanup_message_names_the_validation_file_it_removed(tmp_path, capsys):
+    _setup(tmp_path)
+    assert gp.graduate("research-affiliates", base_dir=tmp_path) == 0
+    assert "+ research-affiliates.validation.json" in capsys.readouterr().out

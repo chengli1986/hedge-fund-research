@@ -314,3 +314,16 @@ def test_the_summary_can_show_what_an_applied_draft_changed(tmp_path):
     html = srs.render_summary(applied=["kkr"], flagged=[], alert_only=False, details=details,
                               names=srs.load_names(repo / "config" / "sources.json"))
     assert "~$758B → ~$800B" in html and "https://www.sec.gov/x" in html
+
+
+# code review 2026-10-12: with no `set -e`, a missing playbook left a prompt
+# with no task, the agent did nothing and the run exited 0.
+def test_a_missing_playbook_stops_before_the_agent(tmp_path):
+    marker = tmp_path / "agent-ran"
+    repo, env = _sandbox(tmp_path, tests_pass=True,
+                         claude_script=f"#!/usr/bin/env bash\ntouch {marker}\n")
+    (repo / "auto-promote" / "refresh-program.md").unlink()
+    r = _run(repo, env)
+    assert r.returncode != 0, r.stdout + r.stderr
+    assert not marker.exists(), "the agent was started with no playbook"
+    assert "refresh-program.md not found" in r.stdout + r.stderr

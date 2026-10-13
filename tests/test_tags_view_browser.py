@@ -48,6 +48,15 @@ def page(tmp_path_factory, chromium):
     pg.close()
 
 
+@pytest.fixture(autouse=True)
+def _no_page_errors(page):
+    """The page is shared by the module: start each test with an empty error
+    list and fail the test that raised one, not whichever test checks next."""
+    page.errors.clear()
+    yield
+    assert page.errors == [], page.errors
+
+
 def _count(pg):
     return int(pg.inner_text("#tv-count b"))
 

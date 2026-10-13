@@ -168,7 +168,9 @@ def refine(row: dict, today: str, get=_get) -> dict:
     latest = _latest_plausible(row, today)
     day = date_from_url(url, month, latest)
     basis = "url" if day else ""
-    if not day and not url.lower().split("?")[0].endswith(".pdf"):
+    # No URL: nothing to fetch -- go straight to the fallback instead of
+    # counting a MissingSchema as a fetch error three nights running.
+    if not day and url and not url.lower().split("?")[0].endswith(".pdf"):
         try:
             day = date_from_page(get(url), month, latest)
             basis = "page" if day else ""
@@ -188,6 +190,7 @@ def refine(row: dict, today: str, get=_get) -> dict:
 
 
 def flush(path: Path, results: dict[str, dict]) -> int:
+    """Write the results; returns how many rows were given a date."""
     if not results:
         return 0
     written = 0
@@ -200,7 +203,8 @@ def flush(path: Path, results: dict[str, dict]) -> int:
             if new is None or r.get("date_basis"):
                 continue
             r.update({k: v for k, v in new.items() if k in DATE_FIELDS})
-            written += 1
+            if new.get("date_basis"):       # a retry-only error count is not a dated row
+                written += 1
         jsonl_store._rewrite_locked(path, fresh, None)
     return written
 
@@ -234,7 +238,7 @@ def run(path: Path, dry_run: bool = False, limit: int = 0, workers: int = 4, get
             for r, new in out:
                 f.write(json.dumps({"at": today, "id": r["id"], "source_id": r["source_id"],
                                     "url": r.get("url"), "was": r["date"], **new}, ensure_ascii=False) + "\n")
-    print(f"written: {flush(path, results)}")
+    print(f"dated: {flush(path, results)}")
     return 0
 
 

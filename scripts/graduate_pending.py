@@ -110,13 +110,14 @@ def graduate(fund_id: str, *, base_dir: Path | None = None) -> int:
 
     # Cleanup pending + validation companion only after successful write
     pending_path.unlink()
-    if validation_path.exists():
+    had_validation = validation_path.exists()   # asked before the unlink, for the message
+    if had_validation:
         validation_path.unlink()
 
     sys.stdout.write(
         f"[graduate] {fund_id} graduated into publish._FUND_PROFILES\n"
         f"[graduate] cleaned up {pending_path.name}"
-        + (f" + {validation_path.name}" if validation_path.exists() else "")
+        + (f" + {validation_path.name}" if had_validation else "")
         + "\n"
         f"[graduate] suggest: git diff publish.py && pytest tests/ -q && "
         f"git add publish.py && git commit\n"

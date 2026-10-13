@@ -542,6 +542,12 @@ page = f"""<!DOCTYPE html>
 </body>
 </html>
 """
+import os
 import sys
-open(sys.argv[1], "w", encoding="utf-8").write(page)
+# Write beside the target and swap it in: a failed write must leave the last
+# good page, not an empty one.
+_tmp = sys.argv[1] + ".tmp"
+with open(_tmp, "w", encoding="utf-8") as _f:
+    _f.write(page)
+os.replace(_tmp, sys.argv[1])
 print("written", len(page.encode()), "bytes; stage1 rows", len(S1), "stage2 rows", len(S2), "stage3 rows", len(S3))

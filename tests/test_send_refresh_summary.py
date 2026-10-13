@@ -31,6 +31,7 @@ def test_render_empty_is_noop_message():
 
 class _FakeSMTP:
     sent: list = []
+    messages: list = []
 
     def __init__(self, host, port, timeout=None):
         self.host, self.port = host, port
@@ -46,6 +47,7 @@ class _FakeSMTP:
 
     def sendmail(self, frm, to, msg):
         _FakeSMTP.sent.append((self.host, self.port, frm, to))
+        _FakeSMTP.messages.append(msg)
 
 
 def test_send_works_without_smtp_host(monkeypatch):
@@ -57,6 +59,31 @@ def test_send_works_without_smtp_host(monkeypatch):
     monkeypatch.setenv("MAIL_TO", "me@example.com")
     assert srs.send("s", "<p>x</p>") is True
     assert _FakeSMTP.sent == [("smtp.163.com", 465, "bot@163.com", ["me@example.com"])]
+
+
+def _smtp_env(monkeypatch):
+    monkeypatch.setattr(srs.smtplib, "SMTP_SSL", _FakeSMTP)
+    monkeypatch.setenv("SMTP_USER", "bot@163.com")
+    monkeypatch.setenv("SMTP_PASS", "pw")
+    monkeypatch.setenv("MAIL_TO", "me@example.com")
+
+
+# code review 2026-10-12: MIMEText already sets MIME-Version, and assigning it
+# again appends a second header.
+def test_the_message_has_exactly_one_mime_version_header(monkeypatch):
+    _FakeSMTP.messages = []
+    _smtp_env(monkeypatch)
+    assert srs.send("s", "<p>x</p>") is True
+    headers = _FakeSMTP.messages[-1].split("\n\n", 1)[0]
+    assert headers.count("MIME-Version:") == 1
+
+
+def test_a_non_numeric_port_is_a_clean_failure_not_a_traceback(monkeypatch):
+    _FakeSMTP.sent = []
+    _smtp_env(monkeypatch)
+    monkeypatch.setenv("SMTP_PORT", "465/ssl")
+    assert srs.send("s", "<p>x</p>") is False
+    assert _FakeSMTP.sent == []
 
 
 def test_unsent_summary_is_a_nonzero_exit(monkeypatch):

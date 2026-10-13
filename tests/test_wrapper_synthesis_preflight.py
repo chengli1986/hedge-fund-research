@@ -67,8 +67,11 @@ def _run(sandbox: Path, preflight_fail: bool):
     env.pop("PREFLIGHT_FAIL", None)
     if preflight_fail:
         env["PREFLIGHT_FAIL"] = "1"
+    # stdin=DEVNULL: the fake claude starts with `cat`, and the bare
+    # `claude --version` call would otherwise wait on the terminal's stdin.
     return subprocess.run(["bash", str(sandbox / "scripts/wrapper-fetcher-synthesis.sh")],
-                          capture_output=True, text=True, timeout=120, env=env)
+                          capture_output=True, text=True, timeout=120, env=env,
+                          stdin=subprocess.DEVNULL)
 
 
 def _history(sandbox: Path) -> list[dict]:
@@ -112,3 +115,14 @@ def test_agent_that_ran_and_skipped_the_target_is_still_charged(tmp_path):
     assert (sandbox / "agent-calls").exists()
     failed = [e for e in _history(sandbox) if e.get("outcome") == "failed"]
     assert [e["id"] for e in failed] == ["rbc-bluebay"]
+
+
+# code review 2026-10-12: with no `set -e`, a failing target listing left
+# TARGET_COUNT empty, the zero-target exit was skipped and the agent started.
+def test_a_broken_target_listing_stops_before_the_agent(tmp_path):
+    sandbox = _sandbox(tmp_path)
+    (sandbox / "synthesize_fetchers.py").write_text("import sys; sys.exit('fund_candidates.json unreadable')\n")
+    proc = _run(sandbox, preflight_fail=False)
+    assert proc.returncode != 0
+    assert not (sandbox / "agent-calls").exists(), "agent started with no target list"
+    assert "could not list synthesis targets" in proc.stdout

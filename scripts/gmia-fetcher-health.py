@@ -200,6 +200,11 @@ def _parse_article_date(raw: str | None) -> datetime | None:
         return None
 
 
+def _date_sort_key(raw: str | None) -> datetime:
+    """Sort key for a raw article date; unparseable sorts first."""
+    return _parse_article_date(raw) or datetime.min.replace(tzinfo=BJT)
+
+
 def _stale_threshold_days(source: dict) -> int:
     freq = (source.get("frequency") or "").strip().lower()
     return FREQ_TO_STALE_DAYS.get(freq, DEFAULT_STALE_DAYS)
@@ -371,7 +376,9 @@ def _probe_once(source: dict) -> dict:
     # top of the page, so articles[0] may be older than later entries.
     # Content probe continues to use articles[0] onward (page order is fine for probing).
     all_dates = [a.get("date") for a in articles if a.get("date")]
-    result["most_recent_date"] = max(all_dates) if all_dates else None
+    # Compared as dates, not strings: "2026/09/30" sorts after "2026-10-12".
+    result["most_recent_date"] = (max(all_dates, key=_date_sort_key)
+                                  if all_dates else None)
 
     # Step 2: content probe — write into a private tmp dir to avoid touching
     # production content/. Patch fetch_content.CONTENT_DIR for the call only.
@@ -1197,7 +1204,7 @@ def render_html_email(
         consecutive = rec.get("consecutive_fails", 1)
         fail_rows += (
             f'<tr><td style="padding:8px;font-weight:bold;color:#cf222e">{sid}</td>'
-            f'<td style="padding:8px">{r["reason"]}<br>'
+            f'<td style="padding:8px">{html.escape(r["reason"])}<br>'
             f'<span style="color:#586069;font-size:11px">'
             f'last OK: {last_ok}  ·  consecutive fails: {consecutive}</span></td></tr>'
         )
@@ -1210,7 +1217,7 @@ def render_html_email(
             last_ok = last_ok[:10]
         warn_rows += (
             f'<tr><td style="padding:8px;font-weight:bold;color:#9a6700">{sid}</td>'
-            f'<td style="padding:8px">{r["reason"]}<br>'
+            f'<td style="padding:8px">{html.escape(r["reason"])}<br>'
             f'<span style="color:#586069;font-size:11px">'
             f'last OK: {last_ok}  ·  persisted {consecutive} runs</span></td></tr>'
         )
@@ -1257,7 +1264,7 @@ def render_html_email(
     if zero_fetches:
         zero_rows = "".join(
             f'<tr><td style="padding:8px;font-weight:bold;color:#9a6700">{sid}</td>'
-            f'<td style="padding:8px">{_zero_fetch_line(sid, rec)}</td></tr>'
+            f'<td style="padding:8px">{html.escape(_zero_fetch_line(sid, rec))}</td></tr>'
             for sid, rec in zero_fetches
         )
         sections.append(section_table(

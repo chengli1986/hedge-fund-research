@@ -392,7 +392,7 @@ def _openai_text(data: dict) -> str:
                          f"keys={sorted(data)})")
     message = choices[0].get("message") or {}
     text = message.get("content")
-    if text is None:
+    if not text:          # None or "": both are no answer, not a reply to parse
         refusal = message.get("refusal")
         reason = choices[0].get("finish_reason")
         raise EmptyAnswer(f"openai returned no content: refusal={refusal!r}, "

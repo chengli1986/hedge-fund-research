@@ -37,13 +37,15 @@ HIGH_RISK_MARKERS = ("unknown", "unclear", "tbd", "n/a", "n.a.", "unverified",
 DESC_MIN = 50
 DESC_MAX = 300
 FOUNDED_MIN = 1700
-FOUNDED_MAX = 2026
+FOUNDED_MAX = datetime.now(timezone.utc).year   # was a literal 2026: rejects 2027 founders
 
 # AUM plausibility band (rough USD magnitude). Catches absurd values
 # (e.g. "$50T", "$5") but NOT in-band confabulations — the evidence
 # requirement is what guards the latter.
 AUM_MIN_USD = 1e7   # $10M
-AUM_MAX_USD = 2e13  # $20T
+AUM_MAX_USD = 3e13  # $30T: MSCI already reports ~$18T+ benchmarked; "$50T" still fails
+
+_BARE_URL_RE = re.compile(r"https?://\S+")
 
 # A citation must look like a real source: a URL or a bare domain.
 _CITATION_RE = re.compile(
@@ -181,6 +183,8 @@ def validate_profile(data: dict) -> dict:
         # *_source fields are citations, checked above as citations; a URL
         # path like '/en/about' contains "n/a" and is not hedged prose.
         if not isinstance(v, str) or k.startswith("_") or k.endswith("_source"):
+            continue
+        if _BARE_URL_RE.fullmatch(v.strip()):     # a link, whatever the field is called
             continue
         for marker in HIGH_RISK_MARKERS:
             if _has_marker(v, marker):

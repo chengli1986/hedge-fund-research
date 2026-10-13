@@ -155,6 +155,17 @@ def test_a_gz_that_disagrees_with_the_html_fails(tmp_path, page):
     assert "gzip_matches_html" in _failed(result)
 
 
+def test_a_gz_with_a_damaged_body_fails_the_check_instead_of_crashing(tmp_path, page):
+    # A good header and a corrupt deflate stream raise zlib.error, which is
+    # not an OSError (code review 2026-10-12).
+    data = bytearray(gzip.compress(page.encode("utf-8")))
+    for i in range(20, min(60, len(data) - 8)):
+        data[i] ^= 0xFF
+    (tmp_path / "p.html.gz").write_bytes(bytes(data))
+    result = _check(page, gz_path=tmp_path / "p.html.gz")
+    assert "gzip_matches_html" in _failed(result)
+
+
 # ── checked BEFORE it goes live ───────────────────────────────────────────────
 
 def test_publish_keeps_yesterdays_page_when_the_check_fails(tmp_path, monkeypatch):

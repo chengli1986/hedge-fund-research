@@ -90,6 +90,11 @@ DIRTY_AT_START="$(git status --porcelain --untracked-files=no -- publish.py conf
 # verification, applied=0 not because nothing changed but because the agent never
 # did the work). wrapper-candidate-discovery.sh already prevents this with the
 # same preamble; mirror it here.
+# Without -e a missing playbook would leave a task-free prompt and a silent no-op run.
+if [[ ! -f auto-promote/refresh-program.md ]]; then
+  echo "[profile-refresh] ERROR: auto-promote/refresh-program.md not found; not run"
+  exit 1
+fi
 PROMPT="IMPORTANT: Skip daily log recap and session start routines. Go straight to the task below.
 
 $(cat auto-promote/refresh-program.md)"

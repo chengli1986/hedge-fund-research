@@ -126,3 +126,14 @@ class TestItReachesAHuman:
         monkeypatch.setattr(sys, "argv", ["gmia-fetcher-health.py"])
         gfh.main()
         assert seen.get("corrupt_state") == ["inspection_state.json.corrupt-x"]
+
+
+# code review 2026-10-12: a valid but empty {} (a deliberate reset) was
+# reported as STATE FILE UNREADABLE and copied as evidence of damage.
+def test_a_valid_empty_file_is_not_reported_as_damage(state, caplog):
+    state.write_text("{}")
+    with caplog.at_level(logging.ERROR):
+        fa.record_quality_metrics("gmo", 5, 1, 0, 0)
+    assert not list(state.parent.glob("inspection_state.json.corrupt-*"))
+    assert not any("UNREADABLE" in r.getMessage() for r in caplog.records)
+    assert json.loads(state.read_text())["gmo"]["last_article_count"] == 5

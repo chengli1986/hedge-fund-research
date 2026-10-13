@@ -161,8 +161,13 @@ def _no_network(request, monkeypatch):
         yield
         return
     import socket
+    # Recorded as well as raised, like the browser launches below: code under
+    # test that swallows the RuntimeError would otherwise pass for the wrong reason.
+    connects: list[str] = []
+    request.node.blocked_connects = connects   # the guard's self-test clears it
 
     def _blocked(self, *args, **kwargs):
+        connects.append(f"{request.node.nodeid} -> {args[0] if args else '?'}")
         raise RuntimeError(
             "a unit test tried to open a network connection "
             f"({args[0] if args else '?'}) — mock the caller, or mark the test "
@@ -186,6 +191,7 @@ def _no_network(request, monkeypatch):
         import playwright.sync_api as _pw
     except ImportError:
         yield
+        assert not connects, f"a unit test tried to open a network connection: {connects}"
         return
 
     def _no_browser(*args, **kwargs):
@@ -201,6 +207,9 @@ def _no_network(request, monkeypatch):
     # empty -- the trial manager's Playwright fallback does -- and then the
     # RuntimeError above is never seen and the test passes for the wrong
     # reason.
+    assert not connects, (
+        "a unit test tried to open a network connection (the error may have been "
+        f"swallowed by the code under test): {connects}")
     assert not launches, (
         "a unit test tried to launch a real browser (the error may have been "
         "swallowed by the code under test) — stub the Playwright call, or mark "

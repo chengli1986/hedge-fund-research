@@ -424,8 +424,9 @@ def _extract_bridgewater_text(html: str) -> Optional[str]:
         if not elements:
             continue
         matched_any = True
+        # Each element is normalised on its own; normalising the joined text
+        # again would turn the "\n" paragraph boundaries back into spaces.
         text = "\n".join(_normalize_whitespace(el.get_text(" ", strip=True)) for el in elements)
-        text = _normalize_whitespace(text)
         if len(text) < MIN_CONTENT_LENGTH:
             continue
         kind = _bridgewater_gate_kind(text)
@@ -1470,18 +1471,26 @@ def _fetch_content_gsam(article: dict) -> Optional[tuple[Path, str]]:
     log.info("  GSAM: fetching article page %s", url)
 
     text = ""
+    page = None
     try:
         resp = requests.get(url, headers=HEADERS, timeout=30)
         resp.raise_for_status()
-        soup = BeautifulSoup(resp.text, "html.parser")
-        for tag in soup.select("nav, footer, header, script, style, aside, "
-                               ".footer-disclosure-text"):
-            tag.decompose()
-        paragraphs = soup.select("main p")
-        _note_selector_result(bool(paragraphs))
-        text = "\n".join(t for t in map(_paragraph_text, paragraphs) if t)
-    except Exception as e:
+        page = resp.text
+    except requests.RequestException as e:
         log.error("  GSAM: fetch failed: %s", e)
+    if page is not None:
+        # Separate from the request: an extraction bug must not read in the
+        # log as a network failure (both fall back to the API summary).
+        try:
+            soup = BeautifulSoup(page, "html.parser")
+            for tag in soup.select("nav, footer, header, script, style, aside, "
+                                   ".footer-disclosure-text"):
+                tag.decompose()
+            paragraphs = soup.select("main p")
+            _note_selector_result(bool(paragraphs))
+            text = "\n".join(t for t in map(_paragraph_text, paragraphs) if t)
+        except Exception as e:
+            log.error("  GSAM: extraction failed (%s): %s", type(e).__name__, e)
 
     if not _check_min_content_length(text):
         summary = article.get("gsam_summary", "")

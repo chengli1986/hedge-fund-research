@@ -123,10 +123,15 @@ def send(subject: str, html_body: str) -> bool:
     pw = os.environ.get("SMTP_PASS"); to = os.environ.get("MAIL_TO", user)
     if not all([host, user, pw, to]):
         sys.stderr.write("[send_refresh_summary] SMTP env missing; skip\n"); return False
+    try:
+        port = int(os.environ.get("SMTP_PORT", "465"))
+    except ValueError:
+        sys.stderr.write("[send_refresh_summary] SMTP_PORT is not a number; skip\n"); return False
+    # MIMEText already carries MIME-Version: 1.0; setting it again appends a
+    # second header rather than replacing the first.
     msg = MIMEText(html_body, "html", "utf-8")
     msg["Subject"] = subject; msg["From"] = user; msg["To"] = to
-    msg["MIME-Version"] = "1.0"
-    with smtplib.SMTP_SSL(host, int(os.environ.get("SMTP_PORT", "465")), timeout=30) as s:
+    with smtplib.SMTP_SSL(host, port, timeout=30) as s:
         s.login(user, pw); s.sendmail(user, [to], msg.as_string())
     return True
 

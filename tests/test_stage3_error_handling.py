@@ -233,6 +233,12 @@ def test_s7_usage_null_is_logged_as_unknown_and_never_raises(tmp_path):
     assert row["input_tokens"] is None and row["parsed"] is True
 
 
+# code review 2026-10-12: an empty string is no more an answer than None.
+def test_s3_an_empty_openai_reply_is_no_answer():
+    with pytest.raises(aa.EmptyAnswer):
+        aa._openai_text({"choices": [{"message": {"content": ""}, "finish_reason": "content_filter"}]})
+
+
 # ---- S8 -------------------------------------------------------------------
 
 def test_s8_a_missing_body_still_counts_towards_the_batch_save(store, monkeypatch):
@@ -241,7 +247,7 @@ def test_s8_a_missing_body_still_counts_towards_the_batch_save(store, monkeypatc
     monkeypatch.setattr(aa, "_analyze_with_fallback", lambda *a, **k: dict(SUMMARY, _model="m", _usage={}))
     saves = []
     real = aa.save_articles
-    monkeypatch.setattr(aa, "save_articles", lambda arts, path=None: (saves.append(1), real(arts, path)))
+    monkeypatch.setattr(aa, "save_articles", lambda arts, path=None: saves.append(1) or real(arts, path))
     aa.main()
     assert len(saves) == 2                      # after the 5th article, and the final one
 

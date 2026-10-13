@@ -29,7 +29,7 @@ import time
 from datetime import datetime, timezone, timedelta, date as date_cls
 from pathlib import Path
 from typing import Optional
-from urllib.parse import urlsplit, urlunsplit, urljoin, urlparse
+from urllib.parse import unquote, urlsplit, urlunsplit, urljoin, urlparse
 
 import jsonl_store
 import listing_templates
@@ -290,16 +290,18 @@ def record_quality_metrics(source_id: str, total_found: int, new_count: int,
     """
     state: dict = {}
     if INSPECTION_STATE_FILE.exists():
+        unreadable = False
         try:
             state = json.loads(INSPECTION_STATE_FILE.read_text())
         except OSError as e:
             log.warning("  quality metrics read failed (%s): %s", INSPECTION_STATE_FILE, e)
             return
         except json.JSONDecodeError:
-            state = {}
+            state, unreadable = {}, True
         if not isinstance(state, dict):
-            state = {}
-        if not state and not dry_run:
+            state, unreadable = {}, True
+        # A valid but empty {} (a reset) is not damage: no ERROR, no copy.
+        if unreadable and not dry_run:
             # A dry run inspects; it must not write even the evidence copy.
             _preserve_unreadable_state()
 
@@ -1281,8 +1283,9 @@ def _fetch_article_date_jsonld(url: str) -> Optional[str]:
         resp = requests.get(url, headers=HEADERS, timeout=15)
         resp.raise_for_status()
         return _jsonld_published_date(BeautifulSoup(resp.text, "html.parser"))
-    except Exception:
-        pass
+    except Exception as e:
+        # The caller cannot tell "no date on the page" from "page not fetched".
+        log.warning("  JSON-LD date fetch failed for %s: %s", url, e)
     return None
 
 
@@ -2258,7 +2261,9 @@ def fetch_de_shaw(source: dict) -> list[dict]:
         title = ""
         url_target = ""
         if mailto:
-            m = re.search(r"body=(.+?)\s*-\s*(https?://\S+)", mailto.get("href", ""))
+            # The body may be percent-encoded (encodeURIComponent); decode
+            # first or "%20-%20" never matches the separator.
+            m = re.search(r"body=(.+?)\s*-\s*(https?://\S+)", unquote(mailto.get("href", "")))
             if m:
                 title = m.group(1).strip()
                 url_target = m.group(2).strip()
@@ -2867,7 +2872,10 @@ def fetch_cohen_steers(source: dict) -> list[dict]:
                     }''',
                     urls,
                 )
-            except Exception:
+            except Exception as e:
+                # Undated cards still get stored; say why they have no date.
+                log.warning("Cohen & Steers: per-article date lookup failed, "
+                            "storing undated: %s", e)
                 date_map = {}
         browser.close()
 
@@ -3308,6 +3316,14 @@ def fetch_baillie_gifford(source: dict) -> list[dict]:
 _MFS_SEARCH_PATH = "/MFSServices/services/search/v1/queryresults"
 
 
+def _first_or_self(value) -> str:
+    """A Solr field may come back as a list (multivalued) or a plain string;
+    indexing a string would keep only its first character."""
+    if isinstance(value, list):
+        return value[0] if value else ""
+    return value or ""
+
+
 def fetch_mfs_investment_management(source: dict) -> list[dict]:
     """Fetch MFS Investment Management insights via its Solr search API.
 
@@ -3370,7 +3386,7 @@ def fetch_mfs_investment_management(source: dict) -> list[dict]:
         date_raw = (doc.get("publisheddate") or "").strip()
         articles.append({
             "title": title,
-            "category": (doc.get("series") or [""])[0],
+            "category": _first_or_self(doc.get("series")),
             "url": url,
             "date": parse_date(date_raw) if date_raw else None,
             "date_raw": date_raw,
@@ -4139,7 +4155,7 @@ def main() -> None:
     # so it fails the run and cron alerts the same night.
     broken_sources: list[str] = []
 
-    for source in sources:
+    for i, source in enumerate(sources):
         if args.source and source["id"] != args.source:
             continue
         source_id = source["id"]
@@ -4178,7 +4194,7 @@ def main() -> None:
             found_by_source[source_id] = 0
 
         # Rate-limit between sources
-        if source != sources[-1]:
+        if i < len(sources) - 1:      # `source` is a modified copy by now
             time.sleep(2)
 
     if all_new and args.dry_run:

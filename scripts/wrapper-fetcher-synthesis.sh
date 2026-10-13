@@ -43,7 +43,15 @@ echo "$LOG_PREFIX Starting fetcher synthesis session..."
 
 # 若无目标则提前退出，不启动 Agent
 TARGETS_JSON=$(cd "$REPO_DIR" && python3 synthesize_fetchers.py)
+TARGETS_EXIT=$?
 TARGET_COUNT=$(echo "$TARGETS_JSON" | python3 -c "import json,sys; print(len(json.load(sys.stdin)))")
+COUNT_EXIT=$?
+# Without -e a failed target listing left TARGET_COUNT empty, `[ "" -eq 0 ]`
+# errored as false, and the agent started with no planned targets.
+if [ "$TARGETS_EXIT" -ne 0 ] || [ "$COUNT_EXIT" -ne 0 ]; then
+    echo "$LOG_PREFIX ERROR: could not list synthesis targets (synthesize_fetchers exit $TARGETS_EXIT, parse exit $COUNT_EXIT); agent not started"
+    exit 1
+fi
 # The first 2 ids are what this session is expected to process (program.md's
 # "handle at most 2 funds"). backfill marks any of these the agent leaves undone.
 PLANNED_IDS=$(echo "$TARGETS_JSON" | python3 -c "import json,sys; d=json.load(sys.stdin); print(','.join(t['id'] for t in d[:2]))")

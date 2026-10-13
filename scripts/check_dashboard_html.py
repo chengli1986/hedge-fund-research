@@ -60,6 +60,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import zlib
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
@@ -329,10 +330,14 @@ def check_dashboard(html: str, expected_ids: set[str], *,
     # readers are served the .gz: it must be this page
     if gz_path is not None:
         try:
-            same = gzip.open(gz_path, "rt", encoding="utf-8").read() == html
+            with gzip.open(gz_path, "rt", encoding="utf-8") as fh:
+                same = fh.read() == html
             add("gzip_matches_html", same, "the .gz decompresses to this page" if same else
                 f"{gz_path} holds a different page than the .html beside it")
-        except (OSError, EOFError) as e:
+        # zlib.error is not an OSError: a .gz with a good header and a damaged
+        # body (an interrupted write) raises it, and it must fail this check,
+        # not crash the whole run.
+        except (OSError, EOFError, zlib.error, UnicodeDecodeError) as e:
             add("gzip_matches_html", False, f"cannot read {gz_path}: {e}")
 
     add("no_duplicate_style_attrs", not dup_styles,

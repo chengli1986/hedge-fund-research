@@ -39,8 +39,13 @@ data = json.load(open('$VALIDATE_OUT'))
 bad = [src for src, entries in data.items() if any(e.get('status') != 'ok' for e in entries)]
 if bad:
     print('WARN: entrypoint issues detected for: ' + ', '.join(bad))
-" 2>/dev/null)
-    if [[ -n "$BAD_SOURCES" ]]; then
+" 2>&1)
+    BAD_EXIT=$?
+    # A summary that crashed is not "all ok": it used to print nothing, which
+    # read as a clean bill of health for the next 7 days.
+    if [[ "$BAD_EXIT" -ne 0 ]]; then
+      echo "WARN: could not summarise $VALIDATE_OUT (exit $BAD_EXIT): $BAD_SOURCES"
+    elif [[ -n "$BAD_SOURCES" ]]; then
       echo "$BAD_SOURCES"
     else
       echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Entrypoint validation passed — all sources ok"

@@ -346,8 +346,33 @@ def _new_profile_drafts(pending: Path) -> list[Path]:
     with every field missing: one rejected refresh draft left behind failed this
     test -- and the monthly refresh's own test gate -- every month after
     (pre-merge review, 2026-10-10)."""
+    if not pending.is_dir():          # a fresh checkout may have no drafts dir at all
+        return []
     return [p for p in sorted(pending.glob("*.json"))
             if not p.name.endswith((".validation.json", ".refresh.json"))]
+
+
+def _module_level_statements(tree):
+    """Statements that run at import: the top level and anything nested in a
+    module-level try/if/with -- not function or class bodies."""
+    import ast
+    todo = list(tree.body)
+    while todo:
+        node = todo.pop()
+        yield node
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            continue
+        for field in ("body", "orelse", "finalbody", "handlers"):
+            todo.extend(getattr(node, field, []) or [])
+
+
+def test_a_guarded_module_level_import_is_still_module_level():
+    import ast
+    tree = ast.parse("try:\n    from playwright.sync_api import sync_playwright\n"
+                     "except ImportError:\n    pass\n"
+                     "def f():\n    import playwright\n")
+    found = [n for n in _module_level_statements(tree) if isinstance(n, (ast.Import, ast.ImportFrom))]
+    assert [getattr(n, "module", None) for n in found] == ["playwright.sync_api"]
 
 
 def test_refresh_drafts_are_not_read_as_new_profiles(tmp_path):
@@ -356,7 +381,7 @@ def test_refresh_drafts_are_not_read_as_new_profiles(tmp_path):
     assert [p.name for p in _new_profile_drafts(tmp_path)] == ["acme.json"]
 
 
-def test_pending_profiles_pass_validator():
+def test_pending_profiles_pass_validator(monkeypatch):
     """Every pending_profiles/<id>.json must pass the hard checks in
     scripts/validate_pending_profile.py.
 
@@ -367,7 +392,7 @@ def test_pending_profiles_pass_validator():
     _FUND_PROFILES. This test enforces the latter — i.e., no hard violations
     are allowed to sit in pending_profiles/ unnoticed.
     """
-    sys.path.insert(0, str(SCRIPTS_DIR))
+    monkeypatch.syspath_prepend(str(SCRIPTS_DIR))      # undone after the test
     from validate_pending_profile import validate_profile  # type: ignore
 
     failures = []
@@ -562,7 +587,7 @@ def test_playwright_is_only_imported_inside_functions():
         if rel.parts[0] in {"tests", ".git", "docs"} or "site-packages" in rel.parts:
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(rel))
-        for node in tree.body:
+        for node in _module_level_statements(tree):
             # The package itself, not modules that merely share the prefix
             # (playwright_nav is this repo's own helper).
             if isinstance(node, ast.ImportFrom) and _is_playwright_pkg(node.module or ""):

@@ -263,7 +263,7 @@ class TestTestsNeverTouchProductionLog:
             f"{prod} — the conftest guard is missing or broken")
 
 
-def test_unit_tests_cannot_reach_the_network():
+def test_unit_tests_cannot_reach_the_network(request):
     """Self-test for the conftest network guard.
 
     Without it, tests/test_unit_discover.py made two real, billed
@@ -273,3 +273,7 @@ def test_unit_tests_cannot_reach_the_network():
     import socket
     with pytest.raises(RuntimeError, match="network connection"):
         socket.create_connection(("example.com", 443), timeout=1)
+    # The guard also records the attempt (for code that swallows the error);
+    # this one was meant, so clear it.
+    assert request.node.blocked_connects
+    request.node.blocked_connects.clear()

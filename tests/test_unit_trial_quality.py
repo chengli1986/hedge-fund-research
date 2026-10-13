@@ -385,6 +385,10 @@ def test_fallback_links_used_on_extraction_failure(monkeypatch):
 
     monkeypatch.setattr(tm, "_extract_article_text", mock_extract_text)
     monkeypatch.setattr(tm, "_call_haiku", mock_haiku)
+    # A failed extraction is probed for a JS shell; unstubbed, that probe went
+    # to example.com and its blocked-connection error was swallowed (found by
+    # the conftest connect record, 2026-10-13).
+    monkeypatch.setattr(tm, "_is_likely_js_only", lambda url, timeout=15: False)
 
     # Simulate: index page returns 6 links
     import httpx

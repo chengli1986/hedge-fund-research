@@ -112,7 +112,8 @@ def test_main_exits_zero_when_all_is_well(tmp_path, monkeypatch):
     monkeypatch.setattr(publish, "generate_html", lambda articles: "<html></html>")
     monkeypatch.setattr(publish, "sync_docs_site", lambda repo, html: True)
     monkeypatch.setattr(sys, "argv", ["publish.py", "--output", str(tmp_path / "page.html")])
-    assert publish.main() in (0, None)
+    assert publish.main() == 0       # None would also read as success to the shell
+    assert (tmp_path / "page.html").read_text() == "<html></html>"
 
 
 def test_the_entry_point_propagates_the_exit_code():
