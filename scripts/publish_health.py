@@ -141,6 +141,7 @@ def build_health(sources: list[dict], inspection: dict, probe: dict, rows: list[
             "not_inspected_hours": _age_hours(state.get("last_inspected_at"), now)
             if state.get("last_inspected_at") else None,
             "probe_status": probed.get("status"),
+            "known_block": source.get("known_block") or "",
             "probe_reason": probed.get("last_failure_reason") or "",
             "most_recent_date": recent,
             "stale_days": _days_since(recent, now),
@@ -206,6 +207,13 @@ def _alerts(rendered: list[dict], ab: list[dict], corrupt_backups: list[str],
             stale: list[dict]) -> list[dict]:
     alerts: list[dict] = []
     for row in rendered:
+        if row.get("known_block"):
+            # A decided refusal (sources.json "known_block"): one line saying
+            # so instead of a zero-streak and a probe alert every night.
+            if row["consecutive_zero"] >= ZERO_ALERT_AT or row["probe_status"] in ("FAIL", "KNOWN"):
+                alerts.append({"kind": "known_block", "source": row["id"],
+                               "detail": "已知被拦、已决定保持现状：" + row["known_block"]})
+            continue
         if row["consecutive_zero"] >= ZERO_ALERT_AT:
             alerts.append({"kind": "consecutive_zero", "source": row["id"],
                            "detail": f"{row['consecutive_zero']} 晚没有抓到任何文章"})
@@ -287,7 +295,7 @@ tr:hover td{background:var(--surface2)}
 .tag{font-size:11px;padding:1px 7px;border-radius:999px;border:1px solid var(--border);
 color:var(--muted);white-space:nowrap}
 .tag.tpl{border-color:var(--blue);color:var(--blue)}
-.s-OK{color:var(--green)}.s-WARN{color:var(--yellow)}.s-FAIL{color:var(--red)}
+.s-OK{color:var(--green)}.s-WARN{color:var(--yellow)}.s-FAIL{color:var(--red)}.s-KNOWN{color:var(--muted)}
 .muted{color:var(--muted)}
 .bars{display:flex;align-items:flex-end;gap:3px;height:90px;background:var(--surface);
 border:1px solid var(--border);border-radius:8px;padding:10px}
@@ -372,7 +380,8 @@ def render_html(health: dict) -> str:
         kind_labels = {"consecutive_zero": "连续零抓取", "refusal": "抓取被拒收",
                        "probe_fail": "探针失败", "probe_warn": "探针告警",
                        "ab_gate": "A/B 不一致", "corrupt_state": "状态文件损坏",
-                       "not_inspected": "该源未抓取", "stale_input": "数据过期"}
+                       "not_inspected": "该源未抓取", "stale_input": "数据过期",
+                       "known_block": "已知拦截"}
         rows = "".join(
             f'<div class="alert"><span class="k">{_esc(kind_labels.get(a["kind"], a["kind"]))}</span>'
             f'<span class="s">{_esc(a["source"])}</span> {_esc(a["detail"])}</div>'

@@ -38,6 +38,7 @@ import html
 import json
 import logging
 import os
+import re
 import smtplib
 import statistics
 import sys
@@ -573,6 +574,30 @@ def probe_source(source: dict) -> dict:
     return result
 
 
+# ── known blocks (a decided state, not an alert) ─────────────────────────────
+# A source may carry "known_block" in sources.json once the user has decided
+# what to do about a site that refuses this server (2026-10-13: ares-management,
+# whose Cloudflare blocks AWS and Aliyun alike; kept as is, no bypass). Its
+# probe failures are then reported, not alerted -- but only while the failure
+# still looks like that refusal. Any other failure (a code bug, a moved page)
+# alerts as usual, and a probe that passes again says the flag can go.
+KNOWN_BLOCK_EVIDENCE = re.compile(r"\b403\b|blocked_by_bot_protection|Attention Required")
+
+
+def apply_known_blocks(per_source: dict[str, dict], sources: list[dict]) -> None:
+    """Mark refusals of known-blocked sources KNOWN; flag a lifted block."""
+    for src in sources:
+        note = src.get("known_block")
+        result = per_source.get(src["id"])
+        if not note or result is None:
+            continue
+        if result["status"] == "OK":
+            result["known_block_lifted"] = True
+        elif KNOWN_BLOCK_EVIDENCE.search(result.get("reason") or ""):
+            result["status"] = "KNOWN"
+            result["known_block"] = note
+
+
 # ── state-driven alert classification ────────────────────────────────────────
 
 def classify_alerts(per_source: dict[str, dict], prev_state: dict) -> dict:
@@ -596,6 +621,8 @@ def classify_alerts(per_source: dict[str, dict], prev_state: dict) -> dict:
     warning: list[tuple] = []
     recovered: list[tuple] = []
     healthy: list[tuple] = []
+    known: list[tuple] = []        # KNOWN: a decided block, reported but not alerting
+    lifted: list[tuple] = []       # passed again although flagged known_block
 
     prev = prev_state.get("sources", {}) if isinstance(prev_state, dict) else {}
 
@@ -614,6 +641,11 @@ def classify_alerts(per_source: dict[str, dict], prev_state: dict) -> dict:
         prev_status = prev_record.get("status")
         new_status = result["status"]
 
+        if new_status == "KNOWN":
+            known.append((sid, result))
+            continue
+        if result.get("known_block_lifted"):
+            lifted.append((sid, result))
         if new_status == "FAIL":
             failing.append((sid, result, prev_status))
         elif new_status == "WARN":
@@ -635,6 +667,8 @@ def classify_alerts(per_source: dict[str, dict], prev_state: dict) -> dict:
         "warning": warning,
         "recovered": recovered,
         "healthy": healthy,
+        "known": known,
+        "lifted": lifted,
     }
 
 
@@ -659,7 +693,7 @@ def merge_into_state(prev_state: dict, per_source: dict[str, dict]) -> dict:
             record["last_ok_at"] = iso
             record["last_fail_at"] = prev.get("last_fail_at")
             record["last_failure_reason"] = ""
-        elif result["status"] == "FAIL":
+        elif result["status"] in ("FAIL", "KNOWN"):     # KNOWN still failed; it just does not alert
             record["consecutive_fails"] = prev.get("consecutive_fails", 0) + 1
             record["consecutive_warns"] = 0
             record["last_ok_at"] = prev.get("last_ok_at")
@@ -1099,6 +1133,7 @@ def should_email(alerts: dict, zero_fetches: list, pipeline_stale: bool = False,
     silent zero-article fetch produces.
     """
     return bool(alerts["failing"] or alerts["warning"] or alerts["recovered"]
+                or alerts.get("lifted")
                 or zero_fetches or pipeline_stale or declines or intake or damaged_rows
                 or corrupt_state or entrypoints
                 or (orphans is not None and orphans.get("new"))
@@ -1149,6 +1184,12 @@ def print_console_report(per_source: dict[str, dict], total_runtime_s: float,
     if warn_rows:
         print(f"⚠️  WARNINGS ({len(warn_rows)}):")
         for sid, r in warn_rows:
+            print(f"  {sid:25} {r['reason']}")
+        print()
+    known_rows = [(sid, r) for sid, r in per_source.items() if r["status"] == "KNOWN"]
+    if known_rows:
+        print(f"🔒 KNOWN BLOCKED — decided, not alerting ({len(known_rows)}):")
+        for sid, r in known_rows:
             print(f"  {sid:25} {r['reason']}")
         print()
     if intake:
@@ -1248,6 +1289,14 @@ def render_html_email(
     if recovered_rows:
         sections.append(section_table(
             f"✅ RECOVERED ({len(alerts['recovered'])})", "#1a7f37", recovered_rows))
+    if alerts.get("lifted"):
+        lifted_rows = "".join(
+            f'<tr><td style="padding:8px;font-weight:bold;color:#1a7f37">{html.escape(sid)}</td>'
+            f'<td style="padding:8px">probe passed again — the site no longer refuses us; '
+            f'remove "known_block" from config/sources.json so failures alert again</td></tr>'
+            for sid, _r in alerts["lifted"])
+        sections.append(section_table(
+            f"🔓 KNOWN BLOCK LIFTED ({len(alerts['lifted'])})", "#1a7f37", lifted_rows))
     if pipeline_stale:
         # The body must say what the subject shouts. When this is the only send
         # condition -- the case the check exists for -- the email used to carry
@@ -1335,6 +1384,14 @@ def render_html_email(
             f"🤖 NOT SUMMARISED — text was not an article ({total})", "#9a6700", decline_rows))
     if quality is not None:
         sections.append(_quality_section(quality))
+    if alerts.get("known"):
+        known_rows = "".join(
+            f'<tr><td style="padding:8px;font-weight:bold;color:#586069">{html.escape(sid)}</td>'
+            f'<td style="padding:8px;color:#586069">{html.escape(str(r.get("known_block")))}'
+            f'<br><span style="font-size:11px">today: {html.escape(r.get("reason") or "")}</span></td></tr>'
+            for sid, r in alerts["known"])
+        sections.append(section_table(
+            f"🔒 KNOWN BLOCKED — decided, not alerting ({len(alerts['known'])})", "#586069", known_rows))
     sections.append(
         f'<h3 style="margin:14px 0 6px;color:#1a7f37">✅ HEALTHY ({len(alerts["healthy"])})</h3>'
         f'{healthy_html}'
@@ -1578,10 +1635,13 @@ def main() -> int:
             }
 
     total_runtime_s = time.monotonic() - started
+    apply_known_blocks(per_source, sources)
 
     # Read once, before the --source early return below, so the console report
-    # and the email decision see the same list.
-    zero_fetches = pipeline_zero_fetches()
+    # and the email decision see the same list. A known-blocked source fetching
+    # nothing is the decided state, not news (it is listed under KNOWN BLOCKED).
+    known_ids = {s["id"] for s in sources if s.get("known_block")}
+    zero_fetches = [z for z in pipeline_zero_fetches() if z[0] not in known_ids]
     intake = pipeline_intake_anomalies()
     damaged_rows = store_damage()
     current_orphans = content_orphans()
@@ -1621,7 +1681,7 @@ def main() -> int:
 
     # Single-source debug mode bypasses state and email entirely.
     if args.source:
-        return 0 if all(r["status"] == "OK" for r in per_source.values()) else 1
+        return 0 if all(r["status"] in ("OK", "KNOWN") for r in per_source.values()) else 1
 
     prev_state = load_state()
     alerts = classify_alerts(per_source, prev_state)
