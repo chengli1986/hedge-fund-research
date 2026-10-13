@@ -119,13 +119,17 @@ def build_health(sources: list[dict], inspection: dict, probe: dict, rows: list[
              or (f["present"] and f["age_hours"] > f["max_age_hours"])]
 
     new_counts = _new_per_source(rows, now)
+    latest = _latest_per_source(rows, now)
     rendered: list[dict] = []
     for source in sources:
         sid = source["id"]
         state = inspection.get(sid) or {}
         probed = probe_sources.get(sid) or {}
         spec = source.get("listing_template") or {}
-        recent = probed.get("last_most_recent_date")
+        # The store's date, as the research page reads it, over the probe's raw
+        # listing date: a month-only listing ("Oct 2026") parses to the 31st,
+        # and the page said "18 天后" for KKR's piece dated 10-12 (2026-10-13).
+        recent, year_only = latest.get(sid) or (probed.get("last_most_recent_date"), False)
         rendered.append({
             "id": sid,
             "name": source.get("short_name") or sid,
@@ -144,7 +148,9 @@ def build_health(sources: list[dict], inspection: dict, probe: dict, rows: list[
             "known_block": source.get("known_block") or "",
             "probe_reason": probed.get("last_failure_reason") or "",
             "most_recent_date": recent,
-            "stale_days": _days_since(recent, now),
+            "date_year_only": year_only,
+            # A year-only label ("2022" -> 2022-01-01) has no age worth printing.
+            "stale_days": None if year_only else _days_since(recent, now),
         })
 
     if not sources:
@@ -171,6 +177,27 @@ def build_health(sources: list[dict], inspection: dict, probe: dict, rows: list[
     return {"generated_at": now.isoformat(timespec="seconds"),
             "inputs": inputs, "stale": stale,
             "stages": {name: (stage1 if name == STAGES[0] else None) for name in STAGES}}
+
+
+def _latest_per_source(rows: list[dict], now: datetime) -> dict[str, tuple[str, bool]]:
+    """Newest article date per source, by the research page's own rule.
+
+    publish._effective_date (earliest of the stored date, the BJT day we first
+    saw the row, and today) -- one rule for both pages, so the two cannot
+    disagree about the same article. Returns {sid: (date, year_only)}.
+    """
+    import publish
+    today = now.astimezone(BJT).date().isoformat()
+    best: dict[str, tuple[str, bool]] = {}
+    for row in rows:
+        day = publish._effective_date(row, today)
+        sid = row.get("source_id")
+        if not day or not sid:
+            continue
+        raw = str(row.get("date_raw") or "").strip()
+        if sid not in best or day > best[sid][0]:
+            best[sid] = (day, len(raw) == 4 and raw.isdigit())
+    return best
 
 
 def _days_since(date_str: str | None, now: datetime) -> int | None:
@@ -397,9 +424,13 @@ def render_html(health: dict) -> str:
                if r["template_type"] else
                f'<span class="tag">手写 {_esc(r["fetch_shape"] or "")}</span>')
         status = r["probe_status"] or "—"
-        recent = (f'{_esc(r["most_recent_date"])} <span class="muted">'
-                  f'({_age_words(r["stale_days"])})</span>' if r["most_recent_date"] else
-                  '<span class="muted">—</span>')
+        if not r["most_recent_date"]:
+            recent = '<span class="muted">—</span>'
+        elif r.get("date_year_only"):
+            recent = f'{_esc(r["most_recent_date"][:4])} <span class="muted">(网站只给年份)</span>'
+        else:
+            recent = (f'{_esc(r["most_recent_date"])} <span class="muted">'
+                      f'({_age_words(r["stale_days"])})</span>')
         body_rows.append(
             f'<tr><td>{_esc(r["name"])}<div class="muted">{_esc(r["id"])}</div></td>'
             f'<td>{way}</td>'
@@ -458,9 +489,9 @@ def render_html(health: dict) -> str:
     · 模板覆盖：{_esc(coverage)}</div>
 
   <h2>其余阶段</h2>
-  <div class="ok" style="color:var(--muted)">第 2 阶段（抓正文）已完成审查，结论见
-    <a href="/hedge-fund-research-audit.html">审查报告</a>；它的指标还没有放进这块面板。
-    第 3–5 阶段尚未做系统审计，面板结构已预留，审完再填——为没审过的阶段现编指标，错的指标比没有更糟。</div>
+  <div class="ok" style="color:var(--muted)">第 1–5 阶段（抓列表、抓正文、写摘要与分类、发布网页、网页检查）都已审查完毕，结论见
+    <a href="/hedge-fund-research-audit.html">审查报告</a>。这块面板目前只放了第 1 阶段的指标，
+    其余阶段的结构已预留，指标还没有接进来。</div>
 </div>
 </body>
 </html>

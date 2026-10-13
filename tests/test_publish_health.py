@@ -277,10 +277,46 @@ class TestAuditReportLink:
         html = ph.render_html(_build())
         assert 'href="/hedge-fund-research-audit.html"' in html
 
-    def test_the_page_no_longer_says_stage_2_is_unaudited(self):
+    def test_the_page_no_longer_says_any_stage_is_unaudited(self):
+        # Stages 3-5 closed on 2026-10-10; the page kept saying "第 3–5 阶段尚未
+        #做系统审计" until a drift audit on 10-13 (this test had pinned it).
         html = ph.render_html(_build())
-        assert "第 2–5 阶段尚未做系统审计" not in html
-        assert "第 3–5 阶段尚未做系统审计" in html
+        assert "尚未做系统审计" not in html
+        assert "第 1–5 阶段" in html and "都已审查完毕" in html
+
+
+class TestNewestDateIsTheStoresDate:
+    """2026-10-13 drift audit: seven sources read "2026-10-31 (18 天后)" -- the
+    probe's raw month-only listing date -- while the research page showed the
+    real day for the same article (KKR 10-12). Both now use one rule,
+    publish._effective_date."""
+
+    def _row(self, date, raw, fetched_hours_ago=30, **kw):
+        return {"source_id": "alpha", "date": date, "date_raw": raw,
+                "fetched_at": _iso(fetched_hours_ago), **kw}
+
+    def _page(self, rows, probe_date="2026-10-31"):
+        probe = _probe("alpha")
+        probe["sources"]["alpha"]["last_most_recent_date"] = probe_date
+        return ph.render_html(_build(sources=_sources("alpha"), inspection=_inspection("alpha"),
+                                     probe=probe, rows=rows))
+
+    def test_a_refined_month_only_piece_shows_its_real_day(self):
+        real = (NOW - timedelta(days=1)).date().isoformat()
+        html = self._page([self._row(real, "October 2026", date_listed="2026-10-31", date_basis="page")])
+        assert real in html and "天后" not in html
+
+    def test_an_unrefined_month_end_date_is_capped_at_the_day_we_saw_it(self):
+        html = self._page([self._row("2099-10-31", "October 2099", fetched_hours_ago=30)])
+        assert "2099-10-31" not in html and "天后" not in html
+
+    def test_a_year_only_label_has_no_age(self):
+        html = self._page([self._row("2022-01-01", "2022")])
+        assert "网站只给年份" in html and "天前" not in html.split("网站只给年份")[0][-200:]
+
+    def test_with_nothing_stored_the_probe_date_is_used(self):
+        html = self._page([], probe_date=(NOW - timedelta(days=3)).date().isoformat())
+        assert "3 天前" in html
 
 
 class TestSelfAudit:
