@@ -45,7 +45,9 @@ n = sum(
     1 for c in candidates
     if c.get("status") == "promoted"
     and c["id"] not in prod_ids
-    and c["id"] in FETCHERS
+    # A passing listing_template (scripts/try_template.py) stands in for a
+    # hand-written fetcher since 2026-10-13 ("template first").
+    and (c["id"] in FETCHERS or c.get("listing_template"))
 )
 print(n)
 PYEOF

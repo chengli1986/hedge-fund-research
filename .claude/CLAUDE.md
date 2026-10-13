@@ -8,7 +8,7 @@ Playwright (Chromium) for JS/CSR sites; multi-model LLM chain for summaries.
 
 ## Develop / Test
 ```bash
-python3 -m pytest tests/ -q                       # 2478 collected, 16 deselected (a fresh clone skips ~14 that need gitignored data/fixtures)
+python3 -m pytest tests/ -q                       # 2506 collected, 16 deselected (a fresh clone skips ~14 that need gitignored data/fixtures)
 bash run_pipeline.sh                              # full 4-stage pipeline
 python3 fetch_articles.py --list                  # list configured sources
 python3 fetch_articles.py --source <id> --dry-run # one source, no save
@@ -30,6 +30,7 @@ Source-acquisition lifecycle (status machine in `config/fund_candidates.json`):
 - Trial manager (`gmia-trial-manager.py`): 7-day live trial (`TRIAL_DAYS`), ≤3 concurrent (`MAX_CONCURRENT_TRIALS`); double-gate — quantity (the listing returns >0 articles on ≥4 of 7 days, `MIN_DAYS_WITH_ARTICLES`; this measures that the listing is reachable, not that new articles appeared — the email's "total articles" sums each day's listing count, so Hamilton Lane's 2026-10-11 pass reported 80 for 12 unique articles) + quality (Haiku samples 3 new articles every trial day, deduped across days, avg ≥0.5 `MIN_QUALITY_SCORE`). PASS→promoted, 0 articles in the whole window→inaccessible (synthesis queue), too few days / low quality / no sample→watchlist
 - Fetcher synthesis (weekly): agent writes Playwright fetchers for `inaccessible` candidates; auto-rejects after `MAX_SYNTHESIS_FAILURES=3`; untouched planned targets are backfilled as failed, but only after a Claude preflight answers — a session where Claude cannot start (2026-10-11 OAuth expiry) charges no failure, writes a heartbeat with the exit code and exits 1
 - Auto-promote (daily): wires `promoted` candidates into production + auto-graduates their fund profile through the validation gate
+- Template first (2026-10-13): synthesis must run `scripts/try_template.py --candidate ID --spec ... --record` before writing any `fetch_<id>`; the script (not the agent) records `template_attempts`, and on a pass `listing_template`/`listing_url`/`expected_hostname` on the candidate. The trial then measures with that template, synthesis no longer re-targets it, auto-promote accepts it in place of a `FETCHERS` entry and copies it into sources.json with `listing_template_active`. `scripts/check_template_first.py` (run by the synthesis wrapper before the backfill) makes the session exit 2 when a processed target has no attempt this session, wrote code after a passing template, or wrote code without `synthesis_template_skip_reason`. A template-only source has no hand-written counterpart, so the A/B gate lists it as "not compared"; coverage tests ask `fetch_articles.listing_fetcher`, not `FETCHERS`.
 - Profile refresh (monthly): agent web-verifies time-sensitive facts (AUM / M&A / rebrand), evidence-gated apply; static facts (founders/history) untouched
 
 Key dirs/files:

@@ -40,7 +40,9 @@ class TestLiveSourceAccess:
 
     def test_config_valid(self):
         config = json.loads((Path(__file__).parent.parent / "config" / "sources.json").read_text())
-        from fetch_articles import FETCHERS
+        from fetch_articles import listing_fetcher
         for src in config["sources"]:
-            assert src["id"] in FETCHERS, f"No fetcher for {src['id']}"
+            # The nightly's own dispatch: FETCHERS[id], or the listing template
+            # (a template-first source has no hand-written fetcher at all).
+            assert listing_fetcher(src) is not None, f"No fetcher for {src['id']}"
             assert "expected_hostname" in src, f"Missing expected_hostname for {src['id']}"

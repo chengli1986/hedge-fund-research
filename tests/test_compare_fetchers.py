@@ -88,6 +88,15 @@ def test_date_raw_is_not_compared(monkeypatch):
     assert cf.compare_source(dict(SRC))["agree"] is True
 
 
+_REAL_HAS_HAND_WRITTEN = cf.has_hand_written
+
+
+@pytest.fixture(autouse=True)
+def _every_fake_source_has_a_hand_written_fetcher(monkeypatch):
+    # The fake ids below are not in FETCHERS; the template-only skip is tested
+    # on its own in TestTemplateFirstSources.
+    monkeypatch.setattr(cf, "has_hand_written", lambda sid: True)
+
 class TestDroppedListingFields:
     """(title, url, date) agreement hides fields the template does not emit.
 
@@ -244,3 +253,21 @@ class TestSnapshot:
         monkeypatch.setattr(cf.sys, "argv", ["compare_fetchers.py", "--source", "t"])
         cf.main()
         assert not (tmp_path / "ab-gate.jsonl").exists()
+
+
+class TestTemplateFirstSources:
+    """2026-10-13: a source promoted with a template from the start has no
+    hand-written fetcher, so --all must skip it, not raise KeyError."""
+
+    def test_it_is_listed_as_not_compared_and_the_gate_passes(self, monkeypatch, tmp_path, capsys):
+        monkeypatch.setattr(cf, "HISTORY", tmp_path / "ab-gate.jsonl")
+        monkeypatch.setattr(cf, "_load_sources", lambda: [dict(SRC, id="fresh")])
+        monkeypatch.setattr(cf, "has_hand_written", lambda sid: False)
+        monkeypatch.setattr(cf, "compare_source", lambda s: pytest.fail("compared a template-only source"))
+        monkeypatch.setattr(cf.sys, "argv", ["compare_fetchers.py", "--all"])
+        assert cf.main() == 0
+        assert "no hand-written counterpart" in capsys.readouterr().out
+
+    def test_the_real_lookup_reads_fetchers(self):
+        assert _REAL_HAS_HAND_WRITTEN("aqr") is True
+        assert _REAL_HAS_HAND_WRITTEN("no-such-source") is False

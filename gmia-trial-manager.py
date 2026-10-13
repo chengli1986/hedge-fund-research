@@ -170,6 +170,15 @@ def count_articles_with_fetcher(trial: dict) -> dict:
     source_id = trial["id"]
     fetchers = _load_fetchers()
 
+    # Template first (2026-10-13): a candidate whose listing_template passed
+    # scripts/try_template.py is measured with that template -- the same code
+    # and spec auto-promote copies into sources.json.
+    templated = next((c for c in load_candidates()
+                      if c["id"] == source_id and c.get("listing_template")), None)
+    if templated is not None:
+        return _count_with(lambda: _listing_templates().fetch(
+            _listing_templates().candidate_source(templated)))
+
     if source_id not in fetchers:
         url = trial.get("research_url") or trial.get("homepage_url", "")
         result = count_articles(url)
@@ -185,8 +194,21 @@ def count_articles_with_fetcher(trial: dict) -> dict:
         return result
 
     source_dict = _candidate_to_source_dict(candidate)
+    return _count_with(lambda: fetchers[source_id](source_dict))
+
+
+def _listing_templates():
+    import sys as _sys
+    if str(BASE_DIR) not in _sys.path:
+        _sys.path.insert(0, str(BASE_DIR))
+    import listing_templates
+    return listing_templates
+
+
+def _count_with(run) -> dict:
+    """Run a listing fetch and summarise it the way the trial records it."""
     try:
-        articles = fetchers[source_id](source_dict)
+        articles = run()
         count = len(articles)
         return {
             "accessible": True,

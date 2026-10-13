@@ -29,7 +29,8 @@ for c in candidates:
         continue
     if c["id"] in prod_ids:
         continue  # already wired up
-    has_fetcher = c["id"] in FETCHERS
+    has_template = bool(c.get("listing_template"))
+    has_fetcher = c["id"] in FETCHERS or has_template
     targets.append({
         "id": c["id"],
         "name": c["name"],
@@ -39,6 +40,10 @@ for c in candidates:
         "topics": c.get("topics", ""),
         "strategy_tags": c.get("strategy_tags", []),
         "has_fetcher": has_fetcher,
+        "has_template": has_template,
+        "listing_template": c.get("listing_template"),
+        "listing_url": c.get("listing_url"),
+        "expected_hostname": c.get("expected_hostname"),
         "notable_authors": c.get("notable_authors", []),
     })
 
@@ -48,6 +53,10 @@ EOF
 
 读输出。`has_fetcher: false` 的基金**跳过**（让 fetcher-synthesis 先处理）；只处理
 `has_fetcher: true` 的，按列表顺序最多 2 个。
+
+`has_template: true` 表示它用声明式模板抓列表（synthesis 用 `scripts/try_template.py` 试过并通过，
+2026-10-13 起"模板优先"），**没有** `fetch_<id>` 函数。这类基金按下面各 Phase 里
+「模板源」的说明处理。
 
 若列表为空 → 输出 `"No targets"` 并退出。
 
@@ -82,6 +91,15 @@ EOF
     全部是研究频道的简介，不是基金本身。
 - `notable_authors`：candidate 的 `notable_authors`，没有就 `[]`
 - `expected_hostname`：从 url 提取主域名（去掉 www. 与子域）
+- **模板源（`has_template: true`）另外**：
+  - `url` 用 candidate 的 `listing_url`（模板实际读的页面/feed），`expected_hostname` 用 candidate 的
+    `expected_hostname`；`listing_template` **原样复制**，再加 `"listing_template_active": true`；
+    **不要**加 `fetch_shape`（那是手写抓取器的形状标签）
+  - `method`：`card_list` + `fetch: requests` → `"ssr"`；`card_list` + `fetch: playwright` → `"playwright"`；
+    `rss_feed` → `"rss"`；`api_json` → `"api"`
+  - 在 `docs/listing-template-decisions.md` 对应的 `## TEMPLATE — <type> (N)` 表里加一行
+    （`| <id> | <一句话：页面形态，为什么一份配置就够> |`），并把标题里的 N 加 1。
+    `tests/test_template_decisions_doc.py` 要求每个源都有一行
 - `no_publish_dates`（可选）：若 fund_candidates.json 里该字段为 `true`，**原样复制**到 sources.json 条目。这告诉 health probe 跳过 date=None 的 WARN（该源设计上不提供日期）。不存在则不加该字段。
 
 **用 Edit 工具**插入到 `sources.json` 的 sources 列表末尾，**保留原文 indent 风格**
@@ -149,7 +167,8 @@ import tempfile
 from fetch_content import _fetch_content_FUNDID  # 替换 FUNDID
 import fetch_articles
 src = {"url": "RESEARCH_URL", "id": "FUNDID"}  # 替换
-articles = fetch_articles.FETCHERS["FUNDID"](src)
+# 模板源：src 用 Phase 1 写进 sources.json 的那条完整 entry（含 listing_template）
+articles = fetch_articles.listing_fetcher(src)(src)
 print(f"Got {len(articles)} articles")
 if articles:
     art = articles[0]
@@ -165,7 +184,7 @@ EOF
 
 **通过标准（4 项硬门，任一失败 → 跳过此基金，不进 Phase 4）**：
 
-1. **抓到 ≥3 文章索引** — `fetch_articles.FETCHERS[id](source)` 返回 ≥3 articles
+1. **抓到 ≥3 文章索引** — `fetch_articles.listing_fetcher(source)(source)` 返回 ≥3 articles（模板源走模板，其余走 `FETCHERS[id]`）
 2. **正文 ≥500 chars**（不是 100）— `_fetch_content_FUNDID` 返回 `ok: True` 且 `chars ≥ 500`
 3. **Haiku 质量抽检 relevance ≥ 0.6** — 复用 trial-manager 的质量评估：
    ```bash
@@ -184,7 +203,7 @@ EOF
    EOF
    ```
    Haiku 抽 3 篇，**至少 1 篇 relevance ≥ 0.6** + **avg_score ≥ 0.5**。否则说明抓的不是研究内容（可能是 nav/footer）。
-4. **Method 字段 cross-check** — grep 你刚写的 `fetch_<id>` 函数实现，验证与 sources.json 的 `method` 一致：
+4. **Method 字段 cross-check** — 模板源按 Phase 1「模板源」里的对照表核对 `method`；其余 grep `fetch_<id>` 函数实现，验证与 sources.json 的 `method` 一致：
    ```bash
    if grep -q "_get_playwright_page\|sync_playwright" fetch_articles.py | grep -A 30 "def fetch_FUNDID"; then
        # method 必须是 "playwright"

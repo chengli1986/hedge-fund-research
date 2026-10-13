@@ -341,11 +341,15 @@ class TestContentFetchers:
         Parallel contract to CONTENT_FETCHERS — catches the same class of bug
         one pipeline stage earlier (fetch_articles vs fetch_content).
         """
-        from fetch_articles import FETCHERS
-        missing = sorted(self._load_source_ids() - set(FETCHERS))
+        from fetch_articles import listing_fetcher
+        config_path = Path(__file__).resolve().parent.parent / "config" / "sources.json"
+        sources = json.loads(config_path.read_text())["sources"]
+        # Asked of the nightly's own dispatch, so a template-first source (no
+        # fetch_<id>, listing_template_active) counts as handled (2026-10-13).
+        missing = sorted(s["id"] for s in sources if listing_fetcher(s) is None)
         assert not missing, (
-            f"Sources in sources.json without FETCHERS handler: {missing}. "
-            f"Add a fetch_<id> function and register it in FETCHERS."
+            f"Sources in sources.json without a listing fetcher: {missing}. "
+            f"Add a fetch_<id> to FETCHERS, or a listing_template with listing_template_active."
         )
 
 

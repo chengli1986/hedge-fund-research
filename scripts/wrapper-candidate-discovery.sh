@@ -187,7 +187,7 @@ try:
 except Exception:
     registered = set()
 candidates = json.loads(Path('config/fund_candidates.json').read_text())
-print(sum(1 for c in candidates if c.get('synthesis_priority') and c['id'] not in registered))
+print(sum(1 for c in candidates if c.get('synthesis_priority') and c['id'] not in registered and not c.get('listing_template')))
 " 2>/dev/null || echo 0
 )
 

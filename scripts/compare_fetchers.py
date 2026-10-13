@@ -44,6 +44,11 @@ import listing_templates as lt       # noqa: E402
 FIELDS = ("title", "url", "date")
 
 
+def has_hand_written(source_id: str) -> bool:
+    """Whether there is a hand-written fetcher to A/B the template against."""
+    return source_id in fa.FETCHERS
+
+
 def _key(row: dict) -> tuple:
     return tuple(row.get(f) for f in FIELDS)
 
@@ -133,6 +138,14 @@ def main() -> int:
         chosen = [s for s in sources if s.get("listing_template")]
     else:
         parser.error("give --source ID or --all")
+    # A template-first source (2026-10-13) never had a hand-written fetcher:
+    # there is nothing to A/B it against. Say so instead of a KeyError.
+    no_counterpart = [s["id"] for s in chosen if not has_hand_written(s["id"])]
+    chosen = [s for s in chosen if has_hand_written(s["id"])]
+    for sid in no_counterpart:
+        print(f"  · {sid:24s} no hand-written counterpart (template from the start), not compared")
+    if not chosen:
+        return 0
 
     results = [compare_source(s) for s in chosen]
     if args.recheck:

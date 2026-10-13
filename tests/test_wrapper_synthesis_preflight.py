@@ -36,6 +36,21 @@ if [[ "$*" != *--dangerously-skip-permissions* ]]; then
     echo OK; exit 0
 fi
 echo "agent call" >> "$(dirname "$0")/agent-calls"
+if [ -n "${AGENT_PROCESS:-}" ]; then
+    # Processes the target the old way: writes code, never tries a template.
+    python3 - <<'PY'
+import json, datetime
+from pathlib import Path
+f = Path("config/fund_candidates.json")
+d = json.loads(f.read_text())
+c = d["candidates"][0]
+c["synthesis_attempted_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+c["synthesis_outcome"] = "success"
+f.write_text(json.dumps(d))
+PY
+    echo "agent processed the target without a template attempt"
+    exit 0
+fi
 echo "agent ran and skipped every target"
 exit 0
 """
@@ -45,7 +60,8 @@ def _sandbox(tmp_path: Path) -> Path:
     for d in ("scripts", "logs", "config", "home"):
         (tmp_path / d).mkdir()
     for rel in ("scripts/wrapper-fetcher-synthesis.sh", "scripts/write_session_heartbeat.py",
-                "scripts/backfill_failed_synthesis.py", "scripts/sync_synthesis_history.py"):
+                "scripts/backfill_failed_synthesis.py", "scripts/sync_synthesis_history.py",
+                "scripts/check_template_first.py"):
         shutil.copy2(REPO / rel, tmp_path / rel)          # verbatim, not a rewrite
     (tmp_path / "synthesize_fetchers.py").write_text(f"print({TARGETS!r})\n")
     (tmp_path / "fetcher-synthesis").mkdir()
@@ -59,7 +75,7 @@ def _sandbox(tmp_path: Path) -> Path:
     return tmp_path
 
 
-def _run(sandbox: Path, preflight_fail: bool):
+def _run(sandbox: Path, preflight_fail: bool, agent_process: bool = False):
     env = dict(os.environ,
                SYNTHESIS_LOCK_FILE=str(sandbox / "test.lock"),
                CLAUDE_BIN=str(sandbox / "claude"),
@@ -67,6 +83,9 @@ def _run(sandbox: Path, preflight_fail: bool):
     env.pop("PREFLIGHT_FAIL", None)
     if preflight_fail:
         env["PREFLIGHT_FAIL"] = "1"
+    env.pop("AGENT_PROCESS", None)
+    if agent_process:
+        env["AGENT_PROCESS"] = "1"
     # stdin=DEVNULL: the fake claude starts with `cat`, and the bare
     # `claude --version` call would otherwise wait on the terminal's stdin.
     return subprocess.run(["bash", str(sandbox / "scripts/wrapper-fetcher-synthesis.sh")],
@@ -126,3 +145,17 @@ def test_a_broken_target_listing_stops_before_the_agent(tmp_path):
     assert proc.returncode != 0
     assert not (sandbox / "agent-calls").exists(), "agent started with no target list"
     assert "could not list synthesis targets" in proc.stdout
+
+
+# 2026-10-13 template first: the wrapper reads try_template's record.
+def test_a_target_processed_without_a_template_attempt_alerts(tmp_path):
+    sandbox = _sandbox(tmp_path)
+    proc = _run(sandbox, preflight_fail=False, agent_process=True)
+    assert "TEMPLATE-FIRST VIOLATION: rbc-bluebay" in proc.stdout, proc.stdout
+    assert proc.returncode == 2
+
+
+def test_a_skipped_target_is_not_a_template_violation(tmp_path):
+    sandbox = _sandbox(tmp_path)
+    proc = _run(sandbox, preflight_fail=False)
+    assert "TEMPLATE-FIRST VIOLATION" not in proc.stdout

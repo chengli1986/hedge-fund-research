@@ -3,8 +3,8 @@
 ## Goal
 
 你是一名 Python 爬虫工程师。目标：对 GMIA 候选列表中每个 `inaccessible` 基金，
-尝试多种抓取策略，写出可运行的 `fetch_<id>()` 函数，注入 `fetch_articles.py`，
-并将该基金状态更新为 `promoted`。若所有策略均失败，记录尝试并继续。
+让它的文章列表能被稳定抓到。**先试声明式模板（Phase 1.5），模板不行才写 `fetch_<id>()`**
+注入 `fetch_articles.py`。成功后按 Phase 5 更新状态。若所有策略均失败，记录尝试并继续。
 
 ## 准备
 
@@ -55,7 +55,39 @@ EOF
 
 若 HTML 内容极少（<500 字）→ 极度 JS 渲染，尝试延长等待时间（page.wait_for_timeout(6000)）。
 
-### Phase 2 — 写 fetcher 函数
+### Phase 1.5 — 先试模板（必做，2026-10-13 起）
+
+现有 43 个源里 19 个用声明式模板（`listing_templates.py`）抓列表：只写一份配置、不写代码。
+三种模板：
+- `card_list`：网页上一组卡片，每张有标题、链接、日期。字段：`fetch`（`requests` 或
+  `playwright`）、`card`（每张卡片的选择器）、`link`（卡片里的链接，卡片本身是 `<a>` 时写 `"self"`）、
+  可选 `title` / `date` / `date_attr` / `path_prefix` / `wait_selector` / `date_separator` / `date_part`
+- `rss_feed`：RSS。字段 `feed: "url"`，并用 `--listing-url` 给出 feed 地址；可选 `categories`、`sort`
+- `api_json`：网站自己的列表接口。字段 `endpoint`、`items`（记录列表的路径，如 `"pages"`）、
+  `title`、`url`、可选 `date`、`params`、`sort`
+
+完整说明见 `listing_templates.py` 文件头。参考现成配置：`config/sources.json` 里
+`northleaf-capital`（card_list）、`amundi`（rss_feed）、`jpmam`（api_json）。
+
+根据 Phase 1 看到的页面结构写一份配置，**用这个脚本在真实网站上试，并且必须带 `--record`**：
+
+```bash
+python3 scripts/try_template.py --candidate FUNDID --record \
+  --spec '{"type": "card_list", "fetch": "requests", "card": "...", "link": "...", "date": "..."}'
+# RSS / 接口的列表地址和 research_url 不同时加 --listing-url URL
+```
+
+- 输出 `VERDICT: PASS` → **不写任何 fetcher 代码**，跳过 Phase 2–4，直接 Phase 5（成功路径），
+  Phase 6 只提交 `config/fund_candidates.json`。脚本已经把模板配置写进候选记录，trial 和
+  auto-promote 会直接用它。
+- 输出 `VERDICT: FAIL` → 看失败原因调整配置再试；页面形态合适的话三种类型都值得试
+  （很多网站有 RSS 或列表接口）。确实套不上（要点击/翻页/逐篇打开文章页才有日期、需要先确认身份、
+  列表要拼多个来源等），才进入 Phase 2 写 fetcher，并在 Phase 5 的
+  `synthesis_template_skip_reason` 里写一句**实际观察到的**原因。
+- **每次尝试都由脚本记录**（`template_attempts`），不要手工编辑这个字段。session 结束后
+  wrapper 会检查：本次处理过的基金没有模板尝试记录，或模板已通过却仍写了 fetcher，都会告警。
+
+### Phase 2 — 写 fetcher 函数（仅当 Phase 1.5 没有通过）
 
 根据页面结构，参考 `fetch_blackstone`（fetch_articles.py 第 764 行）写 `fetch_<fund_id>` 函数。
 
@@ -153,6 +185,8 @@ for c in candidates:
     if c["id"] == "FUNDID":
         c["synthesis_attempted_at"] = now
         c["synthesis_outcome"] = "success"
+        # 走了 Phase 2（写 fetcher）时必填：为什么模板套不上（实际观察到的现象）
+        # c["synthesis_template_skip_reason"] = "……"
 
         if c.get("synthesis_priority"):
             # 路径 1: trial-PASS 短路 (5-14 引入) — trial 已验质量
@@ -206,6 +240,10 @@ print(f"Updated FUNDID")
 
 ```bash
 cd /home/ubuntu/hedge-fund-research
+# 模板通过（没写代码）：
+git add config/fund_candidates.json
+git commit -m "feat(fetcher): listing template for FUNDID (try_template PASS)"
+# 写了 fetcher：
 git add fetch_articles.py config/fund_candidates.json
 git commit -m "feat(fetcher): auto-synthesize fetcher for FUNDID"
 git push

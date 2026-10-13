@@ -380,3 +380,60 @@ def fetch(source: dict) -> list[dict]:
         resp.raise_for_status()
         html = resp.text
     return parse_cards(html, source, spec)
+
+
+# ── candidates: template first (2026-10-13) ──────────────────────────────────
+# New sources used to arrive as a hand-written fetch_<id> every time (the
+# synthesis agent writes code), so template coverage could only fall: 19/43
+# after Hamilton Lane. A candidate may now carry a listing_template of its own;
+# scripts/try_template.py tries one against the live site and records the
+# result, the trial runs it, and auto-promote copies it into sources.json.
+
+MIN_TEMPLATE_ROWS = 3       # the synthesis bar for a hand-written fetcher too
+
+
+def candidate_host(url: str) -> str:
+    """Registrable-ish host of a URL: lower-case, without a leading www."""
+    host = (urlparse(url).hostname or "").lower()
+    return host[4:] if host.startswith("www.") else host
+
+
+def candidate_source(candidate: dict) -> dict:
+    """The source dict a candidate's listing_template runs against.
+
+    listing_url is the page (or feed) the spec reads; it defaults to the
+    candidate's research_url. The same fields become the sources.json entry
+    when the candidate is promoted, so the trial measures what production runs.
+    """
+    url = (candidate.get("listing_url") or candidate.get("research_url")
+           or candidate.get("homepage_url") or "")
+    source = {
+        "id": candidate["id"],
+        "name": candidate.get("name", candidate["id"]),
+        "url": url,
+        "expected_hostname": candidate.get("expected_hostname") or candidate_host(url),
+        "max_articles": 10,
+        "listing_template": candidate.get("listing_template") or {},
+    }
+    if candidate.get("rss_url"):
+        source["rss_url"] = candidate["rss_url"]
+    return source
+
+
+def judge_rows(rows: list[dict], expected_hostname: str) -> list[str]:
+    """Why these rows are not good enough to replace a hand-written fetcher
+    (empty list = good enough). Dates are reported, not required: some
+    sources publish none, and the trial and health probe judge freshness."""
+    problems = []
+    if len(rows) < MIN_TEMPLATE_ROWS:
+        problems.append(f"only {len(rows)} row(s), need {MIN_TEMPLATE_ROWS}")
+    if any(not (r.get("title") or "").strip() for r in rows):
+        problems.append("a row has no title")
+    urls = [r.get("url") or "" for r in rows]
+    off_host = [u for u in urls if candidate_host(u) != expected_hostname
+                and not candidate_host(u).endswith("." + expected_hostname)]
+    if off_host:
+        problems.append(f"{len(off_host)} url(s) off {expected_hostname}: {off_host[0]}")
+    if len(set(urls)) != len(urls):
+        problems.append("duplicate urls")
+    return problems

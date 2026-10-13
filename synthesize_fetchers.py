@@ -62,8 +62,8 @@ def list_targets() -> list[dict]:
     for c in candidates:
         if not c.get("synthesis_priority"):
             continue
-        if c["id"] in fetcher_ids:
-            continue  # fetcher already registered (synthesis succeeded earlier)
+        if c["id"] in fetcher_ids or c.get("listing_template"):
+            continue  # fetcher or template already in place (synthesis succeeded earlier)
         last = c.get("synthesis_attempted_at")
         if last:
             try:
@@ -92,7 +92,7 @@ def list_targets() -> list[dict]:
             continue
         if c.get("quality") == "LOW":
             continue
-        if c["id"] in fetcher_ids:
+        if c["id"] in fetcher_ids or c.get("listing_template"):
             continue
         last = c.get("synthesis_attempted_at")
         if last:

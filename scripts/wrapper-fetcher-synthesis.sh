@@ -146,6 +146,14 @@ echo "$PROMPT" | "$CLAUDE_BIN" --print \
 EXIT_CODE=$?
 echo "$LOG_PREFIX Agent exited with code $EXIT_CODE"
 
+# ── Template first: did the agent try a listing template before writing code? ──
+# Reads what scripts/try_template.py recorded, not the agent's account of it.
+# Runs BEFORE the backfill, which stamps synthesis_attempted_at on targets the
+# agent never touched -- those were not processed and owe no template attempt.
+python3 "$REPO_DIR/scripts/check_template_first.py" \
+    --planned-ids "$PLANNED_IDS" --run-start "$SYNTH_RUN_START"
+TEMPLATE_FIRST_EXIT=$?
+
 # ── Backfill: mark this session's planned targets the agent left unprocessed ──
 # The agent can silently skip a target (never writing synthesis_outcome). Without
 # this the candidate stays inaccessible forever — no history, no auto_reject
@@ -202,6 +210,11 @@ SMTP_USER="${SMTP_USER:-}" SMTP_PASS="${SMTP_PASS:-}" MAIL_TO="${MAIL_TO:-}" \
 # Propagate inconsistency: if heartbeat detected agent ran without recording
 # anything, exit non-zero so cron-wrapper alerts (even if agent itself returned 0).
 if [ "$HEARTBEAT_EXIT" -ne 0 ] && [ "$EXIT_CODE" -eq 0 ]; then
+    EXIT_CODE=2
+fi
+# A skipped template check is not fatal to the work, but someone must see it.
+if [ "$TEMPLATE_FIRST_EXIT" -ne 0 ] && [ "$EXIT_CODE" -eq 0 ]; then
+    echo "$LOG_PREFIX WARN: template-first rule not followed (see TEMPLATE-FIRST lines above)"
     EXIT_CODE=2
 fi
 
