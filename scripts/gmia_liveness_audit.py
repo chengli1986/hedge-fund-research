@@ -591,7 +591,7 @@ def main(argv=None) -> int:
         sent = send_email(render_html(verdicts, state, due), subject)
     except Exception as exc:  # noqa: BLE001 — reported through the exit code below
         print(f"WARNING: liveness email failed: {exc}")
-    if not sent:
+    if sent is False:
         print("ERROR: the liveness mail did not go out; exit 2 so cron-wrapper alerts")
         return 2 if due else 0
     if args.email:

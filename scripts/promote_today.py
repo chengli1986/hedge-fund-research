@@ -37,8 +37,14 @@ def live_promotions(log: Path, today: str) -> list[dict]:
             continue
         if isinstance(e, dict) and e.get("date") == today:
             rows.append(e)
-    reverted = {e.get("id") for e in rows if e.get("outcome") in REVERT_OUTCOMES}
-    return [e for e in rows if e.get("outcome") == "promoted" and e.get("id") not in reverted]
+    live: dict = {}
+    for e in rows:
+        eid = e.get("id")
+        if e.get("outcome") == "promoted":
+            live[eid] = e
+        elif e.get("outcome") in REVERT_OUTCOMES:
+            live.pop(eid, None)
+    return list(live.values())
 
 
 def today_bjt() -> str:
