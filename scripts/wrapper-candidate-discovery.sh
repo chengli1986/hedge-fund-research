@@ -53,7 +53,7 @@ $(cat "$PROGRAM_MD")
 
 ## Session constraints (added by wrapper)
 - You have a MAXIMUM of 15 minutes for this session
-- Cost control: max 5 WebSearch, max 10 WebFetch, max 2 new seeds
+- Cost control: max 5 WebSearch, max 10 WebFetch, max 1 new seed
 - After all work, commit and push any changes
 - Output a brief summary at the end
 "
@@ -218,7 +218,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 sys.path.insert(0, os.environ.get("REPO_DIR", "."))
-from status_util import awaiting_auto_promote, days_since
+from status_util import awaiting_auto_promote, days_since, days_since_last_new_candidate
 from detect_stalled_candidates import DEFAULT_THRESHOLD_DAYS as STALL_THRESHOLD_DAYS
 
 BJT = timezone(timedelta(hours=8))
@@ -429,6 +429,11 @@ stats_bar = " &nbsp;·&nbsp; ".join([
     f'<span style="color:#57606a;font-weight:600">🌱 Seed {stats["seed"]}</span>',
     f'<span style="color:#57606a;font-weight:600">🔴 Rejected {stats["rejected"]}</span>',
 ])
+NEW_CANDIDATE_WARN_DAYS = 7
+gap = days_since_last_new_candidate(candidates, now_dt)
+gap_color = "#9a6700" if gap is None or gap > NEW_CANDIDATE_WARN_DAYS else "#57606a"
+stats_bar += (f' &nbsp;·&nbsp; <span style="color:{gap_color};font-weight:600">🆕 距上次新增候选 '
+              f'{"—" if gap is None else gap} 天</span>')
 
 body_sections = (
     section("🟢", "Production", "每日 pipeline 正在抓取", prod_items, "#1a7f37", show_fit=False)
@@ -463,7 +468,8 @@ html = f"""<html><body style="font-family:-apple-system,BlinkMacSystemFont,'Sego
   🔴 Rejected — 不适合（付费墙/零研究内容）<br>
   <strong>Fit（适配分）</strong>：规则引擎评分（域名可信度+路径结构+页面可访问性），反映「门好不好开」。≥70% 较高，50–70% 一般，&lt;50% 存在阻断。<br>
   <strong>Quality（内容质量）</strong>：LLM 深度分析评估研究价值，反映「门里有没有宝」。HIGH = 原创机构观点；MEDIUM = 一般资讯；LOW = 营销内容为主。<br>
-  <strong>⚠️ Nd 标记</strong>：候选卡在当前状态已 N 天（Seed/Discovery、Inaccessible 分组）。达到 {STALL_THRESHOLD_DAYS} 天会被下次运行自动分流（seed→discovered 重新尝试 / screen_failed→inaccessible+needs_playwright 转交 fetcher-synthesis），≥{STALL_THRESHOLD_DAYS * 2} 天标红提示已分流多轮仍未解决。<br>
+  <strong>⚠️ Nd 标记</strong>：候选卡在当前状态已 N 天（Seed/Discovery、Inaccessible 分组）。达到 {STALL_THRESHOLD_DAYS} 天会被下次运行自动分流（seed→discovered 重新尝试 / screen_failed→inaccessible+needs_playwright 转交 fetcher-synthesis），≥{STALL_THRESHOLD_DAYS * 2} 天标红提示已分流多轮仍未解决；没有研究页地址的 seed 满 7 天转 inaccessible，交给 fetcher-synthesis。<br>
+  <strong>🆕 距上次新增候选</strong>：按候选的 added_at（守卫在新候选出现那天写入）计算，超过 {NEW_CANDIDATE_WARN_DAYS} 天标黄——发现代理每次都应找新基金。<br>
   <em>💡 简单记忆：Fit 是「门好不好开」，Quality 是「门里有没有宝」。两者都高才是理想的 Production 候选。</em>
 </div>
 

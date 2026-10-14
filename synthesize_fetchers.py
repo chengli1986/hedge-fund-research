@@ -45,6 +45,14 @@ def load_fetcher_ids() -> set[str]:
     }
 
 
+def _parsed(ts) -> datetime:
+    try:
+        dt = datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+    except ValueError:
+        return datetime.max.replace(tzinfo=timezone.utc)
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+
 def list_targets() -> list[dict]:
     """Return candidates that need a synthesis attempt.
 
@@ -112,13 +120,17 @@ def list_targets() -> list[dict]:
             "notes": c.get("notes", ""),
             "needs_playwright": bool(c.get("needs_playwright")),
             "quality": c.get("quality", "?"),
+            "_waiting_since": _parsed(c.get("status_since")),
         })
 
     quality_order = {"HIGH": 0, "MEDIUM": 1, "?": 2, "LOW": 3}
     targets.sort(key=lambda t: (
         not t["needs_playwright"],
         quality_order.get(t["quality"], 2),
+        t["_waiting_since"],            # longest waiting first within a tier
     ))
+    for t in targets:
+        del t["_waiting_since"]
     # Priority candidates always come first (already sorted by insertion order)
     return priority_targets + targets
 

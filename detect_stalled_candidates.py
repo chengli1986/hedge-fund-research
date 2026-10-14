@@ -21,6 +21,14 @@ both gated on status_since >= --threshold-days:
     retries and hand it straight to the weekly fetcher-synthesis queue
     (which only picks up status="inaccessible").
 
+  - seed (no research_url) -> inaccessible, after NO_URL_SEED_DAYS
+    Stage1 found no research link on the homepage, or the homepage refused
+    us, every day for a week. Nothing here will ever give it a research_url,
+    so hand it to fetcher-synthesis, whose agent can look for the research
+    page itself (2026-10-14: six seeds sat 18-52 days, three rated HIGH).
+    needs_playwright is left unset: the synthesis queue serves needs_playwright
+    first, and a 403 or a missing nav link does not prove a browser helps.
+
 Every auto-action tags candidate.notes with an [auto-stall YYYY-MM-DD]
 marker for audit, same convention as guard_candidate_status.py's
 [guard: ...] marker.
@@ -47,6 +55,7 @@ BASE_DIR = Path(__file__).resolve().parent
 CANDIDATES_FILE = BASE_DIR / "config" / "fund_candidates.json"
 
 DEFAULT_THRESHOLD_DAYS = 3
+NO_URL_SEED_DAYS = 7
 
 
 def load_candidates() -> list[dict]:
@@ -83,6 +92,11 @@ def find_stalled(candidates: list[dict], threshold_days: int) -> list[dict]:
         if status == "seed" and c.get("research_url"):
             actions.append({
                 "id": c["id"], "from_status": status, "new_status": "discovered",
+                "days_stuck": days, "needs_playwright": False,
+            })
+        elif status == "seed" and days >= max(threshold_days, NO_URL_SEED_DAYS):
+            actions.append({
+                "id": c["id"], "from_status": status, "new_status": "inaccessible",
                 "days_stuck": days, "needs_playwright": False,
             })
         elif status == "screen_failed":

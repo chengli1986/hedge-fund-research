@@ -4,13 +4,14 @@ seed/screen_failed forever (2026-07-14 Nuveen/Longleaf/Lord Abbett/Invesco
 incident: 4 seed candidates stuck for weeks because stage1's httpx crawl has
 no JS-render fallback, discovered only by a manual audit).
 
-Two rules, both gated on status_since >= threshold days old:
+Three rules, gated on status_since >= threshold days old (7 for the third):
   - seed (with a confirmed research_url) -> discovered
     (unsticks the stage1 JS-blind-spot case; lets it flow through screen
     again next run instead of waiting forever for stage1 to succeed)
   - screen_failed -> inaccessible + needs_playwright
     (stage2 has been retrying and failing every day without progress; stop
     the pointless static retries and hand it to fetcher-synthesis)
+  - seed (no research_url) -> inaccessible, after NO_URL_SEED_DAYS (2026-10-14)
 """
 from datetime import datetime, timedelta, timezone
 
@@ -39,10 +40,13 @@ class TestFindStalled:
         assert actions[0]["id"] == "a"
         assert actions[0]["new_status"] == "discovered"
 
-    def test_seed_without_research_url_is_never_flagged(self):
-        # Nothing confirmed to retry against — not our call to force it forward.
-        candidates = [_c("a", "seed", _since(10))]
-        assert dsc.find_stalled(candidates, threshold_days=3) == []
+    def test_seed_without_research_url_goes_to_synthesis_after_a_week(self):
+        # Was "never flagged" (nothing confirmed to retry against) until
+        # 2026-10-14, when six such seeds had sat 18-52 days with no route
+        # out; fetcher-synthesis can look for the research page itself.
+        assert dsc.find_stalled([_c("a", "seed", _since(6))], threshold_days=3) == []
+        actions = dsc.find_stalled([_c("a", "seed", _since(10))], threshold_days=3)
+        assert [(a["new_status"], a["needs_playwright"]) for a in actions] == [("inaccessible", False)]
 
     def test_seed_under_threshold_is_not_flagged(self):
         candidates = [_c("a", "seed", _since(1), research_url="https://x.com/insights")]

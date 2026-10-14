@@ -137,6 +137,10 @@ def stamp_legal_status_changes(before: list[dict], after: list[dict], illegal: l
         if cid in illegal_ids:
             continue
         prev = before_by_id.get(cid)
+        if prev is None and not c.get("added_at"):
+            # The report's "days since the last new candidate" reads this;
+            # stamped here so it does not depend on the agent remembering.
+            c["added_at"] = now_iso()[:10]
         if prev is None or prev.get("status") != c.get("status"):
             c["status_since"] = now_iso()
             stamped.append(cid)

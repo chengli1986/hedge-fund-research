@@ -53,3 +53,14 @@ def awaiting_auto_promote(candidates: list[dict], production_ids: set[str]) -> l
     """
     return [c["id"] for c in candidates
             if c.get("status") == "promoted" and c["id"] not in production_ids]
+
+
+def days_since_last_new_candidate(candidates: list[dict], now: datetime | None = None) -> int | None:
+    """Whole days since the newest candidate's added_at (BJT date), or None
+    when no candidate carries one. The discovery report shows it so a run of
+    sessions that never look for new funds is visible (2026-10-14)."""
+    dates = [c["added_at"] for c in candidates if c.get("added_at")]
+    if not dates:
+        return None
+    today = (now or datetime.now(BJT)).astimezone(BJT).date()
+    return (today - datetime.fromisoformat(max(dates)).date()).days

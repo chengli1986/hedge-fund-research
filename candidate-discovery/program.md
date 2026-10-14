@@ -71,7 +71,7 @@ For each candidate that NEEDS analysis:
 
 ## Phase 3: Discover NEW candidates (beyond seed list)
 
-**Skip logic:** If ALL existing candidates have been deep-analyzed within 7 days, spend this session's budget on discovering new funds. Otherwise, prioritize analyzing existing un-analyzed candidates first.
+**Runs every session, with its own budget.** At least 2 WebSearch queries and 2 WebFetch calls belong to this phase in every session, whatever Phase 2 left undone: Phase 2 may use at most 6 of the 8 WebFetch calls. Stale candidates wait for the next session; looking for new funds does not. (Until 2026-10-14 this phase ran only when every candidate had been analysed within 7 days; with 72 candidates that seldom held, and on 09-17..10-13 new funds were searched for on about 5 days.) Finding nothing worth adding is a fine outcome — say what you searched for in the report. Skipping the searches is not.
 
 Use WebSearch to find additional hedge funds with public research:
 
@@ -109,8 +109,8 @@ Output a brief summary:
 - **NEVER** set `status` to `promoted`, `visitable`, `inaccessible`, or `screened` — not on existing candidates, and not on new seeds you just added yourself. Even for a brand-new seed you're confident is gated/thin, write `status: "seed"` and stop; do not also write `screening_reason`/`screening_signals`/`is_publicly_accessible`/`has_article_index`/`fit_score`. Those are Phase 1's job. Violations get silently auto-reverted by the guard, so getting this wrong wastes a whole session's work.
 - **NEVER** modify `config/sources.json` or `config/entrypoints.json` (production files)
 - **Maximum 1 new seed per session** (deliberate growth, not bulk expansion)
-- Maximum 3 WebSearch queries per session
-- Maximum 8 WebFetch calls per session
+- Maximum 3 WebSearch queries per session (at least 2 of them in Phase 3)
+- Maximum 8 WebFetch calls per session (at most 6 in Phase 2, the rest reserved for Phase 3)
 - **Maximum 4 deep analyses per session** — if more candidates need analysis, pick the 4 highest priority (never-analyzed first, then stalest `last_deep_analyzed_at`), defer the rest to the next session
 - If a page requires login/payment, mark as "rejected: gated content" and move on
 - Keep notes concise (1-2 sentences max)
