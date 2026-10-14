@@ -59,8 +59,15 @@ def days_since_last_new_candidate(candidates: list[dict], now: datetime | None =
     """Whole days since the newest candidate's added_at (BJT date), or None
     when no candidate carries one. The discovery report shows it so a run of
     sessions that never look for new funds is visible (2026-10-14)."""
-    dates = [c["added_at"] for c in candidates if c.get("added_at")]
+    # The agent can write added_at too; a value that is not an ISO date is
+    # skipped, not allowed to crash the report (review 2026-10-15).
+    dates = []
+    for c in candidates:
+        try:
+            dates.append(datetime.fromisoformat(str(c.get("added_at"))[:10]).date())
+        except ValueError:
+            continue
     if not dates:
         return None
     today = (now or datetime.now(BJT)).astimezone(BJT).date()
-    return (today - datetime.fromisoformat(max(dates)).date()).days
+    return (today - max(dates)).days

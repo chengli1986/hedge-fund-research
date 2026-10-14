@@ -368,3 +368,51 @@ def test_promote_today_keeps_a_promotion_made_again_after_a_revert(tmp_path):
     log.write_text("".join(_json.dumps(r) + "\n" for r in rows))
     live = pt.live_promotions(log, "2026-10-15")
     assert [(e["id"], e["commit"]) for e in live] == [("x", "ccc")]
+
+
+# ── 2026-10-15 review of this range (python-reviewer, each reproduced) ──────
+
+def test_a_report_that_crashes_fails_an_otherwise_clean_job(tmp_path):
+    sb = _discovery_sandbox(tmp_path)
+    (sb / "config" / "sources.json").write_text("{not json\n")   # the report reads it
+    out = _run_discovery(sb)
+    assert out.returncode != 0, out.stdout[-2000:]
+    assert "the report crashed" in out.stdout
+
+
+def test_an_agent_written_added_at_in_another_format_does_not_crash_the_report(tmp_path):
+    sb = _discovery_sandbox(tmp_path)
+    (sb / "config" / "fund_candidates.json").write_text(json.dumps([
+        {"id": "a", "status": "watchlist", "added_at": "Oct 14"},
+        {"id": "b", "status": "watchlist", "added_at": "2026-10-01"}]) + "\n")
+    out = _run_discovery(sb)
+    assert out.returncode == 0, out.stdout[-2000:]
+    import status_util
+    assert status_util.days_since_last_new_candidate(
+        [{"added_at": "Oct 14"}, {"added_at": "2026-10-01"}],
+        datetime(2026, 10, 15, 9, tzinfo=BJT)) == 14
+    assert status_util.days_since_last_new_candidate([{"added_at": "Oct 14"}]) is None
+
+
+def test_a_new_candidate_the_guard_reverts_to_seed_is_still_stamped():
+    import guard_candidate_status as g
+    before = [{"id": "old", "status": "watchlist"}]
+    after = before + [{"id": "new", "status": "promoted"}]
+    illegal = g.find_illegal_changes(before, after)
+    assert [x["id"] for x in illegal] == ["new"]
+    corrected = g.apply_corrections(after, illegal)
+    stamped = g.stamp_legal_status_changes(before, corrected, illegal)
+    new = next(c for c in corrected if c["id"] == "new")
+    assert new["status"] == "seed" and stamped == ["new"]
+    assert new.get("status_since") and new.get("added_at")
+
+
+def test_a_hung_check_is_could_not_check_not_a_crash(monkeypatch):
+    sys.path.insert(0, str(REPO / "scripts"))
+    import verify_promotions as vp
+
+    def hang(*a, **kw):
+        raise subprocess.TimeoutExpired(a[0], kw.get("timeout"))
+    monkeypatch.setattr(vp.subprocess, "run", hang)
+    assert vp.check_probe({"id": "x"})[0] == "error"
+    assert vp.check_validate({"id": "x", "commit": "abc"})[0] == "error"

@@ -505,10 +505,14 @@ try:
 except Exception as e:
     print(f"WARNING: Email failed: {e}")
 PYEOF
+REPORT_EXIT=$?
 
-# The job's exit is the work's, not the report's: until 2026-10-14 it was the
-# email step's, so on 09-13 (expired login) and 09-22 (API 500) the agent
-# failed and cron-wrapper recorded exit 0. A failed report stays a warning.
+# The job's exit is the work's first: until 2026-10-14 it was the email
+# step's, so on 09-13 (expired login) and 09-22 (API 500) the agent failed and
+# cron-wrapper recorded exit 0. A mail that SMTP refuses is caught above and
+# stays a warning; but a report that crashed while being built means nobody
+# got one, and that fails the job too once the work itself is clean (review
+# 2026-10-15: from 10-14 such a crash had exited 0).
 if [ "$EXIT_CODE" -ne 0 ]; then
     echo "$LOG_PREFIX Exiting $EXIT_CODE: the discovery agent failed"
     exit "$EXIT_CODE"
@@ -516,5 +520,9 @@ fi
 if [ "$TRIAL_EXIT" -ne 0 ]; then
     echo "$LOG_PREFIX Exiting $TRIAL_EXIT: the trial manager failed"
     exit "$TRIAL_EXIT"
+fi
+if [ "$REPORT_EXIT" -ne 0 ]; then
+    echo "$LOG_PREFIX Exiting $REPORT_EXIT: the report crashed and was not sent"
+    exit "$REPORT_EXIT"
 fi
 exit 0

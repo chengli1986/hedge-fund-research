@@ -69,15 +69,23 @@ def revert(e: dict, outcome: str, why: str, tag: str) -> str | None:
 
 def check_validate(e: dict) -> tuple[str, str]:
     """('ok'|'fail'|'error', detail) from the commit-message validator."""
-    proc = subprocess.run(["python3", VALIDATOR, "--commit", e["commit"], "--quiet"],
-                          capture_output=True, text=True, timeout=30)
+    try:
+        proc = subprocess.run(["python3", VALIDATOR, "--commit", e["commit"], "--quiet"],
+                              capture_output=True, text=True, timeout=30)
+    except subprocess.TimeoutExpired:
+        return "error", "validator timed out after 30s"
     detail = (proc.stdout or proc.stderr).strip()[:200]
     return {0: "ok", 1: "fail"}.get(proc.returncode, "error"), detail
 
 
 def check_probe(e: dict) -> tuple[str, str]:
-    proc = subprocess.run(["python3", HEALTH, "--source", e["id"], "--dry-run"],
-                          capture_output=True, text=True, timeout=180)
+    # A hung probe is "could not be checked", like a validator error: the
+    # other promotions are still checked and this one is named (2026-10-15).
+    try:
+        proc = subprocess.run(["python3", HEALTH, "--source", e["id"], "--dry-run"],
+                              capture_output=True, text=True, timeout=180)
+    except subprocess.TimeoutExpired:
+        return "error", "health probe timed out after 180s"
     return ("ok" if proc.returncode == 0 else "fail"), (proc.stderr or "")[-200:]
 
 

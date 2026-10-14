@@ -134,9 +134,13 @@ def stamp_legal_status_changes(before: list[dict], after: list[dict], illegal: l
     stamped: list[str] = []
     for c in after:
         cid = c.get("id")
-        if cid in illegal_ids:
-            continue
         prev = before_by_id.get(cid)
+        # A reverted existing candidate is back at its old status: nothing to
+        # stamp. A reverted NEW one is a new seed like any other and needs both
+        # stamps -- skipping it left it without status_since, so stall
+        # detection never routed it, and without added_at (review 2026-10-15).
+        if cid in illegal_ids and prev is not None:
+            continue
         if prev is None and not c.get("added_at"):
             # The report's "days since the last new candidate" reads this;
             # stamped here so it does not depend on the agent remembering.
