@@ -86,6 +86,13 @@ def backfill(planned_ids: list[str], run_start: str,
         if run_start_dt is not None and attempted_dt is not None \
                 and attempted_dt >= run_start_dt:
             continue
+        # A template passed this session (scripts/try_template.py --record),
+        # but the session ended before the success path set the status: not a
+        # failure. It stays inaccessible and is retargeted next session.
+        if run_start_dt is not None and any(
+                a.get("ok") and (_parse_iso(a.get("at")) or datetime.min.replace(tzinfo=timezone.utc)) >= run_start_dt
+                for a in c.get("template_attempts") or []):
+            continue
         # Otherwise the agent skipped / silently failed this target → mark failed.
         c["synthesis_attempted_at"] = now
         c["synthesis_outcome"] = "failed"

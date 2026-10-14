@@ -91,6 +91,12 @@ EOF
     全部是研究频道的简介，不是基金本身。
 - `notable_authors`：candidate 的 `notable_authors`，没有就 `[]`
 - `expected_hostname`：从 url 提取主域名（去掉 www. 与子域）
+- **手写抓取器的源另外**：加 `fetch_shape`，取值只能是 `card_list` / `rss_feed` / `api_json` /
+  `card_list_paginated` / `card_list_plus_page` / `sitemap_plus_page` / `attestation`
+  （见 `scripts/template_census.py`）；并在 `docs/listing-template-decisions.md` 的
+  `## HAND-WRITTEN — …` 表里加一行，写一句**为什么不能用模板**、改标题里的数字
+  （`tests/test_template_decisions_doc.py` 要求每个源恰好一行）。2026-10-11 Hamilton Lane
+  是代理被测试拦下后自己补的，这里此前没写。
 - **模板源（`has_template: true`）另外**：
   - `url` 用 candidate 的 `listing_url`（模板实际读的页面/feed），`expected_hostname` 用 candidate 的
     `expected_hostname`；`listing_template` **原样复制**，再加 `"listing_template_active": true`；
@@ -366,9 +372,9 @@ rm -f pending_profiles/FUNDID.json pending_profiles/FUNDID.validation.json
 
 成功路径：
 ```bash
-# publish.py 和 sources.json / fetch_content.py 总是要 add。
+# publish.py、sources.json、fetch_content.py 和决策文档总是要 add。
 # pending_profiles/FUNDID.json 仅在未 auto-graduate 时才存在 — 用条件 add。
-git add config/sources.json publish.py fetch_content.py
+git add config/sources.json publish.py fetch_content.py docs/listing-template-decisions.md
 if [ -f pending_profiles/FUNDID.json ]; then
     git add pending_profiles/FUNDID.json pending_profiles/FUNDID.validation.json
 fi
@@ -440,6 +446,9 @@ with log.open("a") as f:
 - `"failed_validation"` — wrapper 的 commit-msg 校验失败（Phase 6.5）自动 revert
 - `"deferred"` — `has_fetcher: false` 跳过（等 fetcher-synthesis）
 - `"auto_reverted"` — wrapper 的 post-commit health probe 检测异常自动 revert（见 Phase 7）
+- `"revert_failed"` — wrapper 的检查不通过，但 git revert 冲突、已 abort：源仍在线，需要人工处理
+
+wrapper 只要有一笔被 revert 或无法核验/回滚，整个任务就以 exit 3 结束，cron-wrapper 会发信（2026-10-14 起）。
 
 ## Phase 7 — Wrapper post-commit health probe（自动）
 

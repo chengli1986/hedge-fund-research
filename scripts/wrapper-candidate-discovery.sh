@@ -445,6 +445,11 @@ body_sections = (
     + section("🔴", "Rejected", "不适合纳入 pipeline", rejected, "#57606a")
 )
 
+agent_banner = "" if exit_code == 0 else (
+    '<div style="background:#ffebe9;border:1px solid #cf222e;border-radius:6px;padding:8px 14px;'
+    'margin:0 0 16px;font-size:13px;color:#cf222e;font-weight:600">'
+    f'⚠️ 发现代理本次失败（exit {exit_code}），深度分析与找新基金都没有完成；详见 gmia-candidate-discovery.log</div>')
+
 html = f"""<html><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;max-width:780px;margin:0 auto;padding:24px;color:#24292f">
 
 <h1 style="margin:0 0 2px;font-size:20px;font-weight:700;color:#1f2328">GMIA &mdash; Candidate Fund Discovery Report</h1>
@@ -453,6 +458,7 @@ html = f"""<html><body style="font-family:-apple-system,BlinkMacSystemFont,'Sego
 <div style="background:#f6f8fa;border:1px solid #d0d7de;border-radius:6px;padding:10px 16px;margin:0 0 20px;font-size:13px;line-height:1.8">
 {stats_bar}
 </div>
+{agent_banner}
 
 {body_sections}
 
@@ -488,6 +494,9 @@ msg["Message-ID"] = msg_id
 msg["MIME-Version"] = "1.0"
 msg.attach(MIMEText(html, "html"))
 
+if not os.environ.get("SMTP_USER") or not os.environ.get("SMTP_PASS"):
+    print("WARNING: SMTP not configured, report not sent")
+    sys.exit(0)
 try:
     with smtplib.SMTP_SSL("smtp.163.com", 465, timeout=30) as s:
         s.login(os.environ.get("SMTP_USER", ""), os.environ.get("SMTP_PASS", ""))
@@ -496,3 +505,16 @@ try:
 except Exception as e:
     print(f"WARNING: Email failed: {e}")
 PYEOF
+
+# The job's exit is the work's, not the report's: until 2026-10-14 it was the
+# email step's, so on 09-13 (expired login) and 09-22 (API 500) the agent
+# failed and cron-wrapper recorded exit 0. A failed report stays a warning.
+if [ "$EXIT_CODE" -ne 0 ]; then
+    echo "$LOG_PREFIX Exiting $EXIT_CODE: the discovery agent failed"
+    exit "$EXIT_CODE"
+fi
+if [ "$TRIAL_EXIT" -ne 0 ]; then
+    echo "$LOG_PREFIX Exiting $TRIAL_EXIT: the trial manager failed"
+    exit "$TRIAL_EXIT"
+fi
+exit 0

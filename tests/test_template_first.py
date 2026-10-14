@@ -148,9 +148,12 @@ def test_without_a_template_the_trial_is_unchanged(monkeypatch):
 
 # ── synthesis does not re-target a templated candidate ───────────────────────
 
-def test_a_templated_candidate_is_not_a_synthesis_target(monkeypatch):
+def test_a_templated_trial_pass_is_not_a_synthesis_target(monkeypatch):
+    # A trial-passed candidate with a template goes to auto-promote, not synthesis.
+    # An inaccessible one with a template IS a target since 2026-10-14: its
+    # template found nothing in the trial, or its session stopped before the
+    # status was set (tests/test_stage6_fixes_20261014.py).
     monkeypatch.setattr(synthesize_fetchers, "load_candidates", lambda: [
-        dict(CAND, listing_template=SPEC),
         dict(CAND, id="other"),
         dict(CAND, id="prio", status="promoted", synthesis_priority=True, listing_template=SPEC)])
     monkeypatch.setattr(synthesize_fetchers, "load_fetcher_ids", lambda: set())

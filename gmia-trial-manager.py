@@ -551,6 +551,18 @@ def _get_article_links_for_sampling(trial: dict) -> list[str]:
     source_id = trial["id"]
     fetchers = _load_fetchers()
 
+    # A templated candidate is sampled from its template, as it is counted
+    # (count_articles_with_fetcher): a page crawl may find nothing on a
+    # script-rendered page or a feed the template reads fine (2026-10-14).
+    templated = next((c for c in load_candidates()
+                      if c["id"] == source_id and c.get("listing_template")), None)
+    if templated is not None:
+        try:
+            rows = _listing_templates().fetch(_listing_templates().candidate_source(templated))
+            return [r["url"] for r in rows[:SAMPLE_SIZE * 10] if r.get("url")]
+        except Exception:
+            return []
+
     if source_id in fetchers:
         candidates = load_candidates()
         candidate = next((c for c in candidates if c["id"] == source_id), None)
@@ -741,6 +753,26 @@ The "overall" score should be: 0.4*relevance + 0.4*depth + 0.2*extractable.
 
 # ── queue logic ───────────────────────────────────────────────────────────────
 
+def _fixed_since(candidate: dict, verdict_date: str) -> bool:
+    """Did fetcher-synthesis succeed on this candidate after verdict_date (BJT date)?"""
+    if candidate.get("synthesis_outcome") != "success" or not verdict_date:
+        return False
+    try:
+        at = datetime.fromisoformat(str(candidate.get("synthesis_attempted_at")).replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    at = at if at.tzinfo else at.replace(tzinfo=timezone.utc)
+    return at.astimezone(BJT).strftime("%Y-%m-%d") > verdict_date
+
+
+def _retire_template(candidate: dict) -> None:
+    """A listing_template the trial found nothing with is not the candidate's
+    listing any more: keep it for the record, out of the trial and auto-promote's
+    way, so the next synthesis starts over (2026-10-14)."""
+    if candidate.get("listing_template"):
+        candidate["failed_listing_template"] = candidate.pop("listing_template")
+
+
 def get_trial_queue(state: dict) -> list[dict]:
     """Return validated HIGH/MEDIUM candidates not yet trialed, sorted by fit_score desc.
 
@@ -752,12 +784,16 @@ def get_trial_queue(state: dict) -> list[dict]:
     Same for outcome="inconclusive" (sampling never worked, no verdict reached):
     the candidate stays on watchlist, but if a human fixes the underlying issue
     and flips status back to "visitable", re-trial must not be blocked by history.
+    Same for a verdict that synthesis has since answered: a trial with 0
+    articles sends the candidate to fetcher-synthesis, whose success makes it
+    visitable "for a re-trial" -- which this history used to block forever
+    (2026-10-14). Only a synthesis success dated after the trial's end counts.
     """
     candidates = load_candidates()
-    trialed_ids = {
-        h["id"] for h in state.get("history", [])
-        if h.get("outcome") not in ("skipped", "inconclusive")
-    }
+    last_verdict: dict[str, str] = {}
+    for h in state.get("history", []):
+        if h.get("outcome") not in ("skipped", "inconclusive"):
+            last_verdict[h["id"]] = max(last_verdict.get(h["id"], ""), h.get("end_date") or "")
     active_ids = {t["id"] for t in state.get("active_trials", [])}
 
     queue = []
@@ -766,7 +802,7 @@ def get_trial_queue(state: dict) -> list[dict]:
             continue
         if c.get("quality") not in MIN_QUALITY:
             continue
-        if c["id"] in trialed_ids:
+        if c["id"] in last_verdict and not _fixed_since(c, last_verdict[c["id"]]):
             continue
         if c["id"] in active_ids:
             continue
@@ -1377,6 +1413,7 @@ def cmd_run() -> None:
                                 # status="inaccessible") so a Playwright fetcher
                                 # can be auto-synthesized next Sunday.
                                 set_status(c, "inaccessible")
+                                _retire_template(c)
                                 c["notes"] = (
                                     f"Trial failed: 0 articles detected across "
                                     f"{TRIAL_DAYS} days — site likely requires JS "
@@ -1437,10 +1474,10 @@ def cmd_run() -> None:
         slots_available = MAX_CONCURRENT_TRIALS - len(state["active_trials"])
         to_start = queue[:slots_available]
 
-        if not to_start:
-            if not state["active_trials"]:
-                print("[trial] No candidates queued for trial")
-            return
+        # No return here: until 2026-10-14 an empty queue returned before the
+        # daily summary below, so it went out once between 09-13 and 10-14.
+        if not to_start and not state["active_trials"]:
+            print("[trial] No candidates queued for trial")
 
         for next_candidate in to_start:
             print(f"[trial] Starting trial for {next_candidate['name']} "
@@ -1494,6 +1531,7 @@ def cmd_run() -> None:
                 for c in candidates:
                     if c["id"] == new_trial["id"]:
                         set_status(c, "inaccessible")
+                        _retire_template(c)
                         c["notes"] = ("Trial aborted on day 1: index reachable but "
                                       "no article links in static HTML — needs a "
                                       "fetcher. Routed to fetcher-synthesis queue.")

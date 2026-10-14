@@ -100,7 +100,11 @@ def list_targets() -> list[dict]:
             continue
         if c.get("quality") == "LOW":
             continue
-        if c["id"] in fetcher_ids or c.get("listing_template"):
+        # A listing_template does not exclude it here (it does above): an
+        # inaccessible candidate's template either found nothing in its trial
+        # (the trial retires it) or passed in a session that stopped before the
+        # status was set -- either way it needs another session (2026-10-14).
+        if c["id"] in fetcher_ids:
             continue
         last = c.get("synthesis_attempted_at")
         if last:

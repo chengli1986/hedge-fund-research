@@ -110,7 +110,8 @@ $(cat "$PROGRAM_MD")
 
 ## Session constraints (added by wrapper)
 - 最长 20 分钟
-- 最多处理 2 个基金
+- **本次只处理这几个基金，按此顺序：${PLANNED_IDS//,/, }**。不要换成列表里的其他基金：
+  session 结束后没被处理的这几个会被记一次失败（3 次即永久拒绝）
 - 注入 fetcher 后必须运行 pytest；若失败则回滚
 - 每次成功注入后立即 commit + push
 "

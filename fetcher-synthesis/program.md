@@ -13,8 +13,10 @@ cd /home/ubuntu/hedge-fund-research
 python3 synthesize_fetchers.py
 ```
 
-读取 JSON 输出，这是**目标列表**。每次最多处理 **2 个基金**。
-**优先顺序**：① `synthesis_priority=true` 的基金（trial 刚通过、等待最久，最高优先）；② HIGH quality；③ 其余。
+读取 JSON 输出，这是**目标列表**，已经按优先级排好（trial 刚通过的在前，其次需要浏览器的、质量高的、等得久的）。
+**处理哪几个以 wrapper 在末尾 Session constraints 里写的基金 ID 为准**，不要自己另挑：没被处理的
+计划目标会被记一次失败（2026-10-14 前这里写着另一套顺序，与 wrapper 认定的计划不一致）。
+手动运行、没有 Session constraints 时，取列表前 2 个。
 若列表为空，输出 "No targets" 并退出。
 
 > **`needs_playwright` 提示**：若某基金的 `needs_playwright=true`，表示 trial 期间 httpx
@@ -158,7 +160,7 @@ python3 -c "import fetch_articles; print('OK —', list(fetch_articles.FETCHERS.
 
 **Step D**：运行单元测试：
 ```bash
-python3 -m pytest tests/ -q --timeout=30 2>&1 | tail -5
+python3 -m pytest tests/ -q 2>&1 | tail -5
 ```
 若测试失败 → `git checkout fetch_articles.py` 回滚，将基金标记为 failed。
 
