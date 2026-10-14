@@ -232,9 +232,11 @@ def mark_gone(article_ids: list, data_file: Path | None = None) -> int:
     Returns the number of ids it refused.
     """
     import fetch_content as fc
+    import jsonl_store
 
     data_file = data_file or DATA_FILE
-    rows = [json.loads(l) for l in data_file.read_text(encoding="utf-8").splitlines() if l.strip()]
+    damaged: list[bytes] = []
+    rows, _ = jsonl_store.read_rows(data_file, require="id", keep_damaged=damaged)
     by_id = {r["id"]: r for r in rows}
     stamped, refused = 0, 0
     for aid in article_ids:
@@ -253,9 +255,10 @@ def mark_gone(article_ids: list, data_file: Path | None = None) -> int:
         stamped += 1
         print(f"  ✓ {aid} {row.get('source_id')}: {label}")
     if stamped:
-        tmp = data_file.with_name(data_file.name + ".tmp")
-        tmp.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
-        tmp.replace(data_file)
+        # Through jsonl_store like every other writer: its lock, and its merge
+        # of rows appended after the read above -- the pages are fetched in
+        # between, and a nightly append landing there was lost (2026-10-14).
+        jsonl_store.rewrite_rows(data_file, rows, preserve=damaged)
     print(f"marked {stamped} article(s) as withdrawn, refused {refused}")
     return refused
 

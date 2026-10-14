@@ -12,8 +12,19 @@ weeks.
 
 Run standalone for a digest:
     python3 scripts/gmia_liveness_audit.py
-Alert by email when any stage looks silently stalled (exit 1 on problems):
+Alert by email when any stage looks silently stalled:
     python3 scripts/gmia_liveness_audit.py --email
+
+Exit codes with --email (2026-10-14): 0 = nothing wrong, or every problem has been mailed
+(today or within REMIND_DAYS); 2 = a problem needed mailing and the mail did
+not go out; a crash exits 1. Without --email: 1 if any problem. The cron job runs WITHOUT --no-alert, so 1 and 2
+reach a person through cron-wrapper. Until then it always exited 1 on a
+problem under --no-alert: a failed mail, or a crash, was invisible.
+
+A problem is mailed once, then again only every REMIND_DAYS while it lasts
+(logs/liveness-alerted.json); one that clears and comes back is new. The
+10-11 synthesis failure was mailed every day for a week although nothing
+could change before the next weekly session.
 
 The check logic is deliberately split into pure functions (classify_staleness,
 scan_markers, newest_dt, ops_problems) so it is unit-tested without touching the
@@ -22,8 +33,10 @@ filesystem; the check_* wrappers do the I/O.
 from __future__ import annotations
 
 import argparse
+import gzip
 import json
 import re
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -40,6 +53,20 @@ SYNTHESIS_HISTORY = REPO / "logs" / "fetcher-synthesis-history.jsonl"
 # it exits 1 on any problem, cron-wrapper logs that exit=1, and re-reading its own
 # failure would create a self-perpetuating loop it could never recover from.
 SELF_JOB = "gmia-liveness-audit"
+ALERT_STATE = REPO / "logs" / "liveness-alerted.json"
+REMIND_DAYS = 7
+# Every GMIA cron job and the longest gap allowed between two of its runs, in
+# days (daily 1.5, weekly 8, monthly 32), judged from ops-status.jsonl, which
+# cron-wrapper writes for every run. Before 2026-10-14 only five stages were
+# watched, and the trial manager's silent month or a job whose cron line
+# vanished would never have shown here. A gmia job in the crontab that is not
+# listed here is reported, so this list cannot quietly fall behind.
+EXPECTED_JOBS = {
+    "gmia-daily": 1.5, "gmia-nightly-test": 1.5, "gmia-candidate-discovery": 1.5,
+    "gmia-fetcher-health": 1.5, "gmia-auto-promote": 1.5, "gmia-health-page": 1.5,
+    "gmia-fetcher-synthesis": 8, "gmia-content-audit": 8, "gmia-ab-gate": 8,
+    "gmia-profile-refresh": 32, "gmia-census": 32,
+}
 
 OK, STALE, BAIL = "OK", "STALE", "BAIL"
 
@@ -183,6 +210,57 @@ def ops_recovered(rows: Iterable[dict], jobs_prefix: str, now: datetime,
     return out
 
 
+def stale_jobs(rows: Iterable[dict], expected: dict[str, float],
+               now: datetime) -> list[dict]:
+    """Expected jobs with no run (any row with an exit field) within their gap."""
+    last: dict[str, datetime] = {}
+    for r in rows:
+        if r.get("event") == "alert" or "exit" not in r:
+            continue
+        dt = parse_iso(str(r.get("ts", "")))
+        job = str(r.get("job", ""))
+        if dt and job in expected and (job not in last or dt > last[job]):
+            last[job] = dt
+    out = []
+    for job, gap in expected.items():
+        status, age = classify_staleness(now, last.get(job), gap)
+        if status == STALE:
+            out.append({"job": job, "age_days": age, "gap": gap})
+    return out
+
+
+def crontab_jobs(text: str) -> set[str]:
+    """gmia job names (--name) on the crontab's active lines."""
+    names = set()
+    for line in text.splitlines():
+        if line.strip().startswith("#"):
+            continue
+        m = re.search(r"--name\s+(gmia-[\w-]+)", line)
+        if m:
+            names.add(m.group(1))
+    return names
+
+
+def plan_alert(problems: list[dict], state: dict, now: datetime,
+               remind_days: float = REMIND_DAYS) -> tuple[list[str], dict]:
+    """(keys to mail now, state to save once the mail has gone).
+
+    A key is mailed when it is new or was last mailed remind_days ago; keys no
+    longer among the problems drop out of the state, so a recurrence is new."""
+    due, new_state = [], {}
+    for v in problems:
+        key = v["key"]
+        seen = state.get(key) or {}
+        last = parse_iso(str(seen.get("last_alerted", "")))
+        if last is None or (now - last).total_seconds() / 86400.0 >= remind_days:
+            due.append(key)
+            new_state[key] = {"first_alerted": seen.get("first_alerted") or now.isoformat(),
+                              "last_alerted": now.isoformat()}
+        else:
+            new_state[key] = seen
+    return due, new_state
+
+
 # ----------------------------------------------------------------------------
 # I/O helpers
 # ----------------------------------------------------------------------------
@@ -199,6 +277,33 @@ def _read_jsonl(path: Path) -> list[dict]:
         except json.JSONDecodeError:
             continue
     return rows
+
+
+def _read_ops_history() -> list[dict]:
+    """ops-status.jsonl plus its weekly rotations (.N.gz, about 8 weeks).
+
+    The current file alone starts at the last rotation, so a 3-day window read
+    the day after it missed two days, and a monthly job is never in it."""
+    rows = _read_jsonl(LOG_DIR / "ops-status.jsonl")
+    for p in sorted(LOG_DIR.glob("ops-status.jsonl.*.gz")):
+        try:
+            text = gzip.open(p, "rt", errors="replace").read()
+        except (OSError, EOFError):
+            continue
+        for line in text.splitlines():
+            try:
+                rows.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    return rows
+
+
+def _read_crontab() -> Optional[str]:
+    try:
+        r = subprocess.run(["crontab", "-l"], capture_output=True, text=True, timeout=10)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return r.stdout if r.returncode == 0 else None
 
 
 def _read_log_tail(basename: str, max_bytes: int = 200_000) -> str:
@@ -224,8 +329,12 @@ def _file_mtime(path: Path) -> Optional[datetime]:
 # Stage checks (I/O) -> Verdict dict
 # ----------------------------------------------------------------------------
 def _verdict(stage: str, status: str, detail: str,
-             age_days: Optional[float] = None) -> dict:
-    return {"stage": stage, "status": status, "detail": detail, "age_days": age_days}
+             age_days: Optional[float] = None, key: Optional[str] = None) -> dict:
+    """key names the problem for the mail-once rule: stage+status by default
+    (the detail carries an age that changes daily); a check that can tell one
+    incident from the next (a failed run's timestamp) puts that in."""
+    return {"stage": stage, "status": status, "detail": detail, "age_days": age_days,
+            "key": key or f"{stage}:{status}"}
 
 
 def check_fetch(now: datetime) -> dict:
@@ -271,7 +380,9 @@ def check_synthesis(now: datetime) -> dict:
     bail = scan_markers(_read_log_tail("gmia-fetcher-synthesis"), LOCK_BAIL_MARKERS)
     status, age, detail = decide_synthesis(now, last, bail, threshold_days=9,
                                            agent_exit=agent_exit)
-    return _verdict("fetcher-synthesis", status, detail, age)
+    # The session is the incident: the next session failing too is news.
+    key = f"fetcher-synthesis:{status}:{last.isoformat() if last else ''}"
+    return _verdict("fetcher-synthesis", status, detail, age, key=key)
 
 
 def check_profile_refresh(now: datetime) -> dict:
@@ -329,12 +440,13 @@ def check_discovery(now: datetime) -> dict:
     return _verdict("candidate-discovery", STALE, d, age)
 
 
-def check_ops(now: datetime) -> list[dict]:
-    rows = _read_jsonl(LOG_DIR / "ops-status.jsonl")
+def check_ops(now: datetime, rows: Optional[list[dict]] = None) -> list[dict]:
+    rows = _read_ops_history() if rows is None else rows
     kwargs = dict(window_days=3, exclude={SELF_JOB})
     verdicts = [
         _verdict(f"cron:{p['job']}", BAIL,
-                 f"{', '.join(p['reasons'])} at {p['ts']}")
+                 f"{', '.join(p['reasons'])} at {p['ts']}",
+                 key=f"cron:{p['job']}:{p['ts']}")
         for p in ops_problems(rows, "gmia", now, **kwargs)
     ]
     verdicts.extend(
@@ -346,6 +458,34 @@ def check_ops(now: datetime) -> list[dict]:
     return verdicts
 
 
+def check_jobs_ran(now: datetime, rows: Optional[list[dict]] = None,
+                   crontab: Optional[str] = "read") -> list[dict]:
+    """Every expected job ran within its gap, is still in the crontab, and the
+    crontab has no gmia job this list does not watch. crontab=None: unreadable
+    (skipped, reported)."""
+    rows = _read_ops_history() if rows is None else rows
+    crontab = _read_crontab() if crontab == "read" else crontab
+    out = [
+        _verdict(f"ran:{s['job']}", STALE,
+                 ("no run on record" if s["age_days"] is None
+                  else f"last run {s['age_days']:.1f}d ago (>{s['gap']:g}d)"),
+                 s["age_days"])
+        for s in stale_jobs(rows, EXPECTED_JOBS, now)
+    ]
+    if crontab is None:
+        out.append(_verdict("crontab", STALE, "crontab -l failed; job list not checked"))
+        return out
+    listed = crontab_jobs(crontab)
+    for job in sorted(set(EXPECTED_JOBS) - listed):
+        out.append(_verdict(f"ran:{job}", STALE, "not in the crontab any more",
+                            key=f"ran:{job}:missing"))
+    for job in sorted(listed - set(EXPECTED_JOBS) - {SELF_JOB}):
+        out.append(_verdict(f"ran:{job}", STALE,
+                            "in the crontab but not watched: add it to EXPECTED_JOBS",
+                            key=f"ran:{job}:unwatched"))
+    return out
+
+
 CHECKS: list[Callable[[datetime], dict]] = [
     check_fetch, check_synthesis, check_profile_refresh,
     check_fetcher_health, check_discovery,
@@ -355,7 +495,9 @@ CHECKS: list[Callable[[datetime], dict]] = [
 def run_audit(now: Optional[datetime] = None) -> list[dict]:
     now = now or datetime.now(timezone.utc)
     verdicts = [c(now) for c in CHECKS]
-    verdicts.extend(check_ops(now))
+    rows = _read_ops_history()
+    verdicts.extend(check_ops(now, rows))
+    verdicts.extend(check_jobs_ran(now, rows))
     return verdicts
 
 
@@ -370,14 +512,24 @@ def render_text(verdicts: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def render_html(verdicts: list[dict]) -> str:
+def render_html(verdicts: list[dict], state: Optional[dict] = None,
+                due: Optional[list[str]] = None) -> str:
+    """state/due: problems not due today are tagged with when they were first mailed."""
     import html as _html
     color = {OK: "#2e7d32", STALE: "#e65100", BAIL: "#c62828"}
+    state, due = state or {}, set(due or [])
+
+    def seen(v: dict) -> str:
+        if v["status"] == OK or v["key"] in due or v["key"] not in state:
+            return ""
+        first = str(state[v["key"]].get("first_alerted", ""))[:10]
+        return f' <span style="color:#888">(已报过，首次 {_html.escape(first)})</span>'
+
     rows = "".join(
         f'<tr><td style="padding:4px 10px;color:{color[v["status"]]};'
         f'font-weight:bold">{v["status"]}</td>'
         f'<td style="padding:4px 10px">{_html.escape(v["stage"])}</td>'
-        f'<td style="padding:4px 10px">{_html.escape(v["detail"])}</td></tr>'
+        f'<td style="padding:4px 10px">{_html.escape(v["detail"])}{seen(v)}</td></tr>'
         for v in verdicts
     )
     return (
@@ -413,25 +565,55 @@ def main(argv=None) -> int:
                     help="email even when everything is OK")
     args = ap.parse_args(argv)
 
-    verdicts = run_audit()
+    now = datetime.now(timezone.utc)
+    verdicts = run_audit(now)
     print(render_text(verdicts))
     problems = [v for v in verdicts if v["status"] != OK]
+    state = load_alert_state()
+    due, new_state = plan_alert(problems, state, now)
+    if problems and not due:
+        print(f"all {len(problems)} problem(s) already mailed within {REMIND_DAYS}d; not mailing")
 
-    if (args.always_email or (args.email and problems)):
-        try:
-            _load_env_file(Path.home() / ".stock-monitor.env")
-            sys.path.insert(0, str(REPO / "scripts"))
-            from send_synthesis_summary import send_email  # type: ignore
-            subject = (
-                f"⚠️ GMIA liveness: {len(problems)} stage(s) silently stalled"
-                if problems else "✅ GMIA liveness: all stages OK"
-            )
-            send_email(render_html(verdicts), subject)
-        except Exception as exc:  # noqa: BLE001 — alert failure must not mask verdict
-            print(f"WARNING: liveness email failed: {exc}")
+    if not (args.email or args.always_email):
+        return 1 if problems else 0          # a run by hand: the verdict itself
+    if not (args.always_email or due):
+        save_alert_state(new_state)          # drops cleared problems
+        return 0
+    sent = False
+    try:
+        _load_env_file(Path.home() / ".stock-monitor.env")
+        sys.path.insert(0, str(REPO / "scripts"))
+        from send_synthesis_summary import send_email  # type: ignore
+        subject = (
+            f"⚠️ GMIA liveness: {len(due)} new problem(s), {len(problems)} open"
+            if problems else "✅ GMIA liveness: all stages OK"
+        )
+        sent = send_email(render_html(verdicts, state, due), subject)
+    except Exception as exc:  # noqa: BLE001 — reported through the exit code below
+        print(f"WARNING: liveness email failed: {exc}")
+    if not sent:
+        print("ERROR: the liveness mail did not go out; exit 2 so cron-wrapper alerts")
+        return 2 if due else 0
+    if args.email:
+        save_alert_state(new_state)
+    return 0
 
-    # Non-zero exit so a cron-wrapper / caller can react to silent stalls.
-    return 1 if problems else 0
+
+def load_alert_state(path: Optional[Path] = None) -> dict:
+    path = path or ALERT_STATE
+    try:
+        data = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def save_alert_state(state: dict, path: Optional[Path] = None) -> None:
+    path = path or ALERT_STATE
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(json.dumps(state, indent=1, ensure_ascii=False) + "\n")
+    tmp.replace(path)
 
 
 if __name__ == "__main__":

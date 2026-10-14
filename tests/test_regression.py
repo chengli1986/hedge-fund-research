@@ -6,11 +6,16 @@ from urllib.parse import urlparse
 pytestmark = pytest.mark.nightly
 
 def _fetch_all_sources():
+    """Each source through listing_fetcher, the function the nightly run uses.
+
+    FETCHERS[id] directly (until 2026-10-14) ran the hand-written fetcher of
+    the 19 sources switched to a listing template -- code production no
+    longer runs; the health probe had the same bug, fixed 2026-09-26."""
     config = json.loads((Path(__file__).parent.parent / "config" / "sources.json").read_text())
-    from fetch_articles import FETCHERS
+    from fetch_articles import listing_fetcher
     results = {}
     for src in config["sources"]:
-        fetcher = FETCHERS.get(src["id"])
+        fetcher = listing_fetcher(src)
         if fetcher:
             try:
                 results[src["id"]] = fetcher(src)
@@ -72,15 +77,21 @@ class TestDataQuality:
 
 class TestApiHealth:
     def test_gmo_api_returns_json(self):
+        # Same request as fetch_gmo: without the Referer the API answers 500,
+        # which this test skipped as an "upstream outage" every night for
+        # months while production fetched GMO fine (found 2026-10-14).
         import requests
         from bs4 import BeautifulSoup
-        resp = requests.get("https://www.gmo.com/americas/research-library/",
+        from fetch_articles import HEADERS
+        page = "https://www.gmo.com/americas/research-library/"
+        resp = requests.get(page, headers=HEADERS,
                            cookies={"GMO_region": "NorthAmerica"}, timeout=30)
         soup = BeautifulSoup(resp.text, "html.parser")
         grid = soup.select_one("section.article-grid[data-endpoint]")
         assert grid, "GMO article-grid not found"
         api_url = "https://www.gmo.com" + grid["data-endpoint"] + "&currentPage=1"
-        api_resp = requests.get(api_url, cookies={"GMO_region": "NorthAmerica"}, timeout=30)
+        api_resp = requests.get(api_url, headers={**HEADERS, "Referer": page},
+                                cookies={"GMO_region": "NorthAmerica"}, timeout=30)
         if api_resp.status_code >= 500:
             pytest.skip(f"GMO API returned {api_resp.status_code} (upstream outage)")
         assert api_resp.status_code == 200
