@@ -350,3 +350,21 @@ def test_a_clean_revert_is_recorded_even_when_the_push_fails(tmp_path, monkeypat
     assert json.loads((tmp_path / "s.json").read_text()) == {"sources": []}
     row = json.loads((tmp_path / "logs/auto-promote-history.jsonl").read_text())
     assert row["outcome"] == "auto_reverted" and row["reverted_commit"] == sha
+
+
+def test_promote_today_keeps_a_promotion_made_again_after_a_revert(tmp_path):
+    """promoted -> reverted -> promoted again the same day (a re-run by hand):
+    the last promotion stands and is the one checked (CRA finding, 2026-10-15)."""
+    import json as _json
+    import sys as _sys
+    _sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+    import promote_today as pt
+    log = tmp_path / "h.jsonl"
+    rows = [{"date": "2026-10-15", "id": "x", "outcome": "promoted", "commit": "aaa"},
+            {"date": "2026-10-15", "id": "x", "outcome": "auto_reverted", "commit": "bbb"},
+            {"date": "2026-10-15", "id": "x", "outcome": "promoted", "commit": "ccc"},
+            {"date": "2026-10-15", "id": "y", "outcome": "promoted", "commit": "ddd"},
+            {"date": "2026-10-15", "id": "y", "outcome": "failed_validation", "commit": "eee"}]
+    log.write_text("".join(_json.dumps(r) + "\n" for r in rows))
+    live = pt.live_promotions(log, "2026-10-15")
+    assert [(e["id"], e["commit"]) for e in live] == [("x", "ccc")]

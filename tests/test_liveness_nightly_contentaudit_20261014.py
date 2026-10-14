@@ -240,3 +240,12 @@ def test_mark_gone_keeps_a_row_appended_while_it_fetched(tmp_path, monkeypatch):
     rows = [json.loads(l) for l in lines if l.startswith("{\"")]
     assert {r["id"]: r.get("url_status") for r in rows} == {"a1": "gone", "NEW": None}
     assert "{torn" in lines                       # damaged line kept as evidence
+
+
+def test_a_mailer_that_returns_nothing_is_not_taken_as_sent(liveness):
+    # send_email returns True/False; None would mean a mailer that no longer
+    # says. 2026-10-15 an auto-fix turned "if not sent" into "if sent is False"
+    # on the claim that send_email returned None on success -- it does not.
+    liveness["ok"] = None
+    assert la.main(["--email"]) == 2
+    assert not la.ALERT_STATE.exists()
