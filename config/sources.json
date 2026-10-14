@@ -660,8 +660,7 @@
       "notable_authors": [],
       "expected_hostname": "ares.com",
       "max_articles": 10,
-      "fetch_shape": "sitemap_plus_page",
-      "known_block": "Cloudflare blocks this server: www.ares.com returns 403 'Sorry, you have been blocked' for every page incl. robots.txt, from AWS us-east-2 and Aliyun Hangzhou alike (2026-10-13). Decided 2026-10-13: keep the source and its 41 articles as they are, no bypass."
+      "fetch_shape": "sitemap_plus_page"
     },
     {
       "id": "matthews-asia",

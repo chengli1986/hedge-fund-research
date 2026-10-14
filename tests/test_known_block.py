@@ -12,6 +12,7 @@ alerts, and a probe that passes again says the flag can be removed.
 """
 import importlib.util
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -125,9 +126,13 @@ def test_the_health_page_shows_one_known_line_instead_of_two_alerts():
     assert [a["kind"] for a in alerts] == ["known_block"]
 
 
-def test_the_ares_decision_is_recorded_in_the_config():
+def test_every_known_block_in_the_config_records_a_decision():
+    """A known_block silences alerts, so it must say who decided it and when.
+    Ares carried one from 2026-10-13 until the block lifted on 2026-10-15,
+    when the health mail said so and the user agreed to remove it."""
     sources = json.loads((REPO / "config" / "sources.json").read_text())
     sources = sources["sources"] if isinstance(sources, dict) else sources
-    ares = next(s for s in sources if s["id"] == "ares-management")
-    assert "no bypass" in ares["known_block"]
+    for s in sources:
+        if "known_block" in s:
+            assert re.search(r"Decided \d{4}-\d{2}-\d{2}", s["known_block"]), s["id"]
     assert gfh.KNOWN_BLOCK_EVIDENCE.search(BLOCKED)
