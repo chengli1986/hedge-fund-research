@@ -170,6 +170,10 @@ class TestTheWiringItself:
         monkeypatch.setattr(gfh, "STATE_FILE", tmp_path / "health.json")
         monkeypatch.setattr(gfh, "load_sources", lambda: [self.SOURCE])
         monkeypatch.setattr(gfh, "probe_source", lambda src: dict(self.OK_PROBE))
+        # Production articles/ledger, as the sibling tests stub them: a real
+        # first-seen label (ark-invest, 2026-10-16) turned the clean run red.
+        monkeypatch.setattr(gfh, "recent_analysis_declines", lambda *a, **k: [])
+        monkeypatch.setattr(gfh, "load_quality", lambda *a, **k: None)
         sent = {}
         monkeypatch.setattr(gfh, "send_email",
                             lambda body, subject: sent.update(body=body, subject=subject) or True)

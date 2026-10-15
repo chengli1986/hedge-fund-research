@@ -138,7 +138,8 @@
           "market insights"
         ]
       },
-      "listing_template_active": true
+      "listing_template_active": true,
+      "known_block": "Article pages refuse this server: every www.ark-invest.com/articles|videos page returns 403 (blocked_by_bot_protection) since 2026-10-13, re-checked daily to 2026-10-16; the RSS feed and robots.txt still answer 200, so new articles are listed with title only. Decided 2026-10-16: keep the source as is, no bypass."
     },
     {
       "id": "cambridge-associates",
