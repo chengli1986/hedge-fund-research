@@ -3481,7 +3481,7 @@
     "name": "Fulcrum Asset Management",
     "homepage_url": "https://www.fulcrumasset.com",
     "source": "manual",
-    "status": "seed",
+    "status": "inaccessible",
     "strategy_tags": [
       "macro",
       "multi_asset",
@@ -3492,12 +3492,12 @@
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-10-15T09:00:08.250466+08:00",
-    "status_since": "2026-08-22T09:03:32.572404+08:00",
+    "status_since": "2026-10-15T09:00:39.952774+08:00",
     "last_deep_analyzed_at": "2026-10-06T01:00:39Z",
     "quality": "HIGH",
     "quality_score": 0.8,
     "topics": "macro, multi-asset, alternative credit, FX",
-    "notes": "Quant macro/LLM research, ~monthly; latest 2026-08",
+    "notes": "[auto-stall 2026-10-15] seed->inaccessible after 53d stuck Quant macro/LLM research, ~monthly; latest 2026-08",
     "added_at": "2026-08-22"
   },
   {
@@ -3599,7 +3599,7 @@
     "name": "Muzinich & Co",
     "homepage_url": "https://www.muzinich.com/opinions",
     "source": "manual",
-    "status": "seed",
+    "status": "inaccessible",
     "strategy_tags": [
       "fixed_income",
       "private_credit",
@@ -3610,11 +3610,11 @@
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-10-15T09:00:08.643495+08:00",
-    "status_since": "2026-08-25T09:03:39.585223+08:00",
+    "status_since": "2026-10-15T09:00:39.952786+08:00",
     "quality": "MEDIUM",
     "quality_score": 0.62,
     "topics": "credit, high yield, EM, CLOs, macro",
-    "notes": "Weekly credit comment; short pieces, T&C gate",
+    "notes": "[auto-stall 2026-10-15] seed->inaccessible after 50d stuck Weekly credit comment; short pieces, T&C gate",
     "last_deep_analyzed_at": "2026-10-11T01:00:53Z",
     "added_at": "2026-08-25"
   },
@@ -3623,17 +3623,17 @@
     "name": "Capital Fund Management (CFM)",
     "homepage_url": "https://www.cfm.com",
     "source": "manual",
-    "status": "seed",
+    "status": "inaccessible",
     "strategy_tags": [
       "quant",
       "macro"
     ],
-    "status_since": "2026-08-28T09:02:28.706616+08:00",
+    "status_since": "2026-10-15T09:00:39.952790+08:00",
     "last_deep_analyzed_at": "2026-10-05T01:00:40Z",
     "quality": "HIGH",
     "quality_score": 0.85,
     "topics": "quant, market microstructure, systematic trading",
-    "notes": "RECOMMEND: quant/macro research, sampled article solid",
+    "notes": "[auto-stall 2026-10-15] seed->inaccessible after 47d stuck RECOMMEND: quant/macro research, sampled article solid",
     "official_domain": "www.cfm.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
@@ -3765,7 +3765,7 @@
     "name": "Graham Capital Management",
     "homepage_url": "https://www.grahamcapital.com",
     "source": "manual",
-    "status": "seed",
+    "status": "inaccessible",
     "strategy_tags": [
       "macro",
       "quant",
@@ -3776,12 +3776,12 @@
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-10-12T09:00:10.807489+08:00",
-    "status_since": "2026-09-05T09:04:28.857065+08:00",
+    "status_since": "2026-10-15T09:00:39.952792+08:00",
     "last_deep_analyzed_at": "2026-10-11T01:00:53Z",
     "quality": "MEDIUM",
     "quality_score": 0.6,
     "topics": "macro, trend-following, quant, volatility",
-    "notes": "Quant/macro primers; no dates listed, some login",
+    "notes": "[auto-stall 2026-10-15] seed->inaccessible after 39d stuck Quant/macro primers; no dates listed, some login",
     "added_at": "2026-09-05"
   },
   {
@@ -3888,17 +3888,17 @@
     "name": "CBRE Investment Management",
     "homepage_url": "https://www.cbreim.com/insights",
     "source": "manual",
-    "status": "seed",
+    "status": "inaccessible",
     "strategy_tags": [
       "real_assets",
       "macro"
     ],
-    "status_since": "2026-09-11T09:07:45.215654+08:00",
+    "status_since": "2026-10-15T09:00:39.952794+08:00",
     "last_deep_analyzed_at": "2026-10-12T01:00:37Z",
     "quality": "HIGH",
     "quality_score": 0.75,
     "topics": "real assets, infrastructure, macro, real estate",
-    "notes": "RECOMMEND: ~weekly real assets/macro; bot 403, needs PW",
+    "notes": "[auto-stall 2026-10-15] seed->inaccessible after 33d stuck RECOMMEND: ~weekly real assets/macro; bot 403, needs PW",
     "added_at": "2026-09-11"
   },
   {
@@ -3930,19 +3930,19 @@
     "name": "Ninety One",
     "homepage_url": "https://ninetyone.com/en/insights",
     "source": "manual",
-    "status": "seed",
+    "status": "inaccessible",
     "strategy_tags": [
       "emerging_markets",
       "macro",
       "equity",
       "fixed_income"
     ],
-    "status_since": "2026-09-25T09:00:56.177229+08:00",
+    "status_since": "2026-10-15T09:00:39.952796+08:00",
     "last_deep_analyzed_at": "2026-10-05T01:00:40Z",
     "quality": "MEDIUM",
     "quality_score": 0.55,
     "topics": "emerging markets, macro, equity, fixed income",
-    "notes": "EM-focused insights; WAF 403, articles unverified",
+    "notes": "[auto-stall 2026-10-15] seed->inaccessible after 19d stuck EM-focused insights; WAF 403, articles unverified",
     "added_at": "2026-09-25"
   },
   {
