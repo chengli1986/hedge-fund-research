@@ -4059,5 +4059,20 @@
     "topics": "fixed income, macro, credit, EM",
     "notes": "RECOMMEND: Active macro/credit research, data-rich",
     "added_at": "2026-10-07"
+  },
+  {
+    "id": "ariel-investments",
+    "name": "Ariel Investments",
+    "homepage_url": "https://www.arielinvestments.com",
+    "source": "manual",
+    "status": "seed",
+    "strategy_tags": [
+      "equity"
+    ],
+    "rss_url": "https://www.arielinvestments.com/feed/",
+    "official_domain": "www.arielinvestments.com",
+    "research_links": [],
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-10-17T09:00:38.600064+08:00"
   }
 ]
