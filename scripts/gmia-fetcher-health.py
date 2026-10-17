@@ -412,8 +412,11 @@ def _probe_once(source: dict) -> dict:
             # "selector regression" and the transient retry never ran).
             # The wrapper keeps the fetcher's warnings and responses;
             # failure_labels turns them into the label stage 2 would log.
+            # content_fetcher_for, as stage 2 picks it: a PDF URL goes to the
+            # PDF reader whatever its source (partners-group, 2026-10-17).
             outcome, evidence = fetch_content.fetch_with_evidence(
-                probe_article, content_fetcher)
+                probe_article,
+                fetch_content.content_fetcher_for({**probe_article, "source_id": sid}))
             if outcome is None:
                 label, detail = failure_labels.classify_content_failure(evidence)
                 # Playwright details carry a multi-line call log; one line for the email.

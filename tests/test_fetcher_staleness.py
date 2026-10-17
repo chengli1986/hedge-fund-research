@@ -139,6 +139,13 @@ class _FakeFetchContent:
         # /tmp directly, so what it redirects is the real module's global.
         return _real_fetch_content.isolated_content_dir(prefix=prefix)
 
+    def content_fetcher_for(self, article):
+        # The real dispatch rule over this fake's table: a .pdf URL goes to
+        # the real PDF reader, anything else to the source's own fetcher.
+        if _real_fetch_content._is_pdf_url(article.get("url", "")):
+            return _real_fetch_content._fetch_content_pdf_url
+        return self.CONTENT_FETCHERS[article["source_id"]]
+
     def fetch_with_evidence(self, article, fetcher):
         # The real wrapper: it only needs `requests` and the real module's
         # logger, so the probe is exercised against the same evidence contract

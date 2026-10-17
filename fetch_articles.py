@@ -29,7 +29,7 @@ import time
 from datetime import datetime, timezone, timedelta, date as date_cls
 from pathlib import Path
 from typing import Optional
-from urllib.parse import unquote, urlsplit, urlunsplit, urljoin, urlparse
+from urllib.parse import parse_qs, quote, unquote, urlsplit, urlunsplit, urljoin, urlparse
 
 import jsonl_store
 import listing_templates
@@ -3018,6 +3018,17 @@ def fetch_principal_am(source: dict) -> list[dict]:
     return articles[:max_articles]
 
 
+def _partners_group_pdf_url(base: str, href: str) -> str | None:
+    """The PDF behind a ``/pdf-viewer.aspx?src=<path>.pdf`` card, or None."""
+    parts = urlsplit(href)
+    if not parts.path.lower().endswith("/pdf-viewer.aspx"):
+        return None
+    src = (parse_qs(parts.query).get("src") or [""])[0]
+    if not src.lower().endswith(".pdf"):
+        return None
+    return urljoin(base, quote(src, safe="/~:%"))
+
+
 def fetch_partners_group(source: dict) -> list[dict]:
     """Fetch articles from Partners Group Perspectives (SSR).
 
@@ -3028,9 +3039,13 @@ def fetch_partners_group(source: dict) -> list[dict]:
 
     Two kinds of cards share the same markup: article pages under
     ``/news-and-views/perspective/<slug>`` and PDF downloads pointing at
-    ``/pdf-viewer.aspx``. Only the former have extractable body text, so we
-    filter on the path. A couple of cards also link back to section indexes
-    (e.g. ``/news-and-views/videos``) — the same path filter drops those.
+    ``/pdf-viewer.aspx?...&src=<file>.pdf``. Both are kept; a PDF card is
+    stored as the direct file URL (``_partners_group_pdf_url``) so
+    fetch_content reads it as a PDF. Until 2026-10-17 PDF cards were dropped
+    as "no extractable body" -- about half the listing (quarterly Chartbooks,
+    credit commentary), incl. the 2026-10-06 Chartbook, which extracts 25k
+    chars. Cards linking to section indexes (``/news-and-views/videos``) are
+    still dropped.
 
     ``strptime("%d.%m.%Y")`` rather than ``parse_date()``: the dotted format
     isn't in parse_date's list, and normalising to slashes would let the
@@ -3056,9 +3071,12 @@ def fetch_partners_group(source: dict) -> list[dict]:
             if not link:
                 continue
             href = link.get("href", "")
-            if "/news-and-views/perspective/" not in href:
-                continue
-            url = urljoin(base, href)
+            if "/news-and-views/perspective/" in href:
+                url = urljoin(base, href)
+            else:
+                url = _partners_group_pdf_url(base, href)
+                if not url:
+                    continue
             if not _validate_hostname(url, expected_host):
                 continue
             if url in seen_urls:
