@@ -54,7 +54,7 @@ $(cat "$PROGRAM_MD")
 ## Session constraints (added by wrapper)
 - You have a MAXIMUM of 15 minutes for this session
 - Cost control: max 5 WebSearch, max 10 WebFetch, max 1 new seed
-- After all work, commit and push any changes
+- After all work, commit any changes but do NOT push: the wrapper pushes after its checks
 - Output a brief summary at the end
 "
 
@@ -72,7 +72,14 @@ GUARD_BEFORE="/tmp/gmia-guard-before-$$.json"
 cp "$REPO_DIR/config/fund_candidates.json" "$GUARD_BEFORE" 2>/dev/null || true
 
 CLAUDE_BIN="${CLAUDE_BIN:-/home/ubuntu/.npm-global/bin/claude}"
-timeout --kill-after=30 930 "$CLAUDE_BIN" -p \
+# The agent commits, the wrapper pushes -- after the guard has stamped
+# added_at/status_since. 2026-10-17 the agent pushed its new seed itself
+# (d63457c, no added_at) and CI went red until the guard's stamp landed in a
+# later commit. NO_PUSH_ENV points origin's push URL nowhere for the agent's
+# git only (env-scoped config, not written anywhere).
+NO_PUSH_ENV=(GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=remote.origin.pushurl
+             GIT_CONFIG_VALUE_0=/nonexistent/push-disabled-wrapper-pushes)
+env "${NO_PUSH_ENV[@]}" timeout --kill-after=30 930 "$CLAUDE_BIN" -p \
     --allowedTools "Bash Read Edit Write WebFetch WebSearch" \
     --model sonnet \
     "$PROMPT" 2>&1
@@ -86,18 +93,6 @@ else
     echo "$LOG_PREFIX Candidate discovery finished successfully"
 fi
 
-# Push any commits regardless of exit code
-cd "$REPO_DIR"
-REMOTE_HEAD=$(git rev-parse origin/main 2>/dev/null || echo "")
-LOCAL_HEAD=$(git rev-parse HEAD 2>/dev/null || echo "")
-# No origin/main ref (pruned, never fetched) is not "nothing to push": try.
-if [ -z "$REMOTE_HEAD" ] || [ "$REMOTE_HEAD" != "$LOCAL_HEAD" ]; then
-    echo "$LOG_PREFIX Pushing new commits..."
-    git push 2>&1 || echo "$LOG_PREFIX WARNING: git push failed"
-else
-    echo "$LOG_PREFIX No new commits to push"
-fi
-
 # --- Status guard: revert any illegal status change the agent made ---
 # The agent must never set "promoted" (trial-manager owns promotion, only after a
 # trial PASS). If it did, revert + commit + alert. Self-heals the 2026-06-10
@@ -107,11 +102,16 @@ if [ -f "$GUARD_BEFORE" ]; then
         --before "$GUARD_BEFORE" --after config/fund_candidates.json 2>&1)
     echo "$GUARD_OUT"
     GUARD_N=$(printf '%s\n' "$GUARD_OUT" | sed -n 's/^guard: \([0-9]*\) .*/\1/p')
+    # Stamps (added_at, status_since) are committed even when nothing was
+    # reverted, so the push below never carries a seed without added_at.
+    git add config/fund_candidates.json
+    if [ "${GUARD_N:-0}" -gt 0 ]; then
+        git diff --cached --quiet || git commit -m "guard: revert $GUARD_N illegal agent status change(s) (auto)"
+    else
+        git diff --cached --quiet || git commit -m "guard: stamp added_at/status_since (auto)"
+    fi
     if [ "${GUARD_N:-0}" -gt 0 ]; then
         echo "$LOG_PREFIX GUARD reverted $GUARD_N illegal status change(s)"
-        git add config/fund_candidates.json
-        git diff --cached --quiet || git commit -m "guard: revert $GUARD_N illegal agent status change(s) (auto)"
-        git push 2>&1 || echo "$LOG_PREFIX WARNING: git push (guard) failed"
         source ~/.stock-monitor.env 2>/dev/null || true
         GUARD_REVERTS="$(printf '%s\n' "$GUARD_OUT" | grep '^REVERTED' || true)" \
         GUARD_SUBJECT="[GMIA GUARD] reverted $GUARD_N illegal agent status change(s)" \
@@ -133,6 +133,18 @@ except Exception as e:
 " 2>&1 || true
     fi
     rm -f "$GUARD_BEFORE"
+fi
+
+# Push the agent's commits and the guard's, regardless of exit code
+cd "$REPO_DIR"
+REMOTE_HEAD=$(git rev-parse origin/main 2>/dev/null || echo "")
+LOCAL_HEAD=$(git rev-parse HEAD 2>/dev/null || echo "")
+# No origin/main ref (pruned, never fetched) is not "nothing to push": try.
+if [ -z "$REMOTE_HEAD" ] || [ "$REMOTE_HEAD" != "$LOCAL_HEAD" ]; then
+    echo "$LOG_PREFIX Pushing new commits..."
+    git push 2>&1 || echo "$LOG_PREFIX WARNING: git push failed"
+else
+    echo "$LOG_PREFIX No new commits to push"
 fi
 
 # --- Stall detection: auto-route candidates stuck without progress ---

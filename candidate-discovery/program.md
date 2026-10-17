@@ -95,8 +95,9 @@ For any promising new fund NOT already in fund_candidates.json:
 cd /home/ubuntu/hedge-fund-research
 git add config/fund_candidates.json config/candidate_entrypoints.json
 git diff --cached --quiet || git commit -m "data(candidate): daily discovery run $(TZ='Asia/Shanghai' date '+%Y-%m-%d')"
-git push
 ```
+
+Do **not** `git push` — the wrapper pushes after its guard has stamped `added_at` on a new seed (2026-10-17: a self-pushed seed without it turned CI red). A push from this session fails by design.
 
 Output a brief summary:
 - How many funds checked vs skipped (already analyzed)
