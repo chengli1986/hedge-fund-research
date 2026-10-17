@@ -1128,7 +1128,7 @@ def should_email(alerts: dict, zero_fetches: list, pipeline_stale: bool = False,
                  declines: list | None = None, quality: dict | None = None,
                  intake: list | None = None, damaged_rows: int = 0,
                  corrupt_state: list | None = None, entrypoints: list | None = None,
-                 orphans: dict | None = None) -> bool:
+                 orphans: dict | None = None, candidate_fails: list | None = None) -> bool:
     """Whether this run has anything worth sending.
 
     zero_fetches is part of the condition, not just part of the body: the email
@@ -1138,7 +1138,7 @@ def should_email(alerts: dict, zero_fetches: list, pipeline_stale: bool = False,
     return bool(alerts["failing"] or alerts["warning"] or alerts["recovered"]
                 or alerts.get("lifted")
                 or zero_fetches or pipeline_stale or declines or intake or damaged_rows
-                or corrupt_state or entrypoints
+                or corrupt_state or entrypoints or candidate_fails
                 or (orphans is not None and orphans.get("new"))
                 or (quality is not None and quality.get("alerts")))
 
@@ -1227,6 +1227,7 @@ def render_html_email(
     corrupt_state: list | None = None,
     entrypoints: list | None = None,
     orphans: dict | None = None,
+    candidate_fails: list | None = None,
 ) -> str:
     """HTML body with same visual idiom as gmia-trial-manager email."""
     sources_state = state.get("sources", {})
@@ -1321,6 +1322,18 @@ def render_html_email(
         )
         sections.append(section_table(
             f"📉 PIPELINE FETCHED NOTHING ({len(zero_fetches)})", "#9a6700", zero_rows))
+    if candidate_fails:
+        # They set the exit code to 1; until 2026-10-18 the mail never said
+        # so, and the cron failure arrived with no reason anywhere in it.
+        cand_rows = "".join(
+            f'<tr><td style="padding:8px;font-weight:bold;color:#cf222e">{html.escape(cid)}</td>'
+            f'<td style="padding:8px">{html.escape(str(r.get("reason")))}</td></tr>'
+            for cid, r in candidate_fails)
+        sections.append(section_table(
+            f"🧪 CANDIDATE URL FAILING ({len(candidate_fails)})", "#cf222e",
+            cand_rows +
+            '<tr><td style="padding:8px">Visitable candidates waiting for trial '
+            '(--include-validated). This is what makes the run exit 1.</td></tr>'))
     if entrypoints:
         ep_rows = "".join(
             f'<tr><td style="padding:8px;font-weight:bold;color:#9a6700">{html.escape(sid)}</td>'
@@ -1446,7 +1459,8 @@ def alerts_subject(alerts: dict, zero_fetches: list | None = None,
                    pipeline_stale: bool = False, declines: list | None = None,
                    quality: dict | None = None, intake: list | None = None,
                    damaged_rows: int = 0, corrupt_state: list | None = None,
-                   entrypoints: list | None = None, orphans: dict | None = None) -> str:
+                   entrypoints: list | None = None, orphans: dict | None = None,
+                   candidate_fails: list | None = None) -> str:
     """Subject line. Must name every condition that caused the send.
 
     zero_fetches is a send condition on its own, and it is the ONLY one that
@@ -1470,6 +1484,9 @@ def alerts_subject(alerts: dict, zero_fetches: list | None = None,
         parts.append(f"📉 {len(zero_fetches)} fetched nothing ({ids}{more})")
     if pipeline_stale:
         parts.append(f"⛔ pipeline recorded nothing in {ZERO_FETCH_FRESH_HOURS}h")
+    if candidate_fails:
+        ids = ", ".join(cid for cid, _ in candidate_fails[:3])
+        parts.append(f"🧪 {len(candidate_fails)} candidate URL failing ({ids})")
     if entrypoints:
         ids = ", ".join(sid for sid, _ in entrypoints[:3])
         parts.append(f"🚪 {len(entrypoints)} entrypoint(s) not ok ({ids})")
@@ -1530,6 +1547,14 @@ def load_validated_candidates() -> list[dict]:
     ]
 
 
+def candidate_probe_url(candidate: dict) -> str:
+    """research_url, else the listing a template-first synthesis saved, else
+    the homepage (the trial's own fallback). 2026-10-18: fulcrum, templated
+    with listing_url only, failed as "no research_url" and exited 1."""
+    return (candidate.get("research_url") or candidate.get("listing_url")
+            or candidate.get("homepage_url") or "").strip()
+
+
 def probe_candidate_url(candidate: dict) -> dict:
     """HTTP GET the candidate's research_url, return liveness verdict.
 
@@ -1542,10 +1567,11 @@ def probe_candidate_url(candidate: dict) -> dict:
     """
     import httpx  # local import — only needed for this code path
 
-    url = (candidate.get("research_url") or "").strip()
+    url = candidate_probe_url(candidate)
     if not url:
         return {"status": "FAIL", "http_code": None, "content_size": 0,
-                "reason": "candidate has no research_url", "elapsed_ms": 0}
+                "reason": "candidate has no research_url, listing_url or homepage_url",
+                "elapsed_ms": 0}
 
     started = time.monotonic()
     try:
@@ -1704,26 +1730,27 @@ def main() -> int:
     else:
         print("[dry-run] state file NOT written")
 
+    candidate_fails = sorted((cid, r) for cid, r in per_candidate.items() if r["status"] == "FAIL")
     email_failed = False
     needs_alert = should_email(alerts, zero_fetches, pipeline_stale, declines=declines,
-                               quality=quality, intake=intake, damaged_rows=damaged_rows, corrupt_state=corrupt_state, entrypoints=entrypoints, orphans=orphans)
+                               quality=quality, intake=intake, damaged_rows=damaged_rows, corrupt_state=corrupt_state, entrypoints=entrypoints, orphans=orphans, candidate_fails=candidate_fails)
     if args.test_email:
         html_body = render_html_email(per_source, alerts, next_state, total_runtime_s,
                                       zero_fetches=zero_fetches, pipeline_stale=pipeline_stale,
                                       declines=declines, quality=quality, intake=intake,
-                                      damaged_rows=damaged_rows, corrupt_state=corrupt_state, entrypoints=entrypoints, orphans=orphans)
+                                      damaged_rows=damaged_rows, corrupt_state=corrupt_state, entrypoints=entrypoints, orphans=orphans, candidate_fails=candidate_fails)
         subject = alerts_subject(alerts, zero_fetches, pipeline_stale, declines=declines,
-                                 quality=quality, intake=intake, damaged_rows=damaged_rows, corrupt_state=corrupt_state, entrypoints=entrypoints, orphans=orphans)
+                                 quality=quality, intake=intake, damaged_rows=damaged_rows, corrupt_state=corrupt_state, entrypoints=entrypoints, orphans=orphans, candidate_fails=candidate_fails)
         email_failed = not send_email(html_body, f"[测试] {subject}", to=args.test_email)
     elif args.email and needs_alert and not args.dry_run:
         html_body = render_html_email(per_source, alerts, next_state, total_runtime_s,
                                       zero_fetches=zero_fetches,
                                       pipeline_stale=pipeline_stale,
                                       declines=declines, quality=quality, intake=intake,
-                                      damaged_rows=damaged_rows, corrupt_state=corrupt_state, entrypoints=entrypoints, orphans=orphans)
+                                      damaged_rows=damaged_rows, corrupt_state=corrupt_state, entrypoints=entrypoints, orphans=orphans, candidate_fails=candidate_fails)
         email_failed = not send_email(
             html_body, alerts_subject(alerts, zero_fetches, pipeline_stale, declines=declines,
-                                      quality=quality, intake=intake, damaged_rows=damaged_rows, corrupt_state=corrupt_state, entrypoints=entrypoints, orphans=orphans))
+                                      quality=quality, intake=intake, damaged_rows=damaged_rows, corrupt_state=corrupt_state, entrypoints=entrypoints, orphans=orphans, candidate_fails=candidate_fails))
     elif args.email and not needs_alert:
         print("All sources OK and no recoveries — email suppressed.")
 

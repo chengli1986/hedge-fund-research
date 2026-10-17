@@ -280,10 +280,14 @@ def _field(record: dict, names) -> str:
     """First non-empty value among one or more record fields.
 
     gsam's hits carry title or summaryTitle, and pagePath or slug; a chain
-    says so in the spec instead of in code.
+    says so in the spec instead of in code. A dotted name follows nested
+    objects (rbc-bluebay's "author.date", 2026-10-18: read as a top-level key
+    it was always missing, and all 12 rows came back undated).
     """
     for name in ([names] if isinstance(names, str) else names):
         value = record.get(name)
+        if value is None and "." in name:
+            value = _dig(record, name)
         if isinstance(value, str) and value.strip():
             return value.strip()
     return ""

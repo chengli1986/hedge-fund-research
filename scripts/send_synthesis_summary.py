@@ -117,8 +117,15 @@ def _next_step(cand: dict) -> str:
 
 
 def build_html(results: list[dict], targets_count: int, candidates: list[dict],
-               entries: list[dict], now: datetime) -> str:
-    """Render the synthesis summary email body."""
+               entries: list[dict], now: datetime,
+               planned_ids: list[str] | None = None) -> str:
+    """Render the synthesis summary email body.
+
+    planned_ids: the targets this session was told to process (the wrapper
+    hands the agent only the first two). "No result" is counted against them,
+    not against every target in the queue -- 2026-10-18 the mail said "5 of 7
+    targets have no result" after both planned ones succeeded.
+    """
     idx = _candidate_index(candidates)
     succeeded = [r for r in results if r.get("outcome") == "success"]
     failed = [r for r in results if r.get("outcome") != "success"]
@@ -137,7 +144,9 @@ def build_html(results: list[dict], targets_count: int, candidates: list[dict],
     chips = (
         f"<span style='{chip};background:#dafbe1;color:#1a7f37'>{len(succeeded)} 成功</span>"
         f"<span style='{chip};background:#ffebe9;color:#cf222e'>{len(failed)} 失败</span>"
-        f"<span style='{chip};background:#ddf4ff;color:#0969da'>{targets_count} 个目标</span>"
+        f"<span style='{chip};background:#ddf4ff;color:#0969da'>{targets_count} 个目标"
+        + (f" · 本次计划 {len(planned_ids)}" if planned_ids is not None else "")
+        + "</span>"
         f"<span style='{chip};background:#f6f8fa;color:#57606a'>30d {html.escape(rate30)}</span>"
     )
 
@@ -146,11 +155,23 @@ def build_html(results: list[dict], targets_count: int, candidates: list[dict],
         caveats.append(
             f"该成功率取自 {len(entries)} 条全历史记录，其中<b>从未记录到失败</b>——"
             "无法与「失败路径不写记录」区分，暂不作为可靠性证据。")
-    missing = targets_count - len(results)
-    if results and missing > 0:
-        caveats.append(
-            f"本次 {targets_count} 个目标中有 <b>{missing} 个目标无结果记录</b>"
-            "（既未成功也未记失败），请查 <code>~/logs/gmia-fetcher-synthesis.log</code>。")
+    if planned_ids is not None:
+        done = {r.get("id") for r in results}
+        missing_ids = [i for i in planned_ids if i not in done]
+        if results and missing_ids:
+            caveats.append(
+                f"本次计划处理的 {len(planned_ids)} 个目标中有 <b>{len(missing_ids)} 个无结果记录</b>"
+                f"（{html.escape(', '.join(missing_ids))}），请查 "
+                "<code>~/logs/gmia-fetcher-synthesis.log</code>。")
+        queued = targets_count - len(planned_ids)
+        if queued > 0:
+            caveats.append(f"另有 {queued} 个目标排队，留给之后的会话（每次只处理前 {len(planned_ids)} 个）。")
+    else:
+        missing = targets_count - len(results)
+        if results and missing > 0:
+            caveats.append(
+                f"本次 {targets_count} 个目标中有 <b>{missing} 个目标无结果记录</b>"
+                "（既未成功也未记失败），请查 <code>~/logs/gmia-fetcher-synthesis.log</code>。")
     caveat_html = "".join(
         f"<p style='margin:8px 0;padding:8px 10px;background:#fff8c5;"
         f"border-left:3px solid #d4a72c;font-size:12px;color:#57606a'>⚠️ {c}</p>"
@@ -263,6 +284,8 @@ def main(argv=None) -> int:
                     help="ISO UTC timestamp; only attempts at/after this are in the summary")
     ap.add_argument("--targets-count", type=int, default=0,
                     help="number of targets the synthesis run was given")
+    ap.add_argument("--planned-ids", default=None,
+                    help="comma-separated ids this session was told to process")
     ap.add_argument("--dry-run", action="store_true", help="print HTML, do not send")
     args = ap.parse_args(argv)
 
@@ -283,7 +306,10 @@ def main(argv=None) -> int:
         print(f"WARNING: cannot load candidates file: {exc}")
         candidates = []
     now = datetime.now(timezone.utc)
-    html_body = build_html(results, args.targets_count, candidates, entries, now)
+    planned = ([i for i in args.planned_ids.split(",") if i]
+               if args.planned_ids is not None else None)
+    html_body = build_html(results, args.targets_count, candidates, entries, now,
+                           planned_ids=planned)
 
     n_ok = sum(1 for r in results if r.get("outcome") == "success")
     n_fail = len(results) - n_ok

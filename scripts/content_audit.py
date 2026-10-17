@@ -88,6 +88,7 @@ FINDING_LABELS = {
     "body_shrunk": "正文比库里存的短了一半以上",
     "body_grew": "正文比库里存的长了一倍以上（可能混进了页面杂物，仅记录）",
     "content_changed": "正文内容与库里存的对不上（可能抓成了别的内容）",
+    "known_block": "已知拦截：来源配置里登记过 known_block、已决定保持现状（仅记录）",
 }
 SHRINK_RATIO, GROW_RATIO, MIN_OVERLAP, SHINGLE = 0.5, 2.0, 0.5, 8
 
@@ -223,6 +224,27 @@ def mark_site_wide_losses(results: list) -> None:
             r["findings"].append("site_wide_access_loss")
 
 
+def _health_module():
+    """gmia-fetcher-health.py, loaded by path (its name has a hyphen)."""
+    spec = importlib.util.spec_from_file_location("gmia_fetcher_health", Path(__file__).resolve().parent / "gmia-fetcher-health.py")
+    health = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(health)
+    return health
+
+
+def mark_known_blocks(results: list, sources: list, evidence=None) -> None:
+    """A refusal from a source with a decided known_block is recorded, not
+    alerted, in place -- the health probe's rule, with its regex. 2026-10-18
+    the audit reported ark-invest's 403s as "needs action" two days after the
+    block was registered. Any other finding at that source still alerts."""
+    evidence = evidence or _health_module().KNOWN_BLOCK_EVIDENCE
+    blocked = {s["id"] for s in sources if s.get("known_block")}
+    for r in results:
+        if r.get("source_id") in blocked and r.get("findings") == ["now_failing"] \
+                and evidence.search(f'{r.get("label") or ""} {r.get("detail") or ""}'):
+            r["findings"] = ["known_block"]
+
+
 def mark_gone(article_ids: list, data_file: Path | None = None) -> int:
     """Stamp url_status="gone" on rows whose original the publisher removed.
 
@@ -272,7 +294,8 @@ def run_audit(per_source: int = PER_SOURCE) -> tuple[list, int]:
     import fetch_content as fc
 
     rows = [json.loads(l) for l in DATA_FILE.read_text(encoding="utf-8").splitlines() if l.strip()]
-    configured = {s["id"] for s in json.loads(SOURCES_FILE.read_text())["sources"]}
+    sources = json.loads(SOURCES_FILE.read_text())["sources"]
+    configured = {s["id"] for s in sources}
     root = logging.getLogger()
     for h in list(root.handlers):          # the audit must not write the pipeline's logs
         if isinstance(h, logging.FileHandler):
@@ -290,6 +313,7 @@ def run_audit(per_source: int = PER_SOURCE) -> tuple[list, int]:
                             "findings": ["now_failing"], "label": "fetch_error",
                             "detail": f"audit raised {type(exc).__name__}: {exc}"[:300]})
         time.sleep(0.5)
+    mark_known_blocks(results, sources)
     mark_site_wide_losses(results)
     return results, len({r["source_id"] for r in results}), skipped_gone
 
@@ -333,7 +357,7 @@ def render_email(results: list, sources_audited: int, skipped_gone: int = 0) -> 
         parts.append('<h3 style="color:#cf222e">⚠️ 需要处理（抓取方式变了 / 抓不到了 / 正文变短 / 内容对不上）</h3>'
                      f'<table style="width:100%;border-collapse:collapse;font-size:13px;background:#fff5f5">{rows(alerts, "#cf222e")}</table>')
     if info:
-        parts.append('<h3 style="color:#9a6700">ℹ️ 仅记录（页面已删除 / 正文变长）</h3>'
+        parts.append('<h3 style="color:#9a6700">ℹ️ 仅记录（页面已删除 / 正文变长 / 已知拦截）</h3>'
                      f'<table style="width:100%;border-collapse:collapse;font-size:13px;background:#f6f8fa">{rows(info, "#9a6700")}</table>')
     parts.append(f'<h3 style="color:#1a7f37">✅ 抽查全部正常的网站（{len(clean_sources)}）</h3>'
                  f'<p style="font-size:12px;color:#586069">{esc(" · ".join(clean_sources))}</p>')
@@ -343,10 +367,7 @@ def render_email(results: list, sources_audited: int, skipped_gone: int = 0) -> 
 
 
 def send_email(html_body: str, subject: str, to: str | None = None) -> bool:
-    spec = importlib.util.spec_from_file_location("gmia_fetcher_health", Path(__file__).resolve().parent / "gmia-fetcher-health.py")
-    health = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(health)
-    return health.send_email(html_body, subject, to=to)
+    return _health_module().send_email(html_body, subject, to=to)
 
 
 def main() -> int:

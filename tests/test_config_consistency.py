@@ -240,27 +240,36 @@ def _strip_www(host: str) -> str:
 
 
 def test_validated_candidates_have_research_url():
-    """Every candidate marked validated must have a non-empty research_url.
+    """Every candidate marked validated must say where its research is.
 
     A validated candidate is one the pipeline thinks is safe to put into a
     trial. Missing URL means the trial will fail Day 1 with no useful signal.
+    A template-first candidate (2026-10-13) is fetched through its
+    listing_template from listing_url and needs no research_url: fulcrum,
+    synthesised that way on 2026-10-18, turned CI red here.
     """
     missing = [
         c["id"]
         for c in _candidate_records()
         if c.get("status") == "visitable"
         and not (c.get("research_url") or "").strip()
+        and not (c.get("listing_template") and (c.get("listing_url") or "").strip())
     ]
-    assert not missing, f"validated candidates with empty research_url: {missing}"
+    assert not missing, f"validated candidates with no research_url or templated listing_url: {missing}"
 
 
 def test_validated_candidate_research_url_is_parseable():
-    """research_url must parse to a valid http(s) URL with a hostname."""
+    """The URL the health probe checks must be a valid http(s) URL."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "gfh_cfg", Path(__file__).resolve().parent.parent / "scripts" / "gmia-fetcher-health.py")
+    gfh = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(gfh)
     bad = []
     for c in _candidate_records():
         if c.get("status") != "visitable":
             continue
-        url = c.get("research_url", "")
+        url = gfh.candidate_probe_url(c)
         parsed = urlparse(url)
         if parsed.scheme not in {"http", "https"} or not parsed.hostname:
             bad.append(f"{c['id']}: {url!r}")

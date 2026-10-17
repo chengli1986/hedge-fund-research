@@ -206,6 +206,7 @@ SMTP_USER="${SMTP_USER:-}" SMTP_PASS="${SMTP_PASS:-}" MAIL_TO="${MAIL_TO:-}" \
     python3 "$REPO_DIR/scripts/send_synthesis_summary.py" \
         --since "$SYNTH_RUN_START" \
         --targets-count "$TARGET_COUNT" \
+        --planned-ids "$PLANNED_IDS" \
     || echo "$LOG_PREFIX WARN: summary email step failed (non-fatal)"
 
 # Propagate inconsistency: if heartbeat detected agent ran without recording
