@@ -13,7 +13,7 @@ import sys
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
-from status_util import set_status
+from status_util import set_status, write_json_atomic
 
 BASE_DIR = Path(__file__).parent
 CANDIDATES_FILE = BASE_DIR / "config" / "fund_candidates.json"
@@ -198,7 +198,7 @@ def auto_reject_exhausted_candidates(
 
     if flipped:
         out = candidates if isinstance(data, list) else {**data, "candidates": candidates}
-        candidates_path.write_text(json.dumps(out, indent=2, ensure_ascii=False) + "\n")
+        write_json_atomic(candidates_path, out)
     return flipped
 
 

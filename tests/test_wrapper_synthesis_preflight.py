@@ -61,7 +61,7 @@ def _sandbox(tmp_path: Path) -> Path:
         (tmp_path / d).mkdir()
     for rel in ("scripts/wrapper-fetcher-synthesis.sh", "scripts/write_session_heartbeat.py",
                 "scripts/backfill_failed_synthesis.py", "scripts/sync_synthesis_history.py",
-                "scripts/check_template_first.py"):
+                "scripts/check_template_first.py", "status_util.py"):
         shutil.copy2(REPO / rel, tmp_path / rel)          # verbatim, not a rewrite
     (tmp_path / "synthesize_fetchers.py").write_text(f"print({TARGETS!r})\n")
     (tmp_path / "fetcher-synthesis").mkdir()

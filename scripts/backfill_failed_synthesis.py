@@ -37,6 +37,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(BASE_DIR))
+from status_util import write_json_atomic  # noqa: E402
+
 CANDIDATES_FILE = BASE_DIR / "config" / "fund_candidates.json"
 
 
@@ -108,7 +111,7 @@ def backfill(planned_ids: list[str], run_start: str,
 
     if backfilled:
         out = candidates if isinstance(data, list) else {**data, "candidates": candidates}
-        candidates_path.write_text(json.dumps(out, indent=2, ensure_ascii=False) + "\n")
+        write_json_atomic(candidates_path, out)
 
     return {"backfilled": backfilled, "backfilled_count": len(backfilled)}
 

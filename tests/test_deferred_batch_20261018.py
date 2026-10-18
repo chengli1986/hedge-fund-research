@@ -70,3 +70,52 @@ def test_synthesis_agent_and_preflight_are_bounded_inside_cron_wrapper():
     # the agent call comes before the steps that must survive it
     assert w.index('"$AGENT_TIMEOUT_S"') < w.index("backfill_failed_synthesis.py") \
         < w.index("write_session_heartbeat.py", w.index("backfill_failed_synthesis.py"))
+
+
+# --- minor: synthesis commits what its own post-agent steps changed -----------
+def test_synthesis_commits_the_backfill_marks(tmp_path):
+    import subprocess
+    import test_wrapper_synthesis_preflight as wsp
+    (tmp_path / "s").mkdir()
+    sandbox = wsp._sandbox(tmp_path / "s")
+    remote = tmp_path / "remote.git"
+    git = lambda *a, cwd=sandbox: subprocess.run(["git", *a], cwd=cwd, check=True,
+                                                 capture_output=True, text=True).stdout
+    subprocess.run(["git", "init", "-q", "--bare", str(remote)], check=True)
+    git("init", "-q", "-b", "main"); git("config", "user.email", "t@t"); git("config", "user.name", "t")
+    git("remote", "add", "origin", str(remote))
+    git("add", "config/fund_candidates.json"); git("commit", "-qm", "seed")
+    git("push", "-q", "-u", "origin", "main")
+    wsp._run(sandbox, preflight_fail=False)               # agent skips -> backfill marks it
+    assert "synthesis: record session outcomes" in git("log", "-1", "--format=%s")
+    assert git("status", "--porcelain", "config/fund_candidates.json") == ""
+    assert git("log", "-1", "--format=%s", "main", cwd=remote).startswith("synthesis: record")
+
+
+# --- minor: candidate/trial files are written atomically ----------------------
+def test_write_json_atomic_replaces_whole_and_keeps_mode(tmp_path, monkeypatch):
+    import os
+    import status_util as su
+    p = tmp_path / "c.json"
+    p.write_text("[]")
+    p.chmod(0o640)
+    su.write_json_atomic(p, [{"id": "a"}])
+    assert json.loads(p.read_text()) == [{"id": "a"}] and (p.stat().st_mode & 0o777) == 0o640
+
+    def boom(*a, **k):
+        raise OSError("disk full")
+    monkeypatch.setattr(su.json, "dump", boom)
+    with pytest.raises(OSError):
+        su.write_json_atomic(p, [{"id": "b"}])
+    assert json.loads(p.read_text()) == [{"id": "a"}]       # old file intact
+    assert [f.name for f in tmp_path.iterdir()] == ["c.json"]  # no temp left
+
+
+WRITERS = ["scripts/backfill_failed_synthesis.py", "synthesize_fetchers.py"]
+
+
+@pytest.mark.parametrize("rel", WRITERS)
+def test_candidate_writers_go_through_the_atomic_helper(rel):
+    src = (ROOT / rel).read_text()
+    assert "write_json_atomic(" in src
+    assert ".write_text(json.dumps" not in src

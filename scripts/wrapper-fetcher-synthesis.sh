@@ -220,6 +220,17 @@ SMTP_USER="${SMTP_USER:-}" SMTP_PASS="${SMTP_PASS:-}" MAIL_TO="${MAIL_TO:-}" \
         --planned-ids "$PLANNED_IDS" \
     || echo "$LOG_PREFIX WARN: summary email step failed (non-fatal)"
 
+# Commit what the steps after the agent changed (backfill marks, outcomes the
+# agent left uncommitted). Until 2026-10-18 nothing here committed, and the
+# next discovery run swept these edits into its own "daily discovery" commit.
+cd "$REPO_DIR"
+if git rev-parse --git-dir >/dev/null 2>&1 \
+        && ! git diff --quiet -- config/fund_candidates.json 2>/dev/null; then
+    git add config/fund_candidates.json
+    git commit -q -m "synthesis: record session outcomes $(TZ='Asia/Shanghai' date '+%Y-%m-%d') (auto)" \
+        && { git push -q 2>&1 || echo "$LOG_PREFIX WARNING: git push (synthesis outcomes) failed"; }
+fi
+
 # Propagate inconsistency: if heartbeat detected agent ran without recording
 # anything, exit non-zero so cron-wrapper alerts (even if agent itself returned 0).
 if [ "$HEARTBEAT_EXIT" -ne 0 ] && [ "$EXIT_CODE" -eq 0 ]; then
