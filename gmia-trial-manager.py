@@ -1309,6 +1309,15 @@ def send_daily_summary_email(state: dict, today: str) -> None:
 
 # ── main commands ─────────────────────────────────────────────────────────────
 
+def trial_period_complete(elapsed_days: int) -> bool:
+    """True on trial day TRIAL_DAYS (1-indexed), after that day's check.
+
+    Day 1's check runs when the trial starts, so day N is elapsed N-1. Until
+    2026-10-18 this was `elapsed >= TRIAL_DAYS`: the verdict came on day 8
+    after an 8th check, and 22 of the 44 trials on record show "8/7 days"."""
+    return elapsed_days + 1 >= TRIAL_DAYS
+
+
 def cmd_run() -> None:
     state = load_state()
     today = datetime.now(BJT).strftime("%Y-%m-%d")
@@ -1363,7 +1372,7 @@ def cmd_run() -> None:
                         print(f"[trial]     {art['overall']:.1f} — {art['notes'][:60]}")
 
         # Check if trial period complete
-        if elapsed >= TRIAL_DAYS and not active.get("auto_decided"):
+        if trial_period_complete(elapsed) and not active.get("auto_decided"):
             total_articles = sum(
                 d.get("article_count", 0)
                 for d in active.get("daily_checks", {}).values()

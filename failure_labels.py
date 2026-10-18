@@ -242,7 +242,8 @@ _DECLINE_RULES = (
     ("navigation_or_login_wall", r"navigation|login wall|registration"),
     ("disclaimer_only", r"disclaimer|disclosure|legal"),
     ("teaser_only", r"teaser|video description|podcast description|promotional|scheduling|"
-                    r"listing|preview|introductory paragraph|brief description"),
+                    r"listing|preview|introductory paragraph|brief description|"
+                    r"article introduction"),   # robeco podcast page, 2026-10-18
 )
 
 

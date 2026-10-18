@@ -1075,8 +1075,15 @@ def _quality_section(quality: dict) -> str:
         return (f'<p style="margin:10px 0 4px;font-weight:bold">{title}</p>'
                 f'<table style="width:100%;border-collapse:collapse;font-size:13px;background:#f6f8fa">{body}</table>')
 
-    parts.append(by_label(quality["content"], failure_labels.CONTENT_FAILURE_LABELS, "目前未取得正文（按原因）"))
-    parts.append(by_label(quality["declines"], failure_labels.ANALYSIS_DECLINE_LABELS, "AI 拒绝摘要（按原因）"))
+    # Whole store, not the window above: "AI 拒绝摘要 2" over a table listing
+    # ark-invest×29 (rows from before 10-01) read as a contradiction
+    # (2026-10-18). Say so, with the store-wide total.
+    parts.append(by_label(quality["content"], failure_labels.CONTENT_FAILURE_LABELS,
+                          f"全库目前未取得正文（按原因，共 {sum(quality['content'].values())} 篇，"
+                          f"含历史，不限最近 {quality['days']} 天）"))
+    parts.append(by_label(quality["declines"], failure_labels.ANALYSIS_DECLINE_LABELS,
+                          f"全库 AI 拒绝摘要（按原因，共 {sum(quality['declines'].values())} 篇，"
+                          f"含历史，不限最近 {quality['days']} 天）"))
     parts.append('<p style="margin:6px 0;color:#8b949e;font-size:11px">标签说明与真实案例：'
                  '<code>docs/content-failure-casebook.md</code> · 明细：<code>python3 scripts/failure_stats.py</code></p>')
     return ('<h3 style="margin:14px 0 6px;color:#0969da">📋 正文获取质量（Content quality）</h3>' + "".join(parts))
