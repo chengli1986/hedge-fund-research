@@ -119,3 +119,27 @@ def test_candidate_writers_go_through_the_atomic_helper(rel):
     src = (ROOT / rel).read_text()
     assert "write_json_atomic(" in src
     assert ".write_text(json.dumps" not in src
+
+
+# --- minor: the promotion probe checks the gate on measured numbers -----------
+def _probe_with(monkeypatch, stdout, rc=0):
+    import subprocess as sp
+    import verify_promotions as vp
+    monkeypatch.setattr(vp.subprocess, "run",
+                        lambda *a, **k: sp.CompletedProcess(a[0], rc, stdout=stdout, stderr=""))
+    return vp.check_probe({"id": "new-src"})
+
+
+def test_promotion_probe_fails_below_the_gate_the_message_claims(monkeypatch):
+    assert _probe_with(monkeypatch, "  new-src                   1 articles · 150 chars · 9ms\n")[0] == "fail"
+    assert _probe_with(monkeypatch, "  new-src                   10 articles · 900 chars · 9ms\n")[0] == "ok"
+    assert _probe_with(monkeypatch, "nothing parseable\n")[0] == "error"
+    assert _probe_with(monkeypatch, "", rc=1)[0] == "fail"
+
+
+def test_validator_and_probe_share_one_gate():
+    import promote_today as pt
+    src = (ROOT / "scripts" / "validate_promote_commit_msg.py").read_text()
+    assert "from promote_today import MIN_ARTICLES, MIN_CONTENT_CHARS" in src
+    assert "MIN_ARTICLES = " not in src
+    assert (pt.MIN_ARTICLES, pt.MIN_CONTENT_CHARS) == (3, 500)

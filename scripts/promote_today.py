@@ -22,6 +22,10 @@ BJT = timezone(timedelta(hours=8))
 # revert_failed: a check failed but the revert did not go through (aborted);
 # the source is still live and needs a person, not another automatic try.
 REVERT_OUTCOMES = {"failed_validation", "auto_reverted", "revert_failed"}
+# The live-test gate. The commit-message validator checks the agent's claim
+# against it; verify_promotions' probe checks what the source measures now.
+MIN_ARTICLES = 3
+MIN_CONTENT_CHARS = 500
 HISTORY = Path(__file__).resolve().parent.parent / "logs" / "auto-promote-history.jsonl"
 
 

@@ -31,8 +31,11 @@ import subprocess
 import sys
 from typing import Tuple
 
-MIN_ARTICLES = 3
-MIN_CONTENT_CHARS = 500
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from promote_today import MIN_ARTICLES, MIN_CONTENT_CHARS  # noqa: E402  (shared with the probe)
+
 MIN_AVG_QUALITY = 0.5
 MIN_RELEVANCE = 0.6
 PREVIEW_MIN_CHARS = 50

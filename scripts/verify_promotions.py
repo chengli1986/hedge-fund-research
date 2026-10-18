@@ -21,13 +21,15 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from promote_today import BJT, live_promotions, today_bjt  # noqa: E402
+from promote_today import (BJT, MIN_ARTICLES, MIN_CONTENT_CHARS,  # noqa: E402
+                           live_promotions, today_bjt)
 
 LOG = Path("logs/auto-promote-history.jsonl")
 VALIDATOR = "scripts/validate_promote_commit_msg.py"
@@ -86,7 +88,19 @@ def check_probe(e: dict) -> tuple[str, str]:
                               capture_output=True, text=True, timeout=180)
     except subprocess.TimeoutExpired:
         return "error", "health probe timed out after 180s"
-    return ("ok" if proc.returncode == 0 else "fail"), (proc.stderr or "")[-200:]
+    if proc.returncode != 0:
+        return "fail", (proc.stderr or "")[-200:]
+    # The validate phase only reads what the agent wrote in its commit
+    # message; this is the measurement. Until 2026-10-18 a probe "pass" was
+    # >=1 article and >=100 chars, below the gate the message must claim.
+    m = re.search(rf"^\s*{re.escape(e['id'])}\s+(\d+) articles · (\d+) chars", proc.stdout or "", re.M)
+    if not m:
+        return "error", "health probe passed but printed no article/char counts"
+    articles, chars = int(m.group(1)), int(m.group(2))
+    if articles < MIN_ARTICLES or chars < MIN_CONTENT_CHARS:
+        return "fail", (f"measured {articles} articles / {chars} chars, below the gate "
+                        f"({MIN_ARTICLES} / {MIN_CONTENT_CHARS})")
+    return "ok", f"{articles} articles / {chars} chars"
 
 
 PHASES = {

@@ -154,6 +154,8 @@ sys.exit(1 if "FAILME" in msg else 0)
 FAKE_HEALTH = """import json, sys
 sid = sys.argv[sys.argv.index("--source") + 1]
 ids = {s["id"] for s in json.load(open("config/sources.json"))["sources"]}
+if sid in ids:
+    print(f"  {sid:25} 10 articles · 900 chars · 1ms")
 sys.exit(0 if sid in ids else 2)
 """
 
