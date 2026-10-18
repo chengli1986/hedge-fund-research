@@ -9352,6 +9352,149 @@
       "avg_quality_score": 0.707
     }
   ],
-  "active_trials": [],
-  "last_summary_sent_date": "2026-10-04"
+  "active_trials": [
+    {
+      "id": "rbc-bluebay",
+      "name": "RBC BlueBay Asset Management",
+      "research_url": "https://www.rbcbluebay.com/en/institutional/what-we-think/insights/",
+      "homepage_url": "https://www.rbcbluebay.com/en/institutional/what-we-think/insights/",
+      "fit_score": 0.865,
+      "quality": "HIGH",
+      "topics": "fixed income, macro, credit, EM",
+      "start_date": "2026-10-18",
+      "end_date": null,
+      "daily_checks": {
+        "2026-10-18": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.rbcbluebay.com/en/institutional/what-we-think/insights/multi-strategy-credit-dont-get-depressed-by-headline-spreads/",
+            "https://www.rbcbluebay.com/en/institutional/what-we-think/insights/dollars-and-sense-podcast-making-dollars-and-talking-sense-in-emerging-markets-equity/",
+            "https://www.rbcbluebay.com/en/institutional/what-we-think/insights/india-return-of-the-bulls/",
+            "https://www.rbcbluebay.com/en/institutional/what-we-think/insights/global-equity-investor-insight-september-2026/",
+            "https://www.rbcbluebay.com/en/institutional/what-we-think/insights/wild-oats-spread-autumn-discontent/",
+            "https://www.rbcbluebay.com/en/institutional/what-we-think/insights/markets-with-mike-webinar-october-2026/",
+            "https://www.rbcbluebay.com/en/institutional/what-we-think/insights/challenged-arbitrage-and-barbells-in-clos/",
+            "https://www.rbcbluebay.com/en/institutional/what-we-think/insights/securitized-credit-why-now/",
+            "https://www.rbcbluebay.com/en/institutional/what-we-think/insights/markets-with-mike-september-2026/",
+            "https://www.rbcbluebay.com/en/institutional/what-we-think/insights/em-local-markets-the-next-safe-haven/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.rbcbluebay.com/en/institutional/what-we-think/insights/multi-strategy-credit-dont-get-depressed-by-headline-spreads/",
+              "relevance": 0.9,
+              "depth": 0.75,
+              "extractable": 0.7,
+              "overall": 0.8,
+              "notes": "Multi-strategy credit analysis identifying opportunities in tight spreads through dispersion metrics, AI debt growth, and convertible bonds; substantive but truncated mid-sentence."
+            },
+            {
+              "url": "https://www.rbcbluebay.com/en/institutional/what-we-think/insights/dollars-and-sense-podcast-making-dollars-and-talking-sense-in-emerging-markets-equity/",
+              "relevance": 0.85,
+              "depth": 0.6,
+              "extractable": 0.65,
+              "overall": 0.71,
+              "notes": "Emerging markets equity podcast transcript discussing EM outperformance drivers, AI manufacturing, and regional opportunities; conversational format with moderate depth, truncated at end."
+            },
+            {
+              "url": "https://www.rbcbluebay.com/en/institutional/what-we-think/insights/india-return-of-the-bulls/",
+              "relevance": 0.9,
+              "depth": 0.65,
+              "extractable": 0.6,
+              "overall": 0.74,
+              "notes": "India equity investment thesis based on site visits covering manufacturing, tech hubs, financial sector, and data centers; qualitative insights with limited quantitative data, truncated with link to full PDF."
+            }
+          ],
+          "avg_score": 0.75,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 1,
+          "date": "2026-10-18"
+        }
+      ]
+    },
+    {
+      "id": "fulcrum-asset-management",
+      "name": "Fulcrum Asset Management",
+      "research_url": "https://www.fulcrumasset.com",
+      "homepage_url": "https://www.fulcrumasset.com",
+      "fit_score": null,
+      "quality": "HIGH",
+      "topics": "macro, multi-asset, alternative credit, FX",
+      "start_date": "2026-10-18",
+      "end_date": null,
+      "daily_checks": {
+        "2026-10-18": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://fulcrumasset.com/insights/videos-podcasts/us-inflation-data-challenges-the-fed-leadership/",
+            "https://fulcrumasset.com/insights/videos-podcasts/on-the-horizon-october-2026/",
+            "https://fulcrumasset.com/insights/videos-podcasts/the-french-budgetary-crisis/",
+            "https://fulcrumasset.com/insights/videos-podcasts/understanding-the-riddles-of-the-bond-market/",
+            "https://fulcrumasset.com/insights/videos-podcasts/oil-prices-force-warshs-hand/",
+            "https://fulcrumasset.com/insights/videos-podcasts/on-the-horizon-september-2026/",
+            "https://fulcrumasset.com/insights/videos-podcasts/can-healthy-economies-defy-geopolitical-shocks/",
+            "https://fulcrumasset.com/insights/videos-podcasts/on-the-horizon-august-2026/",
+            "https://fulcrumasset.com/insights/investment-insights/investing-for-growth-building-a-resilient-portfolio/",
+            "https://fulcrumasset.com/insights/investment-insights/tracking-central-bank-narratives-with-llms/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://fulcrumasset.com/insights/videos-podcasts/us-inflation-data-challenges-the-fed-leadership/",
+              "relevance": 0.85,
+              "depth": 0.55,
+              "extractable": 0.7,
+              "overall": 0.7,
+              "notes": "Macro analysis of US inflation, Fed policy divergence, and 2027 rate expectations via fireside chat format"
+            },
+            {
+              "url": "https://fulcrumasset.com/insights/videos-podcasts/on-the-horizon-october-2026/",
+              "relevance": 0.8,
+              "depth": 0.5,
+              "extractable": 0.7,
+              "overall": 0.66,
+              "notes": "Thematic macro and sector analysis covering rates, energy bottlenecks, and AI infrastructure demand risks"
+            },
+            {
+              "url": "https://fulcrumasset.com/insights/videos-podcasts/the-french-budgetary-crisis/",
+              "relevance": 0.85,
+              "depth": 0.6,
+              "extractable": 0.7,
+              "overall": 0.72,
+              "notes": "Sovereign debt and fiscal policy analysis of France's budgetary crisis and political/ECB implications"
+            }
+          ],
+          "avg_score": 0.693,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 1,
+          "date": "2026-10-18"
+        }
+      ]
+    }
+  ],
+  "last_summary_sent_date": "2026-10-18"
 }
