@@ -155,3 +155,126 @@ def test_auto_reject_survives_null_notes(tmp_path):
     assert sf.auto_reject_exhausted_candidates(cands, hist, max_failures=3) == ["x"]
     c = json.loads(cands.read_text())[0]
     assert c["status"] == "rejected" and c["notes"].startswith("Auto-rejected ")
+
+
+# --- minor: a promotion reverted twice in a week is parked --------------------
+def _promote_repo(tmp_path, monkeypatch, prior_reverts):
+    import subprocess
+    import verify_promotions as vp
+    monkeypatch.chdir(tmp_path)
+    git = lambda *a: subprocess.run(["git", *a], check=True, capture_output=True, text=True).stdout
+    git("init", "-q", "-b", "main"); git("config", "user.email", "t@t"); git("config", "user.name", "t")
+    (tmp_path / "config").mkdir(); (tmp_path / "logs").mkdir()
+    (tmp_path / "config" / "fund_candidates.json").write_text(json.dumps([{"id": "x", "status": "promoted"}]))
+    (tmp_path / "config" / "sources.json").write_text('{"sources": []}')
+    git("add", "-A"); git("commit", "-qm", "base")
+    (tmp_path / "config" / "sources.json").write_text('{"sources": [{"id": "x"}]}')
+    git("commit", "-qam", "promote x")
+    sha = git("rev-parse", "HEAD").strip()
+    today = vp.today_bjt()
+    (tmp_path / "logs" / "auto-promote-history.jsonl").write_text("".join(
+        json.dumps({"date": today, "id": "x", "outcome": "auto_reverted"}) + "\n"
+        for _ in range(prior_reverts)))
+    problem = vp.revert({"id": "x", "date": today, "commit": sha}, "auto_reverted", "probe FAIL", "probe")
+    c = json.loads((tmp_path / "config" / "fund_candidates.json").read_text())[0]
+    return c, git("log", "-1", "--format=%s"), problem
+
+
+def test_first_revert_keeps_the_retry(tmp_path, monkeypatch):
+    c, last, _ = _promote_repo(tmp_path, monkeypatch, prior_reverts=0)
+    assert c["status"] == "promoted" and last.startswith("Revert")
+
+
+def test_second_revert_in_a_week_parks_it(tmp_path, monkeypatch):
+    c, last, problem = _promote_repo(tmp_path, monkeypatch, prior_reverts=1)
+    assert c["status"] == "watchlist" and "set back to promoted to retry" in c["notes"]
+    assert last.startswith("auto-promote: park x")
+    assert "push failed" in (problem or "")          # no remote here; still reported
+
+
+# --- discovery wrapper: #11 timeouts, timestamps, budget, trigger, report ----
+DISC = (ROOT / "scripts" / "wrapper-candidate-discovery.sh").read_text()
+
+
+def test_every_discovery_step_fits_inside_the_job_timeout():
+    import re
+    v = {k: int(re.search(rf"^{k}=(\d+)", DISC, re.M).group(1))
+         for k in ("JOB_TIMEOUT_S", "PHASE1_TIMEOUT_S", "POST_RESERVE_S", "AGENT_MAX_S")}
+    assert v["JOB_TIMEOUT_S"] == 960
+    # the agent gets what is left (<= AGENT_MAX_S, >= 60): even a Phase 1 that
+    # used its whole timeout leaves the post-agent steps their reserve
+    assert v["PHASE1_TIMEOUT_S"] + 10 + 60 + 30 + v["POST_RESERVE_S"] <= v["JOB_TIMEOUT_S"]
+    assert v["AGENT_MAX_S"] <= v["JOB_TIMEOUT_S"] - v["POST_RESERVE_S"] - 30
+    assert 'timeout --kill-after=30 "$AGENT_TIMEOUT_S" "$CLAUDE_BIN"' in DISC
+    assert "AGENT_TIMEOUT_S=$(( JOB_TIMEOUT_S - SECONDS - POST_RESERVE_S - 30 ))" in DISC
+
+
+def test_each_log_line_gets_its_own_timestamp():
+    assert "$LOG_PREFIX" not in DISC and "ts() {" in DISC
+    synth = (ROOT / "scripts" / "wrapper-fetcher-synthesis.sh").read_text()
+    assert "$LOG_PREFIX" not in synth and "ts() {" in synth
+
+
+def test_one_budget_for_the_agent():
+    assert "max 5 WebSearch" not in DISC and "max 10 WebFetch" not in DISC
+    program = (ROOT / "candidate-discovery" / "program.md").read_text()
+    assert "Maximum 3 WebSearch" in program and "Maximum 8 WebFetch" in program
+
+
+def test_the_trigger_counts_with_synthesis_own_rule_and_fails_closed():
+    assert "sf.list_priority_targets()" in DISC and "from fetch_articles import FETCHERS" not in DISC
+    assert "could not count synthesis_priority targets, not triggering" in DISC
+
+
+def test_list_priority_targets_skips_fetchers_templates_and_recent_attempts():
+    import synthesize_fetchers as sf
+    from datetime import datetime, timedelta, timezone
+    now = datetime.now(timezone.utc)
+    cands = [{"id": "a", "synthesis_priority": True},
+             {"id": "b", "synthesis_priority": True},                       # has a fetcher
+             {"id": "c", "synthesis_priority": True, "listing_template": {"type": "x"}},
+             {"id": "d", "synthesis_priority": True, "synthesis_attempted_at": now.isoformat()},
+             {"id": "e"}]
+    got = sf.list_priority_targets(cands, {"b"}, now - timedelta(days=7))
+    assert [t["id"] for t in got] == ["a"]
+
+
+def test_a_triggered_synthesis_goes_through_cron_wrapper():
+    assert ('nohup "$CRON_WRAPPER" --name gmia-fetcher-synthesis --timeout 1200 --lock --' in DISC)
+
+
+def _report(tmp_path, cands, trial_queue_ids):
+    """Run the wrapper's report code against a temp repo, SMTP unset."""
+    import os
+    import re
+    import subprocess
+    code = re.search(r"python3 << 'PYEOF'\n(.*?)\nPYEOF", DISC, re.S).group(1)
+    code = code.replace('    print("WARNING: SMTP not configured, report not sent")',
+                        '    open(os.environ["OUT_HTML"], "w").write(html)\n'
+                        '    print("WARNING: SMTP not configured, report not sent")')
+    (tmp_path / "config").mkdir()
+    (tmp_path / "config" / "fund_candidates.json").write_text(json.dumps(cands))
+    (tmp_path / "config" / "sources.json").write_text('{"sources": []}')
+    (tmp_path / "gmia-trial-manager.py").write_text(
+        f"def get_trial_queue(state):\n    import json\n"
+        f"    return [c for c in json.load(open('{tmp_path}/config/fund_candidates.json'))"
+        f" if c['id'] in {trial_queue_ids!r}]\n")
+    for f in ("status_util.py", "detect_stalled_candidates.py"):
+        (tmp_path / f).write_text((ROOT / f).read_text())
+    script = tmp_path / "report.py"
+    script.write_text(code)
+    env = {k: v for k, v in os.environ.items() if k not in ("SMTP_USER", "SMTP_PASS")}
+    env.update(REPO_DIR=str(tmp_path), EXIT_CODE="0", PUSH_FAILED="", OUT_HTML=str(tmp_path / "r.html"))
+    p = subprocess.run([sys.executable, "-P", str(script)], env=env, capture_output=True, text=True)
+    assert p.returncode == 0, p.stderr
+    return (tmp_path / "r.html").read_text()
+
+
+def test_the_report_escapes_candidate_text_and_counts_the_real_queue(tmp_path):
+    cands = [{"id": "x", "name": "<b>X&Co</b>", "status": "visitable", "quality": "HIGH",
+              "topics": "<i>t</i>", "notes": "<script>n</script>", "strategy_tags": ["<u>"]},
+             {"id": "low", "name": "Low", "status": "visitable", "quality": "LOW"}]
+    page = _report(tmp_path, cands, ["x"])
+    assert "<b>X&Co</b>" not in page and "&lt;b&gt;X&amp;Co&lt;/b&gt;" in page
+    assert "<script>" not in page and "<i>t</i>" not in page and "<u>" not in page
+    assert "Queue 1</span>" in page          # LOW is visitable but never trialled

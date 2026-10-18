@@ -46,37 +46,28 @@ class TestFindIllegalChanges:
             {"id": "a", "from": "discovered", "to": "visitable"}
         ]
 
-    def test_legitimate_screen_script_transition_is_not_flagged(self):
-        # screen_fund_candidates.py legitimately moves discovered -> screened
-        # (or screen_failed) via status_util.set_status() and stamps
-        # last_screened_at in the same call — proof it's a real script run,
-        # not the agent hand-editing status to match (2026-07-15 regression:
-        # longleaf-partners/lord-abbett/invesco got reverted despite this).
-        before = [{"id": "a", "status": "discovered", "notes": "x"}]
-        after = [{"id": "a", "status": "screened", "notes": "x",
-                  "last_screened_at": "2026-07-15T09:00:01+08:00"}]
-        assert g.find_illegal_changes(before, after) == []
+    def test_a_forged_script_timestamp_no_longer_excuses_a_status(self):
+        # Stage 6 #9 (2026-10-18): the Phase 1 scripts run before the guard's
+        # snapshot now, so inside the session a status change on an existing
+        # candidate is the agent's. Setting status together with the script's
+        # own timestamp (which used to count as proof) is still illegal.
+        # (Before: 2026-07-15 longleaf-partners/lord-abbett/invesco were
+        # reverted because the scripts ran inside the window.)
+        for frm, to, field in (("discovered", "screened", "last_screened_at"),
+                               ("screened", "inaccessible", "last_validated_at"),
+                               ("screened", "visitable", "last_validated_at")):
+            before = [{"id": "a", "status": frm, "notes": "x"}]
+            after = [{"id": "a", "status": to, "notes": "x",
+                      field: "2026-10-18T09:00:01+08:00"}]
+            assert g.find_illegal_changes(before, after) == [
+                {"id": "a", "from": frm, "to": to}]
 
-    def test_legitimate_entrypoints_script_transition_is_not_flagged(self):
-        # discover_candidate_entrypoints.py legitimately moves
-        # discovered/screened -> visitable/inaccessible, stamping
-        # last_validated_at in the same call.
-        before = [{"id": "a", "status": "screened", "notes": "x"}]
-        after = [{"id": "a", "status": "inaccessible", "notes": "x",
-                  "last_validated_at": "2026-07-15T09:00:01+08:00"}]
-        assert g.find_illegal_changes(before, after) == []
-
-    def test_status_matching_pipeline_transition_without_fresh_stamp_is_illegal(self):
-        # The target status matches a pipeline-owned transition, but the
-        # script-owned freshness field never advanced — this is a hand-edit
-        # forging the status without actually running the script, still illegal.
-        before = [{"id": "a", "status": "discovered", "notes": "x",
-                   "last_screened_at": "2026-07-01T00:00:00+08:00"}]
-        after = [{"id": "a", "status": "screened", "notes": "x",
-                  "last_screened_at": "2026-07-01T00:00:00+08:00"}]
-        assert g.find_illegal_changes(before, after) == [
-            {"id": "a", "from": "discovered", "to": "screened"}
-        ]
+    def test_the_wrapper_runs_phase_1_before_the_snapshot(self):
+        from pathlib import Path
+        w = (Path(g.__file__).parent / "scripts" / "wrapper-candidate-discovery.sh").read_text()
+        assert w.index("run-candidate-discovery.sh") < w.index('cp "$REPO_DIR/config/fund_candidates.json" "$GUARD_BEFORE"')
+        program = (Path(g.__file__).parent / "candidate-discovery" / "program.md").read_text()
+        assert "already ran" in program and "Do not run them again" in program
 
     def test_agent_promoting_directly_stays_illegal_even_with_stale_fields(self):
         # "promoted" is never a pipeline-script transition (only

@@ -42,13 +42,11 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
-import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from status_util import days_since, set_status, tag_note
+from status_util import days_since, set_status, tag_note, write_json_atomic
 
 BJT = timezone(timedelta(hours=8))
 BASE_DIR = Path(__file__).resolve().parent
@@ -64,20 +62,7 @@ def load_candidates() -> list[dict]:
 
 def save_candidates(candidates: list[dict]) -> None:
     """Atomically write candidates to fund_candidates.json."""
-    tmp_fd, tmp_path = tempfile.mkstemp(
-        dir=CANDIDATES_FILE.parent,
-        prefix=".fund_candidates_tmp_",
-        suffix=".json",
-    )
-    try:
-        with os.fdopen(tmp_fd, "w", encoding="utf-8") as f:
-            json.dump(candidates, f, indent=2, ensure_ascii=False)
-            f.write("\n")
-        os.replace(tmp_path, CANDIDATES_FILE)
-    except Exception:
-        if os.path.exists(tmp_path):
-            os.unlink(tmp_path)
-        raise
+    write_json_atomic(CANDIDATES_FILE, candidates)
 
 
 def find_stalled(candidates: list[dict], threshold_days: int) -> list[dict]:

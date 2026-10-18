@@ -15,11 +15,10 @@ synthesis_priority so the fetcher gets synthesized. An agent that promotes
 directly orphans the candidate (no trial, no synthesis_priority, never
 queued). See 2026-06-10 Guggenheim incident.
 
-Phase 1 of the same session runs the real pipeline scripts (discover_fund_sites.py
-/ screen_fund_candidates.py / discover_candidate_entrypoints.py) via Bash, and
-those legitimately set these same statuses through status_util.set_status().
-PIPELINE_STATUS_TRANSITIONS lets the guard tell that apart from a hand-edit by
-checking whether the script's own freshness field actually advanced.
+Phase 1's pipeline scripts (discover_fund_sites.py / screen_fund_candidates.py /
+discover_candidate_entrypoints.py) set these statuses legitimately; since
+2026-10-18 the wrapper runs them before this guard's snapshot, so they are
+never inside the before/after window (see NEW_CANDIDATE_TRANSITIONS).
 
 Usage (run after the discovery agent, before trial-manager):
     python3 guard_candidate_status.py --before <snapshot.json> --after config/fund_candidates.json
@@ -33,7 +32,7 @@ import argparse
 import json
 import sys
 
-from status_util import now_iso
+from status_util import now_iso, write_json_atomic
 
 # Statuses the discovery agent is allowed to set on an EXISTING candidate
 # (besides leaving it unchanged).
@@ -41,26 +40,18 @@ ALLOWED_AGENT_STATUSES = {"watchlist", "rejected"}
 # Status the agent is allowed to give a brand-new candidate.
 ALLOWED_NEW_STATUS = "seed"
 
-# Status transitions owned by program.md's Phase 1 pipeline scripts
-# (discover_fund_sites.py / screen_fund_candidates.py /
-# discover_candidate_entrypoints.py), which the agent runs via Bash in the
-# same session this guard's before/after snapshot spans. Each script calls
-# status_util.set_status() itself and stamps its own freshness field at the
-# same time, so a transition is only treated as legitimate when that field
-# actually advanced in this session — proof the real script ran, not the
-# agent hand-editing the status field via Edit/Write to match. Without this,
-# every ordinary Phase 1 pipeline run gets reverted as if it were the agent
-# illegally promoting/rejecting via direct edit (2026-07-15 longleaf-partners/
-# lord-abbett/invesco false-positive: screen_fund_candidates.py legitimately
-# screened all 3, discover_candidate_entrypoints.py legitimately marked 2
-# inaccessible, guard reverted all of it back to "discovered").
-PIPELINE_STATUS_TRANSITIONS = {
-    "screened": "last_screened_at",
-    "screen_failed": "last_screened_at",
-    "visitable": "last_validated_at",
-    "inaccessible": "last_validated_at",
-    "discovered": "last_discovered_at",
-}
+# Status a brand-new candidate may reach in the session: Phase 3 adds a bare
+# seed and runs `discover_fund_sites.py --fund <new-id>`, which advances it to
+# "discovered" and stamps last_discovered_at (2026-07-29 blue-owl-capital).
+#
+# Existing candidates get no such exemption any more (stage 6 #9,
+# 2026-10-18). The Phase 1 scripts used to run inside the agent's session,
+# so a status they set was told apart from a hand-edit by "did the script's
+# own timestamp advance?" -- a field in the same file the agent edits, which
+# it could set together with the status. The wrapper now runs Phase 1 before
+# this guard's snapshot; inside the session nothing but the agent changes an
+# existing candidate, and the agent may only set watchlist or rejected.
+NEW_CANDIDATE_TRANSITIONS = {"discovered": "last_discovered_at"}
 
 
 def find_illegal_changes(before: list[dict], after: list[dict]) -> list[dict]:
@@ -78,14 +69,7 @@ def find_illegal_changes(before: list[dict], after: list[dict]) -> list[dict]:
         if prev is None:
             if to == ALLOWED_NEW_STATUS:
                 continue
-            # Phase 3 has the agent add a bare "seed" candidate, then run
-            # discover_fund_sites.py --fund <new-id> in the same session —
-            # that script legitimately advances seed -> discovered (or
-            # further) and stamps its own freshness field, same proof used
-            # below for pre-existing candidates. A brand-new id has no
-            # "before" value for that field, so its mere presence is the
-            # proof (2026-07-29 blue-owl-capital false positive).
-            stamp_field = PIPELINE_STATUS_TRANSITIONS.get(to)
+            stamp_field = NEW_CANDIDATE_TRANSITIONS.get(to)
             if stamp_field and c.get(stamp_field):
                 continue
             illegal.append({"id": cid, "from": None, "to": to})
@@ -93,9 +77,6 @@ def find_illegal_changes(before: list[dict], after: list[dict]) -> list[dict]:
         frm = prev.get("status")
         if to == frm or to in ALLOWED_AGENT_STATUSES:
             continue
-        stamp_field = PIPELINE_STATUS_TRANSITIONS.get(to)
-        if stamp_field and c.get(stamp_field) != prev.get(stamp_field):
-            continue  # legitimate: proven by a fresh script-owned timestamp
         illegal.append({"id": cid, "from": frm, "to": to})
     return illegal
 
@@ -167,10 +148,10 @@ def main() -> int:
     stamped = stamp_legal_status_changes(before, corrected, illegal)
 
     if illegal or stamped:
-        # Match the on-disk format written by the rest of the pipeline:
-        # json.dumps(indent=2) (ensure_ascii=True default), no trailing newline.
-        with open(args.after, "w") as f:
-            f.write(json.dumps(corrected, indent=2))
+        # Atomic, and the format every other writer uses (indent=2, UTF-8
+        # as is, trailing newline) -- it used to escape non-ASCII, so each
+        # writer re-encoded the others' rows (stage 6 minor, 2026-10-18).
+        write_json_atomic(args.after, corrected)
         for x in illegal:
             print(f"REVERTED {x['id']}: {x['from']} -> {x['to']} (reverted)")
         if stamped:

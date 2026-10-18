@@ -98,4 +98,9 @@ def test_phase_3_no_longer_waits_for_every_candidate_to_be_analysed():
 
 def test_the_wrapper_and_the_playbook_agree_on_one_seed():
     text = (REPO / "scripts" / "wrapper-candidate-discovery.sh").read_text()
-    assert "max 2 new seeds" not in text and "max 1 new seed" in text
+    # Since 2026-10-18 the wrapper states no numbers of its own; the playbook's
+    # Constraints are the session's limits (they had drifted: 5/10 vs 3/8).
+    assert "max 2 new seeds" not in text and "max 1 new seed" not in text
+    assert "limits under Constraints above are this session's limits" in text
+    program = (REPO / "candidate-discovery" / "program.md").read_text()
+    assert "Maximum 1 new seed per session" in program

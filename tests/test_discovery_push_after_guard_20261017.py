@@ -28,8 +28,10 @@ def test_the_agent_is_started_with_push_disabled():
 def test_the_first_push_comes_after_the_guard_and_its_commit():
     guard = WRAPPER.index("python3 guard_candidate_status.py")
     stamp_commit = WRAPPER.index('git commit -m "guard: stamp added_at/status_since (auto)"')
-    first_push = WRAPPER.index("git push")
+    # pushes go through push_or_flag (2026-10-18); its body is the only bare one
+    first_push = WRAPPER.index('push_or_flag "')
     assert guard < stamp_commit < first_push
+    assert len(re.findall(r"^\s*(?:if ! )?git push\b", WRAPPER, re.M)) == 1   # only in push_or_flag
 
 
 def test_the_stamp_commit_does_not_depend_on_a_revert():

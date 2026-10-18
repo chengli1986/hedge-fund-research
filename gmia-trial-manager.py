@@ -40,7 +40,7 @@ from urllib.parse import urlparse
 import httpx
 from bs4 import BeautifulSoup
 
-from status_util import set_status
+from status_util import set_status, write_json_atomic
 
 BJT = timezone(timedelta(hours=8))
 BASE_DIR = Path(__file__).resolve().parent
@@ -54,6 +54,10 @@ MAX_CONCURRENT_TRIALS = 3
 MIN_DAYS_WITH_ARTICLES = 4  # fetcher must return >0 articles on ≥4 of 7 days
 MIN_QUALITY = {"HIGH", "MEDIUM"}
 MIN_QUALITY_SCORE = 0.5     # avg Haiku quality score to pass (0-1)
+# An average needs a few articles behind it: one sampled article could pass
+# or fail a trial on its own (stage 6 minor, 2026-10-18). Fewer is
+# "inconclusive" -- no verdict, re-trial allowed. Every pass on record had >= 3.
+MIN_QUALITY_SAMPLES = 3
 SAMPLE_DAYS = {1, 2, 3, 4, 5, 6, 7}  # quality sampling runs every trial day
                             # each day samples SAMPLE_SIZE *new* articles (dedup
                             # across days); up to 21 unique articles scored total
@@ -113,7 +117,7 @@ def load_state() -> dict:
 
 
 def save_state(state: dict) -> None:
-    TRIAL_STATE_FILE.write_text(json.dumps(state, indent=2, ensure_ascii=False))
+    write_json_atomic(TRIAL_STATE_FILE, state)
 
 
 def load_candidates() -> list[dict]:
@@ -121,7 +125,7 @@ def load_candidates() -> list[dict]:
 
 
 def save_candidates(candidates: list[dict]) -> None:
-    CANDIDATES_FILE.write_text(json.dumps(candidates, indent=2, ensure_ascii=False))
+    write_json_atomic(CANDIDATES_FILE, candidates)
 
 
 def load_env() -> dict[str, str]:
@@ -859,6 +863,14 @@ def _summary_bucket(t: dict) -> str:
     return "other"
 
 
+def trial_subject(trial: dict, passed: bool, dwa, avg_q: float) -> str:
+    """An inconclusive trial reached no verdict; its subject said FAIL until
+    2026-10-18 (stage 6 minor)."""
+    verdict = ("PASS" if passed else
+               "INCONCLUSIVE" if trial.get("outcome") == "inconclusive" else "FAIL")
+    return f"GMIA Trial {verdict}: {trial['name']} ({dwa}/{TRIAL_DAYS} days, Q={avg_q:.2f})"
+
+
 def send_trial_email(trial: dict, passed: bool, total_articles: int,
                      days_with_articles: int | None = None) -> None:
     env = load_env()
@@ -973,7 +985,7 @@ def send_trial_email(trial: dict, passed: bool, total_articles: int,
     dwa = days_with_articles if days_with_articles is not None else trial.get("days_with_articles", "?")
     avg_q = trial.get("avg_quality_score", 0.0)
     msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"GMIA Trial {'PASS' if passed else 'FAIL'}: {trial['name']} ({dwa}/{TRIAL_DAYS} days, Q={avg_q:.2f})"
+    msg["Subject"] = trial_subject(trial, passed, dwa, avg_q)
     msg["From"] = smtp_user
     msg["To"] = mail_to
     msg["MIME-Version"] = "1.0"
@@ -1015,7 +1027,9 @@ def _scan_pending_profiles(today: str) -> list[dict]:
             continue
 
         try:
-            mtime = datetime.fromtimestamp(path.stat().st_mtime).date()
+            # BJT, like `today`: the server's clock is UTC, so a profile
+            # written 00:00-08:00 BJT was dated the day before (stage 6 minor).
+            mtime = datetime.fromtimestamp(path.stat().st_mtime, tz=BJT).date()
             age_days = (today_dt - mtime).days
         except OSError:
             continue
@@ -1390,7 +1404,8 @@ def cmd_run() -> None:
                 for a in s.get("articles", [])
             ]
             avg_quality = (sum(all_scores) / len(all_scores)) if all_scores else 0.0
-            quality_ok = bool(all_scores) and avg_quality >= MIN_QUALITY_SCORE
+            enough_samples = len(all_scores) >= MIN_QUALITY_SAMPLES
+            quality_ok = enough_samples and avg_quality >= MIN_QUALITY_SCORE
 
             passed = quantity_ok and quality_ok
             active["auto_decided"] = True
@@ -1400,9 +1415,9 @@ def cmd_run() -> None:
             active["avg_quality_score"] = round(avg_quality, 3)
             if not quantity_ok:
                 active["outcome"] = "fail_quantity"
-            elif not all_scores:
-                # Articles were detected on enough days but not a single one
-                # could be sampled — that is a sampling failure, not a quality
+            elif not enough_samples:
+                # Articles were detected on enough days but too few could be
+                # sampled — that is a sampling failure, not a quality
                 # verdict. Do not label it fail_quality / LOW QUALITY.
                 active["outcome"] = "inconclusive"
             elif not quality_ok:
@@ -1437,9 +1452,10 @@ def cmd_run() -> None:
                                     f"Trial failed: articles on only "
                                     f"{days_with_articles}/{TRIAL_DAYS} days"
                                 )
-                        elif not all_scores:
+                        elif not enough_samples:
                             set_status(c, "watchlist")
-                            c["notes"] = "Trial inconclusive: no quality samples obtained"
+                            c["notes"] = (f"Trial inconclusive: {len(all_scores)} quality "
+                                          f"sample(s), need {MIN_QUALITY_SAMPLES}")
                         else:
                             set_status(c, "watchlist")
                             c["notes"] = f"Trial failed: low quality ({avg_quality:.2f})"

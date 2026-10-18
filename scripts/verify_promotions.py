@@ -24,14 +24,23 @@ import json
 import re
 import subprocess
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from promote_today import (BJT, MIN_ARTICLES, MIN_CONTENT_CHARS,  # noqa: E402
-                           live_promotions, today_bjt)
+                           REVERT_OUTCOMES, live_promotions, today_bjt)
+from status_util import set_status, tag_note, write_json_atomic  # noqa: E402
 
 LOG = Path("logs/auto-promote-history.jsonl")
+CANDIDATES = Path("config/fund_candidates.json")
+# A reverted promotion left the candidate "promoted", so the next night wired
+# it again -- every night while the problem lasted (stage 6 minor,
+# 2026-10-18). One retry is kept (research-affiliates was reverted 05-14 and
+# wired fine 05-15); the second revert within PARK_WINDOW_DAYS parks it.
+PARK_AFTER_REVERTS = 2
+PARK_WINDOW_DAYS = 7
 VALIDATOR = "scripts/validate_promote_commit_msg.py"
 HEALTH = "scripts/gmia-fetcher-health.py"
 
@@ -46,6 +55,40 @@ def _record(e: dict, outcome: str, notes: str, commit: str = "") -> None:
            "notes": notes, "commit": commit, "reverted_commit": e.get("commit", "")}
     with LOG.open("a") as f:
         f.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+
+def recent_reverts(sid: str, today: str, days: int = PARK_WINDOW_DAYS) -> int:
+    """Reverts of sid recorded in the last `days` days (today included)."""
+    if not LOG.exists():
+        return 0
+    start = (datetime.strptime(today, "%Y-%m-%d") - timedelta(days=days - 1)).strftime("%Y-%m-%d")
+    n = 0
+    for line in LOG.read_text().splitlines():
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if (isinstance(row, dict) and row.get("id") == sid
+                and row.get("outcome") in REVERT_OUTCOMES and start <= str(row.get("date")) <= today):
+            n += 1
+    return n
+
+
+def park(sid: str, why: str, tag: str) -> bool:
+    """promoted -> watchlist with a note, committed. False if not found."""
+    cands = json.loads(CANDIDATES.read_text())
+    rows = cands if isinstance(cands, list) else cands.get("candidates", [])
+    c = next((x for x in rows if x.get("id") == sid), None)
+    if c is None or c.get("status") != "promoted":
+        return False
+    set_status(c, "watchlist")
+    tag_note(c, f"[auto-promote reverted {PARK_AFTER_REVERTS}x in {PARK_WINDOW_DAYS}d: {why[:80]}; "
+                f"set back to promoted to retry]")
+    write_json_atomic(CANDIDATES, cands)
+    _git("add", str(CANDIDATES))
+    _git("commit", "-q", "-m", f"auto-promote: park {sid} on watchlist after repeated reverts (auto)")
+    print(f"[{tag}]   parked {sid} on watchlist ({PARK_AFTER_REVERTS} reverts in {PARK_WINDOW_DAYS} days)")
+    return True
 
 
 def revert(e: dict, outcome: str, why: str, tag: str) -> str | None:
@@ -63,6 +106,8 @@ def revert(e: dict, outcome: str, why: str, tag: str) -> str | None:
     sha = _git("rev-parse", "HEAD").stdout.strip()
     _record(e, outcome, f"{why} -- reverted {commit[:8]}", sha)
     print(f"[{tag}]   ✓ reverted to {sha[:8]}, history updated")
+    if recent_reverts(sid, today_bjt()) >= PARK_AFTER_REVERTS:
+        park(sid, why, tag)
     push = _git("push", "origin", "main")
     if push.returncode != 0:
         return f"{sid}: reverted locally, but git push failed: {push.stderr[:200]}"

@@ -203,6 +203,8 @@ def test_trial_fails_with_low_quality_scores(trial_env, monkeypatch):
                      "depth": 0.1, "extractable": 0.5, "overall": 0.18, "notes": "marketing"},
                     {"url": "https://example.com/a2", "relevance": 0.2,
                      "depth": 0.1, "extractable": 0.3, "overall": 0.18, "notes": "press release"},
+                    {"url": "https://example.com/a3", "relevance": 0.2,
+                     "depth": 0.1, "extractable": 0.3, "overall": 0.18, "notes": "promo"},
                 ],
                 "avg_score": 0.18,
                 "error": None,
@@ -556,6 +558,8 @@ def test_trial_passes_with_both_quantity_and_quality(trial_env, monkeypatch):
                      "depth": 0.8, "extractable": 0.9, "overall": 0.86, "notes": "good research"},
                     {"url": "https://example.com/a2", "relevance": 0.85,
                      "depth": 0.75, "extractable": 0.8, "overall": 0.80, "notes": "solid analysis"},
+                    {"url": "https://example.com/a3", "relevance": 0.85,
+                     "depth": 0.75, "extractable": 0.8, "overall": 0.83, "notes": "third sample"},
                 ],
                 "avg_score": 0.83,
                 "error": None,
@@ -1293,9 +1297,13 @@ def _make_trial_state_pass(start_days_ago=8, js_only_count=0, js_only_checked=3)
             "quality_samples": [{
                 "day": 1,
                 "date": start.strftime("%Y-%m-%d"),
-                "sampled": 2,
-                "articles": [
+                "sampled": 3,
+                "articles": [   # >= MIN_QUALITY_SAMPLES (3), 2026-10-18
                     {"url": "https://example.com/a1", "relevance": 0.9,
+                     "depth": 0.8, "extractable": 0.9, "overall": 0.86, "notes": "good"},
+                    {"url": "https://example.com/a2", "relevance": 0.9,
+                     "depth": 0.8, "extractable": 0.9, "overall": 0.86, "notes": "good"},
+                    {"url": "https://example.com/a3", "relevance": 0.9,
                      "depth": 0.8, "extractable": 0.9, "overall": 0.86, "notes": "good"},
                 ],
                 "avg_score": 0.86,
@@ -1483,3 +1491,56 @@ def test_quality_gate_no_playwright_when_httpx_succeeds(trial_env, monkeypatch):
     result = tm.sample_article_quality("https://ok.example/", trial={"id": "healthy"})
     assert result["sampled"] == tm.SAMPLE_SIZE
     pw.assert_not_called()
+
+
+# ── Stage 6 minors, 2026-10-18 ───────────────────────────────────────────────
+
+def test_one_sampled_article_is_inconclusive_not_a_verdict(trial_env, monkeypatch):
+    """A single high score used to pass a trial on its own."""
+    state = _make_trial_state_pass()
+    state["active_trials"][0]["quality_samples"][0]["articles"] = \
+        state["active_trials"][0]["quality_samples"][0]["articles"][:1]
+    tm.TRIAL_STATE_FILE.write_text(json.dumps(state))
+    monkeypatch.setattr(tm, "count_articles_with_fetcher", lambda trial: {
+        "accessible": True, "article_count": 10, "date_count": 5,
+        "error": None, "fetcher_used": True})
+    monkeypatch.setattr(tm, "sample_article_quality", lambda *a, **k: {
+        "sampled": 0, "articles": [], "avg_score": 0.0, "error": "already sampled",
+        "js_only_count": 0, "js_only_checked": 0})
+    mails = []
+    monkeypatch.setattr(tm, "send_trial_email", lambda *a, **k: mails.append(a))
+    monkeypatch.setattr(tm, "_load_fetchers", lambda: {"test-fund": lambda s: []})
+    tm.cmd_run()
+    done = json.loads(tm.TRIAL_STATE_FILE.read_text())["history"][-1]
+    assert done["outcome"] == "inconclusive"
+    c = next(x for x in json.loads(tm.CANDIDATES_FILE.read_text()) if x["id"] == "test-fund")
+    assert c["status"] == "watchlist" and "1 quality sample(s), need 3" in c["notes"]
+
+
+def test_an_inconclusive_trial_mail_does_not_say_fail():
+    t = {"name": "X", "outcome": "inconclusive"}
+    assert tm.trial_subject(t, False, 7, 0.0).startswith("GMIA Trial INCONCLUSIVE: X")
+    assert tm.trial_subject({"name": "X", "outcome": "fail_quality"}, False, 7, 0.3).startswith("GMIA Trial FAIL")
+    assert tm.trial_subject({"name": "X", "outcome": "pass"}, True, 7, 0.8).startswith("GMIA Trial PASS")
+
+
+def test_pending_profile_age_counts_bjt_days(tmp_path, monkeypatch):
+    """A profile written 01:00 BJT (17:00 UTC the day before) is 0 days old that day."""
+    import os
+    d = tmp_path / "pending_profiles"
+    d.mkdir()
+    p = d / "x.json"
+    p.write_text("{}")
+    ts = datetime(2026, 10, 18, 1, 0, tzinfo=BJT).timestamp()
+    os.utime(p, (ts, ts))
+    monkeypatch.setattr(tm, "PENDING_PROFILES_DIR", d)
+    assert tm._scan_pending_profiles("2026-10-18")[0]["age_days"] == 0
+
+
+def test_trial_state_and_candidates_are_written_atomically():
+    src = Path(tm.__file__).read_text()
+    assert "write_json_atomic(TRIAL_STATE_FILE, state)" in src
+    assert "write_json_atomic(CANDIDATES_FILE, candidates)" in src
+    assert ".write_text(json.dumps(" not in src
+    guard = (Path(tm.__file__).parent / "guard_candidate_status.py").read_text()
+    assert "write_json_atomic(args.after, corrected)" in guard

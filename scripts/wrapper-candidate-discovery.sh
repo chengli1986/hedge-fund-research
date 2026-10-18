@@ -7,13 +7,25 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
-LOG_PREFIX="[$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')]"
+# A timestamp per line: LOG_PREFIX was computed once, so every line of a
+# run read 09:00:01 and the log could not say how long any step took
+# (stage 6 minor, 2026-10-18).
+ts() { TZ='Asia/Shanghai' date '+[%Y-%m-%d %H:%M:%S]'; }
+
+# Time limits, all inside cron-wrapper's --timeout for this job (stage 6
+# #11): the agent used to get 930s+30s of a 960s job, so a long session left
+# the guard, trial manager, push and report no time, and a kill there could
+# land mid-write.
+JOB_TIMEOUT_S=960        # = cron-wrapper --timeout of gmia-candidate-discovery
+PHASE1_TIMEOUT_S=180
+POST_RESERVE_S=240       # guard, stall routing, trial manager, push, report
+AGENT_MAX_S=600          # sessions take ~1 min; the longest seen was 470s
 
 cleanup() {
     local pids
     pids=$(jobs -p 2>/dev/null)
     if [ -n "$pids" ]; then
-        echo "$LOG_PREFIX Cleaning up child processes..."
+        echo "$(ts) Cleaning up child processes..."
         kill $pids 2>/dev/null || true
         sleep 2
         kill -9 $pids 2>/dev/null || true
@@ -21,7 +33,18 @@ cleanup() {
 }
 trap cleanup EXIT
 
-echo "$LOG_PREFIX Starting candidate fund discovery session..."
+# A push that fails used to print a WARNING nobody read; the commits sat
+# local and the job exited 0 (stage 6 minor). Collected here, shown in the
+# report and turned into a non-zero exit at the end.
+PUSH_FAILED=""
+push_or_flag() {
+    if ! git push 2>&1; then
+        echo "$(ts) WARNING: git push ($1) failed"
+        PUSH_FAILED="${PUSH_FAILED:+$PUSH_FAILED, }$1"
+    fi
+}
+
+echo "$(ts) Starting candidate fund discovery session..."
 
 # CRITICAL: Unset API key so Claude uses Max plan auth (not paid API)
 # Save it first — the trial manager needs it later for direct Haiku API calls
@@ -43,20 +66,9 @@ cd "$REPO_DIR"
 # Read the program instructions
 PROGRAM_MD="$REPO_DIR/candidate-discovery/program.md"
 if [ ! -f "$PROGRAM_MD" ]; then
-    echo "$LOG_PREFIX ERROR: $PROGRAM_MD not found"
+    echo "$(ts) ERROR: $PROGRAM_MD not found"
     exit 1
 fi
-
-PROMPT="IMPORTANT: Skip daily log recap and session start routines. Go straight to the task below.
-
-$(cat "$PROGRAM_MD")
-
-## Session constraints (added by wrapper)
-- You have a MAXIMUM of 15 minutes for this session
-- Cost control: max 5 WebSearch, max 10 WebFetch, max 1 new seed
-- After all work, commit any changes but do NOT push: the wrapper pushes after its checks
-- Output a brief summary at the end
-"
 
 # 15-minute timeout + 30s grace
 # --allowedTools: scoped to what the agent actually needs
@@ -64,6 +76,38 @@ $(cat "$PROGRAM_MD")
 #   Read/Edit/Write — update config files
 #   WebFetch — fetch fund research pages for analysis
 #   WebSearch — discover new candidate funds
+
+# --- Phase 1: the rule pipeline, run here, before the guard's snapshot ---
+# Stage 6 #9 (2026-10-18): the agent used to run these three scripts itself,
+# inside the guard's before/after window, so the guard had to accept their
+# status changes on the evidence of a timestamp in the same file the agent
+# edits. Run first, they are outside the window; the agent only reads them.
+echo "$(ts) Phase 1: discover / screen / entrypoints..."
+PHASE1_OUT=$(timeout --kill-after=10 "$PHASE1_TIMEOUT_S" \
+    bash "$SCRIPT_DIR/run-candidate-discovery.sh" 2>&1)
+PHASE1_EXIT=$?
+echo "$PHASE1_OUT"
+if [ "$PHASE1_EXIT" -ne 0 ]; then
+    echo "$(ts) WARNING: Phase 1 pipeline exited $PHASE1_EXIT"
+fi
+
+AGENT_TIMEOUT_S=$(( JOB_TIMEOUT_S - SECONDS - POST_RESERVE_S - 30 ))
+[ "$AGENT_TIMEOUT_S" -gt "$AGENT_MAX_S" ] && AGENT_TIMEOUT_S=$AGENT_MAX_S
+[ "$AGENT_TIMEOUT_S" -lt 60 ] && AGENT_TIMEOUT_S=60
+
+PROMPT="IMPORTANT: Skip daily log recap and session start routines. Go straight to the task below.
+
+$(cat "$PROGRAM_MD")
+
+## Session constraints (added by wrapper)
+- You have a MAXIMUM of $(( AGENT_TIMEOUT_S / 60 )) minutes for this session
+- Cost control: the WebSearch / WebFetch / new-seed limits under Constraints above are this session's limits
+- After all work, commit any changes but do NOT push: the wrapper pushes after its checks
+- Output a brief summary at the end
+
+## Phase 1 output (the wrapper already ran the three scripts before this session)
+$(printf '%s\n' "$PHASE1_OUT" | tail -n 120)
+"
 
 # Snapshot candidate statuses BEFORE the agent runs so the post-run guard can
 # detect any illegal status change it makes (agent may only set watchlist/
@@ -79,18 +123,18 @@ CLAUDE_BIN="${CLAUDE_BIN:-/home/ubuntu/.npm-global/bin/claude}"
 # git only (env-scoped config, not written anywhere).
 NO_PUSH_ENV=(GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=remote.origin.pushurl
              GIT_CONFIG_VALUE_0=/nonexistent/push-disabled-wrapper-pushes)
-env "${NO_PUSH_ENV[@]}" timeout --kill-after=30 930 "$CLAUDE_BIN" -p \
+env "${NO_PUSH_ENV[@]}" timeout --kill-after=30 "$AGENT_TIMEOUT_S" "$CLAUDE_BIN" -p \
     --allowedTools "Bash Read Edit Write WebFetch WebSearch" \
     --model sonnet \
     "$PROMPT" 2>&1
 EXIT_CODE=$?
 
 if [ $EXIT_CODE -eq 124 ]; then
-    echo "$LOG_PREFIX Candidate discovery TIMED OUT after 15 minutes"
+    echo "$(ts) Candidate discovery TIMED OUT after ${AGENT_TIMEOUT_S}s"
 elif [ $EXIT_CODE -ne 0 ]; then
-    echo "$LOG_PREFIX Candidate discovery failed (exit code: $EXIT_CODE)"
+    echo "$(ts) Candidate discovery failed (exit code: $EXIT_CODE)"
 else
-    echo "$LOG_PREFIX Candidate discovery finished successfully"
+    echo "$(ts) Candidate discovery finished successfully"
 fi
 
 # --- Status guard: revert any illegal status change the agent made ---
@@ -104,14 +148,16 @@ if [ -f "$GUARD_BEFORE" ]; then
     GUARD_N=$(printf '%s\n' "$GUARD_OUT" | sed -n 's/^guard: \([0-9]*\) .*/\1/p')
     # Stamps (added_at, status_since) are committed even when nothing was
     # reverted, so the push below never carries a seed without added_at.
-    git add config/fund_candidates.json
+    # candidate_entrypoints.json: Phase 1 writes it; the agent may not commit.
+    git add config/fund_candidates.json config/candidate_entrypoints.json 2>/dev/null \
+        || git add config/fund_candidates.json
     if [ "${GUARD_N:-0}" -gt 0 ]; then
         git diff --cached --quiet || git commit -m "guard: revert $GUARD_N illegal agent status change(s) (auto)"
     else
         git diff --cached --quiet || git commit -m "guard: stamp added_at/status_since (auto)"
     fi
     if [ "${GUARD_N:-0}" -gt 0 ]; then
-        echo "$LOG_PREFIX GUARD reverted $GUARD_N illegal status change(s)"
+        echo "$(ts) GUARD reverted $GUARD_N illegal status change(s)"
         source ~/.stock-monitor.env 2>/dev/null || true
         GUARD_REVERTS="$(printf '%s\n' "$GUARD_OUT" | grep '^REVERTED' || true)" \
         GUARD_SUBJECT="[GMIA GUARD] reverted $GUARD_N illegal agent status change(s)" \
@@ -141,10 +187,10 @@ REMOTE_HEAD=$(git rev-parse origin/main 2>/dev/null || echo "")
 LOCAL_HEAD=$(git rev-parse HEAD 2>/dev/null || echo "")
 # No origin/main ref (pruned, never fetched) is not "nothing to push": try.
 if [ -z "$REMOTE_HEAD" ] || [ "$REMOTE_HEAD" != "$LOCAL_HEAD" ]; then
-    echo "$LOG_PREFIX Pushing new commits..."
-    git push 2>&1 || echo "$LOG_PREFIX WARNING: git push failed"
+    echo "$(ts) Pushing new commits..."
+    push_or_flag "discovery + guard"
 else
-    echo "$LOG_PREFIX No new commits to push"
+    echo "$(ts) No new commits to push"
 fi
 
 # --- Stall detection: auto-route candidates stuck without progress ---
@@ -158,20 +204,20 @@ STALL_OUT=$(python3 detect_stalled_candidates.py 2>&1)
 echo "$STALL_OUT"
 STALL_N=$(printf '%s\n' "$STALL_OUT" | sed -n 's/^stall: \([0-9]*\) .*/\1/p')
 if [ "${STALL_N:-0}" -gt 0 ]; then
-    echo "$LOG_PREFIX Auto-routed $STALL_N stalled candidate(s)"
+    echo "$(ts) Auto-routed $STALL_N stalled candidate(s)"
     git add config/fund_candidates.json
     git diff --cached --quiet || git commit -m "stall: auto-route $STALL_N stalled candidate(s) (auto)"
-    git push 2>&1 || echo "$LOG_PREFIX WARNING: git push (stall) failed"
+    push_or_flag "stall"
 fi
 
 # --- Trial manager (runs regardless of discovery exit code) ---
 # Re-export the API key for Haiku quality sampling
 export ANTHROPIC_API_KEY="$SAVED_ANTHROPIC_API_KEY"
-echo "$LOG_PREFIX Running GMIA trial manager..."
+echo "$(ts) Running GMIA trial manager..."
 python3 "$REPO_DIR/gmia-trial-manager.py" run 2>&1
 TRIAL_EXIT=$?
 if [ $TRIAL_EXIT -ne 0 ]; then
-    echo "$LOG_PREFIX WARNING: trial manager exited with code $TRIAL_EXIT"
+    echo "$(ts) WARNING: trial manager exited with code $TRIAL_EXIT"
 fi
 
 # Commit trial state if changed
@@ -179,8 +225,8 @@ cd "$REPO_DIR"
 if ! git diff --quiet config/trial-state.json config/fund_candidates.json 2>/dev/null; then
     git add config/trial-state.json config/fund_candidates.json
     git diff --cached --quiet || git commit -m "trial: update GMIA trial state $(TZ='Asia/Shanghai' date '+%Y-%m-%d')"
-    echo "$LOG_PREFIX Trial state committed"
-    git push 2>&1 || echo "$LOG_PREFIX WARNING: git push (trial state) failed"
+    echo "$(ts) Trial state committed"
+    push_or_flag "trial state"
 fi
 
 # --- Immediate synthesis trigger for trial-pass candidates ---
@@ -188,41 +234,42 @@ fi
 # fetcher-synthesis now instead of waiting up to 7 days for the weekly cron.
 # The synthesis wrapper has its own flock guard, so concurrent weekly cron
 # runs exit cleanly without double-processing.
-SYNTH_PRIORITY_COUNT=$(
-    cd "$REPO_DIR" && python3 -c "
-import json, sys
-from pathlib import Path
-sys.path.insert(0, '.')
-try:
-    from fetch_articles import FETCHERS
-    registered = set(FETCHERS.keys())
-except Exception:
-    registered = set()
-candidates = json.loads(Path('config/fund_candidates.json').read_text())
-print(sum(1 for c in candidates if c.get('synthesis_priority') and c['id'] not in registered and not c.get('listing_template')))
-" 2>/dev/null || echo 0
-)
+# Counted by synthesize_fetchers' own rule (stage 6 minor, 2026-10-18): the
+# copy that was here imported fetch_articles, and on an import error counted
+# every flagged candidate -- 8 of them already in production -- as fetcherless
+# and launched a synthesis. Any error now means "no trigger", said in the log.
+SYNTH_PRIORITY_COUNT=$(cd "$REPO_DIR" && python3 -c "
+import synthesize_fetchers as sf
+print(len(sf.list_priority_targets()))" 2>&1)
+if ! [[ "$SYNTH_PRIORITY_COUNT" =~ ^[0-9]+$ ]]; then
+    echo "$(ts) WARNING: could not count synthesis_priority targets, not triggering: $SYNTH_PRIORITY_COUNT"
+    SYNTH_PRIORITY_COUNT=0
+fi
 
 if [ "${SYNTH_PRIORITY_COUNT:-0}" -gt 0 ]; then
-    echo "$LOG_PREFIX $SYNTH_PRIORITY_COUNT synthesis_priority target(s) detected — launching fetcher-synthesis in background"
+    echo "$(ts) $SYNTH_PRIORITY_COUNT synthesis_priority target(s) detected — launching fetcher-synthesis in background"
     SYNTH_LOG="$HOME/logs/gmia-fetcher-synthesis.log"
     # Restore original API key state (synthesis wrapper will unset it itself for Max plan auth)
     export ANTHROPIC_API_KEY="$SAVED_ANTHROPIC_API_KEY"
-    nohup bash "$REPO_DIR/scripts/wrapper-fetcher-synthesis.sh" >> "$SYNTH_LOG" 2>&1 &
+    # Through cron-wrapper, like the weekly run: its lock, its ops-status line
+    # and its failure mail (stage 6 minor -- a triggered run had none of them).
+    CRON_WRAPPER="${CRON_WRAPPER:-$HOME/cron-wrapper.sh}"
+    nohup "$CRON_WRAPPER" --name gmia-fetcher-synthesis --timeout 1200 --lock -- \
+        bash "$REPO_DIR/scripts/wrapper-fetcher-synthesis.sh" >> "$SYNTH_LOG" 2>&1 &
     SYNTH_PID=$!
     disown $SYNTH_PID
-    echo "$LOG_PREFIX Fetcher-synthesis started (PID $SYNTH_PID) — log: $SYNTH_LOG"
+    echo "$(ts) Fetcher-synthesis started (PID $SYNTH_PID) — log: $SYNTH_LOG"
 else
-    echo "$LOG_PREFIX No synthesis_priority targets without fetchers — skipping immediate trigger"
+    echo "$(ts) No synthesis_priority targets without fetchers — skipping immediate trigger"
 fi
 
 # --- Email report ---
-echo "$LOG_PREFIX Sending email report..."
+echo "$(ts) Sending email report..."
 source ~/.stock-monitor.env 2>/dev/null || true
 
-export REPO_DIR EXIT_CODE SMTP_USER SMTP_PASS
+export REPO_DIR EXIT_CODE SMTP_USER SMTP_PASS PUSH_FAILED
 python3 << 'PYEOF'
-import json, os, smtplib, sys
+import html, importlib.util, json, os, smtplib, sys
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.utils import make_msgid
@@ -271,10 +318,14 @@ for cid in pass_pending_ids:
     pass_pending.append(c)
 pass_pending.sort(key=lambda c: -(c.get("fit_score") or 0))
 
-queue = [c for c in candidates if c["status"] == "visitable"
-         and c["id"] not in production_ids
-         and c["id"] not in active_trial_ids
-         and c["id"] not in pass_pending_ids]
+# The trial manager's own queue rule, not a copy (stage 6 minor, 2026-10-18):
+# the copy counted every visitable candidate, incl. LOW quality and ones
+# whose trial verdict stands, which the trial manager will never start.
+_spec = importlib.util.spec_from_file_location("gmia_trial_manager", repo / "gmia-trial-manager.py")
+_tm = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_tm)
+queue = [c for c in _tm.get_trial_queue(trial_data)
+         if c["id"] not in production_ids and c["id"] not in pass_pending_ids]
 inaccessible = [c for c in candidates if c["status"] == "inaccessible"]
 seed_statuses = {"seed", "discovered", "screened", "screen_failed"}
 seeds = [c for c in candidates if c["status"] in seed_statuses]
@@ -283,7 +334,7 @@ rejected = [c for c in candidates if c["status"] == "rejected"]
 # 策略覆盖地图
 def q_badge(quality: str) -> str:
     color = {"HIGH": "#22863a", "MEDIUM": "#e36209", "LOW": "#cb2431"}.get(quality, "#959da5")
-    return f'<span style="color:{color};font-weight:bold;font-size:11px">{quality}</span>'
+    return f'<span style="color:{color};font-weight:bold;font-size:11px">{html.escape(str(quality))}</span>'
 
 def fit_pct(score) -> str:
     if score is None:
@@ -294,13 +345,13 @@ def fit_pct(score) -> str:
 
 def tags_html(tags: list) -> str:
     return " ".join(
-        f'<span style="background:#ddf4ff;color:#0969da;border-radius:3px;padding:1px 5px;font-size:10px">{t}</span>'
+        f'<span style="background:#ddf4ff;color:#0969da;border-radius:3px;padding:1px 5px;font-size:10px">{html.escape(str(t))}</span>'
         for t in tags
     )
 
 def notes_short(notes_full: str) -> str:
     n = (notes_full or "")
-    return n[:90] + ("…" if len(n) > 90 else "")
+    return html.escape(n[:90]) + ("…" if len(n) > 90 else "")
 
 def stall_badge(c: dict) -> str:
     """Days stuck in the current status, once >= the auto-stall threshold.
@@ -330,10 +381,10 @@ def group_table(items: list, show_fit: bool = True, show_trial: bool = False, sh
         bg = " style=\"background:#f0fff4\"" if is_rec else ""
         rows += (
             f'<tr{bg}>'
-            f'<td style="padding:5px 8px;border-bottom:1px solid #eee;font-weight:500">{c["name"]}{trial_day}{stall}</td>'
+            f'<td style="padding:5px 8px;border-bottom:1px solid #eee;font-weight:500">{html.escape(str(c["name"]))}{trial_day}{stall}</td>'
             f'<td style="padding:5px 8px;border-bottom:1px solid #eee">{fit_cell}</td>'
             f'<td style="padding:5px 8px;border-bottom:1px solid #eee">{q_badge(c.get("quality","—"))}</td>'
-            f'<td style="padding:5px 8px;border-bottom:1px solid #eee;font-size:11px;color:#586069">{c.get("topics","—")}</td>'
+            f'<td style="padding:5px 8px;border-bottom:1px solid #eee;font-size:11px;color:#586069">{html.escape(str(c.get("topics") or "—"))}</td>'
             f'<td style="padding:5px 8px;border-bottom:1px solid #eee">{tags_html(c.get("strategy_tags",[]))}</td>'
             f'<td style="padding:5px 8px;border-bottom:1px solid #eee;font-size:11px;color:#586069">{notes_short(notes_full)}</td>'
             f'</tr>\n'
@@ -372,7 +423,7 @@ def pass_pending_table(items: list) -> str:
         q_color = "#22863a" if q_score >= 0.7 else ("#e36209" if q_score >= 0.5 else "#cb2431")
         rows += (
             f'<tr style="background:#faf0ff">'
-            f'<td style="padding:5px 8px;border-bottom:1px solid #eee;font-weight:500">{c["name"]}</td>'
+            f'<td style="padding:5px 8px;border-bottom:1px solid #eee;font-weight:500">{html.escape(str(c["name"]))}</td>'
             f'<td style="padding:5px 8px;border-bottom:1px solid #eee">{fit_pct(c.get("fit_score"))}</td>'
             f'<td style="padding:5px 8px;border-bottom:1px solid #eee">{q_badge(c.get("quality","—"))}</td>'
             f'<td style="padding:5px 8px;border-bottom:1px solid #eee;font-weight:600;color:{q_color}">'
@@ -457,6 +508,11 @@ body_sections = (
     + section("🔴", "Rejected", "不适合纳入 pipeline", rejected, "#57606a")
 )
 
+push_failed = os.environ.get("PUSH_FAILED", "")
+push_banner = "" if not push_failed else (
+    '<div style="background:#ffebe9;border:1px solid #cf222e;border-radius:6px;padding:8px 14px;'
+    'margin:0 0 16px;font-size:13px;color:#cf222e;font-weight:600">'
+    f'⚠️ git push 失败（{html.escape(push_failed)}）：今天的改动只在本机，没有推到 GitHub</div>')
 agent_banner = "" if exit_code == 0 else (
     '<div style="background:#ffebe9;border:1px solid #cf222e;border-radius:6px;padding:8px 14px;'
     'margin:0 0 16px;font-size:13px;color:#cf222e;font-weight:600">'
@@ -471,6 +527,7 @@ html = f"""<html><body style="font-family:-apple-system,BlinkMacSystemFont,'Sego
 {stats_bar}
 </div>
 {agent_banner}
+{push_banner}
 
 {body_sections}
 
@@ -526,15 +583,19 @@ REPORT_EXIT=$?
 # got one, and that fails the job too once the work itself is clean (review
 # 2026-10-15: from 10-14 such a crash had exited 0).
 if [ "$EXIT_CODE" -ne 0 ]; then
-    echo "$LOG_PREFIX Exiting $EXIT_CODE: the discovery agent failed"
+    echo "$(ts) Exiting $EXIT_CODE: the discovery agent failed"
     exit "$EXIT_CODE"
 fi
 if [ "$TRIAL_EXIT" -ne 0 ]; then
-    echo "$LOG_PREFIX Exiting $TRIAL_EXIT: the trial manager failed"
+    echo "$(ts) Exiting $TRIAL_EXIT: the trial manager failed"
     exit "$TRIAL_EXIT"
 fi
 if [ "$REPORT_EXIT" -ne 0 ]; then
-    echo "$LOG_PREFIX Exiting $REPORT_EXIT: the report crashed and was not sent"
+    echo "$(ts) Exiting $REPORT_EXIT: the report crashed and was not sent"
     exit "$REPORT_EXIT"
+fi
+if [ -n "$PUSH_FAILED" ]; then
+    echo "$(ts) Exiting 3: git push failed ($PUSH_FAILED); the commits are local only"
+    exit 3
 fi
 exit 0

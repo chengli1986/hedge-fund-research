@@ -63,8 +63,12 @@ FAKE_DISCOVERY_CLAUDE = """#!/bin/bash
 echo "fake agent"; exit ${AGENT_EXIT:-0}
 """
 FAKE_TRIAL_MANAGER = """import os, sys
-print("fake trial manager"); sys.exit(int(os.environ.get("TRIAL_EXIT", "0")))
+def get_trial_queue(state):          # the report imports this module (2026-10-18)
+    return []
+if __name__ == "__main__":
+    print("fake trial manager"); sys.exit(int(os.environ.get("TRIAL_EXIT", "0")))
 """
+FAKE_PHASE1 = "#!/bin/bash\necho fake phase 1\n"
 
 
 def _discovery_sandbox(tmp_path):
@@ -77,9 +81,17 @@ def _discovery_sandbox(tmp_path):
     (tmp_path / "candidate-discovery" / "program.md").write_text("test playbook\n")
     (tmp_path / "config" / "fund_candidates.json").write_text("[]\n")
     (tmp_path / "config" / "sources.json").write_text('{"sources": []}\n')
+    (tmp_path / "scripts" / "run-candidate-discovery.sh").write_text(FAKE_PHASE1)
     fake = tmp_path / "claude"
     fake.write_text(FAKE_DISCOVERY_CLAUDE)
     fake.chmod(0o755)
+    # A real repo and remote: a failed push fails the job since 2026-10-18.
+    remote = tmp_path.parent / f"{tmp_path.name}-remote.git"
+    git = lambda *a: subprocess.run(["git", *a], cwd=tmp_path, check=True, capture_output=True)
+    subprocess.run(["git", "init", "-q", "--bare", str(remote)], check=True)
+    git("init", "-q", "-b", "main"); git("config", "user.email", "t@t"); git("config", "user.name", "t")
+    git("remote", "add", "origin", str(remote))
+    git("add", "-A"); git("commit", "-qm", "base"); git("push", "-q", "-u", "origin", "main")
     return tmp_path
 
 
@@ -105,6 +117,17 @@ def test_a_crashed_trial_manager_fails_the_job(tmp_path):
 def test_a_clean_discovery_run_exits_zero(tmp_path):
     out = _run_discovery(_discovery_sandbox(tmp_path))
     assert out.returncode == 0, out.stdout[-2000:]
+
+
+def test_a_failed_push_fails_an_otherwise_clean_run(tmp_path):
+    sb = _discovery_sandbox(tmp_path)
+    subprocess.run(["git", "remote", "set-url", "origin", str(tmp_path / "gone.git")],
+                   cwd=sb, check=True)
+    (sb / "config" / "fund_candidates.json").write_text('[{"id": "n", "name": "N", "status": "seed"}]\n')
+    subprocess.run(["git", "commit", "-qam", "local only"], cwd=sb, check=True)
+    out = _run_discovery(sb)
+    assert out.returncode == 3, out.stdout[-2000:]
+    assert "git push failed" in out.stdout
 
 
 # ── #1 the daily summary is not skipped when nobody is queued ────────────────
@@ -167,6 +190,7 @@ def _promote_sandbox(tmp_path):
     shutil.copy2(REPO / "scripts/wrapper-auto-promote.sh", sb / "scripts")
     shutil.copy2(REPO / "scripts/promote_today.py", sb / "scripts")
     shutil.copy2(REPO / "scripts/verify_promotions.py", sb / "scripts")
+    shutil.copy2(REPO / "status_util.py", sb)
     (sb / "scripts/validate_promote_commit_msg.py").write_text(FAKE_VALIDATOR)
     (sb / "scripts/gmia-fetcher-health.py").write_text(FAKE_HEALTH)
     (sb / "fetch_articles.py").write_text('FETCHERS = {"x": None, "y": None}\n')

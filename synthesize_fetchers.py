@@ -53,19 +53,20 @@ def _parsed(ts) -> datetime:
     return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 
-def list_targets() -> list[dict]:
-    """Return candidates that need a synthesis attempt.
+def list_priority_targets(candidates: list[dict] | None = None,
+                          fetcher_ids: set[str] | None = None,
+                          cutoff: datetime | None = None) -> list[dict]:
+    """Trial-passed candidates (synthesis_priority) with no fetcher or
+    template yet, not attempted within SKIP_WINDOW_DAYS.
 
-    Two sources:
-    1. synthesis_priority=True candidates (status="promoted", no fetcher yet) — inserted first.
-    2. status="inaccessible" candidates — standard weekly-synthesis queue.
-    """
-    candidates = load_candidates()
-    fetcher_ids = load_fetcher_ids()
-    now = datetime.now(timezone.utc)
-    cutoff = now - timedelta(days=SKIP_WINDOW_DAYS)
-
-    # ── Priority queue: trial-passed, no fetcher yet ──────────────────────────
+    The discovery wrapper's immediate trigger counts these too -- the same
+    rule, not its own copy (stage 6 minor, 2026-10-18: its copy imported
+    fetch_articles and, on an import error, counted every flagged candidate
+    as fetcherless and launched synthesis)."""
+    candidates = load_candidates() if candidates is None else candidates
+    fetcher_ids = load_fetcher_ids() if fetcher_ids is None else fetcher_ids
+    if cutoff is None:
+        cutoff = datetime.now(timezone.utc) - timedelta(days=SKIP_WINDOW_DAYS)
     priority_targets = []
     for c in candidates:
         if not c.get("synthesis_priority"):
@@ -92,6 +93,23 @@ def list_targets() -> list[dict]:
             "needs_playwright": bool(c.get("requires_playwright") or c.get("needs_playwright")),
             "quality": c.get("quality", "?"),
         })
+
+    return priority_targets
+
+
+def list_targets() -> list[dict]:
+    """Return candidates that need a synthesis attempt.
+
+    Two sources:
+    1. synthesis_priority=True candidates (status="promoted", no fetcher yet) — inserted first.
+    2. status="inaccessible" candidates — standard weekly-synthesis queue.
+    """
+    candidates = load_candidates()
+    fetcher_ids = load_fetcher_ids()
+    now = datetime.now(timezone.utc)
+    cutoff = now - timedelta(days=SKIP_WINDOW_DAYS)
+
+    priority_targets = list_priority_targets(candidates, fetcher_ids, cutoff)
 
     # ── Standard inaccessible queue ───────────────────────────────────────────
     targets = []

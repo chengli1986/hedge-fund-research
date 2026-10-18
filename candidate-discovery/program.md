@@ -4,16 +4,9 @@
 
 You are a hedge fund research analyst. Your job is to discover and evaluate candidate hedge funds that publish public research, insights, or commentary pages — potential additions to the GMIA aggregator.
 
-## Phase 1: Run the discovery pipeline
+## Phase 1: Read the discovery pipeline's output
 
-```bash
-cd /home/ubuntu/hedge-fund-research
-python3 discover_fund_sites.py
-python3 screen_fund_candidates.py  
-python3 discover_candidate_entrypoints.py
-```
-
-Read the output. Note which funds changed status.
+The wrapper already ran `discover_fund_sites.py`, `screen_fund_candidates.py` and `discover_candidate_entrypoints.py` before this session; their output is at the end of this prompt under "Phase 1 output". Read it and note which funds changed status. **Do not run them again** (the one exception is Phase 3's `discover_fund_sites.py --fund <new-id>` for the seed you add): since 2026-10-18 the status guard treats any other status change on an existing candidate during this session as yours, and only `watchlist` / `rejected` are yours to set.
 
 ## Phase 2: LLM deep analysis
 

@@ -7,7 +7,9 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
-LOG_PREFIX="[$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')]"
+# A timestamp per line (stage 6 minor, 2026-10-18): LOG_PREFIX was fixed at
+# start, so every line of a session read 02:00:01.
+ts() { TZ='Asia/Shanghai' date '+[%Y-%m-%d %H:%M:%S]'; }
 
 # Prevent concurrent synthesis runs (trial-pass immediate trigger + weekly cron).
 # NOTE: must NOT be the same file the weekly cron's cron-wrapper.sh --lock uses
@@ -23,7 +25,7 @@ LOCK_FILE="${SYNTHESIS_LOCK_FILE:-/tmp/cron-locks/gmia-fetcher-synthesis-inner.l
 mkdir -p /tmp/cron-locks
 exec 9>"$LOCK_FILE"
 if ! flock -n 9; then
-    echo "$LOG_PREFIX Another fetcher-synthesis instance is running. Exiting."
+    echo "$(ts) Another fetcher-synthesis instance is running. Exiting."
     exit 0
 fi
 
@@ -31,7 +33,7 @@ cleanup() {
     local pids
     pids=$(jobs -p 2>/dev/null)
     if [ -n "$pids" ]; then
-        echo "$LOG_PREFIX Cleaning up child processes..."
+        echo "$(ts) Cleaning up child processes..."
         kill $pids 2>/dev/null || true
         sleep 2
         kill -9 $pids 2>/dev/null || true
@@ -39,7 +41,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-echo "$LOG_PREFIX Starting fetcher synthesis session..."
+echo "$(ts) Starting fetcher synthesis session..."
 
 # 若无目标则提前退出，不启动 Agent
 TARGETS_JSON=$(cd "$REPO_DIR" && python3 synthesize_fetchers.py)
@@ -49,14 +51,14 @@ COUNT_EXIT=$?
 # Without -e a failed target listing left TARGET_COUNT empty, `[ "" -eq 0 ]`
 # errored as false, and the agent started with no planned targets.
 if [ "$TARGETS_EXIT" -ne 0 ] || [ "$COUNT_EXIT" -ne 0 ]; then
-    echo "$LOG_PREFIX ERROR: could not list synthesis targets (synthesize_fetchers exit $TARGETS_EXIT, parse exit $COUNT_EXIT); agent not started"
+    echo "$(ts) ERROR: could not list synthesis targets (synthesize_fetchers exit $TARGETS_EXIT, parse exit $COUNT_EXIT); agent not started"
     exit 1
 fi
 # The first 2 ids are what this session is expected to process (program.md's
 # "handle at most 2 funds"). backfill marks any of these the agent leaves undone.
 PLANNED_IDS=$(echo "$TARGETS_JSON" | python3 -c "import json,sys; d=json.load(sys.stdin); print(','.join(t['id'] for t in d[:2]))")
 if [ "$TARGET_COUNT" -eq 0 ]; then
-    echo "$LOG_PREFIX No inaccessible targets to process. Exiting."
+    echo "$(ts) No inaccessible targets to process. Exiting."
     # Record the session anyway. gmia_liveness_audit.py judges this weekly job
     # by the freshest heartbeat, so leaving without one makes a healthy
     # no-work run indistinguishable from a job that never fired -- which is
@@ -72,12 +74,12 @@ if [ "$TARGET_COUNT" -eq 0 ]; then
         --agent-exit 0
     NOWORK_HEARTBEAT_EXIT=$?
     if [ "$NOWORK_HEARTBEAT_EXIT" -ne 0 ]; then
-        echo "$LOG_PREFIX WARN: heartbeat write failed (exit $NOWORK_HEARTBEAT_EXIT)"
+        echo "$(ts) WARN: heartbeat write failed (exit $NOWORK_HEARTBEAT_EXIT)"
         exit "$NOWORK_HEARTBEAT_EXIT"
     fi
     exit 0
 fi
-echo "$LOG_PREFIX Found $TARGET_COUNT target(s)."
+echo "$(ts) Found $TARGET_COUNT target(s)."
 
 # Timestamp before the agent runs — the summary email reports only the history
 # entries appended at/after this instant (this session's work), so concurrent
@@ -100,7 +102,7 @@ cd "$REPO_DIR"
 
 PROGRAM_MD="$REPO_DIR/fetcher-synthesis/program.md"
 if [ ! -f "$PROGRAM_MD" ]; then
-    echo "$LOG_PREFIX ERROR: $PROGRAM_MD not found"
+    echo "$(ts) ERROR: $PROGRAM_MD not found"
     exit 1
 fi
 
@@ -128,7 +130,7 @@ CLAUDE_BIN="${CLAUDE_BIN:-/home/ubuntu/.npm-global/bin/claude}"
 PREFLIGHT_OUTPUT=$(echo "Reply with the single word OK." | timeout --kill-after=10 120 "$CLAUDE_BIN" --print --max-turns 1 2>&1)
 PREFLIGHT_EXIT=$?
 if [ "$PREFLIGHT_EXIT" -ne 0 ]; then
-    echo "$LOG_PREFIX ERROR: Claude preflight failed (exit $PREFLIGHT_EXIT); agent not started, no target charged a failure:"
+    echo "$(ts) ERROR: Claude preflight failed (exit $PREFLIGHT_EXIT); agent not started, no target charged a failure:"
     echo "$PREFLIGHT_OUTPUT" | head -5
     python3 "$REPO_DIR/scripts/write_session_heartbeat.py" \
         --targets-count "$TARGET_COUNT" \
@@ -145,7 +147,7 @@ fi
 # charges the planned targets and the heartbeat records agent_exit=124.
 # Longest real session: 171s.
 AGENT_TIMEOUT_S=900
-echo "$LOG_PREFIX Invoking Claude Code agent ($("$CLAUDE_BIN" --version 2>/dev/null | head -1))..."
+echo "$(ts) Invoking Claude Code agent ($("$CLAUDE_BIN" --version 2>/dev/null | head -1))..."
 echo "$PROMPT" | timeout --kill-after=30 "$AGENT_TIMEOUT_S" "$CLAUDE_BIN" --print \
     --dangerously-skip-permissions \
     --allowedTools "Bash,Read,Edit,Write,Glob,Grep" \
@@ -154,9 +156,9 @@ echo "$PROMPT" | timeout --kill-after=30 "$AGENT_TIMEOUT_S" "$CLAUDE_BIN" --prin
 
 EXIT_CODE=$?
 if [ "$EXIT_CODE" -eq 124 ] || [ "$EXIT_CODE" -eq 137 ]; then
-    echo "$LOG_PREFIX Agent TIMED OUT after ${AGENT_TIMEOUT_S}s (exit $EXIT_CODE)"
+    echo "$(ts) Agent TIMED OUT after ${AGENT_TIMEOUT_S}s (exit $EXIT_CODE)"
 fi
-echo "$LOG_PREFIX Agent exited with code $EXIT_CODE"
+echo "$(ts) Agent exited with code $EXIT_CODE"
 
 # ── Template first: did the agent try a listing template before writing code? ──
 # Reads what scripts/try_template.py recorded, not the agent's account of it.
@@ -171,10 +173,10 @@ TEMPLATE_FIRST_EXIT=$?
 # this the candidate stays inaccessible forever — no history, no auto_reject
 # 3-strike, no alert (the franklin-templeton "stuck 8 weeks" mode). Run BEFORE
 # reconcile so the auto-marked failures flow into history this session.
-echo "$LOG_PREFIX Backfilling unprocessed targets..."
+echo "$(ts) Backfilling unprocessed targets..."
 BACKFILL_OUTPUT=$(python3 "$REPO_DIR/scripts/backfill_failed_synthesis.py" \
     --planned-ids "$PLANNED_IDS" --run-start "$SYNTH_RUN_START" 2>&1) || \
-    echo "$LOG_PREFIX WARN: backfill_failed_synthesis exited non-zero"
+    echo "$(ts) WARN: backfill_failed_synthesis exited non-zero"
 echo "$BACKFILL_OUTPUT"
 BACKFILLED=$(echo "$BACKFILL_OUTPUT" | grep -oP 'marked \K\d+' | head -1)
 BACKFILLED=${BACKFILLED:-0}
@@ -183,9 +185,9 @@ BACKFILLED=${BACKFILLED:-0}
 # into the time-series log (now also picks up the backfilled failures above).
 # Idempotent — safe to run repeatedly.
 # Capture appended count so heartbeat can detect "agent ran but recorded nothing".
-echo "$LOG_PREFIX Syncing synthesis history..."
+echo "$(ts) Syncing synthesis history..."
 RECONCILE_OUTPUT=$(python3 "$REPO_DIR/scripts/sync_synthesis_history.py" --lookback-days 1 2>&1) || \
-    echo "$LOG_PREFIX WARN: sync_synthesis_history exited non-zero"
+    echo "$(ts) WARN: sync_synthesis_history exited non-zero"
 echo "$RECONCILE_OUTPUT"
 
 # Parse "appended N entries" from reconcile output; default 0 if not found
@@ -210,7 +212,7 @@ python3 "$REPO_DIR/scripts/fetcher_synthesis_stats.py" --window 30 2>&1 | head -
 # Notification only — never affects EXIT_CODE. Reads SMTP/recipient from
 # ~/.stock-monitor.env (same as trial daily summary). --since scopes the digest
 # to entries appended by this session.
-echo "$LOG_PREFIX Sending synthesis summary email..."
+echo "$(ts) Sending synthesis summary email..."
 # shellcheck disable=SC1090
 source "$HOME/.stock-monitor.env" 2>/dev/null || true
 SMTP_USER="${SMTP_USER:-}" SMTP_PASS="${SMTP_PASS:-}" MAIL_TO="${MAIL_TO:-}" \
@@ -218,7 +220,7 @@ SMTP_USER="${SMTP_USER:-}" SMTP_PASS="${SMTP_PASS:-}" MAIL_TO="${MAIL_TO:-}" \
         --since "$SYNTH_RUN_START" \
         --targets-count "$TARGET_COUNT" \
         --planned-ids "$PLANNED_IDS" \
-    || echo "$LOG_PREFIX WARN: summary email step failed (non-fatal)"
+    || echo "$(ts) WARN: summary email step failed (non-fatal)"
 
 # Commit what the steps after the agent changed (backfill marks, outcomes the
 # agent left uncommitted). Until 2026-10-18 nothing here committed, and the
@@ -228,7 +230,7 @@ if git rev-parse --git-dir >/dev/null 2>&1 \
         && ! git diff --quiet -- config/fund_candidates.json 2>/dev/null; then
     git add config/fund_candidates.json
     git commit -q -m "synthesis: record session outcomes $(TZ='Asia/Shanghai' date '+%Y-%m-%d') (auto)" \
-        && { git push -q 2>&1 || echo "$LOG_PREFIX WARNING: git push (synthesis outcomes) failed"; }
+        && { git push -q 2>&1 || echo "$(ts) WARNING: git push (synthesis outcomes) failed"; }
 fi
 
 # Propagate inconsistency: if heartbeat detected agent ran without recording
@@ -238,7 +240,7 @@ if [ "$HEARTBEAT_EXIT" -ne 0 ] && [ "$EXIT_CODE" -eq 0 ]; then
 fi
 # A skipped template check is not fatal to the work, but someone must see it.
 if [ "$TEMPLATE_FIRST_EXIT" -ne 0 ] && [ "$EXIT_CODE" -eq 0 ]; then
-    echo "$LOG_PREFIX WARN: template-first rule not followed (see TEMPLATE-FIRST lines above)"
+    echo "$(ts) WARN: template-first rule not followed (see TEMPLATE-FIRST lines above)"
     EXIT_CODE=2
 fi
 
