@@ -180,14 +180,16 @@ def auto_reject_exhausted_candidates(
     candidates = data if isinstance(data, list) else data.get("candidates", [])
 
     flipped: list[str] = []
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    # BJT, like every other date in the notes: the 02:00 BJT run is the
+    # previous day in UTC.
+    today = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d")
     for c in candidates:
         if c.get("status") != "inaccessible":
             continue
         n = _count_failures(c["id"], history_path)
         if n < max_failures:
             continue
-        original_notes = c.get("notes", "")
+        original_notes = c.get("notes") or ""      # a stored null crashed here
         set_status(c, "rejected")
         c["notes"] = (
             f"Auto-rejected {today}: fetcher-synthesis failed {n} times "

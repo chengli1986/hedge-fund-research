@@ -143,3 +143,15 @@ def test_validator_and_probe_share_one_gate():
     assert "from promote_today import MIN_ARTICLES, MIN_CONTENT_CHARS" in src
     assert "MIN_ARTICLES = " not in src
     assert (pt.MIN_ARTICLES, pt.MIN_CONTENT_CHARS) == (3, 500)
+
+
+# --- minor: auto-reject with notes stored as null -----------------------------
+def test_auto_reject_survives_null_notes(tmp_path):
+    import synthesize_fetchers as sf
+    cands = tmp_path / "c.json"
+    cands.write_text(json.dumps([{"id": "x", "status": "inaccessible", "notes": None}]))
+    hist = tmp_path / "h.jsonl"
+    hist.write_text("".join(json.dumps({"id": "x", "outcome": "failed"}) + "\n" for _ in range(3)))
+    assert sf.auto_reject_exhausted_candidates(cands, hist, max_failures=3) == ["x"]
+    c = json.loads(cands.read_text())[0]
+    assert c["status"] == "rejected" and c["notes"].startswith("Auto-rejected ")
