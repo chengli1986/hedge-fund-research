@@ -56,3 +56,17 @@ def test_the_trial_is_decided_on_day_7_after_seven_checks():
     assert "if trial_period_complete(elapsed) and not active.get(\"auto_decided\")" in src
     # the day's quality sample comes before the verdict in the same pass
     assert src.index("if trial_day in SAMPLE_DAYS:") < src.index("if trial_period_complete(elapsed)")
+
+
+# --- stage 6 C: the synthesis agent has its own clock --------------------------
+def test_synthesis_agent_and_preflight_are_bounded_inside_cron_wrapper():
+    import re
+    w = (ROOT / "scripts" / "wrapper-fetcher-synthesis.sh").read_text()
+    agent = int(re.search(r"^AGENT_TIMEOUT_S=(\d+)$", w, re.M).group(1))
+    assert re.search(r'\| timeout --kill-after=30 "\$AGENT_TIMEOUT_S" "\$CLAUDE_BIN" --print', w)
+    assert re.search(r'\| timeout --kill-after=10 120 "\$CLAUDE_BIN" --print --max-turns 1', w)
+    # cron-wrapper --timeout 1200 must still leave room for backfill/heartbeat/mail
+    assert 120 + 10 + agent + 30 <= 1200 - 120
+    # the agent call comes before the steps that must survive it
+    assert w.index('"$AGENT_TIMEOUT_S"') < w.index("backfill_failed_synthesis.py") \
+        < w.index("write_session_heartbeat.py", w.index("backfill_failed_synthesis.py"))

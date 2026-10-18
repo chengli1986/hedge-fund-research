@@ -125,7 +125,7 @@ CLAUDE_BIN="${CLAUDE_BIN:-/home/ubuntu/.npm-global/bin/claude}"
 # rbc-bluebay was still charged. If Claude cannot answer, stop here: no agent,
 # no backfill, a heartbeat with the failing exit code, and a non-zero exit so
 # cron-wrapper alerts.
-PREFLIGHT_OUTPUT=$(echo "Reply with the single word OK." | "$CLAUDE_BIN" --print --max-turns 1 2>&1)
+PREFLIGHT_OUTPUT=$(echo "Reply with the single word OK." | timeout --kill-after=10 120 "$CLAUDE_BIN" --print --max-turns 1 2>&1)
 PREFLIGHT_EXIT=$?
 if [ "$PREFLIGHT_EXIT" -ne 0 ]; then
     echo "$LOG_PREFIX ERROR: Claude preflight failed (exit $PREFLIGHT_EXIT); agent not started, no target charged a failure:"
@@ -137,14 +137,25 @@ if [ "$PREFLIGHT_EXIT" -ne 0 ]; then
     exit 1
 fi
 
+# The agent's own clock, inside cron-wrapper's 1200s (stage 6 C, 2026-10-18).
+# Before, only cron-wrapper's kill bounded it: that kill takes this whole
+# script, so the backfill, heartbeat and summary mail below never ran and the
+# session left no trace; and a run started by the discovery wrapper (nohup,
+# no cron-wrapper) had no bound at all. 124 = timed out: the backfill then
+# charges the planned targets and the heartbeat records agent_exit=124.
+# Longest real session: 171s.
+AGENT_TIMEOUT_S=900
 echo "$LOG_PREFIX Invoking Claude Code agent ($("$CLAUDE_BIN" --version 2>/dev/null | head -1))..."
-echo "$PROMPT" | "$CLAUDE_BIN" --print \
+echo "$PROMPT" | timeout --kill-after=30 "$AGENT_TIMEOUT_S" "$CLAUDE_BIN" --print \
     --dangerously-skip-permissions \
     --allowedTools "Bash,Read,Edit,Write,Glob,Grep" \
     --max-turns 60 \
     2>&1
 
 EXIT_CODE=$?
+if [ "$EXIT_CODE" -eq 124 ] || [ "$EXIT_CODE" -eq 137 ]; then
+    echo "$LOG_PREFIX Agent TIMED OUT after ${AGENT_TIMEOUT_S}s (exit $EXIT_CODE)"
+fi
 echo "$LOG_PREFIX Agent exited with code $EXIT_CODE"
 
 # ── Template first: did the agent try a listing template before writing code? ──
