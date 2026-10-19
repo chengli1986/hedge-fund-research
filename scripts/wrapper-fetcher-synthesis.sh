@@ -228,8 +228,10 @@ SMTP_USER="${SMTP_USER:-}" SMTP_PASS="${SMTP_PASS:-}" MAIL_TO="${MAIL_TO:-}" \
 cd "$REPO_DIR"
 if git rev-parse --git-dir >/dev/null 2>&1 \
         && ! git diff --quiet -- config/fund_candidates.json 2>/dev/null; then
+    # name the file: anything else staged in this checkout is not ours to push
     git add config/fund_candidates.json
     git commit -q -m "synthesis: record session outcomes $(TZ='Asia/Shanghai' date '+%Y-%m-%d') (auto)" \
+        -- config/fund_candidates.json \
         && { git push -q 2>&1 || echo "$(ts) WARNING: git push (synthesis outcomes) failed"; }
 fi
 

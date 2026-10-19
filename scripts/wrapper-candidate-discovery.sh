@@ -149,12 +149,14 @@ if [ -f "$GUARD_BEFORE" ]; then
     # Stamps (added_at, status_since) are committed even when nothing was
     # reverted, so the push below never carries a seed without added_at.
     # candidate_entrypoints.json: Phase 1 writes it; the agent may not commit.
+    # Commits below name their files: whatever else is staged in this shared
+    # checkout stays staged and is not pushed (2026-10-19 review).
     git add config/fund_candidates.json config/candidate_entrypoints.json 2>/dev/null \
         || git add config/fund_candidates.json
     if [ "${GUARD_N:-0}" -gt 0 ]; then
-        git diff --cached --quiet || git commit -m "guard: revert $GUARD_N illegal agent status change(s) (auto)"
+        git diff --cached --quiet -- config/fund_candidates.json config/candidate_entrypoints.json || git commit -m "guard: revert $GUARD_N illegal agent status change(s) (auto)" -- config/fund_candidates.json config/candidate_entrypoints.json
     else
-        git diff --cached --quiet || git commit -m "guard: stamp added_at/status_since (auto)"
+        git diff --cached --quiet -- config/fund_candidates.json config/candidate_entrypoints.json || git commit -m "guard: stamp added_at/status_since (auto)" -- config/fund_candidates.json config/candidate_entrypoints.json
     fi
     if [ "${GUARD_N:-0}" -gt 0 ]; then
         echo "$(ts) GUARD reverted $GUARD_N illegal status change(s)"
@@ -206,7 +208,7 @@ STALL_N=$(printf '%s\n' "$STALL_OUT" | sed -n 's/^stall: \([0-9]*\) .*/\1/p')
 if [ "${STALL_N:-0}" -gt 0 ]; then
     echo "$(ts) Auto-routed $STALL_N stalled candidate(s)"
     git add config/fund_candidates.json
-    git diff --cached --quiet || git commit -m "stall: auto-route $STALL_N stalled candidate(s) (auto)"
+    git diff --cached --quiet -- config/fund_candidates.json || git commit -m "stall: auto-route $STALL_N stalled candidate(s) (auto)" -- config/fund_candidates.json
     push_or_flag "stall"
 fi
 
@@ -224,7 +226,7 @@ fi
 cd "$REPO_DIR"
 if ! git diff --quiet config/trial-state.json config/fund_candidates.json 2>/dev/null; then
     git add config/trial-state.json config/fund_candidates.json
-    git diff --cached --quiet || git commit -m "trial: update GMIA trial state $(TZ='Asia/Shanghai' date '+%Y-%m-%d')"
+    git diff --cached --quiet -- config/trial-state.json config/fund_candidates.json || git commit -m "trial: update GMIA trial state $(TZ='Asia/Shanghai' date '+%Y-%m-%d')" -- config/trial-state.json config/fund_candidates.json
     echo "$(ts) Trial state committed"
     push_or_flag "trial state"
 fi
