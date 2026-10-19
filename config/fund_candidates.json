@@ -3295,11 +3295,11 @@
     "screening_reason": "Research index detected",
     "fit_score": 0.82,
     "last_validated_at": "2026-08-03T09:00:32.504618+08:00",
-    "last_deep_analyzed_at": "2026-09-08T01:02:06Z",
+    "last_deep_analyzed_at": "2026-10-19T01:00:46Z",
     "quality": "HIGH",
     "quality_score": 0.85,
     "topics": "equity, emerging markets, growth investing, thematic research",
-    "notes": "RECOMMEND: WebFetch 403 WAF (recheck); trial OK",
+    "notes": "RECOMMEND: Quarterly letters+viewpoints, substantive, open",
     "synthesis_priority_set_at": "2026-08-13T09:02:43.123779+08:00",
     "synthesis_attempted_at": "2026-08-13T01:04:18.069282+00:00",
     "synthesis_outcome": "success",
@@ -4157,7 +4157,7 @@
     "official_domain": "www.arielinvestments.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-10-18T09:00:06.797454+08:00",
+    "last_discovered_at": "2026-10-19T09:00:01.940461+08:00",
     "added_at": "2026-10-17",
     "status_since": "2026-10-17T09:00:49.015131+08:00",
     "last_deep_analyzed_at": "2026-10-18T01:00:32Z",
@@ -4165,5 +4165,16 @@
     "quality_score": 0.5,
     "topics": "equity, value investing, market commentary",
     "notes": "Quarterly value-equity commentary; low frequency"
+  },
+  {
+    "id": "pershing-square",
+    "name": "Pershing Square",
+    "homepage_url": "https://pershingsquareholdings.com",
+    "source": "manual",
+    "status": "seed",
+    "strategy_tags": [
+      "equity",
+      "event_driven"
+    ]
   }
 ]
