@@ -36,7 +36,7 @@ def test_the_first_push_comes_after_the_guard_and_its_commit():
 
 def test_the_stamp_commit_does_not_depend_on_a_revert():
     block = WRAPPER[WRAPPER.index("python3 guard_candidate_status.py"):WRAPPER.index('GUARD_REVERTS=')]
-    add = block.index("git add config/fund_candidates.json")
+    add = block.index("git add $GUARD_FILES")
     first_if = block.index('if [ "${GUARD_N:-0}" -gt 0 ]')
     assert add < first_if
 

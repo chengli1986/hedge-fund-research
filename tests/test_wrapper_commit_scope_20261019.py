@@ -72,3 +72,49 @@ def test_a_scoped_commit_leaves_other_staged_changes_alone(tmp_path):
     assert out.returncode == 0, out.stderr
     assert run("git", "show", "--name-only", "--format=", "HEAD").stdout.split() == ["mine.json"]
     assert run("git", "diff", "--cached", "--name-only").stdout.split() == ["theirs.py"]
+
+
+def _guard_commit_block() -> str:
+    """The discovery wrapper's guard staging + commit lines, as written."""
+    text = (ROOT / "scripts" / "wrapper-candidate-discovery.sh").read_text()
+    m = re.search(r"^(\s*GUARD_FILES=.*?^\s*fi\n)", text, re.S | re.M)
+    assert m, "guard commit block not found"
+    return m.group(1)
+
+
+def _run_guard_block(tmp_path, track_entrypoints: bool):
+    run = lambda *a: subprocess.run(a, cwd=tmp_path, capture_output=True, text=True)
+    run("git", "init", "-q")
+    run("git", "config", "user.email", "t@t")
+    run("git", "config", "user.name", "t")
+    (tmp_path / "config").mkdir()
+    (tmp_path / "config" / "fund_candidates.json").write_text("0")
+    (tmp_path / "theirs.py").write_text("0")
+    if track_entrypoints:
+        (tmp_path / "config" / "candidate_entrypoints.json").write_text("0")
+    run("git", "add", ".")
+    run("git", "commit", "-qm", "base")
+    (tmp_path / "config" / "fund_candidates.json").write_text("1")
+    if track_entrypoints:
+        (tmp_path / "config" / "candidate_entrypoints.json").write_text("1")
+    (tmp_path / "theirs.py").write_text("half done")
+    run("git", "add", "theirs.py")
+    out = run("bash", "-c", "GUARD_N=0\n" + _guard_commit_block())
+    return run, out
+
+
+def test_guard_commit_works_without_entrypoints_file(tmp_path):
+    # 2026-10-20 review: the file may be absent; the commit must not fail then.
+    run, out = _run_guard_block(tmp_path, track_entrypoints=False)
+    assert out.returncode == 0, out.stderr
+    assert run("git", "log", "-1", "--format=%s").stdout.strip() == "guard: stamp added_at/status_since (auto)"
+    assert run("git", "show", "--name-only", "--format=", "HEAD").stdout.split() == ["config/fund_candidates.json"]
+    assert run("git", "diff", "--cached", "--name-only").stdout.split() == ["theirs.py"]
+
+
+def test_guard_commit_includes_entrypoints_when_present(tmp_path):
+    run, out = _run_guard_block(tmp_path, track_entrypoints=True)
+    assert out.returncode == 0, out.stderr
+    assert sorted(run("git", "show", "--name-only", "--format=", "HEAD").stdout.split()) == [
+        "config/candidate_entrypoints.json", "config/fund_candidates.json"]
+    assert run("git", "diff", "--cached", "--name-only").stdout.split() == ["theirs.py"]

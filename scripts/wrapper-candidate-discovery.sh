@@ -150,13 +150,16 @@ if [ -f "$GUARD_BEFORE" ]; then
     # reverted, so the push below never carries a seed without added_at.
     # candidate_entrypoints.json: Phase 1 writes it; the agent may not commit.
     # Commits below name their files: whatever else is staged in this shared
-    # checkout stays staged and is not pushed (2026-10-19 review).
-    git add config/fund_candidates.json config/candidate_entrypoints.json 2>/dev/null \
-        || git add config/fund_candidates.json
+    # checkout stays staged and is not pushed (2026-10-19 review). They name
+    # only what was staged: a path git doesn't know fails the whole commit
+    # (2026-10-20 review).
+    GUARD_FILES="config/fund_candidates.json config/candidate_entrypoints.json"
+    git add $GUARD_FILES 2>/dev/null \
+        || { GUARD_FILES="config/fund_candidates.json"; git add $GUARD_FILES; }
     if [ "${GUARD_N:-0}" -gt 0 ]; then
-        git diff --cached --quiet -- config/fund_candidates.json config/candidate_entrypoints.json || git commit -m "guard: revert $GUARD_N illegal agent status change(s) (auto)" -- config/fund_candidates.json config/candidate_entrypoints.json
+        git diff --cached --quiet -- $GUARD_FILES || git commit -m "guard: revert $GUARD_N illegal agent status change(s) (auto)" -- $GUARD_FILES
     else
-        git diff --cached --quiet -- config/fund_candidates.json config/candidate_entrypoints.json || git commit -m "guard: stamp added_at/status_since (auto)" -- config/fund_candidates.json config/candidate_entrypoints.json
+        git diff --cached --quiet -- $GUARD_FILES || git commit -m "guard: stamp added_at/status_since (auto)" -- $GUARD_FILES
     fi
     if [ "${GUARD_N:-0}" -gt 0 ]; then
         echo "$(ts) GUARD reverted $GUARD_N illegal status change(s)"
