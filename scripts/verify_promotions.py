@@ -74,21 +74,31 @@ def recent_reverts(sid: str, today: str, days: int = PARK_WINDOW_DAYS) -> int:
     return n
 
 
-def park(sid: str, why: str, tag: str) -> bool:
-    """promoted -> watchlist with a note, committed. False if not found."""
+def park(sid: str, why: str, tag: str) -> str | None:
+    """promoted -> watchlist with a note, committed. Returns a problem line if
+    that commit failed, else None (also when there is nothing to park)."""
     cands = json.loads(CANDIDATES.read_text())
     rows = cands if isinstance(cands, list) else cands.get("candidates", [])
     c = next((x for x in rows if x.get("id") == sid), None)
     if c is None or c.get("status") != "promoted":
-        return False
+        return None
     set_status(c, "watchlist")
     tag_note(c, f"[auto-promote reverted {PARK_AFTER_REVERTS}x in {PARK_WINDOW_DAYS}d: {why[:80]}; "
                 f"set back to promoted to retry]")
     write_json_atomic(CANDIDATES, cands)
-    _git("add", str(CANDIDATES))
-    _git("commit", "-q", "-m", f"auto-promote: park {sid} on watchlist after repeated reverts (auto)")
+    # Names its file: anything else staged in the shared checkout stays out.
+    # A failed commit used to print "parked" and leave the edit staged, so the
+    # next source's `git revert` refused the dirty index (2026-10-20 audit).
+    r = _git("add", "--", str(CANDIDATES))
+    if r.returncode == 0:
+        r = _git("commit", "-q", "-m", f"auto-promote: park {sid} on watchlist after repeated reverts (auto)",
+                 "--", str(CANDIDATES))
+    if r.returncode != 0:
+        _git("checkout", "HEAD", "--", str(CANDIDATES))   # back to the committed file, index clean
+        print(f"[{tag}]   could not park {sid}: {r.stderr.strip()[:200]}")
+        return f"{sid}: reverted, but parking it on the watchlist failed ({r.stderr.strip()[:200]}); tried again on its next revert"
     print(f"[{tag}]   parked {sid} on watchlist ({PARK_AFTER_REVERTS} reverts in {PARK_WINDOW_DAYS} days)")
-    return True
+    return None
 
 
 def revert(e: dict, outcome: str, why: str, tag: str) -> str | None:
@@ -106,12 +116,13 @@ def revert(e: dict, outcome: str, why: str, tag: str) -> str | None:
     sha = _git("rev-parse", "HEAD").stdout.strip()
     _record(e, outcome, f"{why} -- reverted {commit[:8]}", sha)
     print(f"[{tag}]   ✓ reverted to {sha[:8]}, history updated")
+    parked = None
     if recent_reverts(sid, today_bjt()) >= PARK_AFTER_REVERTS:
-        park(sid, why, tag)
+        parked = park(sid, why, tag)
     push = _git("push", "origin", "main")
     if push.returncode != 0:
-        return f"{sid}: reverted locally, but git push failed: {push.stderr[:200]}"
-    return None
+        return f"{sid}: reverted locally, but git push failed: {push.stderr[:200]}" + (f"; {parked}" if parked else "")
+    return parked
 
 
 def check_validate(e: dict) -> tuple[str, str]:

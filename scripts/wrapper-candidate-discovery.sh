@@ -37,7 +37,15 @@ trap cleanup EXIT
 # local and the job exited 0 (stage 6 minor). Collected here, shown in the
 # report and turned into a non-zero exit at the end.
 PUSH_FAILED=""
+# Set when the status guard could not check the agent's edits (no snapshot,
+# crash, no "guard: N" line). Then nothing from this run is pushed: an
+# unchecked "promoted" must not reach GitHub (2026-10-20 audit).
+GUARD_FAILED=""
 push_or_flag() {
+    if [ -n "$GUARD_FAILED" ]; then
+        echo "$(ts) WARNING: git push ($1) held: status guard did not run ($GUARD_FAILED)"
+        return
+    fi
     if ! git push 2>&1; then
         echo "$(ts) WARNING: git push ($1) failed"
         PUSH_FAILED="${PUSH_FAILED:+$PUSH_FAILED, }$1"
@@ -141,11 +149,22 @@ fi
 # The agent must never set "promoted" (trial-manager owns promotion, only after a
 # trial PASS). If it did, revert + commit + alert. Self-heals the 2026-06-10
 # Guggenheim-class orphan bug. Quiet no-op ("guard: 0") on a well-behaved run.
-if [ -f "$GUARD_BEFORE" ]; then
+if [ ! -f "$GUARD_BEFORE" ]; then
+    GUARD_FAILED="no pre-agent snapshot"
+else
     GUARD_OUT=$(cd "$REPO_DIR" && python3 guard_candidate_status.py \
         --before "$GUARD_BEFORE" --after config/fund_candidates.json 2>&1)
+    GUARD_RC=$?
     echo "$GUARD_OUT"
     GUARD_N=$(printf '%s\n' "$GUARD_OUT" | sed -n 's/^guard: \([0-9]*\) .*/\1/p')
+    # A crash used to read as "0 illegal changes" (empty GUARD_N -> 0): the
+    # stamps were committed and the agent's edits pushed unchecked.
+    if [ "$GUARD_RC" -ne 0 ] || [ -z "$GUARD_N" ]; then
+        GUARD_FAILED="guard_candidate_status.py exit $GUARD_RC"
+        echo "$(ts) ERROR: status guard failed ($GUARD_FAILED); nothing from this run will be pushed"
+    fi
+fi
+if [ -z "$GUARD_FAILED" ]; then
     # Stamps (added_at, status_since) are committed even when nothing was
     # reverted, so the push below never carries a seed without added_at.
     # candidate_entrypoints.json: Phase 1 writes it; the agent may not commit.
@@ -183,8 +202,8 @@ except Exception as e:
     print('guard alert email failed:', e)
 " 2>&1 || true
     fi
-    rm -f "$GUARD_BEFORE"
 fi
+rm -f "$GUARD_BEFORE"
 
 # Push the agent's commits and the guard's, regardless of exit code
 cd "$REPO_DIR"
@@ -272,7 +291,7 @@ fi
 echo "$(ts) Sending email report..."
 source ~/.stock-monitor.env 2>/dev/null || true
 
-export REPO_DIR EXIT_CODE SMTP_USER SMTP_PASS PUSH_FAILED
+export REPO_DIR EXIT_CODE SMTP_USER SMTP_PASS PUSH_FAILED GUARD_FAILED
 python3 << 'PYEOF'
 import html, importlib.util, json, os, smtplib, sys
 from email.mime.text import MIMEText
@@ -518,6 +537,12 @@ push_banner = "" if not push_failed else (
     '<div style="background:#ffebe9;border:1px solid #cf222e;border-radius:6px;padding:8px 14px;'
     'margin:0 0 16px;font-size:13px;color:#cf222e;font-weight:600">'
     f'⚠️ git push 失败（{html.escape(push_failed)}）：今天的改动只在本机，没有推到 GitHub</div>')
+guard_failed = os.environ.get("GUARD_FAILED", "")
+guard_banner = "" if not guard_failed else (
+    '<div style="background:#ffebe9;border:1px solid #cf222e;border-radius:6px;padding:8px 14px;'
+    'margin:0 0 16px;font-size:13px;color:#cf222e;font-weight:600">'
+    f'⚠️ 状态守卫没有正常运行（{html.escape(guard_failed)}）：发现代理的改动未经检查，本次一律没有推送。'
+    '下次 discovery 运行前请人工检查本机未推送的提交，否则它们会被一起推上去</div>')
 agent_banner = "" if exit_code == 0 else (
     '<div style="background:#ffebe9;border:1px solid #cf222e;border-radius:6px;padding:8px 14px;'
     'margin:0 0 16px;font-size:13px;color:#cf222e;font-weight:600">'
@@ -532,7 +557,7 @@ html = f"""<html><body style="font-family:-apple-system,BlinkMacSystemFont,'Sego
 {stats_bar}
 </div>
 {agent_banner}
-{push_banner}
+{guard_banner}{push_banner}
 
 {body_sections}
 
@@ -590,6 +615,10 @@ REPORT_EXIT=$?
 if [ "$EXIT_CODE" -ne 0 ]; then
     echo "$(ts) Exiting $EXIT_CODE: the discovery agent failed"
     exit "$EXIT_CODE"
+fi
+if [ -n "$GUARD_FAILED" ]; then
+    echo "$(ts) Exiting 4: status guard failed ($GUARD_FAILED); nothing was pushed"
+    exit 4
 fi
 if [ "$TRIAL_EXIT" -ne 0 ]; then
     echo "$(ts) Exiting $TRIAL_EXIT: the trial manager failed"
