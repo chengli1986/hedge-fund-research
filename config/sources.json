@@ -482,10 +482,10 @@
       "listing_template": {
         "type": "card_list",
         "fetch": "requests",
-        "card": "div.cmp-insight-cardlist-with-images__details",
-        "link": "a.text-link-blck-bold",
-        "title": "a.text-link-blck-bold",
-        "date": ".cmp-insight-cardlist-with-images__author-date"
+        "card": "div.cmp-insight-cardlist-with-images__bento-item, div.cmp-insight-cardlist-with-images__details",
+        "link": "a.cmp-insight-cardlist-with-images__bento-item-title, a.text-link-blck-bold",
+        "title": "a.cmp-insight-cardlist-with-images__bento-item-title, a.text-link-blck-bold",
+        "date": ".cmp-insight-cardlist-with-images__bento-item-release-date, .cmp-insight-cardlist-with-images__author-date"
       },
       "listing_template_active": true,
       "listing_template_drops": [

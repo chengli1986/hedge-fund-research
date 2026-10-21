@@ -3536,7 +3536,13 @@ def fetch_hamilton_lane(source: dict) -> list[dict]:
 def fetch_apollo_global_management(source: dict) -> list[dict]:
     """Fetch articles from Apollo Global Management Insights (SSR — AEM card list).
 
-    Card: div.cmp-insight-cardlist-with-images__details containing
+    The three newest insights sit in a featured "bento" block above the list
+    (div.cmp-insight-cardlist-with-images__bento-item: __bento-item-title,
+    __bento-item-eyebrow, __bento-item-release-date, __bento-item-description).
+    The site added it between 2026-07-14 and 2026-08-15; reading the list
+    alone saw each article 2-3 weeks late (2026-10-21).
+
+    List card: div.cmp-insight-cardlist-with-images__details containing
             a.text-link-blck-bold (title + url),
             a.cmp-insight-cardlist-with-images__tag (category),
             span.cmp-insight-cardlist-with-images__author-date (date),
@@ -3555,8 +3561,9 @@ def fetch_apollo_global_management(source: dict) -> list[dict]:
     articles: list[dict] = []
     seen_urls: set[str] = set()
 
-    for card in soup.select("div.cmp-insight-cardlist-with-images__details"):
-        title_link = card.select_one("a.text-link-blck-bold")
+    p = "cmp-insight-cardlist-with-images__"
+    for card in soup.select(f"div.{p}bento-item, div.{p}details"):
+        title_link = card.select_one(f"a.{p}bento-item-title, a.text-link-blck-bold")
         if not title_link:
             continue
         href = title_link.get("href", "")
@@ -3571,13 +3578,13 @@ def fetch_apollo_global_management(source: dict) -> list[dict]:
         if not title or len(title) < 5:
             continue
 
-        tag_el = card.select_one("a.cmp-insight-cardlist-with-images__tag")
+        tag_el = card.select_one(f"a.{p}bento-item-eyebrow, a.{p}tag")
         category = tag_el.get_text(strip=True) if tag_el else ""
 
-        date_el = card.select_one(".cmp-insight-cardlist-with-images__author-date")
+        date_el = card.select_one(f".{p}bento-item-release-date, .{p}author-date")
         date_raw = date_el.get_text(strip=True) if date_el else ""
 
-        desc_el = card.select_one(".cmp-insight-cardlist-with-images__description")
+        desc_el = card.select_one(f".{p}bento-item-description, .{p}description")
         summary = desc_el.get_text(strip=True) if desc_el else ""
 
         articles.append({
