@@ -96,7 +96,8 @@ def test_a_failed_guard_is_in_the_report_and_the_exit_code():
 
 
 # --- 2. park() commits only its file and says when it could not ---------------
-def _park_repo(tmp_path, monkeypatch, hook: str | None = None, stage_other: bool = False):
+def _park_repo(tmp_path, monkeypatch, hook: str | None = None, stage_other: bool = False,
+               dirty_candidates: bool = False):
     import verify_promotions as vp
     monkeypatch.chdir(tmp_path)
     _git(tmp_path, "init", "-q", "-b", "main")
@@ -121,6 +122,9 @@ def _park_repo(tmp_path, monkeypatch, hook: str | None = None, stage_other: bool
         if stage_other:                          # another session stages work mid-run
             (tmp_path / "theirs.py").write_text("half done")
             _git(tmp_path, "add", "theirs.py")
+        if dirty_candidates:                     # someone's uncommitted candidate edit
+            f = tmp_path / "config" / "fund_candidates.json"
+            f.write_text(json.dumps(json.loads(f.read_text()) + [{"id": "y", "status": "candidate"}]))
         return vp.PARK_AFTER_REVERTS
     monkeypatch.setattr(vp, "recent_reverts", reverts)
     problem = vp.revert({"id": "x", "date": vp.today_bjt(), "commit": sha}, "auto_reverted", "probe FAIL", "probe")
@@ -145,3 +149,16 @@ def test_park_commits_only_the_candidates_file(tmp_path, monkeypatch):
     assert _git(tmp_path, "show", "--name-only", "--format=", "HEAD").stdout.split() == [
         "config/fund_candidates.json"]
     assert _git(tmp_path, "diff", "--cached", "--name-only").stdout.split() == ["theirs.py"]
+
+
+# --- 2b. park() leaves an uncommitted fund_candidates.json alone (2026-10-21) --
+# Codex 10-21: on a failed commit `checkout HEAD` wiped edits that had nothing to
+# do with parking; on a good one `git add` swept them into the park commit.
+def test_park_skips_and_reports_when_candidates_file_has_uncommitted_edits(tmp_path, monkeypatch):
+    c, problem = _park_repo(tmp_path, monkeypatch, dirty_candidates=True)
+    assert c["status"] == "promoted"              # not parked
+    assert "uncommitted" in (problem or "") and "fund_candidates.json" in problem
+    rows = json.loads((tmp_path / "config" / "fund_candidates.json").read_text())
+    assert [r["id"] for r in rows] == ["x", "y"]  # the other edit survives
+    assert _git(tmp_path, "log", "-1", "--format=%s").stdout.startswith("Revert")
+    assert _git(tmp_path, "diff", "--cached", "--name-only").stdout == ""

@@ -82,6 +82,14 @@ def park(sid: str, why: str, tag: str) -> str | None:
     c = next((x for x in rows if x.get("id") == sid), None)
     if c is None or c.get("status") != "promoted":
         return None
+    # Someone else's uncommitted edit in the file: committing would sweep it into
+    # the park commit, and the failure path's checkout would wipe it (2026-10-21
+    # review). Leave the file alone; exit 1 (dirty) and 128 (git error) both stop.
+    dirty = _git("diff", "--quiet", "HEAD", "--", str(CANDIDATES))
+    if dirty.returncode != 0:
+        print(f"[{tag}]   not parking {sid}: {CANDIDATES} has uncommitted changes")
+        return (f"{sid}: reverted, but not parked on the watchlist -- {CANDIDATES} has uncommitted "
+                f"changes (left untouched; check them); tried again on its next revert")
     set_status(c, "watchlist")
     tag_note(c, f"[auto-promote reverted {PARK_AFTER_REVERTS}x in {PARK_WINDOW_DAYS}d: {why[:80]}; "
                 f"set back to promoted to retry]")
