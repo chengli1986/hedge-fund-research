@@ -4190,6 +4190,10 @@
     "status": "seed",
     "strategy_tags": [
       "equity"
-    ]
+    ],
+    "official_domain": "oakridgeinvest.com",
+    "research_links": [],
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-10-21T09:00:37.156014+08:00"
   }
 ]
