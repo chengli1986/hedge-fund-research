@@ -20,6 +20,7 @@ JOB_TIMEOUT_S=960        # = cron-wrapper --timeout of gmia-candidate-discovery
 PHASE1_TIMEOUT_S=180
 POST_RESERVE_S=240       # guard, stall routing, trial manager, push, report
 AGENT_MAX_S=600          # sessions take ~1 min; the longest seen was 470s
+TRIAL_TAIL_RESERVE_S=60  # after the trial manager: commit, push, report mail
 
 cleanup() {
     local pids
@@ -237,10 +238,19 @@ fi
 # --- Trial manager (runs regardless of discovery exit code) ---
 # Re-export the API key for Haiku quality sampling
 export ANTHROPIC_API_KEY="$SAVED_ANTHROPIC_API_KEY"
-echo "$(ts) Running GMIA trial manager..."
-python3 "$REPO_DIR/gmia-trial-manager.py" run 2>&1
+# Its own clock (2026-10-21 follow-up audit): unbounded, a slow night (Haiku
+# sampling, back-off) could run into the cron kill mid-push or mid-report.
+# ~30s on 10-19..21. Trial state is written atomically, so a kill leaves the
+# old or the new file, never half of one.
+TRIAL_TIMEOUT_S=$(( JOB_TIMEOUT_S - SECONDS - TRIAL_TAIL_RESERVE_S ))
+[ "$TRIAL_TIMEOUT_S" -lt 30 ] && TRIAL_TIMEOUT_S=30
+echo "$(ts) Running GMIA trial manager (limit ${TRIAL_TIMEOUT_S}s)..."
+timeout --kill-after=15 "$TRIAL_TIMEOUT_S" python3 "$REPO_DIR/gmia-trial-manager.py" run 2>&1
 TRIAL_EXIT=$?
-if [ $TRIAL_EXIT -ne 0 ]; then
+if [ "$TRIAL_EXIT" -eq 124 ]; then
+    echo "$(ts) WARNING: trial manager TIMED OUT after ${TRIAL_TIMEOUT_S}s"
+    TRIAL_EXIT=5   # exiting 124 would read to cron-wrapper as the whole job timing out
+elif [ $TRIAL_EXIT -ne 0 ]; then
     echo "$(ts) WARNING: trial manager exited with code $TRIAL_EXIT"
 fi
 

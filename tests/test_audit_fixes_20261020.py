@@ -127,7 +127,7 @@ def _park_repo(tmp_path, monkeypatch, hook: str | None = None, stage_other: bool
             f.write_text(json.dumps(json.loads(f.read_text()) + [{"id": "y", "status": "candidate"}]))
         return vp.PARK_AFTER_REVERTS
     monkeypatch.setattr(vp, "recent_reverts", reverts)
-    problem = vp.revert({"id": "x", "date": vp.today_bjt(), "commit": sha}, "auto_reverted", "probe FAIL", "probe")
+    _, problem = vp.revert({"id": "x", "date": vp.today_bjt(), "commit": sha}, "auto_reverted", "probe FAIL", "probe")
     c = json.loads((tmp_path / "config" / "fund_candidates.json").read_text())[0]
     return c, problem
 

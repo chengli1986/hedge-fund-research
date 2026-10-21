@@ -74,10 +74,18 @@ def test_a_scoped_commit_leaves_other_staged_changes_alone(tmp_path):
     assert run("git", "diff", "--cached", "--name-only").stdout.split() == ["theirs.py"]
 
 
+def _wrapper_text() -> str:
+    return (ROOT / "scripts" / "wrapper-candidate-discovery.sh").read_text()
+
+
 def _guard_commit_block() -> str:
-    """The discovery wrapper's guard staging + commit lines, as written."""
-    text = (ROOT / "scripts" / "wrapper-candidate-discovery.sh").read_text()
-    m = re.search(r"^(\s*GUARD_FILES=.*?^\s*fi\n)", text, re.S | re.M)
+    """The discovery wrapper's guard staging + commit lines, as written.
+
+    Cut at the `fi` that closes the stamp commit, not at the first `fi`: an
+    `if` added between GUARD_FILES= and the commits would otherwise end the
+    block before them (2026-10-21 follow-up audit)."""
+    text = _wrapper_text()
+    m = re.search(r"^(\s*GUARD_FILES=.*?guard: stamp added_at[^\n]*\n\s*fi\n)", text, re.S | re.M)
     assert m, "guard commit block not found"
     return m.group(1)
 

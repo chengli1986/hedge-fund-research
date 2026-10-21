@@ -371,7 +371,7 @@ def test_a_clean_revert_is_recorded_even_when_the_push_fails(tmp_path, monkeypat
     sha = subprocess.run(["git", "rev-parse", "HEAD"], cwd=tmp_path, capture_output=True, text=True).stdout.strip()
     (tmp_path / "logs").mkdir()
     monkeypatch.chdir(tmp_path)
-    problem = vp.revert({"date": TODAY, "id": "x", "commit": sha}, "auto_reverted", "probe FAIL", "probe")
+    _, problem = vp.revert({"date": TODAY, "id": "x", "commit": sha}, "auto_reverted", "probe FAIL", "probe")
     assert "push failed" in problem                      # no remote here
     assert json.loads((tmp_path / "s.json").read_text()) == {"sources": []}
     row = json.loads((tmp_path / "logs/auto-promote-history.jsonl").read_text())

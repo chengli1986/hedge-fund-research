@@ -109,18 +109,22 @@ def park(sid: str, why: str, tag: str) -> str | None:
     return None
 
 
-def revert(e: dict, outcome: str, why: str, tag: str) -> str | None:
-    """Revert e's commit and record it. Returns a problem line, or None."""
+def revert(e: dict, outcome: str, why: str, tag: str) -> tuple[bool, str | None]:
+    """Revert e's commit and record it. Returns (reverted, problem line or None).
+
+    `reverted` is said outright: the caller used to infer it from the problem
+    text and missed "reverted, but not parked" (2026-10-21 follow-up audit).
+    """
     sid, commit = e["id"], e.get("commit", "")
     if not commit:
         _record(e, "revert_failed", f"{why} -- no commit sha in history, not reverted")
-        return f"{sid}: {why}, but no commit sha to revert"
+        return False, f"{sid}: {why}, but no commit sha to revert"
     print(f"[{tag}]   reverting {commit[:8]}")
     r = _git("revert", commit, "--no-edit")
     if r.returncode != 0:
         _git("revert", "--abort")          # never leave a half-done revert behind
         _record(e, "revert_failed", f"{why} -- git revert failed and was aborted: {r.stderr[:200]}")
-        return f"{sid}: {why}, and git revert failed (aborted; the source is still live)"
+        return False, f"{sid}: {why}, and git revert failed (aborted; the source is still live)"
     sha = _git("rev-parse", "HEAD").stdout.strip()
     _record(e, outcome, f"{why} -- reverted {commit[:8]}", sha)
     print(f"[{tag}]   ✓ reverted to {sha[:8]}, history updated")
@@ -129,8 +133,8 @@ def revert(e: dict, outcome: str, why: str, tag: str) -> str | None:
         parked = park(sid, why, tag)
     push = _git("push", "origin", "main")
     if push.returncode != 0:
-        return f"{sid}: reverted locally, but git push failed: {push.stderr[:200]}" + (f"; {parked}" if parked else "")
-    return parked
+        return True, f"{sid}: reverted locally, but git push failed: {push.stderr[:200]}" + (f"; {parked}" if parked else "")
+    return True, parked
 
 
 def check_validate(e: dict) -> tuple[str, str]:
@@ -199,10 +203,10 @@ def main(argv: list[str] | None = None) -> int:
             problems.append(f"{e['id']}: could not be checked: {detail}")
             continue
         print(f"[{tag}]   FAIL ✗ {detail}")
-        problem = revert(e, outcome, f"{why}: {detail}", tag)
+        did_revert, problem = revert(e, outcome, f"{why}: {detail}", tag)
         if problem:
             problems.append(problem)
-        if not problem or "push failed" in problem:
+        if did_revert:
             reverted.append(e["id"])
     for p in problems:
         print(f"[{tag}] ⚠️ {p}")

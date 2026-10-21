@@ -175,7 +175,7 @@ def _promote_repo(tmp_path, monkeypatch, prior_reverts):
     (tmp_path / "logs" / "auto-promote-history.jsonl").write_text("".join(
         json.dumps({"date": today, "id": "x", "outcome": "auto_reverted"}) + "\n"
         for _ in range(prior_reverts)))
-    problem = vp.revert({"id": "x", "date": today, "commit": sha}, "auto_reverted", "probe FAIL", "probe")
+    _, problem = vp.revert({"id": "x", "date": today, "commit": sha}, "auto_reverted", "probe FAIL", "probe")
     c = json.loads((tmp_path / "config" / "fund_candidates.json").read_text())[0]
     return c, git("log", "-1", "--format=%s"), problem
 
