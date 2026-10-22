@@ -14,7 +14,9 @@ Runs against every source listed in config/sources.json:
 
 State persists per-source consecutive-fail and consecutive-warn counters so
 alerts can be throttled (FAIL alerts every run, WARN alerts only after the
-3rd consecutive run, RECOVERED alerts once on the OK transition).
+3rd consecutive run, RECOVERED alerts once on the OK transition). A listing
+that still answers 502/503/504 after the retry is UPSTREAM on its first night
+(reported, not in the exit code) and FAIL from the second (2026-10-22).
 
 Email is HTML; SMTP creds load from ~/.stock-monitor.env (same pattern as
 gmia-trial-manager.py).
@@ -243,6 +245,26 @@ def _is_transient(exc: Exception) -> bool:
     return "timeout" in msg or "temporarily unavailable" in msg
 
 
+# The site itself is down or in maintenance (amundi 2026-10-22: 503 on every
+# host, "Scheduled maintenance"). 500 is left out: it is the site's code
+# failing, often on our request, and stays a first-night FAIL.
+UPSTREAM_DOWN_CODES = (502, 503, 504)
+_UPSTREAM_DOWN_MSG = re.compile(r"\b(502|503|504) Server Error\b")
+
+
+def _upstream_down_status(exc: Exception) -> int | None:
+    """The 5xx code if this listing failure means the site is down, else None.
+
+    requests.HTTPError carries the response; a fetcher that re-raised it as
+    something else keeps requests' "503 Server Error" wording in the message.
+    """
+    code = getattr(getattr(exc, "response", None), "status_code", None)
+    if code in UPSTREAM_DOWN_CODES:
+        return code
+    m = _UPSTREAM_DOWN_MSG.search(str(exc))
+    return int(m.group(1)) if m else None
+
+
 def _evidence_is_transient(evidence: dict, label: str) -> bool:
     """Whether a content-probe failure labelled from fetch_with_evidence
     evidence deserves the one retry.
@@ -359,9 +381,14 @@ def _probe_once(source: dict) -> dict:
     try:
         articles = fetcher(source)
     except Exception as exc:
+        upstream = _upstream_down_status(exc)
         result["status"] = "FAIL"
+        # No rollback hint when the site is down: the hand-written fetcher
+        # would get the same 503.
         result["reason"] = (f"fetch_articles raised {type(exc).__name__}: {str(exc)[:120]}"
-                            + _template_hint(source))
+                            + ("" if upstream else _template_hint(source)))
+        if upstream:
+            result["upstream_down"] = upstream
         result["transient_exc"] = exc if _is_transient(exc) else None
         return result
 
@@ -601,6 +628,25 @@ def apply_known_blocks(per_source: dict[str, dict], sources: list[dict]) -> None
             result["known_block"] = note
 
 
+# ── one night of grace for a site that is down ───────────────────────────────
+
+def apply_upstream_grace(per_source: dict[str, dict], prev_state: dict) -> None:
+    """A site-down listing failure is UPSTREAM on its first night.
+
+    "First night" = the previous run did not fail this source
+    (consecutive_fails 0). UPSTREAM counts as a failed night in the state, so
+    a second night in a row stays FAIL and alerts as before.
+    """
+    prev = prev_state.get("sources", {}) if isinstance(prev_state, dict) else {}
+    for sid, result in per_source.items():
+        if result.get("status") != "FAIL" or not result.get("upstream_down"):
+            continue
+        prev_record = prev.get(sid) if isinstance(prev.get(sid), dict) else {}
+        if prev_record.get("consecutive_fails", 0) > 0:
+            continue
+        result["status"] = "UPSTREAM"
+
+
 # ── state-driven alert classification ────────────────────────────────────────
 
 def classify_alerts(per_source: dict[str, dict], prev_state: dict) -> dict:
@@ -626,6 +672,7 @@ def classify_alerts(per_source: dict[str, dict], prev_state: dict) -> dict:
     healthy: list[tuple] = []
     known: list[tuple] = []        # KNOWN: a decided block, reported but not alerting
     lifted: list[tuple] = []       # passed again although flagged known_block
+    upstream: list[tuple] = []     # UPSTREAM: site down, first night, not alerting
 
     prev = prev_state.get("sources", {}) if isinstance(prev_state, dict) else {}
 
@@ -646,6 +693,9 @@ def classify_alerts(per_source: dict[str, dict], prev_state: dict) -> dict:
 
         if new_status == "KNOWN":
             known.append((sid, result))
+            continue
+        if new_status == "UPSTREAM":
+            upstream.append((sid, result))
             continue
         if result.get("known_block_lifted"):
             lifted.append((sid, result))
@@ -672,6 +722,7 @@ def classify_alerts(per_source: dict[str, dict], prev_state: dict) -> dict:
         "healthy": healthy,
         "known": known,
         "lifted": lifted,
+        "upstream": upstream,
     }
 
 
@@ -696,7 +747,7 @@ def merge_into_state(prev_state: dict, per_source: dict[str, dict]) -> dict:
             record["last_ok_at"] = iso
             record["last_fail_at"] = prev.get("last_fail_at")
             record["last_failure_reason"] = ""
-        elif result["status"] in ("FAIL", "KNOWN"):     # KNOWN still failed; it just does not alert
+        elif result["status"] in ("FAIL", "KNOWN", "UPSTREAM"):   # failed nights that do not alert still count
             record["consecutive_fails"] = prev.get("consecutive_fails", 0) + 1
             record["consecutive_warns"] = 0
             record["last_ok_at"] = prev.get("last_ok_at")
@@ -1143,7 +1194,7 @@ def should_email(alerts: dict, zero_fetches: list, pipeline_stale: bool = False,
     silent zero-article fetch produces.
     """
     return bool(alerts["failing"] or alerts["warning"] or alerts["recovered"]
-                or alerts.get("lifted")
+                or alerts.get("lifted") or alerts.get("upstream")
                 or zero_fetches or pipeline_stale or declines or intake or damaged_rows
                 or corrupt_state or entrypoints or candidate_fails
                 or (orphans is not None and orphans.get("new"))
@@ -1194,6 +1245,12 @@ def print_console_report(per_source: dict[str, dict], total_runtime_s: float,
     if warn_rows:
         print(f"⚠️  WARNINGS ({len(warn_rows)}):")
         for sid, r in warn_rows:
+            print(f"  {sid:25} {r['reason']}")
+        print()
+    upstream_rows = [(sid, r) for sid, r in per_source.items() if r["status"] == "UPSTREAM"]
+    if upstream_rows:
+        print(f"⏳ SITE TEMPORARILY DOWN — 1st night, not failing ({len(upstream_rows)}):")
+        for sid, r in upstream_rows:
             print(f"  {sid:25} {r['reason']}")
         print()
     known_rows = [(sid, r) for sid, r in per_source.items() if r["status"] == "KNOWN"]
@@ -1293,6 +1350,17 @@ def render_html_email(
     if fail_rows:
         sections.append(section_table(
             f"🚨 FAILING ({len(alerts['failing'])})", "#cf222e", fail_rows))
+    if alerts.get("upstream"):
+        upstream_rows = "".join(
+            f'<tr><td style="padding:8px;font-weight:bold;color:#9a6700">{html.escape(sid)}</td>'
+            f'<td style="padding:8px">{html.escape(r.get("reason") or "")}<br>'
+            f'<span style="color:#586069;font-size:11px">the site answered '
+            f'{html.escape(str(r.get("upstream_down")))} — first night, not counted as failing; '
+            f'FAIL if it is still down at the next run</span></td></tr>'
+            for sid, r in alerts["upstream"])
+        sections.append(section_table(
+            f"⏳ SITE TEMPORARILY DOWN — 1st night, not failing ({len(alerts['upstream'])})",
+            "#9a6700", upstream_rows))
     if warn_rows:
         sections.append(section_table(
             f"⚠️ WARNINGS ({len(alerts['warning'])}) — persisted ≥{WARN_ALERT_THRESHOLD} runs",
@@ -1483,6 +1551,9 @@ def alerts_subject(alerts: dict, zero_fetches: list | None = None,
         parts.append(f"🚨 {len(alerts['failing'])} FAILING ({ids}{more})")
     if alerts["warning"]:
         parts.append(f"⚠️ {len(alerts['warning'])} WARN")
+    if alerts.get("upstream"):
+        ids = ", ".join(sid for sid, _ in alerts["upstream"][:3])
+        parts.append(f"⏳ {len(alerts['upstream'])} site(s) down, 1st night ({ids})")
     if alerts["recovered"]:
         parts.append(f"✅ {len(alerts['recovered'])} recovered")
     if zero_fetches:
@@ -1672,6 +1743,8 @@ def main() -> int:
 
     total_runtime_s = time.monotonic() - started
     apply_known_blocks(per_source, sources)
+    # Before the console report and the --source return, so every view agrees.
+    apply_upstream_grace(per_source, load_state())
 
     # Read once, before the --source early return below, so the console report
     # and the email decision see the same list. A known-blocked source fetching
@@ -1717,7 +1790,7 @@ def main() -> int:
 
     # Single-source debug mode bypasses state and email entirely.
     if args.source:
-        return 0 if all(r["status"] in ("OK", "KNOWN") for r in per_source.values()) else 1
+        return 0 if all(r["status"] in ("OK", "KNOWN", "UPSTREAM") for r in per_source.values()) else 1
 
     prev_state = load_state()
     alerts = classify_alerts(per_source, prev_state)

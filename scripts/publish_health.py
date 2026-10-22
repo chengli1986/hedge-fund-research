@@ -257,6 +257,9 @@ def _alerts(rendered: list[dict], ab: list[dict], corrupt_backups: list[str],
         elif row["probe_status"] == "WARN":
             alerts.append({"kind": "probe_warn", "source": row["id"],
                            "detail": row["probe_reason"] or "探针告警"})
+        elif row["probe_status"] == "UPSTREAM":
+            alerts.append({"kind": "probe_upstream", "source": row["id"],
+                           "detail": "对方网站暂时不可用（第 1 晚，不算失败）：" + (row["probe_reason"] or "")})
     last_ab = (ab or [{}])[-1]
     if ab and not last_ab.get("agree", True):
         alerts.append({"kind": "ab_gate", "source": "",
@@ -322,7 +325,7 @@ tr:hover td{background:var(--surface2)}
 .tag{font-size:11px;padding:1px 7px;border-radius:999px;border:1px solid var(--border);
 color:var(--muted);white-space:nowrap}
 .tag.tpl{border-color:var(--blue);color:var(--blue)}
-.s-OK{color:var(--green)}.s-WARN{color:var(--yellow)}.s-FAIL{color:var(--red)}.s-KNOWN{color:var(--muted)}
+.s-OK{color:var(--green)}.s-WARN{color:var(--yellow)}.s-FAIL{color:var(--red)}.s-KNOWN{color:var(--muted)}.s-UPSTREAM{color:var(--yellow)}
 .muted{color:var(--muted)}
 .bars{display:flex;align-items:flex-end;gap:3px;height:90px;background:var(--surface);
 border:1px solid var(--border);border-radius:8px;padding:10px}
@@ -405,7 +408,7 @@ def render_html(health: dict) -> str:
 
     if stage["alerts"]:
         kind_labels = {"consecutive_zero": "连续零抓取", "refusal": "抓取被拒收",
-                       "probe_fail": "探针失败", "probe_warn": "探针告警",
+                       "probe_fail": "探针失败", "probe_warn": "探针告警", "probe_upstream": "对方暂不可用",
                        "ab_gate": "A/B 不一致", "corrupt_state": "状态文件损坏",
                        "not_inspected": "该源未抓取", "stale_input": "数据过期",
                        "known_block": "已知拦截"}
