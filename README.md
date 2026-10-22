@@ -174,7 +174,7 @@ stopped matching, a new access gate, a page now blocked) that daily fetching of
 python3 scripts/content_audit.py                  # report to logs/content-audit/
 python3 scripts/content_audit.py --email          # email only when there are alerts
 python3 scripts/content_audit.py --accept ID ...  # after checking a page, save today's fetch as its baseline
-# Cron: Sun 06:00 BJT (gmia-content-audit)
+# Cron: Sun 06:05 BJT (gmia-content-audit; moved from 06:00 on 2026-10-22 to clear a cron-audit collision with portal-health)
 ```
 
 Alerts: `extraction_drift`, `now_failing` (with its failure label, see
