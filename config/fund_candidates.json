@@ -3662,12 +3662,12 @@
     "name": "Capital Fund Management (CFM)",
     "homepage_url": "https://www.cfm.com",
     "source": "manual",
-    "status": "inaccessible",
+    "status": "visitable",
     "strategy_tags": [
       "quant",
       "macro"
     ],
-    "status_since": "2026-10-15T09:00:39.952790+08:00",
+    "status_since": "2026-10-25T02:06:24.660980+08:00",
     "last_deep_analyzed_at": "2026-10-05T01:00:40Z",
     "quality": "HIGH",
     "quality_score": 0.85,
@@ -3677,7 +3677,47 @@
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-10-12T09:00:10.633037+08:00",
-    "added_at": "2026-08-28"
+    "added_at": "2026-08-28",
+    "template_attempts": [
+      {
+        "at": "2026-10-24T18:00:38+00:00",
+        "type": "rss_feed",
+        "spec": {
+          "type": "rss_feed",
+          "feed": "url"
+        },
+        "listing_url": "https://www.cfm.com/feed/",
+        "ok": true,
+        "rows": 10,
+        "dated": 10,
+        "problems": [],
+        "sample": [
+          {
+            "title": "2026 Midterms: What’s Old in Washington",
+            "url": "https://www.cfm.com/2026-midterms-whats-old-in-washington/",
+            "date": "2026-10-19"
+          },
+          {
+            "title": "A Systematic View of How Liquidity Shapes Markets",
+            "url": "https://www.cfm.com/a-systematic-view-of-how-liquidity-shapes-markets/",
+            "date": "2026-10-15"
+          },
+          {
+            "title": "Optimists vs Pessimists",
+            "url": "https://www.cfm.com/optimists-vs-pessimists/",
+            "date": "2026-10-13"
+          }
+        ]
+      }
+    ],
+    "listing_template": {
+      "type": "rss_feed",
+      "feed": "url"
+    },
+    "listing_url": "https://www.cfm.com/feed/",
+    "expected_hostname": "cfm.com",
+    "synthesis_attempted_at": "2026-10-24T18:06:24.655085+00:00",
+    "synthesis_outcome": "success"
   },
   {
     "id": "northleaf-capital",
@@ -3926,18 +3966,126 @@
     "name": "CBRE Investment Management",
     "homepage_url": "https://www.cbreim.com/insights",
     "source": "manual",
-    "status": "inaccessible",
+    "status": "visitable",
     "strategy_tags": [
       "real_assets",
       "macro"
     ],
-    "status_since": "2026-10-15T09:00:39.952794+08:00",
+    "status_since": "2026-10-25T02:06:24.661013+08:00",
     "last_deep_analyzed_at": "2026-10-12T01:00:37Z",
     "quality": "HIGH",
     "quality_score": 0.75,
     "topics": "real assets, infrastructure, macro, real estate",
     "notes": "[auto-stall 2026-10-15] seed->inaccessible after 33d stuck RECOMMEND: ~weekly real assets/macro; bot 403, needs PW",
-    "added_at": "2026-09-11"
+    "added_at": "2026-09-11",
+    "template_attempts": [
+      {
+        "at": "2026-10-24T18:01:48+00:00",
+        "type": "card_list",
+        "spec": {
+          "type": "card_list",
+          "fetch": "playwright",
+          "card": "a[href*=\"/insights/\"]",
+          "link": "self"
+        },
+        "listing_url": "https://www.cbreim.com/insights",
+        "ok": true,
+        "rows": 10,
+        "dated": 0,
+        "problems": [],
+        "sample": [
+          {
+            "title": "Built on Infrastructure",
+            "url": "https://www.cbreim.com/insights/built-on-infrastructure",
+            "date": null
+          },
+          {
+            "title": "Investing at the Intersection",
+            "url": "https://www.cbreim.com/insights/investing-at-the-intersection",
+            "date": null
+          },
+          {
+            "title": "Macro House View Q3 2026",
+            "url": "https://www.cbreim.com/insights/articles/macro-house-view-q3-2026",
+            "date": null
+          }
+        ]
+      },
+      {
+        "at": "2026-10-24T18:03:16+00:00",
+        "type": "card_list",
+        "spec": {
+          "type": "card_list",
+          "fetch": "playwright",
+          "card": ".cbre-c-gridCard--article",
+          "link": "a.cbre-c-gridCard__title-link",
+          "title": "a.cbre-c-gridCard__title-link",
+          "date": ".cbre-c-gridCard__date",
+          "path_prefix": "/insights/articles/",
+          "wait_selector": ".cbre-c-gridCard__date"
+        },
+        "listing_url": "https://www.cbreim.com/insights",
+        "ok": true,
+        "rows": 10,
+        "dated": 10,
+        "problems": [],
+        "sample": [
+          {
+            "title": "Macro House View Q3 2026",
+            "url": "https://www.cbreim.com/insights/articles/macro-house-view-q3-2026",
+            "date": "2026-08-10"
+          },
+          {
+            "title": "U.S. reindustrialization and AI reinforce each other while competing for shared resources",
+            "url": "https://www.cbreim.com/insights/articles/us-reindustrialization-and-ai-reinforce-each-other-while-competing-for-shared-resources",
+            "date": "2026-09-08"
+          },
+          {
+            "title": "Value creation under resource constraints",
+            "url": "https://www.cbreim.com/insights/articles/value-creation-under-resource-constraints-apac",
+            "date": "2026-08-05"
+          }
+        ]
+      },
+      {
+        "at": "2026-10-24T18:05:39+00:00",
+        "type": "card_list",
+        "spec": {
+          "type": "card_list",
+          "fetch": "playwright",
+          "wait_until": "domcontentloaded",
+          "wait_selector": ".CoveoResult",
+          "wait_ms": 20000,
+          "card": ".CoveoResult",
+          "link": "a.cbre-c-listCards__title-link",
+          "title": "a.cbre-c-listCards__title-link",
+          "date": ".cbre-c-listCards__date",
+          "path_prefix": "/insights/"
+        },
+        "listing_url": "https://www.cbreim.com/insights/search-insights-results#sort=%40publishdate%20descending&numberOfResults=24",
+        "ok": false,
+        "rows": 0,
+        "dated": 0,
+        "problems": [
+          "only 0 row(s), need 3"
+        ],
+        "sample": []
+      }
+    ],
+    "listing_template": {
+      "type": "card_list",
+      "fetch": "playwright",
+      "card": ".cbre-c-gridCard--article",
+      "link": "a.cbre-c-gridCard__title-link",
+      "title": "a.cbre-c-gridCard__title-link",
+      "date": ".cbre-c-gridCard__date",
+      "path_prefix": "/insights/articles/",
+      "wait_selector": ".cbre-c-gridCard__date"
+    },
+    "listing_url": "https://www.cbreim.com/insights",
+    "expected_hostname": "cbreim.com",
+    "synthesis_attempted_at": "2026-10-24T18:06:24.655085+00:00",
+    "synthesis_outcome": "success"
   },
   {
     "id": "nexpoint",
