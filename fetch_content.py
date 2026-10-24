@@ -2423,6 +2423,45 @@ def _fetch_content_hamilton_lane(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+FULCRUM_MIN_CONTENT = 500  # Filter video/podcast pages whose only text is a ~100-200-char intro
+
+
+def _fetch_content_fulcrum(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Fulcrum Asset Management insight content via requests (SSR WordPress).
+
+    The listing is the WordPress RSS feed (`/feed/?post_type=insights`, a
+    listing template). Article pages are server-rendered; the body sits in
+    `div.article-content`, which also nests the firm's ~2K-char
+    `div.article-disclaimer` -- that is removed first so it neither pads a
+    short page past the threshold nor reaches the summary. Most of the feed is
+    "Deeper Dive" / "On the Horizon" Vimeo videos whose page holds only a
+    one- or two-sentence intro (93-206 chars measured 2026-10-24), hence
+    FULCRUM_MIN_CONTENT, as matthews-asia does. Written investment insights
+    measured 12K chars.
+    """
+    url = article["url"]
+    log.info("  Fulcrum: fetching article page %s", url)
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Fulcrum: fetch failed: %s", e)
+        return None
+
+    soup = BeautifulSoup(resp.text, "html.parser")
+    for tag in soup.select("div.article-disclaimer"):
+        tag.decompose()
+    text = _normalize_html(str(soup), "div.article-content p")
+    if not _check_min_content_length(text, FULCRUM_MIN_CONTENT):
+        log.warning("  Fulcrum: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Fulcrum: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -2467,6 +2506,7 @@ CONTENT_FETCHERS = {
     "mfs-investment-management": _fetch_content_mfs,
     "northleaf-capital": _fetch_content_northleaf_capital,
     "hamilton-lane": _fetch_content_hamilton_lane,
+    "fulcrum-asset-management": _fetch_content_fulcrum,
 }
 
 

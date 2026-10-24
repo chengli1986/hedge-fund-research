@@ -77,6 +77,7 @@ BADGE_COLORS: dict[str, str] = {
     "northleaf-capital": "#364b0c",         # Northleaf deep moss/leaf green (brand-literal "leaf", but the bright- and mid-green band is full, so this takes the dark yellow-green hole below it: min RGB dist 55.6 across all 41 existing colors — 55.7 to #046307 Baillie Gifford emerald (pure green, no yellow), 56.7 to #556b2f KKR olive (much lighter and greyer), 59+ to #827717 G&R khaki and #5d4037 Acadian umber; WCAG AAA 9.7:1 on white)
     "blue-owl-capital": "#301070",          # Blue Owl midnight indigo-violet ("night owl"; the deep blue-violet slot between the navy and violet clusters was empty — min RGB dist 63.8 to any of the 36 existing colors, the highest of any palette-consistent candidate: 63.8 to #003a70 PIMCO navy, 82 to #3949ab Matthews indigo, 66 to #5e3a82 Apollo plum; WCAG AAA 14.6:1 on white)
     "hamilton-lane": "#6014e8",             # Hamilton Lane vivid blue-violet (the muted blue, violet and green bands are all full; a grid search over every WCAG-AA colour with HLS saturation <=0.85 put this one farthest from the palette: min RGB dist 82.7 across all 42 existing colors — 82.7 to #7a4cb1 JPMAM violet, 84.2 to #1f49e0 MSCI cobalt, 89.7 to #3949ab Matthews indigo, 129 to #301070 Blue Owl midnight; WCAG AAA 7.6:1 on white)
+    "fulcrum-asset-management": "#c018e8",  # Fulcrum vivid violet-magenta (same grid search as Hamilton Lane over WCAG-AA colours with HLS saturation <=0.85: min RGB dist 75.2 across all 43 existing colors — 75.2 to #a31fa3 Loomis Sayles orchid, 91.2 to #9b6be0 GMO lavender, 96.1 to #6014e8 Hamilton Lane; WCAG AA 4.6:1 on white)
 }
 
 INITIAL_VISIBLE = 20
@@ -391,6 +392,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "总部位于美国宾夕法尼亚州 Conshohocken，1991 年创立起只做私募市场。全权委托资产 ~$147B，另有约 $914B 非全权监管资产（合计约 $1.06T，截至 2026-06-30）。为机构客户设计并监管私募市场组合：定制化管理账户、初级基金、二级份额、直接股权、直接信贷、基础设施/实物资产、房地产与创投成长，并为私人财富客户提供常青基金。",
         "notable_en": "Combined assets under management and supervision passed $1.0T (as of 2026-06-30), of which ~$914B is non-discretionary advisory oversight. Publishes a Weekly Research Briefing on macro markets and private-markets trends, alongside in-house private markets data and technology tools.",
         "notable_zh": "管理与监管资产合计突破 1 万亿美元（截至 2026-06-30），其中约 9140 亿美元为非全权顾问监管资产。按周发布 Weekly Research Briefing，点评宏观市场与私募市场动向，并自建私募市场数据与技术工具。",
+    },
+    "fulcrum-asset-management": {
+        "founded": "2004", "aum": "~$7.5B", "hq": "London, UK",
+        "type_en": "Macro / Multi-Asset Manager (Absolute Return)", "type_zh": "宏观 / 多资产管理人（绝对收益）",
+        "desc_zh": "伦敦独立资产管理公司，2004 年由前高盛高管 Gavyn Davies 与 Andrew Stevens 创立，管理资产约 $7.5B，在伦敦、纽约和东京设有办公室。以宏观经济研究为根基做绝对收益投资：主观宏观判断结合全系统化的宏观预测与组合构建引擎 MARS，产品覆盖分散化绝对收益、多资产、股票与另类投资方案。",
+        "notable_en": "Founder and Executive Chairman Gavyn Davies hosts regular \"Fireside Chat\" and \"Deeper Dive\" macro videos; research notes publish what MARS, the firm's systematic macro forecasting engine, implies for asset valuations and allocation.",
+        "notable_zh": "创始人兼执行主席 Gavyn Davies 定期主持 \"Fireside Chat\" 与 \"Deeper Dive\" 宏观视频；研究报告公开其系统化宏观预测引擎 MARS 对资产估值与配置的判断。",
     },
 }
 

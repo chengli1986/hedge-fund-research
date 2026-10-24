@@ -59,7 +59,7 @@ being worth building.
 | troweprice | `date_separator` ("Date · Category"); U+00A0 in titles fixed on the hand-written side first |
 | msci-research | `date_separator`, `date_part=after`. Reports "order differs" on about half of A/B runs: the site varies card order and serves exactly max_articles cards, so the set cannot change |
 
-## TEMPLATE — rss_feed (5)
+## TEMPLATE — rss_feed (6)
 
 | source | note |
 | --- | --- |
@@ -68,6 +68,7 @@ being worth building.
 | verdad-capital | Mailchimp archive feed |
 | loomis-sayles | `path_prefix`, `sort` |
 | resonanz-capital | `sort` |
+| fulcrum-asset-management | WordPress feed for the insights post type (`?post_type=insights`); `path_prefix`, `sort`. Template-only (auto-promoted 2026-10-24, no hand-written function) |
 
 ## TEMPLATE — api_json (2)
 

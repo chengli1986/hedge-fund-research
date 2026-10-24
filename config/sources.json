@@ -1052,6 +1052,30 @@
       "expected_hostname": "hamiltonlane.com",
       "max_articles": 10,
       "fetch_shape": "api_json"
+    },
+    {
+      "id": "fulcrum-asset-management",
+      "strategy_tags": [
+        "macro",
+        "multi_asset",
+        "fixed_income"
+      ],
+      "name": "Fulcrum Asset Management",
+      "short_name": "Fulcrum",
+      "url": "https://fulcrumasset.com/feed/?post_type=insights",
+      "method": "rss",
+      "frequency": "weekly",
+      "description": "Independent London macro and multi-asset manager founded in 2004 by former Goldman Sachs executives Gavyn Davies and Andrew Stevens (~$7.5B AUM; offices in London, New York and Tokyo). Research-led absolute-return investing that combines discretionary macro views with MARS, its fully systematic macro forecasting and portfolio construction engine, across diversified absolute return, multi-asset, equities and alternative solutions.",
+      "notable_authors": [],
+      "expected_hostname": "fulcrumasset.com",
+      "max_articles": 10,
+      "listing_template": {
+        "type": "rss_feed",
+        "feed": "url",
+        "path_prefix": "/insights/",
+        "sort": "date_desc"
+      },
+      "listing_template_active": true
     }
   ]
 }
