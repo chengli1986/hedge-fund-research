@@ -4156,7 +4156,7 @@
     "official_domain": "www.arielinvestments.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-10-23T09:00:02.108526+08:00",
+    "last_discovered_at": "2026-10-24T09:00:02.418941+08:00",
     "added_at": "2026-10-17",
     "status_since": "2026-10-17T09:00:49.015131+08:00",
     "last_deep_analyzed_at": "2026-10-18T01:00:32Z",
@@ -4202,5 +4202,125 @@
     "quality_score": 0.4,
     "topics": "equity, quarterly commentary",
     "notes": "Quarterly PDF-only letters; thin landing pages"
+  },
+  {
+    "id": "bnp-paribas-am",
+    "name": "BNP Paribas Asset Management",
+    "homepage_url": "https://www.bnpparibas-am.com/en-au/financial-advisors/insights/",
+    "source": "manual",
+    "status": "discovered",
+    "strategy_tags": [
+      "multi_asset",
+      "fixed_income",
+      "equity",
+      "esg_climate"
+    ],
+    "research_url": "https://www.bnpparibas-am.com/en-au/financial-advisors/insights/",
+    "official_domain": "www.bnpparibas-am.com",
+    "research_links": [
+      {
+        "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/insights/",
+        "label": "Insights",
+        "path": "en-au/financial-advisors/insights"
+      },
+      {
+        "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/insights/categories/",
+        "label": "Insights by category",
+        "path": "en-au/financial-advisors/insights/categories"
+      },
+      {
+        "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/insights/bookmarks/",
+        "label": "Bookmarks",
+        "path": "en-au/financial-advisors/insights/bookmarks"
+      },
+      {
+        "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/insights/category/front-of-mind/",
+        "label": "Front of mind",
+        "path": "en-au/financial-advisors/insights/category/front-of-mind"
+      },
+      {
+        "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/insights/category/portfolio-perspectives/",
+        "label": "Portfolio perspectives",
+        "path": "en-au/financial-advisors/insights/category/portfolio-perspectives"
+      },
+      {
+        "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/insights/category/forward-thinking/",
+        "label": "Forward thinking",
+        "path": "en-au/financial-advisors/insights/category/forward-thinking"
+      },
+      {
+        "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/insights/category/news/",
+        "label": "News",
+        "path": "en-au/financial-advisors/insights/category/news"
+      },
+      {
+        "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/insights/tag/central-banks/",
+        "label": "Central banks",
+        "path": "en-au/financial-advisors/insights/tag/central-banks"
+      },
+      {
+        "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/insights/tag/currencies/",
+        "label": "Currencies",
+        "path": "en-au/financial-advisors/insights/tag/currencies"
+      },
+      {
+        "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/insights/tag/inflation/",
+        "label": "Inflation",
+        "path": "en-au/financial-advisors/insights/tag/inflation"
+      },
+      {
+        "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/insights/tag/macroeconomics/",
+        "label": "Macroeconomics",
+        "path": "en-au/financial-advisors/insights/tag/macroeconomics"
+      },
+      {
+        "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/insights/tag/china/",
+        "label": "China",
+        "path": "en-au/financial-advisors/insights/tag/china"
+      },
+      {
+        "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/insights/tag/emerging-markets/",
+        "label": "Emerging markets",
+        "path": "en-au/financial-advisors/insights/tag/emerging-markets"
+      },
+      {
+        "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/insights/tag/europe/",
+        "label": "Europe",
+        "path": "en-au/financial-advisors/insights/tag/europe"
+      },
+      {
+        "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/insights/tag/global/",
+        "label": "Global",
+        "path": "en-au/financial-advisors/insights/tag/global"
+      },
+      {
+        "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/insights/tag/japan/",
+        "label": "Japan",
+        "path": "en-au/financial-advisors/insights/tag/japan"
+      },
+      {
+        "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/insights/tag/uk/",
+        "label": "UK",
+        "path": "en-au/financial-advisors/insights/tag/uk"
+      },
+      {
+        "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/insights/tag/us/",
+        "label": "US",
+        "path": "en-au/financial-advisors/insights/tag/us"
+      },
+      {
+        "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/insights/tag/equity/",
+        "label": "Equity",
+        "path": "en-au/financial-advisors/insights/tag/equity"
+      },
+      {
+        "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/insights/tag/fixed-income/",
+        "label": "Fixed income",
+        "path": "en-au/financial-advisors/insights/tag/fixed-income"
+      }
+    ],
+    "status_since": "2026-10-24T09:00:33.783157+08:00",
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-10-24T09:00:33.783110+08:00"
   }
 ]
