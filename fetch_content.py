@@ -1340,6 +1340,17 @@ def _fetch_content_msci(article: dict) -> Optional[tuple[Path, str]]:
     fallback -- which is the right content (title, byline, body, legal
     footer). <main> is named explicitly (2026-09-13) so the fallback WARN in
     gmia-fetcher-health does not fire for this source on every run.
+
+    Gated research papers (2026-10-24): a /paper/ page whose button opens
+    the "Unlock for free" form (formHandlerType "gated-pdf") shows only a
+    preview, a form link and a disclaimer; the analysis step declined two
+    such pages (10-07, 10-24). The page names the PDF it unlocks (pdfDamPath
+    /content/dam/web/msci-com/.../paper/<slug>/<file>.pdf), and the form's
+    "View PDF" link is the same path under /downloads/, which answers without
+    a session. Decided 10-24 with the user, after filling the form once in
+    their name: read that PDF directly. Only a PDF in this page's own
+    /paper/<slug>/ folder is used (the sidebar can promote other papers); if
+    it fails the preview is kept as before.
     """
     url = article["url"]
     log.info("  MSCI: fetching article page %s", url)
@@ -1352,6 +1363,29 @@ def _fetch_content_msci(article: dict) -> Optional[tuple[Path, str]]:
         return None
 
     text = _normalize_html(resp.text, "main")
+
+    slug = urlsplit(url).path.rstrip("/").rsplit("/", 1)[-1]
+    if "/paper/" in url and re.search(r'formHandlerType\\?"\s*:\s*\\?"gated-pdf', resp.text):
+        dam = re.findall(r'pdfDamPath\\?"\s*:\s*\\?"(/content/dam/[^"\\]+\.pdf)', resp.text)
+        own = sorted({p for p in dam if f"/paper/{slug}/" in p})
+        if len(own) == 1:
+            pdf_url = urljoin(url, own[0].replace("/content/dam/", "/downloads/", 1))
+            try:
+                pdf = requests.get(pdf_url, headers=HEADERS, timeout=60)
+                if _validate_pdf_response(pdf.status_code, pdf.headers.get("Content-Type", ""),
+                                          len(pdf.content)):
+                    pdf_text = re.sub(r"[ \t]+", " ", _pdf_text(pdf.content)).strip()
+                    if _check_min_content_length(pdf_text):
+                        log.info("  MSCI: gated paper, body read from %s", pdf_url)
+                        _extraction_paths.append("gated_pdf")
+                        text = f"{article.get('title', '')}\n\n{pdf_text}".strip()
+                else:
+                    log.warning("  MSCI: gated paper PDF not usable (HTTP %s) %s",
+                                pdf.status_code, pdf_url)
+            except Exception as e:
+                log.warning("  MSCI: gated paper PDF failed %s: %s", pdf_url, e)
+        else:
+            log.warning("  MSCI: gated paper but %d PDFs in /paper/%s/; preview kept", len(own), slug)
 
     if not _check_min_content_length(text):
         log.warning("  MSCI: extracted text too short (%d chars)", len(text))
