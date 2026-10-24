@@ -12,6 +12,8 @@ import sys
 import types
 from pathlib import Path
 
+import pytest
+
 import msci_gate
 
 REPO = Path(__file__).resolve().parent.parent
@@ -33,6 +35,8 @@ def _fake_playwright(monkeypatch, saved_resp, form_link, form_resp, calls):
     class Req:
         def get(self, url, **k):
             calls.append(("saved", url))
+            if isinstance(saved_resp, Exception):
+                raise saved_resp
             return saved_resp
 
         def dispose(self):
@@ -40,6 +44,9 @@ def _fake_playwright(monkeypatch, saved_resp, form_link, form_resp, calls):
 
     class Ctx:
         request = types.SimpleNamespace(get=lambda url, **k: (calls.append(("ctx", url)), form_resp)[1])
+
+        def set_default_timeout(self, ms):
+            calls.append(("timeout", ms))
 
         def new_page(self):
             return types.SimpleNamespace()
@@ -50,6 +57,7 @@ def _fake_playwright(monkeypatch, saved_resp, form_link, form_resp, calls):
 
     class Browser:
         def new_context(self, **k):
+            calls.append(("context", k.get("storage_state")))
             return Ctx()
 
         def close(self):
@@ -111,14 +119,14 @@ def test_a_refused_saved_unlock_falls_through_to_the_form_and_saves_the_new_one(
     state.write_text("{}")
     _fake_playwright(monkeypatch, Resp(307, ""), PDF, Resp(), calls)
     assert msci_gate.fetch_gated_pdf(PAGE, PDF, config_path=_cfg(tmp_path), state_path=state)
-    assert [c[0] for c in calls] == ["saved", "form", "ctx", "save_state", "close"]
+    assert [c[0] for c in calls if c[0] not in ("context", "timeout")] == ["saved", "form", "ctx", "save_state", "close"]
 
 
 def test_no_saved_state_goes_straight_to_the_form(tmp_path, monkeypatch):
     calls = []
     _fake_playwright(monkeypatch, Resp(), PDF, Resp(), calls)
     assert msci_gate.fetch_gated_pdf(PAGE, PDF, config_path=_cfg(tmp_path), state_path=tmp_path / "s.json")
-    assert calls[0] == ("form",)
+    assert [c for c in calls if c[0] not in ("context", "timeout")][0] == ("form",)
 
 
 def test_a_view_pdf_link_to_another_paper_is_not_used(tmp_path, monkeypatch):
@@ -131,6 +139,7 @@ def test_a_view_pdf_link_to_another_paper_is_not_used(tmp_path, monkeypatch):
 
 def test_a_failed_form_or_a_non_pdf_returns_none_and_saves_nothing(tmp_path, monkeypatch):
     for link, resp in ((None, Resp()), (PDF, Resp(200, "text/html"))):
+        (tmp_path / msci_gate.FORM_PAUSE_NAME).unlink(missing_ok=True)   # each case from a fresh start
         calls = []
         state = tmp_path / "s.json"
         _fake_playwright(monkeypatch, Resp(), link, resp, calls)
@@ -171,8 +180,8 @@ def test_the_readers_details_stay_out_of_the_repo():
     assert ignored.returncode == 0, "the form config must be gitignored"
     cfg = msci_gate.load_form_config(REPO / "config" / "msci_form.local.json")
     if cfg is None:
-        return
-    needles = [cfg["company"].encode()]
+        pytest.skip("no local form config (not the production checkout)")
+    needles = [cfg["company"].encode(), cfg["State"].encode()]
     tracked = subprocess.run(["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
                              cwd=REPO, capture_output=True).stdout.split(b"\0")
     for name in filter(None, tracked):
@@ -194,3 +203,92 @@ def test_a_redirect_is_not_a_pdf_whatever_its_content_type():
     assert not msci_gate._is_pdf(Resp(307, "application/pdf"))
     assert not msci_gate._is_pdf(Resp(200, "application/pdf", b"%PDF tiny"))
     assert msci_gate._is_pdf(Resp())
+
+
+# --- review follow-ups, 2026-10-24 (M1 pause, M2 saved state, M3 timeouts, L2) ---
+
+def _form_fails(tmp_path, monkeypatch, calls):
+    _fake_playwright(monkeypatch, Resp(), None, Resp(), calls)
+    return msci_gate.fetch_gated_pdf(PAGE, PDF, config_path=_cfg(tmp_path), state_path=tmp_path / "s.json")
+
+
+def test_a_failed_form_pauses_the_form_for_other_processes(tmp_path, monkeypatch):
+    """M1: the health probe, the audit and stage 2 are separate processes; a
+    rejected form must not be resubmitted in the reader's name every night."""
+    calls = []
+    assert _form_fails(tmp_path, monkeypatch, calls) is None
+    marker = json.loads((tmp_path / msci_gate.FORM_PAUSE_NAME).read_text())
+    assert "no View PDF link" in marker["reason"]
+    calls.clear()
+    assert _form_fails(tmp_path, monkeypatch, calls) is None
+    assert ("form",) not in calls and not any(c[0] == "context" for c in calls)
+
+
+def test_the_saved_unlock_is_still_tried_while_the_form_is_paused(tmp_path, monkeypatch):
+    calls = []
+    _form_fails(tmp_path, monkeypatch, calls)
+    state = tmp_path / "s.json"
+    state.write_text("{}")
+    calls.clear()
+    _fake_playwright(monkeypatch, Resp(), None, Resp(), calls)
+    assert msci_gate.fetch_gated_pdf(PAGE, PDF, config_path=_cfg(tmp_path), state_path=state)
+    assert calls == [("saved", PDF)]
+
+
+def test_the_pause_expires_and_a_success_clears_it(tmp_path, monkeypatch):
+    calls = []
+    _form_fails(tmp_path, monkeypatch, calls)
+    marker = tmp_path / msci_gate.FORM_PAUSE_NAME
+    data = json.loads(marker.read_text())
+    data["until"] = "2000-01-01T00:00:00+00:00"
+    marker.write_text(json.dumps(data))
+    calls.clear()
+    _fake_playwright(monkeypatch, Resp(), PDF, Resp(), calls)
+    assert msci_gate.fetch_gated_pdf(PAGE, PDF, config_path=_cfg(tmp_path), state_path=tmp_path / "s.json")
+    assert ("form",) in calls and not marker.exists()
+
+
+def test_an_exception_in_the_browser_also_pauses_the_form(tmp_path, monkeypatch):
+    calls = []
+    _fake_playwright(monkeypatch, Resp(), PDF, Resp(), calls)
+    monkeypatch.setattr(msci_gate, "_open_form_and_submit",
+                        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("Timeout 15000ms exceeded")))
+    assert msci_gate.fetch_gated_pdf(PAGE, PDF, config_path=_cfg(tmp_path), state_path=tmp_path / "s.json") is None
+    assert "Timeout" in json.loads((tmp_path / msci_gate.FORM_PAUSE_NAME).read_text())["reason"]
+
+
+def test_a_failing_saved_unlock_request_still_reaches_the_form(tmp_path, monkeypatch):
+    """M2: req.get raising used to end the whole fallback."""
+    calls = []
+    state = tmp_path / "s.json"
+    state.write_text("{}")
+    _fake_playwright(monkeypatch, RuntimeError("connection reset"), PDF, Resp(), calls)
+    assert msci_gate.fetch_gated_pdf(PAGE, PDF, config_path=_cfg(tmp_path), state_path=state)
+    assert ("form",) in calls
+
+
+def test_a_corrupt_saved_state_is_ignored_not_fatal(tmp_path, monkeypatch):
+    """M2: an unreadable state file made every later attempt raise before the form."""
+    calls = []
+    state = tmp_path / "s.json"
+    state.write_text("{not json")
+    _fake_playwright(monkeypatch, Resp(), PDF, Resp(), calls)
+    assert msci_gate.fetch_gated_pdf(PAGE, PDF, config_path=_cfg(tmp_path), state_path=state)
+    assert not any(c[0] == "saved" for c in calls)
+    assert ("context", None) in calls and ("form",) in calls
+
+
+def test_browser_steps_have_a_short_default_timeout(tmp_path, monkeypatch):
+    """M3: the health check has 600 s and uses ~300; Playwright's 30 s default per step could eat the rest."""
+    calls = []
+    _fake_playwright(monkeypatch, Resp(), PDF, Resp(), calls)
+    msci_gate.fetch_gated_pdf(PAGE, PDF, config_path=_cfg(tmp_path), state_path=tmp_path / "s.json")
+    assert ("timeout", msci_gate.FORM_STEP_TIMEOUT_MS) in calls
+    assert msci_gate.FORM_STEP_TIMEOUT_MS <= 15000
+
+
+def test_same_pdf_ignores_percent_encoding():
+    """L2: "Too Hot to Work - FINAL.pdf" (live, 10-24) is a raw space in pdfDamPath, %20 in an href."""
+    raw = "https://www.msci.com/downloads/x/paper/too-hot-to-work/Too Hot to Work - FINAL.pdf"
+    assert msci_gate._same_pdf(raw.replace(" ", "%20"), raw)
+    assert not msci_gate._same_pdf(raw.replace("FINAL", "DRAFT"), raw)

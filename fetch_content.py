@@ -20,6 +20,7 @@ Usage:
 import argparse
 import contextlib
 import hashlib
+import importlib
 import inspect
 import json
 from urllib.parse import urljoin, urlsplit
@@ -1352,7 +1353,12 @@ def _fetch_content_msci(article: dict) -> Optional[tuple[Path, str]]:
     form in a browser (or reuses a saved unlock). Decided 10-24 with the user,
     after filling the form once in their name: direct PDF first, the form as
     the fallback. Only a PDF in this page's own /paper/<slug>/ folder is used
-    (the sidebar can promote other papers); if both fail the preview is kept.
+    (the sidebar can promote other papers), and its lock type is read from the
+    same button object (live: pdfDamPath, eventId, assetName, formHandlerType).
+    If neither route gives a usable PDF nothing is stored and the paper is
+    retried: the preview stored as "ok" was never fetched again and the
+    analysis step declined it (review M2, 2026-10-24). The preview is kept
+    only when the page names no single PDF of its own.
     """
     import msci_gate
 
@@ -1369,9 +1375,10 @@ def _fetch_content_msci(article: dict) -> Optional[tuple[Path, str]]:
     text = _normalize_html(resp.text, "main")
 
     slug = urlsplit(url).path.rstrip("/").rsplit("/", 1)[-1]
-    if "/paper/" in url and re.search(r'formHandlerType\\?"\s*:\s*\\?"gated-pdf', resp.text):
-        dam = re.findall(r'pdfDamPath\\?"\s*:\s*\\?"(/content/dam/[^"\\]+\.pdf)', resp.text)
-        own = sorted({p for p in dam if f"/paper/{slug}/" in p})
+    gated = re.findall(r'pdfDamPath\\?"\s*:\s*\\?"(/content/dam/[^"\\]+\.pdf)\\?"[^{}]*?'
+                       r'formHandlerType\\?"\s*:\s*\\?"gated-pdf', resp.text)
+    if "/paper/" in url and gated:
+        own = sorted({p for p in gated if f"/paper/{slug}/" in p})
         if len(own) == 1:
             pdf_url = urljoin(url, own[0].replace("/content/dam/", "/downloads/", 1))
             body, path = None, "gated_pdf"
@@ -1381,24 +1388,29 @@ def _fetch_content_msci(article: dict) -> Optional[tuple[Path, str]]:
                                           len(pdf.content)):
                     body = pdf.content
                 else:
-                    log.info("  MSCI: gated paper PDF not served directly (HTTP %s); trying the form",
-                             pdf.status_code)
+                    # requests follows the 307 back to the page, so the final 200 alone misleads
+                    chain = " -> ".join(str(r.status_code) for r in [*pdf.history, pdf])
+                    log.info("  MSCI: gated paper PDF not served directly (HTTP %s, %s); trying the form",
+                             chain, pdf.headers.get("Content-Type", ""))
             except Exception as e:
                 log.warning("  MSCI: gated paper PDF failed %s: %s", pdf_url, e)
             if body is None:
                 body, path = msci_gate.fetch_gated_pdf(url, pdf_url), "gated_pdf_form"
-            if body is not None:
-                try:
-                    pdf_text = re.sub(r"[ \t]+", " ", _pdf_text(body)).strip()
-                except Exception as e:
-                    log.warning("  MSCI: gated paper PDF extraction failed %s: %s", pdf_url, e)
-                    pdf_text = ""
-                if _check_min_content_length(pdf_text):
-                    log.info("  MSCI: gated paper, body read from %s", pdf_url)
-                    _extraction_paths.append(path)
-                    text = f"{article.get('title', '')}\n\n{pdf_text}".strip()
-            else:
-                log.warning("  MSCI: gated paper PDF not obtained; preview kept %s", pdf_url)
+            if body is None:
+                log.warning("  MSCI: gated paper PDF download failed (direct and form) %s; nothing stored",
+                            pdf_url)
+                return None
+            try:
+                pdf_text = re.sub(r"[ \t]+", " ", _pdf_text(body)).strip()
+            except Exception as e:
+                log.warning("  MSCI: gated paper PDF extraction failed %s: %s", pdf_url, e)
+                return None
+            if not _check_min_content_length(pdf_text):
+                log.warning("  MSCI: gated paper PDF text too short (%d chars) %s", len(pdf_text), pdf_url)
+                return None
+            log.info("  MSCI: gated paper, body read from %s", pdf_url)
+            _extraction_paths.append(path)
+            text = f"{article.get('title', '')}\n\n{pdf_text}".strip()
         else:
             log.warning("  MSCI: gated paper but %d PDFs in /paper/%s/; preview kept", len(own), slug)
 
@@ -1410,6 +1422,9 @@ def _fetch_content_msci(article: dict) -> Optional[tuple[Path, str]]:
     _atomic_write(content_path, text.encode("utf-8"))
     log.info("  MSCI: saved %d chars to %s", len(text), content_path.name)
     return (content_path, "ok")
+
+
+_fetch_content_msci.code_deps = ("msci_gate",)   # see code_version_for
 
 
 def _fetch_content_janus_henderson(article: dict) -> Optional[tuple[Path, str]]:
@@ -2656,6 +2671,9 @@ def code_version_for(article: dict) -> str:
         own = inspect.getsource(fetcher)
     except (OSError, TypeError):
         own = repr(fetcher)
+    # A module a fetcher delegates to counts as part of it (msci -> msci_gate, 2026-10-24)
+    for name in getattr(fetcher, "code_deps", ()):
+        own += inspect.getsource(importlib.import_module(name))
     return hashlib.sha256((_SHARED_CODE_HASH + own).encode("utf-8")).hexdigest()[:12]
 
 
