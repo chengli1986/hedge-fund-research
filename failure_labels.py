@@ -24,10 +24,12 @@ def unexpected_paths(paths: list[str]) -> list[str]:
     button by design, so their selector "miss" directly followed by
     "linked_pdf" is the designed route, not a redesign (2026-10-11: the
     weekly audit flagged an identical metlife pension body as drift).
+    "gated_pdf"/"gated_pdf_form" mean an MSCI gated paper's own PDF was read,
+    directly or after the unlock form (2026-10-24).
     """
     out = []
     for i, p in enumerate(paths):
-        if p in ("primary", "linked_pdf"):
+        if p in ("primary", "linked_pdf", "gated_pdf", "gated_pdf_form"):
             continue
         if p == "miss" and paths[i + 1:i + 2] == ["linked_pdf"]:
             continue

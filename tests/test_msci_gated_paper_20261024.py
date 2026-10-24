@@ -13,6 +13,7 @@ sidebar promoting another paper); live it gave 8,109 and 57,115 chars.
 from unittest.mock import MagicMock
 
 import fetch_content as fc
+import failure_labels
 
 URL = "https://www.msci.com/research-and-insights/paper/rca-commercial-property-price-indexes-rca-cppi"
 TITLE = "Latest on US Commercial-Property Pricing"
@@ -111,3 +112,14 @@ def test_two_pdfs_in_the_papers_own_folder_is_ambiguous_and_keeps_the_preview(tm
     text, asked = _run(tmp_path, monkeypatch, _page(_payload(DAM), _payload(second)))
     assert not any(u.endswith(".pdf") for u in asked)
     assert "Provide your information" in text
+
+
+def test_the_recorded_paths_are_not_reported_as_drift(tmp_path, monkeypatch):
+    """The nightly health probe and weekly audit flag paths outside the whitelist (review H1)."""
+    for status, form in ((200, None), (307, b"%PDF-1.6 " + b"y" * 20000)):
+        fc.drain_extraction_paths()
+        text, _ = _run(tmp_path, monkeypatch, _page(_payload(DAM)), pdf_status=status, form=form)
+        paths = fc.drain_extraction_paths()
+        assert "RCA CPPI US 0.9%" in text
+        assert paths[-1] in ("gated_pdf", "gated_pdf_form")
+        assert failure_labels.unexpected_paths(paths) == [], paths

@@ -116,6 +116,12 @@ class TestContentFailure:
                messages=["Apollo: extracted text too short (300 chars, min 500)"])
         assert fl.classify_content_failure(e)[0] == "body_too_short"
 
+    def test_a_read_gated_pdf_is_not_selector_miss(self):
+        # MSCI gated papers (2026-10-24): "gated_pdf"/"gated_pdf_form" record
+        # that the paper's PDF was read, directly or after the unlock form.
+        for path in ("gated_pdf", "gated_pdf_form"):
+            assert fl.unexpected_paths(["primary", path]) == []
+
     def test_a_short_page_with_a_media_player_is_media_without_text(self):
         # matthews/apollo/robeco video and podcast pages
         e = ev(responses=[resp(200, media=True)], extraction_paths=["primary"],

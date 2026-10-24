@@ -17,8 +17,8 @@ import msci_gate
 REPO = Path(__file__).resolve().parent.parent
 PAGE = "https://www.msci.com/research-and-insights/paper/financed-water-consumption"
 PDF = "https://www.msci.com/downloads/web/msci-com/research-and-insights/paper/financed-water-consumption/f.pdf"
-CFG = {"firstName": "A", "lastName": "B", "email": "a@example.com", "Location": "Canada",
-       "State": "British Columbia", "company": "Example Inc.", "Segment": "Other", "Interest": "Index"}
+CFG = {"firstName": "A", "lastName": "B", "email": "a@example.com", "Location": "Exampleland",
+       "State": "Example State", "company": "Example Inc.", "Segment": "Other", "Interest": "Index"}
 
 
 class Resp:
@@ -183,8 +183,10 @@ def test_the_readers_details_stay_out_of_the_repo():
 
 
 def test_the_module_holds_no_default_details():
+    """No literal of the local file's values in the module (named by reading the file, as above)."""
     src = (REPO / "msci_gate.py").read_text()
-    for value in ("Canada", "British Columbia", "@", "Real Estate"):
+    cfg = msci_gate.load_form_config(REPO / "config" / "msci_form.local.json") or {}
+    for value in ["@", *(str(v) for v in cfg.values())]:
         assert f'"{value}"' not in src
 
 

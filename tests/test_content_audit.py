@@ -136,6 +136,12 @@ class TestAuditArticle:
         assert self._with_paths(tmp_path, ["miss", "linked_pdf"]) == []
         assert self._with_paths(tmp_path, ["primary", "linked_pdf"]) == []
 
+    def test_a_gated_msci_paper_read_from_its_pdf_is_not_drift(self, tmp_path):
+        # 2026-10-24: the preview page's own selector matched, then the paper's
+        # PDF was read directly or after the unlock form (review finding H1).
+        assert self._with_paths(tmp_path, ["primary", "gated_pdf"]) == []
+        assert self._with_paths(tmp_path, ["primary", "gated_pdf_form"]) == []
+
     def test_a_miss_or_fallback_not_answered_by_the_pdf_is_still_drift(self, tmp_path):
         assert "extraction_drift" in self._with_paths(tmp_path, ["miss"])
         assert "extraction_drift" in self._with_paths(tmp_path, ["fallback:main", "linked_pdf"])
