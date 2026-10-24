@@ -3474,7 +3474,7 @@
     "name": "Fulcrum Asset Management",
     "homepage_url": "https://www.fulcrumasset.com",
     "source": "manual",
-    "status": "visitable",
+    "status": "promoted",
     "strategy_tags": [
       "macro",
       "multi_asset",
@@ -3485,12 +3485,12 @@
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-10-15T09:00:08.250466+08:00",
-    "status_since": "2026-10-18T02:02:25.448527+08:00",
+    "status_since": "2026-10-24T09:01:06.717104+08:00",
     "last_deep_analyzed_at": "2026-10-06T01:00:39Z",
     "quality": "HIGH",
     "quality_score": 0.8,
     "topics": "macro, multi-asset, alternative credit, FX",
-    "notes": "[auto-stall 2026-10-15] seed->inaccessible after 53d stuck Quant macro/LLM research, ~monthly; latest 2026-08",
+    "notes": "RECOMMEND: trial passed (7/7 days with articles, quality=0.73)",
     "added_at": "2026-08-22",
     "template_attempts": [
       {
@@ -3535,7 +3535,9 @@
     "listing_url": "https://fulcrumasset.com/feed/?post_type=insights",
     "expected_hostname": "fulcrumasset.com",
     "synthesis_attempted_at": "2026-10-17T18:02:25.442386+00:00",
-    "synthesis_outcome": "success"
+    "synthesis_outcome": "success",
+    "synthesis_priority": true,
+    "synthesis_priority_set_at": "2026-10-24T09:01:06.717145+08:00"
   },
   {
     "id": "mfs-investment-management",
@@ -4034,7 +4036,7 @@
     "name": "RBC BlueBay Asset Management",
     "homepage_url": "https://www.rbcbluebay.com/en/institutional/what-we-think/insights/",
     "source": "manual",
-    "status": "visitable",
+    "status": "promoted",
     "strategy_tags": [
       "fixed_income",
       "macro",
@@ -4069,7 +4071,7 @@
         "path": "en/institutional/what-we-think/insights/polinas-perspective-shooting-for-the-moon-strategic-rivalry-in-a-fragile-world"
       }
     ],
-    "status_since": "2026-10-18T02:02:25.448553+08:00",
+    "status_since": "2026-10-24T09:00:53.727157+08:00",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-10-07T09:00:46.435991+08:00",
     "is_publicly_accessible": false,
@@ -4092,7 +4094,7 @@
     "quality": "HIGH",
     "quality_score": 0.78,
     "topics": "fixed income, macro, EM debt, credit",
-    "notes": "RECOMMEND: Dated macro/credit pieces, free, Oct 2026",
+    "notes": "RECOMMEND: trial passed (7/7 days with articles, quality=0.77)",
     "added_at": "2026-10-07",
     "template_attempts": [
       {
@@ -4141,7 +4143,9 @@
     "listing_url": "https://www.rbcbluebay.com/en/institutional/what-we-think/insights/",
     "expected_hostname": "rbcbluebay.com",
     "synthesis_attempted_at": "2026-10-17T18:02:25.442386+00:00",
-    "synthesis_outcome": "success"
+    "synthesis_outcome": "success",
+    "synthesis_priority": true,
+    "synthesis_priority_set_at": "2026-10-24T09:00:53.727203+08:00"
   },
   {
     "id": "ariel-investments",
