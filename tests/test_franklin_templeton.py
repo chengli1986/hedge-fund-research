@@ -103,3 +103,51 @@ class TestFranklinBody:
         html = ("<main><p>" + "Intro paragraph. " * 8 + "</p><ul><li><p>Point inside a paragraph.</p></li></ul></main>")
         text = self._run(tmp_path, monkeypatch, html)
         assert text.count("Point inside a paragraph.") == 1
+
+
+class TestFranklinCompletePdf:
+    """PDF lead pages (2026-10-24). The Animoca tokenization series (10-08)
+    renders only a series introduction, "Read this article" cards and the
+    disclosure in <main>; the article is behind "Download complete PDF"
+    (franklintempletonprod.widen.net). All three parts were declined. Decided
+    with the user: whenever that button is there and the PDF opens with the
+    title, read the PDF (2 of 6 ordinary posts sampled carry it too, and their
+    PDF is the complete report: US Treasuries 63K chars vs 13.7K on the page).
+    """
+    TITLE = "Article 1: Tokenization, RWAs, and the Future of Finance"
+    PDF = "https://franklintempletonprod.widen.net/content/2tiga75xfy/pdf/animoca-part-one.pdf"
+    OTHER = "https://franklintempletonprod.widen.net/s/nsxhkzpcmt/animoca-part-four-bridging-the-gap.pdf"
+    PDF_TEXT = "Tokenization, RWAs, and the Future of Finance\n" + "Tokenized real-world assets change settlement. " * 60
+
+    def _page(self, button=True):
+        return ("<main><p>" + "This is article 1 of a 4-part series co-authored by Franklin Templeton. " * 4 + "</p>"
+                + (f'<a href="{self.PDF}">Download complete PDF</a>' if button else "")
+                + f'<a href="{self.OTHER}">Download this article</a>'
+                + "<p>" + "DISCLOSURE This report is for informational purposes only. " * 6 + "</p></main>")
+
+    def _run(self, tmp_path, monkeypatch, html, pdf_text=None, status=200):
+        monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
+        import fetch_articles
+        monkeypatch.setattr(fetch_articles, "_get_playwright_page", lambda *a, **k: html)
+        asked = []
+        monkeypatch.setattr(fc.requests, "get", lambda u, **k: (asked.append(u), MagicMock(
+            status_code=status, headers={"Content-Type": "application/pdf"}, content=b"%PDF-1.7 " + b"x" * 20000))[1])
+        monkeypatch.setattr(fc, "_pdf_text", lambda content: pdf_text or self.PDF_TEXT)
+        fc.drain_extraction_paths()
+        out = fc._fetch_content_franklin_templeton({"id": "ft-2", "url": URL, "title": self.TITLE})
+        return out[0].read_text(), asked, fc.drain_extraction_paths()
+
+    def test_the_complete_pdf_replaces_the_lead_page(self, tmp_path, monkeypatch):
+        text, asked, paths = self._run(tmp_path, monkeypatch, self._page())
+        assert asked == [self.PDF]
+        assert "Tokenized real-world assets change settlement" in text and "4-part series" not in text
+        assert paths == ["primary", "linked_pdf"]
+
+    def test_no_button_reads_the_page_and_never_another_parts_pdf(self, tmp_path, monkeypatch):
+        text, asked, paths = self._run(tmp_path, monkeypatch, self._page(button=False))
+        assert asked == [] and "4-part series" in text and paths == ["primary"]
+
+    def test_a_pdf_that_is_not_this_article_or_fails_keeps_the_page(self, tmp_path, monkeypatch):
+        for pdf_text, status in (("Quarterly factsheet for an unrelated fund. " * 40, 200), (None, 404)):
+            text, asked, _ = self._run(tmp_path, monkeypatch, self._page(), pdf_text=pdf_text, status=status)
+            assert asked == [self.PDF] and "4-part series" in text

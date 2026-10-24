@@ -2108,6 +2108,14 @@ def _fetch_content_franklin_templeton(article: dict) -> Optional[tuple[Path, str
     wait_until='domcontentloaded' plus a short settle is enough. The body renders
     into `main` (no `<article>` element exists on these pages), hence the `main p`
     selector. Verified live 2026-07-28: 11.8K chars from a research post.
+
+    A "Download complete PDF" button means the article is that PDF (2026-10-24,
+    decided with the user): the Animoca tokenization series renders only a
+    series introduction and the disclosure, and all three parts were declined.
+    Ordinary posts with the button get the complete report (US Treasuries: 63K
+    chars vs 13.7K on the page). _linked_article_pdf keeps the page unless the
+    PDF opens with the title; "Download this article" links point at other
+    parts of a series and are not used.
     """
     url = article["url"]
     log.info("  Franklin Templeton: fetching article page %s", url)
@@ -2125,6 +2133,12 @@ def _fetch_content_franklin_templeton(article: dict) -> Optional[tuple[Path, str
     # disclosures. A list item holding a nested <p> or <li> is skipped -- its
     # children are selected themselves and would otherwise appear twice.
     text = _normalize_html(html, "main p, main li:not(:has(p)):not(:has(li))")
+    button = next((a for a in BeautifulSoup(html, "html.parser").select('main a[href*=".pdf"]')
+                   if a.get_text(" ", strip=True).lower().startswith("download complete pdf")), None)
+    if button is not None:
+        pdf_text = _linked_article_pdf(button, url, article.get("title", ""), "Franklin Templeton")
+        if _check_min_content_length(pdf_text):
+            text = pdf_text
     if not _check_min_content_length(text):
         log.warning("  Franklin Templeton: extracted text too short (%d chars)", len(text))
         return None
