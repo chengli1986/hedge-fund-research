@@ -34,9 +34,14 @@ def _page(*payloads):
     return f"<html><body><main><p>{PREVIEW}</p></main>{''.join(payloads)}</body></html>"
 
 
-def _run(tmp_path, monkeypatch, page, url=URL, pdf_status=200):
+def _run(tmp_path, monkeypatch, page, url=URL, pdf_status=200, form=None):
+    """`form` is what the form fallback (msci_gate) returns; its calls land in `asked`."""
+    import msci_gate
+
     monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
     asked = []
+    monkeypatch.setattr(msci_gate, "fetch_gated_pdf",
+                        lambda page_url, pdf_url, **k: (asked.append(("form", pdf_url)), form)[1])
 
     def fake_get(u, **k):
         asked.append(u)
@@ -66,9 +71,31 @@ def test_only_another_papers_pdf_on_the_page_keeps_the_preview(tmp_path, monkeyp
     assert "Provide your information" in text
 
 
-def test_a_failed_pdf_download_keeps_the_preview(tmp_path, monkeypatch):
-    text, _ = _run(tmp_path, monkeypatch, _page(_payload(DAM)), pdf_status=403)
+def test_a_failed_pdf_download_and_a_failed_form_keep_the_preview(tmp_path, monkeypatch):
+    text, asked = _run(tmp_path, monkeypatch, _page(_payload(DAM)), pdf_status=403, form=None)
+    assert ("form", "https://www.msci.com" + DAM.replace("/content/dam/", "/downloads/")) in asked
     assert "Provide your information" in text and "RCA CPPI US 0.9%" not in text
+
+
+def test_the_form_is_the_fallback_when_the_direct_pdf_is_refused(tmp_path, monkeypatch):
+    """10-24: 22 papers' /downloads/ path 307s back to the page until the visitor unlocks."""
+    text, asked = _run(tmp_path, monkeypatch, _page(_payload(DAM)), pdf_status=307,
+                       form=b"%PDF-1.6 " + b"y" * 20000)
+    assert text.startswith(TITLE + "\n\nQ3 2026 RCA CPPI US")
+    assert [a for a in asked if isinstance(a, tuple)] == [("form", asked[-1][1])]
+
+
+def test_the_form_is_not_tried_when_the_direct_pdf_works(tmp_path, monkeypatch):
+    text, asked = _run(tmp_path, monkeypatch, _page(_payload(DAM)), form=b"%PDF-1.6 never")
+    assert not any(isinstance(a, tuple) for a in asked)
+    assert "RCA CPPI US 0.9%" in text
+
+
+def test_the_form_is_not_tried_for_an_ambiguous_or_foreign_pdf(tmp_path, monkeypatch):
+    second = DAM.replace("2610_RCACPPI_US_MSCI.pdf", "2609_RCACPPI_US_MSCI.pdf")
+    for page in (_page(_payload(OTHER)), _page(_payload(DAM), _payload(second))):
+        _, asked = _run(tmp_path, monkeypatch, page, pdf_status=307, form=b"%PDF-1.6 " + b"y" * 20000)
+        assert not any(isinstance(a, tuple) for a in asked)
 
 
 def test_a_page_that_is_not_gated_is_left_alone(tmp_path, monkeypatch):

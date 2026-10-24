@@ -20,3 +20,5 @@ config/inspection_state.json
 # os.replace would otherwise leave an untracked file inside config/.
 config/inspection_state.json.tmp
 pending_profiles/
+# MSCI gated-paper form: the reader's details (msci_gate.py); never committed
+config/msci_form.local.json
