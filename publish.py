@@ -78,6 +78,7 @@ BADGE_COLORS: dict[str, str] = {
     "blue-owl-capital": "#301070",          # Blue Owl midnight indigo-violet ("night owl"; the deep blue-violet slot between the navy and violet clusters was empty — min RGB dist 63.8 to any of the 36 existing colors, the highest of any palette-consistent candidate: 63.8 to #003a70 PIMCO navy, 82 to #3949ab Matthews indigo, 66 to #5e3a82 Apollo plum; WCAG AAA 14.6:1 on white)
     "hamilton-lane": "#6014e8",             # Hamilton Lane vivid blue-violet (the muted blue, violet and green bands are all full; a grid search over every WCAG-AA colour with HLS saturation <=0.85 put this one farthest from the palette: min RGB dist 82.7 across all 42 existing colors — 82.7 to #7a4cb1 JPMAM violet, 84.2 to #1f49e0 MSCI cobalt, 89.7 to #3949ab Matthews indigo, 129 to #301070 Blue Owl midnight; WCAG AAA 7.6:1 on white)
     "fulcrum-asset-management": "#c018e8",  # Fulcrum vivid violet-magenta (same grid search as Hamilton Lane over WCAG-AA colours with HLS saturation <=0.85: min RGB dist 75.2 across all 43 existing colors — 75.2 to #a31fa3 Loomis Sayles orchid, 91.2 to #9b6be0 GMO lavender, 96.1 to #6014e8 Hamilton Lane; WCAG AA 4.6:1 on white)
+    "rbc-bluebay": "#1010b8",               # RBC BlueBay deep royal blue (brand blue; the same grid search with Fulcrum added: min RGB dist 71.2 across all 44 colors — 71.2 to #1f49e0 MSCI cobalt, 71.4 to #3949ab Matthews indigo, 78.8 to #301070 Blue Owl midnight; WCAG AAA 11.7:1 on white)
 }
 
 INITIAL_VISIBLE = 20
@@ -399,6 +400,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "伦敦独立资产管理公司，2004 年由前高盛高管 Gavyn Davies 与 Andrew Stevens 创立，管理资产约 $7.5B，在伦敦、纽约和东京设有办公室。以宏观经济研究为根基做绝对收益投资：主观宏观判断结合全系统化的宏观预测与组合构建引擎 MARS，产品覆盖分散化绝对收益、多资产、股票与另类投资方案。",
         "notable_en": "Founder and Executive Chairman Gavyn Davies hosts regular \"Fireside Chat\" and \"Deeper Dive\" macro videos; research notes publish what MARS, the firm's systematic macro forecasting engine, implies for asset valuations and allocation.",
         "notable_zh": "创始人兼执行主席 Gavyn Davies 定期主持 \"Fireside Chat\" 与 \"Deeper Dive\" 宏观视频；研究报告公开其系统化宏观预测引擎 MARS 对资产估值与配置的判断。",
+    },
+    "rbc-bluebay": {
+        "founded": "2001", "aum": "~$598B", "hq": "London, UK",
+        "type_en": "Fixed Income Specialist / Asset Manager (RBC GAM)", "type_zh": "固定收益专家 / 资产管理（RBC GAM 旗下）",
+        "desc_zh": "总部位于伦敦，2001 年以 BlueBay 之名创立，2010 年被加拿大皇家银行收购，现为 RBC 环球资产管理（RBC GAM）在北美以外的业务品牌；RBC GAM 整体管理资产约 $598B（截至 2026-06-30）。以主动信用、高收益、新兴市场债务与全球宏观债券策略见长，另有股票与另类投资能力。",
+        "notable_en": "One of Europe's best-known credit and emerging-market debt houses; publishes frequent macro and fixed-income commentary, the \"Dollars and Sense\" podcast and monthly \"Markets with Mike\" webinars.",
+        "notable_zh": "欧洲知名的信用与新兴市场债务管理人之一；频繁发布宏观与固收评论，并有 \"Dollars and Sense\" 播客和月度 \"Markets with Mike\" 网络研讨会。",
     },
 }
 

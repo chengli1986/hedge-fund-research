@@ -70,12 +70,13 @@ being worth building.
 | resonanz-capital | `sort` |
 | fulcrum-asset-management | WordPress feed for the insights post type (`?post_type=insights`); `path_prefix`, `sort`. Template-only (auto-promoted 2026-10-24, no hand-written function) |
 
-## TEMPLATE — api_json (2)
+## TEMPLATE — api_json (3)
 
 | source | note |
 | --- | --- |
 | jpmam | AEM model.json |
 | mfs-investment-management | Solr endpoint with params; entity-in-title fixed on the hand-written side first |
+| rbc-bluebay | the insights page's own `/en/api/insights/` JSON (title, link, author.date), one call. Template-only (auto-promoted 2026-10-24, no hand-written function) |
 
 ## HAND-WRITTEN — the listing needs code (15)
 

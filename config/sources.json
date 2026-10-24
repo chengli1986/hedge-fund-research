@@ -1076,6 +1076,32 @@
         "sort": "date_desc"
       },
       "listing_template_active": true
+    },
+    {
+      "id": "rbc-bluebay",
+      "strategy_tags": [
+        "fixed_income",
+        "macro",
+        "emerging_markets"
+      ],
+      "name": "RBC BlueBay Asset Management",
+      "short_name": "RBC BlueBay",
+      "url": "https://www.rbcbluebay.com/en/institutional/what-we-think/insights/",
+      "method": "api",
+      "frequency": "weekly",
+      "description": "London fixed-income specialist founded in 2001 as BlueBay and acquired by Royal Bank of Canada in 2010; it now represents RBC Global Asset Management outside North America (RBC GAM ~$598B AUM as of 30 June 2026). Best known for active credit, high yield, emerging-market debt and global macro bond strategies, alongside equity and alternatives capabilities.",
+      "notable_authors": [],
+      "expected_hostname": "rbcbluebay.com",
+      "max_articles": 10,
+      "listing_template": {
+        "type": "api_json",
+        "endpoint": "/en/api/insights/",
+        "items": "insightslist",
+        "title": "title",
+        "url": "link",
+        "date": "author.date"
+      },
+      "listing_template_active": true
     }
   ]
 }

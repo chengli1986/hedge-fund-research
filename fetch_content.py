@@ -2462,6 +2462,49 @@ def _fetch_content_fulcrum(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+def _fetch_content_rbc_bluebay(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch RBC BlueBay insight content via requests (SSR).
+
+    The listing is the site's `/en/api/insights/` JSON (a listing template);
+    article pages are server-rendered. There is no `<article>`/`<main>` body:
+    the text is in `div.bb-rich-text` (headings, paragraphs and key-takeaway
+    bullets), and podcast pages put the transcript in `div.accordion-body`.
+    The ~4.5K-char `bb-disclaimer` and the cookie/terms blocks sit outside
+    both. Many insights render only an intro and takeaways on the page and
+    link the full piece as a PDF under /globalassets/documents/ ("Read our
+    full piece here" / "Download PDF"); that PDF is read when it opens with
+    the title and is longer than the page text (China batteries 2026-10-24:
+    944 chars on the page).
+    """
+    url = article["url"]
+    log.info("  RBC BlueBay: fetching article page %s", url)
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  RBC BlueBay: fetch failed: %s", e)
+        return None
+
+    text = _normalize_html(
+        resp.text,
+        "div.bb-rich-text h2, div.bb-rich-text h3, div.bb-rich-text p, "
+        "div.bb-rich-text li:not(:has(p)):not(:has(li)), div.accordion-body p")
+    link = BeautifulSoup(resp.text, "html.parser").select_one(
+        'a[href*="/globalassets/documents/"][href$=".pdf"]')
+    if link is not None:
+        pdf_text = _linked_article_pdf(link, url, article.get("title", ""), "RBC BlueBay")
+        if len(pdf_text) > len(text):
+            text = pdf_text
+    if not _check_min_content_length(text):
+        log.warning("  RBC BlueBay: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  RBC BlueBay: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -2507,6 +2550,7 @@ CONTENT_FETCHERS = {
     "northleaf-capital": _fetch_content_northleaf_capital,
     "hamilton-lane": _fetch_content_hamilton_lane,
     "fulcrum-asset-management": _fetch_content_fulcrum,
+    "rbc-bluebay": _fetch_content_rbc_bluebay,
 }
 
 
