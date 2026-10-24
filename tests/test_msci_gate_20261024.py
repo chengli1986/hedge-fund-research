@@ -161,17 +161,25 @@ def test_form_submissions_are_spaced(monkeypatch):
 
 
 def test_the_readers_details_stay_out_of_the_repo():
+    """The values are read from the local file itself, so the test names none of them.
+
+    Only where the file exists (the production checkout); the email is left
+    out because it was already tracked as the alert recipient
+    (scripts/wrapper-candidate-discovery.sh) before this module existed.
+    """
     ignored = subprocess.run(["git", "check-ignore", "-q", "config/msci_form.local.json"], cwd=REPO)
     assert ignored.returncode == 0, "the form config must be gitignored"
-    tracked = subprocess.run(["git", "ls-files", "-z"], cwd=REPO, capture_output=True).stdout.split(b"\0")
-    # The email is not a needle: it was already tracked as the alert recipient
-    # (scripts/wrapper-candidate-discovery.sh) before this module existed.
-    needles = [("Xenon " + "Enterprise").encode(), ("xenon " + "enterprise").encode()]
+    cfg = msci_gate.load_form_config(REPO / "config" / "msci_form.local.json")
+    if cfg is None:
+        return
+    needles = [cfg["company"].encode()]
+    tracked = subprocess.run(["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+                             cwd=REPO, capture_output=True).stdout.split(b"\0")
     for name in filter(None, tracked):
         path = REPO / name.decode()
         if path.is_file() and path.stat().st_size < 5_000_000:
             data = path.read_bytes()
-            assert not any(n in data for n in needles), f"reader's details in tracked file {name.decode()}"
+            assert not any(n in data for n in needles), f"reader's details in repo file {name.decode()}"
 
 
 def test_the_module_holds_no_default_details():
