@@ -345,3 +345,28 @@ class TestDateSeparator:
     def test_date_part_without_a_separator_is_refused(self):
         with pytest.raises(ValueError, match="date_separator"):
             lt.validate_spec(self._spec(date_part="after"))
+
+
+class TestSortKnob:
+    """2026-10-25: validate_spec accepted sort="date_desc" on a card_list, but
+    parse_cards ignored it, so the spec looked sorted and was not. CBRE's
+    /insights lists its newest pieces (10-21, 10-13) after the 14th card; cut
+    at max_articles in page order, the trial saw only June-September pieces."""
+    HTML = """
+    <article class="c"><a href="/insight/old">Old</a><p class="d">June 3, 2026</p></article>
+    <article class="c"><a href="/insight/undated">Undated</a></article>
+    <article class="c"><a href="/insight/new">New</a><p class="d">October 21, 2026</p></article>
+    """
+    SPEC = {"type": "card_list", "fetch": "requests", "card": "article.c", "date": "p.d"}
+
+    def test_sorting_happens_before_the_cap(self):
+        rows = lt.parse_cards(self.HTML, dict(SOURCE, max_articles=1), dict(self.SPEC, sort="date_desc"))
+        assert [r["title"] for r in rows] == ["New"]
+
+    def test_an_undated_card_sorts_last_not_first(self):
+        rows = lt.parse_cards(self.HTML, SOURCE, dict(self.SPEC, sort="date_desc"))
+        assert [r["title"] for r in rows] == ["New", "Old", "Undated"]
+
+    def test_without_the_sort_knob_page_order_is_kept(self):
+        rows = lt.parse_cards(self.HTML, SOURCE, self.SPEC)
+        assert [r["title"] for r in rows] == ["Old", "Undated", "New"]

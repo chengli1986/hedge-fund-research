@@ -37,6 +37,8 @@ Spec (type card_list):
                    first occurrence of this
     date_part      optional; "before" (default) or "after" the separator.
                    Text without the separator is the date either way.
+    sort           optional; "date_desc" to sort before the max_articles cut,
+                   for pages that do not list newest first
 
 Spec (type api_json):
     endpoint       the listing API: an absolute URL, or a path joined onto the
@@ -182,6 +184,19 @@ def parse_cards(html: str, source: dict, spec: dict) -> list[dict]:
         rows.append({"title": title, "url": url,
                      "date": parse_date(date_raw) if date_raw else None,
                      "date_raw": date_raw})
+    return _cut(rows, source, spec)
+
+
+def _cut(rows: list[dict], source: dict, spec: dict) -> list[dict]:
+    """Sort if the spec asks, then cut to max_articles.
+
+    One place for all three types: validate_spec accepts sort for any of
+    them, and until 2026-10-25 parse_cards skipped this step, so a card_list
+    spec with sort="date_desc" passed validation and stayed in page order.
+    """
+    if spec.get("sort") == "date_desc":
+        # "" sorts below any real date, so undated rows land at the end.
+        rows = sorted(rows, key=lambda r: r["date"] or "", reverse=True)
     return rows[:source.get("max_articles", 10)]
 
 
@@ -242,10 +257,7 @@ def parse_feed(xml_text: str, source: dict, spec: dict) -> list[dict]:
                      "date_raw": date_raw,
                      "summary": _strip_tags(_feed_text(item, "description")),
                      "category": ", ".join(c for c in cats if c)})
-    if spec.get("sort") == "date_desc":
-        # "" sorts below any real date, so undated rows land at the end.
-        rows.sort(key=lambda r: r["date"] or "", reverse=True)
-    return rows[:source.get("max_articles", 10)]
+    return _cut(rows, source, spec)
 
 
 def _strip_tags(text: str) -> str:
@@ -336,9 +348,7 @@ def parse_items(payload: dict, source: dict, spec: dict) -> list[dict]:
         rows.append({"title": title, "url": url,
                      "date": parse_date(date_raw) if date_raw else None,
                      "date_raw": date_raw})
-    if spec.get("sort") == "date_desc":
-        rows.sort(key=lambda r: r["date"] or "", reverse=True)
-    return rows[:source.get("max_articles", 10)]
+    return _cut(rows, source, spec)
 
 
 def _site(url: str) -> str:

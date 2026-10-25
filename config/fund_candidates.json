@@ -4080,7 +4080,8 @@
       "title": "a.cbre-c-gridCard__title-link",
       "date": ".cbre-c-gridCard__date",
       "path_prefix": "/insights/articles/",
-      "wait_selector": ".cbre-c-gridCard__date"
+      "wait_selector": ".cbre-c-gridCard__date",
+      "sort": "date_desc"
     },
     "listing_url": "https://www.cbreim.com/insights",
     "expected_hostname": "cbreim.com",
