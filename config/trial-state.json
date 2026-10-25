@@ -9998,6 +9998,219 @@
       "avg_quality_score": 0.727
     }
   ],
-  "active_trials": [],
-  "last_summary_sent_date": "2026-10-24"
+  "active_trials": [
+    {
+      "id": "bnp-paribas-am",
+      "name": "BNP Paribas Asset Management",
+      "research_url": "https://www.bnpparibas-am.com/en-au/financial-advisors/insights/",
+      "homepage_url": "https://www.bnpparibas-am.com/en-au/financial-advisors/insights/",
+      "fit_score": 0.97,
+      "quality": "MEDIUM",
+      "topics": "macro, credit, equity, multi-asset, ETF flows",
+      "start_date": "2026-10-25",
+      "end_date": null,
+      "daily_checks": {
+        "2026-10-25": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 0,
+          "article_urls": [
+            "https://www.bnpparibas-am.com/en-au/financial-advisors/front-of-mind/",
+            "https://www.bnpparibas-am.com/en-au/financial-advisors/portfolio-perspectives/",
+            "https://www.bnpparibas-am.com/en-au/financial-advisors/forward-thinking/",
+            "https://www.bnpparibas-am.com/en-au/financial-advisors/front-of-mind/view-from-the-markets-why-have-emerging-market-tech-stocks-been-so-volatile/",
+            "https://www.bnpparibas-am.com/en-au/financial-advisors/front-of-mind/take-two-imf-lifts-global-growth-forecast-us-inflation-rises/",
+            "https://www.bnpparibas-am.com/en-au/financial-advisors/front-of-mind/view-from-the-markets-a-critical-earnings-season-approaches/",
+            "https://www.bnpparibas-am.com/en-au/financial-advisors/front-of-mind/take-two-fed-signals-further-rate-increase-us-stocks-hit-record-high/",
+            "https://www.bnpparibas-am.com/en-au/financial-advisors/front-of-mind/view-from-the-markets-is-high-yield-credit-flashing-a-warning-sign/",
+            "https://www.bnpparibas-am.com/en-au/financial-advisors/front-of-mind/take-two-us-equities-enjoy-record-inflows-eurozone-inflation-rises/"
+          ],
+          "error": null,
+          "fetcher_used": false
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/front-of-mind/",
+              "relevance": 0.85,
+              "depth": 0.35,
+              "extractable": 0.2,
+              "overall": 0.52,
+              "notes": "Index/landing page of market commentary pieces; titles suggest investment relevance but only headlines and bylines are visible, no substantive content extracted"
+            },
+            {
+              "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/portfolio-perspectives/",
+              "relevance": 0.9,
+              "depth": 0.4,
+              "extractable": 0.25,
+              "overall": 0.57,
+              "notes": "Portfolio strategy and asset allocation research; titles indicate substantive quarterly updates and thematic analysis, but only headlines/metadata visible without full article text"
+            },
+            {
+              "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/forward-thinking/",
+              "relevance": 0.65,
+              "depth": 0.35,
+              "extractable": 0.2,
+              "overall": 0.44,
+              "notes": "ESG/sustainability and geopolitical thematic research with some investment angle; primarily headlines visible; sustainability focus reduces pure investment research relevance"
+            }
+          ],
+          "avg_score": 0.51,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 1,
+          "date": "2026-10-25"
+        }
+      ]
+    },
+    {
+      "id": "capital-fund-management",
+      "name": "Capital Fund Management (CFM)",
+      "research_url": "https://www.cfm.com",
+      "homepage_url": "https://www.cfm.com",
+      "fit_score": null,
+      "quality": "HIGH",
+      "topics": "quant, market microstructure, systematic trading",
+      "start_date": "2026-10-25",
+      "end_date": null,
+      "daily_checks": {
+        "2026-10-25": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.cfm.com/2026-midterms-whats-old-in-washington/",
+            "https://www.cfm.com/a-systematic-view-of-how-liquidity-shapes-markets/",
+            "https://www.cfm.com/optimists-vs-pessimists/",
+            "https://www.cfm.com/ai-will-help-cfm-discover-new-sources-of-alpha/",
+            "https://www.cfm.com/real-but-not-settled/",
+            "https://www.cfm.com/cfm-talks-to-xavier-gabaix/",
+            "https://www.cfm.com/the-wisdom-of-crowds-a-mid-year-review/",
+            "https://www.cfm.com/the-hidden-beta-in-dip-trade/",
+            "https://www.cfm.com/beating-the-market-is-even-harder-than-you-think-monkeys-with-dartboards/",
+            "https://www.cfm.com/seven-degrees-of-market-structure/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.cfm.com/2026-midterms-whats-old-in-washington/",
+              "relevance": 0.3,
+              "depth": 0.6,
+              "extractable": 0.4,
+              "overall": 0.44,
+              "notes": "Political forecasting for 2026 midterms using polling and fundamentals; not investment research but macro/political analysis with some quantitative rigor."
+            },
+            {
+              "url": "https://www.cfm.com/a-systematic-view-of-how-liquidity-shapes-markets/",
+              "relevance": 0.85,
+              "depth": 0.75,
+              "extractable": 0.5,
+              "overall": 0.74,
+              "notes": "Analysis of liquidity's impact on alternative markets and fund flows; substantive portfolio strategy insights but article appears truncated mid-sentence."
+            },
+            {
+              "url": "https://www.cfm.com/optimists-vs-pessimists/",
+              "relevance": 0.9,
+              "depth": 0.8,
+              "extractable": 0.5,
+              "overall": 0.78,
+              "notes": "AI investment thesis analysis with back-of-envelope economics on compute capex; strong investment research but text cuts off abruptly, limiting completeness."
+            }
+          ],
+          "avg_score": 0.653,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 1,
+          "date": "2026-10-25"
+        }
+      ]
+    },
+    {
+      "id": "cbre-investment-management",
+      "name": "CBRE Investment Management",
+      "research_url": "https://www.cbreim.com/insights",
+      "homepage_url": "https://www.cbreim.com/insights",
+      "fit_score": null,
+      "quality": "HIGH",
+      "topics": "real assets, infrastructure, macro, real estate",
+      "start_date": "2026-10-25",
+      "end_date": null,
+      "daily_checks": {
+        "2026-10-25": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.cbreim.com/insights/articles/macro-house-view-q3-2026",
+            "https://www.cbreim.com/insights/articles/us-reindustrialization-and-ai-reinforce-each-other-while-competing-for-shared-resources",
+            "https://www.cbreim.com/insights/articles/value-creation-under-resource-constraints-apac",
+            "https://www.cbreim.com/insights/articles/europes-strategic-autonomy-imperative-is-an-infrastructure-delivery-challenge",
+            "https://www.cbreim.com/insights/articles/why-affordable-housing-is-becoming-a-portfolio-anchor-for-dc-capital",
+            "https://www.cbreim.com/insights/articles/webcast-replay-no-limit-on-opportunity-mid-market-core-infrastructure-open-end-funds",
+            "https://www.cbreim.com/insights/articles/in-conversation-integrating-sustainability-listed-real-assets",
+            "https://www.cbreim.com/insights/articles/infrastructures-strategic-ascent-through-innovation-eras",
+            "https://www.cbreim.com/insights/articles/powered-land",
+            "https://www.cbreim.com/insights/articles/powering-ai-in-an-age-of-anxiety"
+          ],
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.cbreim.com/insights/articles/macro-house-view-q3-2026",
+              "relevance": 0.9,
+              "depth": 0.75,
+              "extractable": 0.85,
+              "overall": 0.83,
+              "notes": "Macro house view Q3 2026 with forecasts on geopolitical shocks, energy prices, growth divergence, and monetary policy across major economies"
+            },
+            {
+              "url": "https://www.cbreim.com/insights/articles/us-reindustrialization-and-ai-reinforce-each-other-while-competing-for-shared-resources",
+              "relevance": 0.0,
+              "depth": 0.0,
+              "extractable": 0.0,
+              "overall": 0.0,
+              "notes": "Login wall / security verification page - no content accessible"
+            },
+            {
+              "url": "https://www.cbreim.com/insights/articles/value-creation-under-resource-constraints-apac",
+              "relevance": 0.0,
+              "depth": 0.0,
+              "extractable": 0.0,
+              "overall": 0.0,
+              "notes": "Login wall / security verification page - no content accessible"
+            }
+          ],
+          "avg_score": 0.277,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 10,
+          "day": 1,
+          "date": "2026-10-25"
+        }
+      ]
+    }
+  ],
+  "last_summary_sent_date": "2026-10-25"
 }
