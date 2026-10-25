@@ -292,3 +292,17 @@ def test_same_pdf_ignores_percent_encoding():
     raw = "https://www.msci.com/downloads/x/paper/too-hot-to-work/Too Hot to Work - FINAL.pdf"
     assert msci_gate._same_pdf(raw.replace(" ", "%20"), raw)
     assert not msci_gate._same_pdf(raw.replace("FINAL", "DRAFT"), raw)
+
+
+def test_a_pdf_read_after_the_form_survives_a_failed_unlock_save(tmp_path, monkeypatch):
+    """Review 10-25 (backfill): saving the unlock ran before the PDF was taken,
+    so a failed save (disk full, permissions) dropped a PDF the reader's form
+    had already paid for and paused the form for 72 hours."""
+    calls = []
+    state = tmp_path / "s.json"
+    state.mkdir()                     # storage_state's write fails on it
+    _fake_playwright(monkeypatch, Resp(), PDF, Resp(), calls)
+    body = msci_gate.fetch_gated_pdf(PAGE, PDF, config_path=_cfg(tmp_path), state_path=state)
+    assert body and body.startswith(b"%PDF")
+    assert ("save_state", str(state)) in calls
+    assert not (tmp_path / msci_gate.FORM_PAUSE_NAME).exists()

@@ -228,10 +228,17 @@ def _unlock_with_form(p, page_url: str, pdf_url: str, cfg: dict, state: Optional
         resp = ctx.request.get(urljoin(page_url, link), timeout=60000)
         if not _is_pdf(resp):
             return None, f"View PDF answered {resp.status} {resp.headers.get('content-type')}"
-        state_path.parent.mkdir(parents=True, exist_ok=True)
-        ctx.storage_state(path=str(state_path))
-        log.info("  MSCI gate: PDF read after the form; unlock saved")
-        return resp.body(), ""
+        body = resp.body()
+        # The form has been submitted and the PDF is in hand: a failed save
+        # costs only the next unlock, so it must not cost this PDF (review 10-25).
+        try:
+            state_path.parent.mkdir(parents=True, exist_ok=True)
+            ctx.storage_state(path=str(state_path))
+            log.info("  MSCI gate: PDF read after the form; unlock saved")
+        except Exception as e:
+            log.warning("  MSCI gate: PDF read after the form; unlock not saved (%s: %s)",
+                        type(e).__name__, e)
+        return body, ""
     finally:
         browser.close()
 
