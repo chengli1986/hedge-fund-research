@@ -2778,8 +2778,13 @@ def code_version_for(article: dict) -> str:
     except (OSError, TypeError):
         own = repr(fetcher)
     # A module a fetcher delegates to counts as part of it (msci -> msci_gate, 2026-10-24)
+    # Guarded: is_content_pending runs this for every article before any
+    # fetch, so a dep that will not load must not stop every source's night.
     for name in getattr(fetcher, "code_deps", ()):
-        own += inspect.getsource(importlib.import_module(name))
+        try:
+            own += inspect.getsource(importlib.import_module(name))
+        except Exception as e:
+            own += f"<{name} unavailable: {type(e).__name__}>"
     return hashlib.sha256((_SHARED_CODE_HASH + own).encode("utf-8")).hexdigest()[:12]
 
 

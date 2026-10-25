@@ -128,6 +128,15 @@ class TestContentFailure:
                messages=["Matthews Asia: extracted text too short (324 chars, min 500)"])
         assert fl.classify_content_failure(e)[0] == "media_without_text"
 
+    def test_a_missed_selector_on_a_media_page_is_still_selector_miss(self):
+        # Order pinned 2026-10-25 (a review proposed the reverse). ARK's 10
+        # video pages (casebook 09-14) had their intro in a container the
+        # selector missed; fa08959 fixed the selector. As media_without_text
+        # they would have retired after two nights and never been re-queued.
+        e = ev(responses=[resp(200, media=True)], extraction_paths=["miss"],
+               messages=["ARK: extracted text too short (40 chars, min 500)"])
+        assert fl.classify_content_failure(e)[0] == "selector_miss"
+
     def test_short_text_without_a_player_is_body_too_short(self):
         e = ev(responses=[resp(200)], extraction_paths=["primary"], messages=["X: extracted text too short (80 chars)"])
         assert fl.classify_content_failure(e)[0] == "body_too_short"

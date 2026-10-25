@@ -176,3 +176,17 @@ def test_the_recorded_paths_are_not_reported_as_drift(tmp_path, monkeypatch):
         assert "RCA CPPI US 0.9%" in text
         assert paths[-1] in ("gated_pdf", "gated_pdf_form")
         assert failure_labels.unexpected_paths(paths) == [], paths
+
+
+def test_an_unloadable_code_dep_does_not_crash_the_pending_scan(monkeypatch):
+    """Review 10-25 (backfill): code_version_for imported the deps unguarded.
+    is_content_pending calls it inside main()'s list comprehension, so one
+    broken msci_gate stopped every source's night, not just msci's."""
+    def boom(name):
+        raise ImportError(f"No module named {name!r}")
+    monkeypatch.setattr(fc.importlib, "import_module", boom)
+    art = {"source_id": "msci-research", "url": URL, "content_status": "permafail",
+           "content_failure_label": "selector_miss", "content_code_version": "old"}
+    v = fc.code_version_for(art)
+    assert v == fc.code_version_for(art)            # still deterministic
+    fc.is_content_pending(art)                      # and no exception
