@@ -4308,7 +4308,7 @@
     "official_domain": "www.arielinvestments.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-10-24T09:00:02.418941+08:00",
+    "last_discovered_at": "2026-10-25T09:00:02.974015+08:00",
     "added_at": "2026-10-17",
     "status_since": "2026-10-17T09:00:49.015131+08:00",
     "last_deep_analyzed_at": "2026-10-18T01:00:32Z",
@@ -4360,12 +4360,12 @@
     "name": "BNP Paribas Asset Management",
     "homepage_url": "https://www.bnpparibas-am.com/en-au/financial-advisors/insights/",
     "source": "manual",
-    "status": "discovered",
+    "status": "visitable",
     "strategy_tags": [
       "multi_asset",
       "fixed_income",
       "equity",
-      "esg_climate"
+      "macro"
     ],
     "research_url": "https://www.bnpparibas-am.com/en-au/financial-advisors/insights/",
     "official_domain": "www.bnpparibas-am.com",
@@ -4471,9 +4471,30 @@
         "path": "en-au/financial-advisors/insights/tag/fixed-income"
       }
     ],
-    "status_since": "2026-10-24T09:00:41.645426+08:00",
+    "status_since": "2026-10-25T09:00:19.645457+08:00",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-10-24T09:00:33.783110+08:00",
-    "added_at": "2026-10-24"
+    "added_at": "2026-10-24",
+    "is_publicly_accessible": true,
+    "has_article_index": true,
+    "last_screened_at": "2026-10-25T09:00:03.512958+08:00",
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 0,
+      "article_tags": 1,
+      "time_tags": 0,
+      "date_patterns": 0,
+      "h2_tags": 17,
+      "article_signals": 0
+    },
+    "screening_reason": "Research index detected",
+    "fit_score": 0.97,
+    "last_validated_at": "2026-10-25T09:00:19.645436+08:00",
+    "last_deep_analyzed_at": "2026-10-25T01:01:01Z",
+    "quality": "MEDIUM",
+    "quality_score": 0.62,
+    "topics": "macro, credit, equity, multi-asset, ETF flows",
+    "notes": "Weekly market commentary, data-backed, no dates in list"
   }
 ]
