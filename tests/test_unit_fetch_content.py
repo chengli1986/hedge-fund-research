@@ -976,12 +976,15 @@ class TestVerdadMailchimpTemplate:
             assert junk not in text, junk
 
 
-def _fake_playwright(monkeypatch, html):
-    """Make `from playwright.sync_api import sync_playwright` render `html`."""
+def _fake_playwright(monkeypatch, html, status=None):
+    """Make `from playwright.sync_api import sync_playwright` render `html`.
+
+    With `status`, goto returns a response carrying that HTTP status."""
     import playwright.sync_api as pw
 
     class _Page:
-        def goto(self, *a, **k): pass
+        def goto(self, *a, **k):
+            return None if status is None else type("R", (), {"status": status})()
         def wait_for_timeout(self, *a, **k): pass
         def wait_for_selector(self, *a, **k): pass
         def content(self): return html
@@ -1062,6 +1065,42 @@ class TestTrowepriceSoftNotFound:
                 + "</p></div></body></html>")
         _fake_playwright(monkeypatch, html)
         assert fc._fetch_content_troweprice({"id": "trp-404", "url": "https://www.troweprice.com/x"}) is None
+
+
+class TestWellingtonGonePage:
+    """2026-10-25 weekly audit: "Personalized Cancer Vaccines" (stored 14,483
+    chars) now answers HTTP 404 with Wellington's "Page Not Found" page. Its
+    footer sits in .cmp-text, so the fetcher saved 403 chars of copyright and
+    newsletter text as ok: the audit called it body_shrunk and offered
+    --accept, which would have replaced the article with the footer."""
+
+    FOOTER = ('<html><head><title>Page Not Found | Wellington Management</title></head><body>'
+              '<div class="cmp-text"><p>' + "© Copyright 2026 Wellington Management Company LLP. " * 4
+              + '</p></div><div class="cmp-text"><p>Get similar insights delivered straight to your inbox.</p></div>'
+              '</body></html>')
+    BODY = ('<html><body><div class="cmp-text"><p>'
+            + "Therapeutic cancer vaccines help the immune system attack existing cancer cells. " * 4
+            + '</p></div></body></html>')
+
+    def _fetch(self, html, status, tmp_path, monkeypatch):
+        import fetch_content as fc
+        monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
+        _fake_playwright(monkeypatch, html, status=status)
+        art = {"id": "wel-1", "url": "https://www.wellington.com/en/insights/gone"}
+        return fc.fetch_with_evidence(art, fc._fetch_content_wellington)
+
+    def test_a_404_is_page_gone_and_nothing_is_saved(self, tmp_path, monkeypatch):
+        import failure_labels
+        for status in (404, 410):
+            outcome, evidence = self._fetch(self.FOOTER, status, tmp_path, monkeypatch)
+            assert outcome is None
+            assert not (tmp_path / "wel-1.txt").exists()
+            assert failure_labels.classify_content_failure(evidence)[0] == "page_gone"
+
+    def test_a_live_article_is_still_saved(self, tmp_path, monkeypatch):
+        outcome, _ = self._fetch(self.BODY, 200, tmp_path, monkeypatch)
+        assert outcome is not None
+        assert "Therapeutic cancer vaccines" in (tmp_path / "wel-1.txt").read_text()
 
 
 class TestManGroupLayout:

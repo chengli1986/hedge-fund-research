@@ -907,12 +907,20 @@ def _fetch_content_wellington(article: dict) -> Optional[tuple[Path, str]]:
             page = context.new_page()
             # AEM pages often have long-running analytics requests that never reach
             # networkidle; SSR content is fully present at load event
-            page.goto(url, wait_until="load", timeout=30000)
+            resp = page.goto(url, wait_until="load", timeout=30000)
             page.wait_for_timeout(2000)
             html = _page_html(page)
             browser.close()
     except Exception as e:
         log.error("  Wellington: Playwright fetch failed: %s", e)
+        return None
+
+    if resp is not None and resp.status in (404, 410):
+        # A withdrawn article: the "Page Not Found" page keeps its footer in
+        # .cmp-text, so the selector below would save ~400 chars of copyright
+        # text as ok (cancer-vaccines piece, 2026-10-25 audit).
+        log.warning("  Wellington: HTTP %d (withdrawn article?)", resp.status)
+        note_failure_hint("page_gone", f"HTTP {resp.status} at {url}")
         return None
 
     # AEM .cmp-text components hold the real article body
