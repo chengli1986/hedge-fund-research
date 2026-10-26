@@ -10027,6 +10027,24 @@
           ],
           "error": null,
           "fetcher_used": false
+        },
+        "2026-10-26": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 0,
+          "article_urls": [
+            "https://www.bnpparibas-am.com/en-au/financial-advisors/front-of-mind/",
+            "https://www.bnpparibas-am.com/en-au/financial-advisors/portfolio-perspectives/",
+            "https://www.bnpparibas-am.com/en-au/financial-advisors/forward-thinking/",
+            "https://www.bnpparibas-am.com/en-au/financial-advisors/front-of-mind/view-from-the-markets-why-have-emerging-market-tech-stocks-been-so-volatile/",
+            "https://www.bnpparibas-am.com/en-au/financial-advisors/front-of-mind/take-two-imf-lifts-global-growth-forecast-us-inflation-rises/",
+            "https://www.bnpparibas-am.com/en-au/financial-advisors/front-of-mind/view-from-the-markets-a-critical-earnings-season-approaches/",
+            "https://www.bnpparibas-am.com/en-au/financial-advisors/front-of-mind/take-two-fed-signals-further-rate-increase-us-stocks-hit-record-high/",
+            "https://www.bnpparibas-am.com/en-au/financial-advisors/front-of-mind/view-from-the-markets-is-high-yield-credit-flashing-a-warning-sign/",
+            "https://www.bnpparibas-am.com/en-au/financial-advisors/front-of-mind/take-two-us-equities-enjoy-record-inflows-eurozone-inflation-rises/"
+          ],
+          "error": null,
+          "fetcher_used": false
         }
       },
       "auto_decided": false,
@@ -10066,6 +10084,41 @@
           "js_only_checked": 0,
           "day": 1,
           "date": "2026-10-25"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/front-of-mind/view-from-the-markets-why-have-emerging-market-tech-stocks-been-so-volatile/",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.95,
+              "overall": 0.83,
+              "notes": "Analysis of emerging market tech stock volatility driven by AI uncertainty; uses earnings estimate dispersion as key metric."
+            },
+            {
+              "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/front-of-mind/take-two-imf-lifts-global-growth-forecast-us-inflation-rises/",
+              "relevance": 0.85,
+              "depth": 0.6,
+              "extractable": 0.85,
+              "overall": 0.75,
+              "notes": "Macro roundup of IMF forecasts, US/Eurozone inflation data, and market performance; brief commentary format with some truncation at end."
+            },
+            {
+              "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/front-of-mind/view-from-the-markets-a-critical-earnings-season-approaches/",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.7,
+              "overall": 0.84,
+              "notes": "Detailed earnings season analysis showing tech/energy concentration risk in Q3 but diversification expected in 2027; text appears truncated mid-sentence."
+            }
+          ],
+          "avg_score": 0.807,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 2,
+          "date": "2026-10-26"
         }
       ]
     },
@@ -10081,6 +10134,25 @@
       "end_date": null,
       "daily_checks": {
         "2026-10-25": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.cfm.com/2026-midterms-whats-old-in-washington/",
+            "https://www.cfm.com/a-systematic-view-of-how-liquidity-shapes-markets/",
+            "https://www.cfm.com/optimists-vs-pessimists/",
+            "https://www.cfm.com/ai-will-help-cfm-discover-new-sources-of-alpha/",
+            "https://www.cfm.com/real-but-not-settled/",
+            "https://www.cfm.com/cfm-talks-to-xavier-gabaix/",
+            "https://www.cfm.com/the-wisdom-of-crowds-a-mid-year-review/",
+            "https://www.cfm.com/the-hidden-beta-in-dip-trade/",
+            "https://www.cfm.com/beating-the-market-is-even-harder-than-you-think-monkeys-with-dartboards/",
+            "https://www.cfm.com/seven-degrees-of-market-structure/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-10-26": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -10137,6 +10209,41 @@
           "js_only_checked": 0,
           "day": 1,
           "date": "2026-10-25"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.cfm.com/ai-will-help-cfm-discover-new-sources-of-alpha/",
+              "relevance": 0.9,
+              "depth": 0.6,
+              "extractable": 0.7,
+              "overall": 0.74,
+              "notes": "CFM executives discuss AI/ML integration for alpha generation and research velocity improvements in quantitative investing"
+            },
+            {
+              "url": "https://www.cfm.com/real-but-not-settled/",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.6,
+              "overall": 0.84,
+              "notes": "Macro analysis of US bond yield decomposition and debt concerns; challenges conventional narrative on real yields and term premium"
+            },
+            {
+              "url": "https://www.cfm.com/cfm-talks-to-xavier-gabaix/",
+              "relevance": 0.85,
+              "depth": 0.7,
+              "extractable": 0.65,
+              "overall": 0.75,
+              "notes": "Interview with Harvard economist Xavier Gabaix on interdisciplinary approaches to economics, finance, and complexity science"
+            }
+          ],
+          "avg_score": 0.777,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 2,
+          "date": "2026-10-26"
         }
       ]
     },
@@ -10166,6 +10273,25 @@
             "https://www.cbreim.com/insights/articles/infrastructures-strategic-ascent-through-innovation-eras",
             "https://www.cbreim.com/insights/articles/powered-land",
             "https://www.cbreim.com/insights/articles/powering-ai-in-an-age-of-anxiety"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-10-26": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.cbreim.com/insights/articles/chart-of-the-week",
+            "https://www.cbreim.com/insights/articles/infrastructure-quarterly-q3-2026",
+            "https://www.cbreim.com/insights/articles/infrastructure-quarterly",
+            "https://www.cbreim.com/insights/articles/diversity-in-living-portfolios-unlocks-performance",
+            "https://www.cbreim.com/insights/articles/us-reindustrialization-and-ai-reinforce-each-other-while-competing-for-shared-resources",
+            "https://www.cbreim.com/insights/articles/uk-single-family-housing-institutional-opportunity",
+            "https://www.cbreim.com/insights/articles/macro-house-view-q3-2026",
+            "https://www.cbreim.com/insights/articles/value-creation-under-resource-constraints-apac",
+            "https://www.cbreim.com/insights/articles/europes-strategic-autonomy-imperative-is-an-infrastructure-delivery-challenge",
+            "https://www.cbreim.com/insights/articles/why-affordable-housing-is-becoming-a-portfolio-anchor-for-dc-capital"
           ],
           "error": null,
           "fetcher_used": true
@@ -10208,9 +10334,44 @@
           "js_only_checked": 10,
           "day": 1,
           "date": "2026-10-25"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.cbreim.com/insights/articles/chart-of-the-week",
+              "relevance": 0.0,
+              "depth": 0.0,
+              "extractable": 0.0,
+              "overall": 0.0,
+              "notes": "Login wall / bot verification page - no content accessible"
+            },
+            {
+              "url": "https://www.cbreim.com/insights/articles/infrastructure-quarterly-q3-2026",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.6,
+              "overall": 0.76,
+              "notes": "Infrastructure quarterly report with market performance data, sector analysis, and deal flow insights; text is truncated mid-sentence limiting full extractability"
+            },
+            {
+              "url": "https://www.cbreim.com/insights/articles/infrastructure-quarterly",
+              "relevance": 0.85,
+              "depth": 0.4,
+              "extractable": 0.7,
+              "overall": 0.64,
+              "notes": "Infrastructure Quarterly landing page with summary of Q3 2026 themes (digitalization, electrification); mostly promotional with links to full report rather than substantive analysis"
+            }
+          ],
+          "avg_score": 0.467,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 7,
+          "day": 2,
+          "date": "2026-10-26"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-10-25"
+  "last_summary_sent_date": "2026-10-26"
 }
