@@ -143,6 +143,19 @@ def _text(el) -> str:
     return re.sub(r"\s+", " ", el.get_text(" ")).strip()
 
 
+# blue-owl-capital, 2026-10-28: some cards link /index%2Ephp/insights/<slug>,
+# the CMS front controller leaking into the href (the count varied run to run).
+# Same page as /insights/<slug>; left alone, path_prefix dropped the newest card
+# and the article id (derived from the URL) would differ from the stored one.
+_FRONT_CONTROLLER = re.compile(r"^/index(?:\.|%2e)php(?=/)", re.IGNORECASE)
+
+
+def _strip_front_controller(url: str) -> str:
+    parts = urlparse(url)
+    path = _FRONT_CONTROLLER.sub("", parts.path, count=1)
+    return url if path == parts.path else parts._replace(path=path).geturl()
+
+
 def parse_cards(html: str, source: dict, spec: dict) -> list[dict]:
     """Rows from a card listing, in page order. Pure: no network."""
     from fetch_articles import _validate_hostname, parse_date
@@ -161,7 +174,7 @@ def parse_cards(html: str, source: dict, spec: dict) -> list[dict]:
         # the host check (found by the A/B run, 2026-09-25).
         if not href or href.startswith("#") or href.lower().startswith("javascript:"):
             continue
-        url = urljoin(source["url"], href)
+        url = _strip_front_controller(urljoin(source["url"], href))
         if expected_host and not _validate_hostname(url, expected_host):
             continue
         prefix = spec.get("path_prefix")

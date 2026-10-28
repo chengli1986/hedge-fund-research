@@ -370,3 +370,36 @@ class TestSortKnob:
     def test_without_the_sort_knob_page_order_is_kept(self):
         rows = lt.parse_cards(self.HTML, SOURCE, self.SPEC)
         assert [r["title"] for r in rows] == ["Old", "Undated", "New"]
+
+
+class TestFrontControllerPrefix:
+    """blue-owl-capital, 2026-10-28: the listing started linking some cards as
+    /index%2Ephp/insights/<slug> (the CMS front controller leaking into the
+    href; how many cards varied run to run). path_prefix "/insights/" dropped
+    them, the newest card (09-23) vanished, the health probe saw "105d stale"
+    and the daily fetch, left with three 2025 cards, was refused as
+    listing_head_moved_back. Both URLs serve the same page."""
+    SRC = TestTwoMoreKnobs.SRC
+    SPEC = TestTwoMoreKnobs.SPEC
+
+    @pytest.mark.parametrize("href", [
+        "/index%2Ephp/insights/anaplan", "/index.php/insights/anaplan",
+        "/INDEX%2EPHP/insights/anaplan", "https://site.test/index%2ephp/insights/anaplan",
+    ])
+    def test_the_prefix_is_stripped_to_the_canonical_url(self, href):
+        html = f'<a class="card" href="{href}"><h3>Anaplan</h3><time datetime="2026-09-23">x</time></a>'
+        rows = lt.parse_cards(html, self.SRC, self.SPEC)
+        assert [r["url"] for r in rows] == ["https://site.test/insights/anaplan"]
+
+    def test_both_spellings_of_one_article_are_kept_once(self):
+        html = """
+        <a class="card" href="/index%2Ephp/insights/anaplan"><h3>Anaplan</h3></a>
+        <a class="card" href="/insights/anaplan"><h3>Anaplan</h3></a>
+        """
+        assert len(lt.parse_cards(html, self.SRC, self.SPEC)) == 1
+
+    @pytest.mark.parametrize("href", ["/index.php", "/index.phpx/insights/a", "/news/index.php/insights/a"])
+    def test_only_a_leading_front_controller_segment_is_touched(self, href):
+        html = f'<a class="card" href="{href}"><h3>Other</h3></a>'
+        rows = lt.parse_cards(html, self.SRC, {k: v for k, v in self.SPEC.items() if k != "path_prefix"})
+        assert rows[0]["url"] == "https://site.test" + href
