@@ -38,7 +38,7 @@ import json
 import re
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Callable, Iterable, Optional
 
@@ -121,6 +121,21 @@ def classify_staleness(
         return STALE, None
     age = (now - last).total_seconds() / 86400.0
     return (STALE if age > threshold_days else OK), age
+
+
+_BJT = timezone(timedelta(hours=8))
+
+
+def last_logged_success(text: str, marker: str) -> Optional[datetime]:
+    """Newest `[YYYY-MM-DD HH:MM:SS] <marker>` line in a wrapper log (stamps are
+    BJT, the wrappers' ts()), as UTC. None if no such line."""
+    best: Optional[datetime] = None
+    for m in re.finditer(r"^\[(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d)\] " + marker,
+                         text, re.MULTILINE):
+        dt = datetime.strptime(m.group(1), "%Y-%m-%d %H:%M:%S").replace(tzinfo=_BJT)
+        if best is None or dt > best:
+            best = dt
+    return best.astimezone(timezone.utc) if best else None
 
 
 def scan_markers(text: str, markers: dict[str, str]) -> list[str]:
@@ -432,11 +447,19 @@ def check_fetcher_health(now: datetime) -> dict:
 
 
 def check_discovery(now: datetime) -> dict:
-    last = _file_mtime(REPO / "config" / "fund_candidates.json")
+    """A run that finds nothing new leaves the pool untouched (10-26..28: three
+    clean runs, pool still 10-25, reported STALE), so a logged successful run
+    counts as activity too."""
+    pool = _file_mtime(REPO / "config" / "fund_candidates.json")
+    ran = last_logged_success(_read_log_tail("gmia-candidate-discovery"),
+                              r"Candidate discovery finished successfully")
+    last = max((t for t in (pool, ran) if t), default=None)
     status, age = classify_staleness(now, last, threshold_days=2)
     if status == OK:
-        return _verdict("candidate-discovery", OK, f"pool touched {age:.1f}d ago", age)
-    d = "no candidate file" if age is None else f"pool unchanged {age:.1f}d (>2d)"
+        what = "last successful run" if last == ran else "pool touched"
+        return _verdict("candidate-discovery", OK, f"{what} {age:.1f}d ago", age)
+    d = ("no candidate file or successful run" if age is None
+         else f"pool unchanged and no successful run in {age:.1f}d (>2d)")
     return _verdict("candidate-discovery", STALE, d, age)
 
 

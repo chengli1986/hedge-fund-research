@@ -296,3 +296,51 @@ def test_synthesis_history_path_matches_writer():
     # 2026-07-23 config/ and ~/logs/ mismatches) fails fast.
     import write_session_heartbeat as wsh  # noqa: E402
     assert la.SYNTHESIS_HISTORY == wsh.HISTORY_FILE
+
+
+# --- last_logged_success (candidate-discovery, 2026-10-28) -----------------
+# A discovery run that finds nothing new leaves fund_candidates.json untouched,
+# so pool mtime alone reported STALE on 10-28 after three clean daily runs.
+DISCOVERY_OK = r"Candidate discovery finished successfully"
+
+
+def test_last_logged_success_reads_bjt_stamp_as_utc():
+    text = ("[2026-10-27 09:00:47] Candidate discovery finished successfully\n"
+            "[2026-10-28 09:00:48] Candidate discovery finished successfully\n")
+    assert la.last_logged_success(text, DISCOVERY_OK) == datetime(
+        2026, 10, 28, 1, 0, 48, tzinfo=timezone.utc)
+
+
+def test_last_logged_success_ignores_failed_and_timed_out_runs():
+    text = ("[2026-10-26 09:00:40] Candidate discovery finished successfully\n"
+            "[2026-10-27 09:00:47] Candidate discovery failed (exit code: 1)\n"
+            "[2026-10-28 09:10:00] Candidate discovery TIMED OUT after 600s\n")
+    assert la.last_logged_success(text, DISCOVERY_OK) == datetime(
+        2026, 10, 26, 1, 0, 40, tzinfo=timezone.utc)
+
+
+def test_last_logged_success_none_when_absent():
+    assert la.last_logged_success("", DISCOVERY_OK) is None
+    assert la.last_logged_success("Candidate discovery finished successfully\n",
+                                  DISCOVERY_OK) is None
+
+
+def test_discovery_ok_when_pool_unchanged_but_runs_succeed(monkeypatch):
+    now = datetime(2026, 10, 27, 21, 2, tzinfo=timezone.utc)
+    monkeypatch.setattr(la, "_file_mtime",
+                        lambda p: datetime(2026, 10, 25, 2, 38, tzinfo=timezone.utc))
+    monkeypatch.setattr(la, "_read_log_tail", lambda name: (
+        "[2026-10-27 09:00:47] Candidate discovery finished successfully\n"))
+    v = la.check_discovery(now)
+    assert v["status"] == la.OK, v
+
+
+def test_discovery_stale_when_neither_pool_nor_log_is_recent(monkeypatch):
+    now = datetime(2026, 10, 27, 21, 2, tzinfo=timezone.utc)
+    monkeypatch.setattr(la, "_file_mtime",
+                        lambda p: datetime(2026, 10, 20, tzinfo=timezone.utc))
+    monkeypatch.setattr(la, "_read_log_tail", lambda name: (
+        "[2026-10-21 09:00:47] Candidate discovery finished successfully\n"
+        "[2026-10-27 09:00:47] Candidate discovery failed (exit code: 1)\n"))
+    v = la.check_discovery(now)
+    assert v["status"] == la.STALE, v
