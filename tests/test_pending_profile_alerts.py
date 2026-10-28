@@ -55,7 +55,7 @@ def test_scan_skips_validation_files(monkeypatch, tmp_path):
     # Companion validation file should NOT show up as a separate profile
     (pending_dir / "blackrock.validation.json").write_text('{"ok": true}')
     monkeypatch.setattr(gtm, "PENDING_PROFILES_DIR", pending_dir)
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = datetime.now(gtm.BJT).strftime("%Y-%m-%d")
     out = gtm._scan_pending_profiles(today)
     ids = [p["id"] for p in out]
     assert ids == ["blackrock"]
@@ -68,7 +68,7 @@ def test_scan_returns_age_in_days(monkeypatch, tmp_path):
     _make_pending(pending_dir, "fund-b", 5)
     _make_pending(pending_dir, "fund-c", 12)
     monkeypatch.setattr(gtm, "PENDING_PROFILES_DIR", pending_dir)
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = datetime.now(gtm.BJT).strftime("%Y-%m-%d")
     out = {p["id"]: p["age_days"] for p in gtm._scan_pending_profiles(today)}
     assert out["fund-a"] == 0
     assert out["fund-b"] == 5
@@ -81,7 +81,7 @@ def test_scan_picks_up_validation_high_risk(monkeypatch, tmp_path):
     _make_pending(pending_dir, "shaky", 3,
                   validation={"ok": False, "high_risk": True, "issues": ["unknown AUM"]})
     monkeypatch.setattr(gtm, "PENDING_PROFILES_DIR", pending_dir)
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = datetime.now(gtm.BJT).strftime("%Y-%m-%d")
     out = gtm._scan_pending_profiles(today)
     assert len(out) == 1
     assert out[0]["validation_ok"] is False
@@ -123,7 +123,7 @@ def test_send_summary_does_not_skip_when_only_urgent_pending(monkeypatch, tmp_pa
     monkeypatch.setattr(gtm, "save_state", lambda s: None)
 
     # State with no trial activity at all
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = datetime.now(gtm.BJT).strftime("%Y-%m-%d")
     state = {"history": [], "active_trials": []}
 
     gtm.send_daily_summary_email(state, today)
@@ -166,7 +166,7 @@ def test_send_summary_skips_when_only_fresh_pending(monkeypatch, tmp_path):
     monkeypatch.setattr(gtm, "save_state", lambda s: None)
 
     state = {"history": [], "active_trials": []}
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = datetime.now(gtm.BJT).strftime("%Y-%m-%d")
 
     gtm.send_daily_summary_email(state, today)
 
@@ -198,7 +198,7 @@ def test_subject_flags_urgent_pending(monkeypatch, tmp_path):
     monkeypatch.setattr(gtm, "save_state", lambda s: None)
 
     state = {"history": [], "active_trials": []}
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = datetime.now(gtm.BJT).strftime("%Y-%m-%d")
     gtm.send_daily_summary_email(state, today)
 
     assert len(sent) == 1
