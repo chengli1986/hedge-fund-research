@@ -2297,6 +2297,25 @@ def _fetch_content_resonanz_capital(article: dict) -> Optional[tuple[Path, str]]
     return (content_path, "ok")
 
 
+def _baillie_gifford_transcript(html: str) -> str:
+    """The interview text of a video ic-article, or "".
+
+    2026-10-28 two Vinted interview pages were saved as the "Watch ... here"
+    line plus the author bio (280 chars) and declined by the summariser. The
+    whole interview (26K chars) is on the page in <section aria-label=
+    "Transcript"> -- as HTML-escaped text, so `main p` matches none of it. The
+    aria-label, not the CSS-module class, is the stable handle. A transcript in
+    real <p> tags is already in `main p` and is left alone.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    section = soup.select_one('section[aria-label="Transcript"]')
+    if section is None or section.find("p") is not None:
+        return ""
+    inner = BeautifulSoup("".join(section.strings), "html.parser")  # escaped HTML, not prose
+    paras = (_paragraph_text(p) for p in inner.find_all("p"))
+    return "\n".join(t for t in paras if t)
+
+
 def _fetch_content_baillie_gifford(article: dict) -> Optional[tuple[Path, str]]:
     """Fetch Baillie Gifford insights article content via requests (SSR — Next.js).
 
@@ -2319,6 +2338,9 @@ def _fetch_content_baillie_gifford(article: dict) -> Optional[tuple[Path, str]]:
         return None
 
     text = _normalize_html(resp.text, "main p")
+    transcript = _baillie_gifford_transcript(resp.text)
+    if transcript:
+        text = f"{text}\n{transcript}" if text else transcript
     if not _check_min_content_length(text):
         log.warning("  Baillie Gifford: extracted text too short (%d chars)", len(text))
         return None

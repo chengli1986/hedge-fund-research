@@ -1180,3 +1180,48 @@ class TestMsciLayout:
         assert paths == ["primary"]
         assert "factor index is built" in text
         assert "MSCI menu" not in text and "Footer links" not in text
+
+
+class TestBaillieGiffordTranscript:
+    """2026-10-28 two Vinted interview pages (ic-article, video) were saved as
+    the 280-char "Watch ... here" line plus the author bio and declined by the
+    summariser. The page carries the whole interview (26K chars, 92 paragraphs)
+    in <section aria-label="Transcript">, but as HTML-escaped text, so
+    `main p` matched none of it."""
+    ESCAPED = ("&lt;p&gt;&lt;strong&gt;Robert Natzler (RN):&lt;/strong&gt; Vinted is an online "
+               "second-hand marketplace based in Lithuania. " + "It took off after 2017. " * 10
+               + "&lt;/p&gt;&lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;p&gt;&lt;strong&gt;MD:&lt;/strong&gt; "
+               "We have a strong cost orientation.&lt;/p&gt;")
+
+    def _page(self, transcript: str) -> str:
+        return ("<html><body><main>"
+                "<p>Watch short highlights from our conversation with Vinted CFO here.</p>"
+                f'<section class="Transcript_seoOnly__mQuLB" aria-label="Transcript"><div>{transcript}</div></section>'
+                "<p>Robert joined Baillie Gifford in 2015 and is an investment manager.</p>"
+                "</main></body></html>")
+
+    def _run(self, tmp_path, monkeypatch, html):
+        import fetch_content as fc
+        monkeypatch.setattr(fc, "CONTENT_DIR", tmp_path)
+        resp = MagicMock(status_code=200, text=html); resp.raise_for_status = lambda: None
+        monkeypatch.setattr(fc.requests, "get", lambda *a, **k: resp)
+        out = fc._fetch_content_baillie_gifford({"id": "bg-v", "url": "https://www.bailliegifford.com/x"})
+        return out and out[0].read_text()
+
+    def test_the_escaped_transcript_is_saved_as_paragraphs(self, tmp_path, monkeypatch):
+        text = self._run(tmp_path, monkeypatch, self._page(self.ESCAPED))
+        lines = text.splitlines()
+        assert "Robert Natzler (RN): Vinted is an online second-hand marketplace" in text
+        assert "MD: We have a strong cost orientation." in lines
+        assert "<p>" not in text and "&lt;" not in text
+        assert lines[0].startswith("Watch short highlights")
+
+    def test_a_page_without_a_transcript_is_unchanged(self, tmp_path, monkeypatch):
+        html = ("<html><body><main><p>" + "Charting the trends beyond AI. " * 10 + "</p></main></body></html>")
+        text = self._run(tmp_path, monkeypatch, html)
+        assert text == ("Charting the trends beyond AI. " * 10).strip()
+
+    def test_a_transcript_in_real_paragraphs_is_not_saved_twice(self, tmp_path, monkeypatch):
+        real = "<p>RN: " + "Vinted is a marketplace. " * 10 + "</p>"
+        text = self._run(tmp_path, monkeypatch, self._page(real))
+        assert text.count("RN: Vinted is a marketplace.") == 1
