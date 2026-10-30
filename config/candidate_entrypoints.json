@@ -1820,6 +1820,40 @@
         }
       ],
       "rejected_pages": []
+    },
+    "fairtree": {
+      "last_discovered_at": "2026-10-30T09:03:07.937742+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://www.fairtree.com/resource-hub/insight/what-if-the-best-opportunities-never-list/",
+          "final_score": 0.8843,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.7143,
+          "gate_penalty": 0.15,
+          "active": true
+        },
+        {
+          "url": "https://www.fairtree.com",
+          "final_score": 0.7,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.6,
+          "gate_penalty": 0.15,
+          "active": false
+        },
+        {
+          "url": "https://www.fairtree.com/about-us/stewardship/",
+          "final_score": 0.62,
+          "domain_score": 1.0,
+          "path_score": 0.0,
+          "structure_score": 0.8333,
+          "gate_penalty": 0.15,
+          "active": false
+        }
+      ],
+      "rejected_pages": []
     }
   }
 }

@@ -888,8 +888,8 @@
     "rss_url": null,
     "official_domain": null,
     "discovery_method": "seed",
-    "notes": "Re-confirmed: still 403 EC2-blocked, permanent policy block",
-    "last_deep_analyzed_at": "2026-09-11T01:30:00Z",
+    "notes": "Rejected stays: Global Insights mostly undated teasers",
+    "last_deep_analyzed_at": "2026-10-30T01:03:59Z",
     "quality": "MEDIUM",
     "topics": "private equity, credit, real assets, macro",
     "strategy_tags": [
@@ -4503,11 +4503,11 @@
     "name": "Fairtree",
     "homepage_url": "https://www.fairtree.com",
     "source": "manual",
-    "status": "discovered",
+    "status": "visitable",
     "strategy_tags": [
-      "multi_asset",
-      "fixed_income",
-      "emerging_markets"
+      "private_equity",
+      "equity",
+      "multi_asset"
     ],
     "research_url": "https://www.fairtree.com/resource-hub/insight/what-if-the-best-opportunities-never-list/",
     "official_domain": "www.fairtree.com",
@@ -4543,9 +4543,75 @@
         "path": "resource-hub/commentary/fairtree-global-emerging-markets-fund-q3-2026-commentary"
       }
     ],
-    "status_since": "2026-10-29T09:01:15.496548+08:00",
+    "status_since": "2026-10-30T09:03:07.937762+08:00",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-10-29T09:01:06.450615+08:00",
-    "added_at": "2026-10-29"
+    "added_at": "2026-10-29",
+    "is_publicly_accessible": true,
+    "has_article_index": true,
+    "last_screened_at": "2026-10-30T09:03:03.769943+08:00",
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 0,
+      "article_tags": 0,
+      "time_tags": 0,
+      "date_patterns": 1,
+      "h2_tags": 5,
+      "article_signals": 0
+    },
+    "screening_reason": "Research index detected",
+    "fit_score": 0.8843,
+    "last_validated_at": "2026-10-30T09:03:07.937742+08:00",
+    "last_deep_analyzed_at": "2026-10-30T01:03:59Z",
+    "quality": "MEDIUM",
+    "quality_score": 0.55,
+    "topics": "private markets, equity, income",
+    "notes": "Open thought leadership, undated list, sales-tilted"
+  },
+  {
+    "id": "madison-investments",
+    "name": "Madison Investments",
+    "homepage_url": "https://madisoninvestments.com",
+    "source": "manual",
+    "status": "discovered",
+    "strategy_tags": [
+      "equity",
+      "fixed_income",
+      "multi_asset"
+    ],
+    "research_url": "https://madisoninvestments.com/insights/",
+    "rss_url": "https://madisoninvestments.com/feed/",
+    "official_domain": "madisoninvestments.com",
+    "research_links": [
+      {
+        "url": "https://madisoninvestments.com/insights/",
+        "label": "Insights",
+        "path": "insights"
+      },
+      {
+        "url": "https://madisoninvestments.com/category/insights/videos/",
+        "label": "Videos",
+        "path": "category/insights/videos"
+      },
+      {
+        "url": "https://madisoninvestments.com/category/insights/commentary/",
+        "label": "Commentary",
+        "path": "category/insights/commentary"
+      },
+      {
+        "url": "https://madisoninvestments.com/category/insights/white-papers/",
+        "label": "White Papers",
+        "path": "category/insights/white-papers"
+      },
+      {
+        "url": "https://madisoninvestments.com/category/insights/in-the-news-insights/",
+        "label": "In the News",
+        "path": "category/insights/in-the-news-insights"
+      }
+    ],
+    "status_since": "2026-10-30T09:04:01.443228+08:00",
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-10-30T09:04:01.443187+08:00"
   }
 ]
