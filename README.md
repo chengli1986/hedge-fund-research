@@ -12,7 +12,7 @@ Tracks and aggregates research insights, market commentary, and papers from top 
 | **GMO LLC** | JSON API | Quarterly | Value contrarian, 7-Year forecasts |
 | **Oaktree Capital** | Playwright (CSR) | Monthly | Howard Marks memos, credit/distressed |
 | **ARK Invest** | RSS feed | Weekly | Analyst Research, Market Commentary. Article pages 403 this server since 2026-10-13 → `known_block` (decided 2026-10-16): listed with title only, health probe reports it as KNOWN, not failing |
-| **Cambridge Associates** | SSR (requests) | Monthly | Private equity, venture capital, private credit |
+| **Cambridge Associates** | SSR (requests) | Quarterly | Private equity, venture capital, private credit |
 | **Wellington Management** | Playwright (AEM) | Weekly | Equity, macro, fixed income, multi-asset, ESG |
 | **Amundi Research Center** | RSS | Weekly | Macro, ESG, emerging markets, fixed income |
 | **T. Rowe Price** | Playwright (AEM) | Weekly | Equity, fixed income, active management |
