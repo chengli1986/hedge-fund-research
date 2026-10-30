@@ -4610,8 +4610,9 @@
         "path": "category/insights/in-the-news-insights"
       }
     ],
-    "status_since": "2026-10-30T09:04:01.443228+08:00",
+    "status_since": "2026-10-30T09:04:14.349743+08:00",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-10-30T09:04:01.443187+08:00"
+    "last_discovered_at": "2026-10-30T09:04:01.443187+08:00",
+    "added_at": "2026-10-30"
   }
 ]
