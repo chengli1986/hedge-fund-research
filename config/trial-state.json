@@ -10099,6 +10099,24 @@
           ],
           "error": null,
           "fetcher_used": false
+        },
+        "2026-10-30": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 0,
+          "article_urls": [
+            "https://www.bnpparibas-am.com/en-au/financial-advisors/front-of-mind/",
+            "https://www.bnpparibas-am.com/en-au/financial-advisors/portfolio-perspectives/",
+            "https://www.bnpparibas-am.com/en-au/financial-advisors/forward-thinking/",
+            "https://www.bnpparibas-am.com/en-au/financial-advisors/front-of-mind/take-two-market-performance-diverges/",
+            "https://www.bnpparibas-am.com/en-au/financial-advisors/front-of-mind/view-from-the-markets-why-have-emerging-market-tech-stocks-been-so-volatile/",
+            "https://www.bnpparibas-am.com/en-au/financial-advisors/front-of-mind/take-two-imf-lifts-global-growth-forecast-us-inflation-rises/",
+            "https://www.bnpparibas-am.com/en-au/financial-advisors/front-of-mind/view-from-the-markets-a-critical-earnings-season-approaches/",
+            "https://www.bnpparibas-am.com/en-au/financial-advisors/front-of-mind/take-two-fed-signals-further-rate-increase-us-stocks-hit-record-high/",
+            "https://www.bnpparibas-am.com/en-au/financial-advisors/front-of-mind/view-from-the-markets-is-high-yield-credit-flashing-a-warning-sign/"
+          ],
+          "error": null,
+          "fetcher_used": false
         }
       },
       "auto_decided": false,
@@ -10224,6 +10242,14 @@
           "error": "No new (un-sampled) article links available",
           "day": 5,
           "date": "2026-10-29"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 6,
+          "date": "2026-10-30"
         }
       ]
     },
@@ -10329,6 +10355,25 @@
             "https://www.cfm.com/the-hidden-beta-in-dip-trade/",
             "https://www.cfm.com/beating-the-market-is-even-harder-than-you-think-monkeys-with-dartboards/",
             "https://www.cfm.com/seven-degrees-of-market-structure/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-10-30": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.cfm.com/philip-seager-speaks-on-the-most-important-thing-podcast/",
+            "https://www.cfm.com/2026-midterms-whats-old-in-washington/",
+            "https://www.cfm.com/a-systematic-view-of-how-liquidity-shapes-markets/",
+            "https://www.cfm.com/optimists-vs-pessimists/",
+            "https://www.cfm.com/ai-will-help-cfm-discover-new-sources-of-alpha/",
+            "https://www.cfm.com/real-but-not-settled/",
+            "https://www.cfm.com/cfm-talks-to-xavier-gabaix/",
+            "https://www.cfm.com/the-wisdom-of-crowds-a-mid-year-review/",
+            "https://www.cfm.com/the-hidden-beta-in-dip-trade/",
+            "https://www.cfm.com/beating-the-market-is-even-harder-than-you-think-monkeys-with-dartboards/"
           ],
           "error": null,
           "fetcher_used": true
@@ -10468,6 +10513,25 @@
           "error": "No new (un-sampled) article links available",
           "day": 5,
           "date": "2026-10-29"
+        },
+        {
+          "sampled": 1,
+          "articles": [
+            {
+              "url": "https://www.cfm.com/philip-seager-speaks-on-the-most-important-thing-podcast/",
+              "relevance": 0.3,
+              "depth": 0.0,
+              "extractable": 0.2,
+              "overall": 0.16,
+              "notes": "Landing page for podcast appearance with no substantive content; mostly navigation, disclaimers, and cookie policy boilerplate"
+            }
+          ],
+          "avg_score": 0.16,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 6,
+          "date": "2026-10-30"
         }
       ]
     },
@@ -10566,6 +10630,25 @@
             "https://www.cbreim.com/insights/articles/chart-of-the-week",
             "https://www.cbreim.com/insights/articles/infrastructure-quarterly-q3-2026",
             "https://www.cbreim.com/insights/articles/infrastructure-quarterly",
+            "https://www.cbreim.com/insights/articles/diversity-in-living-portfolios-unlocks-performance",
+            "https://www.cbreim.com/insights/articles/us-reindustrialization-and-ai-reinforce-each-other-while-competing-for-shared-resources",
+            "https://www.cbreim.com/insights/articles/uk-single-family-housing-institutional-opportunity",
+            "https://www.cbreim.com/insights/articles/macro-house-view-q3-2026",
+            "https://www.cbreim.com/insights/articles/value-creation-under-resource-constraints-apac",
+            "https://www.cbreim.com/insights/articles/europes-strategic-autonomy-imperative-is-an-infrastructure-delivery-challenge",
+            "https://www.cbreim.com/insights/articles/why-affordable-housing-is-becoming-a-portfolio-anchor-for-dc-capital"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-10-30": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.cbreim.com/insights/articles/chart-of-the-week",
+            "https://www.cbreim.com/insights/articles/infrastructure-quarterly",
+            "https://www.cbreim.com/insights/articles/infrastructure-quarterly-q3-2026",
             "https://www.cbreim.com/insights/articles/diversity-in-living-portfolios-unlocks-performance",
             "https://www.cbreim.com/insights/articles/us-reindustrialization-and-ai-reinforce-each-other-while-competing-for-shared-resources",
             "https://www.cbreim.com/insights/articles/uk-single-family-housing-institutional-opportunity",
@@ -10712,9 +10795,17 @@
           "error": "No new (un-sampled) article links available",
           "day": 5,
           "date": "2026-10-29"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 6,
+          "date": "2026-10-30"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-10-29"
+  "last_summary_sent_date": "2026-10-30"
 }
