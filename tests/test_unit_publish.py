@@ -1033,6 +1033,44 @@ class TestDuplicatesAreNotRendered:
         assert "dup1" not in html
 
 
+class TestListingTeaser:
+    """2026-10-30: ARK's pages refuse this server, so its rows had a bare
+    headline although the feed carries a one-paragraph blurb. A row the model
+    never summarised now shows that blurb under the headline -- the
+    publisher's own words, untranslated, for deciding whether to open the
+    original. It is never sent to the model (user, 2026-10-30).
+    """
+    BLURB = "Quantum computing has become a hot topic in the Bitcoin ecosystem."
+    TITLE_ONLY = dict(SAMPLE_ARTICLES[1], id="ark1", source_id="ark-invest",
+                      summary=BLURB)
+
+    def test_a_title_only_row_shows_its_blurb(self):
+        html = generate_html([self.TITLE_ONLY])
+        assert self.BLURB in html
+        assert "出版方简介" in html and "Publisher blurb" in html
+
+    def test_a_summarised_row_shows_the_analysis_not_the_blurb(self):
+        done = dict(SAMPLE_ARTICLES[0], id="s1", summary=self.BLURB)
+        assert self.BLURB not in generate_html([done])
+
+    def test_a_row_without_a_blurb_renders_no_empty_teaser(self):
+        bare = dict(self.TITLE_ONLY, summary="  ")
+        assert 'class="listing-teaser"' not in generate_html([bare])
+
+    def test_the_wordpress_footer_is_dropped(self):
+        row = dict(self.TITLE_ONLY, summary=(
+            "France's fiscal credibility is weakening. The post The French "
+            "budgetary crisis appeared first on Fulcrum Asset Management."))
+        html = generate_html([row])
+        assert "France&#x27;s fiscal credibility is weakening." in html
+        assert "appeared first on" not in html
+
+    def test_the_blurb_is_escaped(self):
+        row = dict(self.TITLE_ONLY, summary='<img src=x onerror="alert(1)">')
+        html = generate_html([row])
+        assert "<img src=x" not in html
+
+
 class TestFutureDatedArticles:
     """A month-granular date must not park an article at the top of the page
     for the rest of the month (audit B7).

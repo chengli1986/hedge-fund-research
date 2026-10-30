@@ -693,6 +693,28 @@ def _tag_chips(a: dict) -> str:
     return f'<div class="tv-chips">{"".join(chips)}</div>' if chips else ""
 
 
+def _listing_teaser(a: dict) -> str:
+    """The listing's own blurb, for a row the model never summarised.
+
+    ARK's pages refuse this server (known_block since 2026-10-13) while its
+    feed still carries a paragraph per post, so those rows were a bare
+    headline. Shown untranslated as the publisher's words, to decide whether
+    to open the original; never sent to the model, which declines publisher
+    blurbs anyway (user, 2026-10-30). WordPress feeds end the blurb with
+    "The post <title> appeared first on <site>."; that line is dropped.
+    """
+    text = _WP_FEED_FOOTER.sub("", (a.get("summary") or "").strip())
+    if not text:
+        return ""
+    return ('<p class="listing-teaser"><span class="teaser-label">'
+            '<span class="lang-en">Publisher blurb</span>'
+            '<span class="lang-zh" style="display:none">出版方简介</span></span> '
+            f'{_esc(text)}</p>')
+
+
+_WP_FEED_FOOTER = re.compile(r"\s*The post .+ appeared first on .+$", re.DOTALL)
+
+
 def _taxonomy_payload() -> dict:
     """Group and tag names for the rail, in taxonomy order."""
     return {"groups": [{"key": g, "en": en, "zh": zh, "color": TAG_GROUP_COLORS[g],
@@ -907,7 +929,7 @@ def _article_card(a: dict, show_takeaway: bool = False, *, url_reused: bool = Fa
             )
     else:
         toggle = '<span class="index-chip">Index</span>'
-        summary_html = ""
+        summary_html = _listing_teaser(a)
         inline_takeaway = ""
 
     # Month-granularity dates are normalised to the month's LAST day upstream
@@ -1442,6 +1464,13 @@ body.hide-older article.pool-article[data-age="older"] {{ display: none !importa
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   overflow: hidden;
 }}
+.listing-teaser {{
+  margin: 4px 0 2px 60px; font-size: 0.82rem; line-height: 1.45;
+  color: var(--text-muted);
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+  overflow: hidden;
+}}
+.teaser-label {{ font-size: 0.72rem; opacity: 0.8; margin-right: 4px; }}
 /* Hide inline takeaway when article lives inside the Timeline wrapper.
    The same <article> card is shared across views; keeps Timeline dense. */
 .timeline-wrap .inline-takeaway {{
@@ -1546,14 +1575,14 @@ body.hide-older article.pool-article[data-age="older"] {{ display: none !importa
 @media (max-width: 980px) {{
   .board {{ grid-template-columns: 1fr; }}
   .summary-panel {{ margin-left: 32px; }}
-  .inline-takeaway {{ margin-left: 32px; }}
+  .inline-takeaway, .listing-teaser {{ margin-left: 32px; }}
 }}
 @media (max-width: 720px) {{
   .container {{ padding: 14px 14px 22px; }}
   .row-main {{ flex-wrap: wrap; }}
   .headline {{ white-space: normal; overflow: visible; }}
   .summary-panel {{ margin-left: 0; }}
-  .inline-takeaway {{ margin-left: 0; }}
+  .inline-takeaway, .listing-teaser {{ margin-left: 0; }}
   .fund-links li {{ grid-template-columns: 1fr; }}
   .view-bar {{ overflow-x: auto; }}
 }}
