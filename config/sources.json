@@ -153,7 +153,7 @@
       "short_name": "Cambridge",
       "url": "https://www.cambridgeassociates.com/insights/private-investments/",
       "method": "ssr",
-      "frequency": "monthly",
+      "frequency": "quarterly",
       "description": "Institutional investment advisor. Private equity, venture capital, endowment strategies.",
       "notable_authors": [],
       "expected_hostname": "cambridgeassociates.com",
