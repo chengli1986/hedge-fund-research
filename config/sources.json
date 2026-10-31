@@ -1108,6 +1108,29 @@
         "date": "author.date"
       },
       "listing_template_active": true
+    },
+    {
+      "id": "bnp-paribas-am",
+      "strategy_tags": [
+        "multi_asset",
+        "fixed_income",
+        "equity",
+        "macro"
+      ],
+      "name": "BNP Paribas Asset Management",
+      "short_name": "BNP Paribas AM",
+      "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/feed/",
+      "method": "rss",
+      "frequency": "weekly",
+      "description": "Paris-based asset management arm of BNP Paribas (~€1.7T AUM incl. advisory as of 30 June 2026), one of Europe's three largest managers after absorbing AXA Investment Managers in 2025-26. Broad multi-asset, fixed income and equity franchise with a large long-term-savings business for insurers and pension funds, ~€300B in alternatives, and a long-standing sustainable-investing focus.",
+      "notable_authors": [],
+      "expected_hostname": "bnpparibas-am.com",
+      "max_articles": 10,
+      "listing_template": {
+        "type": "rss_feed",
+        "feed": "rss_url"
+      },
+      "listing_template_active": true
     }
   ]
 }

@@ -2535,6 +2535,41 @@ def _fetch_content_rbc_bluebay(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+BNP_PARIBAS_AM_MIN_CONTENT = 500  # Refuse a teaser/video page whose only text is a short intro
+
+
+def _fetch_content_bnp_paribas_am(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch BNP Paribas Asset Management insight content via requests (SSR WordPress).
+
+    The listing is the en-au financial-advisors WordPress RSS feed (a listing
+    template). Article pages are server-rendered; the body sits in
+    `article` (`div.entry-content`, plus `div.bnp-basic-content` on the
+    "Talking Heads" pages). The ~4.6K-char regulatory `div.disclaimer-text`
+    lives outside `article`, and is removed anyway in case a layout moves it in.
+    """
+    url = article["url"]
+    log.info("  BNP Paribas AM: fetching article page %s", url)
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  BNP Paribas AM: fetch failed: %s", e)
+        return None
+
+    soup = BeautifulSoup(resp.text, "html.parser")
+    for tag in soup.select("div.disclaimer-text, div.disclaimer-content, div.post-meta"):
+        tag.decompose()
+    text = _normalize_html(str(soup), "article p, article li")
+    if not _check_min_content_length(text, BNP_PARIBAS_AM_MIN_CONTENT):
+        log.warning("  BNP Paribas AM: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  BNP Paribas AM: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -2581,6 +2616,7 @@ CONTENT_FETCHERS = {
     "hamilton-lane": _fetch_content_hamilton_lane,
     "fulcrum-asset-management": _fetch_content_fulcrum,
     "rbc-bluebay": _fetch_content_rbc_bluebay,
+    "bnp-paribas-am": _fetch_content_bnp_paribas_am,
 }
 
 

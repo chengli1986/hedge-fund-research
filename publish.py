@@ -79,6 +79,7 @@ BADGE_COLORS: dict[str, str] = {
     "hamilton-lane": "#6014e8",             # Hamilton Lane vivid blue-violet (the muted blue, violet and green bands are all full; a grid search over every WCAG-AA colour with HLS saturation <=0.85 put this one farthest from the palette: min RGB dist 82.7 across all 42 existing colors — 82.7 to #7a4cb1 JPMAM violet, 84.2 to #1f49e0 MSCI cobalt, 89.7 to #3949ab Matthews indigo, 129 to #301070 Blue Owl midnight; WCAG AAA 7.6:1 on white)
     "fulcrum-asset-management": "#c018e8",  # Fulcrum vivid violet-magenta (same grid search as Hamilton Lane over WCAG-AA colours with HLS saturation <=0.85: min RGB dist 75.2 across all 43 existing colors — 75.2 to #a31fa3 Loomis Sayles orchid, 91.2 to #9b6be0 GMO lavender, 96.1 to #6014e8 Hamilton Lane; WCAG AA 4.6:1 on white)
     "rbc-bluebay": "#1010b8",               # RBC BlueBay deep royal blue (brand blue; the same grid search with Fulcrum added: min RGB dist 71.2 across all 44 colors — 71.2 to #1f49e0 MSCI cobalt, 71.4 to #3949ab Matthews indigo, 78.8 to #301070 Blue Owl midnight; WCAG AAA 11.7:1 on white)
+    "bnp-paribas-am": "#e01818",            # BNP Paribas AM scarlet (the brand green band is full — nearest green-dominant AA colour sits only 50 from the palette; the same grid search with RBC BlueBay added: min RGB dist 67.1 across all 45 colors — 67.1 to #c45000 ARK orange, 72.6 to #e8601c Amundi orange, 73.4 to #c2185b Research Affiliates pink; WCAG AA 4.9:1 on white)
 }
 
 INITIAL_VISIBLE = 20
@@ -407,6 +408,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "总部位于伦敦，2001 年以 BlueBay 之名创立，2010 年被加拿大皇家银行收购，现为 RBC 环球资产管理（RBC GAM）在北美以外的业务品牌；RBC GAM 整体管理资产约 $598B（截至 2026-06-30）。以主动信用、高收益、新兴市场债务与全球宏观债券策略见长，另有股票与另类投资能力。",
         "notable_en": "One of Europe's best-known credit and emerging-market debt houses; publishes frequent macro and fixed-income commentary, the \"Dollars and Sense\" podcast and monthly \"Markets with Mike\" webinars.",
         "notable_zh": "欧洲知名的信用与新兴市场债务管理人之一；频繁发布宏观与固收评论，并有 \"Dollars and Sense\" 播客和月度 \"Markets with Mike\" 网络研讨会。",
+    },
+    "bnp-paribas-am": {
+        "founded": "2007", "aum": "~€1.7T", "hq": "Paris, France",
+        "type_en": "Asset Manager (Bank-Owned, Multi-Asset)", "type_zh": "资产管理（银行系，多资产）",
+        "desc_zh": "法国巴黎银行集团旗下资产管理公司，总部巴黎，管理资产约 €1.7T（含顾问资产，截至 2026-06-30），2025 年收购并于 2026 年初整合安盛投资管理（AXA IM）后跻身欧洲前三大资管。业务覆盖多资产、固定收益与股票，为保险和养老金提供长期储蓄管理，另类资产约 €300B，长期以可持续投资为特色。",
+        "notable_en": "Absorbed AXA Investment Managers (acquisition completed 1 July 2025), becoming a top-3 European asset manager. Chief Market Strategist Daniel Morris writes the weekly \"View from the markets\" and \"Take Two\" market notes; multi-asset and emerging-market-debt teams publish regular investment views.",
+        "notable_zh": "2025 年 7 月 1 日完成收购安盛投资管理（AXA IM），跻身欧洲前三大资管。首席市场策略师 Daniel Morris 撰写每周 \"View from the markets\" 与 \"Take Two\" 市场点评；多资产与新兴市场债团队定期发布投资观点。",
     },
 }
 
