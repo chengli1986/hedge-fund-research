@@ -3638,7 +3638,7 @@
     "name": "Muzinich & Co",
     "homepage_url": "https://www.muzinich.com/opinions",
     "source": "manual",
-    "status": "inaccessible",
+    "status": "visitable",
     "strategy_tags": [
       "fixed_income",
       "private_credit",
@@ -3649,13 +3649,65 @@
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-10-15T09:00:08.643495+08:00",
-    "status_since": "2026-10-15T09:00:39.952786+08:00",
+    "status_since": "2026-10-31T09:06:18.130865+08:00",
     "quality": "MEDIUM",
     "quality_score": 0.62,
     "topics": "credit, high yield, EM, CLOs, macro",
     "notes": "[auto-stall 2026-10-15] seed->inaccessible after 50d stuck Weekly credit comment; short pieces, T&C gate",
     "last_deep_analyzed_at": "2026-10-11T01:00:53Z",
-    "added_at": "2026-08-25"
+    "added_at": "2026-08-25",
+    "template_attempts": [
+      {
+        "at": "2026-10-31T01:06:11+00:00",
+        "type": "card_list",
+        "spec": {
+          "type": "card_list",
+          "fetch": "requests",
+          "card": "div.card",
+          "link": "a.title",
+          "date": "p.category-date",
+          "date_separator": "|",
+          "date_part": "after",
+          "sort": "date_desc"
+        },
+        "listing_url": "https://www.muzinich.com/opinions",
+        "ok": true,
+        "rows": 10,
+        "dated": 10,
+        "problems": [],
+        "sample": [
+          {
+            "title": "Aviation finance – a new flightpath for investors",
+            "url": "https://www.muzinich.com/opinions/2026-10-27-a-new-flight-path-for-investors?utm_source=Insight&utm_medium=Website&utm_campaign=the_case_for_aviation_finance_in_institutional_portfolios",
+            "date": "2026-10-27"
+          },
+          {
+            "title": "Muzinich Weekly Market Comment: Always Look on the Bright Side of Life",
+            "url": "https://www.muzinich.com/opinions/muzinich-weekly-market-comment?utm_source=Insight&utm_medium=Website&utm_campaign=weekly_comment_26_October_2026",
+            "date": "2026-10-26"
+          },
+          {
+            "title": "Muzinich Weekly Market Comment: Occam’s Razor",
+            "url": "https://www.muzinich.com/opinions/muzinich-weekly-market-comment-19-10-26?utm_source=Insight&utm_medium=Website&utm_campaign=weekly_comment_19_October_2026",
+            "date": "2026-10-19"
+          }
+        ]
+      }
+    ],
+    "listing_template": {
+      "type": "card_list",
+      "fetch": "requests",
+      "card": "div.card",
+      "link": "a.title",
+      "date": "p.category-date",
+      "date_separator": "|",
+      "date_part": "after",
+      "sort": "date_desc"
+    },
+    "listing_url": "https://www.muzinich.com/opinions",
+    "expected_hostname": "muzinich.com",
+    "synthesis_attempted_at": "2026-10-31T01:06:18.130827+00:00",
+    "synthesis_outcome": "success"
   },
   {
     "id": "capital-fund-management",
