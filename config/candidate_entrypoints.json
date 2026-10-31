@@ -1854,6 +1854,40 @@
         }
       ],
       "rejected_pages": []
+    },
+    "madison-investments": {
+      "last_discovered_at": "2026-10-31T09:03:13.020107+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://madisoninvestments.com/insights/",
+          "final_score": 0.895,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.75,
+          "gate_penalty": 0.15,
+          "active": true
+        },
+        {
+          "url": "https://madisoninvestments.com/who-we-serve/credit-unions/",
+          "final_score": 0.76,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.8,
+          "gate_penalty": 0.15,
+          "active": false
+        },
+        {
+          "url": "https://madisoninvestments.com/strategies/fixed-income/core-bond/",
+          "final_score": 0.76,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.8,
+          "gate_penalty": 0.15,
+          "active": false
+        }
+      ],
+      "rejected_pages": []
     }
   }
 }

@@ -497,10 +497,10 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.9,
-    "last_deep_analyzed_at": "2026-09-12T01:03:13.173181Z",
+    "last_deep_analyzed_at": "2026-10-31T01:03:53Z",
     "quality": "MEDIUM",
     "topics": "macro, equity, fixed income, alternatives, geopolitics",
-    "notes": "Index gated/subscribe-wall; article URLs still fetchable",
+    "notes": "Re-check inconclusive: list page is JS shell",
     "quality_score": 0.65,
     "research_links": [
       {
@@ -2408,8 +2408,8 @@
       "multi_asset"
     ],
     "topics": "real assets, REITs, infrastructure, preferred securities",
-    "notes": "WebFetch still 403 WAF (recheck 2026-08-29); trial-validated fetcher unaffected",
-    "last_deep_analyzed_at": "2026-08-29T01:10:00Z",
+    "notes": "Re-check blocked: insights page 403 to WebFetch",
+    "last_deep_analyzed_at": "2026-10-31T01:03:53Z",
     "quality": "MEDIUM",
     "quality_score": 0.55,
     "synthesis_attempted_at": "2026-07-01T11:05:50.804223+00:00",
@@ -4574,10 +4574,10 @@
     "name": "Madison Investments",
     "homepage_url": "https://madisoninvestments.com",
     "source": "manual",
-    "status": "discovered",
+    "status": "visitable",
     "strategy_tags": [
-      "equity",
       "fixed_income",
+      "equity",
       "multi_asset"
     ],
     "research_url": "https://madisoninvestments.com/insights/",
@@ -4610,9 +4610,45 @@
         "path": "category/insights/in-the-news-insights"
       }
     ],
-    "status_since": "2026-10-30T09:04:14.349743+08:00",
+    "status_since": "2026-10-31T09:03:13.020131+08:00",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-10-30T09:04:01.443187+08:00",
-    "added_at": "2026-10-30"
+    "added_at": "2026-10-30",
+    "is_publicly_accessible": true,
+    "has_article_index": true,
+    "last_screened_at": "2026-10-31T09:03:03.732598+08:00",
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 1,
+      "article_tags": 3,
+      "time_tags": 0,
+      "date_patterns": 3,
+      "h2_tags": 1,
+      "article_signals": 2
+    },
+    "screening_reason": "Research index detected",
+    "fit_score": 0.895,
+    "last_validated_at": "2026-10-31T09:03:13.020107+08:00",
+    "quality": "MEDIUM",
+    "quality_score": 0.62,
+    "topics": "fixed income, equity, multi-asset",
+    "notes": "Free monthly/quarterly PM commentary, sparse index",
+    "last_deep_analyzed_at": "2026-10-31T01:03:53Z"
+  },
+  {
+    "id": "doubleline",
+    "name": "DoubleLine Capital",
+    "homepage_url": "https://doubleline.com",
+    "source": "manual",
+    "status": "seed",
+    "strategy_tags": [
+      "fixed_income",
+      "macro"
+    ],
+    "official_domain": "doubleline.com",
+    "research_links": [],
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-10-31T09:03:54.179951+08:00"
   }
 ]
