@@ -3662,17 +3662,17 @@
     "name": "Capital Fund Management (CFM)",
     "homepage_url": "https://www.cfm.com",
     "source": "manual",
-    "status": "visitable",
+    "status": "promoted",
     "strategy_tags": [
       "quant",
       "macro"
     ],
-    "status_since": "2026-10-25T02:06:24.660980+08:00",
+    "status_since": "2026-10-31T09:04:25.100581+08:00",
     "last_deep_analyzed_at": "2026-10-05T01:00:40Z",
     "quality": "HIGH",
     "quality_score": 0.85,
     "topics": "quant, market microstructure, systematic trading",
-    "notes": "[auto-stall 2026-10-15] seed->inaccessible after 47d stuck RECOMMEND: quant/macro research, sampled article solid",
+    "notes": "RECOMMEND: trial passed (7/7 days with articles, quality=0.64)",
     "official_domain": "www.cfm.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
@@ -3717,7 +3717,9 @@
     "listing_url": "https://www.cfm.com/feed/",
     "expected_hostname": "cfm.com",
     "synthesis_attempted_at": "2026-10-24T18:06:24.655085+00:00",
-    "synthesis_outcome": "success"
+    "synthesis_outcome": "success",
+    "synthesis_priority": true,
+    "synthesis_priority_set_at": "2026-10-31T09:04:25.100626+08:00"
   },
   {
     "id": "northleaf-capital",
@@ -3966,17 +3968,17 @@
     "name": "CBRE Investment Management",
     "homepage_url": "https://www.cbreim.com/insights",
     "source": "manual",
-    "status": "visitable",
+    "status": "watchlist",
     "strategy_tags": [
       "real_assets",
       "macro"
     ],
-    "status_since": "2026-10-25T02:06:24.661013+08:00",
+    "status_since": "2026-10-31T09:04:49.852009+08:00",
     "last_deep_analyzed_at": "2026-10-12T01:00:37Z",
     "quality": "HIGH",
     "quality_score": 0.75,
     "topics": "real assets, infrastructure, macro, real estate",
-    "notes": "[auto-stall 2026-10-15] seed->inaccessible after 33d stuck RECOMMEND: ~weekly real assets/macro; bot 403, needs PW",
+    "notes": "Trial failed: low quality (0.47)",
     "added_at": "2026-09-11",
     "template_attempts": [
       {
@@ -4361,7 +4363,7 @@
     "name": "BNP Paribas Asset Management",
     "homepage_url": "https://www.bnpparibas-am.com/en-au/financial-advisors/insights/",
     "source": "manual",
-    "status": "visitable",
+    "status": "promoted",
     "strategy_tags": [
       "multi_asset",
       "fixed_income",
@@ -4472,7 +4474,7 @@
         "path": "en-au/financial-advisors/insights/tag/fixed-income"
       }
     ],
-    "status_since": "2026-10-25T09:00:19.645457+08:00",
+    "status_since": "2026-10-31T09:04:13.444674+08:00",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-10-24T09:00:33.783110+08:00",
     "added_at": "2026-10-24",
@@ -4496,7 +4498,9 @@
     "quality": "MEDIUM",
     "quality_score": 0.62,
     "topics": "macro, credit, equity, multi-asset, ETF flows",
-    "notes": "Weekly market commentary, data-backed, no dates in list"
+    "notes": "RECOMMEND: trial passed (7/7 days with articles, quality=0.71)",
+    "synthesis_priority": true,
+    "synthesis_priority_set_at": "2026-10-31T09:04:13.444732+08:00"
   },
   {
     "id": "fairtree",
