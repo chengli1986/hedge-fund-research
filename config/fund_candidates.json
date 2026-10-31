@@ -4224,7 +4224,45 @@
     "quality_score": 0.55,
     "topics": "emerging markets, macro, equity, fixed income",
     "notes": "[auto-stall 2026-10-15] seed->inaccessible after 19d stuck EM-focused insights; WAF 403, articles unverified",
-    "added_at": "2026-09-25"
+    "added_at": "2026-09-25",
+    "template_attempts": [
+      {
+        "at": "2026-10-31T18:01:39+00:00",
+        "type": "card_list",
+        "spec": {
+          "type": "card_list",
+          "fetch": "playwright",
+          "card": "a[href*=\"/insights/\"]",
+          "link": "self",
+          "wait_selector": "a[href*=\"/insights/\"]"
+        },
+        "listing_url": "https://ninetyone.com/en/insights",
+        "ok": false,
+        "rows": 0,
+        "problems": [
+          "TimeoutError: Page.goto: Timeout 30000ms exceeded.\nCall log:\n  - navigating to \"https://ninetyone.com/en/insights\", waiting until \"domcontentloaded\"\n"
+        ]
+      },
+      {
+        "at": "2026-10-31T18:02:40+00:00",
+        "type": "card_list",
+        "spec": {
+          "type": "card_list",
+          "fetch": "requests",
+          "card": "a[href*=\"/insights/\"]",
+          "link": "self"
+        },
+        "listing_url": "https://ninetyone.com/en/insights",
+        "ok": false,
+        "rows": 0,
+        "problems": [
+          "HTTPError: 403 Client Error: Forbidden for url: https://ninetyone.com/en/insights"
+        ]
+      }
+    ],
+    "synthesis_attempted_at": "2026-10-31T18:02:51.383271+00:00",
+    "synthesis_outcome": "failed",
+    "synthesis_failure_reason": "Cloudflare bot challenge on every route (2026-10-31): requests/curl get HTTP 403 'Just a moment...' for /en/insights, /en/rss, /rss.xml, /sitemap.xml, /robots.txt, regional /en/united-kingdom|united-states/insights; headless Chromium also gets 403 + Turnstile challenge page (title 'Just a moment...', goto timed out in try_template). No RSS/API reachable; no bypass attempted."
   },
   {
     "id": "hamilton-lane",
