@@ -1676,11 +1676,15 @@ def _strip_html_tags(text: str) -> str:
 def fetch_ark_invest(source: dict) -> list[dict]:
     """Fetch research articles from ARK Invest RSS feed.
 
-    RSS 2.0 XML at /feed (999 items). Filters to high-value categories:
-    Analyst Research, Market Commentary, White Papers.
+    RSS 2.0 XML at /feed (999 items). Filters to the same categories as the
+    listing template in sources.json (production runs the template; the weekly
+    A/B gate compares this fetcher against it, so the two lists must match --
+    tests/test_ark_category_parity.py). Six were added on 2026-10-30.
     pubDate is RFC 2822 format parsed via email.utils.parsedate_to_datetime.
     """
-    WANTED_CATEGORIES = {"analyst research", "market commentary", "white papers", "market insights"}
+    WANTED_CATEGORIES = {"analyst research", "market commentary", "white papers", "market insights",
+                         "newsletters", "crypto reports", "bitcoin brainstorm", "valuation models",
+                         "the brainstorm", "for your innovation"}
 
     resp = requests.get(source["url"], headers=HEADERS, timeout=30)
     resp.raise_for_status()
