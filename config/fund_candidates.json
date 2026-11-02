@@ -1935,7 +1935,7 @@
       "macro",
       "fixed_income"
     ],
-    "notes": "RECOMMEND: Free weekly EM/macro research, fresh thru May'26",
+    "notes": "RECOMMEND: Weekly macro (Temple), fresh Oct 2026",
     "research_url": "https://www.lazardassetmanagement.com/us/en_us/research-insights",
     "official_domain": "www.lazardassetmanagement.com",
     "research_links": [
@@ -2023,10 +2023,10 @@
     "screening_reason": "Research index detected",
     "fit_score": 0.94,
     "last_validated_at": "2026-05-04T09:00:19.804656+08:00",
-    "last_deep_analyzed_at": "2026-09-12T01:03:13.173181Z",
+    "last_deep_analyzed_at": "2026-11-02T01:04:03Z",
     "quality": "HIGH",
     "quality_score": 0.82,
-    "topics": "emerging markets, equity, macro, fixed income, ETFs, geopolitics",
+    "topics": "equity, EM, macro, fixed income, infrastructure",
     "synthesis_priority_set_at": "2026-06-12T09:03:52.684367+08:00",
     "synthesis_attempted_at": "2026-06-12T01:06:44.191476+00:00",
     "synthesis_outcome": "success",
@@ -4833,5 +4833,21 @@
     "quality_score": 0.7,
     "topics": "fixed income, macro, inflation, rates",
     "notes": "Free weekly updates+blog at /markets-insights/"
+  },
+  {
+    "id": "crescat-capital",
+    "name": "Crescat Capital",
+    "homepage_url": "https://www.crescat.net/",
+    "source": "manual",
+    "status": "seed",
+    "strategy_tags": [
+      "macro",
+      "equity"
+    ],
+    "rss_url": "https://www.crescat.net/feed/",
+    "official_domain": "www.crescat.net",
+    "research_links": [],
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-11-02T09:04:03.614301+08:00"
   }
 ]
