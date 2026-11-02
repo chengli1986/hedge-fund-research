@@ -192,23 +192,37 @@ EOF
 
 1. **抓到 ≥3 文章索引** — `fetch_articles.listing_fetcher(source)(source)` 返回 ≥3 articles（模板源走模板，其余走 `FETCHERS[id]`）
 2. **正文 ≥500 chars**（不是 100）— `_fetch_content_FUNDID` 返回 `ok: True` 且 `chars ≥ 500`
-3. **Haiku 质量抽检 relevance ≥ 0.6** — 复用 trial-manager 的质量评估：
+3. **Haiku 质量抽检 relevance ≥ 0.6** — 只给**上面这个新写的 `_fetch_content_FUNDID` 真能抓到正文的文章**打分
+   （2026-11-02 起；用户 11-01 定「以抓文本为主，播客只给题目」）。抓取器拒收的条目（播客预告、短 teaser）
+   在生产里只显示标题、从不生成摘要，所以也不参与打分——CFM 11-01/02 两次被通用抽样器里的两篇播客预告
+   拉到 0.43 就是这个原因：
    ```bash
    python3 - << 'EOF'
-   import sys; sys.path.insert(0, ".")
+   import sys, tempfile; sys.path.insert(0, ".")
    import importlib.util
+   from pathlib import Path
+   import fetch_articles
+   from fetch_content import _fetch_content_FUNDID  # 替换 FUNDID
    spec = importlib.util.spec_from_file_location("tm", "gmia-trial-manager.py")
    tm = importlib.util.module_from_spec(spec)
    spec.loader.exec_module(tm)
-   url = "RESEARCH_URL"  # 替换
-   result = tm.sample_article_quality(url)
-   print(f"sampled={result['sampled']} avg={result.get('avg_score',0):.2f}")
+   src = {"url": "RESEARCH_URL", "id": "FUNDID"}  # 替换；模板源用 sources.json 里那条完整 entry
+   articles = fetch_articles.listing_fetcher(src)(src)
+   with tempfile.TemporaryDirectory() as td:
+       result = tm.sample_fetched_content(articles, _fetch_content_FUNDID, Path(td))
+   print(f"sampled={result['sampled']} avg={result.get('avg_score',0):.2f} error={result.get('error')}")
+   for url, why in result.get("skipped", []):
+       print(f"  skipped {url} ({why})")
    for art in result.get("articles", []):
        print(f"  rel={art['relevance']:.1f} dep={art['depth']:.1f} ext={art['extractable']:.1f} → {art['notes'][:60]}")
    # 通过条件: avg_score >= 0.5 且至少 1 篇 relevance >= 0.6
    EOF
    ```
-   Haiku 抽 3 篇，**至少 1 篇 relevance ≥ 0.6** + **avg_score ≥ 0.5**。否则说明抓的不是研究内容（可能是 nav/footer）。
+   按列表顺序取前 3 篇正文 ≥500 字的文章，至少 1 篇 relevance ≥ 0.6，且 avg_score ≥ 0.5。有正文的不足 3 篇
+   （`error` 写「only N of M listed articles had a full body」）→ 不通过：这个源大部分只有标题，不算文字源。
+   **不要**改回 `tm.sample_article_quality(url)`——它用通用规则抽最新 3 篇，不管我们的抓取器收不收。
+   commit message 里把 skipped 的条目一并列出。
+
 4. **Method 字段 cross-check** — 模板源按 Phase 1「模板源」里的对照表核对 `method`；其余 grep `fetch_<id>` 函数实现，验证与 sources.json 的 `method` 一致：
    ```bash
    if grep -q "_get_playwright_page\|sync_playwright" fetch_articles.py | grep -A 30 "def fetch_FUNDID"; then

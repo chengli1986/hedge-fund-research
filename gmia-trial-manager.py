@@ -673,6 +673,19 @@ def sample_article_quality(research_url: str, trial: dict | None = None,
                 "js_only_checked": js_only_checked}
 
     # Step 3: batch assess via Haiku
+    result = assess_article_texts(article_texts)
+    result["js_only_count"] = js_only_count
+    result["js_only_checked"] = js_only_checked
+    return result
+
+
+def assess_article_texts(article_texts: list[tuple[str, str]]) -> dict:
+    """Score (url, text) pairs with one Haiku call.
+
+    Shared by the trial's generic sampler and auto-promote's gate
+    (sample_fetched_content). Returns dict with keys: sampled, articles,
+    avg_score, error.
+    """
     articles_block = ""
     for i, (url, text) in enumerate(article_texts, 1):
         articles_block += f"\n--- Article {i} (URL: {url}) ---\n{text}\n"
@@ -750,9 +763,51 @@ The "overall" score should be: 0.4*relevance + 0.4*depth + 0.2*extractable.
         "articles": scored_articles,
         "avg_score": round(avg_score, 3),
         "error": None,
-        "js_only_count": js_only_count,
-        "js_only_checked": js_only_checked,
     }
+
+
+# Auto-promote Phase 3 gate 2 asks the new content fetcher for >=500 chars; the
+# quality gate scores only bodies that clear the same bar.
+PROMOTE_MIN_BODY_CHARS = 500
+
+
+def sample_fetched_content(articles: list[dict], content_fetcher, content_dir,
+                           sample_size: int = SAMPLE_SIZE,
+                           min_chars: int = PROMOTE_MIN_BODY_CHARS) -> dict:
+    """Auto-promote's Haiku gate: score what the source's content fetcher keeps.
+
+    Runs ``content_fetcher(article, content_dir)`` (a fetch_content
+    ``_fetch_content_<id>``) over the listing in order and scores the first
+    ``sample_size`` articles it returns a body of at least ``min_chars`` for.
+    Anything it refuses -- podcast announcements, teasers -- is listed title-only
+    in production and never summarised, so it is not scored either (user,
+    2026-11-01: text first; CFM failed the generic sampler twice on two podcast
+    stubs). Fewer than ``sample_size`` full-text articles fails without a model
+    call: a source that is mostly title-only is not a text source.
+
+    Returns the assess_article_texts dict plus ``skipped``: [(url, reason)].
+    """
+    texts: list[tuple[str, str]] = []
+    skipped: list[tuple[str, str]] = []
+    for art in articles:
+        res = content_fetcher(art, content_dir)
+        if not res.get("ok"):
+            skipped.append((art["url"], str(res.get("error", "refused"))[:120]))
+        elif res.get("chars", 0) < min_chars:
+            skipped.append((art["url"], f"body {res.get('chars', 0)} chars < {min_chars}"))
+        else:
+            texts.append((art["url"], Path(res["path"]).read_text(encoding="utf-8")[:3000]))
+        if len(texts) >= sample_size:
+            break
+    if len(texts) < sample_size:
+        tried = len(texts) + len(skipped)
+        return {"sampled": len(texts), "articles": [], "avg_score": 0.0,
+                "error": f"only {len(texts)} of {tried} listed articles had a full body "
+                         f"(need {sample_size})",
+                "skipped": skipped}
+    result = assess_article_texts(texts)
+    result["skipped"] = skipped
+    return result
 
 
 # ── queue logic ───────────────────────────────────────────────────────────────
