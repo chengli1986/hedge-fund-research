@@ -1131,6 +1131,27 @@
         "feed": "rss_url"
       },
       "listing_template_active": true
+    },
+    {
+      "id": "capital-fund-management",
+      "strategy_tags": [
+        "quant",
+        "macro"
+      ],
+      "name": "Capital Fund Management (CFM)",
+      "short_name": "CFM",
+      "url": "https://www.cfm.com/feed/",
+      "method": "rss",
+      "frequency": "weekly",
+      "description": "Paris-based quantitative and systematic hedge fund manager (~$36B+ AUM as of Sep 2026), founded in 1991 by Jean-Pierre Aguilar. Physics-driven research culture under chairman Jean-Philippe Bouchaud (Science & Finance merged in 2000); began in managed futures / trend following and now runs a flagship multi-strategy program plus intraday trading for institutions and wealth managers.",
+      "notable_authors": [],
+      "expected_hostname": "cfm.com",
+      "max_articles": 10,
+      "listing_template": {
+        "type": "rss_feed",
+        "feed": "url"
+      },
+      "listing_template_active": true
     }
   ]
 }

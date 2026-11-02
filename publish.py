@@ -80,6 +80,7 @@ BADGE_COLORS: dict[str, str] = {
     "fulcrum-asset-management": "#c018e8",  # Fulcrum vivid violet-magenta (same grid search as Hamilton Lane over WCAG-AA colours with HLS saturation <=0.85: min RGB dist 75.2 across all 43 existing colors — 75.2 to #a31fa3 Loomis Sayles orchid, 91.2 to #9b6be0 GMO lavender, 96.1 to #6014e8 Hamilton Lane; WCAG AA 4.6:1 on white)
     "rbc-bluebay": "#1010b8",               # RBC BlueBay deep royal blue (brand blue; the same grid search with Fulcrum added: min RGB dist 71.2 across all 44 colors — 71.2 to #1f49e0 MSCI cobalt, 71.4 to #3949ab Matthews indigo, 78.8 to #301070 Blue Owl midnight; WCAG AAA 11.7:1 on white)
     "bnp-paribas-am": "#e01818",            # BNP Paribas AM scarlet (the brand green band is full — nearest green-dominant AA colour sits only 50 from the palette; the same grid search with RBC BlueBay added: min RGB dist 67.1 across all 45 colors — 67.1 to #c45000 ARK orange, 72.6 to #e8601c Amundi orange, 73.4 to #c2185b Research Affiliates pink; WCAG AA 4.9:1 on white)
+    "capital-fund-management": "#e00098",   # CFM hot magenta (grid search over WCAG-AA colours with all 46 existing: min RGB dist 69.3 — 69.3 to #a31fa3 Loomis purple, 72.1 to #c2185b Research Affiliates pink; WCAG AA 4.54:1 on white)
 }
 
 INITIAL_VISIBLE = 20
@@ -415,6 +416,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "法国巴黎银行集团旗下资产管理公司，总部巴黎，管理资产约 €1.7T（含顾问资产，截至 2026-06-30），2025 年收购并于 2026 年初整合安盛投资管理（AXA IM）后跻身欧洲前三大资管。业务覆盖多资产、固定收益与股票，为保险和养老金提供长期储蓄管理，另类资产约 €300B，长期以可持续投资为特色。",
         "notable_en": "Absorbed AXA Investment Managers (acquisition completed 1 July 2025), becoming a top-3 European asset manager. Chief Market Strategist Daniel Morris writes the weekly \"View from the markets\" and \"Take Two\" market notes; multi-asset and emerging-market-debt teams publish regular investment views.",
         "notable_zh": "2025 年 7 月 1 日完成收购安盛投资管理（AXA IM），跻身欧洲前三大资管。首席市场策略师 Daniel Morris 撰写每周 \"View from the markets\" 与 \"Take Two\" 市场点评；多资产与新兴市场债团队定期发布投资观点。",
+    },
+    "capital-fund-management": {
+        "founded": "1991", "aum": "~$36B+", "hq": "Paris, France",
+        "type_en": "Quant Hedge Fund", "type_zh": "量化对冲基金",
+        "desc_zh": "总部位于巴黎的量化与系统化资管公司，1991 年由 Jean-Pierre Aguilar 创立，管理规模约 $36B+（2026 年 9 月）。以物理学式的科研文化著称，从管理期货/趋势跟踪起家，现以旗舰多策略项目和日内交易为主，服务全球机构与财富管理客户，在纽约、伦敦、多伦多、上海设有办公室。",
+        "notable_en": "Chairman and chief scientist Jean-Philippe Bouchaud, a statistical physicist, founded Science & Finance in 1994, which merged into CFM in 2000; the firm co-runs an econophysics chair and publishes academic market-microstructure research.",
+        "notable_zh": "董事长兼首席科学家 Jean-Philippe Bouchaud 为统计物理学家，1994 年创立的 Science & Finance 于 2000 年并入 CFM；公司与学界合办计量经济物理学讲席，长期发表市场微观结构方面的学术研究。",
     },
 }
 

@@ -2570,6 +2570,43 @@ def _fetch_content_bnp_paribas_am(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+CFM_MIN_CONTENT = 500  # Refuse podcast/video announcement pages (~140-char blurb + link)
+
+
+def _fetch_content_cfm(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Capital Fund Management insight content via requests (SSR WordPress).
+
+    The listing is cfm.com's WordPress RSS feed (a listing template). Article
+    pages have no `article`/`main` wrapper: the body is a run of
+    `div.text-content` blocks (paragraphs, chart captions, footnotes). The last
+    block is a regulatory disclaimer ("Disclaimer: ..." / "Disclaimer Any ..."),
+    dropped before extraction. Podcast announcements are a one-line blurb and
+    are refused by CFM_MIN_CONTENT (listed title-only, user 2026-11-01).
+    """
+    url = article["url"]
+    log.info("  CFM: fetching article page %s", url)
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  CFM: fetch failed: %s", e)
+        return None
+
+    soup = BeautifulSoup(resp.text, "html.parser")
+    for block in soup.select("div.text-content"):
+        if block.get_text(" ", strip=True).startswith("Disclaimer"):
+            block.decompose()
+    text = _normalize_html(str(soup), "div.text-content p, div.text-content li")
+    if not _check_min_content_length(text, CFM_MIN_CONTENT):
+        log.warning("  CFM: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  CFM: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -2617,6 +2654,7 @@ CONTENT_FETCHERS = {
     "fulcrum-asset-management": _fetch_content_fulcrum,
     "rbc-bluebay": _fetch_content_rbc_bluebay,
     "bnp-paribas-am": _fetch_content_bnp_paribas_am,
+    "capital-fund-management": _fetch_content_cfm,
 }
 
 
