@@ -4810,7 +4810,47 @@
     "quality_score": 0.62,
     "topics": "fixed income, equity, multi-asset",
     "notes": "Free monthly/quarterly PM commentary, sparse index",
-    "last_deep_analyzed_at": "2026-10-31T01:03:53Z"
+    "last_deep_analyzed_at": "2026-10-31T01:03:53Z",
+    "template_attempts": [
+      {
+        "at": "2026-11-02T02:03:33+00:00",
+        "type": "rss_feed",
+        "spec": {
+          "type": "rss_feed",
+          "feed": "url",
+          "sort": "date_desc"
+        },
+        "listing_url": "https://madisoninvestments.com/feed/",
+        "ok": true,
+        "rows": 10,
+        "dated": 10,
+        "problems": [],
+        "sample": [
+          {
+            "title": "Benchmark Illusion: When Managers Deviate from the Index",
+            "url": "https://madisoninvestments.com/benchmark-illusion-when-managers-deviate-from-the-index/",
+            "date": "2026-10-06"
+          },
+          {
+            "title": "Don’t Judge A Bond By Its Coupon",
+            "url": "https://madisoninvestments.com/dont-judge-a-bond-by-its-coupon/",
+            "date": "2026-09-08"
+          },
+          {
+            "title": "Market Brief: Bond Market Takeaways from Jackson Hole",
+            "url": "https://madisoninvestments.com/market-brief-bond-market-takeaways-from-jackson-hole/",
+            "date": "2026-08-31"
+          }
+        ]
+      }
+    ],
+    "listing_template": {
+      "type": "rss_feed",
+      "feed": "url",
+      "sort": "date_desc"
+    },
+    "listing_url": "https://madisoninvestments.com/feed/",
+    "expected_hostname": "madisoninvestments.com"
   },
   {
     "id": "doubleline",
