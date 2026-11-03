@@ -182,6 +182,12 @@ class TestAlerts:
     def test_an_agreeing_ab_gate_is_silent(self):
         assert self._alerts(ab=[{"at": _iso(20), "agree": True, "disagreed": []}]) == []
 
+    def test_a_site_down_ab_source_is_shown_without_failing_the_gate(self):
+        """2026-11-04: a 5xx source passes the gate for one run but stays visible."""
+        ab = [{"at": _iso(20), "agree": True, "disagreed": [], "upstream": ["alpha"]}]
+        alerts = self._alerts(ab=ab)
+        assert [a["kind"] for a in alerts] == ["ab_upstream"] and "alpha" in alerts[0]["detail"]
+
     def test_a_corrupt_state_backup_alerts(self):
         alerts = self._alerts(corrupt_backups=["inspection_state.json.corrupt-20260926"])
         assert alerts[0]["kind"] == "corrupt_state"

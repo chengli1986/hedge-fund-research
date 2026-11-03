@@ -19,6 +19,13 @@ bespoke run had not seen, which pushed the oldest row off the max_articles
 cap). A single-row difference where the extra template row is the newest on
 the page is that race, not a defect -- re-run before concluding anything.
 
+A source whose site answers 502/503/504 (after the --recheck retry) is "site
+temporarily down, not compared" for one run: listed, recorded under "upstream"
+in the snapshot, not in the exit code. Down on the previous run too
+("site_down" in its snapshot) = a failure as before, every run until it is back. Same rule as the health probe's UPSTREAM grace
+(gmia-fetcher-health.py, 2026-10-22); added 2026-11-04 after MFS's own search
+API answered 503 to three gate runs in a row while probes between them got 200.
+
 msci-research reports "order differs" on roughly half its runs: the site
 serves its cards in a different order each load. Its listing renders exactly
 max_articles cards (10 of 10, counted 2026-09-26), so the set cannot change
@@ -28,6 +35,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -43,6 +51,20 @@ import listing_templates as lt       # noqa: E402
 
 FIELDS = ("title", "url", "date")
 
+# As in gmia-fetcher-health.py: the site is down or in maintenance. 500 is the
+# site's code failing, often on our request, and gets no grace.
+UPSTREAM_DOWN_CODES = (502, 503, 504)
+_UPSTREAM_DOWN_MSG = re.compile(r"\b(502|503|504) Server Error\b")
+
+
+def _upstream_down_status(exc: Exception) -> int | None:
+    """The 5xx code if this failure means the site is down, else None."""
+    code = getattr(getattr(exc, "response", None), "status_code", None)
+    if code in UPSTREAM_DOWN_CODES:
+        return code
+    m = _UPSTREAM_DOWN_MSG.search(str(exc))
+    return int(m.group(1)) if m else None
+
 
 def has_hand_written(source_id: str) -> bool:
     """Whether there is a hand-written fetcher to A/B the template against."""
@@ -54,8 +76,8 @@ def _key(row: dict) -> tuple:
 
 
 def compare_source(source: dict) -> dict:
-    """{agree, bespoke, template, only_bespoke, only_template, order_differs, error}"""
-    out = {"source_id": source["id"], "agree": False, "error": None,
+    """{agree, bespoke, template, only_bespoke, only_template, order_differs, error, upstream_down}"""
+    out = {"source_id": source["id"], "agree": False, "error": None, "upstream_down": None,
            "bespoke": 0, "template": 0, "only_bespoke": [], "only_template": [],
            "order_differs": False, "dropped_fields": []}
     try:
@@ -64,6 +86,7 @@ def compare_source(source: dict) -> dict:
         template = lt.fetch(dict(source, url=url))
     except Exception as exc:
         out["error"] = f"{type(exc).__name__}: {exc}"[:300]
+        out["upstream_down"] = _upstream_down_status(exc)
         return out
     b = [_key(r) for r in bespoke]
     t = [_key(r) for r in template]
@@ -91,15 +114,43 @@ def compare_source(source: dict) -> dict:
     return out
 
 
+def _passes(r: dict) -> bool:
+    return r["agree"] or bool(r.get("upstream_grace"))
+
+
+def _previously_down() -> set[str]:
+    """Sources whose site was down on the last recorded run, let through or not
+    (so a site that stays down keeps failing instead of alternating)."""
+    try:
+        lines = HISTORY.read_text(encoding="utf-8").splitlines()
+        return set(json.loads(lines[-1]).get("site_down") or []) if lines else set()
+    except (OSError, ValueError, AttributeError):
+        return set()
+
+
+def apply_upstream_grace(results: list[dict]) -> None:
+    """A site-down source is not compared this run, unless it was down last run too."""
+    prev = _previously_down()
+    for r in results:
+        if r["agree"] or not r.get("upstream_down"):
+            continue
+        if r["source_id"] in prev:
+            r["down_twice"] = True
+        else:
+            r["upstream_grace"] = True
+
+
 def _record(results: list[dict]) -> None:
     """Append what this sweep found, so a green week is visible later."""
     from datetime import datetime, timedelta, timezone
 
     row = {"at": datetime.now(timezone(timedelta(hours=8))).isoformat(timespec="seconds"),
            "sources": len(results),
-           "agree": all(r["agree"] for r in results),
-           "disagreed": [r["source_id"] for r in results if not r["agree"]],
-           "errors": [r["source_id"] for r in results if r["error"]]}
+           "agree": all(_passes(r) for r in results),
+           "disagreed": [r["source_id"] for r in results if not _passes(r)],
+           "errors": [r["source_id"] for r in results if r["error"]],
+           "upstream": [r["source_id"] for r in results if r.get("upstream_grace")],
+           "site_down": [r["source_id"] for r in results if not r["agree"] and r.get("upstream_down")]}
     try:
         HISTORY.parent.mkdir(parents=True, exist_ok=True)
         with HISTORY.open("a", encoding="utf-8") as fh:
@@ -153,16 +204,22 @@ def main() -> int:
         for i, r in enumerate(results):
             if r["agree"]:
                 continue
-            print(f"  … {r['source_id']}: disagreed, re-running once")
+            print(f"  … {r['source_id']}: {'error' if r['error'] else 'disagreed'}, re-running once")
             second = compare_source(by_id[r["source_id"]])
             second["rechecked"] = True
             results[i] = second
+    apply_upstream_grace(results)
     if args.json:
         print(json.dumps(results, ensure_ascii=False, indent=1))
     else:
         for r in results:
+            if r.get("upstream_grace"):
+                print(f"  ⏳ {r['source_id']:24s} site temporarily down (HTTP {r['upstream_down']}), "
+                      "not compared this run -- fails if still down next run")
+                continue
             if r["error"]:
-                print(f"  ✗ {r['source_id']:24s} {r['error']}")
+                print(f"  ✗ {r['source_id']:24s} {r['error']}"
+                      + ("  | site down on the previous run too" if r.get("down_twice") else ""))
                 continue
             mark = "✓" if r["agree"] else "✗"
             print(f"  {mark} {r['source_id']:24s} hand-written {r['bespoke']:2d} / template "
@@ -181,7 +238,7 @@ def main() -> int:
                 print(f"      only template:     {k}")
     if args.all and not args.no_record:
         _record(results)
-    return 0 if all(r["agree"] for r in results) else 1
+    return 0 if all(_passes(r) for r in results) else 1
 
 
 if __name__ == "__main__":
