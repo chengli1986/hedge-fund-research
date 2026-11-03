@@ -198,7 +198,7 @@ EOF
    拉到 0.43 就是这个原因：
    ```bash
    python3 - << 'EOF'
-   import sys, tempfile; sys.path.insert(0, ".")
+   import sys; sys.path.insert(0, ".")
    import importlib.util
    from pathlib import Path
    import fetch_articles
@@ -208,8 +208,9 @@ EOF
    spec.loader.exec_module(tm)
    src = {"url": "RESEARCH_URL", "id": "FUNDID"}  # 替换；模板源用 sources.json 里那条完整 entry
    articles = fetch_articles.listing_fetcher(src)(src)
-   with tempfile.TemporaryDirectory() as td:
-       result = tm.sample_fetched_content(articles, _fetch_content_FUNDID, Path(td))
+   # 直接传生产抽取器本身，不要写适配器：签名 (article) -> (path, status) | None；
+   # sample_fetched_content 内部自己套 isolated_content_dir()，正文不会写进 content/
+   result = tm.sample_fetched_content(articles, _fetch_content_FUNDID)
    print(f"sampled={result['sampled']} avg={result.get('avg_score',0):.2f} error={result.get('error')}")
    for url, why in result.get("skipped", []):
        print(f"  skipped {url} ({why})")

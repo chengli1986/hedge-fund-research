@@ -771,34 +771,53 @@ The "overall" score should be: 0.4*relevance + 0.4*depth + 0.2*extractable.
 PROMOTE_MIN_BODY_CHARS = 500
 
 
-def sample_fetched_content(articles: list[dict], content_fetcher, content_dir,
+def sample_fetched_content(articles: list[dict], content_fetcher,
                            sample_size: int = SAMPLE_SIZE,
                            min_chars: int = PROMOTE_MIN_BODY_CHARS) -> dict:
     """Auto-promote's Haiku gate: score what the source's content fetcher keeps.
 
-    Runs ``content_fetcher(article, content_dir)`` (a fetch_content
-    ``_fetch_content_<id>``) over the listing in order and scores the first
-    ``sample_size`` articles it returns a body of at least ``min_chars`` for.
-    Anything it refuses -- podcast announcements, teasers -- is listed title-only
-    in production and never summarised, so it is not scored either (user,
+    ``content_fetcher`` is the production extractor itself, unadapted:
+    ``fetch_content._fetch_content_<id>(article) -> (path, status) | None``,
+    which writes the body to ``fetch_content.CONTENT_DIR``. It runs over the
+    listing in order inside ``isolated_content_dir()`` (so nothing lands in
+    content/), and the first ``sample_size`` articles it returns an "ok" body
+    of at least ``min_chars`` for are scored. Anything it refuses -- podcast
+    announcements, teasers, metadata_only rows -- is listed title-only in
+    production and never summarised, so it is not scored either (user,
     2026-11-01: text first; CFM failed the generic sampler twice on two podcast
     stubs). Fewer than ``sample_size`` full-text articles fails without a model
     call: a source that is mostly title-only is not a text source.
 
+    (41a6a2b called it as ``fetcher(article, dir) -> dict``, a shape no
+    extractor has; the 11-03 CFM promotion needed an adapter.)
+
     Returns the assess_article_texts dict plus ``skipped``: [(url, reason)].
     """
+    import fetch_content
+
     texts: list[tuple[str, str]] = []
     skipped: list[tuple[str, str]] = []
-    for art in articles:
-        res = content_fetcher(art, content_dir)
-        if not res.get("ok"):
-            skipped.append((art["url"], str(res.get("error", "refused"))[:120]))
-        elif res.get("chars", 0) < min_chars:
-            skipped.append((art["url"], f"body {res.get('chars', 0)} chars < {min_chars}"))
-        else:
-            texts.append((art["url"], Path(res["path"]).read_text(encoding="utf-8")[:3000]))
-        if len(texts) >= sample_size:
-            break
+    with fetch_content.isolated_content_dir("gmia-promote-gate-"):
+        for i, art in enumerate(articles):
+            art = {**art, "id": art.get("id") or f"promote-gate-{i}"}
+            try:
+                res = content_fetcher(art)
+            except Exception as exc:
+                skipped.append((art["url"], f"{type(exc).__name__}: {exc}"[:120]))
+                continue
+            if not res:
+                skipped.append((art["url"], "refused by the content fetcher"))
+                continue
+            path, status = res
+            body = Path(path).read_text(encoding="utf-8") if status == "ok" else ""
+            if status != "ok":
+                skipped.append((art["url"], f"status {status}"))
+            elif len(body) < min_chars:
+                skipped.append((art["url"], f"body {len(body)} chars < {min_chars}"))
+            else:
+                texts.append((art["url"], body[:3000]))
+            if len(texts) >= sample_size:
+                break
     if len(texts) < sample_size:
         tried = len(texts) + len(skipped)
         return {"sampled": len(texts), "articles": [], "avg_score": 0.0,
