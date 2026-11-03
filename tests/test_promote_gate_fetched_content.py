@@ -198,3 +198,60 @@ def test_scored_text_is_capped_like_the_generic_sampler(monkeypatch):
     tm.sample_fetched_content(_articles("a", "b", "c"), _fetcher(dict.fromkeys("abc", long_body)))
 
     assert "x" * 3001 not in calls[0]
+
+
+def test_listing_articles_without_an_id_still_get_scored(monkeypatch, stand_in_content_dir):
+    """Real listing output carries no id; production extractors write <id>.txt."""
+    monkeypatch.setattr(tm, "_call_haiku", _haiku_recorder([]))
+    arts = [{"url": f"https://fund.example/{n}", "title": n} for n in "abc"]
+
+    res = tm.sample_fetched_content(arts, _fetcher(dict.fromkeys("abc", BODY)))
+
+    assert res["error"] is None and res["sampled"] == 3
+    assert "id" not in arts[0]                           # caller's dicts untouched
+    assert list(stand_in_content_dir.iterdir()) == []
+
+
+def test_an_unreadable_body_skips_that_article_only(monkeypatch, tmp_path):
+    monkeypatch.setattr(tm, "_call_haiku", _haiku_recorder([]))
+    ok = _fetcher(dict.fromkeys("abc", BODY))
+
+    def fetch(article):
+        if article["url"].endswith("/gone"):
+            return (tmp_path / "never-written.txt", "ok")
+        return ok(article)
+
+    res = tm.sample_fetched_content(_articles("gone", "a", "b", "c"), fetch)
+
+    assert res["error"] is None and res["sampled"] == 3
+    assert res["skipped"][0][0].endswith("/gone") and "unreadable" in res["skipped"][0][1]
+
+
+def _program_md_template() -> str:
+    text = (ROOT / "auto-promote" / "program.md").read_text(encoding="utf-8")
+    start = text.index("```python\ndef _fetch_content_FUNDID(") + len("```python\n")
+    return text[start:text.index("```", start)]
+
+
+def test_program_md_extractor_template_follows_the_production_contract(monkeypatch, stand_in_content_dir):
+    """The Phase 3 template the agent copies must plug straight into the gate (and
+    CONTENT_FETCHERS). Until 2026-11-03 it taught (article, content_dir) -> dict."""
+    page = "<html><body><article><p>" + BODY + "</p></article></body></html>"
+
+    class _Resp:
+        text = page
+
+        def raise_for_status(self):
+            pass
+
+    monkeypatch.setattr(fc.requests, "get", lambda url, **kw: _Resp())
+    monkeypatch.setattr(tm, "_call_haiku", _haiku_recorder([]))
+    exec(_program_md_template(), vars(fc))              # defines fc._fetch_content_FUNDID
+    try:
+        arts = [{"url": f"https://fund.example/{n}", "title": n} for n in "abc"]
+        res = tm.sample_fetched_content(arts, fc._fetch_content_FUNDID)
+    finally:
+        del fc._fetch_content_FUNDID
+
+    assert res["error"] is None and res["sampled"] == 3, res.get("skipped")
+    assert list(stand_in_content_dir.iterdir()) == []

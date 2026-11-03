@@ -134,42 +134,44 @@ EOF
 `_fetch_content_apollo`），写一个新函数：
 
 ```python
-def _fetch_content_FUNDID(article: dict, content_dir: Path) -> dict:
+def _fetch_content_FUNDID(article: dict) -> Optional[tuple[Path, str]]:
     """Fetch full article body for FUND_NAME."""
     url = article["url"]
     try:
         resp = requests.get(url, headers=HEADERS, timeout=30)
         resp.raise_for_status()
-    except Exception as exc:
-        return {"ok": False, "error": f"HTTP fetch failed: {exc}"[:200], "skipped": False}
+    except Exception as e:
+        log.error("  FUND_NAME: fetch failed: %s", e)
+        return None
 
     soup = BeautifulSoup(resp.text, "html.parser")
     for tag in soup.select("nav, footer, header, script, style, aside"):
         tag.decompose()
 
     # 默认 selector — 调整以匹配该基金的 HTML 结构
-    paragraphs = soup.select("article p")
-    if not paragraphs:
-        paragraphs = soup.select("main p")
-    text = "\n\n".join(p.get_text(strip=True) for p in paragraphs if p.get_text(strip=True))
+    text = _normalize_html(str(soup), "article p, article li")
+    if not text:
+        text = _normalize_html(str(soup), "main p, main li")
+    if not _check_min_content_length(text, 500):
+        log.warning("  FUND_NAME: extracted text too short (%d chars)", len(text))
+        return None
 
-    if not _check_min_content_length(text):
-        return {"ok": False, "error": f"Content too short ({len(text)} chars)",
-                "skipped": False}
-
-    fname = _safe_filename(article["title"], article["url"])
-    out_path = content_dir / fname
-    out_path.write_text(text, encoding="utf-8")
-    return {"ok": True, "path": str(out_path), "chars": len(text), "skipped": False}
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    return (content_path, "ok")
 ```
+**契约（必须照抄，2026-11-03 起）**：签名 `(article) -> (path, "ok") | None`，正文写到
+`CONTENT_DIR / f"{article['id']}.txt"`（运行时读模块全局，夜间流水线和下面的测试都靠它重定向），
+拒收返回 `None`。这是 `CONTENT_FETCHERS` 里所有抽取器的共同形状，也是 gate 3 的调用方式。
+旧模板的 `(article, content_dir) -> {"ok", "path", "chars"}` 是错的：放不进 `CONTENT_FETCHERS`，
+gate 3 调它会每篇都报 TypeError 而被跳过（`tests/test_promote_gate_fetched_content.py` 锁定此契约）。
 
 **测试（必须强证据，写到 commit message）**：
 
 ```bash
 python3 - << 'EOF'
 import sys; sys.path.insert(0, ".")
-from pathlib import Path
-import tempfile
+import fetch_content
 from fetch_content import _fetch_content_FUNDID  # 替换 FUNDID
 import fetch_articles
 src = {"url": "RESEARCH_URL", "id": "FUNDID"}  # 替换
@@ -177,21 +179,20 @@ src = {"url": "RESEARCH_URL", "id": "FUNDID"}  # 替换
 articles = fetch_articles.listing_fetcher(src)(src)
 print(f"Got {len(articles)} articles")
 if articles:
-    art = articles[0]
-    with tempfile.TemporaryDirectory() as td:
-        result = _fetch_content_FUNDID(art, Path(td))
-        print(f"Result: ok={result.get('ok')} chars={result.get('chars', 0)}")
+    art = {**articles[0], "id": "smoke-test"}   # 列表输出没有 id；必须在隔离目录里跑，别写进 content/
+    with fetch_content.isolated_content_dir():
+        result = _fetch_content_FUNDID(art)
+        print(f"Result: {result[1] if result else 'refused (None)'}")
         # 必须把正文前 200 字 preview 打出来，agent 把这段粘到 commit message
-        if result.get("ok"):
-            text = Path(result["path"]).read_text()
-            print(f"--- PREVIEW (first 200 chars) ---\n{text[:200]}\n--- END ---")
-EOF
-```
+        if result and result[1] == "ok":
+            text = result[0].read_text(encoding="utf-8")
+            print(f"chars={len(text)}\n--- PREVIEW (first 200 chars) ---\n{text[:200]}\n--- END ---")
+EOF```
 
 **通过标准（4 项硬门，任一失败 → 跳过此基金，不进 Phase 4）**：
 
 1. **抓到 ≥3 文章索引** — `fetch_articles.listing_fetcher(source)(source)` 返回 ≥3 articles（模板源走模板，其余走 `FETCHERS[id]`）
-2. **正文 ≥500 chars**（不是 100）— `_fetch_content_FUNDID` 返回 `ok: True` 且 `chars ≥ 500`
+2. **正文 ≥500 chars**（不是 100）— `_fetch_content_FUNDID` 返回 `(path, "ok")` 且正文 ≥500 字（上面测试打印的 `chars`）
 3. **Haiku 质量抽检 relevance ≥ 0.6** — 只给**上面这个新写的 `_fetch_content_FUNDID` 真能抓到正文的文章**打分
    （2026-11-02 起；用户 11-01 定「以抓文本为主，播客只给题目」）。抓取器拒收的条目（播客预告、短 teaser）
    在生产里只显示标题、从不生成摘要，所以也不参与打分——CFM 11-01/02 两次被通用抽样器里的两篇播客预告

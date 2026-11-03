@@ -809,7 +809,11 @@ def sample_fetched_content(articles: list[dict], content_fetcher,
                 skipped.append((art["url"], "refused by the content fetcher"))
                 continue
             path, status = res
-            body = Path(path).read_text(encoding="utf-8") if status == "ok" else ""
+            try:
+                body = Path(path).read_text(encoding="utf-8") if status == "ok" else ""
+            except OSError as exc:
+                skipped.append((art["url"], f"body unreadable: {type(exc).__name__}"))
+                continue
             if status != "ok":
                 skipped.append((art["url"], f"status {status}"))
             elif len(body) < min_chars:
