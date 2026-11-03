@@ -19,6 +19,8 @@ real ``_fetch_content_cfm``. The fakes below now follow the production contract
 import importlib.util
 from pathlib import Path
 
+import pytest
+
 import fetch_content as fc
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -28,6 +30,18 @@ tm = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(tm)
 
 BODY = "Substantive macro research paragraph. " * 40   # ~1,500 chars
+
+
+@pytest.fixture(autouse=True)
+def stand_in_content_dir(monkeypatch, tmp_path):
+    """Point the "production" CONTENT_DIR at a temp dir for every test, so a gate
+    that stops isolating fails a test instead of writing into the real content/
+    (2026-11-03: a mutation run with the isolation removed left 11 test bodies
+    there)."""
+    prod = tmp_path / "production-content"
+    prod.mkdir()
+    monkeypatch.setattr(fc, "CONTENT_DIR", prod)
+    return prod
 
 
 def _articles(*names):
@@ -102,9 +116,9 @@ def test_real_cfm_fetcher_runs_unadapted(monkeypatch):
     assert "Disclaimer" not in calls[0]
 
 
-def test_bodies_go_to_a_scratch_dir_never_the_production_content_dir(monkeypatch):
+def test_bodies_go_to_a_scratch_dir_never_the_production_content_dir(monkeypatch, stand_in_content_dir):
     monkeypatch.setattr(tm, "_call_haiku", _haiku_recorder([]))
-    prod_dir = fc.CONTENT_DIR
+    prod_dir = stand_in_content_dir
     written = []
     inner = _fetcher(dict.fromkeys("abc", BODY))
 
@@ -118,6 +132,7 @@ def test_bodies_go_to_a_scratch_dir_never_the_production_content_dir(monkeypatch
     assert fc.CONTENT_DIR == prod_dir
     assert written and all(prod_dir not in p.parents for p in written)
     assert not any(p.exists() for p in written)          # scratch dir is gone afterwards
+    assert list(prod_dir.iterdir()) == []
 
 
 def test_metadata_only_and_crashing_fetches_are_skipped(monkeypatch):
