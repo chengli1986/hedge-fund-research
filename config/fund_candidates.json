@@ -913,7 +913,7 @@
     "rss_url": null,
     "official_domain": "www.syzygyassetmanagement.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "RECOMMEND: NLP+factor research, active thru Sep 2026",
+    "notes": "Landing active to Nov'26; sampled article teaser+PDF",
     "research_links": [
       {
         "url": "https://www.researchaffiliates.com/insights/publications",
@@ -1018,10 +1018,10 @@
     "screening_reason": "Insufficient article index signals",
     "fit_score": 0.94,
     "last_validated_at": "2026-04-19T09:01:48.873166+08:00",
-    "quality": "HIGH",
-    "quality_score": 0.9,
+    "quality": "MEDIUM",
+    "quality_score": 0.6,
     "topics": "quant, factor investing, equity, index research",
-    "last_deep_analyzed_at": "2026-09-15T01:02:00Z",
+    "last_deep_analyzed_at": "2026-11-04T01:05:00Z",
     "strategy_tags": [
       "quant",
       "equity",
@@ -2049,10 +2049,10 @@
       "multi_asset"
     ],
     "quality": "HIGH",
-    "quality_score": 0.8,
+    "quality_score": 0.78,
     "topics": "quant, ESG, emerging markets, macro, equity, fixed income",
-    "notes": "RECOMMEND: 900+ articles; EM/quant/ESG, fresh thru Sep'26",
-    "last_deep_analyzed_at": "2026-09-15T01:02:00Z",
+    "notes": "RECOMMEND: near-daily EM/credit/climate, data-backed",
+    "last_deep_analyzed_at": "2026-11-04T01:05:00Z",
     "official_domain": "www.robeco.com",
     "discovery_method": "discover_fund_sites",
     "research_links": [
@@ -4888,7 +4888,7 @@
     "official_domain": "www.crescat.net",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-11-03T09:03:17.533358+08:00",
+    "last_discovered_at": "2026-11-04T09:03:04.050489+08:00",
     "added_at": "2026-11-02",
     "status_since": "2026-11-02T09:04:16.677478+08:00",
     "quality": "MEDIUM",
