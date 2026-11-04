@@ -319,6 +319,11 @@ def _extract_article_links(base_url: str, soup: BeautifulSoup) -> list[str]:
 
     for a in soup.find_all("a", href=True):
         href = a["href"]
+        # A backslash or quote never appears raw in a real link. Fairtree's
+        # footer hrefs are nothing but escaped quotes, which urljoin turned into
+        # "<page>/\\"\\\\"..." and the trial sampled and scored 0.0 (2026-11-01).
+        if any(ch in href for ch in '\\"'):
+            continue
         full = urljoin(base_url, href)
         parsed = urlparse(full)
 

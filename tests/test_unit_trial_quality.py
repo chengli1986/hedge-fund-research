@@ -1150,6 +1150,28 @@ class TestExtractArticleLinksFiltering:
         )
         assert len(links) >= 1, "neutral links should be kept as fallback"
 
+    def test_a_mangled_href_is_not_sampled(self):
+        """Fairtree 2026-11-01: its "Terms and Conditions" / "Privacy Policy"
+        links carry an href of nothing but backslashes and quotes. urljoin made
+        that "<page>/\\"\\\\"..." -- a URL on the right host with a 2+ segment
+        path -- so it was sampled twice, got Cloudflare's error page and scored
+        0.0 twice, dragging the trial from 0.70 to 0.42."""
+        junk = '\\"\\\\"\\\\\\\\"' + "\\" * 40
+        html_str = f"""
+        <a href="/resource-hub/article/the-de-equitisation-of-public-markets/">A</a>
+        <label><a href='{junk}'>Terms and Conditions</a></label>
+        <a href='{junk}x'>Privacy Policy</a>
+        <a href='/resource-hub/article/robotics"-teaser/'>Quoted</a>
+        <a href="/resource-hub/article/robotics-a-solution/">B</a>
+        """
+        links = tm._extract_article_links(
+            "https://www.fairtree.com/resource-hub/insight/what-if-the-best-opportunities-never-list/",
+            self._soup(html_str))
+        assert links == [
+            "https://www.fairtree.com/resource-hub/article/the-de-equitisation-of-public-markets/",
+            "https://www.fairtree.com/resource-hub/article/robotics-a-solution/",
+        ]
+
     def test_blackstone_marketing_paths_filtered(self):
         """Blackstone-style: /tommy-fleetwood/ (golf sponsorship) is hard to
         catch (no segment match), but /careers/, /events/, /contact/ are."""
