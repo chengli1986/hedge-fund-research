@@ -11170,6 +11170,25 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-11-05": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://madisoninvestments.com/municipal-bonds-why-theyre-back-in-focus/",
+            "https://madisoninvestments.com/benchmark-illusion-when-managers-deviate-from-the-index/",
+            "https://madisoninvestments.com/dont-judge-a-bond-by-its-coupon/",
+            "https://madisoninvestments.com/introduction-to-bonds/",
+            "https://madisoninvestments.com/mastering-the-fixed-income-framework/",
+            "https://madisoninvestments.com/private-credit-how-early-success-created-todays-risks/",
+            "https://madisoninvestments.com/skill-or-luck-measuring-the-value-of-active-management/",
+            "https://madisoninvestments.com/the-warsh-fed-a-new-playbook-for-bond-investors/",
+            "https://madisoninvestments.com/madison-investments-launches-the-issue-at-hand-a-new-podcast-series-focused-on-risk-markets-and-client-conversations/",
+            "https://madisoninvestments.com/trump-accounts/"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -11268,6 +11287,41 @@
           "js_only_checked": 0,
           "day": 5,
           "date": "2026-11-04"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://madisoninvestments.com/private-credit-how-early-success-created-todays-risks/",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.8,
+              "overall": 0.8,
+              "notes": "Deep dive on private credit market evolution, risks, and investor evaluation framework; podcast transcript format with substantive discussion of liquidity, valuation, and underwriting concerns."
+            },
+            {
+              "url": "https://madisoninvestments.com/skill-or-luck-measuring-the-value-of-active-management/",
+              "relevance": 0.95,
+              "depth": 0.75,
+              "extractable": 0.8,
+              "overall": 0.84,
+              "notes": "Investment research on fixed income manager evaluation using alpha, beta, tracking error, and information ratio; practical framework for advisors to assess risk-adjusted performance."
+            },
+            {
+              "url": "https://madisoninvestments.com/the-warsh-fed-a-new-playbook-for-bond-investors/",
+              "relevance": 0.85,
+              "depth": 0.6,
+              "extractable": 0.8,
+              "overall": 0.74,
+              "notes": "Macro analysis of Fed policy shift under Chair Warsh; brief market commentary on FOMC meeting outcomes and implications for bond portfolios; lighter depth than research pieces."
+            }
+          ],
+          "avg_score": 0.793,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 6,
+          "date": "2026-11-05"
         }
       ]
     },
@@ -11340,6 +11394,25 @@
           "fetcher_used": true
         },
         "2026-11-04": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.muzinich.com/opinions/muzinich-weekly-market-comment?utm_source=Insight&utm_medium=Website&utm_campaign=weekly_comment_02_November_2026",
+            "https://www.muzinich.com/opinions/2026-10-27-a-new-flight-path-for-investors?utm_source=Insight&utm_medium=Website&utm_campaign=the_case_for_aviation_finance_in_institutional_portfolios",
+            "https://www.muzinich.com/opinions/muzinich-weekly-market-comment-19-10-26?utm_source=Insight&utm_medium=Website&utm_campaign=weekly_comment_19_October_2026",
+            "https://www.muzinich.com/opinions/podcast-stronger-together-the-power-of-parallel-lending?utm_source=Insight&utm_medium=Website&utm_campaign=Stronger_Together_The_Power_of_Parallel_Lending",
+            "https://www.muzinich.com/opinions/2026-10-16-em-monthly-latin-america-makes-the-right-turn?utm_source=Insight&utm_medium=Website&utm_campaign=EM_Monthly_October_2026",
+            "https://www.muzinich.com/opinions/parallel-lending-five-lessons-learned-october-2026?utm_source=Insight&utm_medium=Website&utm_campaign=parallel-lending-five-lessons-learned",
+            "https://www.muzinich.com/opinions/muzinich-weekly-market-comment-12-10-26?utm_source=Insight&utm_medium=Website&utm_campaign=weekly_comment_12_October_2026",
+            "https://www.muzinich.com/opinions/us-high-yield-compelling-opportunity?utm_source=Insight&utm_medium=Website&utm_campaign=ushy_compelling_opportunity_october_26",
+            "https://www.muzinich.com/opinions/muzinich-asset-allocation-group-monthly-update?utm_source=Insight&utm_medium=Website&utm_campaign=AAG_September_2026",
+            "https://www.muzinich.com/opinions/corporate-credit-snapshot?utm_source=Insight&utm_medium=Website&utm_campaign=Snapshot_october_2026"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-11-05": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -11493,9 +11566,87 @@
           "js_only_checked": 0,
           "day": 4,
           "date": "2026-11-04"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 5,
+          "date": "2026-11-05"
+        }
+      ]
+    },
+    {
+      "id": "fairtree",
+      "name": "Fairtree",
+      "research_url": "https://www.fairtree.com/resource-hub/",
+      "homepage_url": "https://www.fairtree.com",
+      "fit_score": 0.8843,
+      "quality": "MEDIUM",
+      "topics": "private markets, equity, income",
+      "start_date": "2026-11-05",
+      "end_date": null,
+      "daily_checks": {
+        "2026-11-05": {
+          "accessible": true,
+          "article_count": 16,
+          "date_count": 0,
+          "article_urls": [
+            "https://www.fairtree.com/resource-hub/article/the-decade-of-the-port/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-fr-income-plus-fund-q3-2026-commentary/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-global-flexible-income-plus-fund-q3-2026-commentary/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-sa-equity-prescient-fund-q3-2026-commentary/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-global-emerging-markets-fund-q3-2026-commentary/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-global-equity-fund-q3-2026-commentary/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-global-listed-real-estate-fund-q3-2026-commentary/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-balanced-prescient-fund-q3-2026-commentary/",
+            "https://www.fairtree.com/resource-hub/article/emerging-markets-on-firmer-ground/"
+          ],
+          "error": null,
+          "fetcher_used": false
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.fairtree.com/resource-hub/article/the-decade-of-the-port/",
+              "relevance": 0.85,
+              "depth": 0.7,
+              "extractable": 0.6,
+              "overall": 0.74,
+              "notes": "Thematic investment research on port infrastructure as strategic asset amid decarbonization, climate risk, and geopolitical fragmentation; includes data on trade flows and climate risk exposure but text is truncated."
+            },
+            {
+              "url": "https://www.fairtree.com/resource-hub/commentary/fairtree-fr-income-plus-fund-q3-2026-commentary/",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.5,
+              "overall": 0.8,
+              "notes": "Fund commentary analyzing Q3 2026 macro backdrop (rate hikes, bond sell-off, sovereign spreads) and portfolio performance; substantive but truncated mid-sentence."
+            },
+            {
+              "url": "https://www.fairtree.com/resource-hub/commentary/fairtree-global-flexible-income-plus-fund-q3-2026-commentary/",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.5,
+              "overall": 0.8,
+              "notes": "Fund commentary on global fixed income strategy amid rising rates and credit spread widening; detailed macro analysis but truncated at end."
+            }
+          ],
+          "avg_score": 0.78,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 1,
+          "date": "2026-11-05"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-11-04"
+  "last_summary_sent_date": "2026-11-05"
 }
