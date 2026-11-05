@@ -59,7 +59,7 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-09-15T01:02:00Z",
+    "last_deep_analyzed_at": "2026-11-05T01:04:16Z",
     "quality": "HIGH",
     "topics": "fixed income, macro, credit, global economy",
     "strategy_tags": [
@@ -2525,7 +2525,7 @@
     "quality_score": 0.68,
     "topics": "quant, equity, global allocation, ESG, credit, behavioral finance",
     "notes": "Gated for accredited/institutional; articles fetchable",
-    "last_deep_analyzed_at": "2026-09-15T01:02:00Z",
+    "last_deep_analyzed_at": "2026-11-05T01:04:16Z",
     "inaccessible_reason": null,
     "promotion_notes": "JS-rendered homepage; article URLs directly accessible via WebFetch. Needs Playwright fetcher for full index scraping.",
     "synthesis_attempted_at": "2026-06-03T01:10:11.791298+00:00",
@@ -4888,7 +4888,7 @@
     "official_domain": "www.crescat.net",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-11-04T09:03:04.050489+08:00",
+    "last_discovered_at": "2026-11-05T09:03:02.284448+08:00",
     "added_at": "2026-11-02",
     "status_since": "2026-11-02T09:04:16.677478+08:00",
     "quality": "MEDIUM",
@@ -4896,5 +4896,16 @@
     "topics": "macro, equity, precious metals, credit",
     "notes": "Biweekly macro letters; many posts media/deck only",
     "last_deep_analyzed_at": "2026-11-03T01:08:00Z"
+  },
+  {
+    "id": "oakmark",
+    "name": "Oakmark (Harris Associates)",
+    "homepage_url": "https://www.oakmark.com",
+    "source": "manual",
+    "status": "seed",
+    "strategy_tags": [
+      "equity",
+      "fixed_income"
+    ]
   }
 ]
