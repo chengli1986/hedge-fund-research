@@ -2286,11 +2286,10 @@
     "source": "manual",
     "status": "promoted",
     "strategy_tags": [
-      "equity",
       "emerging_markets",
-      "macro"
+      "equity"
     ],
-    "notes": "Free; mixed: CIO outlooks real, Japan pages video teasers",
+    "notes": "Asia insights ~3/mo; sampled piece was a teaser",
     "official_domain": "www.matthewsasia.com",
     "research_links": [
       {
@@ -2383,9 +2382,9 @@
     "fit_score": 0.85,
     "last_validated_at": "2026-05-16T09:04:19.082474+08:00",
     "quality": "MEDIUM",
-    "quality_score": 0.62,
-    "topics": "Asian equities, China, India, Japan, EM, CIO outlook",
-    "last_deep_analyzed_at": "2026-09-19T01:01:34Z",
+    "quality_score": 0.55,
+    "topics": "emerging markets, Asia equity, China, India",
+    "last_deep_analyzed_at": "2026-11-06T01:03:38Z",
     "synthesis_priority_set_at": "2026-06-03T09:05:38.825095+08:00",
     "synthesis_attempted_at": "2026-06-03T01:08:23.985559+00:00",
     "synthesis_outcome": "success",
@@ -4888,7 +4887,7 @@
     "official_domain": "www.crescat.net",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-11-05T09:03:02.284448+08:00",
+    "last_discovered_at": "2026-11-06T09:03:02.631638+08:00",
     "added_at": "2026-11-02",
     "status_since": "2026-11-02T09:04:16.677478+08:00",
     "quality": "MEDIUM",
@@ -4904,10 +4903,18 @@
     "source": "manual",
     "status": "seed",
     "strategy_tags": [
-      "equity",
-      "fixed_income"
+      "equity"
     ],
     "added_at": "2026-11-05",
-    "status_since": "2026-11-05T09:04:23.838606+08:00"
+    "status_since": "2026-11-05T09:04:23.838606+08:00",
+    "official_domain": "www.oakmark.com",
+    "research_links": [],
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-11-06T09:03:02.843573+08:00",
+    "quality": "MEDIUM",
+    "quality_score": 0.55,
+    "topics": "equity, value investing, quarterly commentary",
+    "notes": "Quarterly fund commentary at /news-insights/commentary",
+    "last_deep_analyzed_at": "2026-11-06T01:03:38Z"
   }
 ]
