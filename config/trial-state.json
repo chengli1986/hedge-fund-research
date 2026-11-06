@@ -11095,9 +11095,7 @@
           "date": "2026-11-04"
         }
       ]
-    }
-  ],
-  "active_trials": [
+    },
     {
       "id": "madison-investments",
       "name": "Madison Investments",
@@ -11107,7 +11105,7 @@
       "quality": "MEDIUM",
       "topics": "fixed income, equity, multi-asset",
       "start_date": "2026-10-31",
-      "end_date": null,
+      "end_date": "2026-11-06",
       "daily_checks": {
         "2026-10-31": {
           "accessible": true,
@@ -11189,10 +11187,29 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-11-06": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://madisoninvestments.com/municipal-bonds-why-theyre-back-in-focus/",
+            "https://madisoninvestments.com/benchmark-illusion-when-managers-deviate-from-the-index/",
+            "https://madisoninvestments.com/dont-judge-a-bond-by-its-coupon/",
+            "https://madisoninvestments.com/introduction-to-bonds/",
+            "https://madisoninvestments.com/mastering-the-fixed-income-framework/",
+            "https://madisoninvestments.com/private-credit-how-early-success-created-todays-risks/",
+            "https://madisoninvestments.com/skill-or-luck-measuring-the-value-of-active-management/",
+            "https://madisoninvestments.com/the-warsh-fed-a-new-playbook-for-bond-investors/",
+            "https://madisoninvestments.com/madison-investments-launches-the-issue-at-hand-a-new-podcast-series-focused-on-risk-markets-and-client-conversations/",
+            "https://madisoninvestments.com/trump-accounts/"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 0,
@@ -11322,9 +11339,41 @@
           "js_only_checked": 0,
           "day": 6,
           "date": "2026-11-05"
+        },
+        {
+          "sampled": 2,
+          "articles": [
+            {
+              "url": "https://madisoninvestments.com/madison-investments-launches-the-issue-at-hand-a-new-podcast-series-focused-on-risk-markets-and-client-conversations/",
+              "relevance": 0.2,
+              "depth": 0.1,
+              "extractable": 1.0,
+              "overall": 0.32,
+              "notes": "Marketing announcement for a new podcast series; not investment research or portfolio strategy."
+            },
+            {
+              "url": "https://madisoninvestments.com/trump-accounts/",
+              "relevance": 0.75,
+              "depth": 0.65,
+              "extractable": 0.5,
+              "overall": 0.66,
+              "notes": "Educational explainer on Trump Accounts (new retirement savings vehicle); substantive but truncated mid-sentence; relevant for financial planning but not deep market/portfolio analysis."
+            }
+          ],
+          "avg_score": 0.49,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 7,
+          "date": "2026-11-06"
         }
-      ]
-    },
+      ],
+      "total_articles": 49,
+      "days_with_articles": 7,
+      "avg_quality_score": 0.66
+    }
+  ],
+  "active_trials": [
     {
       "id": "muzinich",
       "name": "Muzinich & Co",
@@ -11426,6 +11475,25 @@
             "https://www.muzinich.com/opinions/muzinich-weekly-market-comment-12-10-26?utm_source=Insight&utm_medium=Website&utm_campaign=weekly_comment_12_October_2026",
             "https://www.muzinich.com/opinions/us-high-yield-compelling-opportunity?utm_source=Insight&utm_medium=Website&utm_campaign=ushy_compelling_opportunity_october_26",
             "https://www.muzinich.com/opinions/muzinich-asset-allocation-group-monthly-update?utm_source=Insight&utm_medium=Website&utm_campaign=AAG_September_2026",
+            "https://www.muzinich.com/opinions/corporate-credit-snapshot?utm_source=Insight&utm_medium=Website&utm_campaign=Snapshot_october_2026"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-11-06": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.muzinich.com/opinions/parallel-lending-dc-decumulation?utm_source=Insight&utm_medium=Website&utm_campaign=parallel-lending-as-part-of-a-dc-decumulation-solution",
+            "https://www.muzinich.com/opinions/muzinich-weekly-market-comment?utm_source=Insight&utm_medium=Website&utm_campaign=weekly_comment_02_November_2026",
+            "https://www.muzinich.com/opinions/2026-10-27-a-new-flight-path-for-investors?utm_source=Insight&utm_medium=Website&utm_campaign=the_case_for_aviation_finance_in_institutional_portfolios",
+            "https://www.muzinich.com/opinions/podcast-stronger-together-the-power-of-parallel-lending?utm_source=Insight&utm_medium=Website&utm_campaign=Stronger_Together_The_Power_of_Parallel_Lending",
+            "https://www.muzinich.com/opinions/muzinich-weekly-market-comment-19-10-26?utm_source=Insight&utm_medium=Website&utm_campaign=weekly_comment_19_October_2026",
+            "https://www.muzinich.com/opinions/2026-10-16-em-monthly-latin-america-makes-the-right-turn?utm_source=Insight&utm_medium=Website&utm_campaign=EM_Monthly_October_2026",
+            "https://www.muzinich.com/opinions/parallel-lending-five-lessons-learned-october-2026?utm_source=Insight&utm_medium=Website&utm_campaign=parallel-lending-five-lessons-learned",
+            "https://www.muzinich.com/opinions/muzinich-weekly-market-comment-12-10-26?utm_source=Insight&utm_medium=Website&utm_campaign=weekly_comment_12_October_2026",
+            "https://www.muzinich.com/opinions/us-high-yield-compelling-opportunity?utm_source=Insight&utm_medium=Website&utm_campaign=ushy_compelling_opportunity_october_26",
             "https://www.muzinich.com/opinions/corporate-credit-snapshot?utm_source=Insight&utm_medium=Website&utm_campaign=Snapshot_october_2026"
           ],
           "error": null,
@@ -11574,6 +11642,25 @@
           "error": "No new (un-sampled) article links available",
           "day": 5,
           "date": "2026-11-05"
+        },
+        {
+          "sampled": 1,
+          "articles": [
+            {
+              "url": "https://www.muzinich.com/opinions/parallel-lending-dc-decumulation?utm_source=Insight&utm_medium=Website&utm_campaign=parallel-lending-as-part-of-a-dc-decumulation-solution",
+              "relevance": 0.85,
+              "depth": 0.7,
+              "extractable": 0.6,
+              "overall": 0.74,
+              "notes": "Analysis of private credit and parallel lending strategies for UK DC pension decumulation, with focus on cash flow generation vs. PIK structures"
+            }
+          ],
+          "avg_score": 0.74,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 6,
+          "date": "2026-11-06"
         }
       ]
     },
@@ -11589,6 +11676,24 @@
       "end_date": null,
       "daily_checks": {
         "2026-11-05": {
+          "accessible": true,
+          "article_count": 16,
+          "date_count": 0,
+          "article_urls": [
+            "https://www.fairtree.com/resource-hub/article/the-decade-of-the-port/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-fr-income-plus-fund-q3-2026-commentary/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-global-flexible-income-plus-fund-q3-2026-commentary/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-sa-equity-prescient-fund-q3-2026-commentary/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-global-emerging-markets-fund-q3-2026-commentary/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-global-equity-fund-q3-2026-commentary/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-global-listed-real-estate-fund-q3-2026-commentary/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-balanced-prescient-fund-q3-2026-commentary/",
+            "https://www.fairtree.com/resource-hub/article/emerging-markets-on-firmer-ground/"
+          ],
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-11-06": {
           "accessible": true,
           "article_count": 16,
           "date_count": 0,
@@ -11644,9 +11749,115 @@
           "js_only_checked": 0,
           "day": 1,
           "date": "2026-11-05"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.fairtree.com/resource-hub/commentary/fairtree-sa-equity-prescient-fund-q3-2026-commentary/",
+              "relevance": 0.9,
+              "depth": 0.75,
+              "extractable": 0.6,
+              "overall": 0.78,
+              "notes": "Q3 2026 SA equity fund commentary with market overview, economic analysis, and geopolitical context; text appears truncated mid-sentence"
+            },
+            {
+              "url": "https://www.fairtree.com/resource-hub/commentary/fairtree-global-emerging-markets-fund-q3-2026-commentary/",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.6,
+              "overall": 0.82,
+              "notes": "Emerging markets fund Q3 2026 commentary analyzing sector rotation, commodity dynamics, and macro backdrop; truncated at end"
+            },
+            {
+              "url": "https://www.fairtree.com/resource-hub/commentary/fairtree-global-equity-fund-q3-2026-commentary/",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.65,
+              "overall": 0.85,
+              "notes": "Global equity fund Q3 2026 commentary with fund performance, sector analysis, AI trade broadening, and macro drivers; truncated at end"
+            }
+          ],
+          "avg_score": 0.817,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 2,
+          "date": "2026-11-06"
+        }
+      ]
+    },
+    {
+      "id": "graham-capital-management",
+      "name": "Graham Capital Management",
+      "research_url": "https://www.grahamcapital.com",
+      "homepage_url": "https://www.grahamcapital.com",
+      "fit_score": null,
+      "quality": "MEDIUM",
+      "topics": "macro, trend-following, quant, volatility",
+      "start_date": "2026-11-06",
+      "end_date": null,
+      "daily_checks": {
+        "2026-11-06": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.grahamcapital.com/blog/from-suppressed-to-structural-the-return-of-volatility/",
+            "https://www.grahamcapital.com/blog/trend-following-primer/",
+            "https://www.grahamcapital.com/blog/fireside-insights-navigating-the-evolving-macro-landscape/",
+            "https://www.grahamcapital.com/blog/lessons-from-market-crises/",
+            "https://www.grahamcapital.com/blog/macro-across-monetary-regimes/",
+            "https://www.grahamcapital.com/blog/whats-next-for-quant-caasas-primer-featuring-thomas-feng-ph-d-chief-investment-officer-quant-strategies/",
+            "https://www.grahamcapital.com/blog/interpreting-correlation/",
+            "https://www.grahamcapital.com/blog/resilient-strategies-tailwinds-in-left-tail-scenarios/",
+            "https://www.grahamcapital.com/blog/global-macro-primer/",
+            "https://www.grahamcapital.com/blog/market-diversification/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.grahamcapital.com/blog/from-suppressed-to-structural-the-return-of-volatility/",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.7,
+              "overall": 0.86,
+              "notes": "Macro analysis arguing that post-GFC low-volatility regime was artificial and has broken down; volatility now structural; explores implications for asset pricing and portfolio construction."
+            },
+            {
+              "url": "https://www.grahamcapital.com/blog/trend-following-primer/",
+              "relevance": 0.9,
+              "depth": 0.8,
+              "extractable": 0.65,
+              "overall": 0.81,
+              "notes": "Educational primer on trend-following strategy covering theoretical foundations, mechanics, and portfolio diversification benefits with academic citations."
+            },
+            {
+              "url": "https://www.grahamcapital.com/blog/fireside-insights-navigating-the-evolving-macro-landscape/",
+              "relevance": 0.6,
+              "depth": 0.4,
+              "extractable": 0.5,
+              "overall": 0.5,
+              "notes": "Fireside chat transcript with firm founder discussing macro relevance, talent retention, and risk management; mostly promotional/conversational rather than analytical research."
+            }
+          ],
+          "avg_score": 0.723,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 10,
+          "day": 1,
+          "date": "2026-11-06"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-11-05"
+  "last_summary_sent_date": "2026-11-06"
 }
