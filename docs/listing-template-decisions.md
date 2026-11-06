@@ -59,7 +59,7 @@ being worth building.
 | troweprice | `date_separator` ("Date · Category"); U+00A0 in titles fixed on the hand-written side first |
 | msci-research | `date_separator`, `date_part=after`. Reports "order differs" on about half of A/B runs: the site varies card order and serves exactly max_articles cards, so the set cannot change |
 
-## TEMPLATE — rss_feed (8)
+## TEMPLATE — rss_feed (9)
 
 | source | note |
 | --- | --- |
@@ -71,6 +71,7 @@ being worth building.
 | fulcrum-asset-management | WordPress feed for the insights post type (`?post_type=insights`); `path_prefix`, `sort`. Template-only (auto-promoted 2026-10-24, no hand-written function) |
 | bnp-paribas-am | WordPress feed of the en-au financial-advisors insights site (Front of mind / Portfolio perspectives / Forward thinking); every item is an article, dated pubDate, no filter needed. Template-only (auto-promoted 2026-10-31, no hand-written function) |
 | capital-fund-management | WordPress site feed `/feed/`, every item an insight post dated pubDate, no filter needed; podcast announcements are listed but the content fetcher refuses them (141 chars), so they stay title-only. Template-only (auto-promoted 2026-11-02, no hand-written function) |
+| madison-investments | WordPress site feed `/feed/`, every item an Insights post dated pubDate (podcast episodes carry a full transcript in the page body), no filter needed; `sort`. Template-only (auto-promoted 2026-11-06, no hand-written function) |
 
 ## TEMPLATE — api_json (3)
 

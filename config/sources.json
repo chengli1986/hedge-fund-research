@@ -1152,6 +1152,29 @@
         "feed": "url"
       },
       "listing_template_active": true
+    },
+    {
+      "id": "madison-investments",
+      "strategy_tags": [
+        "fixed_income",
+        "equity",
+        "multi_asset"
+      ],
+      "name": "Madison Investments",
+      "short_name": "Madison",
+      "url": "https://madisoninvestments.com/feed/",
+      "method": "rss",
+      "frequency": "monthly",
+      "description": "Independent, employee-owned manager in Madison, Wisconsin (~$28B AUM as of Mar 2026), founded in 1974. Risk-first \"Participate and Protect\" philosophy across fixed income, equity and multi-asset strategies for advisors, institutions, credit unions and insurers.",
+      "notable_authors": [],
+      "expected_hostname": "madisoninvestments.com",
+      "max_articles": 10,
+      "listing_template": {
+        "type": "rss_feed",
+        "feed": "url",
+        "sort": "date_desc"
+      },
+      "listing_template_active": true
     }
   ]
 }

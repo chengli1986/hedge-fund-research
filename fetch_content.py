@@ -2607,6 +2607,41 @@ def _fetch_content_cfm(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+MADISON_MIN_CONTENT = 500  # Refuse teaser/video-only pages
+
+
+def _fetch_content_madison_investments(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Madison Investments insight content via requests (SSR WordPress).
+
+    The listing is madisoninvestments.com's WordPress RSS feed (a listing
+    template). The body is the Gutenberg `div.entry-content`; the
+    "The Issue at Hand" podcast pages carry a full transcript there, kept as
+    text. The embedded subscribe modal (style/script/overlay) is dropped
+    before extraction.
+    """
+    url = article["url"]
+    log.info("  Madison: fetching article page %s", url)
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Madison: fetch failed: %s", e)
+        return None
+
+    soup = BeautifulSoup(resp.text, "html.parser")
+    for tag in soup.select("script, style, div.subscribe-modal-overlay"):
+        tag.decompose()
+    text = _normalize_html(str(soup), "div.entry-content p, div.entry-content li")
+    if not _check_min_content_length(text, MADISON_MIN_CONTENT):
+        log.warning("  Madison: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Madison: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -2655,6 +2690,7 @@ CONTENT_FETCHERS = {
     "rbc-bluebay": _fetch_content_rbc_bluebay,
     "bnp-paribas-am": _fetch_content_bnp_paribas_am,
     "capital-fund-management": _fetch_content_cfm,
+    "madison-investments": _fetch_content_madison_investments,
 }
 
 

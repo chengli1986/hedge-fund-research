@@ -81,6 +81,7 @@ BADGE_COLORS: dict[str, str] = {
     "rbc-bluebay": "#1010b8",               # RBC BlueBay deep royal blue (brand blue; the same grid search with Fulcrum added: min RGB dist 71.2 across all 44 colors — 71.2 to #1f49e0 MSCI cobalt, 71.4 to #3949ab Matthews indigo, 78.8 to #301070 Blue Owl midnight; WCAG AAA 11.7:1 on white)
     "bnp-paribas-am": "#e01818",            # BNP Paribas AM scarlet (the brand green band is full — nearest green-dominant AA colour sits only 50 from the palette; the same grid search with RBC BlueBay added: min RGB dist 67.1 across all 45 colors — 67.1 to #c45000 ARK orange, 72.6 to #e8601c Amundi orange, 73.4 to #c2185b Research Affiliates pink; WCAG AA 4.9:1 on white)
     "capital-fund-management": "#e00098",   # CFM hot magenta (grid search over WCAG-AA colours with all 46 existing: min RGB dist 69.3 — 69.3 to #a31fa3 Loomis purple, 72.1 to #c2185b Research Affiliates pink; WCAG AA 4.54:1 on white)
+    "madison-investments": "#887078",       # Madison dusty mauve-grey (same grid search, HLS saturation <=0.85, with all 47 existing: min RGB dist 68.5 — 68.5 to #b85450 Ares coral, 68.9 to #7a4cb1 JPMAM purple, 69.1 to #5e3a82 Apollo; WCAG AA 4.53:1 on white)
 }
 
 INITIAL_VISIBLE = 20
@@ -423,6 +424,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "总部位于巴黎的量化与系统化资管公司，1991 年由 Jean-Pierre Aguilar 创立，管理规模约 $36B+（2026 年 9 月）。以物理学式的科研文化著称，从管理期货/趋势跟踪起家，现以旗舰多策略项目和日内交易为主，服务全球机构与财富管理客户，在纽约、伦敦、多伦多、上海设有办公室。",
         "notable_en": "Chairman and chief scientist Jean-Philippe Bouchaud, a statistical physicist, founded Science & Finance in 1994, which merged into CFM in 2000; the firm co-runs an econophysics chair and publishes academic market-microstructure research.",
         "notable_zh": "董事长兼首席科学家 Jean-Philippe Bouchaud 为统计物理学家，1994 年创立的 Science & Finance 于 2000 年并入 CFM；公司与学界合办计量经济物理学讲席，长期发表市场微观结构方面的学术研究。",
+    },
+    "madison-investments": {
+        "founded": "1974", "aum": "~$28B", "hq": "Madison, WI, USA",
+        "type_en": "Asset Manager", "type_zh": "资产管理",
+        "desc_zh": "总部位于美国威斯康星州麦迪逊的独立、员工持股资产管理公司，1974 年成立，管理规模约 $28B（截至 2026 年 3 月 31 日）。奉行以风险管理为核心的 \"Participate and Protect\" 投资理念，力求在分享长期上涨的同时控制下行风险，提供固定收益、股票与多资产策略，客户涵盖投资顾问、机构、信用社与保险公司。",
+        "notable_en": "Trademarked \"Participate and Protect\" philosophy built around downside protection; since May 2026 its fixed-income team publishes the monthly \"The Issue at Hand\" podcast, hosted by Christopher Aleman, explaining bond-market risks for advisors, with full transcripts posted.",
+        "notable_zh": "以注册商标 \"Participate and Protect\" 的下行保护理念著称；2026 年 5 月起固定收益团队推出月度播客 \"The Issue at Hand\"（Christopher Aleman 主持），面向投资顾问讲解债券市场风险，并在官网发布完整文字稿。",
     },
 }
 
