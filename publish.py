@@ -82,6 +82,7 @@ BADGE_COLORS: dict[str, str] = {
     "bnp-paribas-am": "#e01818",            # BNP Paribas AM scarlet (the brand green band is full — nearest green-dominant AA colour sits only 50 from the palette; the same grid search with RBC BlueBay added: min RGB dist 67.1 across all 45 colors — 67.1 to #c45000 ARK orange, 72.6 to #e8601c Amundi orange, 73.4 to #c2185b Research Affiliates pink; WCAG AA 4.9:1 on white)
     "capital-fund-management": "#e00098",   # CFM hot magenta (grid search over WCAG-AA colours with all 46 existing: min RGB dist 69.3 — 69.3 to #a31fa3 Loomis purple, 72.1 to #c2185b Research Affiliates pink; WCAG AA 4.54:1 on white)
     "madison-investments": "#887078",       # Madison dusty mauve-grey (same grid search, HLS saturation <=0.85, with all 47 existing: min RGB dist 68.5 — 68.5 to #b85450 Ares coral, 68.9 to #7a4cb1 JPMAM purple, 69.1 to #5e3a82 Apollo; WCAG AA 4.53:1 on white)
+    "muzinich": "#5868e8",                  # Muzinich periwinkle (grid search over WCAG-AA colors, HLS saturation <=0.85, black excluded, with all 48 existing: min RGB dist 65.4 — 65.4 to #1f49e0 MSCI cobalt, 66.1 to #58a6ff Man sky blue, 67.5 to #9b6be0 GMO violet; WCAG AA 4.6:1 on white)
 }
 
 INITIAL_VISIBLE = 20
@@ -431,6 +432,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "总部位于美国威斯康星州麦迪逊的独立、员工持股资产管理公司，1974 年成立，管理规模约 $28B（截至 2026 年 3 月 31 日）。奉行以风险管理为核心的 \"Participate and Protect\" 投资理念，力求在分享长期上涨的同时控制下行风险，提供固定收益、股票与多资产策略，客户涵盖投资顾问、机构、信用社与保险公司。",
         "notable_en": "Trademarked \"Participate and Protect\" philosophy built around downside protection; since May 2026 its fixed-income team publishes the monthly \"The Issue at Hand\" podcast, hosted by Christopher Aleman, explaining bond-market risks for advisors, with full transcripts posted.",
         "notable_zh": "以注册商标 \"Participate and Protect\" 的下行保护理念著称；2026 年 5 月起固定收益团队推出月度播客 \"The Issue at Hand\"（Christopher Aleman 主持），面向投资顾问讲解债券市场风险，并在官网发布完整文字稿。",
+    },
+    "muzinich": {
+        "founded": "1988", "aum": "~$43B", "hq": "New York, USA",
+        "type_en": "Credit Specialist Asset Manager", "type_zh": "信用专业资产管理",
+        "desc_zh": "总部位于纽约的独立私有企业信用专业资管，1988 年成立，管理资产约 $43B（2026 年 2 月底）。业务 100% 聚焦信用：公开市场覆盖高收益、投资级、新兴市场与多资产信用；私募市场做欧洲平行/直接贷款、私募债与航空融资，在全球设有 18 个办公室。",
+        "notable_en": "30+ years investing in high yield; in private markets it lends to mid-market companies alongside banks (\"parallel lending\"). Publishes a weekly market comment, a monthly EM report and a monthly corporate credit snapshot.",
+        "notable_zh": "投资高收益债 30 余年；私募业务与银行并肩向中型企业放贷（「平行贷款」）。定期发布每周市场评论、新兴市场月报和企业信用月度快照。",
     },
 }
 

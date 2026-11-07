@@ -2699,6 +2699,69 @@ def _fetch_content_madison_investments(article: dict) -> Optional[tuple[Path, st
     return (content_path, "ok")
 
 
+MUZINICH_MIN_CONTENT = 500  # Refuse teaser pages
+MUZINICH_TAIL_HEADINGS = {"references", "important information", "index descriptions"}
+MUZINICH_FEEDBACK_PREFIX = "If you have any feedback on this article"
+
+
+def _fetch_content_muzinich(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Muzinich & Co opinion content via requests (SSR).
+
+    The listing is muzinich.com/opinions (a card_list template). The page has
+    two `div.content` blocks: one in the banner (title only) and the body in
+    `div.col-md-8 > div.content`. The body ends in chart sources, references,
+    index descriptions and a ~5K-char "Important information" block, mostly
+    `p.disclaimer-14` / `p.disclaimer-12` but not always (some pages leave the
+    legal paragraphs unclassed, some start "References" unclassed). Figure
+    sources mid-article are disclaimer-classed too, so those classes are
+    dropped one by one, and everything from a tail heading ("References",
+    "Important information", "Index descriptions") on; also the date line,
+    the "If you have any feedback..." preamble and "--------" rules. Podcast pages ("/opinions/podcast-...")
+    are an audio player plus a ~600-char blurb and are refused, so they are
+    listed title-only (user 2026-11-01).
+    """
+    url = article["url"]
+    if urlsplit(url).path.rstrip("/").rsplit("/", 1)[-1].startswith("podcast"):
+        log.info("  Muzinich: podcast page, title only: %s", url)
+        return None
+    log.info("  Muzinich: fetching article page %s", url)
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Muzinich: fetch failed: %s", e)
+        return None
+
+    soup = BeautifulSoup(resp.text, "html.parser")
+    body = "div.col-md-8 > div.content"
+    container = soup.select_one(body)
+    if container is not None:
+        tail = False
+        for child in container.find_all(recursive=False):
+            classes = set(child.get("class") or [])
+            words = child.get_text(" ", strip=True)
+            if words.lower() in MUZINICH_TAIL_HEADINGS:
+                tail = True  # references / index notes / legal text to the end
+            if (
+                tail
+                or classes & {"disclaimer-14", "disclaimer-12", "small", "category-date"}
+                or words.startswith(MUZINICH_FEEDBACK_PREFIX)
+                or (words and set(words) <= {"-"})
+            ):
+                child.decompose()
+    text = _normalize_html(
+        str(soup), f"{body} p, {body} li, {body} h2, {body} h3, {body} h4"
+    )
+    if not _check_min_content_length(text, MUZINICH_MIN_CONTENT):
+        log.warning("  Muzinich: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Muzinich: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -2748,6 +2811,7 @@ CONTENT_FETCHERS = {
     "bnp-paribas-am": _fetch_content_bnp_paribas_am,
     "capital-fund-management": _fetch_content_cfm,
     "madison-investments": _fetch_content_madison_investments,
+    "muzinich": _fetch_content_muzinich,
 }
 
 

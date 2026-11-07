@@ -1175,6 +1175,35 @@
         "sort": "date_desc"
       },
       "listing_template_active": true
+    },
+    {
+      "id": "muzinich",
+      "strategy_tags": [
+        "fixed_income",
+        "private_credit",
+        "emerging_markets",
+        "macro"
+      ],
+      "name": "Muzinich & Co",
+      "short_name": "Muzinich",
+      "url": "https://www.muzinich.com/opinions",
+      "method": "ssr",
+      "frequency": "weekly",
+      "description": "Independent, privately owned corporate credit specialist headquartered in New York (~US$43B AUM as of Feb 2026), founded in 1988. 100% credit: high yield, investment grade, emerging-market and multi-asset credit in public markets, plus European parallel/direct lending, private debt and aviation finance in private markets.",
+      "notable_authors": [],
+      "expected_hostname": "muzinich.com",
+      "max_articles": 10,
+      "listing_template": {
+        "type": "card_list",
+        "fetch": "requests",
+        "card": "div.card",
+        "link": "a.title",
+        "date": "p.category-date",
+        "date_separator": "|",
+        "date_part": "after",
+        "sort": "date_desc"
+      },
+      "listing_template_active": true
     }
   ]
 }

@@ -42,7 +42,7 @@ Shapes with no template type today: `sitemap_plus_page` (2),
 `attestation` (2), `card_list_paginated` (1). Each is one source short of
 being worth building.
 
-## TEMPLATE — card_list (12)
+## TEMPLATE — card_list (13)
 
 | source | note |
 | --- | --- |
@@ -58,6 +58,7 @@ being worth building.
 | acadian-asset | month-granularity date stays in `date_raw`, which publish reads |
 | troweprice | `date_separator` ("Date · Category"); U+00A0 in titles fixed on the hand-written side first |
 | msci-research | `date_separator`, `date_part=after`. Reports "order differs" on about half of A/B runs: the site varies card order and serves exactly max_articles cards, so the set cannot change |
+| muzinich | SSR `div.card` grid with title link and "Category \| Date" line: `date_separator` + `date_part=after`, `sort=date_desc`. Podcast cards are listed too; the content extractor refuses them (title-only) |
 
 ## TEMPLATE — rss_feed (9)
 
