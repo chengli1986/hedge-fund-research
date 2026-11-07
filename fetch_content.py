@@ -2392,7 +2392,22 @@ def _fetch_content_mfs(article: dict) -> Optional[tuple[Path, str]]:
     matches what `main p` would return on every page checked. Verified live
     2026-09-06: 7.5K chars on "Municipals: The Hidden Costs of a Passive
     Approach", 9.4K on Week in Review, 11.6K on the target-date-funds piece.
+
+    2026-11-07: some pages are hubs whose report is a PDF ("Portfolio
+    Perspectives // Q4 2026": 515 chars of intro + authors + contents, the
+    report behind a "Read Now" button). Below hub_body_max the page's own
+    "Read Now" / "Download" PDF link in <article> is read, if its opening
+    matches the title; otherwise the page text is stored as before
+    (tests/test_mfs_linked_pdf.py). Everything for this lives inside this
+    function: module-level code is part of the shared code version, and
+    changing it would requeue every source's permafails.
     """
+    # `article p` on the 28 distinct live MFS pages (2026-11-07): article pages
+    # 2,940-16,447 chars (shortest: ETF Pulse 2,940, US Midterm Elections
+    # 3,003); Straight Talk webcast teasers 376-719 (953 stored for one in
+    # August), none with a PDF; the Portfolio Perspectives hub 515. 1,500 sits
+    # between the two groups, so no full article page triggers a PDF download.
+    hub_body_max = 1500
     url = article["url"]
     log.info("  MFS: fetching article page %s", url)
     try:
@@ -2403,6 +2418,16 @@ def _fetch_content_mfs(article: dict) -> Optional[tuple[Path, str]]:
         return None
 
     text = _normalize_html(resp.text, "article p")
+    if len(text) < hub_body_max:
+        # The hub's own report button ("Read Now", "Download ..."), not "Print"
+        # and not a PDF outside <article> (factsheets, footer documents).
+        soup = BeautifulSoup(resp.text, "html.parser")
+        link = next((a for a in soup.select('article a[href*=".pdf"]')
+                     if a.get_text(" ", strip=True).lower() == "read now"
+                     or a.get_text(" ", strip=True).lower().startswith("download")), None)
+        pdf_text = _linked_article_pdf(link, url, article.get("title", ""), "MFS")
+        if pdf_text:
+            text = pdf_text
     if not _check_min_content_length(text):
         log.warning("  MFS: extracted text too short (%d chars)", len(text))
         return None
