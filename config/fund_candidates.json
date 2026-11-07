@@ -4259,11 +4259,31 @@
         "problems": [
           "HTTPError: 403 Client Error: Forbidden for url: https://ninetyone.com/en/insights"
         ]
+      },
+      {
+        "at": "2026-11-07T18:02:09+00:00",
+        "type": "card_list",
+        "spec": {
+          "type": "card_list",
+          "fetch": "playwright",
+          "card": "a[href*=\"/insights/\"]",
+          "link": "self",
+          "wait_selector": "a[href*=\"/insights/\"]",
+          "path_prefix": "/en/insights/macro-insights/"
+        },
+        "listing_url": "https://ninetyone.com/en/insights/macro-insights",
+        "ok": false,
+        "rows": 0,
+        "dated": 0,
+        "problems": [
+          "only 0 row(s), need 3"
+        ],
+        "sample": []
       }
     ],
-    "synthesis_attempted_at": "2026-10-31T18:02:51.383271+00:00",
+    "synthesis_attempted_at": "2026-11-07T18:02:57.457274+00:00",
     "synthesis_outcome": "failed",
-    "synthesis_failure_reason": "Cloudflare bot challenge on every route (2026-10-31): requests/curl get HTTP 403 'Just a moment...' for /en/insights, /en/rss, /rss.xml, /sitemap.xml, /robots.txt, regional /en/united-kingdom|united-states/insights; headless Chromium also gets 403 + Turnstile challenge page (title 'Just a moment...', goto timed out in try_template). No RSS/API reachable; no bypass attempted."
+    "synthesis_failure_reason": "2026-11-07: curl/requests still HTTP 403 Cloudflare 'Just a moment...' on /en/insights, /en/rss, /sitemap.xml, /robots.txt, /en/united-states/insights. Headless Chromium passed the challenge on 2 of 3 /en/insights loads (the 3rd: challenge-platform XHRs only, 0 site links); when it passed, /en/insights held only 6 topic-hub carousel cards (no article links/dates); try_template playwright card_list on /en/insights/macro-insights returned 0 rows. No API/RSS reachable; no bypass attempted."
   },
   {
     "id": "hamilton-lane",
@@ -4434,7 +4454,7 @@
     "name": "Ariel Investments",
     "homepage_url": "https://www.arielinvestments.com",
     "source": "manual",
-    "status": "inaccessible",
+    "status": "visitable",
     "strategy_tags": [
       "equity"
     ],
@@ -4444,12 +4464,64 @@
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-10-25T09:00:02.974015+08:00",
     "added_at": "2026-10-17",
-    "status_since": "2026-10-25T09:01:11.512529+08:00",
+    "status_since": "2026-11-08T02:02:57.461520+08:00",
     "last_deep_analyzed_at": "2026-10-18T01:00:32Z",
     "quality": "MEDIUM",
     "quality_score": 0.5,
     "topics": "equity, value investing, market commentary",
-    "notes": "[auto-stall 2026-10-25] seed->inaccessible after 8d stuck Quarterly value-equity commentary; low frequency"
+    "notes": "[auto-stall 2026-10-25] seed->inaccessible after 8d stuck Quarterly value-equity commentary; low frequency",
+    "template_attempts": [
+      {
+        "at": "2026-11-07T18:00:48+00:00",
+        "type": "card_list",
+        "spec": {
+          "type": "card_list",
+          "fetch": "requests",
+          "card": ".ar-listing-paged a.article",
+          "link": "self",
+          "title": ".ar-article-title",
+          "date": ".ar-article-date",
+          "path_prefix": "/article/",
+          "sort": "date_desc"
+        },
+        "listing_url": "https://www.arielinvestments.com/news-insights-listing/?tags=31",
+        "ok": true,
+        "rows": 10,
+        "dated": 10,
+        "problems": [],
+        "sample": [
+          {
+            "title": "The Patient Investor - 2Q26",
+            "url": "https://www.arielinvestments.com/article/the-patient-investor-2q26/",
+            "date": "2026-08-07"
+          },
+          {
+            "title": "Company Spotlight: Knowles Corporation",
+            "url": "https://www.arielinvestments.com/article/company-spotlight-knowles-corporation/",
+            "date": "2026-07-28"
+          },
+          {
+            "title": "Company Spotlight: Orsted AS",
+            "url": "https://www.arielinvestments.com/article/company-spotlight-orsted-as/",
+            "date": "2026-07-28"
+          }
+        ]
+      }
+    ],
+    "listing_template": {
+      "type": "card_list",
+      "fetch": "requests",
+      "card": ".ar-listing-paged a.article",
+      "link": "self",
+      "title": ".ar-article-title",
+      "date": ".ar-article-date",
+      "path_prefix": "/article/",
+      "sort": "date_desc"
+    },
+    "listing_url": "https://www.arielinvestments.com/news-insights-listing/?tags=31",
+    "expected_hostname": "arielinvestments.com",
+    "synthesis_attempted_at": "2026-11-07T18:02:57.457274+00:00",
+    "synthesis_outcome": "success"
   },
   {
     "id": "pershing-square",
