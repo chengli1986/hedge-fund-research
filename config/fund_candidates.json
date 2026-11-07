@@ -3637,7 +3637,7 @@
     "name": "Muzinich & Co",
     "homepage_url": "https://www.muzinich.com/opinions",
     "source": "manual",
-    "status": "visitable",
+    "status": "promoted",
     "strategy_tags": [
       "fixed_income",
       "private_credit",
@@ -3648,11 +3648,11 @@
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-10-15T09:00:08.643495+08:00",
-    "status_since": "2026-10-31T09:06:18.130865+08:00",
+    "status_since": "2026-11-07T09:04:02.897652+08:00",
     "quality": "MEDIUM",
     "quality_score": 0.62,
     "topics": "credit, high yield, EM, CLOs, macro",
-    "notes": "[auto-stall 2026-10-15] seed->inaccessible after 50d stuck Weekly credit comment; short pieces, T&C gate",
+    "notes": "RECOMMEND: trial passed (7/7 days with articles, quality=0.69)",
     "last_deep_analyzed_at": "2026-10-11T01:00:53Z",
     "added_at": "2026-08-25",
     "template_attempts": [
@@ -3706,7 +3706,9 @@
     "listing_url": "https://www.muzinich.com/opinions",
     "expected_hostname": "muzinich.com",
     "synthesis_attempted_at": "2026-10-31T01:06:18.130827+00:00",
-    "synthesis_outcome": "success"
+    "synthesis_outcome": "success",
+    "synthesis_priority": true,
+    "synthesis_priority_set_at": "2026-11-07T09:04:02.897715+08:00"
   },
   {
     "id": "capital-fund-management",

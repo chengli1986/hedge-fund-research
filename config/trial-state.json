@@ -11371,9 +11371,7 @@
       "total_articles": 49,
       "days_with_articles": 7,
       "avg_quality_score": 0.66
-    }
-  ],
-  "active_trials": [
+    },
     {
       "id": "muzinich",
       "name": "Muzinich & Co",
@@ -11383,7 +11381,7 @@
       "quality": "MEDIUM",
       "topics": "credit, high yield, EM, CLOs, macro",
       "start_date": "2026-11-01",
-      "end_date": null,
+      "end_date": "2026-11-07",
       "daily_checks": {
         "2026-11-01": {
           "accessible": true,
@@ -11498,10 +11496,29 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-11-07": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.muzinich.com/opinions/parallel-lending-dc-decumulation?utm_source=Insight&utm_medium=Website&utm_campaign=parallel-lending-as-part-of-a-dc-decumulation-solution",
+            "https://www.muzinich.com/opinions/muzinich-weekly-market-comment?utm_source=Insight&utm_medium=Website&utm_campaign=weekly_comment_02_November_2026",
+            "https://www.muzinich.com/opinions/2026-10-27-a-new-flight-path-for-investors?utm_source=Insight&utm_medium=Website&utm_campaign=the_case_for_aviation_finance_in_institutional_portfolios",
+            "https://www.muzinich.com/opinions/podcast-stronger-together-the-power-of-parallel-lending?utm_source=Insight&utm_medium=Website&utm_campaign=Stronger_Together_The_Power_of_Parallel_Lending",
+            "https://www.muzinich.com/opinions/muzinich-weekly-market-comment-19-10-26?utm_source=Insight&utm_medium=Website&utm_campaign=weekly_comment_19_October_2026",
+            "https://www.muzinich.com/opinions/2026-10-16-em-monthly-latin-america-makes-the-right-turn?utm_source=Insight&utm_medium=Website&utm_campaign=EM_Monthly_October_2026",
+            "https://www.muzinich.com/opinions/parallel-lending-five-lessons-learned-october-2026?utm_source=Insight&utm_medium=Website&utm_campaign=parallel-lending-five-lessons-learned",
+            "https://www.muzinich.com/opinions/muzinich-weekly-market-comment-12-10-26?utm_source=Insight&utm_medium=Website&utm_campaign=weekly_comment_12_October_2026",
+            "https://www.muzinich.com/opinions/us-high-yield-compelling-opportunity?utm_source=Insight&utm_medium=Website&utm_campaign=ushy_compelling_opportunity_october_26",
+            "https://www.muzinich.com/opinions/corporate-credit-snapshot?utm_source=Insight&utm_medium=Website&utm_campaign=Snapshot_october_2026"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -11661,9 +11678,22 @@
           "js_only_checked": 0,
           "day": 6,
           "date": "2026-11-06"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 7,
+          "date": "2026-11-07"
         }
-      ]
-    },
+      ],
+      "total_articles": 70,
+      "days_with_articles": 7,
+      "avg_quality_score": 0.692
+    }
+  ],
+  "active_trials": [
     {
       "id": "fairtree",
       "name": "Fairtree",
@@ -11707,6 +11737,24 @@
             "https://www.fairtree.com/resource-hub/commentary/fairtree-global-listed-real-estate-fund-q3-2026-commentary/",
             "https://www.fairtree.com/resource-hub/commentary/fairtree-balanced-prescient-fund-q3-2026-commentary/",
             "https://www.fairtree.com/resource-hub/article/emerging-markets-on-firmer-ground/"
+          ],
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-11-07": {
+          "accessible": true,
+          "article_count": 16,
+          "date_count": 0,
+          "article_urls": [
+            "https://www.fairtree.com/resource-hub/insight/macro-pulse-episode-42/",
+            "https://www.fairtree.com/resource-hub/article/the-decade-of-the-port/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-fr-income-plus-fund-q3-2026-commentary/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-global-flexible-income-plus-fund-q3-2026-commentary/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-sa-equity-prescient-fund-q3-2026-commentary/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-global-emerging-markets-fund-q3-2026-commentary/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-global-equity-fund-q3-2026-commentary/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-global-listed-real-estate-fund-q3-2026-commentary/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-balanced-prescient-fund-q3-2026-commentary/"
           ],
           "error": null,
           "fetcher_used": false
@@ -11784,6 +11832,41 @@
           "js_only_checked": 0,
           "day": 2,
           "date": "2026-11-06"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.fairtree.com/resource-hub/insight/macro-pulse-episode-42/",
+              "relevance": 0.3,
+              "depth": 0.1,
+              "extractable": 0.2,
+              "overall": 0.2,
+              "notes": "Landing page for macro podcast series with subscription form; minimal substantive content, mostly navigation and CRM fields"
+            },
+            {
+              "url": "https://www.fairtree.com/resource-hub/commentary/fairtree-global-listed-real-estate-fund-q3-2026-commentary/",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.75,
+              "overall": 0.87,
+              "notes": "Detailed Q3 2026 real estate fund commentary with regional/sector performance analysis, positioning changes, and attribution breakdown"
+            },
+            {
+              "url": "https://www.fairtree.com/resource-hub/commentary/fairtree-balanced-prescient-fund-q3-2026-commentary/",
+              "relevance": 0.95,
+              "depth": 0.9,
+              "extractable": 0.8,
+              "overall": 0.9,
+              "notes": "Comprehensive Q3 2026 balanced fund commentary covering macro drivers (oil shock, central bank policy), asset class performance, and fund positioning with data"
+            }
+          ],
+          "avg_score": 0.657,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 3,
+          "date": "2026-11-07"
         }
       ]
     },
@@ -11799,6 +11882,25 @@
       "end_date": null,
       "daily_checks": {
         "2026-11-06": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.grahamcapital.com/blog/from-suppressed-to-structural-the-return-of-volatility/",
+            "https://www.grahamcapital.com/blog/trend-following-primer/",
+            "https://www.grahamcapital.com/blog/fireside-insights-navigating-the-evolving-macro-landscape/",
+            "https://www.grahamcapital.com/blog/lessons-from-market-crises/",
+            "https://www.grahamcapital.com/blog/macro-across-monetary-regimes/",
+            "https://www.grahamcapital.com/blog/whats-next-for-quant-caasas-primer-featuring-thomas-feng-ph-d-chief-investment-officer-quant-strategies/",
+            "https://www.grahamcapital.com/blog/interpreting-correlation/",
+            "https://www.grahamcapital.com/blog/resilient-strategies-tailwinds-in-left-tail-scenarios/",
+            "https://www.grahamcapital.com/blog/global-macro-primer/",
+            "https://www.grahamcapital.com/blog/market-diversification/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-11-07": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -11855,9 +11957,44 @@
           "js_only_checked": 10,
           "day": 1,
           "date": "2026-11-06"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.grahamcapital.com/blog/lessons-from-market-crises/",
+              "relevance": 0.85,
+              "depth": 0.65,
+              "extractable": 0.75,
+              "overall": 0.75,
+              "notes": "Portfolio resilience framework across market crises with historical case studies; substantive but somewhat generic best-practices oriented; text appears truncated at end."
+            },
+            {
+              "url": "https://www.grahamcapital.com/blog/macro-across-monetary-regimes/",
+              "relevance": 0.9,
+              "depth": 0.8,
+              "extractable": 0.7,
+              "overall": 0.82,
+              "notes": "Macro hedge fund alpha generation analysis across monetary policy regimes with empirical data and charts; solid research depth; text truncated mid-sentence."
+            },
+            {
+              "url": "https://www.grahamcapital.com/blog/whats-next-for-quant-caasas-primer-featuring-thomas-feng-ph-d-chief-investment-officer-quant-strategies/",
+              "relevance": 0.5,
+              "depth": 0.3,
+              "extractable": 0.8,
+              "overall": 0.48,
+              "notes": "Promotional content announcing CIO participation in industry primer; minimal substantive analysis; mostly bio and disclosure boilerplate."
+            }
+          ],
+          "avg_score": 0.683,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 7,
+          "day": 2,
+          "date": "2026-11-07"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-11-06"
+  "last_summary_sent_date": "2026-11-07"
 }
