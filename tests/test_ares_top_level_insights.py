@@ -139,3 +139,25 @@ def test_dates_are_parsed_from_the_page(monkeypatch):
     got, _ = _run(monkeypatch)
     by_url = {a["url"]: a for a in got}
     assert by_url[f"{BASE}/beyond-the-game"]["date"] == "2026-08-31"
+
+
+# ── 2026-11-04: Ares dropped the /us/ locale prefix ────────────────────────────
+# The sitemap now lists /news-and-insights/<slug> only (0 /us/ URLs on
+# 2026-11-07); the fetcher, matching /us/news-and-insights/, returned 0 articles
+# two pipeline runs in a row. The old /us/ URLs still answer 200 without a
+# redirect, so both shapes are accepted.
+NEW_BASE = "https://www.ares.com/news-and-insights"
+
+
+def _unprefixed(mapping):
+    return {u.replace(BASE, NEW_BASE): v for u, v in mapping.items()}
+
+
+def test_unprefixed_sitemap_urls_are_collected(monkeypatch):
+    got, _ = _run(monkeypatch, sitemap=_sitemap(_unprefixed(LASTMOD)),
+                  pages=_unprefixed(PAGES))
+    urls = _urls(got)
+    assert f"{NEW_BASE}/perspectives/what-is-infrastructure" in urls
+    assert f"{NEW_BASE}/beyond-the-game" in urls
+    assert f"{NEW_BASE}/a-box-seat" not in urls
+    assert f"{NEW_BASE}/press-releases/ares-reports-q3" not in urls

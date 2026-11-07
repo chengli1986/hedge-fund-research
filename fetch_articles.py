@@ -2417,8 +2417,10 @@ def fetch_ares_management(source: dict) -> list[dict]:
     resp = requests.get(sitemap_url, headers=HEADERS, timeout=20)
     resp.raise_for_status()
 
+    # /us/ is optional: Ares dropped the locale prefix from the sitemap around
+    # 2026-11-04 (old /us/ URLs still answer 200, no redirect).
     pattern = re.compile(
-        rf"<loc>({re.escape(base_url)}/us/news-and-insights/(perspectives/)?[^/<]+)</loc>"
+        rf"<loc>({re.escape(base_url)}(?:/us)?/news-and-insights/(perspectives/)?[^/<]+)</loc>"
         r"\s*<lastmod>([^<]+)</lastmod>",
         re.IGNORECASE,
     )
