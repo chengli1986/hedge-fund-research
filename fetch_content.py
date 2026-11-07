@@ -75,6 +75,15 @@ HEADERS = {
 # enforces a country+role disclaimer interstitial server-side on this cookie
 # pair; without it every /investments/ URL 302s to the disclaimer page.
 METLIFE_COOKIES = {"culture": "en-us", "disclaimer": "en-us/Institution"}
+# Shortest new-template body taken as an article: PDF-led pages' leads measured
+# 267-579 chars, the first new-template article 2,578 (2026-11-07).
+METLIFE_TEMPLATE_BODY_MIN = 1000
+
+
+def _url_key(url: str) -> tuple[str, str]:
+    """Host and path without a trailing slash: tells a redirect from the same page."""
+    parts = urlsplit(url)
+    return parts.netloc.lower(), parts.path.rstrip("/")
 
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 logging.basicConfig(
@@ -1683,6 +1692,12 @@ def _fetch_content_metlife_im(article: dict) -> Optional[tuple[Path, str]]:
     "Download ..." button in <main> (ten quarterly reviews, pension funding
     statuses and a chartbook had been permafail), if its opening matches the
     title. No such PDF still returns None.
+
+    2026-11-07: new articles also come on a second template with no read-more
+    section; their body is `main div.richtext` (tests/test_metlife_new_template.py).
+    It is read only on a page without a Download button, at
+    METLIFE_TEMPLATE_BODY_MIN chars or more, and when the request was not
+    redirected (the home page's cards would pass the length).
     """
     url = article["url"]
     log.info("  MetLife IM: fetching article page %s", url)
@@ -1699,26 +1714,43 @@ def _fetch_content_metlife_im(article: dict) -> Optional[tuple[Path, str]]:
                             "div[class*='terms-of-use'], div[class*='disclaimer']"):
         tag.decompose()
 
+    def _join(paragraphs) -> str:
+        kept = []
+        for p in paragraphs:
+            para = _paragraph_text(p)
+            if not para:
+                continue
+            # Same disclaimer, sometimes inlined in the body under a "Disclosure"
+            # heading run together with the text (9.3k of 30.5k chars on the
+            # 2026-07-20 Global Risks piece).
+            if para.lower().startswith("disclosure"):
+                continue
+            kept.append(para)
+        return "\n".join(kept)
+
     paragraphs = soup.select("div.read-more-section.richtext p")
-    _note_selector_result(bool(paragraphs))
-    kept = []
-    for p in paragraphs:
-        para = _paragraph_text(p)
-        if not para:
-            continue
-        # Same disclaimer, sometimes inlined in the body under a "Disclosure"
-        # heading run together with the text (9.3k of 30.5k chars on the
-        # 2026-07-20 Global Risks piece).
-        if para.lower().startswith("disclosure"):
-            continue
-        kept.append(para)
-    text = "\n".join(kept)
+    # New template (first seen 2026-11-07): no read-more section, the body is
+    # the richtext block in <main>. The search widget is also a richtext.
+    template_body = [] if paragraphs else [
+        p for p in soup.select("main div.richtext p")
+        if not p.find_parent(class_=re.compile("navigation-search"))]
+    _note_selector_result(bool(paragraphs or template_body))
+    text = _join(paragraphs)
 
     if not _check_min_content_length(text):
         button = next((a for a in soup.select('main a[href*=".pdf"]')
                        if a.get_text(" ", strip=True).lower().startswith("download")), None)
-        text = _linked_article_pdf(button, url, article.get("title", ""),
-                                   "MetLife IM", cookies=METLIFE_COOKIES)
+        if button is None:
+            # A PDF-led page's richtext is a lead (267-579 chars measured), so
+            # the template body counts only without a Download button, only at
+            # article length, and only on the page asked for: dead pinebridge
+            # URLs redirect to the home page, whose card blurbs measured 1,024.
+            body = _join(template_body)
+            text = body if (len(body) >= METLIFE_TEMPLATE_BODY_MIN
+                            and _url_key(resp.url) == _url_key(url)) else ""
+        else:
+            text = _linked_article_pdf(button, url, article.get("title", ""),
+                                       "MetLife IM", cookies=METLIFE_COOKIES)
 
     if not _check_min_content_length(text):
         log.warning("  MetLife IM: extracted text too short (%d chars)", len(text))
