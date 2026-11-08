@@ -4932,7 +4932,7 @@
     "name": "DoubleLine Capital",
     "homepage_url": "https://doubleline.com",
     "source": "manual",
-    "status": "seed",
+    "status": "inaccessible",
     "strategy_tags": [
       "fixed_income",
       "macro"
@@ -4942,12 +4942,12 @@
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-11-01T09:03:02.632373+08:00",
     "added_at": "2026-10-31",
-    "status_since": "2026-10-31T09:04:05.333767+08:00",
+    "status_since": "2026-11-08T09:03:36.530336+08:00",
     "last_deep_analyzed_at": "2026-11-01T01:04:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.7,
     "topics": "fixed income, macro, inflation, rates",
-    "notes": "Free weekly updates+blog at /markets-insights/"
+    "notes": "[auto-stall 2026-11-08] seed->inaccessible after 7d stuck Free weekly updates+blog at /markets-insights/"
   },
   {
     "id": "crescat-capital",
