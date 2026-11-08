@@ -2723,6 +2723,9 @@ def _fetch_content_muzinich(article: dict) -> Optional[tuple[Path, str]]:
     url = article["url"]
     if urlsplit(url).path.rstrip("/").rsplit("/", 1)[-1].startswith("podcast"):
         log.info("  Muzinich: podcast page, title only: %s", url)
+        # Refused without a request, so the evidence is empty and the page
+        # was labelled unknown (2026-11-08, first ingest).
+        note_failure_hint("media_without_text", "podcast page, audio player and blurb only")
         return None
     log.info("  Muzinich: fetching article page %s", url)
     try:
