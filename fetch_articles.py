@@ -1706,7 +1706,10 @@ def fetch_ark_invest(source: dict) -> list[dict]:
 
         # The feed double-escapes: "ARK&apos;s" arrives after XML parsing still
         # as an entity, and was stored and shown that way.
-        title = html.unescape(title_el.text.strip()) if title_el is not None and title_el.text else ""
+        # Collapse whitespace like the template: the feed carries &nbsp; in some
+        # titles, kept as \xa0 the A/B gate saw as a different title (2026-11-09).
+        title = (re.sub(r"\s+", " ", html.unescape(title_el.text)).strip()
+                 if title_el is not None and title_el.text else "")
         link = link_el.text.strip() if link_el is not None and link_el.text else ""
         if not title or not link:
             continue
@@ -3190,7 +3193,9 @@ def fetch_blue_owl_capital(source: dict) -> list[dict]:
         href = card.get("href", "")
         if not href:
             continue
-        url = urljoin(base_url, href)
+        # Some cards link /index%2Ephp/insights/<slug> (the CMS front controller,
+        # stripped by the template since bc43520); same page as /insights/<slug>.
+        url = listing_templates._strip_front_controller(urljoin(base_url, href))
         if not _validate_hostname(url, expected_host):
             continue
         if not urlparse(url).path.startswith("/insights/"):
