@@ -224,7 +224,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.97,
-    "notes": "Recheck: still culture/HR dominated, no fresh quant research",
+    "notes": "Recheck 11-09: essays/culture, no quant research",
     "research_links": [
       {
         "url": "https://www.twosigma.com/insights/",
@@ -248,7 +248,7 @@
       "article_signals": 2
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-09-16T01:01:24Z",
+    "last_deep_analyzed_at": "2026-11-09T01:03:39Z",
     "quality": "LOW",
     "topics": "quant research, HR/culture (culture-heavy, stale tech content)",
     "reject_reason": "content_not_research",
@@ -257,7 +257,7 @@
       "quant"
     ],
     "source": "auto_discovered",
-    "quality_score": 0.2,
+    "quality_score": 0.25,
     "status_since": "2026-04-12T02:31:04.953038+08:00",
     "added_at": "2026-04-04"
   },
@@ -2266,14 +2266,14 @@
     "strategy_tags": [
       "venture_capital"
     ],
-    "notes": "Recheck: VC advocacy/portfolio promo, not buy-side research",
+    "notes": "Recheck 11-09: VC advocacy, undated index",
     "official_domain": "a16z.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-05-15T09:00:10.435535+08:00",
-    "last_deep_analyzed_at": "2026-09-16T01:01:24Z",
+    "last_deep_analyzed_at": "2026-11-09T01:03:39Z",
     "quality": "LOW",
-    "quality_score": 0.1,
+    "quality_score": 0.3,
     "topics": "venture capital, AI, enterprise tech, founder commentary",
     "status_since": "2026-05-15T09:00:10.435535+08:00",
     "added_at": "2026-05-14"
@@ -4963,7 +4963,7 @@
     "official_domain": "www.crescat.net",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-11-08T09:03:02.782879+08:00",
+    "last_discovered_at": "2026-11-09T09:03:01.780219+08:00",
     "added_at": "2026-11-02",
     "status_since": "2026-11-02T09:04:16.677478+08:00",
     "quality": "MEDIUM",
@@ -4986,7 +4986,7 @@
     "official_domain": "www.oakmark.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-11-08T09:03:03.013586+08:00",
+    "last_discovered_at": "2026-11-09T09:03:01.983114+08:00",
     "quality": "MEDIUM",
     "quality_score": 0.55,
     "topics": "equity, value investing, quarterly commentary",
