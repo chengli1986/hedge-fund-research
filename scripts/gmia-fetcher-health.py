@@ -628,6 +628,24 @@ def apply_known_blocks(per_source: dict[str, dict], sources: list[dict]) -> None
             result["known_block"] = note
 
 
+# A source may carry "known_media_mix" once the user has decided that its
+# "content mix" WARN (every probed item a video page) is the source, not a
+# fault (2026-11-09: fulcrum-asset-management, whose written insights are rare).
+# The result stays a WARN in the state; only that warning stops alerting.
+MEDIA_MIX_PREFIX = "content mix:"
+
+
+def apply_known_media_mix(per_source: dict[str, dict], sources: list[dict]) -> None:
+    """Mark the content-mix WARN of a known video-heavy source as decided."""
+    for src in sources:
+        note = src.get("known_media_mix")
+        result = per_source.get(src["id"])
+        if not note or result is None:
+            continue
+        if result["status"] == "WARN" and (result.get("reason") or "").startswith(MEDIA_MIX_PREFIX):
+            result["known_media_mix"] = note
+
+
 # ── one night of grace for a site that is down ───────────────────────────────
 
 def apply_upstream_grace(per_source: dict[str, dict], prev_state: dict) -> None:
@@ -691,7 +709,7 @@ def classify_alerts(per_source: dict[str, dict], prev_state: dict) -> dict:
         prev_status = prev_record.get("status")
         new_status = result["status"]
 
-        if new_status == "KNOWN":
+        if new_status == "KNOWN" or (new_status == "WARN" and result.get("known_media_mix")):
             known.append((sid, result))
             continue
         if new_status == "UPSTREAM":
@@ -1234,7 +1252,8 @@ def print_console_report(per_source: dict[str, dict], total_runtime_s: float,
     print(f"Sources probed: {len(per_source)}    Total runtime: {total_runtime_s:.1f}s\n")
 
     fail_rows = [(sid, r) for sid, r in per_source.items() if r["status"] == "FAIL"]
-    warn_rows = [(sid, r) for sid, r in per_source.items() if r["status"] == "WARN"]
+    warn_rows = [(sid, r) for sid, r in per_source.items()
+                 if r["status"] == "WARN" and not r.get("known_media_mix")]
     ok_rows = [(sid, r) for sid, r in per_source.items() if r["status"] == "OK"]
 
     if fail_rows:
@@ -1257,6 +1276,12 @@ def print_console_report(per_source: dict[str, dict], total_runtime_s: float,
     if known_rows:
         print(f"🔒 KNOWN BLOCKED — decided, not alerting ({len(known_rows)}):")
         for sid, r in known_rows:
+            print(f"  {sid:25} {r['reason']}")
+        print()
+    media_rows = [(sid, r) for sid, r in per_source.items() if r.get("known_media_mix")]
+    if media_rows:
+        print(f"📺 KNOWN MEDIA MIX — decided, not alerting ({len(media_rows)}):")
+        for sid, r in media_rows:
             print(f"  {sid:25} {r['reason']}")
         print()
     if intake:
@@ -1475,14 +1500,17 @@ def render_html_email(
             f"🤖 NOT SUMMARISED — text was not an article ({total})", "#9a6700", decline_rows))
     if quality is not None:
         sections.append(_quality_section(quality))
-    if alerts.get("known"):
+    for title, key in (("🔒 KNOWN BLOCKED", "known_block"), ("📺 KNOWN MEDIA MIX", "known_media_mix")):
+        known = [(sid, r) for sid, r in alerts.get("known", []) if r.get(key)]
+        if not known:
+            continue
         known_rows = "".join(
             f'<tr><td style="padding:8px;font-weight:bold;color:#586069">{html.escape(sid)}</td>'
-            f'<td style="padding:8px;color:#586069">{html.escape(str(r.get("known_block")))}'
+            f'<td style="padding:8px;color:#586069">{html.escape(str(r.get(key)))}'
             f'<br><span style="font-size:11px">today: {html.escape(r.get("reason") or "")}</span></td></tr>'
-            for sid, r in alerts["known"])
+            for sid, r in known)
         sections.append(section_table(
-            f"🔒 KNOWN BLOCKED — decided, not alerting ({len(alerts['known'])})", "#586069", known_rows))
+            f"{title} — decided, not alerting ({len(known)})", "#586069", known_rows))
     sections.append(
         f'<h3 style="margin:14px 0 6px;color:#1a7f37">✅ HEALTHY ({len(alerts["healthy"])})</h3>'
         f'{healthy_html}'
@@ -1743,6 +1771,7 @@ def main() -> int:
 
     total_runtime_s = time.monotonic() - started
     apply_known_blocks(per_source, sources)
+    apply_known_media_mix(per_source, sources)
     # Before the console report and the --source return, so every view agrees.
     apply_upstream_grace(per_source, load_state())
 

@@ -146,6 +146,7 @@ def build_health(sources: list[dict], inspection: dict, probe: dict, rows: list[
             if state.get("last_inspected_at") else None,
             "probe_status": probed.get("status"),
             "known_block": source.get("known_block") or "",
+            "known_media_mix": source.get("known_media_mix") or "",
             "probe_reason": probed.get("last_failure_reason") or "",
             "most_recent_date": recent,
             "date_year_only": year_only,
@@ -254,6 +255,11 @@ def _alerts(rendered: list[dict], ab: list[dict], corrupt_backups: list[str],
         if row["probe_status"] == "FAIL":
             alerts.append({"kind": "probe_fail", "source": row["id"],
                            "detail": row["probe_reason"] or "探针失败"})
+        elif (row["probe_status"] == "WARN" and row.get("known_media_mix")
+              and (row["probe_reason"] or "").startswith("content mix:")):
+            # A decided video-heavy source (sources.json "known_media_mix").
+            alerts.append({"kind": "known_media_mix", "source": row["id"],
+                           "detail": "已知以视频为主、已决定不提醒：" + row["known_media_mix"]})
         elif row["probe_status"] == "WARN":
             alerts.append({"kind": "probe_warn", "source": row["id"],
                            "detail": row["probe_reason"] or "探针告警"})
@@ -415,7 +421,7 @@ def render_html(health: dict) -> str:
                        "probe_fail": "探针失败", "probe_warn": "探针告警", "probe_upstream": "对方暂不可用",
                        "ab_gate": "A/B 不一致", "ab_upstream": "A/B 未比对", "corrupt_state": "状态文件损坏",
                        "not_inspected": "该源未抓取", "stale_input": "数据过期",
-                       "known_block": "已知拦截"}
+                       "known_block": "已知拦截", "known_media_mix": "已知视频为主"}
         rows = "".join(
             f'<div class="alert"><span class="k">{_esc(kind_labels.get(a["kind"], a["kind"]))}</span>'
             f'<span class="s">{_esc(a["source"])}</span> {_esc(a["detail"])}</div>'
