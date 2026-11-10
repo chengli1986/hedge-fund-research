@@ -114,7 +114,12 @@ echo "$LOG_PREFIX Invoking Claude Code agent..."
 # Ensure the npm-global claude (2.x, supports --print) takes precedence over
 # the system /usr/bin/claude (1.0.65) that lives on cron's default PATH.
 export PATH="$HOME/.npm-global/bin:$PATH"
+# --strict-mcp-config (2026-11-10): no MCP servers. Headless claude otherwise inherits the
+# playwright plugin's browser tools from ~/.claude/settings.json and sees the claude.ai
+# connectors; none was ever called here (the playbook's "playwright" is the Python library).
+# Settings still load on purpose: they carry the secret-scanner Bash hook.
 echo "$PROMPT" | claude --print \
+    --strict-mcp-config \
     --allowedTools "Bash,Read,Edit,Write,Glob,Grep,WebSearch,WebFetch" \
     --max-turns 120 \
     2>&1

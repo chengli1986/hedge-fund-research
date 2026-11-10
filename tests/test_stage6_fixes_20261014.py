@@ -356,6 +356,17 @@ def test_auto_promote_may_use_the_web_tools_its_playbook_requires():
     assert '--allowedTools "Bash,Read,Edit,Write,Glob,Grep,WebSearch,WebFetch"' in text
 
 
+def test_auto_promote_loads_no_mcp_servers():
+    """2026-11-10: headless claude inherits ~/.claude/settings.json allows, including the
+    playwright plugin's browser tools, and sees the claude.ai connectors. 18 past sessions
+    never called an MCP tool (the playbook's "playwright" is the Python library via Bash),
+    so --strict-mcp-config drops them; settings still load, keeping the secret-scanner hook."""
+    text = (REPO / "scripts" / "wrapper-auto-promote.sh").read_text()
+    call = text.split('echo "$PROMPT" | claude --print', 1)[1].split("2>&1", 1)[0]
+    assert "--strict-mcp-config" in call
+    assert "--setting-sources" not in call and "--bare" not in call
+
+
 def test_auto_promote_playbook_covers_a_hand_written_sources_bookkeeping():
     playbook = (REPO / "auto-promote" / "program.md").read_text()
     assert "fetch_shape" in playbook.split("**模板源", 1)[0]
