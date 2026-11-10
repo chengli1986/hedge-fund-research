@@ -11794,6 +11794,24 @@
           ],
           "error": null,
           "fetcher_used": false
+        },
+        "2026-11-10": {
+          "accessible": true,
+          "article_count": 16,
+          "date_count": 0,
+          "article_urls": [
+            "https://www.fairtree.com/resource-hub/insight/macro-pulse-episode-42/",
+            "https://www.fairtree.com/resource-hub/article/the-decade-of-the-port/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-fr-income-plus-fund-q3-2026-commentary/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-global-flexible-income-plus-fund-q3-2026-commentary/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-sa-equity-prescient-fund-q3-2026-commentary/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-global-emerging-markets-fund-q3-2026-commentary/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-global-equity-fund-q3-2026-commentary/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-global-listed-real-estate-fund-q3-2026-commentary/",
+            "https://www.fairtree.com/resource-hub/commentary/fairtree-balanced-prescient-fund-q3-2026-commentary/"
+          ],
+          "error": null,
+          "fetcher_used": false
         }
       },
       "auto_decided": false,
@@ -11919,6 +11937,14 @@
           "error": "No new (un-sampled) article links available",
           "day": 5,
           "date": "2026-11-09"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 6,
+          "date": "2026-11-10"
         }
       ]
     },
@@ -11991,6 +12017,25 @@
           "fetcher_used": true
         },
         "2026-11-09": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.grahamcapital.com/blog/from-suppressed-to-structural-the-return-of-volatility/",
+            "https://www.grahamcapital.com/blog/trend-following-primer/",
+            "https://www.grahamcapital.com/blog/fireside-insights-navigating-the-evolving-macro-landscape/",
+            "https://www.grahamcapital.com/blog/lessons-from-market-crises/",
+            "https://www.grahamcapital.com/blog/macro-across-monetary-regimes/",
+            "https://www.grahamcapital.com/blog/whats-next-for-quant-caasas-primer-featuring-thomas-feng-ph-d-chief-investment-officer-quant-strategies/",
+            "https://www.grahamcapital.com/blog/interpreting-correlation/",
+            "https://www.grahamcapital.com/blog/resilient-strategies-tailwinds-in-left-tail-scenarios/",
+            "https://www.grahamcapital.com/blog/global-macro-primer/",
+            "https://www.grahamcapital.com/blog/market-diversification/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-11-10": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -12136,6 +12181,14 @@
           "js_only_checked": 1,
           "day": 4,
           "date": "2026-11-09"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 5,
+          "date": "2026-11-10"
         }
       ]
     },
@@ -12170,6 +12223,25 @@
           "fetcher_used": true
         },
         "2026-11-09": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.arielinvestments.com/article/the-patient-investor-2q26/",
+            "https://www.arielinvestments.com/article/company-spotlight-knowles-corporation/",
+            "https://www.arielinvestments.com/article/company-spotlight-orsted-as/",
+            "https://www.arielinvestments.com/article/company-spotlight-murata-manufacturing-co-ltd/",
+            "https://www.arielinvestments.com/article/company-spotlight-masco-corporation/",
+            "https://www.arielinvestments.com/article/the-patient-investor-1q26/",
+            "https://www.arielinvestments.com/article/iran-conflict-assessing-the-path-forward/",
+            "https://www.arielinvestments.com/article/the-patient-investor-4q25/",
+            "https://www.arielinvestments.com/article/a-turtles-take-on-china/",
+            "https://www.arielinvestments.com/article/the-patient-investor-3q25/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-11-10": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -12261,9 +12333,44 @@
           "js_only_checked": 7,
           "day": 2,
           "date": "2026-11-09"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.arielinvestments.com/article/iran-conflict-assessing-the-path-forward/",
+              "relevance": 0.85,
+              "depth": 0.65,
+              "extractable": 0.75,
+              "overall": 0.75,
+              "notes": "Macro analysis of Iran conflict impact on energy markets with base/bull/bear case scenarios; truncated at end"
+            },
+            {
+              "url": "https://www.arielinvestments.com/article/the-patient-investor-4q25/",
+              "relevance": 0.75,
+              "depth": 0.55,
+              "extractable": 0.7,
+              "overall": 0.66,
+              "notes": "Quarterly fund commentary on market rotation and portfolio positioning; high-level strategy with company spotlights; truncated"
+            },
+            {
+              "url": "https://www.arielinvestments.com/article/a-turtles-take-on-china/",
+              "relevance": 0.8,
+              "depth": 0.6,
+              "extractable": 0.8,
+              "overall": 0.72,
+              "notes": "China emerging markets research from 75+ company meetings; identifies four key drivers for Chinese equity upside; brief but substantive"
+            }
+          ],
+          "avg_score": 0.71,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 4,
+          "day": 3,
+          "date": "2026-11-10"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-11-09"
+  "last_summary_sent_date": "2026-11-10"
 }
