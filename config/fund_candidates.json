@@ -4954,7 +4954,7 @@
     "name": "Crescat Capital",
     "homepage_url": "https://www.crescat.net/",
     "source": "manual",
-    "status": "seed",
+    "status": "inaccessible",
     "strategy_tags": [
       "macro",
       "equity"
@@ -4965,11 +4965,11 @@
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-11-10T09:03:02.462545+08:00",
     "added_at": "2026-11-02",
-    "status_since": "2026-11-02T09:04:16.677478+08:00",
+    "status_since": "2026-11-10T09:04:00.638637+08:00",
     "quality": "MEDIUM",
     "quality_score": 0.5,
     "topics": "macro, equity, precious metals, credit",
-    "notes": "Biweekly macro letters; many posts media/deck only",
+    "notes": "[auto-stall 2026-11-10] seed->inaccessible after 7d stuck Biweekly macro letters; many posts media/deck only",
     "last_deep_analyzed_at": "2026-11-03T01:08:00Z"
   },
   {
