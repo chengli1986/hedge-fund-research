@@ -367,6 +367,22 @@ def test_auto_promote_loads_no_mcp_servers():
     assert "--setting-sources" not in call and "--bare" not in call
 
 
+def test_synthesis_and_profile_refresh_load_no_mcp_servers():
+    """Same as auto-promote, for the two --dangerously-skip-permissions agents: with every
+    tool auto-approved, MCP meant the playwright browser and the claude.ai connectors were
+    usable too. Sessions on record (synthesis 10-31/11-07: Bash only; refresh 11-01 incl.
+    4 subagents: Bash/WebSearch/WebFetch/Agent) never called one; both playbooks use the
+    Python playwright library. Settings still load (secret-scanner hook)."""
+    for name in ("wrapper-fetcher-synthesis.sh", "wrapper-profile-refresh.sh"):
+        text = (REPO / "scripts" / name).read_text()
+        calls = [c for c in text.split('"$CLAUDE_BIN" --print')[1:]]
+        assert calls, name
+        for call in calls:
+            head = call.split("2>&1", 1)[0]
+            assert "--strict-mcp-config" in head, name
+            assert "--setting-sources" not in head and "--bare" not in head, name
+
+
 def test_auto_promote_playbook_covers_a_hand_written_sources_bookkeeping():
     playbook = (REPO / "auto-promote" / "program.md").read_text()
     assert "fetch_shape" in playbook.split("**模板源", 1)[0]

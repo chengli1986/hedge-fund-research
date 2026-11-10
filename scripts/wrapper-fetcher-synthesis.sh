@@ -127,7 +127,7 @@ CLAUDE_BIN="${CLAUDE_BIN:-/home/ubuntu/.npm-global/bin/claude}"
 # rbc-bluebay was still charged. If Claude cannot answer, stop here: no agent,
 # no backfill, a heartbeat with the failing exit code, and a non-zero exit so
 # cron-wrapper alerts.
-PREFLIGHT_OUTPUT=$(echo "Reply with the single word OK." | timeout --kill-after=10 120 "$CLAUDE_BIN" --print --max-turns 1 2>&1)
+PREFLIGHT_OUTPUT=$(echo "Reply with the single word OK." | timeout --kill-after=10 120 "$CLAUDE_BIN" --print --max-turns 1 --strict-mcp-config 2>&1)
 PREFLIGHT_EXIT=$?
 if [ "$PREFLIGHT_EXIT" -ne 0 ]; then
     echo "$(ts) ERROR: Claude preflight failed (exit $PREFLIGHT_EXIT); agent not started, no target charged a failure:"
@@ -148,8 +148,12 @@ fi
 # Longest real session: 171s.
 AGENT_TIMEOUT_S=900
 echo "$(ts) Invoking Claude Code agent ($("$CLAUDE_BIN" --version 2>/dev/null | head -1))..."
+# --strict-mcp-config (2026-11-10): no MCP servers. With every tool auto-approved, the playwright
+# plugin's browser and the claude.ai connectors were usable too; sessions on record used Bash only
+# (fetchers use the Python playwright library). Settings still load: secret-scanner hook.
 echo "$PROMPT" | timeout --kill-after=30 "$AGENT_TIMEOUT_S" "$CLAUDE_BIN" --print \
     --dangerously-skip-permissions \
+    --strict-mcp-config \
     --allowedTools "Bash,Read,Edit,Write,Glob,Grep" \
     --max-turns 60 \
     2>&1

@@ -122,7 +122,9 @@ fi
 # 2700 s, not 3000: cron-wrapper kills the whole run at 3600 s, and apply +
 # the test suite + publish (with its pre-check) + commit must fit in what is
 # left -- a kill between apply and commit left both files modified.
-timeout --kill-after=30 2700 "$CLAUDE_BIN" --print --dangerously-skip-permissions \
+# --strict-mcp-config (2026-11-10): no MCP servers (playwright browser, claude.ai connectors). The
+# 11-01 run and its 4 subagents used Bash/WebSearch/WebFetch/Agent only. Settings still load.
+timeout --kill-after=30 2700 "$CLAUDE_BIN" --print --dangerously-skip-permissions --strict-mcp-config \
   --max-turns 120 "$PROMPT" \
   > logs/profile-refresh-agent.log 2>&1 || echo "[profile-refresh] agent exit $? (max-turns ok)"
 
