@@ -1205,6 +1205,32 @@
         "sort": "date_desc"
       },
       "listing_template_active": true
+    },
+    {
+      "id": "fairtree",
+      "strategy_tags": [
+        "private_equity",
+        "equity",
+        "multi_asset"
+      ],
+      "name": "Fairtree",
+      "short_name": "Fairtree",
+      "url": "https://www.fairtree.com/resource-hub/",
+      "method": "ssr",
+      "frequency": "weekly",
+      "description": "Independent South African asset manager (Cape Town). Fundamental, valuation-driven SA and global equity, fixed income, multi-asset and hedge funds, plus private markets.",
+      "notable_authors": [],
+      "expected_hostname": "fairtree.com",
+      "max_articles": 10,
+      "listing_template": {
+        "type": "card_list",
+        "fetch": "requests",
+        "card": "div.resource-list div.report-card",
+        "link": "a.absolute.inset-0:not(.tag-link-mask):not(.author-link-mask)",
+        "title": "h3",
+        "path_prefix": "/resource-hub/"
+      },
+      "listing_template_active": true
     }
   ]
 }

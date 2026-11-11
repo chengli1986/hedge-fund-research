@@ -2765,6 +2765,49 @@ def _fetch_content_muzinich(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+FAIRTREE_MIN_CONTENT = 500
+
+
+def _fetch_content_fairtree(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Fairtree resource-hub content via requests (SSR).
+
+    The listing is fairtree.com/resource-hub/ (a card_list template). Written
+    articles, insights and fund commentaries carry their body in one
+    `div.right-content`; the rest of `<main>` is share buttons, twelve
+    "Read more" cards of other pieces and the disclaimer, so only that block
+    is read. Video/podcast pages (Macro Pulse, Equity Explorer) have no
+    `div.right-content` and are refused, so they are listed title-only
+    (user 2026-11-01: text first, podcasts title only).
+    """
+    url = article["url"]
+    log.info("  Fairtree: fetching article page %s", url)
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Fairtree: fetch failed: %s", e)
+        return None
+
+    soup = BeautifulSoup(resp.text, "html.parser")
+    body = "div.right-content"
+    if soup.select_one(body) is None:
+        log.info("  Fairtree: no article body (video/podcast page), title only: %s", url)
+        note_failure_hint("media_without_text", "no div.right-content, video/podcast page")
+        return None
+    # Pull quotes are <blockquote><p>, so the p selector already reads them.
+    text = _normalize_html(
+        str(soup), f"{body} p, {body} li, {body} h2, {body} h3, {body} h4"
+    )
+    if not _check_min_content_length(text, FAIRTREE_MIN_CONTENT):
+        log.warning("  Fairtree: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Fairtree: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -2815,6 +2858,7 @@ CONTENT_FETCHERS = {
     "capital-fund-management": _fetch_content_cfm,
     "madison-investments": _fetch_content_madison_investments,
     "muzinich": _fetch_content_muzinich,
+    "fairtree": _fetch_content_fairtree,
 }
 
 

@@ -83,6 +83,7 @@ BADGE_COLORS: dict[str, str] = {
     "capital-fund-management": "#e00098",   # CFM hot magenta (grid search over WCAG-AA colours with all 46 existing: min RGB dist 69.3 — 69.3 to #a31fa3 Loomis purple, 72.1 to #c2185b Research Affiliates pink; WCAG AA 4.54:1 on white)
     "madison-investments": "#887078",       # Madison dusty mauve-grey (same grid search, HLS saturation <=0.85, with all 47 existing: min RGB dist 68.5 — 68.5 to #b85450 Ares coral, 68.9 to #7a4cb1 JPMAM purple, 69.1 to #5e3a82 Apollo; WCAG AA 4.53:1 on white)
     "muzinich": "#5868e8",                  # Muzinich periwinkle (grid search over WCAG-AA colors, HLS saturation <=0.85, black excluded, with all 48 existing: min RGB dist 65.4 — 65.4 to #1f49e0 MSCI cobalt, 66.1 to #58a6ff Man sky blue, 67.5 to #9b6be0 GMO violet; WCAG AA 4.6:1 on white)
+    "fairtree": "#5010ac",                  # Fairtree indigo-violet (grid search over WCAG-AA colors, HLS saturation <=0.85 and lightness >=0.25, with all 49 existing: min RGB dist 61.0 — 61.0 to #5e3a82 Apollo, 61.5 to #3949ab, 62.2 to #6014e8; WCAG AA 10.4:1 on white)
 }
 
 INITIAL_VISIBLE = 20
@@ -439,6 +440,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "总部位于纽约的独立私有企业信用专业资管，1988 年成立，管理资产约 $43B（2026 年 2 月底）。业务 100% 聚焦信用：公开市场覆盖高收益、投资级、新兴市场与多资产信用；私募市场做欧洲平行/直接贷款、私募债与航空融资，在全球设有 18 个办公室。",
         "notable_en": "30+ years investing in high yield; in private markets it lends to mid-market companies alongside banks (\"parallel lending\"). Publishes a weekly market comment, a monthly EM report and a monthly corporate credit snapshot.",
         "notable_zh": "投资高收益债 30 余年；私募业务与银行并肩向中型企业放贷（「平行贷款」）。定期发布每周市场评论、新兴市场月报和企业信用月度快照。",
+    },
+    "fairtree": {
+        "founded": "2006", "aum": "~£9.0B (R195.7B)", "hq": "Cape Town (Bellville), South Africa",
+        "type_en": "Asset Manager / Hedge Funds", "type_zh": "资产管理 / 对冲基金",
+        "desc_zh": "南非独立资产管理公司，2006 年由 Andre Malan 与 Kobus Nel 创立，总部位于开普敦 Bellville，管理规模约 £9.0B（约 1957 亿兰特）。以基本面、估值驱动的主动管理见长，覆盖南非与全球股票、固定收益、多资产、对冲基金及私募市场。",
+        "notable_en": "Named South African Manager of the Year at the 2024 Raging Bull Awards; its FR Income Plus Fund passed R20B in assets. Publishes quarterly fund commentaries plus Macro Pulse and Equity Explorer video series.",
+        "notable_zh": "2024 年 Raging Bull 颁奖获评南非年度最佳基金管理人；旗下 FR Income Plus Fund 规模突破 200 亿兰特。定期发布各基金季度评论，以及 Macro Pulse、Equity Explorer 视频系列。",
     },
 }
 
