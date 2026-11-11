@@ -4818,7 +4818,91 @@
     "topics": "private markets, equity, income",
     "notes": "RECOMMEND: trial passed (7/7 days with articles, quality=0.75)",
     "synthesis_priority": true,
-    "synthesis_priority_set_at": "2026-11-11T09:03:58.307935+08:00"
+    "synthesis_priority_set_at": "2026-11-11T09:03:58.307935+08:00",
+    "template_attempts": [
+      {
+        "at": "2026-11-11T01:05:47+00:00",
+        "type": "card_list",
+        "spec": {
+          "type": "card_list",
+          "fetch": "requests",
+          "card": "div.resource-list div.report-card",
+          "link": "a.absolute.inset-0[href*=\"/resource-hub/\"]",
+          "title": "h3",
+          "path_prefix": "/resource-hub/"
+        },
+        "listing_url": "https://www.fairtree.com/resource-hub/",
+        "ok": true,
+        "rows": 6,
+        "dated": 0,
+        "problems": [],
+        "sample": [
+          {
+            "title": "Macro Pulse Episode 42",
+            "url": "https://www.fairtree.com/resource-hub/?page=1&strategy-type=market_insights",
+            "date": null
+          },
+          {
+            "title": "The decade of ‘The Port’",
+            "url": "https://www.fairtree.com/resource-hub/?page=1&strategy-type=private-equity",
+            "date": null
+          },
+          {
+            "title": "Fairtree FR Income Plus Fund Q3 2026 commentary",
+            "url": "https://www.fairtree.com/resource-hub/?page=1&strategy-type=fixed-income",
+            "date": null
+          }
+        ]
+      },
+      {
+        "at": "2026-11-11T01:05:54+00:00",
+        "type": "card_list",
+        "spec": {
+          "type": "card_list",
+          "fetch": "requests",
+          "card": "div.resource-list div.report-card",
+          "link": "a.absolute.inset-0:not(.tag-link-mask):not(.author-link-mask)",
+          "title": "h3",
+          "path_prefix": "/resource-hub/"
+        },
+        "listing_url": "https://www.fairtree.com/resource-hub/",
+        "ok": true,
+        "rows": 10,
+        "dated": 0,
+        "problems": [],
+        "sample": [
+          {
+            "title": "Macro Pulse Episode 42",
+            "url": "https://www.fairtree.com/resource-hub/insight/macro-pulse-episode-42/",
+            "date": null
+          },
+          {
+            "title": "The decade of ‘The Port’",
+            "url": "https://www.fairtree.com/resource-hub/article/the-decade-of-the-port/",
+            "date": null
+          },
+          {
+            "title": "Fairtree FR Income Plus Fund Q3 2026 commentary",
+            "url": "https://www.fairtree.com/resource-hub/commentary/fairtree-fr-income-plus-fund-q3-2026-commentary/",
+            "date": null
+          }
+        ]
+      }
+    ],
+    "listing_template": {
+      "type": "card_list",
+      "fetch": "requests",
+      "card": "div.resource-list div.report-card",
+      "link": "a.absolute.inset-0:not(.tag-link-mask):not(.author-link-mask)",
+      "title": "h3",
+      "path_prefix": "/resource-hub/"
+    },
+    "listing_url": "https://www.fairtree.com/resource-hub/",
+    "expected_hostname": "fairtree.com",
+    "synthesis_attempted_at": "2026-11-11T01:06:08.578800+00:00",
+    "synthesis_outcome": "success",
+    "promoted_at": "2026-11-11T01:06:08.578800+00:00",
+    "promoted_reason": "fetcher_synthesis_success (trial-PASS shortcut)"
   },
   {
     "id": "madison-investments",
