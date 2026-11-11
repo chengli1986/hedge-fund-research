@@ -61,7 +61,7 @@ echo "$(ts) Starting candidate fund discovery session..."
 if [[ -z "${ANTHROPIC_API_KEY:-}" ]]; then
     # cron doesn't source env files; search both locations, strip surrounding quotes
     SAVED_ANTHROPIC_API_KEY="$(
-        grep '^ANTHROPIC_API_KEY=' "$HOME/.openclaw/.env" "$HOME/.stock-monitor.env" 2>/dev/null \
+        grep '^ANTHROPIC_API_KEY=' "$HOME/.anthropic-api.env" "$HOME/.openclaw/.env" "$HOME/.stock-monitor.env" 2>/dev/null \
         | head -1 | cut -d= -f2- | tr -d '"'"'"
     )"
 else

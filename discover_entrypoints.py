@@ -40,7 +40,7 @@ BASE_DIR = Path(__file__).resolve().parent
 CONFIG_FILE = BASE_DIR / "config" / "sources.json"
 ENTRYPOINTS_FILE = BASE_DIR / "config" / "entrypoints.json"
 LOG_FILE = BASE_DIR / "logs" / "discover.log"
-ENV_FILE = Path("/home/ubuntu/.openclaw/.env")
+ENV_FILE = Path("/home/ubuntu/.stock-monitor.env")  # GEMINI_API_KEY (same value as the old ~/.openclaw/.env copy)
 
 
 def _load_env_file(path: Path) -> None:

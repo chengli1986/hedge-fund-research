@@ -33,7 +33,7 @@ if ! flock -n 9; then echo "[profile-refresh] another run holds the lock; exit";
 
 # --- Max Plan auth: unset API key so claude uses the subscription, restore after
 if [[ -z "${ANTHROPIC_API_KEY:-}" ]]; then
-  SAVED_KEY="$(grep -h '^ANTHROPIC_API_KEY=' "$HOME/.openclaw/.env" "$HOME/.stock-monitor.env" 2>/dev/null | head -1 | cut -d= -f2-)"
+  SAVED_KEY="$(grep -h '^ANTHROPIC_API_KEY=' "$HOME/.anthropic-api.env" "$HOME/.openclaw/.env" "$HOME/.stock-monitor.env" 2>/dev/null | head -1 | cut -d= -f2-)"
 else
   SAVED_KEY="${ANTHROPIC_API_KEY}"
 fi

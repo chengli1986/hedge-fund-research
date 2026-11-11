@@ -68,7 +68,7 @@ echo "$LOG_PREFIX Found $TARGET_COUNT candidate(s) to promote."
 # 取消 API key 使 Claude 走 Max plan（不走付费 API）
 if [[ -z "${ANTHROPIC_API_KEY:-}" ]]; then
     SAVED_ANTHROPIC_API_KEY="$(
-        grep '^ANTHROPIC_API_KEY=' "$HOME/.openclaw/.env" "$HOME/.stock-monitor.env" 2>/dev/null \
+        grep '^ANTHROPIC_API_KEY=' "$HOME/.anthropic-api.env" "$HOME/.openclaw/.env" "$HOME/.stock-monitor.env" 2>/dev/null \
         | head -1 | cut -d= -f2- | tr -d '"'"'"
     )"
 else
