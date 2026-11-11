@@ -4212,14 +4212,14 @@
     "name": "Ninety One",
     "homepage_url": "https://ninetyone.com/en/insights",
     "source": "manual",
-    "status": "inaccessible",
+    "status": "visitable",
     "strategy_tags": [
       "emerging_markets",
       "macro",
       "equity",
       "fixed_income"
     ],
-    "status_since": "2026-10-15T09:00:39.952796+08:00",
+    "status_since": "2026-11-11T09:08:03.343194+08:00",
     "last_deep_analyzed_at": "2026-10-05T01:00:40Z",
     "quality": "MEDIUM",
     "quality_score": 0.55,
@@ -4279,11 +4279,97 @@
           "only 0 row(s), need 3"
         ],
         "sample": []
+      },
+      {
+        "at": "2026-11-11T01:06:45+00:00",
+        "type": "card_list",
+        "spec": {
+          "type": "card_list",
+          "fetch": "playwright",
+          "wait_until": "domcontentloaded",
+          "card": "a[href*=\"/insights/\"]",
+          "link": "self",
+          "wait_selector": "a[href*=\"/insights/\"]",
+          "path_prefix": "/en/insights/"
+        },
+        "listing_url": "https://ninetyone.com/en/insights",
+        "ok": true,
+        "rows": 10,
+        "dated": 0,
+        "problems": [],
+        "sample": [
+          {
+            "title": "Market review 8 minutes 06 Nov 2026 October in review October was a mixed month for capital markets, as AI capex concerns combined with higher energy prices, renewed tensions in Iran and stress in France to leave plenty for investors to digest. Developed market bond yields fell on safe-haven demand, although wider spreads weighed on credit markets. While oil had a strong month, most other commodities declined. Read more",
+            "url": "https://ninetyone.com/en/insights/market-review-october-2026",
+            "date": null
+          },
+          {
+            "title": "Natural resources 9 minutes 04 Nov 2026 The resource crunch: conflict, AI and the race for energy, metals and food Listen Info",
+            "url": "https://ninetyone.com/en/insights/the-resource-crunch-conflict-ai-and-the-race-for-energy-metals-and-food",
+            "date": null
+          },
+          {
+            "title": "Macro insights 8 minutes 03 Nov 2026 Multi-Asset Strategy Quarterly – October 2026",
+            "url": "https://ninetyone.com/en/insights/multi-asset-strategy-quarterly-october-2026",
+            "date": null
+          }
+        ]
+      },
+      {
+        "at": "2026-11-11T01:07:40+00:00",
+        "type": "card_list",
+        "spec": {
+          "type": "card_list",
+          "fetch": "playwright",
+          "wait_until": "domcontentloaded",
+          "wait_selector": "a[href*=\"/insights/\"] .topbar",
+          "card": "a[href*=\"/insights/\"]:has(.topbar)",
+          "link": "self",
+          "title": ".title",
+          "date": ".topbar span.separator:last-of-type",
+          "path_prefix": "/en/insights/",
+          "sort": "date_desc"
+        },
+        "listing_url": "https://ninetyone.com/en/insights",
+        "ok": true,
+        "rows": 5,
+        "dated": 5,
+        "problems": [],
+        "sample": [
+          {
+            "title": "October in review",
+            "url": "https://ninetyone.com/en/insights/market-review-october-2026",
+            "date": "2026-11-06"
+          },
+          {
+            "title": "The resource crunch: conflict, AI and the race for energy, metals and food",
+            "url": "https://ninetyone.com/en/insights/the-resource-crunch-conflict-ai-and-the-race-for-energy-metals-and-food",
+            "date": "2026-11-04"
+          },
+          {
+            "title": "Multi-Asset Strategy Quarterly – October 2026",
+            "url": "https://ninetyone.com/en/insights/multi-asset-strategy-quarterly-october-2026",
+            "date": "2026-11-03"
+          }
+        ]
       }
     ],
-    "synthesis_attempted_at": "2026-11-07T18:02:57.457274+00:00",
-    "synthesis_outcome": "failed",
-    "synthesis_failure_reason": "2026-11-07: curl/requests still HTTP 403 Cloudflare 'Just a moment...' on /en/insights, /en/rss, /sitemap.xml, /robots.txt, /en/united-states/insights. Headless Chromium passed the challenge on 2 of 3 /en/insights loads (the 3rd: challenge-platform XHRs only, 0 site links); when it passed, /en/insights held only 6 topic-hub carousel cards (no article links/dates); try_template playwright card_list on /en/insights/macro-insights returned 0 rows. No API/RSS reachable; no bypass attempted."
+    "synthesis_attempted_at": "2026-11-11T01:08:03.343168+00:00",
+    "synthesis_outcome": "success",
+    "listing_template": {
+      "type": "card_list",
+      "fetch": "playwright",
+      "wait_until": "domcontentloaded",
+      "wait_selector": "a[href*=\"/insights/\"] .topbar",
+      "card": "a[href*=\"/insights/\"]:has(.topbar)",
+      "link": "self",
+      "title": ".title",
+      "date": ".topbar span.separator:last-of-type",
+      "path_prefix": "/en/insights/",
+      "sort": "date_desc"
+    },
+    "listing_url": "https://ninetyone.com/en/insights",
+    "expected_hostname": "ninetyone.com"
   },
   {
     "id": "hamilton-lane",
