@@ -821,7 +821,7 @@
     "official_domain": "www.fidelity.com",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-04-19T09:00:12.375997+08:00",
-    "notes": "Recheck: still retail education portal, not institutional",
+    "notes": "retail education/marketing, not research",
     "research_links": [],
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -839,7 +839,7 @@
     "screening_reason": "Login/paywall detected",
     "fit_score": 0.82,
     "last_validated_at": "2026-04-16T09:01:28.399090+08:00",
-    "last_deep_analyzed_at": "2026-09-16T01:01:24Z",
+    "last_deep_analyzed_at": "2026-11-11T01:03:38Z",
     "quality": "LOW",
     "topics": "retail education, personal finance",
     "strategy_tags": [
@@ -2251,8 +2251,8 @@
     "quality": "LOW",
     "quality_score": 0.25,
     "topics": "factor investing, equity, multi-asset (podcast-heavy)",
-    "notes": "Recheck: still no dated article index, podcast-only",
-    "last_deep_analyzed_at": "2026-09-16T01:01:24Z",
+    "notes": "Reconfirmed: podcast-led, no dated index",
+    "last_deep_analyzed_at": "2026-11-11T01:03:38Z",
     "status_since": "2026-05-12T09:00:20.241489+08:00",
     "added_at": "2026-05-11"
   },
@@ -2699,11 +2699,11 @@
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-07-14T09:00:45.165660+08:00",
-    "last_deep_analyzed_at": "2026-09-17T01:01:27Z",
+    "last_deep_analyzed_at": "2026-11-11T01:03:38Z",
     "quality": "LOW",
     "quality_score": 0.3,
     "topics": "value equity, podcasts, ESG",
-    "notes": "Reconfirmed: podcasts/bios only, no dated research index",
+    "notes": "Reconfirmed: podcasts, no dated research index",
     "status_since": "2026-08-17T09:03:21.177618+08:00",
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -2761,11 +2761,11 @@
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-07-14T09:00:45.503268+08:00",
-    "last_deep_analyzed_at": "2026-09-17T01:01:27Z",
+    "last_deep_analyzed_at": "2026-11-11T01:03:38Z",
     "quality": "MEDIUM",
     "quality_score": 0.62,
     "topics": "fixed income, equity, macro, multi-asset",
-    "notes": "Reconfirmed rejected: nav only, no visible dated articles",
+    "notes": "Landing page only, no dated items visible",
     "status_since": "2026-07-21T00:03:03.326083+08:00",
     "is_publicly_accessible": false,
     "has_article_index": false,
@@ -4986,11 +4986,96 @@
     "official_domain": "www.oakmark.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-11-10T09:03:02.725261+08:00",
+    "last_discovered_at": "2026-11-11T09:03:01.964905+08:00",
     "quality": "MEDIUM",
     "quality_score": 0.55,
     "topics": "equity, value investing, quarterly commentary",
     "notes": "Quarterly fund commentary at /news-insights/commentary",
     "last_deep_analyzed_at": "2026-11-06T01:03:38Z"
+  },
+  {
+    "id": "fiera-capital",
+    "name": "Fiera Capital",
+    "homepage_url": "https://www.fieracapital.com",
+    "source": "manual",
+    "status": "discovered",
+    "strategy_tags": [
+      "multi_asset",
+      "fixed_income",
+      "private_credit",
+      "real_assets"
+    ],
+    "research_url": "https://www.fieracapital.com/en/insights/",
+    "official_domain": "www.fieracapital.com",
+    "research_links": [
+      {
+        "url": "https://www.fieracapital.com/en/insights/",
+        "label": "Insights",
+        "path": "en/insights"
+      },
+      {
+        "url": "https://www.fieracapital.com/en/insights/beyond-the-benchmark/",
+        "label": "Learn more about Beyond the Benchmark",
+        "path": "en/insights/beyond-the-benchmark"
+      },
+      {
+        "url": "https://www.fieracapital.com/en-ca/insights/rethinking-duration-management-moving-beyond-traditional-bonds/",
+        "label": "Learn more about Rethinking Duration Management: Moving Beyond Traditional Bonds",
+        "path": "en-ca/insights/rethinking-duration-management-moving-beyond-traditional-bonds"
+      },
+      {
+        "url": "https://www.fieracapital.com/en/insights/private-real-estate-debt-a-complement-to-traditional-fixed-incom/",
+        "label": "Learn more about Private Real Estate Debt: A Complement to Traditional Fixed Income",
+        "path": "en/insights/private-real-estate-debt-a-complement-to-traditional-fixed-incom"
+      },
+      {
+        "url": "https://www.fieracapital.com/en/insights/2025-sustainability-report/",
+        "label": "Learn more about 2025 Sustainability Report",
+        "path": "en/insights/2025-sustainability-report"
+      },
+      {
+        "url": "https://www.fieracapital.com/en/insights/fiera-apex-growth-in-focus-4/",
+        "label": "Learn more about Fiera Apex: Growth in Focus",
+        "path": "en/insights/fiera-apex-growth-in-focus-4"
+      },
+      {
+        "url": "https://www.fieracapital.com/en/insights/global-asset-allocation-team-market-update-november-2026/",
+        "label": "Learn More about Global Asset Allocation Team Market Update – November 2026",
+        "path": "en/insights/global-asset-allocation-team-market-update-november-2026"
+      },
+      {
+        "url": "https://www.fieracapital.com/en/insights/q3-2026-sustainability-update/",
+        "label": "Learn More about Q3 2026 Sustainability Update",
+        "path": "en/insights/q3-2026-sustainability-update"
+      },
+      {
+        "url": "https://www.fieracapital.com/en/insights/q4-2026-investment-outlook-portfolio-strategy/",
+        "label": "Learn More about Q4 2026 Investment Outlook &#038; Portfolio Strategy",
+        "path": "en/insights/q4-2026-investment-outlook-portfolio-strategy"
+      },
+      {
+        "url": "https://www.fieracapital.com/en/insights/webinar-geopolitical-and-economic-updates/",
+        "label": "Learn More about Webinar: Geopolitical and Economic Updates",
+        "path": "en/insights/webinar-geopolitical-and-economic-updates"
+      },
+      {
+        "url": "https://www.fieracapital.com/en/insights/2024-sustainability-report/",
+        "label": "Learn More about 2024 Sustainability Report",
+        "path": "en/insights/2024-sustainability-report"
+      },
+      {
+        "url": "https://www.fieracapital.com/en/insights/navigating-global-seas-unleashing-the-power-of-global-multi-sector-fixed-income-strategies/",
+        "label": "Learn More about Navigating Global Seas: Unleashing the Power of Global Multi-Sector Fixed Income St",
+        "path": "en/insights/navigating-global-seas-unleashing-the-power-of-global-multi-sector-fixed-income-strategies"
+      },
+      {
+        "url": "https://www.fieracapital.com/en/insights/tariff-announcements-update-with-jean-guy-desjardins-candice-bangsund/",
+        "label": "Learn More about Tariff Announcements: Update with Jean-Guy Desjardins &#038; Candice Bangsund",
+        "path": "en/insights/tariff-announcements-update-with-jean-guy-desjardins-candice-bangsund"
+      }
+    ],
+    "status_since": "2026-11-11T09:03:39.460720+08:00",
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-11-11T09:03:39.460663+08:00"
   }
 ]
