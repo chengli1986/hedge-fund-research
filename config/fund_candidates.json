@@ -5074,8 +5074,9 @@
         "path": "en/insights/tariff-announcements-update-with-jean-guy-desjardins-candice-bangsund"
       }
     ],
-    "status_since": "2026-11-11T09:03:39.460720+08:00",
+    "status_since": "2026-11-11T09:03:55.738667+08:00",
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-11-11T09:03:39.460663+08:00"
+    "last_discovered_at": "2026-11-11T09:03:39.460663+08:00",
+    "added_at": "2026-11-11"
   }
 ]
