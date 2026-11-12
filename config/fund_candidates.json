@@ -5149,12 +5149,12 @@
     "name": "Oakmark (Harris Associates)",
     "homepage_url": "https://www.oakmark.com",
     "source": "manual",
-    "status": "seed",
+    "status": "inaccessible",
     "strategy_tags": [
       "equity"
     ],
     "added_at": "2026-11-05",
-    "status_since": "2026-11-05T09:04:23.838606+08:00",
+    "status_since": "2026-11-12T09:04:30.596024+08:00",
     "official_domain": "www.oakmark.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
@@ -5162,7 +5162,7 @@
     "quality": "MEDIUM",
     "quality_score": 0.55,
     "topics": "equity, value investing, quarterly commentary",
-    "notes": "Quarterly fund commentary at /news-insights/commentary",
+    "notes": "[auto-stall 2026-11-12] seed->inaccessible after 7d stuck Quarterly fund commentary at /news-insights/commentary",
     "last_deep_analyzed_at": "2026-11-06T01:03:38Z"
   },
   {
