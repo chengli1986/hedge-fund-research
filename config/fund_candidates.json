@@ -3898,7 +3898,7 @@
     "name": "Graham Capital Management",
     "homepage_url": "https://www.grahamcapital.com",
     "source": "manual",
-    "status": "visitable",
+    "status": "promoted",
     "strategy_tags": [
       "macro",
       "quant",
@@ -3909,12 +3909,12 @@
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-10-12T09:00:10.807489+08:00",
-    "status_since": "2026-11-01T02:00:49.148355+08:00",
+    "status_since": "2026-11-12T09:04:32.258353+08:00",
     "last_deep_analyzed_at": "2026-10-11T01:00:53Z",
     "quality": "MEDIUM",
     "quality_score": 0.6,
     "topics": "macro, trend-following, quant, volatility",
-    "notes": "[auto-stall 2026-10-15] seed->inaccessible after 39d stuck Quant/macro primers; no dates listed, some login",
+    "notes": "RECOMMEND: trial passed (7/7 days with articles, quality=0.71)",
     "added_at": "2026-09-05",
     "template_attempts": [
       {
@@ -3955,7 +3955,9 @@
     "listing_url": "https://www.grahamcapital.com/feed/",
     "expected_hostname": "grahamcapital.com",
     "synthesis_attempted_at": "2026-10-31T18:00:49.138373+00:00",
-    "synthesis_outcome": "success"
+    "synthesis_outcome": "success",
+    "synthesis_priority": true,
+    "synthesis_priority_set_at": "2026-11-12T09:04:32.258394+08:00"
   },
   {
     "id": "candriam",
@@ -4212,19 +4214,19 @@
     "name": "Ninety One",
     "homepage_url": "https://ninetyone.com/en/insights",
     "source": "manual",
-    "status": "visitable",
+    "status": "inaccessible",
     "strategy_tags": [
       "emerging_markets",
       "macro",
       "equity",
       "fixed_income"
     ],
-    "status_since": "2026-11-11T09:08:03.343194+08:00",
+    "status_since": "2026-11-12T09:04:54.667585+08:00",
     "last_deep_analyzed_at": "2026-10-05T01:00:40Z",
     "quality": "MEDIUM",
     "quality_score": 0.55,
     "topics": "emerging markets, macro, equity, fixed income",
-    "notes": "[auto-stall 2026-10-15] seed->inaccessible after 19d stuck EM-focused insights; WAF 403, articles unverified",
+    "notes": "Trial aborted on day 1: index reachable but no article links in static HTML — needs a fetcher. Routed to fetcher-synthesis queue.",
     "added_at": "2026-09-25",
     "template_attempts": [
       {
@@ -4356,7 +4358,9 @@
     ],
     "synthesis_attempted_at": "2026-11-11T01:08:03.343168+00:00",
     "synthesis_outcome": "success",
-    "listing_template": {
+    "listing_url": "https://ninetyone.com/en/insights",
+    "expected_hostname": "ninetyone.com",
+    "failed_listing_template": {
       "type": "card_list",
       "fetch": "playwright",
       "wait_until": "domcontentloaded",
@@ -4367,9 +4371,7 @@
       "date": ".topbar span.separator:last-of-type",
       "path_prefix": "/en/insights/",
       "sort": "date_desc"
-    },
-    "listing_url": "https://ninetyone.com/en/insights",
-    "expected_hostname": "ninetyone.com"
+    }
   },
   {
     "id": "hamilton-lane",
