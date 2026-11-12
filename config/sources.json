@@ -1232,6 +1232,28 @@
         "path_prefix": "/resource-hub/"
       },
       "listing_template_active": true
+    },
+    {
+      "id": "graham-capital-management",
+      "strategy_tags": [
+        "macro",
+        "quant",
+        "multi_asset"
+      ],
+      "name": "Graham Capital Management",
+      "short_name": "Graham",
+      "url": "https://www.grahamcapital.com/feed/",
+      "method": "rss",
+      "frequency": "monthly",
+      "description": "Macro and trend-following hedge fund manager headquartered in Rowayton, Connecticut (~$23B AUM as of Oct 2026), founded in 1994 by Kenneth G. Tropin. Runs systematic quantitative (trend-following) programs alongside multi-PM discretionary global macro, with offices in New York, West Palm Beach and London.",
+      "notable_authors": [],
+      "expected_hostname": "grahamcapital.com",
+      "max_articles": 10,
+      "listing_template": {
+        "type": "rss_feed",
+        "feed": "rss_url"
+      },
+      "listing_template_active": true
     }
   ]
 }

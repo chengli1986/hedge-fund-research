@@ -2808,6 +2808,54 @@ def _fetch_content_fairtree(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+GRAHAM_MIN_CONTENT = 500  # Refuse teaser/video-only pages
+GRAHAM_BODY_SELECTOR = ", ".join(
+    f"div.entry-content {s}"
+    for s in ("h2", "h3", "h4", ".advgb-accordion-header-title", "p", "li")
+)
+
+
+def _fetch_content_graham_capital_management(
+    article: dict,
+) -> Optional[tuple[Path, str]]:
+    """Fetch Graham Capital Management blog content via requests (SSR WordPress).
+
+    The listing is grahamcapital.com's WordPress RSS feed (a listing
+    template). The body is the Gutenberg `div.entry-content`; long papers put
+    each section in an advgb accordion whose title is a div (kept via
+    `.advgb-accordion-header-title`, the body text is ordinary `p`/`li`).
+    Every page ends in a "LEGAL DISCLAIMER" / "INDEX DISCLOSURE" block of
+    3-11K chars, cut at the first line that reads "LEGAL DISCLAIMER".
+    """
+    url = article["url"]
+    log.info("  Graham: fetching article page %s", url)
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Graham: fetch failed: %s", e)
+        return None
+
+    soup = BeautifulSoup(resp.text, "html.parser")
+    for tag in soup.select("script, style, aside"):
+        tag.decompose()
+    text = _normalize_html(str(soup), GRAHAM_BODY_SELECTOR)
+    lines = text.split("\n")
+    for i, line in enumerate(lines):
+        if line.strip().upper().startswith("LEGAL DISCLAIMER"):
+            lines = lines[:i]
+            break
+    text = "\n".join(lines).strip()
+    if not _check_min_content_length(text, GRAHAM_MIN_CONTENT):
+        log.warning("  Graham: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Graham: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -2859,6 +2907,7 @@ CONTENT_FETCHERS = {
     "madison-investments": _fetch_content_madison_investments,
     "muzinich": _fetch_content_muzinich,
     "fairtree": _fetch_content_fairtree,
+    "graham-capital-management": _fetch_content_graham_capital_management,
 }
 
 

@@ -84,6 +84,7 @@ BADGE_COLORS: dict[str, str] = {
     "madison-investments": "#887078",       # Madison dusty mauve-grey (same grid search, HLS saturation <=0.85, with all 47 existing: min RGB dist 68.5 — 68.5 to #b85450 Ares coral, 68.9 to #7a4cb1 JPMAM purple, 69.1 to #5e3a82 Apollo; WCAG AA 4.53:1 on white)
     "muzinich": "#5868e8",                  # Muzinich periwinkle (grid search over WCAG-AA colors, HLS saturation <=0.85, black excluded, with all 48 existing: min RGB dist 65.4 — 65.4 to #1f49e0 MSCI cobalt, 66.1 to #58a6ff Man sky blue, 67.5 to #9b6be0 GMO violet; WCAG AA 4.6:1 on white)
     "fairtree": "#5010ac",                  # Fairtree indigo-violet (grid search over WCAG-AA colors, HLS saturation <=0.85 and lightness >=0.25, with all 49 existing: min RGB dist 61.0 — 61.0 to #5e3a82 Apollo, 61.5 to #3949ab, 62.2 to #6014e8; WCAG AA 10.4:1 on white)
+    "graham-capital-management": "#b8528c", # Graham raspberry-rose (same grid search, step 2, HLS saturation <=0.85 and lightness >=0.25, with all 50 existing: min RGB dist 59.8 — 59.8 to #a31fa3 Loomis purple, 60.0 to #b85450 Ares coral, 60.0 to #887078 Madison; WCAG AA 4.54:1 on white)
 }
 
 INITIAL_VISIBLE = 20
@@ -447,6 +448,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "南非独立资产管理公司，2006 年由 Andre Malan 与 Kobus Nel 创立，总部位于开普敦 Bellville，管理规模约 £9.0B（约 1957 亿兰特）。以基本面、估值驱动的主动管理见长，覆盖南非与全球股票、固定收益、多资产、对冲基金及私募市场。",
         "notable_en": "Named South African Manager of the Year at the 2024 Raging Bull Awards; its FR Income Plus Fund passed R20B in assets. Publishes quarterly fund commentaries plus Macro Pulse and Equity Explorer video series.",
         "notable_zh": "2024 年 Raging Bull 颁奖获评南非年度最佳基金管理人；旗下 FR Income Plus Fund 规模突破 200 亿兰特。定期发布各基金季度评论，以及 Macro Pulse、Equity Explorer 视频系列。",
+    },
+    "graham-capital-management": {
+        "founded": "1994", "aum": "~$23B", "hq": "Rowayton, CT, USA",
+        "type_en": "Hedge Fund (Macro / Systematic)", "type_zh": "对冲基金（宏观 / 系统化）",
+        "desc_zh": "总部位于美国康涅狄格州 Rowayton 的宏观与趋势跟踪对冲基金，1994 年由 Kenneth G. Tropin 创立，管理规模约 $23B（截至 2026 年 10 月 1 日，含大量自有资本）。同时经营系统化量化（趋势跟踪）与多基金经理主观全球宏观两条业务线，强调两者互补带来的分散化，在纽约、西棕榈滩和伦敦设有办公室。",
+        "notable_en": "Started trading in 1994 with $30 million of proprietary capital in its flagship quantitative trend-following program, added discretionary portfolio managers from 1998 and multi-PM discretionary macro funds in 2004-2005; publishes long-form primers on trend following and global macro.",
+        "notable_zh": "1994 年以 3000 万美元自有资本启动旗舰量化趋势跟踪程序，1998 年起引入主观交易基金经理，2004-2005 年推出多基金经理主观宏观基金；定期发布趋势跟踪与全球宏观长篇入门研究（Primer）。",
     },
 }
 

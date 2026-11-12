@@ -61,7 +61,7 @@ being worth building.
 | muzinich | SSR `div.card` grid with title link and "Category \| Date" line: `date_separator` + `date_part=after`, `sort=date_desc`. Podcast cards are listed too; the content extractor refuses them (title-only) |
 | fairtree | SSR resource-hub grid of `div.report-card`s, one full-card link + `h3` title; `path_prefix=/resource-hub/` keeps tag/author masks out. No date on the card (dates stay empty). Video/podcast cards (Macro Pulse, Equity Explorer) have no `div.right-content` and are refused by the extractor (title-only) |
 
-## TEMPLATE — rss_feed (9)
+## TEMPLATE — rss_feed (10)
 
 | source | note |
 | --- | --- |
@@ -74,6 +74,7 @@ being worth building.
 | bnp-paribas-am | WordPress feed of the en-au financial-advisors insights site (Front of mind / Portfolio perspectives / Forward thinking); every item is an article, dated pubDate, no filter needed. Template-only (auto-promoted 2026-10-31, no hand-written function) |
 | capital-fund-management | WordPress site feed `/feed/`, every item an insight post dated pubDate, no filter needed; podcast announcements are listed but the content fetcher refuses them (141 chars), so they stay title-only. Template-only (auto-promoted 2026-11-02, no hand-written function) |
 | madison-investments | WordPress site feed `/feed/`, every item an Insights post dated pubDate (podcast episodes carry a full transcript in the page body), no filter needed; `sort`. Template-only (auto-promoted 2026-11-06, no hand-written function) |
+| graham-capital-management | WordPress site feed `/feed/` (`feed: rss_url`), every item a blog paper dated pubDate, newest first, no filter needed; video/fireside pages still carry a text summary in the body. Template-only (auto-promoted 2026-11-12, no hand-written function) |
 
 ## TEMPLATE — api_json (3)
 
