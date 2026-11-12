@@ -1888,6 +1888,40 @@
         }
       ],
       "rejected_pages": []
+    },
+    "fiera-capital": {
+      "last_discovered_at": "2026-11-12T09:03:07.629595+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://www.fieracapital.com/fr/perspectives/",
+          "final_score": 0.8,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.3333,
+          "gate_penalty": 0.0,
+          "active": true
+        },
+        {
+          "url": "https://www.fieracapital.com/en/insights/",
+          "final_score": 0.68,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.3333,
+          "gate_penalty": 0.6,
+          "active": false
+        },
+        {
+          "url": "https://www.fieracapital.com/en/preferences/?action=set&choice=en",
+          "final_score": 0.63,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.6667,
+          "gate_penalty": 0.6,
+          "active": false
+        }
+      ],
+      "rejected_pages": []
     }
   }
 }

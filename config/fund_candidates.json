@@ -3461,11 +3461,11 @@
     "screening_reason": "Login/paywall detected",
     "fit_score": 0.97,
     "last_validated_at": "2026-08-18T09:00:19.754475+08:00",
-    "quality": "MEDIUM",
-    "quality_score": 0.55,
-    "topics": "fixed income, equity, macro, behavioral finance",
-    "notes": "Mixed: sub-advised macro rigor amid retail marketing",
-    "last_deep_analyzed_at": "2026-09-18T01:02:34Z",
+    "quality": "LOW",
+    "quality_score": 0.25,
+    "topics": "advisor practice management, retirement",
+    "notes": "Advisor practice marketing, undated; no market research",
+    "last_deep_analyzed_at": "2026-11-12T01:04:14Z",
     "added_at": "2026-08-17"
   },
   {
@@ -4201,10 +4201,10 @@
     "last_discovered_at": "2026-09-19T09:00:09.476701+08:00",
     "status_since": "2026-09-19T09:01:57.570311+08:00",
     "quality": "LOW",
-    "quality_score": 0.28,
-    "topics": "event-driven, merger arb, real estate DST, marketing",
-    "notes": "PR feed + gated sales whitepapers; recheck monthly",
-    "last_deep_analyzed_at": "2026-09-19T01:01:34Z",
+    "quality_score": 0.35,
+    "topics": "real estate, income, alternatives",
+    "notes": "Product-promoting commentary, qualitative; thin",
+    "last_deep_analyzed_at": "2026-11-12T01:04:14Z",
     "added_at": "2026-09-18"
   },
   {
@@ -5158,7 +5158,7 @@
     "official_domain": "www.oakmark.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-11-11T09:03:01.964905+08:00",
+    "last_discovered_at": "2026-11-12T09:03:02.262180+08:00",
     "quality": "MEDIUM",
     "quality_score": 0.55,
     "topics": "equity, value investing, quarterly commentary",
@@ -5170,12 +5170,12 @@
     "name": "Fiera Capital",
     "homepage_url": "https://www.fieracapital.com",
     "source": "manual",
-    "status": "discovered",
+    "status": "visitable",
     "strategy_tags": [
       "multi_asset",
       "fixed_income",
-      "private_credit",
-      "real_assets"
+      "real_assets",
+      "esg_climate"
     ],
     "research_url": "https://www.fieracapital.com/en/insights/",
     "official_domain": "www.fieracapital.com",
@@ -5246,9 +5246,48 @@
         "path": "en/insights/tariff-announcements-update-with-jean-guy-desjardins-candice-bangsund"
       }
     ],
-    "status_since": "2026-11-11T09:03:55.738667+08:00",
+    "status_since": "2026-11-12T09:03:07.629615+08:00",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-11-11T09:03:39.460663+08:00",
-    "added_at": "2026-11-11"
+    "added_at": "2026-11-11",
+    "is_publicly_accessible": true,
+    "has_article_index": true,
+    "last_screened_at": "2026-11-12T09:03:03.500169+08:00",
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 1,
+      "article_tags": 0,
+      "time_tags": 0,
+      "date_patterns": 19,
+      "h2_tags": 3,
+      "article_signals": 1
+    },
+    "screening_reason": "Research index detected",
+    "fit_score": 0.8,
+    "last_validated_at": "2026-11-12T09:03:07.629595+08:00",
+    "last_deep_analyzed_at": "2026-11-12T01:04:14Z",
+    "quality": "MEDIUM",
+    "quality_score": 0.6,
+    "topics": "market commentary, multi-asset, private markets, ESG",
+    "notes": "Weekly dated insights; short gated-ish commentary, PDFs"
+  },
+  {
+    "id": "partners-capital",
+    "name": "Partners Capital",
+    "homepage_url": "https://www.partners-cap.com",
+    "source": "manual",
+    "status": "seed",
+    "strategy_tags": [
+      "multi_asset",
+      "macro",
+      "private_equity",
+      "esg_climate"
+    ],
+    "rss_url": "https://partners-cap.com/feed/",
+    "official_domain": "www.partners-cap.com",
+    "research_links": [],
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-11-12T09:04:16.397073+08:00"
   }
 ]
