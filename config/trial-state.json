@@ -12409,6 +12409,25 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-11-13": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "article_urls": [
+            "https://www.arielinvestments.com/article/the-patient-investor-2q26/",
+            "https://www.arielinvestments.com/article/company-spotlight-knowles-corporation/",
+            "https://www.arielinvestments.com/article/company-spotlight-orsted-as/",
+            "https://www.arielinvestments.com/article/company-spotlight-murata-manufacturing-co-ltd/",
+            "https://www.arielinvestments.com/article/company-spotlight-masco-corporation/",
+            "https://www.arielinvestments.com/article/the-patient-investor-1q26/",
+            "https://www.arielinvestments.com/article/iran-conflict-assessing-the-path-forward/",
+            "https://www.arielinvestments.com/article/the-patient-investor-4q25/",
+            "https://www.arielinvestments.com/article/a-turtles-take-on-china/",
+            "https://www.arielinvestments.com/article/the-patient-investor-3q25/"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -12545,6 +12564,14 @@
           "error": "No new (un-sampled) article links available",
           "day": 5,
           "date": "2026-11-12"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 6,
+          "date": "2026-11-13"
         }
       ]
     },
@@ -12566,6 +12593,24 @@
           "article_urls": [],
           "error": "HTTP 429",
           "fetcher_used": false
+        },
+        "2026-11-13": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 19,
+          "article_urls": [
+            "https://www.fieracapital.com/en/insights/private-real-estate-debt-a-complement-to-traditional-fixed-incom/",
+            "https://www.fieracapital.com/en/insights/q4-2026-investment-outlook-portfolio-strategy/",
+            "https://www.fieracapital.com/en/insights/forestry-gears-up-for-a-technology-revolution/",
+            "https://www.fieracapital.com/en/insights/mid-market-infrastructure-debt-a-defensive-allocation-for-a-changing-market-environment/",
+            "https://www.fieracapital.com/en/insights/investing-in-tomorrow-the-mid-market-infrastructure-advantage/",
+            "https://www.fieracapital.com/en/insights/q3-2026-investment-outlook-portfolio-strategy/",
+            "https://www.fieracapital.com/en/insights/all-eyes-on-emerging-markets/",
+            "https://www.fieracapital.com/en/insights/made-in-canada-a-new-structural-catalyst-for-canadian-industrial-real-estate/",
+            "https://www.fieracapital.com/en/insights/global-asset-allocation-team-market-update-november-2026/"
+          ],
+          "error": null,
+          "fetcher_used": false
         }
       },
       "auto_decided": false,
@@ -12578,9 +12623,44 @@
           "error": "No article links found on index page",
           "day": 1,
           "date": "2026-11-12"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.fieracapital.com/en/insights/private-real-estate-debt-a-complement-to-traditional-fixed-incom/",
+              "relevance": 0.9,
+              "depth": 0.6,
+              "extractable": 0.4,
+              "overall": 0.68,
+              "notes": "Investment research on private real estate debt as fixed income complement; substantive thesis but full PDF content not extracted, only abstract/summary visible"
+            },
+            {
+              "url": "https://www.fieracapital.com/en/insights/q4-2026-investment-outlook-portfolio-strategy/",
+              "relevance": 0.95,
+              "depth": 0.4,
+              "extractable": 0.3,
+              "overall": 0.6,
+              "notes": "Quarterly investment outlook and portfolio strategy document; highly relevant but only landing page summary provided, full PDF behind download wall"
+            },
+            {
+              "url": "https://www.fieracapital.com/en/insights/forestry-gears-up-for-a-technology-revolution/",
+              "relevance": 0.75,
+              "depth": 0.5,
+              "extractable": 0.3,
+              "overall": 0.56,
+              "notes": "Q&A on forestry sector technology trends; relevant to natural capital/timberland investing but limited substantive content visible, full PDF not extracted"
+            }
+          ],
+          "avg_score": 0.613,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 2,
+          "date": "2026-11-13"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-11-12"
+  "last_summary_sent_date": "2026-11-13"
 }
