@@ -3898,7 +3898,7 @@
     "name": "Graham Capital Management",
     "homepage_url": "https://www.grahamcapital.com",
     "source": "manual",
-    "status": "promoted",
+    "status": "watchlist",
     "strategy_tags": [
       "macro",
       "quant",
@@ -3909,12 +3909,12 @@
     "research_links": [],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-10-12T09:00:10.807489+08:00",
-    "status_since": "2026-11-12T09:04:32.258353+08:00",
+    "status_since": "2026-11-13T12:16:04.807047+08:00",
     "last_deep_analyzed_at": "2026-10-11T01:00:53Z",
     "quality": "MEDIUM",
     "quality_score": 0.6,
     "topics": "macro, trend-following, quant, volatility",
-    "notes": "RECOMMEND: trial passed (7/7 days with articles, quality=0.71)",
+    "notes": "[low cadence, user decision 2026-11-13: not wired. Trial PASS 7/7 but newest article 2026-06-04 (162d), ~2-3 posts/yr (2025-06-24, 2026-05-04, 2026-06-04); auto-promote probe reverted it as stale (monthly 90d). Re-check if it starts publishing regularly] RECOMMEND: trial passed (7/7 days with articl",
     "added_at": "2026-09-05",
     "template_attempts": [
       {
