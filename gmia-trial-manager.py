@@ -218,10 +218,24 @@ def _listing_templates():
     return listing_templates
 
 
+def _past_iso_date(value) -> str | None:
+    """value[:10] as YYYY-MM-DD if it is a real calendar date not after today (BJT), else None.
+
+    Impossible dates ('2026-11-31') would crash the verdict's strptime; future dates
+    (event listings, typos) would give a negative age and wave a stale source through."""
+    raw = str(value or "")[:10]
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", raw):
+        return None
+    try:
+        d = datetime.strptime(raw, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+    return raw if d <= datetime.now(BJT).date() else None
+
+
 def _newest_date(articles: list[dict]) -> str | None:
-    """Latest ISO date (YYYY-MM-DD) among the listed articles, None if none."""
-    dates = [str(a.get("date") or "")[:10] for a in articles]
-    dates = [d for d in dates if re.fullmatch(r"\d{4}-\d{2}-\d{2}", d)]
+    """Latest real, non-future ISO date (YYYY-MM-DD) among the listed articles, None if none."""
+    dates = [d for d in (_past_iso_date(a.get("date")) for a in articles) if d]
     return max(dates) if dates else None
 
 
@@ -1535,8 +1549,8 @@ def cmd_run() -> None:
                 if d.get("accessible") and d.get("article_count", 0) > 0
             )
             quantity_ok = days_with_articles >= MIN_DAYS_WITH_ARTICLES
-            newest_dates = [d["newest_date"] for d in active.get("daily_checks", {}).values()
-                            if d.get("newest_date")]
+            newest_dates = [nd for nd in (_past_iso_date(d.get("newest_date"))
+                                          for d in active.get("daily_checks", {}).values()) if nd]
             newest = max(newest_dates) if newest_dates else None
             newest_age = ((datetime.strptime(today, "%Y-%m-%d")
                            - datetime.strptime(newest, "%Y-%m-%d")).days if newest else None)

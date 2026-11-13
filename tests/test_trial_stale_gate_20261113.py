@@ -108,3 +108,18 @@ def test_generic_page_counter_reads_the_newest_written_date():
     text = f"Outlook 2026-06-04 · Notes June 4, 2025 · Brief 3 Jul 2026 · Event {future}"
     assert tm._page_newest_date(text) == "2026-07-03"
     assert tm._page_newest_date("no dates here") is None
+
+
+def test_impossible_or_future_dates_are_ignored():
+    """CRA 2026-11-14: '2026-11-31' passed the format regex and would crash the verdict's
+    strptime; a future date would make the age negative and wave a stale source through."""
+    arts = [{"url": "u1", "date": "2026-02-30"}, {"url": "u2", "date": "2099-01-01"},
+            {"url": "u3", "date": "2026-06-04"}]
+    assert tm._count_with(lambda: arts)["newest_date"] == "2026-06-04"
+    assert tm._count_with(lambda: [{"url": "u", "date": "2026-13-01"}])["newest_date"] is None
+
+
+def test_bad_stored_newest_date_does_not_abort_the_run(trial_env, monkeypatch):
+    """A daily_checks entry written before validation existed must not crash cmd_run."""
+    trial, _ = _run_last_day(monkeypatch, "2026-11-31")
+    assert trial["outcome"] == "pass"  # no usable date -> the other gates decide
