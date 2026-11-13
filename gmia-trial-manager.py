@@ -48,6 +48,9 @@ CANDIDATES_FILE = BASE_DIR / "config" / "fund_candidates.json"
 SOURCES_FILE = BASE_DIR / "config" / "sources.json"
 TRIAL_STATE_FILE = BASE_DIR / "config" / "trial-state.json"
 ENV_FILE = Path.home() / ".stock-monitor.env"
+# Holds only ANTHROPIC_API_KEY (mode 600, never sourced by a shell). Read here
+# because the auto-promote agent runs this with the key unset (2026-11-13).
+ANTHROPIC_KEY_FILE = Path.home() / ".anthropic-api.env"
 
 TRIAL_DAYS = 7
 MAX_CONCURRENT_TRIALS = 3
@@ -496,6 +499,18 @@ def _is_likely_js_only(url: str, timeout: int = 15) -> bool:
         return False
 
 
+def anthropic_api_key() -> str:
+    """~/.stock-monitor.env, then the environment, then ANTHROPIC_KEY_FILE."""
+    key = load_env().get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_API_KEY", "")
+    if key or not ANTHROPIC_KEY_FILE.exists():
+        return key
+    for line in ANTHROPIC_KEY_FILE.read_text().splitlines():
+        k, _, v = line.strip().partition("=")
+        if k.strip() == "ANTHROPIC_API_KEY":
+            return v.strip().strip("'\"")
+    return ""
+
+
 def _call_haiku(prompt: str, max_retries: int = 1) -> dict | None:
     """Call Claude Haiku for quality assessment. Returns parsed JSON or None.
 
@@ -505,8 +520,7 @@ def _call_haiku(prompt: str, max_retries: int = 1) -> dict | None:
     Haiku JSON glitch sends ``avg_score`` to ``0.0`` and can auto-reject an
     otherwise-good source (regression seen with research-affiliates 2026-04-19).
     """
-    env = load_env()
-    api_key = env.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_API_KEY", "")
+    api_key = anthropic_api_key()
     if not api_key:
         print("WARNING: ANTHROPIC_API_KEY not set, skipping quality sampling")
         return None

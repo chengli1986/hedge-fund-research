@@ -157,7 +157,11 @@ def check_probe(e: dict) -> tuple[str, str]:
     except subprocess.TimeoutExpired:
         return "error", "health probe timed out after 180s"
     if proc.returncode != 0:
-        return "fail", (proc.stderr or "")[-200:]
+        # The verdict ("<id> stale: ...") is on stdout; stderr is INFO logging.
+        # 2026-11-13 Graham: keeping only stderr[-200:] lost the real reason.
+        verdict = [ln.strip() for ln in (proc.stdout or "").splitlines()
+                   if ln.strip().startswith(e["id"] + " ")]
+        return "fail", " | ".join(verdict)[:400] or (proc.stderr or "")[-200:]
     # The validate phase only reads what the agent wrote in its commit
     # message; this is the measurement. Until 2026-10-18 a probe "pass" was
     # >=1 article and >=100 chars, below the gate the message must claim.
