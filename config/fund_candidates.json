@@ -277,7 +277,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.94,
-    "notes": "Free; Flash Macro + insights; only landing page checked",
+    "notes": "Free; Nov pieces deal-promo heavy, macro playbook ok",
     "research_links": [
       {
         "url": "https://www.kkr.com/insights",
@@ -326,9 +326,9 @@
       "article_signals": 1
     },
     "screening_reason": "Insufficient article index signals",
-    "last_deep_analyzed_at": "2026-09-19T01:01:34Z",
+    "last_deep_analyzed_at": "2026-11-13T01:03:48.065273+00:00",
     "quality": "MEDIUM",
-    "topics": "private equity, macro, infrastructure, credit, real estate",
+    "topics": "private equity, infrastructure, macro, credit, asset allocation",
     "strategy_tags": [
       "private_equity",
       "macro",
@@ -338,7 +338,7 @@
     "source": "manual",
     "inaccessible_reason": null,
     "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager",
-    "quality_score": 0.68,
+    "quality_score": 0.6,
     "status_since": "2026-04-19T09:01:04.025696+08:00",
     "added_at": "2026-04-04"
   },
@@ -5290,8 +5290,13 @@
     "official_domain": "www.partners-cap.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-11-12T09:04:16.397073+08:00",
+    "last_discovered_at": "2026-11-13T09:03:03.847380+08:00",
     "added_at": "2026-11-12",
-    "status_since": "2026-11-12T09:04:28.935572+08:00"
+    "status_since": "2026-11-12T09:04:28.935572+08:00",
+    "quality": "MEDIUM",
+    "quality_score": 0.72,
+    "topics": "multi-asset, macro, private equity, sustainable investing",
+    "notes": "Free multi-asset macro pieces, ~monthly; some marketing",
+    "last_deep_analyzed_at": "2026-11-13T01:03:48.065273+00:00"
   }
 ]
