@@ -55,6 +55,12 @@ ANTHROPIC_KEY_FILE = Path.home() / ".anthropic-api.env"
 TRIAL_DAYS = 7
 MAX_CONCURRENT_TRIALS = 3
 MIN_DAYS_WITH_ARTICLES = 4  # fetcher must return >0 articles on ≥4 of 7 days
+# Newest listed article must be at most this old to PASS -- the post-promote
+# health probe's threshold for a source of unknown frequency
+# (gmia-fetcher-health.py DEFAULT_STALE_DAYS; a test keeps them equal).
+# 2026-11-13 Graham: same 10 old articles every day passed 7/7, newest 162d
+# old, and the probe reverted it as stale right after auto-promote.
+TRIAL_MAX_NEWEST_AGE_DAYS = 120
 MIN_QUALITY = {"HIGH", "MEDIUM"}
 MIN_QUALITY_SCORE = 0.5     # avg Haiku quality score to pass (0-1)
 # An average needs a few articles behind it: one sampled article could pass
@@ -212,6 +218,13 @@ def _listing_templates():
     return listing_templates
 
 
+def _newest_date(articles: list[dict]) -> str | None:
+    """Latest ISO date (YYYY-MM-DD) among the listed articles, None if none."""
+    dates = [str(a.get("date") or "")[:10] for a in articles]
+    dates = [d for d in dates if re.fullmatch(r"\d{4}-\d{2}-\d{2}", d)]
+    return max(dates) if dates else None
+
+
 def _count_with(run) -> dict:
     """Run a listing fetch and summarise it the way the trial records it."""
     try:
@@ -221,6 +234,7 @@ def _count_with(run) -> dict:
             "accessible": True,
             "article_count": count,
             "date_count": sum(1 for a in articles if a.get("date")),
+            "newest_date": _newest_date(articles),
             "article_urls": [a["url"] for a in articles if a.get("url")][:50],
             "error": None,
             "fetcher_used": True,
@@ -244,6 +258,28 @@ _DATE_PATTERNS = [
     r"\b\d{1,2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* 20\d{2}\b",
 ]
 _DATE_RE = re.compile("|".join(_DATE_PATTERNS), re.IGNORECASE)
+
+
+def _page_newest_date(text: str) -> str | None:
+    """Latest full date written in a listing page's text (YYYY-MM-DD), or None.
+
+    For candidates counted by the generic page heuristic (no fetcher/template),
+    so the trial's staleness gate can still see how old the newest item is.
+    Future dates (event listings, typos) are ignored."""
+    today = datetime.now(BJT).date()
+    best = None
+    for m in _DATE_RE.finditer(text):
+        raw = re.sub(r"\s+", " ", m.group(0).replace(",", "")).strip()
+        d = None
+        for fmt in ("%Y-%m-%d", "%Y/%m/%d", "%b %d %Y", "%B %d %Y", "%d %b %Y", "%d %B %Y"):
+            try:
+                d = datetime.strptime(raw.replace("Sept ", "Sep "), fmt).date()
+                break
+            except ValueError:
+                continue
+        if d and d <= today and (best is None or d > best):
+            best = d
+    return best.isoformat() if best else None
 
 
 def count_articles(url: str, timeout: int = 20) -> dict:
@@ -294,6 +330,7 @@ def count_articles(url: str, timeout: int = 20) -> dict:
             "accessible": True,
             "article_count": article_count,
             "date_count": date_matches,
+            "newest_date": _page_newest_date(text),
             "article_urls": article_urls,
             "error": None,
         }
@@ -937,6 +974,8 @@ def _trial_result_label(outcome: str, passed: bool) -> tuple[str, str, str]:
         return "⚠️", "ABORTED — NEEDS FETCHER (ROUTED TO SYNTHESIS)", "#9a6700"
     if outcome == "fail_quality":
         return "❌", "FAILED — LOW QUALITY", "#cf222e"
+    if outcome == "fail_stale":
+        return "❌", "FAILED — NO RECENT ARTICLES (LOW CADENCE)", "#cf222e"
     return "❌", "FAILED — INSUFFICIENT CONTENT", "#cf222e"
 
 
@@ -957,6 +996,8 @@ def _summary_bucket(t: dict) -> str:
         return "aborted_needs_fetcher"
     if outcome == "fail_quantity":
         return "inaccessible" if t.get("total_articles", 0) == 0 else "low_cadence"
+    if outcome == "fail_stale":
+        return "low_cadence"
     return "other"
 
 
@@ -1385,7 +1426,7 @@ def send_daily_summary_email(state: dict, today: str) -> None:
 {section("⚠️ Watchlist — low quality", fail_quality_rows, trial_header, "#9a6700")}
 {section("⚠️ Inconclusive — articles detected but sampling failed", inconclusive_rows, trial_header, "#9a6700")}
 {section("🔧 Aborted day 1 — needs fetcher (routed to synthesis)", aborted_rows, trial_header, "#cf222e")}
-{section("⚠️ Watchlist — low cadence (some articles, not enough days)", fail_quantity_watchlist_rows, trial_header, "#9a6700")}
+{section("⚠️ Watchlist — low cadence (articles on too few days, or none recent)", fail_quantity_watchlist_rows, trial_header, "#9a6700")}
 {section("🚫 Inaccessible — 0 articles (routed to fetcher-synthesis)", fail_quantity_inaccessible_rows, trial_header, "#cf222e")}
 {section("🔄 Active trials (in progress)", active_rows, active_header, "#0969da")}
 
@@ -1494,6 +1535,13 @@ def cmd_run() -> None:
                 if d.get("accessible") and d.get("article_count", 0) > 0
             )
             quantity_ok = days_with_articles >= MIN_DAYS_WITH_ARTICLES
+            newest_dates = [d["newest_date"] for d in active.get("daily_checks", {}).values()
+                            if d.get("newest_date")]
+            newest = max(newest_dates) if newest_dates else None
+            newest_age = ((datetime.strptime(today, "%Y-%m-%d")
+                           - datetime.strptime(newest, "%Y-%m-%d")).days if newest else None)
+            # No dates on the listing: nothing to measure, the other gates decide.
+            fresh_ok = newest_age is None or newest_age <= TRIAL_MAX_NEWEST_AGE_DAYS
 
             all_scores = [
                 a["overall"]
@@ -1504,14 +1552,18 @@ def cmd_run() -> None:
             enough_samples = len(all_scores) >= MIN_QUALITY_SAMPLES
             quality_ok = enough_samples and avg_quality >= MIN_QUALITY_SCORE
 
-            passed = quantity_ok and quality_ok
+            passed = quantity_ok and fresh_ok and quality_ok
             active["auto_decided"] = True
             active["end_date"] = today
             active["total_articles"] = total_articles
             active["days_with_articles"] = days_with_articles
             active["avg_quality_score"] = round(avg_quality, 3)
+            if newest:
+                active["newest_article_date"] = newest
             if not quantity_ok:
                 active["outcome"] = "fail_quantity"
+            elif not fresh_ok:
+                active["outcome"] = "fail_stale"
             elif not enough_samples:
                 # Articles were detected on enough days but too few could be
                 # sampled — that is a sampling failure, not a quality
@@ -1549,6 +1601,15 @@ def cmd_run() -> None:
                                     f"Trial failed: articles on only "
                                     f"{days_with_articles}/{TRIAL_DAYS} days"
                                 )
+                        elif not fresh_ok:
+                            # Listed every day, but nothing new: the health probe
+                            # would revert it as stale right after promotion.
+                            set_status(c, "watchlist")
+                            c["notes"] = (
+                                f"Trial failed: low cadence -- newest article {newest} "
+                                f"({newest_age}d old, limit {TRIAL_MAX_NEWEST_AGE_DAYS}d); "
+                                f"listing had articles on {days_with_articles}/{TRIAL_DAYS} days"
+                            )
                         elif not enough_samples:
                             set_status(c, "watchlist")
                             c["notes"] = (f"Trial inconclusive: {len(all_scores)} quality "
