@@ -1324,7 +1324,7 @@
     "rss_url": null,
     "official_domain": "www.aberdeeninvestments.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "Static page 0 insights (JS); Playwright fetcher in prod",
+    "notes": "Institutional insights; listing empty in fetch, articles fin",
     "research_links": [
       {
         "url": "https://www.aberdeeninvestments.com/en-us/institutional/insights-and-research/insights",
@@ -1347,16 +1347,14 @@
       "article_signals": 0
     },
     "screening_reason": "Insufficient article index signals",
-    "quality": "LOW",
-    "quality_score": 0.32,
-    "topics": "multi_asset, institutional insights",
-    "last_deep_analyzed_at": "2026-09-19T01:01:34Z",
+    "quality": "MEDIUM",
+    "quality_score": 0.62,
+    "topics": "hedge funds, multi-asset, macro",
+    "last_deep_analyzed_at": "2026-11-14T01:03:44Z",
     "fit_score": 0.82,
     "strategy_tags": [
-      "macro",
-      "fixed_income",
       "multi_asset",
-      "emerging_markets"
+      "macro"
     ],
     "last_validated_at": "2026-04-19T09:02:22.948295+08:00",
     "source": "manual",
@@ -1800,9 +1798,7 @@
     "status": "promoted",
     "strategy_tags": [
       "macro",
-      "multi_asset",
-      "fixed_income",
-      "equity"
+      "multi_asset"
     ],
     "official_domain": "www.im.natixis.com",
     "research_links": [
@@ -1898,7 +1894,7 @@
       }
     ],
     "discovery_method": "discover_fund_sites",
-    "notes": "Tactical Take podcast + full transcript, ~monthly, free",
+    "notes": "Monthly Tactical Take podcast+text; undated listing",
     "last_discovered_at": "2026-05-02T09:03:53.598499+08:00",
     "is_publicly_accessible": true,
     "has_article_index": true,
@@ -1916,10 +1912,10 @@
     "screening_reason": "Research index detected",
     "fit_score": 0.85,
     "last_validated_at": "2026-05-03T09:00:33.191261+08:00",
-    "last_deep_analyzed_at": "2026-09-20T01:01:27Z",
+    "last_deep_analyzed_at": "2026-11-14T01:03:44Z",
     "quality": "MEDIUM",
-    "quality_score": 0.62,
-    "topics": "macro, multi_asset, tactical positioning",
+    "quality_score": 0.58,
+    "topics": "macro, multi-asset",
     "status_since": "2026-05-03T09:00:33.191261+08:00",
     "added_at": "2026-05-02"
   },
@@ -2189,9 +2185,8 @@
     "source": "manual",
     "status": "promoted",
     "strategy_tags": [
-      "fixed_income",
       "equity",
-      "macro",
+      "fixed_income",
       "multi_asset"
     ],
     "rss_url": "https://www.janushenderson.com/feed/",
@@ -2200,11 +2195,11 @@
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-05-11T09:00:09.554318+08:00",
     "research_url": "https://www.janushenderson.com/en-us/investor/insights/",
-    "quality": "HIGH",
-    "quality_score": 0.85,
-    "topics": "fixed income, equity, macro, factor investing, AI, climate",
-    "notes": "RECOMMEND: Free 2-3/wk, data-backed FI/macro/equity",
-    "last_deep_analyzed_at": "2026-09-20T01:01:27Z",
+    "quality": "MEDIUM",
+    "quality_score": 0.68,
+    "topics": "equity, fixed income, multi-asset, AI",
+    "notes": "3-4 free articles/week, data-backed, some marketing",
+    "last_deep_analyzed_at": "2026-11-14T01:03:44Z",
     "promoted_at": "2026-05-12T10:19:29.746916+08:00",
     "status_since": "2026-05-11T09:00:09.554318+08:00",
     "added_at": "2026-05-10"
@@ -5290,7 +5285,7 @@
     "official_domain": "www.partners-cap.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-11-13T09:03:03.847380+08:00",
+    "last_discovered_at": "2026-11-14T09:03:03.483394+08:00",
     "added_at": "2026-11-12",
     "status_since": "2026-11-12T09:04:28.935572+08:00",
     "quality": "MEDIUM",
