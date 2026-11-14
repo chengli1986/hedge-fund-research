@@ -12301,9 +12301,7 @@
       "skip_reason": "needs_fetcher",
       "total_articles": 0,
       "days_with_articles": 0
-    }
-  ],
-  "active_trials": [
+    },
     {
       "id": "ariel-investments",
       "name": "Ariel Investments",
@@ -12313,7 +12311,7 @@
       "quality": "MEDIUM",
       "topics": "equity, value investing, market commentary",
       "start_date": "2026-11-08",
-      "end_date": null,
+      "end_date": "2026-11-14",
       "daily_checks": {
         "2026-11-08": {
           "accessible": true,
@@ -12428,10 +12426,30 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-11-14": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "newest_date": "2026-08-07",
+          "article_urls": [
+            "https://www.arielinvestments.com/article/the-patient-investor-2q26/",
+            "https://www.arielinvestments.com/article/company-spotlight-knowles-corporation/",
+            "https://www.arielinvestments.com/article/company-spotlight-orsted-as/",
+            "https://www.arielinvestments.com/article/company-spotlight-murata-manufacturing-co-ltd/",
+            "https://www.arielinvestments.com/article/company-spotlight-masco-corporation/",
+            "https://www.arielinvestments.com/article/the-patient-investor-1q26/",
+            "https://www.arielinvestments.com/article/iran-conflict-assessing-the-path-forward/",
+            "https://www.arielinvestments.com/article/the-patient-investor-4q25/",
+            "https://www.arielinvestments.com/article/a-turtles-take-on-china/",
+            "https://www.arielinvestments.com/article/the-patient-investor-3q25/"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -12572,9 +12590,23 @@
           "error": "No new (un-sampled) article links available",
           "day": 6,
           "date": "2026-11-13"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 7,
+          "date": "2026-11-14"
         }
-      ]
-    },
+      ],
+      "total_articles": 70,
+      "days_with_articles": 7,
+      "avg_quality_score": 0.728,
+      "newest_article_date": "2026-08-07"
+    }
+  ],
+  "active_trials": [
     {
       "id": "fiera-capital",
       "name": "Fiera Capital",
@@ -12598,6 +12630,25 @@
           "accessible": true,
           "article_count": 20,
           "date_count": 19,
+          "article_urls": [
+            "https://www.fieracapital.com/en/insights/private-real-estate-debt-a-complement-to-traditional-fixed-incom/",
+            "https://www.fieracapital.com/en/insights/q4-2026-investment-outlook-portfolio-strategy/",
+            "https://www.fieracapital.com/en/insights/forestry-gears-up-for-a-technology-revolution/",
+            "https://www.fieracapital.com/en/insights/mid-market-infrastructure-debt-a-defensive-allocation-for-a-changing-market-environment/",
+            "https://www.fieracapital.com/en/insights/investing-in-tomorrow-the-mid-market-infrastructure-advantage/",
+            "https://www.fieracapital.com/en/insights/q3-2026-investment-outlook-portfolio-strategy/",
+            "https://www.fieracapital.com/en/insights/all-eyes-on-emerging-markets/",
+            "https://www.fieracapital.com/en/insights/made-in-canada-a-new-structural-catalyst-for-canadian-industrial-real-estate/",
+            "https://www.fieracapital.com/en/insights/global-asset-allocation-team-market-update-november-2026/"
+          ],
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-11-14": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 19,
+          "newest_date": "2026-11-10",
           "article_urls": [
             "https://www.fieracapital.com/en/insights/private-real-estate-debt-a-complement-to-traditional-fixed-incom/",
             "https://www.fieracapital.com/en/insights/q4-2026-investment-outlook-portfolio-strategy/",
@@ -12658,9 +12709,44 @@
           "js_only_checked": 0,
           "day": 2,
           "date": "2026-11-13"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.fieracapital.com/en/insights/mid-market-infrastructure-debt-a-defensive-allocation-for-a-changing-market-environment/",
+              "relevance": 0.9,
+              "depth": 0.4,
+              "extractable": 0.3,
+              "overall": 0.58,
+              "notes": "Infrastructure debt allocation strategy; substantive topic but only abstract/teaser text provided, full PDF behind download wall"
+            },
+            {
+              "url": "https://www.fieracapital.com/en/insights/investing-in-tomorrow-the-mid-market-infrastructure-advantage/",
+              "relevance": 0.85,
+              "depth": 0.3,
+              "extractable": 0.2,
+              "overall": 0.5,
+              "notes": "Mid-market infrastructure investing thesis; minimal detail in extracted text, full content locked behind PDF download"
+            },
+            {
+              "url": "https://www.fieracapital.com/en/insights/q3-2026-investment-outlook-portfolio-strategy/",
+              "relevance": 0.95,
+              "depth": 0.35,
+              "extractable": 0.25,
+              "overall": 0.57,
+              "notes": "Quarterly macro outlook and portfolio strategy; relevant but only brief summary visible, full analysis behind PDF wall"
+            }
+          ],
+          "avg_score": 0.55,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 3,
+          "date": "2026-11-14"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-11-13"
+  "last_summary_sent_date": "2026-11-14"
 }
