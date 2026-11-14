@@ -5103,7 +5103,7 @@
     "name": "DoubleLine Capital",
     "homepage_url": "https://doubleline.com",
     "source": "manual",
-    "status": "inaccessible",
+    "status": "visitable",
     "strategy_tags": [
       "fixed_income",
       "macro"
@@ -5113,19 +5113,86 @@
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-11-01T09:03:02.632373+08:00",
     "added_at": "2026-10-31",
-    "status_since": "2026-11-08T09:03:36.530336+08:00",
+    "status_since": "2026-11-15T02:01:55.333242+08:00",
     "last_deep_analyzed_at": "2026-11-01T01:04:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.7,
     "topics": "fixed income, macro, inflation, rates",
-    "notes": "[auto-stall 2026-11-08] seed->inaccessible after 7d stuck Free weekly updates+blog at /markets-insights/"
+    "notes": "[auto-stall 2026-11-08] seed->inaccessible after 7d stuck Free weekly updates+blog at /markets-insights/",
+    "template_attempts": [
+      {
+        "at": "2026-11-14T18:00:56+00:00",
+        "type": "rss_feed",
+        "spec": {
+          "type": "rss_feed",
+          "feed": "url",
+          "sort": "date_desc"
+        },
+        "listing_url": "https://doubleline.com/markets-insights/feed/",
+        "ok": false,
+        "rows": 0,
+        "problems": [
+          "ParseError: XML or text declaration not at start of entity: line 1, column 5"
+        ]
+      },
+      {
+        "at": "2026-11-14T18:01:04+00:00",
+        "type": "card_list",
+        "spec": {
+          "type": "card_list",
+          "fetch": "requests",
+          "card": "div.results-listing div.insight-item",
+          "link": "a",
+          "title": ".item-title h4",
+          "date": ".item-date span",
+          "path_prefix": "/markets-insights/",
+          "sort": "date_desc"
+        },
+        "listing_url": "https://doubleline.com/markets-insights/",
+        "ok": true,
+        "rows": 10,
+        "dated": 10,
+        "problems": [],
+        "sample": [
+          {
+            "title": "Weekly Market Update: November 2026 - Week 2",
+            "url": "https://doubleline.com/markets-insights/weekly-market-update-november-2026-week-2/",
+            "date": "2026-11-13"
+          },
+          {
+            "title": "The Fed and Inflation Expectations Diverge",
+            "url": "https://doubleline.com/markets-insights/the-fed-and-inflation-expectations-diverge/",
+            "date": "2026-11-13"
+          },
+          {
+            "title": "Broad Rally for Stocks, Bear Flattening for Bonds (E285)",
+            "url": "https://doubleline.com/markets-insights/dline-minutes-e285/",
+            "date": "2026-11-13"
+          }
+        ]
+      }
+    ],
+    "listing_template": {
+      "type": "card_list",
+      "fetch": "requests",
+      "card": "div.results-listing div.insight-item",
+      "link": "a",
+      "title": ".item-title h4",
+      "date": ".item-date span",
+      "path_prefix": "/markets-insights/",
+      "sort": "date_desc"
+    },
+    "listing_url": "https://doubleline.com/markets-insights/",
+    "expected_hostname": "doubleline.com",
+    "synthesis_attempted_at": "2026-11-14T18:01:55.320551+00:00",
+    "synthesis_outcome": "success"
   },
   {
     "id": "crescat-capital",
     "name": "Crescat Capital",
     "homepage_url": "https://www.crescat.net/",
     "source": "manual",
-    "status": "inaccessible",
+    "status": "visitable",
     "strategy_tags": [
       "macro",
       "equity"
@@ -5136,12 +5203,78 @@
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-11-10T09:03:02.462545+08:00",
     "added_at": "2026-11-02",
-    "status_since": "2026-11-10T09:04:00.638637+08:00",
+    "status_since": "2026-11-15T02:01:55.333286+08:00",
     "quality": "MEDIUM",
     "quality_score": 0.5,
     "topics": "macro, equity, precious metals, credit",
     "notes": "[auto-stall 2026-11-10] seed->inaccessible after 7d stuck Biweekly macro letters; many posts media/deck only",
-    "last_deep_analyzed_at": "2026-11-03T01:08:00Z"
+    "last_deep_analyzed_at": "2026-11-03T01:08:00Z",
+    "template_attempts": [
+      {
+        "at": "2026-11-14T18:01:27+00:00",
+        "type": "api_json",
+        "spec": {
+          "type": "api_json",
+          "endpoint": "https://www.crescat.net/wp-json/wp/v2/posts",
+          "params": {
+            "categories": "118",
+            "per_page": "10",
+            "_fields": "date,link,title"
+          },
+          "items": "",
+          "title": "title.rendered",
+          "url": "link",
+          "date": "date",
+          "sort": "date_desc"
+        },
+        "listing_url": "https://www.crescat.net/wp-json/wp/v2/posts",
+        "ok": false,
+        "rows": 0,
+        "problems": [
+          "ValueError: listing_template for type 'api_json' needs 'items'"
+        ]
+      },
+      {
+        "at": "2026-11-14T18:01:42+00:00",
+        "type": "rss_feed",
+        "spec": {
+          "type": "rss_feed",
+          "feed": "url",
+          "sort": "date_desc"
+        },
+        "listing_url": "https://www.crescat.net/category/quarterly-letter/crescat-updates/research-letter-performance-update-crescat-updates/feed/",
+        "ok": true,
+        "rows": 10,
+        "dated": 10,
+        "problems": [],
+        "sample": [
+          {
+            "title": "The Great Rotation",
+            "url": "https://www.crescat.net/28559-2/",
+            "date": "2026-10-30"
+          },
+          {
+            "title": "Market Warning Signs",
+            "url": "https://www.crescat.net/market-warning-signs/",
+            "date": "2026-09-22"
+          },
+          {
+            "title": "Gold Alpha",
+            "url": "https://www.crescat.net/gold-alpha/",
+            "date": "2026-08-22"
+          }
+        ]
+      }
+    ],
+    "listing_template": {
+      "type": "rss_feed",
+      "feed": "url",
+      "sort": "date_desc"
+    },
+    "listing_url": "https://www.crescat.net/category/quarterly-letter/crescat-updates/research-letter-performance-update-crescat-updates/feed/",
+    "expected_hostname": "crescat.net",
+    "synthesis_attempted_at": "2026-11-14T18:01:55.320551+00:00",
+    "synthesis_outcome": "success"
   },
   {
     "id": "oakmark",
