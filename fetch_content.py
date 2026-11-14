@@ -2808,6 +2808,65 @@ def _fetch_content_fairtree(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+ARIEL_MIN_CONTENT = 500
+# Phrase that only the fund-disclosure block at the foot of every article carries
+# (its last sentence names the distributor).
+_ARIEL_DISCLAIMER_MARK = "Ariel Distributors"
+
+
+def _fetch_content_ariel_investments(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Ariel Investments article content via requests (SSR).
+
+    The listing is arielinvestments.com/news-insights-listing/?tags=31 (a
+    card_list template). The body sits in `div.ar-content-block-copy` blocks;
+    the last one on every page is the ~2.7k-char fund disclosure (risk text,
+    holdings list, "Distributed by Ariel Distributors LLC"), structurally the
+    same as the body blocks, so it is dropped by that sentence; on pages that
+    append it to the body block instead (Iran Conflict), it follows an `<hr>`
+    and everything from the rule on is cut first. The Patient
+    Investor quarterly letters carry a ~1.2k-char "What's Inside" summary on
+    the page (the full letter is a PDF), which is what is stored.
+    """
+    url = article["url"]
+    log.info("  Ariel: fetching article page %s", url)
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Ariel: fetch failed: %s", e)
+        return None
+
+    soup = BeautifulSoup(resp.text, "html.parser")
+    body = "div.ar-content-block-copy"
+    blocks = soup.select(body)
+    if not blocks:
+        log.warning("  Ariel: no %s on page: %s", body, url)
+        return None
+    for block in blocks:
+        # Some pages put the disclosure in the body block itself, after an <hr>.
+        rule = block.find("hr", recursive=False)
+        if rule is not None:
+            for sib in list(rule.find_next_siblings()):
+                sib.decompose()
+            rule.decompose()
+        if _ARIEL_DISCLAIMER_MARK in block.get_text(" ", strip=True):
+            block.decompose()
+    if soup.select_one(body) is None:
+        log.warning("  Ariel: only the disclosure block on page: %s", url)
+        return None
+    text = _normalize_html(
+        str(soup), f"{body} p, {body} li, {body} h2, {body} h3, {body} h4"
+    )
+    if not _check_min_content_length(text, ARIEL_MIN_CONTENT):
+        log.warning("  Ariel: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Ariel: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -2859,6 +2918,7 @@ CONTENT_FETCHERS = {
     "madison-investments": _fetch_content_madison_investments,
     "muzinich": _fetch_content_muzinich,
     "fairtree": _fetch_content_fairtree,
+    "ariel-investments": _fetch_content_ariel_investments,
 }
 
 

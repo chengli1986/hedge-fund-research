@@ -42,7 +42,7 @@ Shapes with no template type today: `sitemap_plus_page` (2),
 `attestation` (2), `card_list_paginated` (1). Each is one source short of
 being worth building.
 
-## TEMPLATE — card_list (14)
+## TEMPLATE — card_list (15)
 
 | source | note |
 | --- | --- |
@@ -60,6 +60,7 @@ being worth building.
 | msci-research | `date_separator`, `date_part=after`. Reports "order differs" on about half of A/B runs: the site varies card order and serves exactly max_articles cards, so the set cannot change |
 | muzinich | SSR `div.card` grid with title link and "Category \| Date" line: `date_separator` + `date_part=after`, `sort=date_desc`. Podcast cards are listed too; the content extractor refuses them (title-only) |
 | fairtree | SSR resource-hub grid of `div.report-card`s, one full-card link + `h3` title; `path_prefix=/resource-hub/` keeps tag/author masks out. No date on the card (dates stay empty). Video/podcast cards (Macro Pulse, Equity Explorer) have no `div.right-content` and are refused by the extractor (title-only) |
+| ariel-investments | SSR `.ar-listing-paged` grid of `a.article` cards (the card is the link), `.ar-article-title` + `.ar-article-date`; `path_prefix=/article/`, `sort=date_desc`. Listing is the `?tags=31` commentary filter |
 
 ## TEMPLATE — rss_feed (9)
 

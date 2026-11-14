@@ -1232,6 +1232,31 @@
         "path_prefix": "/resource-hub/"
       },
       "listing_template_active": true
+    },
+    {
+      "id": "ariel-investments",
+      "strategy_tags": [
+        "equity"
+      ],
+      "name": "Ariel Investments",
+      "short_name": "Ariel",
+      "url": "https://www.arielinvestments.com/news-insights-listing/?tags=31",
+      "method": "ssr",
+      "frequency": "monthly",
+      "description": "Chicago-based value equity manager, the first African-American-owned asset management firm in the US. Patient, long-term, concentrated small/mid-cap value investing.",
+      "notable_authors": [],
+      "expected_hostname": "arielinvestments.com",
+      "listing_template": {
+        "type": "card_list",
+        "fetch": "requests",
+        "card": ".ar-listing-paged a.article",
+        "link": "self",
+        "title": ".ar-article-title",
+        "date": ".ar-article-date",
+        "path_prefix": "/article/",
+        "sort": "date_desc"
+      },
+      "listing_template_active": true
     }
   ]
 }
