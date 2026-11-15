@@ -12662,6 +12662,25 @@
           ],
           "error": null,
           "fetcher_used": false
+        },
+        "2026-11-15": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 19,
+          "newest_date": "2026-11-10",
+          "article_urls": [
+            "https://www.fieracapital.com/en/insights/private-real-estate-debt-a-complement-to-traditional-fixed-incom/",
+            "https://www.fieracapital.com/en/insights/q4-2026-investment-outlook-portfolio-strategy/",
+            "https://www.fieracapital.com/en/insights/forestry-gears-up-for-a-technology-revolution/",
+            "https://www.fieracapital.com/en/insights/mid-market-infrastructure-debt-a-defensive-allocation-for-a-changing-market-environment/",
+            "https://www.fieracapital.com/en/insights/investing-in-tomorrow-the-mid-market-infrastructure-advantage/",
+            "https://www.fieracapital.com/en/insights/q3-2026-investment-outlook-portfolio-strategy/",
+            "https://www.fieracapital.com/en/insights/all-eyes-on-emerging-markets/",
+            "https://www.fieracapital.com/en/insights/made-in-canada-a-new-structural-catalyst-for-canadian-industrial-real-estate/",
+            "https://www.fieracapital.com/en/insights/global-asset-allocation-team-market-update-november-2026/"
+          ],
+          "error": null,
+          "fetcher_used": false
         }
       },
       "auto_decided": false,
@@ -12744,9 +12763,188 @@
           "js_only_checked": 0,
           "day": 3,
           "date": "2026-11-14"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.fieracapital.com/en/insights/all-eyes-on-emerging-markets/",
+              "relevance": 0.7,
+              "depth": 0.3,
+              "extractable": 0.4,
+              "overall": 0.48,
+              "notes": "Landing page for emerging markets insights; mostly promotional with links to deeper content (white paper, interview, article) but no substantive analysis in the excerpt itself."
+            },
+            {
+              "url": "https://www.fieracapital.com/en/insights/made-in-canada-a-new-structural-catalyst-for-canadian-industrial-real-estate/",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.5,
+              "overall": 0.74,
+              "notes": "Research paper on Canadian industrial real estate driven by infrastructure/manufacturing investment; substantive thesis with geographic and property-type specificity, but full text truncated with PDF download required."
+            },
+            {
+              "url": "https://www.fieracapital.com/en/insights/global-asset-allocation-team-market-update-november-2026/",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.6,
+              "overall": 0.82,
+              "notes": "Monthly market commentary with detailed equity market analysis, sector rotation data, and macro drivers (earnings, geopolitics, central banks); substantive but excerpt is partial with PDF download option."
+            }
+          ],
+          "avg_score": 0.68,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 4,
+          "date": "2026-11-15"
+        }
+      ]
+    },
+    {
+      "id": "doubleline",
+      "name": "DoubleLine Capital",
+      "research_url": "https://doubleline.com",
+      "homepage_url": "https://doubleline.com",
+      "fit_score": null,
+      "quality": "MEDIUM",
+      "topics": "fixed income, macro, inflation, rates",
+      "start_date": "2026-11-15",
+      "end_date": null,
+      "daily_checks": {
+        "2026-11-15": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "newest_date": "2026-11-13",
+          "article_urls": [
+            "https://doubleline.com/markets-insights/weekly-market-update-november-2026-week-2/",
+            "https://doubleline.com/markets-insights/the-fed-and-inflation-expectations-diverge/",
+            "https://doubleline.com/markets-insights/dline-minutes-e285/",
+            "https://doubleline.com/markets-insights/20-years-after-the-pension-protection-act-nevin-adams/",
+            "https://doubleline.com/markets-insights/rainy-days-for-stocks-silver-lining-for-bonds/",
+            "https://doubleline.com/markets-insights/did-bonds-just-win-the-election/",
+            "https://doubleline.com/markets-insights/ai-highway-to-hell/",
+            "https://doubleline.com/markets-insights/5-is-normal-the-deficit-isnt-tim-paulson/",
+            "https://doubleline.com/markets-insights/monthly-market-commentary/",
+            "https://doubleline.com/markets-insights/a-taxing-time-for-bond-investors/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://doubleline.com/markets-insights/weekly-market-update-november-2026-week-2/",
+              "relevance": 0.7,
+              "depth": 0.3,
+              "extractable": 0.6,
+              "overall": 0.52,
+              "notes": "Weekly market snapshot covering equities, bonds, yields, economic indicators, currencies and commodities with minimal analysis."
+            },
+            {
+              "url": "https://doubleline.com/markets-insights/the-fed-and-inflation-expectations-diverge/",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.7,
+              "overall": 0.86,
+              "notes": "Substantive macro analysis of Fed policy divergence from inflation expectations post-election, with specific data points and forward-looking scenarios; text appears truncated at end."
+            },
+            {
+              "url": "https://doubleline.com/markets-insights/dline-minutes-e285/",
+              "relevance": 0.85,
+              "depth": 0.6,
+              "extractable": 0.8,
+              "overall": 0.74,
+              "notes": "Podcast summary discussing market breadth, fixed income selloff, CPI implications for Fed policy, and fiscal concerns; conversational format with less depth than written research."
+            }
+          ],
+          "avg_score": 0.707,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 1,
+          "date": "2026-11-15"
+        }
+      ]
+    },
+    {
+      "id": "crescat-capital",
+      "name": "Crescat Capital",
+      "research_url": "https://www.crescat.net/",
+      "homepage_url": "https://www.crescat.net/",
+      "fit_score": null,
+      "quality": "MEDIUM",
+      "topics": "macro, equity, precious metals, credit",
+      "start_date": "2026-11-15",
+      "end_date": null,
+      "daily_checks": {
+        "2026-11-15": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "newest_date": "2026-10-30",
+          "article_urls": [
+            "https://www.crescat.net/28559-2/",
+            "https://www.crescat.net/market-warning-signs/",
+            "https://www.crescat.net/gold-alpha/",
+            "https://www.crescat.net/the-price-target-for-gold/",
+            "https://www.crescat.net/the-new-inflation-regime/",
+            "https://www.crescat.net/nosebleed-territory/",
+            "https://www.crescat.net/sell-the-sp-500-and-buy-gold-mining-stocks/",
+            "https://www.crescat.net/us-military-strike-on-iran/",
+            "https://www.crescat.net/third-wave-of-the-us-dollar-cycle/",
+            "https://www.crescat.net/crescat-celebrates-5-of-the-top-10-hedge-funds-for-2025/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.crescat.net/28559-2/",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.7,
+              "overall": 0.78,
+              "notes": "Macro investment thesis arguing for gold/precious metals long and S&P 500 short based on valuation bubble, margin debt, and credit stress signals."
+            },
+            {
+              "url": "https://www.crescat.net/market-warning-signs/",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.8,
+              "overall": 0.86,
+              "notes": "Technical and cross-market analysis identifying divergence signals (52-week highs/lows, credit spreads, advance-decline line) suggesting potential major market top."
+            },
+            {
+              "url": "https://www.crescat.net/gold-alpha/",
+              "relevance": 0.75,
+              "depth": 0.6,
+              "extractable": 0.7,
+              "overall": 0.68,
+              "notes": "Investment thesis on gold alpha and precious metals strategy with fund performance promotion; mixes research with marketing of Crescat's own funds."
+            }
+          ],
+          "avg_score": 0.773,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 1,
+          "date": "2026-11-15"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-11-14"
+  "last_summary_sent_date": "2026-11-15"
 }
