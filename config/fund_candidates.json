@@ -2929,8 +2929,8 @@
     "quality": "HIGH",
     "quality_score": 0.85,
     "topics": "macro, credit, real estate, fixed income, ESG, digital assets",
-    "notes": "403 persists 2026-09-20; HIGH rating from Aug, unverified",
-    "last_deep_analyzed_at": "2026-09-20T01:01:27Z",
+    "notes": "403 persists 2026-11-15; HIGH rating unverified",
+    "last_deep_analyzed_at": "2026-11-15T01:03:44Z",
     "added_at": "2026-07-26"
   },
   {
@@ -5420,7 +5420,7 @@
     "official_domain": "www.partners-cap.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-11-14T09:03:03.483394+08:00",
+    "last_discovered_at": "2026-11-15T09:03:03.233489+08:00",
     "added_at": "2026-11-12",
     "status_since": "2026-11-12T09:04:28.935572+08:00",
     "quality": "MEDIUM",
