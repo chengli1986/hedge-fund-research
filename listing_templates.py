@@ -25,6 +25,8 @@ Spec (type card_list):
     fetch          "requests" | "playwright"
     wait_selector  playwright only: wait for this before reading the HTML
     wait_until     playwright only: "networkidle" (default) or "domcontentloaded"
+    scroll_steps   playwright only: wheel the page down this many times (0-20,
+                   default 0) before the wait, for lazy-loaded listings
     card           selector for each card
     link           anchor inside the card, or "self" when the card is the <a>
     title          optional; defaults to the link's own text
@@ -81,6 +83,7 @@ FETCH_MODES = ("requests", "playwright")
 DATE_PARTS = ("before", "after")
 FEED_KEYS = ("rss_url", "url")
 SORTS = ("date_desc",)
+MAX_SCROLL_STEPS = 20
 
 
 def validate_spec(spec: dict) -> None:
@@ -100,6 +103,13 @@ def validate_spec(spec: dict) -> None:
         for key in ("title", "url"):
             if not isinstance(spec[key], (str, list)):
                 raise ValueError(f"listing_template {key!r} must be a field name or a list")
+    steps = spec.get("scroll_steps")
+    if steps is not None:
+        if isinstance(steps, bool) or not isinstance(steps, int) or not 0 <= steps <= MAX_SCROLL_STEPS:
+            raise ValueError(f"listing_template scroll_steps {steps!r} must be an integer "
+                             f"0-{MAX_SCROLL_STEPS}")
+        if steps and not (kind == "card_list" and spec["fetch"] == "playwright"):
+            raise ValueError("listing_template scroll_steps needs fetch 'playwright'")
     sort = spec.get("sort")
     if sort is not None and sort not in SORTS:
         raise ValueError(f"listing_template sort {sort!r} is not one of {SORTS}")
@@ -370,11 +380,11 @@ def _site(url: str) -> str:
 
 
 def _playwright_html(url: str, wait_selector: str | None = None, wait_ms: int = 5000,
-                     wait_until: str = "networkidle") -> str:
+                     wait_until: str = "networkidle", scroll_steps: int = 0) -> str:
     from fetch_articles import _get_playwright_page
 
     return _get_playwright_page(url, wait_selector=wait_selector, wait_ms=wait_ms,
-                                wait_until=wait_until)
+                                wait_until=wait_until, scroll_steps=scroll_steps)
 
 
 def fetch(source: dict) -> list[dict]:
@@ -401,7 +411,8 @@ def fetch(source: dict) -> list[dict]:
     if spec["fetch"] == "playwright":
         html = _playwright_html(source["url"], wait_selector=spec.get("wait_selector"),
                                 wait_ms=spec.get("wait_ms", 5000),
-                                wait_until=spec.get("wait_until", "networkidle"))
+                                wait_until=spec.get("wait_until", "networkidle"),
+                                scroll_steps=spec.get("scroll_steps", 0))
     else:
         resp = requests.get(source["url"], headers=HEADERS, timeout=30)
         resp.raise_for_status()

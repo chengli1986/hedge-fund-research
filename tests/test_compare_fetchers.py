@@ -379,3 +379,29 @@ class TestSiteDown:
     def test_the_recheck_line_says_error_not_disagreed(self, monkeypatch, tmp_path, capsys):
         self._run(monkeypatch, tmp_path, [(True, None), (False, 503), (False, 503)])
         assert "u: error, re-running once" in capsys.readouterr().out
+
+
+class TestBothEmpty:
+    """Two empty listings agree on nothing (2026-11-16).
+
+    troweprice went lazy-load: hand-written 0 / template 0, marked ✓, exit 0,
+    for a source that had returned nothing on two daily runs. [] == [] is not
+    evidence that the template works; it is evidence that neither does.
+    """
+
+    def test_both_empty_is_not_agreement(self, monkeypatch):
+        _patch(monkeypatch, [], [])
+        out = cf.compare_source(dict(SRC))
+        assert out["agree"] is False and out["both_empty"] is True
+
+    def test_rows_on_both_sides_are_not_flagged(self, monkeypatch):
+        _patch(monkeypatch, ROWS, ROWS)
+        assert cf.compare_source(dict(SRC))["both_empty"] is False
+
+    def test_the_gate_fails_and_says_why(self, monkeypatch, capsys):
+        _patch(monkeypatch, [], [])
+        monkeypatch.setattr(cf, "_load_sources", lambda: [dict(SRC)])
+        monkeypatch.setattr(cf.sys, "argv", ["compare_fetchers.py", "--all", "--no-record"])
+        assert cf.main() == 1
+        line = capsys.readouterr().out.splitlines()[0]
+        assert line.lstrip().startswith("✗") and "both returned nothing" in line

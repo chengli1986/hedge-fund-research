@@ -663,6 +663,7 @@ def _get_playwright_page(
     wait_until: str = "networkidle",
     timeout: int = 30000,
     init_script: Optional[str] = None,
+    scroll_steps: int = 0,
 ):
     """Launch Playwright, navigate, wait for content, return page HTML.
 
@@ -670,6 +671,13 @@ def _get_playwright_page(
     reach `networkidle` — pass `wait_until="domcontentloaded"` for those.
     Use `init_script` to pre-seed localStorage/cookies before page JS runs
     (e.g. Osano consent state to unblock dynamically-loaded content).
+    `scroll_steps` wheels the page down up to that many times (1000px, 1s
+    apart) before the selector wait, stopping as soon as `wait_selector`
+    matches, for listings that render their cards only once scrolled.
+    troweprice, measured 2026-11-16: 0 tiles unscrolled; wheeling straight
+    after domcontentloaded at 500ms steps also 0 (the page script is not
+    listening yet); 1s steps found them after 4 steps in 4 runs of 4.
+    Off by default.
     """
     from playwright.sync_api import sync_playwright
 
@@ -684,6 +692,11 @@ def _get_playwright_page(
         page = context.new_page()
         # A never-settling site is slow, not broken: see playwright_nav.
         playwright_nav.goto_with_fallback(page, url, wait_until=wait_until, timeout=timeout)
+        for _ in range(scroll_steps):
+            page.mouse.wheel(0, 1000)
+            page.wait_for_timeout(1000)
+            if wait_selector and page.query_selector(wait_selector):
+                break
         if wait_selector:
             try:
                 page.wait_for_selector(wait_selector, timeout=10000)
@@ -1037,10 +1050,13 @@ def fetch_troweprice(source: dict) -> list[dict]:
     wait_selector below is what actually guarantees readiness.
     """
     base_url = _site_base(source["url"])
+    # The tiles are lazy-loaded since ~2026-11-14: unscrolled the page holds
+    # none (0 articles two days running), so scroll before reading it.
     html = _get_playwright_page(
         source["url"],
         wait_until="domcontentloaded",
-        wait_selector="div.b-grid-item--12-col",
+        wait_selector="h2.beacon-article-tile__title a",
+        scroll_steps=10,
     )
     soup = BeautifulSoup(html, "html.parser")
     expected_host = source["expected_hostname"]

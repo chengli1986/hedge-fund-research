@@ -250,8 +250,9 @@
       "listing_template": {
         "type": "card_list",
         "fetch": "playwright",
-        "wait_selector": "div.b-grid-item--12-col",
+        "wait_selector": "h2.beacon-article-tile__title a",
         "wait_until": "domcontentloaded",
+        "scroll_steps": 10,
         "card": "div.b-grid-item--12-col",
         "link": "h2.beacon-article-tile__title a",
         "title": "h2.beacon-article-tile__title a",

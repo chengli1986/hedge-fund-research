@@ -703,9 +703,12 @@ class TestFetchTroweprice:
             "default 'networkidle' is never reached reliably because of the "
             "site's hanging CSP-violation report beacons."
         )
-        assert kwargs.get("wait_selector") == "div.b-grid-item--12-col", (
+        # Since the 2026-11-16 lazy-load change the grid div is on the page
+        # before any tile renders, so only the tile title proves readiness --
+        # and the scroll loop stops on that same selector.
+        assert kwargs.get("wait_selector") == "h2.beacon-article-tile__title a", (
             "dropping networkidle removes the only readiness guarantee unless "
-            "the card selector is still waited for."
+            "the article title selector is still waited for."
         )
 
 

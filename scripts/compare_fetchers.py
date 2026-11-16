@@ -79,7 +79,7 @@ def compare_source(source: dict) -> dict:
     """{agree, bespoke, template, only_bespoke, only_template, order_differs, error, upstream_down}"""
     out = {"source_id": source["id"], "agree": False, "error": None, "upstream_down": None,
            "bespoke": 0, "template": 0, "only_bespoke": [], "only_template": [],
-           "order_differs": False, "dropped_fields": []}
+           "order_differs": False, "dropped_fields": [], "both_empty": False}
     try:
         url = fa.get_source_url(dict(source), fa.load_entrypoints())
         bespoke = fa.FETCHERS[source["id"]](dict(source, url=url))
@@ -110,7 +110,11 @@ def compare_source(source: dict) -> dict:
     # date_sorted, where fetch_source refuses every article if the order
     # breaks (DATE_ORDER_BROKEN) -- there the order IS the contract.
     same_rows = b == t or (not source.get("date_sorted") and sorted(b) == sorted(t))
-    out["agree"] = same_rows and not (set(out["dropped_fields"]) - declared)
+    # [] == [] is not agreement: troweprice went lazy-load and both sides
+    # returned 0, which passed as "✓ 0 / 0" (2026-11-16).
+    out["both_empty"] = not b and not t
+    out["agree"] = (same_rows and not out["both_empty"]
+                    and not (set(out["dropped_fields"]) - declared))
     return out
 
 
@@ -225,6 +229,7 @@ def main() -> int:
             print(f"  {mark} {r['source_id']:24s} hand-written {r['bespoke']:2d} / template "
                   f"{r['template']:2d}"
                   + ("" if r["agree"] else
+                     "  | both returned nothing" if r.get("both_empty") else
                      f"  | only hand-written {len(r['only_bespoke'])}, only template "
                      f"{len(r['only_template'])}"
                      + (", order differs" if r["order_differs"] else "")))
