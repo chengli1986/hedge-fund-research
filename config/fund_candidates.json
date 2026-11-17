@@ -141,7 +141,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.88,
-    "notes": "Monthly PC/RE commentary; WAF 403, stays watchlist",
+    "notes": "Insights page 403 to fetch; stays watchlist",
     "research_links": [
       {
         "url": "https://www.blackstone.com/insights/",
@@ -195,7 +195,7 @@
       "article_signals": 3
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-09-30T01:00:28Z",
+    "last_deep_analyzed_at": "2026-11-17T01:03:44Z",
     "quality": "MEDIUM",
     "topics": "private credit, private equity, real assets",
     "strategy_tags": [
@@ -1041,7 +1041,7 @@
     "rss_url": null,
     "official_domain": "www.blackrock.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "Free weekly macro; archive is nav hub, trial 0.34",
+    "notes": "Archive page lists no dated articles; stays watchlist",
     "research_links": [
       {
         "url": "https://www.blackrock.com/us/individual/insights/blackrock-investment-institute/weekly-commentary",
@@ -1129,7 +1129,7 @@
     "quality": "MEDIUM",
     "quality_score": 0.48,
     "topics": "macro, fixed income, equity, portfolio construction",
-    "last_deep_analyzed_at": "2026-09-30T01:00:28Z",
+    "last_deep_analyzed_at": "2026-11-17T01:03:44Z",
     "strategy_tags": [
       "macro",
       "multi_asset",
@@ -5419,7 +5419,7 @@
     "official_domain": "www.partners-cap.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-11-16T09:03:03.401664+08:00",
+    "last_discovered_at": "2026-11-17T09:03:03.319370+08:00",
     "added_at": "2026-11-12",
     "status_since": "2026-11-12T09:04:28.935572+08:00",
     "quality": "MEDIUM",
@@ -5433,9 +5433,10 @@
     "name": "Polen Capital",
     "homepage_url": "https://www.polencapital.com",
     "source": "manual",
-    "status": "discovered",
+    "status": "visitable",
     "strategy_tags": [
-      "equity"
+      "equity",
+      "fixed_income"
     ],
     "research_url": "https://www.polencapital.com/insights?hsLang=en",
     "official_domain": "www.polencapital.com",
@@ -5466,9 +5467,43 @@
         "path": "insights"
       }
     ],
-    "status_since": "2026-11-16T09:03:56.460308+08:00",
+    "status_since": "2026-11-17T09:03:06.774998+08:00",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-11-16T09:03:47.684759+08:00",
-    "added_at": "2026-11-16"
+    "added_at": "2026-11-16",
+    "is_publicly_accessible": true,
+    "has_article_index": true,
+    "last_screened_at": "2026-11-17T09:03:03.926451+08:00",
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 1,
+      "article_tags": 0,
+      "time_tags": 0,
+      "date_patterns": 0,
+      "h2_tags": 4,
+      "article_signals": 0
+    },
+    "screening_reason": "Research index detected",
+    "fit_score": 0.79,
+    "last_validated_at": "2026-11-17T09:03:06.774978+08:00",
+    "last_deep_analyzed_at": "2026-11-17T01:03:44Z",
+    "quality": "MEDIUM",
+    "quality_score": 0.62,
+    "topics": "equity, growth, credit, AI",
+    "notes": "Open growth/credit commentary, irregular cadence"
+  },
+  {
+    "id": "gcm-grosvenor",
+    "name": "GCM Grosvenor",
+    "homepage_url": "https://www.gcmgrosvenor.com",
+    "source": "manual",
+    "status": "seed",
+    "strategy_tags": [
+      "private_equity",
+      "real_assets",
+      "multi_asset",
+      "private_credit"
+    ]
   }
 ]

@@ -1922,6 +1922,40 @@
         }
       ],
       "rejected_pages": []
+    },
+    "polen-capital": {
+      "last_discovered_at": "2026-11-17T09:03:06.774978+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://www.polencapital.com/insights?hsLang=en",
+          "final_score": 0.79,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.4,
+          "gate_penalty": 0.15,
+          "active": true
+        },
+        {
+          "url": "https://www.polencapital.com/?hsLang=en",
+          "final_score": 0.62,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.3333,
+          "gate_penalty": 0.15,
+          "active": false
+        },
+        {
+          "url": "https://www.polencapital.com/franchises/5perspectives-growth?hsLang=en",
+          "final_score": 0.62,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.3333,
+          "gate_penalty": 0.15,
+          "active": false
+        }
+      ],
+      "rejected_pages": []
     }
   }
 }
