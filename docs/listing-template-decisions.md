@@ -72,7 +72,7 @@ being worth building.
 | loomis-sayles | `path_prefix`, `sort` |
 | resonanz-capital | `sort` |
 | fulcrum-asset-management | WordPress feed for the insights post type (`?post_type=insights`); `path_prefix`, `sort`. Template-only (auto-promoted 2026-10-24, no hand-written function) |
-| bnp-paribas-am | WordPress feed of the en-au financial-advisors insights site (Front of mind / Portfolio perspectives / Forward thinking); every item is an article, dated pubDate, no filter needed. Template-only (auto-promoted 2026-10-31, no hand-written function) |
+| bnp-paribas-am | WordPress feed of the en-au insights site (Front of mind / Portfolio perspectives / Forward thinking); every item is an article, dated pubDate, no filter needed. Template-only (auto-promoted 2026-10-31, no hand-written function). 2026-11-17: the site dropped `/financial-advisors/` from every path (old feed 404, old article URLs 301 to the new ones); feed moved to `/en-au/feed/` and the 20 stored rows were re-keyed to the new URLs |
 | capital-fund-management | WordPress site feed `/feed/`, every item an insight post dated pubDate, no filter needed; podcast announcements are listed but the content fetcher refuses them (141 chars), so they stay title-only. Template-only (auto-promoted 2026-11-02, no hand-written function) |
 | madison-investments | WordPress site feed `/feed/`, every item an Insights post dated pubDate (podcast episodes carry a full transcript in the page body), no filter needed; `sort`. Template-only (auto-promoted 2026-11-06, no hand-written function) |
 

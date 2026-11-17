@@ -1121,7 +1121,7 @@
       ],
       "name": "BNP Paribas Asset Management",
       "short_name": "BNP Paribas AM",
-      "url": "https://www.bnpparibas-am.com/en-au/financial-advisors/feed/",
+      "url": "https://www.bnpparibas-am.com/en-au/feed/",
       "method": "rss",
       "frequency": "weekly",
       "description": "Paris-based asset management arm of BNP Paribas (~€1.7T AUM incl. advisory as of 30 June 2026), one of Europe's three largest managers after absorbing AXA Investment Managers in 2025-26. Broad multi-asset, fixed income and equity franchise with a large long-term-savings business for insurers and pension funds, ~€300B in alternatives, and a long-standing sustainable-investing focus.",
