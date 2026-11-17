@@ -12700,6 +12700,25 @@
           ],
           "error": null,
           "fetcher_used": false
+        },
+        "2026-11-17": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 19,
+          "newest_date": "2026-11-16",
+          "article_urls": [
+            "https://www.fieracapital.com/en/insights/private-real-estate-debt-a-complement-to-traditional-fixed-incom/",
+            "https://www.fieracapital.com/en/insights/q4-2026-investment-outlook-portfolio-strategy/",
+            "https://www.fieracapital.com/en/insights/forestry-gears-up-for-a-technology-revolution/",
+            "https://www.fieracapital.com/en/insights/mid-market-infrastructure-debt-a-defensive-allocation-for-a-changing-market-environment/",
+            "https://www.fieracapital.com/en/insights/investing-in-tomorrow-the-mid-market-infrastructure-advantage/",
+            "https://www.fieracapital.com/en/insights/q3-2026-investment-outlook-portfolio-strategy/",
+            "https://www.fieracapital.com/en/insights/all-eyes-on-emerging-markets/",
+            "https://www.fieracapital.com/en/insights/6855/",
+            "https://www.fieracapital.com/en/insights/made-in-canada-a-new-structural-catalyst-for-canadian-industrial-real-estate/"
+          ],
+          "error": null,
+          "fetcher_used": false
         }
       },
       "auto_decided": false,
@@ -12825,6 +12844,25 @@
           "error": "No new (un-sampled) article links available",
           "day": 5,
           "date": "2026-11-16"
+        },
+        {
+          "sampled": 1,
+          "articles": [
+            {
+              "url": "https://www.fieracapital.com/en/insights/6855/",
+              "relevance": 0.3,
+              "depth": 0.2,
+              "extractable": 0.2,
+              "overall": 0.24,
+              "notes": "Landing page / index stub with no substantive content; actual research locked behind PDF download; primarily navigation and metadata"
+            }
+          ],
+          "avg_score": 0.24,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 6,
+          "date": "2026-11-17"
         }
       ]
     },
@@ -12860,6 +12898,26 @@
           "fetcher_used": true
         },
         "2026-11-16": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "newest_date": "2026-11-13",
+          "article_urls": [
+            "https://doubleline.com/markets-insights/weekly-market-update-november-2026-week-2/",
+            "https://doubleline.com/markets-insights/the-fed-and-inflation-expectations-diverge/",
+            "https://doubleline.com/markets-insights/dline-minutes-e285/",
+            "https://doubleline.com/markets-insights/20-years-after-the-pension-protection-act-nevin-adams/",
+            "https://doubleline.com/markets-insights/rainy-days-for-stocks-silver-lining-for-bonds/",
+            "https://doubleline.com/markets-insights/did-bonds-just-win-the-election/",
+            "https://doubleline.com/markets-insights/ai-highway-to-hell/",
+            "https://doubleline.com/markets-insights/5-is-normal-the-deficit-isnt-tim-paulson/",
+            "https://doubleline.com/markets-insights/monthly-market-commentary/",
+            "https://doubleline.com/markets-insights/a-taxing-time-for-bond-investors/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-11-17": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -12952,6 +13010,41 @@
           "js_only_checked": 7,
           "day": 2,
           "date": "2026-11-16"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://doubleline.com/markets-insights/ai-highway-to-hell/",
+              "relevance": 0.9,
+              "depth": 0.7,
+              "extractable": 0.95,
+              "overall": 0.83,
+              "notes": "Portfolio manager commentary on tech sector rotation, inflation outlook, and fixed income strategy with specific rate forecasts and positioning recommendations."
+            },
+            {
+              "url": "https://doubleline.com/markets-insights/5-is-normal-the-deficit-isnt-tim-paulson/",
+              "relevance": 0.85,
+              "depth": 0.75,
+              "extractable": 0.95,
+              "overall": 0.83,
+              "notes": "Guest analyst discusses Fed policy, inflation drivers (wages, deficit, AI capex), and argues 5% yields are normal while fiscal deficits remain the real concern."
+            },
+            {
+              "url": "https://doubleline.com/markets-insights/monthly-market-commentary/",
+              "relevance": 0.4,
+              "depth": 0.1,
+              "extractable": 0.2,
+              "overall": 0.24,
+              "notes": "Marketing/promotional description of a monthly report series; no actual content, data, or analysis provided—only a template/landing page description."
+            }
+          ],
+          "avg_score": 0.633,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 4,
+          "day": 3,
+          "date": "2026-11-17"
         }
       ]
     },
@@ -12987,6 +13080,26 @@
           "fetcher_used": true
         },
         "2026-11-16": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "newest_date": "2026-10-30",
+          "article_urls": [
+            "https://www.crescat.net/28559-2/",
+            "https://www.crescat.net/market-warning-signs/",
+            "https://www.crescat.net/gold-alpha/",
+            "https://www.crescat.net/the-price-target-for-gold/",
+            "https://www.crescat.net/the-new-inflation-regime/",
+            "https://www.crescat.net/nosebleed-territory/",
+            "https://www.crescat.net/sell-the-sp-500-and-buy-gold-mining-stocks/",
+            "https://www.crescat.net/us-military-strike-on-iran/",
+            "https://www.crescat.net/third-wave-of-the-us-dollar-cycle/",
+            "https://www.crescat.net/crescat-celebrates-5-of-the-top-10-hedge-funds-for-2025/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-11-17": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -13079,9 +13192,44 @@
           "js_only_checked": 0,
           "day": 2,
           "date": "2026-11-16"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.crescat.net/sell-the-sp-500-and-buy-gold-mining-stocks/",
+              "relevance": 0.9,
+              "depth": 0.8,
+              "extractable": 0.7,
+              "overall": 0.82,
+              "notes": "Investment thesis arguing for rotation from S&P 500 to gold mining stocks based on geopolitical risks, inflation concerns, and historical 1970s parallels; substantive but truncated."
+            },
+            {
+              "url": "https://www.crescat.net/us-military-strike-on-iran/",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.6,
+              "overall": 0.84,
+              "notes": "Portfolio positioning commentary on Iran conflict impact; argues for continued long precious metals/oil exposure and short megacap tech based on CapEx analysis; truncated mid-sentence."
+            },
+            {
+              "url": "https://www.crescat.net/third-wave-of-the-us-dollar-cycle/",
+              "relevance": 0.9,
+              "depth": 0.75,
+              "extractable": 0.65,
+              "overall": 0.79,
+              "notes": "Macro analysis framing current period as third wave of US dollar devaluation cycle; compares to 1933 and 1971 precedents; argues for Great Rotation into precious metals; truncated ending."
+            }
+          ],
+          "avg_score": 0.817,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 3,
+          "date": "2026-11-17"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-11-16"
+  "last_summary_sent_date": "2026-11-17"
 }
