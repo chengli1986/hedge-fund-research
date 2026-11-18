@@ -358,7 +358,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.97,
-    "notes": "PE/VC benchmark research, monthly; latest Jul 2026",
+    "notes": "Monthly-ish PE/VC insights; investor-only notice",
     "research_links": [
       {
         "url": "https://www.cambridgeassociates.com/insights/private-investments/",
@@ -467,14 +467,13 @@
       "article_signals": 1
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-09-24T01:00:52Z",
-    "quality": "HIGH",
-    "quality_score": 0.8,
-    "topics": "private equity, venture capital, endowments, macro, AI infrastructure",
+    "last_deep_analyzed_at": "2026-11-18T01:03:56+00:00",
+    "quality": "MEDIUM",
+    "quality_score": 0.65,
+    "topics": "private investments, PE/VC, portfolio construction",
     "strategy_tags": [
       "private_equity",
       "venture_capital",
-      "private_credit",
       "multi_asset"
     ],
     "source": "manual",
@@ -2418,11 +2417,11 @@
     "source": "manual",
     "status": "rejected",
     "strategy_tags": [
-      "esg_climate",
-      "equity"
+      "equity",
+      "esg_climate"
     ],
-    "topics": "ESG, climate, sustainability, long-term equity",
-    "notes": "Rejected: annual flagship report but index still sparse",
+    "topics": "sustainable equity, esg",
+    "notes": "Mostly annual reports; index thin, few articles",
     "official_domain": "www.generationim.com",
     "research_links": [
       {
@@ -2447,9 +2446,9 @@
       "article_signals": 0
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-09-23T01:02:52Z",
-    "quality": "LOW",
-    "quality_score": 0.28,
+    "last_deep_analyzed_at": "2026-11-18T01:03:56+00:00",
+    "quality": "MEDIUM",
+    "quality_score": 0.5,
     "status_since": "2026-08-23T09:02:58.398210+08:00",
     "added_at": "2026-05-21"
   },
@@ -2832,7 +2831,7 @@
       "real_assets",
       "event_driven"
     ],
-    "notes": "Rejected 2026-07-20: 独立源已不存在——angelogordon.com 301 永久重定向到 tpg.com(被 TPG 收购吞并),tpg.com/insights 亦 404。无独立 insights 页可抓。实测确认(#2 审计)。",
+    "notes": "Insights URL now 301s to tpg.com (acquired)",
     "official_domain": "www.angelogordon.com",
     "research_links": [
       {
@@ -2860,10 +2859,10 @@
     "screening_reason": "Login/paywall detected",
     "fit_score": 0.97,
     "last_validated_at": "2026-07-20T09:00:16.425234+08:00",
-    "last_deep_analyzed_at": "2026-09-21T01:01:30Z",
-    "quality": "MEDIUM",
-    "quality_score": 0.6,
-    "topics": "private credit, real estate, distressed debt, direct lending",
+    "last_deep_analyzed_at": "2026-11-18T01:03:56+00:00",
+    "quality": "LOW",
+    "quality_score": 0.1,
+    "topics": "private credit, real estate",
     "added_at": "2026-07-19"
   },
   {
@@ -5419,7 +5418,7 @@
     "official_domain": "www.partners-cap.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-11-17T09:03:03.319370+08:00",
+    "last_discovered_at": "2026-11-18T09:03:03.459903+08:00",
     "added_at": "2026-11-12",
     "status_since": "2026-11-12T09:04:28.935572+08:00",
     "quality": "MEDIUM",
@@ -5502,10 +5501,26 @@
     "strategy_tags": [
       "private_equity",
       "real_assets",
-      "multi_asset",
-      "private_credit"
+      "multi_asset"
     ],
     "added_at": "2026-11-17",
-    "status_since": "2026-11-17T09:03:52.683395+08:00"
+    "status_since": "2026-11-17T09:03:52.683395+08:00",
+    "quality": "MEDIUM",
+    "quality_score": 0.6,
+    "topics": "alternatives, private equity, real assets, hedge funds",
+    "notes": "Investment Perspectives, ~monthly; site 403s bots",
+    "last_deep_analyzed_at": "2026-11-18T01:03:56+00:00"
+  },
+  {
+    "id": "ubs-asset-management",
+    "name": "UBS Asset Management",
+    "homepage_url": "https://www.ubs.com/global/en/assetmanagement.html",
+    "source": "manual",
+    "status": "seed",
+    "strategy_tags": [
+      "multi_asset",
+      "macro",
+      "private_credit"
+    ]
   }
 ]
