@@ -5279,12 +5279,12 @@
     "name": "Oakmark (Harris Associates)",
     "homepage_url": "https://www.oakmark.com",
     "source": "manual",
-    "status": "inaccessible",
+    "status": "visitable",
     "strategy_tags": [
       "equity"
     ],
     "added_at": "2026-11-05",
-    "status_since": "2026-11-12T09:04:30.596024+08:00",
+    "status_since": "2026-11-18T09:06:21.965360+08:00",
     "official_domain": "www.oakmark.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
@@ -5293,7 +5293,47 @@
     "quality_score": 0.55,
     "topics": "equity, value investing, quarterly commentary",
     "notes": "[auto-stall 2026-11-12] seed->inaccessible after 7d stuck Quarterly fund commentary at /news-insights/commentary",
-    "last_deep_analyzed_at": "2026-11-06T01:03:38Z"
+    "last_deep_analyzed_at": "2026-11-06T01:03:38Z",
+    "template_attempts": [
+      {
+        "at": "2026-11-18T01:05:41+00:00",
+        "type": "rss_feed",
+        "spec": {
+          "type": "rss_feed",
+          "feed": "url"
+        },
+        "listing_url": "https://oakmark.com/news-insights/category/commentary/feed/",
+        "ok": true,
+        "rows": 10,
+        "dated": 10,
+        "problems": [],
+        "sample": [
+          {
+            "title": "A conversation with shareholders | U.S. equity market commentary 3Q 2026",
+            "url": "https://oakmark.com/news-insights/a-conversation-with-shareholders-u-s-equity-market-commentary-3q-2026/",
+            "date": "2026-09-30"
+          },
+          {
+            "title": "A conversation with shareholders | International equity market commentary 3Q 2026",
+            "url": "https://oakmark.com/news-insights/a-conversation-with-shareholders-international-equity-market-commentary-3q-2026/",
+            "date": "2026-09-30"
+          },
+          {
+            "title": "The business behind the bond | Fixed income market commentary 3Q 2026",
+            "url": "https://oakmark.com/news-insights/the-business-behind-the-bond-fixed-income-market-commentary-3q-2026/",
+            "date": "2026-09-30"
+          }
+        ]
+      }
+    ],
+    "listing_template": {
+      "type": "rss_feed",
+      "feed": "url"
+    },
+    "listing_url": "https://oakmark.com/news-insights/category/commentary/feed/",
+    "expected_hostname": "oakmark.com",
+    "synthesis_attempted_at": "2026-11-18T01:06:21.965328+00:00",
+    "synthesis_outcome": "success"
   },
   {
     "id": "fiera-capital",
@@ -5402,7 +5442,61 @@
     "topics": "market commentary, multi-asset, private markets, ESG",
     "notes": "RECOMMEND: trial passed (6/7 days with articles, quality=0.58)",
     "synthesis_priority": true,
-    "synthesis_priority_set_at": "2026-11-18T09:04:14.326745+08:00"
+    "synthesis_priority_set_at": "2026-11-18T09:04:14.326745+08:00",
+    "template_attempts": [
+      {
+        "at": "2026-11-18T01:06:02+00:00",
+        "type": "card_list",
+        "spec": {
+          "type": "card_list",
+          "fetch": "requests",
+          "card": "div.insight-inner",
+          "link": "h3.insight-title a",
+          "title": "h3.insight-title a",
+          "date": ".insight-date",
+          "path_prefix": "/en/insights/",
+          "sort": "date_desc"
+        },
+        "listing_url": "https://www.fieracapital.com/en/insights/",
+        "ok": true,
+        "rows": 10,
+        "dated": 10,
+        "problems": [],
+        "sample": [
+          {
+            "title": "Canadian Real Estate Market Update – Q3 2026",
+            "url": "https://www.fieracapital.com/en/insights/6855/",
+            "date": "2026-11-16"
+          },
+          {
+            "title": "Made in Canada: A New Structural Catalyst for Canadian Industrial Real Estate",
+            "url": "https://www.fieracapital.com/en/insights/made-in-canada-a-new-structural-catalyst-for-canadian-industrial-real-estate/",
+            "date": "2026-11-10"
+          },
+          {
+            "title": "Global Asset Allocation Team Market Update – November 2026",
+            "url": "https://www.fieracapital.com/en/insights/global-asset-allocation-team-market-update-november-2026/",
+            "date": "2026-11-06"
+          }
+        ]
+      }
+    ],
+    "listing_template": {
+      "type": "card_list",
+      "fetch": "requests",
+      "card": "div.insight-inner",
+      "link": "h3.insight-title a",
+      "title": "h3.insight-title a",
+      "date": ".insight-date",
+      "path_prefix": "/en/insights/",
+      "sort": "date_desc"
+    },
+    "listing_url": "https://www.fieracapital.com/en/insights/",
+    "expected_hostname": "fieracapital.com",
+    "synthesis_attempted_at": "2026-11-18T01:06:21.965328+00:00",
+    "synthesis_outcome": "success",
+    "promoted_at": "2026-11-18T01:06:21.965328+00:00",
+    "promoted_reason": "fetcher_synthesis_success (trial-PASS shortcut)"
   },
   {
     "id": "partners-capital",
