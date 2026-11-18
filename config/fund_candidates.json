@@ -5300,7 +5300,7 @@
     "name": "Fiera Capital",
     "homepage_url": "https://www.fieracapital.com",
     "source": "manual",
-    "status": "visitable",
+    "status": "promoted",
     "strategy_tags": [
       "multi_asset",
       "fixed_income",
@@ -5376,7 +5376,7 @@
         "path": "en/insights/tariff-announcements-update-with-jean-guy-desjardins-candice-bangsund"
       }
     ],
-    "status_since": "2026-11-12T09:03:07.629615+08:00",
+    "status_since": "2026-11-18T09:04:14.326709+08:00",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-11-11T09:03:39.460663+08:00",
     "added_at": "2026-11-11",
@@ -5400,7 +5400,9 @@
     "quality": "MEDIUM",
     "quality_score": 0.6,
     "topics": "market commentary, multi-asset, private markets, ESG",
-    "notes": "Weekly dated insights; short gated-ish commentary, PDFs"
+    "notes": "RECOMMEND: trial passed (6/7 days with articles, quality=0.58)",
+    "synthesis_priority": true,
+    "synthesis_priority_set_at": "2026-11-18T09:04:14.326745+08:00"
   },
   {
     "id": "partners-capital",

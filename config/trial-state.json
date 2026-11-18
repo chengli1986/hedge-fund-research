@@ -12604,9 +12604,7 @@
       "days_with_articles": 7,
       "avg_quality_score": 0.728,
       "newest_article_date": "2026-08-07"
-    }
-  ],
-  "active_trials": [
+    },
     {
       "id": "fiera-capital",
       "name": "Fiera Capital",
@@ -12616,7 +12614,7 @@
       "quality": "MEDIUM",
       "topics": "market commentary, multi-asset, private markets, ESG",
       "start_date": "2026-11-12",
-      "end_date": null,
+      "end_date": "2026-11-18",
       "daily_checks": {
         "2026-11-12": {
           "accessible": false,
@@ -12719,10 +12717,29 @@
           ],
           "error": null,
           "fetcher_used": false
+        },
+        "2026-11-18": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 19,
+          "newest_date": "2026-11-16",
+          "article_urls": [
+            "https://www.fieracapital.com/en/insights/private-real-estate-debt-a-complement-to-traditional-fixed-incom/",
+            "https://www.fieracapital.com/en/insights/q4-2026-investment-outlook-portfolio-strategy/",
+            "https://www.fieracapital.com/en/insights/forestry-gears-up-for-a-technology-revolution/",
+            "https://www.fieracapital.com/en/insights/mid-market-infrastructure-debt-a-defensive-allocation-for-a-changing-market-environment/",
+            "https://www.fieracapital.com/en/insights/investing-in-tomorrow-the-mid-market-infrastructure-advantage/",
+            "https://www.fieracapital.com/en/insights/q3-2026-investment-outlook-portfolio-strategy/",
+            "https://www.fieracapital.com/en/insights/all-eyes-on-emerging-markets/",
+            "https://www.fieracapital.com/en/insights/6855/",
+            "https://www.fieracapital.com/en/insights/made-in-canada-a-new-structural-catalyst-for-canadian-industrial-real-estate/"
+          ],
+          "error": null,
+          "fetcher_used": false
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 0,
@@ -12863,9 +12880,23 @@
           "js_only_checked": 0,
           "day": 6,
           "date": "2026-11-17"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 7,
+          "date": "2026-11-18"
         }
-      ]
-    },
+      ],
+      "total_articles": 120,
+      "days_with_articles": 6,
+      "avg_quality_score": 0.577,
+      "newest_article_date": "2026-11-16"
+    }
+  ],
+  "active_trials": [
     {
       "id": "doubleline",
       "name": "DoubleLine Capital",
@@ -12918,6 +12949,26 @@
           "fetcher_used": true
         },
         "2026-11-17": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "newest_date": "2026-11-13",
+          "article_urls": [
+            "https://doubleline.com/markets-insights/weekly-market-update-november-2026-week-2/",
+            "https://doubleline.com/markets-insights/the-fed-and-inflation-expectations-diverge/",
+            "https://doubleline.com/markets-insights/dline-minutes-e285/",
+            "https://doubleline.com/markets-insights/20-years-after-the-pension-protection-act-nevin-adams/",
+            "https://doubleline.com/markets-insights/rainy-days-for-stocks-silver-lining-for-bonds/",
+            "https://doubleline.com/markets-insights/did-bonds-just-win-the-election/",
+            "https://doubleline.com/markets-insights/ai-highway-to-hell/",
+            "https://doubleline.com/markets-insights/5-is-normal-the-deficit-isnt-tim-paulson/",
+            "https://doubleline.com/markets-insights/monthly-market-commentary/",
+            "https://doubleline.com/markets-insights/a-taxing-time-for-bond-investors/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-11-18": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -13045,6 +13096,25 @@
           "js_only_checked": 4,
           "day": 3,
           "date": "2026-11-17"
+        },
+        {
+          "sampled": 1,
+          "articles": [
+            {
+              "url": "https://doubleline.com/markets-insights/a-taxing-time-for-bond-investors/",
+              "relevance": 0.85,
+              "depth": 0.75,
+              "extractable": 0.65,
+              "overall": 0.77,
+              "notes": "Analysis of seasonal patterns in municipal CEFs and Treasury yields, with tax-loss harvesting as explanatory mechanism for October weakness and January strength."
+            }
+          ],
+          "avg_score": 0.77,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 4,
+          "date": "2026-11-18"
         }
       ]
     },
@@ -13100,6 +13170,26 @@
           "fetcher_used": true
         },
         "2026-11-17": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "newest_date": "2026-10-30",
+          "article_urls": [
+            "https://www.crescat.net/28559-2/",
+            "https://www.crescat.net/market-warning-signs/",
+            "https://www.crescat.net/gold-alpha/",
+            "https://www.crescat.net/the-price-target-for-gold/",
+            "https://www.crescat.net/the-new-inflation-regime/",
+            "https://www.crescat.net/nosebleed-territory/",
+            "https://www.crescat.net/sell-the-sp-500-and-buy-gold-mining-stocks/",
+            "https://www.crescat.net/us-military-strike-on-iran/",
+            "https://www.crescat.net/third-wave-of-the-us-dollar-cycle/",
+            "https://www.crescat.net/crescat-celebrates-5-of-the-top-10-hedge-funds-for-2025/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-11-18": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -13227,9 +13317,99 @@
           "js_only_checked": 0,
           "day": 3,
           "date": "2026-11-17"
+        },
+        {
+          "sampled": 1,
+          "articles": [
+            {
+              "url": "https://www.crescat.net/crescat-celebrates-5-of-the-top-10-hedge-funds-for-2025/",
+              "relevance": 0.6,
+              "depth": 0.4,
+              "extractable": 0.7,
+              "overall": 0.54,
+              "notes": "Marketing-focused performance announcement with limited investment thesis; mostly rankings and disclaimers with brief macro commentary on metals and debt cycles."
+            }
+          ],
+          "avg_score": 0.54,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 4,
+          "date": "2026-11-18"
+        }
+      ]
+    },
+    {
+      "id": "polen-capital",
+      "name": "Polen Capital",
+      "research_url": "https://www.polencapital.com/insights?hsLang=en",
+      "homepage_url": "https://www.polencapital.com",
+      "fit_score": 0.79,
+      "quality": "MEDIUM",
+      "topics": "equity, growth, credit, AI",
+      "start_date": "2026-11-18",
+      "end_date": null,
+      "daily_checks": {
+        "2026-11-18": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 0,
+          "newest_date": null,
+          "article_urls": [
+            "https://www.polencapital.com/insights/investing-at-the-speed-of-change",
+            "https://www.polencapital.com/insights/compute-to-capacity",
+            "https://www.polencapital.com/insights/commentary/focus-growth",
+            "https://www.polencapital.com/insights/2026-high-yield-and-leveraged-loan-mid-year-review-and",
+            "https://www.polencapital.com/insights/ais-second-act-from-suppliers-to-appliers",
+            "https://www.polencapital.com/insights/news/5perspectives-etf-launch",
+            "https://www.polencapital.com/insights/commentary/5perspectives-large-growth",
+            "https://www.polencapital.com/insights/beyond-the-25-year-milestone",
+            "https://www.polencapital.com/insights/navigating-credit-risk-lessons-from-the-first-brands-default"
+          ],
+          "error": null,
+          "fetcher_used": false
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.polencapital.com/insights/investing-at-the-speed-of-change",
+              "relevance": 0.9,
+              "depth": 0.75,
+              "extractable": 0.85,
+              "overall": 0.83,
+              "notes": "Growth investing strategy analysis on how AI is compressing competitive advantage cycles and why adaptability matters; includes framework discussion and data on user adoption speeds."
+            },
+            {
+              "url": "https://www.polencapital.com/insights/compute-to-capacity",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.8,
+              "overall": 0.86,
+              "notes": "SMID-cap investment thesis on AI infrastructure spending bottlenecks (power, labor, thermal); quantifies revenue-to-stock-price impact differential vs large caps with supporting white paper."
+            },
+            {
+              "url": "https://www.polencapital.com/insights/commentary/focus-growth",
+              "relevance": 0.85,
+              "depth": 0.65,
+              "extractable": 0.9,
+              "overall": 0.78,
+              "notes": "Q3 2026 portfolio commentary with performance attribution, holdings analysis (ServiceNow, Shopify, Microsoft), and market narrative; standard quarterly update format."
+            }
+          ],
+          "avg_score": 0.823,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 1,
+          "date": "2026-11-18"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-11-17"
+  "last_summary_sent_date": "2026-11-18"
 }
