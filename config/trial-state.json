@@ -12987,6 +12987,26 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-11-19": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "newest_date": "2026-11-13",
+          "article_urls": [
+            "https://doubleline.com/markets-insights/weekly-market-update-november-2026-week-2/",
+            "https://doubleline.com/markets-insights/the-fed-and-inflation-expectations-diverge/",
+            "https://doubleline.com/markets-insights/dline-minutes-e285/",
+            "https://doubleline.com/markets-insights/20-years-after-the-pension-protection-act-nevin-adams/",
+            "https://doubleline.com/markets-insights/rainy-days-for-stocks-silver-lining-for-bonds/",
+            "https://doubleline.com/markets-insights/did-bonds-just-win-the-election/",
+            "https://doubleline.com/markets-insights/ai-highway-to-hell/",
+            "https://doubleline.com/markets-insights/5-is-normal-the-deficit-isnt-tim-paulson/",
+            "https://doubleline.com/markets-insights/monthly-market-commentary/",
+            "https://doubleline.com/markets-insights/a-taxing-time-for-bond-investors/"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
       "auto_decided": false,
@@ -13115,6 +13135,14 @@
           "js_only_checked": 0,
           "day": 4,
           "date": "2026-11-18"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 5,
+          "date": "2026-11-19"
         }
       ]
     },
@@ -13190,6 +13218,26 @@
           "fetcher_used": true
         },
         "2026-11-18": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "newest_date": "2026-10-30",
+          "article_urls": [
+            "https://www.crescat.net/28559-2/",
+            "https://www.crescat.net/market-warning-signs/",
+            "https://www.crescat.net/gold-alpha/",
+            "https://www.crescat.net/the-price-target-for-gold/",
+            "https://www.crescat.net/the-new-inflation-regime/",
+            "https://www.crescat.net/nosebleed-territory/",
+            "https://www.crescat.net/sell-the-sp-500-and-buy-gold-mining-stocks/",
+            "https://www.crescat.net/us-military-strike-on-iran/",
+            "https://www.crescat.net/third-wave-of-the-us-dollar-cycle/",
+            "https://www.crescat.net/crescat-celebrates-5-of-the-top-10-hedge-funds-for-2025/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-11-19": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -13336,6 +13384,14 @@
           "js_only_checked": 0,
           "day": 4,
           "date": "2026-11-18"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 5,
+          "date": "2026-11-19"
         }
       ]
     },
@@ -13351,6 +13407,25 @@
       "end_date": null,
       "daily_checks": {
         "2026-11-18": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 0,
+          "newest_date": null,
+          "article_urls": [
+            "https://www.polencapital.com/insights/investing-at-the-speed-of-change",
+            "https://www.polencapital.com/insights/compute-to-capacity",
+            "https://www.polencapital.com/insights/commentary/focus-growth",
+            "https://www.polencapital.com/insights/2026-high-yield-and-leveraged-loan-mid-year-review-and",
+            "https://www.polencapital.com/insights/ais-second-act-from-suppliers-to-appliers",
+            "https://www.polencapital.com/insights/news/5perspectives-etf-launch",
+            "https://www.polencapital.com/insights/commentary/5perspectives-large-growth",
+            "https://www.polencapital.com/insights/beyond-the-25-year-milestone",
+            "https://www.polencapital.com/insights/navigating-credit-risk-lessons-from-the-first-brands-default"
+          ],
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-11-19": {
           "accessible": true,
           "article_count": 20,
           "date_count": 0,
@@ -13407,9 +13482,44 @@
           "js_only_checked": 0,
           "day": 1,
           "date": "2026-11-18"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.polencapital.com/insights/2026-high-yield-and-leveraged-loan-mid-year-review-and",
+              "relevance": 0.85,
+              "depth": 0.45,
+              "extractable": 0.6,
+              "overall": 0.64,
+              "notes": "Mid-year review of high-yield and leveraged loan markets identifying issuer-level dispersion as key opportunity; mostly promotional teaser for full report."
+            },
+            {
+              "url": "https://www.polencapital.com/insights/ais-second-act-from-suppliers-to-appliers",
+              "relevance": 0.9,
+              "depth": 0.75,
+              "extractable": 0.7,
+              "overall": 0.8,
+              "notes": "Substantive thematic analysis arguing AI value is shifting from infrastructure suppliers to appliers; uses historical internet analogy and sector examples (healthcare, consumer)."
+            },
+            {
+              "url": "https://www.polencapital.com/insights/news/5perspectives-etf-launch",
+              "relevance": 0.4,
+              "depth": 0.3,
+              "extractable": 0.8,
+              "overall": 0.44,
+              "notes": "Product launch announcement for two new ETFs; marketing-focused with minimal investment analysis or research content."
+            }
+          ],
+          "avg_score": 0.627,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 2,
+          "date": "2026-11-19"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-11-18"
+  "last_summary_sent_date": "2026-11-19"
 }
