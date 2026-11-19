@@ -669,7 +669,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.95,
-    "notes": "Weekly free Fed/ECB views; sampled article substantive",
+    "notes": "Weekly+monthly views, dated; investor-confirm prompt",
     "research_links": [],
     "screening_signals": {
       "status_code": 200,
@@ -682,16 +682,14 @@
       "article_signals": 3
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-09-24T01:00:52Z",
+    "last_deep_analyzed_at": "2026-11-19T01:03:41.098601+00:00",
     "quality": "MEDIUM",
-    "quality_score": 0.66,
-    "topics": "macro, equity, fixed income, multi-asset, portfolio strategy",
+    "quality_score": 0.72,
+    "topics": "macro, multi-asset, fixed income",
     "strategy_tags": [
       "macro",
-      "fixed_income",
-      "emerging_markets",
       "multi_asset",
-      "esg_climate"
+      "fixed_income"
     ],
     "source": "manual",
     "status_since": "2026-04-07T18:33:00.000000+08:00",
@@ -757,7 +755,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.97,
-    "notes": "Free multi-theme insights hub; dated index needs JS",
+    "notes": "Hub of collections; article list dynamic, undated",
     "research_links": [
       {
         "url": "https://www.troweprice.com/en/us/insights",
@@ -796,13 +794,12 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-09-24T01:00:52Z",
-    "quality": "HIGH",
-    "quality_score": 0.8,
-    "topics": "equity, macro, AI/tech, fixed income, multi-asset",
+    "last_deep_analyzed_at": "2026-11-19T01:03:41.098601+00:00",
+    "quality": "MEDIUM",
+    "quality_score": 0.55,
+    "topics": "equity, fixed income, multi-asset, markets",
     "strategy_tags": [
       "equity",
-      "macro",
       "fixed_income",
       "multi_asset"
     ],
@@ -859,22 +856,21 @@
     "rss_url": null,
     "official_domain": "www.msci.com",
     "discovery_method": "discover_fund_sites",
-    "notes": "Weekly; reports gated; prod Playwright fetcher OK",
+    "notes": "Papers/blogs multi-format; dates not on landing page",
     "research_links": [],
     "last_discovered_at": "2026-04-19T09:00:14.697222+08:00",
     "quality": "MEDIUM",
-    "topics": "factor investing, ESG, climate, multi-asset, risk, fixed income",
-    "last_deep_analyzed_at": "2026-09-24T01:00:52Z",
+    "topics": "equities, private assets, risk, climate",
+    "last_deep_analyzed_at": "2026-11-19T01:03:41.098601+00:00",
     "strategy_tags": [
-      "quant",
-      "esg_climate",
-      "multi_asset",
-      "fixed_income"
+      "equity",
+      "private_equity",
+      "esg_climate"
     ],
     "source": "manual",
     "inaccessible_reason": null,
     "promotion_notes": "Playwright/SSR fetcher written 2026-04-24 — ready for trial manager",
-    "quality_score": 0.5,
+    "quality_score": 0.65,
     "status_since": "2026-04-19T09:00:14.697222+08:00",
     "added_at": "2026-04-12"
   },
@@ -5514,7 +5510,7 @@
     "official_domain": "www.partners-cap.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
-    "last_discovered_at": "2026-11-18T09:03:03.459903+08:00",
+    "last_discovered_at": "2026-11-19T09:03:03.889394+08:00",
     "added_at": "2026-11-12",
     "status_since": "2026-11-12T09:04:28.935572+08:00",
     "quality": "MEDIUM",
@@ -5615,10 +5611,15 @@
     "status": "seed",
     "strategy_tags": [
       "multi_asset",
-      "macro",
-      "private_credit"
+      "private_credit",
+      "emerging_markets"
     ],
     "added_at": "2026-11-18",
-    "status_since": "2026-11-18T09:04:10.622142+08:00"
+    "status_since": "2026-11-18T09:04:10.622142+08:00",
+    "last_deep_analyzed_at": "2026-11-19T01:03:41.098601+00:00",
+    "quality": "MEDIUM",
+    "quality_score": 0.5,
+    "topics": "multi-asset, alternatives, EM, sustainable",
+    "notes": "Insights index empty on fetch; Red Thread undated"
   }
 ]
