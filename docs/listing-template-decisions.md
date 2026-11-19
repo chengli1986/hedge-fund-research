@@ -42,7 +42,7 @@ Shapes with no template type today: `sitemap_plus_page` (2),
 `attestation` (2), `card_list_paginated` (1). Each is one source short of
 being worth building.
 
-## TEMPLATE — card_list (15)
+## TEMPLATE — card_list (16)
 
 | source | note |
 | --- | --- |
@@ -61,6 +61,7 @@ being worth building.
 | muzinich | SSR `div.card` grid with title link and "Category \| Date" line: `date_separator` + `date_part=after`, `sort=date_desc`. Podcast cards are listed too; the content extractor refuses them (title-only) |
 | fairtree | SSR resource-hub grid of `div.report-card`s, one full-card link + `h3` title; `path_prefix=/resource-hub/` keeps tag/author masks out. No date on the card (dates stay empty). Video/podcast cards (Macro Pulse, Equity Explorer) have no `div.right-content` and are refused by the extractor (title-only) |
 | ariel-investments | SSR `.ar-listing-paged` grid of `a.article` cards (the card is the link), `.ar-article-title` + `.ar-article-date`; `path_prefix=/article/`, `sort=date_desc`. Listing is the `?tags=31` commentary filter |
+| fiera-capital | WordPress /en/insights/ card grid (div.insight-inner, title link + .insight-date), one card per insight, plain SSR; the page carries only a lead, the body is the linked PDF, read by `_fetch_content_fiera_capital` (paced 20s per request: the site 429s after about five requests a minute) |
 
 ## TEMPLATE — rss_feed (9)
 

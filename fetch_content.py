@@ -2867,6 +2867,66 @@ def _fetch_content_ariel_investments(article: dict) -> Optional[tuple[Path, str]
     return (content_path, "ok")
 
 
+def _fetch_content_fiera_capital(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Fiera Capital insight content via requests (SSR WordPress).
+
+    The listing is the /en/insights/ card grid (a listing template). An
+    insight page carries only a lead (203-1,443 chars measured 2026-11-19);
+    the piece itself is the PDF behind its "Download PDF" button
+    (a.btn.download, /wp-content/uploads/insights/<n>/*.pdf: 17,628 and
+    30,503 chars, both opening with the title). The PDF is read when it
+    opens with the title and is longer than the page text.
+
+    The site rate-limits hard: about the sixth request inside a minute gets
+    429 with Retry-After 60, and asking on gets Retry-After 3600 (measured
+    2026-11-19). The stage-2 label for a 429 is blocked_by_bot_protection,
+    retried only after 7 days, so the pace is kept here instead: at least
+    20s between this extractor's requests, and one wait-and-retry on a 429
+    that asks for 2 minutes or less. Nothing outside this function changes.
+    """
+    min_gap, longest_wait = 20.0, 120
+
+    def _pace() -> None:
+        last = getattr(_fetch_content_fiera_capital, "_last_request", 0.0)
+        wait = last + min_gap - time.monotonic()
+        if wait > 0:
+            time.sleep(wait)
+        _fetch_content_fiera_capital._last_request = time.monotonic()
+
+    url = article["url"]
+    log.info("  Fiera Capital: fetching article page %s", url)
+    try:
+        _pace()
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        retry_after = resp.headers.get("Retry-After", "")
+        if resp.status_code == 429 and retry_after.isdigit() and int(retry_after) <= longest_wait:
+            log.warning("  Fiera Capital: 429, waiting %ss as asked", retry_after)
+            time.sleep(int(retry_after) + 1)
+            _pace()
+            resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Fiera Capital: fetch failed: %s", e)
+        return None
+
+    text = _normalize_html(resp.text, "main p, main li")
+    soup = BeautifulSoup(resp.text, "html.parser")
+    link = soup.select_one("a.btn.download[href$='.pdf']") or soup.select_one('main a[href$=".pdf"]')
+    if link is not None:
+        _pace()
+        pdf_text = _linked_article_pdf(link, url, article.get("title", ""), "Fiera Capital")
+        if len(pdf_text) > len(text):
+            text = pdf_text
+    if not _check_min_content_length(text, 500):
+        log.warning("  Fiera Capital: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Fiera Capital: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -2919,6 +2979,7 @@ CONTENT_FETCHERS = {
     "muzinich": _fetch_content_muzinich,
     "fairtree": _fetch_content_fairtree,
     "ariel-investments": _fetch_content_ariel_investments,
+    "fiera-capital": _fetch_content_fiera_capital,
 }
 
 

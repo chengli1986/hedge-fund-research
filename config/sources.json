@@ -1258,6 +1258,36 @@
         "sort": "date_desc"
       },
       "listing_template_active": true
+    },
+    {
+      "id": "fiera-capital",
+      "strategy_tags": [
+        "multi_asset",
+        "fixed_income",
+        "real_assets",
+        "esg_climate"
+      ],
+      "name": "Fiera Capital",
+      "short_name": "Fiera",
+      "url": "https://www.fieracapital.com/en/insights/",
+      "method": "ssr",
+      "frequency": "weekly",
+      "description": "Montreal-based independent asset manager founded in 2003 (~C$151B AUM as of 30 September 2026). Public and private markets across Canadian and global equities, fixed income, multi-asset, real estate, infrastructure, agriculture and private credit for institutional, intermediary and private-wealth clients.",
+      "notable_authors": [],
+      "expected_hostname": "fieracapital.com",
+      "max_articles": 5,
+      "content_probe_top_n": 1,
+      "listing_template": {
+        "type": "card_list",
+        "fetch": "requests",
+        "card": "div.insight-inner",
+        "link": "h3.insight-title a",
+        "title": "h3.insight-title a",
+        "date": ".insight-date",
+        "path_prefix": "/en/insights/",
+        "sort": "date_desc"
+      },
+      "listing_template_active": true
     }
   ]
 }

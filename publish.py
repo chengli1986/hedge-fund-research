@@ -85,6 +85,7 @@ BADGE_COLORS: dict[str, str] = {
     "muzinich": "#5868e8",                  # Muzinich periwinkle (grid search over WCAG-AA colors, HLS saturation <=0.85, black excluded, with all 48 existing: min RGB dist 65.4 — 65.4 to #1f49e0 MSCI cobalt, 66.1 to #58a6ff Man sky blue, 67.5 to #9b6be0 GMO violet; WCAG AA 4.6:1 on white)
     "fairtree": "#5010ac",                  # Fairtree indigo-violet (grid search over WCAG-AA colors, HLS saturation <=0.85 and lightness >=0.25, with all 49 existing: min RGB dist 61.0 — 61.0 to #5e3a82 Apollo, 61.5 to #3949ab, 62.2 to #6014e8; WCAG AA 10.4:1 on white)
     "ariel-investments": "#c04888",         # Ariel raspberry-rose (same grid search, HLS saturation <=0.85 and lightness >=0.25, with all 50 existing: min RGB dist 57.0 — 57.0 to #a31fa3 Loomis orchid, 57.8 to #b85450 Ares coral, 65.8 to #c2185b Research Affiliates; WCAG AA 4.64:1 on white)
+    "fiera-capital": "#9034e0",             # Fiera violet (same grid search, HLS saturation <=0.85 and lightness >=0.25, with all 51 existing: min RGB dist 56.1 — 56.1 to #9b6be0 GMO violet, 56.1 to #c018e8 Fulcrum, 57.2 to #7a4cb1 JPMAM purple; WCAG AA 5.59:1 on white)
 }
 
 INITIAL_VISIBLE = 20
@@ -455,6 +456,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "美国价值型股票资产管理公司，1983 年由 John W. Rogers Jr. 在芝加哥创立，是美国首家非裔美国人所有的资产管理公司，管理规模约 $15.7B。以\"耐心投资\"为核心理念，长期、集中持有被低估的中小盘股票，旗舰产品 Ariel Fund 专注小盘价值股，亦有国际与全球价值策略。",
         "notable_en": "Led by co-CEOs John W. Rogers Jr. and Mellody Hobson; its tortoise mascot embodies the 'slow and steady wins the race' philosophy. Publishes The Patient Investor quarterly letters and Company Spotlight deep dives on individual holdings.",
         "notable_zh": "由联席 CEO John W. Rogers Jr. 与 Mellody Hobson 掌舵，以乌龟为标志，奉行\"慢而稳者胜\"。定期发布 The Patient Investor 季度信及 Company Spotlight 个股深度分析。",
+    },
+    "fiera-capital": {
+        "founded": "2003", "aum": "~C$151B", "hq": "Montreal, Canada",
+        "type_en": "Asset Manager (Independent, Public & Private Markets)", "type_zh": "资产管理（独立，公开与私募市场）",
+        "desc_zh": "总部位于蒙特利尔的独立资产管理公司，2003 年由 Jean-Guy Desjardins 创立，管理资产约 C$151B（截至 2026-09-30）。业务横跨公开市场（加拿大及全球股票、固定收益、多资产）与私募市场（房地产、基础设施、农业、私募信贷），服务机构、中介与私人财富客户。",
+        "notable_en": "Its Global Asset Allocation team publishes a monthly market update and a quarterly Investment Outlook & Portfolio Strategy; the private-markets teams publish research on Canadian real estate, mid-market infrastructure debt and forestry, often as full papers behind a short web lead.",
+        "notable_zh": "全球资产配置团队每月发布市场更新、每季度发布《投资展望与组合策略》；私募市场团队发表加拿大房地产、中型基础设施债与林业方面的研究，多为网页导语加完整 PDF 报告。",
     },
 }
 
