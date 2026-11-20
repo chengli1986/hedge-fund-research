@@ -2503,17 +2503,23 @@ def fetch_ares_management(source: dict) -> list[dict]:
     return articles[:max_articles]
 
 
+ROBECO_CARD_SELECTOR = "div.card[data-testid='grid-list-item']"
+
+
 def fetch_robeco(source: dict) -> list[dict]:
     """Fetch articles from Robeco Insights (Playwright — Nuxt.js SPA).
 
-    Cards: div.clickable-wrapper.card containing:
-      a[href*='/insights/YYYY/MM/<slug>'] (URL + title via h2/h3 or link text),
-      <time> element with date in DD-MM-YYYY format (European).
+    Cards (since the 2026-11-18 redesign): div.card[data-testid='grid-list-item']
+    containing h4.card-title > a[href*='/insights/YYYY/MM/<slug>'] (URL + title)
+    and time[data-testid='app-date'] in DD-MM-YYYY format (European). The old
+    div.clickable-wrapper.card markup is gone. The page is not in date order (a
+    highlight card, a curated list with months-old items, a second list repeating
+    the newest), so every card is read, deduped by URL, and the newest kept.
     """
     base_url = _site_base(source["url"])
     html = _get_playwright_page(
         source["url"],
-        wait_selector="div.clickable-wrapper.card",
+        wait_selector=ROBECO_CARD_SELECTOR,
         wait_ms=4000,
     )
     soup = BeautifulSoup(html, "html.parser")
@@ -2525,7 +2531,7 @@ def fetch_robeco(source: dict) -> list[dict]:
     articles: list[dict] = []
     seen: set[str] = set()
 
-    for card in soup.select("div.clickable-wrapper.card"):
+    for card in soup.select(ROBECO_CARD_SELECTOR):
         link = None
         for a in card.select("a[href*='/insights/']"):
             href = a.get("href") or ""
@@ -2581,6 +2587,7 @@ def fetch_robeco(source: dict) -> list[dict]:
             "date_raw": date_raw,
         })
 
+    articles.sort(key=lambda a: a["date"] or "", reverse=True)
     return articles[:source.get("max_articles", 10)]
 
 
