@@ -2503,17 +2503,25 @@ def fetch_ares_management(source: dict) -> list[dict]:
     return articles[:max_articles]
 
 
+ROBECO_CARD_SELECTOR = "div.card[data-testid='grid-list-item']"
+ROBECO_SKIP_TYPES = {"podcast", "video", "webinar"}
+
+
 def fetch_robeco(source: dict) -> list[dict]:
     """Fetch articles from Robeco Insights (Playwright — Nuxt.js SPA).
 
-    Cards: div.clickable-wrapper.card containing:
-      a[href*='/insights/YYYY/MM/<slug>'] (URL + title via h2/h3 or link text),
-      <time> element with date in DD-MM-YYYY format (European).
+    Cards (since the 2026-11-18 redesign): div.card[data-testid='grid-list-item']
+    containing h4.card-title > a[href*='/insights/YYYY/MM/<slug>'] (URL + title)
+    and time[data-testid='app-date'] in DD-MM-YYYY format (European). The old
+    div.clickable-wrapper.card markup is gone. The page is not in date order (a
+    highlight card, a curated list with months-old items, a second list repeating
+    the newest), so every card is read, deduped by URL, and the newest kept.
+    Cards labelled Podcast / Video / Webinar are skipped.
     """
     base_url = _site_base(source["url"])
     html = _get_playwright_page(
         source["url"],
-        wait_selector="div.clickable-wrapper.card",
+        wait_selector=ROBECO_CARD_SELECTOR,
         wait_ms=4000,
     )
     soup = BeautifulSoup(html, "html.parser")
@@ -2522,10 +2530,9 @@ def fetch_robeco(source: dict) -> list[dict]:
     article_url_pattern = re.compile(r"/insights/\d{4}/\d{2}/")
     date_pattern = re.compile(r"^(\d{2})-(\d{2})-(\d{4})$")
 
-    articles: list[dict] = []
-    seen: set[str] = set()
+    by_url: dict[str, dict] = {}
 
-    for card in soup.select("div.clickable-wrapper.card"):
+    for card in soup.select(ROBECO_CARD_SELECTOR):
         link = None
         for a in card.select("a[href*='/insights/']"):
             href = a.get("href") or ""
@@ -2537,14 +2544,17 @@ def fetch_robeco(source: dict) -> list[dict]:
 
         href = link.get("href", "")
         url_target = urljoin(base_url, href)
-        if url_target in seen:
-            continue
-        seen.add(url_target)
         if not _validate_hostname(url_target, expected_host):
             continue
-        # Skip podcast and video pages — content fetch extracts 0 chars from them
-        if re.search(r"/podcast|/video|/webinar", href, re.IGNORECASE):
-            log.debug("Robeco: skipping non-article URL %s", url_target)
+        # Skip podcast and video pages — their pages hold a few hundred chars of
+        # show notes, not an article. Since the redesign most podcasts use an
+        # ordinary /insights/YYYY/MM/<slug> path, so the card's type label
+        # ("20-11-2026 · Podcast" in div.meta) is the real test; the path check
+        # stays as a fallback.
+        meta = card.select_one("div.meta")
+        labels = {t.strip(" ·").lower() for t in meta.stripped_strings} if meta else set()
+        if labels & ROBECO_SKIP_TYPES or re.search(r"/podcast|/video|/webinar", href, re.IGNORECASE):
+            log.debug("Robeco: skipping non-article card %s", url_target)
             continue
 
         title = ""
@@ -2574,13 +2584,19 @@ def fetch_robeco(source: dict) -> list[dict]:
             if not parsed_date:
                 parsed_date = parse_date(date_raw)
 
-        articles.append({
+        # The same URL appears in more than one list; keep the first card that has
+        # a date (an undated first copy must not hide a dated later one).
+        if url_target in by_url and (by_url[url_target]["date"] or not parsed_date):
+            continue
+        by_url[url_target] = {
             "title": title,
             "url": url_target,
             "date": parsed_date,
             "date_raw": date_raw,
-        })
+        }
 
+    articles = list(by_url.values())
+    articles.sort(key=lambda a: a["date"] or "", reverse=True)
     return articles[:source.get("max_articles", 10)]
 
 

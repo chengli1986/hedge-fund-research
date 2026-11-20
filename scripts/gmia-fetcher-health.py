@@ -400,9 +400,10 @@ def _probe_once(source: dict) -> dict:
         return result
 
     # Staleness is reported relative to the most-recent date across ALL returned
-    # articles. Some sources (e.g. Robeco) pin an older featured article at the
-    # top of the page, so articles[0] may be older than later entries.
-    # Content probe continues to use articles[0] onward (page order is fine for probing).
+    # articles: a fetcher may return them in page order, and a page can pin an
+    # older featured article at the top, so articles[0] may be older than later
+    # entries. (Robeco did; since 2026-11-21 its fetcher sorts newest first.)
+    # The content probe samples articles[0] onward in the order the fetcher returns.
     all_dates = [a.get("date") for a in articles if a.get("date")]
     # Compared as dates, not strings: "2026/09/30" sorts after "2026-10-12".
     result["most_recent_date"] = (max(all_dates, key=_date_sort_key)
