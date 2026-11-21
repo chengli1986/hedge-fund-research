@@ -25,6 +25,10 @@ def site(tmp_path, monkeypatch):
     state = tmp_path / "state"
     monkeypatch.setattr(publish, "SITE_ROOT", root)
     monkeypatch.setattr(publish, "GMIA_STATE_ROOT", state)
+    # 正常用例固定「余量充足」，不依赖测试机临时盘的真实剩余（GM-05）
+    import collections
+    VFS = collections.namedtuple("VFS", "f_bavail f_frsize f_favail")
+    monkeypatch.setattr(publish.os, "statvfs", lambda p: VFS(10 ** 9, 4096, 10 ** 7))
     return root, state
 
 
@@ -34,8 +38,12 @@ def _records(state):
 
 
 def test_state_root_is_redirected_in_tests():
-    """conftest 必须把状态根重定向走，测试绝不碰 ~/.local/state/gmia-publish。"""
+    """conftest 必须把状态根重定向走（本进程与子进程），测试绝不碰 ~/.local/state/gmia-publish。"""
     assert ".local/state/gmia-publish" not in str(publish.GMIA_STATE_ROOT)
+    assert ".local/state/gmia-publish" not in os.environ["GMIA_PUBLISH_STATE_ROOT"]
+    r = subprocess.run([sys.executable, "-c", "import publish; print(publish.GMIA_STATE_ROOT)"],
+                       cwd=REPO, capture_output=True, text=True)
+    assert r.returncode == 0 and ".local/state/gmia-publish" not in r.stdout
 
 
 def test_preview_path_goes_straight_to_publish_html(site, tmp_path, monkeypatch):
@@ -106,10 +114,13 @@ def test_backup_failure_does_not_block(site, monkeypatch, capsys):
     root, state = site
     page = root / "hedge-fund-research.html"
     publish.publish_html(page, "<html>OLD</html>")
-    monkeypatch.setattr(publish.shutil, "copy2", lambda *a, **k: (_ for _ in ()).throw(OSError("full")))
+    called = []
+    monkeypatch.setattr(publish.shutil, "copy2", lambda *a, **k: (called.append(1), (_ for _ in ()).throw(OSError("full")))[1])
     publish.publish_live(page, "<html>NEW</html>")
+    assert called, "复制确实被调用（不是因为磁盘余量而跳过）"
     assert page.read_text() == "<html>NEW</html>"
-    assert "WARN" in capsys.readouterr().err
+    assert "备份失败" in capsys.readouterr().err
+    assert not [d for d in (state / "backup").iterdir()], "残件已删"
 
 
 def test_publish_html_failure_propagates_and_releases_lock(site, monkeypatch):
@@ -185,12 +196,12 @@ def test_backup_skipped_when_disk_low(site, monkeypatch, capsys):
     root, state = site
     page = root / "hedge-fund-research.html"
     publish.publish_html(page, "<html>OLD</html>")
-    Usage = collections.namedtuple("Usage", "total used free")
-    monkeypatch.setattr(publish.shutil, "disk_usage", lambda p: Usage(10, 9, 1))
+    VFS = collections.namedtuple("VFS", "f_bavail f_frsize f_favail")
+    monkeypatch.setattr(publish.os, "statvfs", lambda p: VFS(1, 4096, 10 ** 7))
     publish.publish_live(page, "<html>NEW</html>")
     assert page.read_text() == "<html>NEW</html>"
     assert _records(state)[-1]["backup_dir"] is None
-    assert "磁盘余量不足" in capsys.readouterr().err
+    assert "磁盘余量" in capsys.readouterr().err
 
 
 def test_records_file_is_capped(site, monkeypatch):
@@ -212,3 +223,109 @@ def test_exit_codes_unchanged_for_main(site, monkeypatch):
     assert publish.main() == 3
     monkeypatch.setattr(publish, "_precheck", lambda html, articles: ["x: bad"])
     assert publish.main() == 4
+
+
+
+# ---------- Codex GM-01～07 ----------
+
+def test_close_failure_after_busy_lock_does_not_block(site, monkeypatch):
+    root, state = site
+    state.mkdir(parents=True)
+    real_close = os.close
+    with open(state / "lock", "a") as f:
+        fcntl.flock(f, fcntl.LOCK_EX)
+        monkeypatch.setattr(publish.os, "close", lambda fd: (_ for _ in ()).throw(OSError("EIO")))
+        publish.publish_live(root / "hedge-fund-research.html", "<html>C</html>")
+        monkeypatch.setattr(publish.os, "close", real_close)
+    assert (root / "hedge-fund-research.html").read_text() == "<html>C</html>"
+
+
+def test_exists_raising_in_backup_does_not_block(site, monkeypatch):
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    publish.publish_html(page, "<html>OLD</html>")
+    real_lstat = os.lstat
+    monkeypatch.setattr(publish.os, "lstat", lambda p, *a, **k: (_ for _ in ()).throw(OSError(5, "EIO"))
+                        if str(p).endswith("hedge-fund-research.html") else real_lstat(p, *a, **k))
+    publish.publish_live(page, "<html>NEW</html>")
+    monkeypatch.setattr(publish.os, "lstat", real_lstat)
+    assert page.read_text() == "<html>NEW</html>"
+
+
+def test_records_fifo_does_not_hang(site):
+    root, state = site
+    state.mkdir(parents=True)
+    os.mkfifo(state / "records.jsonl")
+    import time
+    t0 = time.monotonic()
+    publish.publish_live(root / "hedge-fund-research.html", "<html>F</html>")
+    assert time.monotonic() - t0 < 5
+    assert (root / "hedge-fund-research.html").read_text() == "<html>F</html>"
+
+
+def test_lock_fifo_does_not_hang(site):
+    root, state = site
+    state.mkdir(parents=True)
+    os.mkfifo(state / "lock")
+    publish.publish_live(root / "hedge-fund-research.html", "<html>L</html>")
+    assert (root / "hedge-fund-research.html").read_text() == "<html>L</html>"
+
+
+def test_slow_backup_is_cut_off_and_publish_continues(site, monkeypatch, capsys):
+    import time
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    publish.publish_html(page, "<html>OLD</html>")
+    monkeypatch.setattr(publish, "SIDE_STEP_SECONDS", 0.5)
+    monkeypatch.setattr(publish.shutil, "copy2", lambda *a, **k: time.sleep(5))
+    t0 = time.monotonic()
+    publish.publish_live(page, "<html>NEW</html>")
+    assert time.monotonic() - t0 < 3
+    assert page.read_text() == "<html>NEW</html>"
+
+
+def test_missing_ubuntu_account_does_not_break_import(monkeypatch):
+    monkeypatch.delenv("GMIA_PUBLISH_STATE_ROOT", raising=False)
+    import pwd
+    monkeypatch.setattr(pwd, "getpwnam", lambda n: (_ for _ in ()).throw(KeyError(n)))
+    assert publish._default_state_root() is None
+
+
+def test_no_state_root_still_publishes(site, monkeypatch):
+    root, state = site
+    monkeypatch.setattr(publish, "GMIA_STATE_ROOT", None)
+    publish.publish_live(root / "hedge-fund-research.html", "<html>N</html>")
+    assert (root / "hedge-fund-research.html").read_text() == "<html>N</html>"
+
+
+def test_inode_shortage_skips_backup(site, monkeypatch):
+    import collections
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    publish.publish_html(page, "<html>OLD</html>")
+    VFS = collections.namedtuple("VFS", "f_bavail f_frsize f_favail")
+    monkeypatch.setattr(publish.os, "statvfs", lambda p: VFS(10 ** 9, 4096, 5))
+    publish.publish_live(page, "<html>NEW</html>")
+    assert _records(state)[-1]["backup_dir"] is None
+
+
+def test_undeletable_old_backup_skips_new_backup(site, monkeypatch):
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    for i in range(4):          # 第一次没有旧页不备份 → 4 次后正好 3 份
+        publish.publish_live(page, f"<html>{i}</html>")
+    assert len(list((state / "backup").iterdir())) == 3
+    monkeypatch.setattr(publish.shutil, "rmtree", lambda *a, **k: None)   # 删不掉
+    publish.publish_live(page, "<html>X</html>")
+    assert _records(state)[-1]["backup_dir"] is None
+    assert len(list((state / "backup").iterdir())) == 3
+
+
+def test_record_trim_keeps_tail_and_is_bounded(site, monkeypatch):
+    root, state = site
+    monkeypatch.setattr(publish, "RECORDS_MAX_BYTES", 600)
+    for i in range(30):
+        publish.publish_live(root / "hedge-fund-research.html", f"<html>{i}</html>")
+    lines = (state / "records.jsonl").read_text().splitlines()
+    assert all(json.loads(l) for l in lines)
+    assert (state / "records.jsonl").stat().st_size < 1500
