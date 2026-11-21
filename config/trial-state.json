@@ -12894,9 +12894,7 @@
       "days_with_articles": 6,
       "avg_quality_score": 0.577,
       "newest_article_date": "2026-11-16"
-    }
-  ],
-  "active_trials": [
+    },
     {
       "id": "doubleline",
       "name": "DoubleLine Capital",
@@ -12906,7 +12904,7 @@
       "quality": "MEDIUM",
       "topics": "fixed income, macro, inflation, rates",
       "start_date": "2026-11-15",
-      "end_date": null,
+      "end_date": "2026-11-21",
       "daily_checks": {
         "2026-11-15": {
           "accessible": true,
@@ -13027,10 +13025,30 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-11-21": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "newest_date": "2026-11-19",
+          "article_urls": [
+            "https://doubleline.com/markets-insights/an-economy-that-keeps-beating-expectations/",
+            "https://doubleline.com/markets-insights/bill-campbell-credit-is-getting-picky-bloomberg-tv/",
+            "https://doubleline.com/markets-insights/weekly-market-update-november-2026-week-2/",
+            "https://doubleline.com/markets-insights/the-fed-and-inflation-expectations-diverge/",
+            "https://doubleline.com/markets-insights/dline-minutes-e285/",
+            "https://doubleline.com/markets-insights/20-years-after-the-pension-protection-act-nevin-adams/",
+            "https://doubleline.com/markets-insights/rainy-days-for-stocks-silver-lining-for-bonds/",
+            "https://doubleline.com/markets-insights/did-bonds-just-win-the-election/",
+            "https://doubleline.com/markets-insights/ai-highway-to-hell/",
+            "https://doubleline.com/markets-insights/5-is-normal-the-deficit-isnt-tim-paulson/"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -13182,8 +13200,31 @@
           "js_only_checked": 1,
           "day": 6,
           "date": "2026-11-20"
+        },
+        {
+          "sampled": 1,
+          "articles": [
+            {
+              "url": "https://doubleline.com/markets-insights/an-economy-that-keeps-beating-expectations/",
+              "relevance": 0.9,
+              "depth": 0.8,
+              "extractable": 0.6,
+              "overall": 0.8,
+              "notes": "Macro analysis of U.S. economic resilience, positive economic surprises, and implications for Fed policy and Treasury yields; includes data on Citigroup Economic Surprise Index and Q3 GDP growth."
+            }
+          ],
+          "avg_score": 0.8,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 7,
+          "date": "2026-11-21"
         }
-      ]
+      ],
+      "total_articles": 70,
+      "days_with_articles": 7,
+      "avg_quality_score": 0.703,
+      "newest_article_date": "2026-11-19"
     },
     {
       "id": "crescat-capital",
@@ -13194,7 +13235,7 @@
       "quality": "MEDIUM",
       "topics": "macro, equity, precious metals, credit",
       "start_date": "2026-11-15",
-      "end_date": null,
+      "end_date": "2026-11-21",
       "daily_checks": {
         "2026-11-15": {
           "accessible": true,
@@ -13315,10 +13356,30 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-11-21": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "newest_date": "2026-10-30",
+          "article_urls": [
+            "https://www.crescat.net/28559-2/",
+            "https://www.crescat.net/market-warning-signs/",
+            "https://www.crescat.net/gold-alpha/",
+            "https://www.crescat.net/the-price-target-for-gold/",
+            "https://www.crescat.net/the-new-inflation-regime/",
+            "https://www.crescat.net/nosebleed-territory/",
+            "https://www.crescat.net/sell-the-sp-500-and-buy-gold-mining-stocks/",
+            "https://www.crescat.net/us-military-strike-on-iran/",
+            "https://www.crescat.net/third-wave-of-the-us-dollar-cycle/",
+            "https://www.crescat.net/crescat-celebrates-5-of-the-top-10-hedge-funds-for-2025/"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -13459,9 +13520,23 @@
           "error": "No new (un-sampled) article links available",
           "day": 6,
           "date": "2026-11-20"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 7,
+          "date": "2026-11-21"
         }
-      ]
-    },
+      ],
+      "total_articles": 70,
+      "days_with_articles": 7,
+      "avg_quality_score": 0.783,
+      "newest_article_date": "2026-10-30"
+    }
+  ],
+  "active_trials": [
     {
       "id": "polen-capital",
       "name": "Polen Capital",
@@ -13512,6 +13587,25 @@
           "fetcher_used": false
         },
         "2026-11-20": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 0,
+          "newest_date": null,
+          "article_urls": [
+            "https://www.polencapital.com/insights/investing-at-the-speed-of-change",
+            "https://www.polencapital.com/insights/compute-to-capacity",
+            "https://www.polencapital.com/insights/commentary/focus-growth",
+            "https://www.polencapital.com/insights/2026-high-yield-and-leveraged-loan-mid-year-review-and",
+            "https://www.polencapital.com/insights/ais-second-act-from-suppliers-to-appliers",
+            "https://www.polencapital.com/insights/news/5perspectives-etf-launch",
+            "https://www.polencapital.com/insights/commentary/5perspectives-large-growth",
+            "https://www.polencapital.com/insights/beyond-the-25-year-milestone",
+            "https://www.polencapital.com/insights/navigating-credit-risk-lessons-from-the-first-brands-default"
+          ],
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-11-21": {
           "accessible": true,
           "article_count": 20,
           "date_count": 0,
@@ -13638,9 +13732,155 @@
           "js_only_checked": 0,
           "day": 3,
           "date": "2026-11-20"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 4,
+          "date": "2026-11-21"
+        }
+      ]
+    },
+    {
+      "id": "eagle-capital",
+      "name": "Eagle Capital Management",
+      "research_url": "https://www.eaglecap.com/letters",
+      "homepage_url": "https://www.eaglecap.com",
+      "fit_score": 0.8543,
+      "quality": "HIGH",
+      "topics": "equity, long-term investing, AI",
+      "start_date": "2026-11-21",
+      "end_date": null,
+      "daily_checks": {
+        "2026-11-21": {
+          "accessible": true,
+          "article_count": 12,
+          "date_count": 0,
+          "newest_date": null,
+          "article_urls": [
+            "https://www.eaglecap.com/letter/q3-2026-investor-letter",
+            "https://www.eaglecap.com/letter/q2-2026-investor-letter",
+            "https://www.eaglecap.com/insights/graham-doddsville-eagle-co-cios-on-finding-value-in-overlooked-places",
+            "https://www.eaglecap.com/insights/capital-allocators-podcast-active-equity-excellence-with-adrian-meli"
+          ],
+          "error": null,
+          "fetcher_used": false
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.eaglecap.com/letter/q3-2026-investor-letter",
+              "relevance": 0.9,
+              "depth": 0.75,
+              "extractable": 0.6,
+              "overall": 0.78,
+              "notes": "Quarterly investor letter discussing long-term investment philosophy and deep dive into MercadoLibre position; text appears truncated mid-sentence."
+            },
+            {
+              "url": "https://www.eaglecap.com/letter/q2-2026-investor-letter",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.55,
+              "overall": 0.83,
+              "notes": "Substantive quarterly letter analyzing AI capex boom, market valuation risks, and portfolio construction strategy with accounting analysis; truncated at end."
+            },
+            {
+              "url": "https://www.eaglecap.com/insights/graham-doddsville-eagle-co-cios-on-finding-value-in-overlooked-places",
+              "relevance": 0.9,
+              "depth": 0.8,
+              "extractable": 0.5,
+              "overall": 0.78,
+              "notes": "Interview-format article on market structure changes, research process, and value investing approach; significantly truncated with missing content."
+            }
+          ],
+          "avg_score": 0.797,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 1,
+          "date": "2026-11-21"
+        }
+      ]
+    },
+    {
+      "id": "oakmark",
+      "name": "Oakmark (Harris Associates)",
+      "research_url": "https://www.oakmark.com",
+      "homepage_url": "https://www.oakmark.com",
+      "fit_score": null,
+      "quality": "MEDIUM",
+      "topics": "equity, value investing, quarterly commentary",
+      "start_date": "2026-11-21",
+      "end_date": null,
+      "daily_checks": {
+        "2026-11-21": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "newest_date": "2026-09-30",
+          "article_urls": [
+            "https://oakmark.com/news-insights/a-conversation-with-shareholders-u-s-equity-market-commentary-3q-2026/",
+            "https://oakmark.com/news-insights/a-conversation-with-shareholders-international-equity-market-commentary-3q-2026/",
+            "https://oakmark.com/news-insights/the-business-behind-the-bond-fixed-income-market-commentary-3q-2026/",
+            "https://oakmark.com/news-insights/oakmark-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-select-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-global-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-global-select-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-international-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-international-small-cap-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-equity-and-income-fund-third-quarter-2026/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://oakmark.com/news-insights/a-conversation-with-shareholders-u-s-equity-market-commentary-3q-2026/",
+              "relevance": 0.9,
+              "depth": 0.6,
+              "extractable": 0.7,
+              "overall": 0.74,
+              "notes": "U.S. equity market commentary from Oakmark fund manager addressing AI enthusiasm, valuation discipline, S&P 500 concentration, and active management philosophy with performance data."
+            },
+            {
+              "url": "https://oakmark.com/news-insights/a-conversation-with-shareholders-international-equity-market-commentary-3q-2026/",
+              "relevance": 0.9,
+              "depth": 0.6,
+              "extractable": 0.6,
+              "overall": 0.72,
+              "notes": "International equity market commentary discussing portfolio diversification, currency effects, Japan opportunities, and value-focused investment approach; text truncated mid-sentence."
+            },
+            {
+              "url": "https://oakmark.com/news-insights/the-business-behind-the-bond-fixed-income-market-commentary-3q-2026/",
+              "relevance": 0.85,
+              "depth": 0.5,
+              "extractable": 0.6,
+              "overall": 0.66,
+              "notes": "Fixed income market commentary on tech company bond valuations and credit risk assessment; brief opinion piece with limited substantive analysis; text truncated."
+            }
+          ],
+          "avg_score": 0.707,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 1,
+          "date": "2026-11-21"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-11-20"
+  "last_summary_sent_date": "2026-11-21"
 }

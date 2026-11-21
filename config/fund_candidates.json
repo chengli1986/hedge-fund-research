@@ -5093,7 +5093,7 @@
     "name": "DoubleLine Capital",
     "homepage_url": "https://doubleline.com",
     "source": "manual",
-    "status": "visitable",
+    "status": "promoted",
     "strategy_tags": [
       "fixed_income",
       "macro"
@@ -5103,12 +5103,12 @@
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-11-01T09:03:02.632373+08:00",
     "added_at": "2026-10-31",
-    "status_since": "2026-11-15T02:01:55.333242+08:00",
+    "status_since": "2026-11-21T09:04:11.790669+08:00",
     "last_deep_analyzed_at": "2026-11-01T01:04:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.7,
     "topics": "fixed income, macro, inflation, rates",
-    "notes": "[auto-stall 2026-11-08] seed->inaccessible after 7d stuck Free weekly updates+blog at /markets-insights/",
+    "notes": "RECOMMEND: trial passed (7/7 days with articles, quality=0.70)",
     "template_attempts": [
       {
         "at": "2026-11-14T18:00:56+00:00",
@@ -5175,14 +5175,16 @@
     "listing_url": "https://doubleline.com/markets-insights/",
     "expected_hostname": "doubleline.com",
     "synthesis_attempted_at": "2026-11-14T18:01:55.320551+00:00",
-    "synthesis_outcome": "success"
+    "synthesis_outcome": "success",
+    "synthesis_priority": true,
+    "synthesis_priority_set_at": "2026-11-21T09:04:11.790716+08:00"
   },
   {
     "id": "crescat-capital",
     "name": "Crescat Capital",
     "homepage_url": "https://www.crescat.net/",
     "source": "manual",
-    "status": "visitable",
+    "status": "promoted",
     "strategy_tags": [
       "macro",
       "equity"
@@ -5193,11 +5195,11 @@
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-11-10T09:03:02.462545+08:00",
     "added_at": "2026-11-02",
-    "status_since": "2026-11-15T02:01:55.333286+08:00",
+    "status_since": "2026-11-21T09:04:17.586980+08:00",
     "quality": "MEDIUM",
     "quality_score": 0.5,
     "topics": "macro, equity, precious metals, credit",
-    "notes": "[auto-stall 2026-11-10] seed->inaccessible after 7d stuck Biweekly macro letters; many posts media/deck only",
+    "notes": "RECOMMEND: trial passed (7/7 days with articles, quality=0.78)",
     "last_deep_analyzed_at": "2026-11-03T01:08:00Z",
     "template_attempts": [
       {
@@ -5264,7 +5266,9 @@
     "listing_url": "https://www.crescat.net/category/quarterly-letter/crescat-updates/research-letter-performance-update-crescat-updates/feed/",
     "expected_hostname": "crescat.net",
     "synthesis_attempted_at": "2026-11-14T18:01:55.320551+00:00",
-    "synthesis_outcome": "success"
+    "synthesis_outcome": "success",
+    "synthesis_priority": true,
+    "synthesis_priority_set_at": "2026-11-21T09:04:17.587023+08:00"
   },
   {
     "id": "oakmark",
