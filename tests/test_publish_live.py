@@ -496,3 +496,28 @@ def test_backup_from_two_versions_is_discarded(site, monkeypatch):
     assert page.read_text() == "<html>NEW</html>"
     assert _records(state)[-1]["backup_dir"] is None
     assert not list((state / "backup").iterdir())
+
+
+def test_gz_check_is_bounded_on_a_bomb(bounded, site, monkeypatch):
+    """线上 .gz 与正文不配套且解压后极大：校验逐块读、超过正文长度即停；不整块解压，备份丢弃，发布照常。"""
+    import gzip as _gz
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    publish.publish_html(page, "<html>OLD</html>")
+    (root / "hedge-fund-research.html.gz").write_bytes(_gz.compress(b"\0" * (20 * 1024 * 1024)))
+    monkeypatch.setattr(publish.gzip, "decompress", lambda *a, **k: (_ for _ in ()).throw(_Hung("不许整块解压")))
+    publish.publish_live(page, "<html>NEW</html>")
+    assert page.read_text() == "<html>NEW</html>"
+    assert _records(state)[-1]["backup_dir"] is None
+    assert not list((state / "backup").iterdir())
+
+
+def test_gz_matches_unit(tmp_path):
+    import gzip as _gz
+    b = tmp_path / "b"; g = tmp_path / "g"
+    b.write_bytes(b"abc" * 1000); g.write_bytes(_gz.compress(b"abc" * 1000))
+    assert publish._gz_matches(g, b)
+    g.write_bytes(_gz.compress(b"abc" * 1000 + b"x"))
+    assert not publish._gz_matches(g, b)
+    g.write_bytes(_gz.compress(b"abc" * 999))
+    assert not publish._gz_matches(g, b)

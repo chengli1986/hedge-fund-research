@@ -2265,6 +2265,21 @@ def _copy_regular(src: Path, dst: Path, budget: int) -> int:
         os.close(sfd)
 
 
+def _gz_matches(gz_path: Path, body_path: Path) -> bool:
+    """分块解压 .gz 并与正文逐块比较；解压长度一旦超过正文即判不符。内存占用只有 1 MiB 级。"""
+    size = body_path.stat().st_size
+    pos = 0
+    with gzip.open(gz_path, "rb") as g, open(body_path, "rb") as b:
+        while True:
+            chunk = g.read(1 << 20)
+            if not chunk:
+                break
+            pos += len(chunk)
+            if pos > size or b.read(len(chunk)) != chunk:
+                return False
+    return pos == size
+
+
 def _backup_live(page: Path) -> str | None:
     """持锁时才备份：线上现有正文与 .gz 复制进备份目录，每页只留最近 KEEP_BACKUPS 份。
     空间/inode 不足、页面过大、旧备份删不掉、任何错误 → 跳过并告警；复制到一半失败会删掉这份残件。"""
@@ -2307,8 +2322,7 @@ def _backup_live(page: Path) -> str | None:
         if gz_ok:
             _copy_regular(gz, bdir / gz.name, left)
             # 正文与 .gz 是分两次复制的；中间若有锁忙降级的发布插进来，两者会来自不同版本——不算成功备份
-            body = (bdir / page.name).read_bytes()
-            if gzip.decompress((bdir / gz.name).read_bytes()) != body:
+            if not _gz_matches(bdir / gz.name, bdir / page.name):
                 raise OSError("备份中正文与 .gz 不是同一版本（复制期间页面被改写）")
         done, bdir = str(bdir), None
         return done
