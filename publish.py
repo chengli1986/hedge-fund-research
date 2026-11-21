@@ -2166,6 +2166,7 @@ def _warn(msg: str) -> None:
 # 状态目录与 /var/www/overview 同在本机根盘（2026-11-21 核实：同一 ext4、无配额）：附加步骤的 I/O
 # 与 publish_html 自己的写入同盘，盘卡住时 publish_html 同样会卡，附加步骤不引入新的卡住方式；
 # 特殊文件（FIFO、设备）靠非阻塞打开 + 普通文件检查拒掉。记录文件不截短（每次约 350 字节）。
+# 接受的边界：备份与记录是同步本地 I/O，盘卡住多久，入口就等多久——与 publish_html 本身相同，不另设时限。
 BACKUP_MAX_BYTES = 32 * 1024 * 1024      # 单页超过这个大小就不备份
 BACKUP_MIN_FREE = 2 * 1024 ** 3          # 状态目录所在盘剩余不足 2 GiB（+2×页面）就不备份（把空间留给发布）
 BACKUP_MIN_INODES = 10000                # 剩余 inode 不足也不备份
@@ -2235,6 +2236,27 @@ def _try_lock() -> tuple[int | None, str]:
         _close_quietly(fd)
 
 
+def _copy_regular(src: Path, dst: Path) -> None:
+    """从「非阻塞打开、fstat 确认是普通文件」的同一个 fd 复制（源在检查后被换成 FIFO 也不会卡）；保留 mtime。"""
+    sfd = _open_regular(src, os.O_RDONLY)
+    try:
+        st = os.fstat(sfd)
+        dfd = _open_regular(dst, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
+        try:
+            while True:
+                chunk = os.read(sfd, 1 << 20)
+                if not chunk:
+                    break
+                view = memoryview(chunk)
+                while view:
+                    view = view[os.write(dfd, view):]
+        finally:
+            os.close(dfd)
+        os.utime(dst, ns=(st.st_atime_ns, st.st_mtime_ns))
+    finally:
+        os.close(sfd)
+
+
 def _backup_live(page: Path) -> str | None:
     """持锁时才备份：线上现有正文与 .gz 复制进备份目录，每页只留最近 KEEP_BACKUPS 份。
     空间/inode 不足、页面过大、旧备份删不掉、任何错误 → 跳过并告警；复制到一半失败会删掉这份残件。"""
@@ -2273,9 +2295,9 @@ def _backup_live(page: Path) -> str | None:
         stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
         bdir = broot / f"{stamp}-{os.getpid()}-{page.name}"
         bdir.mkdir()
-        shutil.copy2(page, bdir / page.name)
+        _copy_regular(page, bdir / page.name)
         if gz_ok:
-            shutil.copy2(gz, bdir / gz.name)
+            _copy_regular(gz, bdir / gz.name)
         done, bdir = str(bdir), None
         return done
     except Exception as e:  # noqa: BLE001
@@ -2293,8 +2315,11 @@ def _record(rec: dict) -> None:
         return
     line = (json.dumps(rec, ensure_ascii=False) + "\n").encode("utf-8")
     root.mkdir(parents=True, exist_ok=True)
-    fd = _open_regular(root / "records.jsonl", os.O_WRONLY | os.O_APPEND | os.O_CREAT)
+    fd = _open_regular(root / "records.jsonl", os.O_RDWR | os.O_APPEND | os.O_CREAT)
     try:
+        size = os.fstat(fd).st_size
+        if size and os.pread(fd, 1, size - 1) != b"\n":
+            line = b"\n" + line        # 上一条没写完整：先补换行，让这一条能独立解析
         n = os.write(fd, line)
     finally:
         os.close(fd)

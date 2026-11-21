@@ -117,7 +117,7 @@ def test_backup_failure_does_not_block(site, monkeypatch, capsys):
     page = root / "hedge-fund-research.html"
     publish.publish_html(page, "<html>OLD</html>")
     called = []
-    monkeypatch.setattr(publish.shutil, "copy2", lambda *a, **k: (called.append(1), (_ for _ in ()).throw(OSError("full")))[1])
+    monkeypatch.setattr(publish, "_copy_regular", lambda *a, **k: (called.append(1), (_ for _ in ()).throw(OSError("full")))[1])
     publish.publish_live(page, "<html>NEW</html>")
     assert called, "复制确实被调用（不是因为磁盘余量而跳过）"
     assert page.read_text() == "<html>NEW</html>"
@@ -307,7 +307,7 @@ def test_keyboard_interrupt_during_backup_releases_lock(site, monkeypatch):
     root, state = site
     page = root / "hedge-fund-research.html"
     publish.publish_html(page, "<html>OLD</html>")
-    monkeypatch.setattr(publish.shutil, "copy2", lambda *a, **k: (_ for _ in ()).throw(KeyboardInterrupt()))
+    monkeypatch.setattr(publish, "_copy_regular", lambda *a, **k: (_ for _ in ()).throw(KeyboardInterrupt()))
     with pytest.raises(KeyboardInterrupt):
         publish.publish_live(page, "<html>NEW</html>")
     with open(state / "lock", "a") as f:
@@ -321,3 +321,42 @@ def test_record_is_one_full_line_each(site):
         publish.publish_live(root / "hedge-fund-research.html", f"<html>{i}</html>")
     lines = (state / "records.jsonl").read_text().splitlines()
     assert len(lines) == 5 and all(json.loads(l)["page"] == "hedge-fund-research.html" for l in lines)
+
+
+def test_backup_source_swapped_to_fifo_does_not_hang(site, monkeypatch):
+    """lstat 判完是普通文件后源被换成 FIFO：非阻塞打开 + fstat 拒掉，不卡，照常发布。"""
+    import time
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    publish.publish_html(page, "<html>OLD</html>")
+    fifo = root / "swapped.fifo"
+    os.mkfifo(fifo)
+    real = publish._copy_regular
+    monkeypatch.setattr(publish, "_copy_regular", lambda src, dst: real(fifo, dst))
+    t0 = time.monotonic()
+    publish.publish_live(page, "<html>NEW</html>")
+    assert time.monotonic() - t0 < 3
+    assert page.read_text() == "<html>NEW</html>"
+    assert _records(state)[-1]["backup_dir"] is None
+
+
+def test_backup_copy_keeps_bytes_and_mtime(site):
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    publish.publish_html(page, "<html>OLD</html>")
+    old_m = page.stat().st_mtime_ns
+    publish.publish_live(page, "<html>NEW</html>")
+    b = Path(_records(state)[-1]["backup_dir"])
+    assert (b / page.name).read_text() == "<html>OLD</html>"
+    assert (b / page.name).stat().st_mtime_ns == old_m
+    import gzip as _gz
+    assert _gz.decompress((b / (page.name + ".gz")).read_bytes()) == b"<html>OLD</html>"
+
+
+def test_record_after_partial_line_is_still_parseable(site):
+    root, state = site
+    state.mkdir(parents=True)
+    (state / "records.jsonl").write_bytes(b'{"page": "half')
+    publish.publish_live(root / "hedge-fund-research.html", "<html>P</html>")
+    last = (state / "records.jsonl").read_text().splitlines()[-1]
+    assert json.loads(last)["page"] == "hedge-fund-research.html"
