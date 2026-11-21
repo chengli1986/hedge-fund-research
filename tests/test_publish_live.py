@@ -38,7 +38,7 @@ def _records(state):
 
 
 
-class _Hung(Exception):
+class _Hung(BaseException):          # 不是 Exception：发布代码的降级处理吞不掉它
     pass
 
 
@@ -107,7 +107,7 @@ def test_keeps_only_three_backups_per_page(site):
     assert len([d for d in dirs if (d / "hedge-fund-research.html").exists()]) == 3
 
 
-def test_lock_busy_still_publishes_and_warns(site, capsys):
+def test_lock_busy_still_publishes_and_warns(bounded, site, capsys):
     root, state = site
     state.mkdir(parents=True)
     page = root / "hedge-fund-research.html"
@@ -143,7 +143,7 @@ def test_backup_failure_does_not_block(site, monkeypatch, capsys):
     assert not [d for d in (state / "backup").iterdir()], "残件已删"
 
 
-def test_publish_html_failure_propagates_and_releases_lock(site, monkeypatch):
+def test_publish_html_failure_propagates_and_releases_lock(bounded, site, monkeypatch):
     root, state = site
     page = root / "hedge-fund-research.html"
     monkeypatch.setattr(publish, "publish_html", lambda p, h: (_ for _ in ()).throw(OSError("disk")))
@@ -187,7 +187,7 @@ def test_health_page_uses_publish_live(site, monkeypatch):
 
 
 
-def test_no_wait_on_busy_lock(site):
+def test_no_wait_on_busy_lock(bounded, site):
     """不等锁：被占时立刻返回发布，耗时远小于 1 秒。"""
     import time
     root, state = site
@@ -240,7 +240,7 @@ def test_exit_codes_unchanged_for_main(site, monkeypatch):
 
 # ---------- Codex GM-01～07 ----------
 
-def test_close_failure_after_busy_lock_does_not_block(site, monkeypatch):
+def test_close_failure_after_busy_lock_does_not_block(bounded, site, monkeypatch):
     root, state = site
     state.mkdir(parents=True)
     real_close = os.close
@@ -320,7 +320,7 @@ def test_undeletable_old_backup_skips_new_backup(site, monkeypatch):
     assert len(list((state / "backup").iterdir())) == 3
 
 
-def test_keyboard_interrupt_during_backup_releases_lock(site, monkeypatch):
+def test_keyboard_interrupt_during_backup_releases_lock(bounded, site, monkeypatch):
     """中断照常上传，但锁 fd 已释放（下一个发布能立刻拿到锁），残件已删。"""
     root, state = site
     page = root / "hedge-fund-research.html"
@@ -380,7 +380,7 @@ def test_record_after_partial_line_is_still_parseable(site):
     assert json.loads(last)["page"] == "hedge-fund-research.html"
 
 
-def test_record_lock_busy_skips_record_but_publishes(site, capsys):
+def test_record_lock_busy_skips_record_but_publishes(bounded, site, capsys):
     root, state = site
     state.mkdir(parents=True)
     with open(state / "records.lock", "a") as f:
@@ -446,5 +446,53 @@ def test_backup_stops_when_source_grows_during_copy(site, monkeypatch):
     publish.publish_live(page, "<html>NEW</html>")
     monkeypatch.setattr(publish.os, "fstat", real_fstat)
     assert calls and page.read_text() == "<html>NEW</html>"
+    assert _records(state)[-1]["backup_dir"] is None
+    assert not list((state / "backup").iterdir())
+
+
+def test_new_records_escape_non_ascii(site):
+    """新记录里真有非 ASCII 值：原始行必须是纯 ASCII，解析回来与原值相同。"""
+    root, state = site
+    publish._record({"page": "研报.html", "note": "备份 → ok"})
+    raw = (state / "records.jsonl").read_bytes().splitlines()[-1]
+    assert raw.isascii()
+    assert json.loads(raw) == {"page": "研报.html", "note": "备份 → ok"}
+
+
+def test_gz_uses_only_the_remaining_budget(site, monkeypatch):
+    """正文复制成功后 .gz 变大：.gz 单独不超上限、两者合计超 → 整份备份清掉，发布照常。"""
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    publish.publish_html(page, "<html>OLD</html>" + "z" * 300)
+    gz = root / "hedge-fund-research.html.gz"
+    body_size, gz_size = page.stat().st_size, gz.stat().st_size
+    monkeypatch.setattr(publish, "BACKUP_MAX_BYTES", body_size + gz_size + 50)
+    real = publish._copy_regular
+    def grow_gz(src, dst, budget):
+        if src.name.endswith(".gz"):
+            with open(src, "ab") as f:
+                f.write(b"\0" * 200)               # .gz 单独 < 上限，但正文 + .gz > 上限
+            assert src.stat().st_size < publish.BACKUP_MAX_BYTES
+        return real(src, dst, budget)
+    monkeypatch.setattr(publish, "_copy_regular", grow_gz)
+    publish.publish_live(page, "<html>NEW</html>")
+    assert page.read_text() == "<html>NEW</html>"
+    assert _records(state)[-1]["backup_dir"] is None
+    assert not list((state / "backup").iterdir())
+
+
+def test_backup_from_two_versions_is_discarded(site, monkeypatch):
+    """复制完正文后、复制 .gz 前，另一个（锁忙降级的）发布改写了页面：这份备份不算成功并被清理。"""
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    publish.publish_html(page, "<html>OLD</html>")
+    real = publish._copy_regular
+    def racing(src, dst, budget):
+        if src.name.endswith(".gz"):
+            publish.publish_html(page, "<html>OTHER</html>")
+        return real(src, dst, budget)
+    monkeypatch.setattr(publish, "_copy_regular", racing)
+    publish.publish_live(page, "<html>NEW</html>")
+    assert page.read_text() == "<html>NEW</html>"
     assert _records(state)[-1]["backup_dir"] is None
     assert not list((state / "backup").iterdir())

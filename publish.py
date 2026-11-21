@@ -2306,6 +2306,10 @@ def _backup_live(page: Path) -> str | None:
         left = BACKUP_MAX_BYTES - _copy_regular(page, bdir / page.name, BACKUP_MAX_BYTES)
         if gz_ok:
             _copy_regular(gz, bdir / gz.name, left)
+            # 正文与 .gz 是分两次复制的；中间若有锁忙降级的发布插进来，两者会来自不同版本——不算成功备份
+            body = (bdir / page.name).read_bytes()
+            if gzip.decompress((bdir / gz.name).read_bytes()) != body:
+                raise OSError("备份中正文与 .gz 不是同一版本（复制期间页面被改写）")
         done, bdir = str(bdir), None
         return done
     except Exception as e:  # noqa: BLE001
