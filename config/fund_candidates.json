@@ -4339,10 +4339,34 @@
             "date": "2026-11-03"
           }
         ]
+      },
+      {
+        "at": "2026-11-21T18:01:41+00:00",
+        "type": "card_list",
+        "spec": {
+          "type": "card_list",
+          "fetch": "playwright",
+          "wait_until": "domcontentloaded",
+          "wait_selector": "a[href*=\"/insights/\"] .topbar",
+          "card": "a[href*=\"/insights/\"]:has(.topbar)",
+          "link": "self",
+          "title": ".title",
+          "date": ".topbar span.separator:last-of-type",
+          "path_prefix": "/en/insights/",
+          "sort": "date_desc"
+        },
+        "listing_url": "https://ninetyone.com/en/insights",
+        "ok": false,
+        "rows": 0,
+        "dated": 0,
+        "problems": [
+          "only 0 row(s), need 3"
+        ],
+        "sample": []
       }
     ],
-    "synthesis_attempted_at": "2026-11-11T01:08:03.343168+00:00",
-    "synthesis_outcome": "success",
+    "synthesis_attempted_at": "2026-11-21T18:02:31.343342+00:00",
+    "synthesis_outcome": "failed",
     "listing_url": "https://ninetyone.com/en/insights",
     "expected_hostname": "ninetyone.com",
     "failed_listing_template": {
@@ -4356,7 +4380,8 @@
       "date": ".topbar span.separator:last-of-type",
       "path_prefix": "/en/insights/",
       "sort": "date_desc"
-    }
+    },
+    "synthesis_failure_reason": "2026-11-21: every ninetyone.com URL (/en/insights, robots.txt, sitemap.xml, /en/insights/rss, other locales) returns HTTP 403 Cloudflare challenge page 'Just a moment...' to both curl and headless Chromium (still on challenge after 25s wait); the 2026-11-11 passing template now yields 0 rows. Not bypassed."
   },
   {
     "id": "hamilton-lane",
@@ -5499,7 +5524,7 @@
     "name": "Partners Capital",
     "homepage_url": "https://www.partners-cap.com",
     "source": "manual",
-    "status": "inaccessible",
+    "status": "visitable",
     "strategy_tags": [
       "multi_asset",
       "macro",
@@ -5512,12 +5537,64 @@
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-11-20T09:03:02.864621+08:00",
     "added_at": "2026-11-12",
-    "status_since": "2026-11-20T09:03:37.818849+08:00",
+    "status_since": "2026-11-22T02:02:31.343372+08:00",
     "quality": "MEDIUM",
     "quality_score": 0.72,
     "topics": "multi-asset, macro, private equity, sustainable investing",
     "notes": "[auto-stall 2026-11-20] seed->inaccessible after 7d stuck Free multi-asset macro pieces, ~monthly; some marketing",
-    "last_deep_analyzed_at": "2026-11-13T01:03:48.065273+00:00"
+    "last_deep_analyzed_at": "2026-11-13T01:03:48.065273+00:00",
+    "template_attempts": [
+      {
+        "at": "2026-11-21T18:02:22+00:00",
+        "type": "card_list",
+        "spec": {
+          "type": "card_list",
+          "fetch": "requests",
+          "card": "a.insight-card",
+          "link": "self",
+          "title": ".insight-card__title",
+          "date": ".insight-card__date",
+          "path_prefix": "/insights/",
+          "sort": "date_desc"
+        },
+        "listing_url": "https://partners-cap.com/insights/",
+        "ok": true,
+        "rows": 10,
+        "dated": 10,
+        "problems": [],
+        "sample": [
+          {
+            "title": "The Liquidity Event: A Hundred Year Decision",
+            "url": "https://partners-cap.com/insights/the-liquidity-event-a-hundred-year-decision/",
+            "date": "2026-11-10"
+          },
+          {
+            "title": "Inflections: US midterms deliver a seismic shift",
+            "url": "https://partners-cap.com/insights/inflections-us-midterms-deliver-seismic-shift/",
+            "date": "2026-11-09"
+          },
+          {
+            "title": "Inflections: Bond Yields Rising “like it’s 1999”",
+            "url": "https://partners-cap.com/insights/inflections-bond-yields-rising-like-its-1999/",
+            "date": "2026-09-30"
+          }
+        ]
+      }
+    ],
+    "listing_template": {
+      "type": "card_list",
+      "fetch": "requests",
+      "card": "a.insight-card",
+      "link": "self",
+      "title": ".insight-card__title",
+      "date": ".insight-card__date",
+      "path_prefix": "/insights/",
+      "sort": "date_desc"
+    },
+    "listing_url": "https://partners-cap.com/insights/",
+    "expected_hostname": "partners-cap.com",
+    "synthesis_attempted_at": "2026-11-21T18:02:31.343342+00:00",
+    "synthesis_outcome": "success"
   },
   {
     "id": "polen-capital",
