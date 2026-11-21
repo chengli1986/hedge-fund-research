@@ -1956,6 +1956,68 @@
         }
       ],
       "rejected_pages": []
+    },
+    "eagle-capital": {
+      "last_discovered_at": "2026-11-21T09:03:03.965145+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://www.eaglecap.com/letters",
+          "final_score": 0.8543,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.7143,
+          "gate_penalty": 0.3,
+          "active": true
+        },
+        {
+          "url": "https://www.eaglecap.com/eagl-etf",
+          "final_score": 0.79,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 1.0,
+          "gate_penalty": 0.3,
+          "active": false
+        },
+        {
+          "url": "https://www.eaglecap.com/",
+          "final_score": 0.69,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.6667,
+          "gate_penalty": 0.3,
+          "active": false
+        }
+      ],
+      "rejected_pages": [
+        {
+          "url": "https://www.eaglecap.com/about",
+          "final_score": 0.4,
+          "domain_score": 1.0,
+          "path_score": 0.0,
+          "structure_score": 0.2,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        },
+        {
+          "url": "https://www.eaglecap.com/about#enduring-philosophy",
+          "final_score": 0.4,
+          "domain_score": 1.0,
+          "path_score": 0.0,
+          "structure_score": 0.2,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        },
+        {
+          "url": "https://www.eaglecap.com/about#team",
+          "final_score": 0.4,
+          "domain_score": 1.0,
+          "path_score": 0.0,
+          "structure_score": 0.2,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        }
+      ]
     }
   }
 }

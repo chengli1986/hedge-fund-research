@@ -711,7 +711,7 @@
     "is_publicly_accessible": true,
     "has_article_index": true,
     "fit_score": 0.88,
-    "notes": "Weekly market recaps/Guide to Markets; commentary hub",
+    "notes": "Weekly market updates; landing shows teasers only",
     "research_links": [],
     "screening_signals": {
       "status_code": 200,
@@ -724,14 +724,12 @@
       "article_signals": 0
     },
     "screening_reason": "Research index detected",
-    "last_deep_analyzed_at": "2026-09-26T01:00:59Z",
+    "last_deep_analyzed_at": "2026-11-21T01:03:50Z",
     "quality": "MEDIUM",
-    "quality_score": 0.5,
-    "topics": "macro, equity, fixed income, alternatives, multi-asset",
+    "quality_score": 0.58,
+    "topics": "macro, markets, asset allocation",
     "strategy_tags": [
       "macro",
-      "equity",
-      "fixed_income",
       "multi_asset"
     ],
     "source": "manual",
@@ -2458,15 +2456,14 @@
     "inaccessible_reason": "EC2-403 on homepage and article pages; index page accessible but content blocked",
     "strategy_tags": [
       "macro",
-      "multi_asset",
-      "equity",
-      "fixed_income"
+      "fixed_income",
+      "equity"
     ],
-    "topics": "macro, equity, multi_asset, geopolitics, wealth management",
+    "topics": "macro, fixed income, European equities, wealth",
     "quality": "MEDIUM",
-    "quality_score": 0.65,
-    "notes": "Weekly free wealth/markets research; sampled piece solid",
-    "last_deep_analyzed_at": "2026-09-27T01:00:57Z",
+    "quality_score": 0.62,
+    "notes": "Dated index, ~8-10/mo; some wealth marketing",
+    "last_deep_analyzed_at": "2026-11-21T01:03:50Z",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-05-24T01:02:30Z",
     "synthesis_attempted_at": "2026-06-12T01:08:13.034245+00:00",
@@ -2623,9 +2620,8 @@
     "source": "manual",
     "status": "promoted",
     "strategy_tags": [
-      "macro",
       "multi_asset",
-      "real_assets",
+      "equity",
       "fixed_income"
     ],
     "official_domain": "www.principalam.com",
@@ -2648,11 +2644,11 @@
     ],
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-07-01T09:00:47.942381+08:00",
-    "last_deep_analyzed_at": "2026-09-26T01:00:59Z",
+    "last_deep_analyzed_at": "2026-11-21T01:03:50Z",
     "quality": "MEDIUM",
-    "quality_score": 0.72,
-    "topics": "macro, real estate, fixed income, private credit",
-    "notes": "Near-daily free insights, latest 2026-09-25",
+    "quality_score": 0.6,
+    "topics": "macro, equities, fixed income, private markets",
+    "notes": "Frequent market commentary, disclaimer-heavy",
     "is_publicly_accessible": false,
     "has_article_index": false,
     "last_screened_at": "2026-07-01T09:00:51.472778+08:00",
@@ -5627,11 +5623,53 @@
     "name": "Eagle Capital Management",
     "homepage_url": "https://www.eaglecap.com",
     "source": "manual",
-    "status": "seed",
+    "status": "visitable",
     "strategy_tags": [
       "equity"
     ],
     "added_at": "2026-11-20",
-    "status_since": "2026-11-20T09:03:36.219553+08:00"
+    "status_since": "2026-11-21T09:03:03.965170+08:00",
+    "research_url": "https://www.eaglecap.com/letters",
+    "official_domain": "www.eaglecap.com",
+    "research_links": [
+      {
+        "url": "https://www.eaglecap.com/letters",
+        "label": "Quarterly Letters",
+        "path": "letters"
+      },
+      {
+        "url": "https://www.eaglecap.com/letters#latest",
+        "label": "Latest Letter",
+        "path": "letters"
+      },
+      {
+        "url": "https://www.eaglecap.com/letters#insights",
+        "label": "Additional Insights",
+        "path": "letters"
+      }
+    ],
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-11-21T09:03:02.535737+08:00",
+    "is_publicly_accessible": true,
+    "has_article_index": true,
+    "last_screened_at": "2026-11-21T09:03:02.903587+08:00",
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 0,
+      "article_tags": 0,
+      "time_tags": 0,
+      "date_patterns": 0,
+      "h2_tags": 4,
+      "article_signals": 0
+    },
+    "screening_reason": "Research index detected",
+    "fit_score": 0.8543,
+    "last_validated_at": "2026-11-21T09:03:03.965145+08:00",
+    "last_deep_analyzed_at": "2026-11-21T01:03:50Z",
+    "quality": "HIGH",
+    "quality_score": 0.78,
+    "topics": "equity, long-term investing, AI",
+    "notes": "RECOMMEND: Quarterly equity letters, free, stock theses"
   }
 ]
