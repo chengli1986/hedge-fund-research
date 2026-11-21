@@ -41,9 +41,11 @@ def test_state_root_is_redirected_in_tests():
     """conftest 必须把状态根重定向走（本进程与子进程），测试绝不碰 ~/.local/state/gmia-publish。"""
     assert ".local/state/gmia-publish" not in str(publish.GMIA_STATE_ROOT)
     assert ".local/state/gmia-publish" not in os.environ["GMIA_PUBLISH_STATE_ROOT"]
-    r = subprocess.run([sys.executable, "-c", "import publish; print(publish.GMIA_STATE_ROOT)"],
+    import conftest
+    r = subprocess.run([sys.executable, "-c", "import os, publish; print(os.path.realpath(publish.GMIA_STATE_ROOT))"],
                        cwd=REPO, capture_output=True, text=True)
-    assert r.returncode == 0 and ".local/state/gmia-publish" not in r.stdout
+    assert r.returncode == 0
+    assert r.stdout.strip() == conftest.GMIA_TEST_STATE_ROOT, "子进程的状态根（按真实路径）就是测试临时根"
 
 
 def test_preview_path_goes_straight_to_publish_html(site, tmp_path, monkeypatch):
@@ -204,14 +206,6 @@ def test_backup_skipped_when_disk_low(site, monkeypatch, capsys):
     assert "磁盘余量" in capsys.readouterr().err
 
 
-def test_records_file_is_capped(site, monkeypatch):
-    root, state = site
-    monkeypatch.setattr(publish, "RECORDS_MAX_BYTES", 400)
-    for i in range(20):
-        publish.publish_live(root / "hedge-fund-research.html", f"<html>{i}</html>")
-    assert (state / "records.jsonl").stat().st_size < 1200
-
-
 def test_exit_codes_unchanged_for_main(site, monkeypatch):
     """docs-site 同步失败仍返回 3，precheck 失败仍返回 4（publish_live 不改语义）。"""
     root, state = site
@@ -271,19 +265,6 @@ def test_lock_fifo_does_not_hang(site):
     assert (root / "hedge-fund-research.html").read_text() == "<html>L</html>"
 
 
-def test_slow_backup_is_cut_off_and_publish_continues(site, monkeypatch, capsys):
-    import time
-    root, state = site
-    page = root / "hedge-fund-research.html"
-    publish.publish_html(page, "<html>OLD</html>")
-    monkeypatch.setattr(publish, "SIDE_STEP_SECONDS", 0.5)
-    monkeypatch.setattr(publish.shutil, "copy2", lambda *a, **k: time.sleep(5))
-    t0 = time.monotonic()
-    publish.publish_live(page, "<html>NEW</html>")
-    assert time.monotonic() - t0 < 3
-    assert page.read_text() == "<html>NEW</html>"
-
-
 def test_missing_ubuntu_account_does_not_break_import(monkeypatch):
     monkeypatch.delenv("GMIA_PUBLISH_STATE_ROOT", raising=False)
     import pwd
@@ -321,11 +302,22 @@ def test_undeletable_old_backup_skips_new_backup(site, monkeypatch):
     assert len(list((state / "backup").iterdir())) == 3
 
 
-def test_record_trim_keeps_tail_and_is_bounded(site, monkeypatch):
+def test_keyboard_interrupt_during_backup_releases_lock(site, monkeypatch):
+    """中断照常上传，但锁 fd 已释放（下一个发布能立刻拿到锁），残件已删。"""
     root, state = site
-    monkeypatch.setattr(publish, "RECORDS_MAX_BYTES", 600)
-    for i in range(30):
+    page = root / "hedge-fund-research.html"
+    publish.publish_html(page, "<html>OLD</html>")
+    monkeypatch.setattr(publish.shutil, "copy2", lambda *a, **k: (_ for _ in ()).throw(KeyboardInterrupt()))
+    with pytest.raises(KeyboardInterrupt):
+        publish.publish_live(page, "<html>NEW</html>")
+    with open(state / "lock", "a") as f:
+        fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)      # 拿得到 = 已释放
+    assert not list((state / "backup").iterdir())
+
+
+def test_record_is_one_full_line_each(site):
+    root, state = site
+    for i in range(5):
         publish.publish_live(root / "hedge-fund-research.html", f"<html>{i}</html>")
     lines = (state / "records.jsonl").read_text().splitlines()
-    assert all(json.loads(l) for l in lines)
-    assert (state / "records.jsonl").stat().st_size < 1500
+    assert len(lines) == 5 and all(json.loads(l)["page"] == "hedge-fund-research.html" for l in lines)

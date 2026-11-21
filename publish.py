@@ -2163,46 +2163,12 @@ def _warn(msg: str) -> None:
         pass
 
 
+# 状态目录与 /var/www/overview 同在本机根盘（2026-11-21 核实：同一 ext4、无配额）：附加步骤的 I/O
+# 与 publish_html 自己的写入同盘，盘卡住时 publish_html 同样会卡，附加步骤不引入新的卡住方式；
+# 特殊文件（FIFO、设备）靠非阻塞打开 + 普通文件检查拒掉。记录文件不截短（每次约 350 字节）。
 BACKUP_MAX_BYTES = 32 * 1024 * 1024      # 单页超过这个大小就不备份
 BACKUP_MIN_FREE = 2 * 1024 ** 3          # 状态目录所在盘剩余不足 2 GiB（+2×页面）就不备份（把空间留给发布）
 BACKUP_MIN_INODES = 10000                # 剩余 inode 不足也不备份
-RECORDS_MAX_BYTES = 1024 * 1024          # 记录文件超过 1 MiB 只保留最后一半
-SIDE_STEP_SECONDS = 10                   # 备份、记录各自的硬时限（主线程里用 SIGALRM 强制打断）
-
-
-class _SideStepTimeout(Exception):
-    pass
-
-
-class _time_limit:
-    """主线程里给一段附加 I/O 加硬时限；超时抛 _SideStepTimeout。非主线程或不支持时不设时限。"""
-
-    def __init__(self, seconds: float):
-        self.seconds, self.armed, self.old = seconds, False, None
-
-    def __enter__(self):
-        import signal
-        import threading
-        try:
-            if threading.current_thread() is threading.main_thread() and hasattr(signal, "setitimer"):
-                def _raise(signum, frame):
-                    raise _SideStepTimeout()
-                self.old = signal.signal(signal.SIGALRM, _raise)
-                signal.setitimer(signal.ITIMER_REAL, self.seconds)
-                self.armed = True
-        except Exception:  # noqa: BLE001
-            self.armed = False
-        return self
-
-    def __exit__(self, *exc):
-        import signal
-        if self.armed:
-            try:
-                signal.setitimer(signal.ITIMER_REAL, 0)
-                signal.signal(signal.SIGALRM, self.old if self.old is not None else signal.SIG_DFL)
-            except Exception:  # noqa: BLE001
-                pass
-        return False
 
 
 def _state_root() -> Path | None:
@@ -2231,38 +2197,42 @@ def _open_regular(path: Path, flags: int, mode: int = 0o600) -> int:
     try:
         if not stat.S_ISREG(os.fstat(fd).st_mode):
             raise OSError(f"{path} 不是普通文件")
-    except Exception:
+    except BaseException:
         os.close(fd)
         raise
     return fd
 
 
-def _try_lock():
-    """GMIA 自己的锁（只有 GMIA 的写入方用）。**只试一次、不等待**：拿不到就返回 (None, 原因)，
-    调用方照常发布（今天本来就没有锁），不占用 cron 的时间预算。任何异常都不外漏。"""
-    import fcntl
-    fd = None
-    try:
-        root = _state_root()
-        if root is None:
-            return None, "no-state-root"
-        root.mkdir(parents=True, exist_ok=True)
-        fd = _open_regular(root / "lock", os.O_RDWR | os.O_CREAT)
-        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        return fd, "held"
-    except BlockingIOError:
-        state = "busy"
-    except Exception as e:  # noqa: BLE001
-        _warn(f"GMIA 发布锁出错（{type(e).__name__}: {e}），不持锁照常发布")
-        state = "error"
+def _close_quietly(fd: int | None) -> None:
     if fd is not None:
         try:
             os.close(fd)
         except Exception:  # noqa: BLE001
             pass
-    if state == "busy":
+
+
+def _try_lock() -> tuple[int | None, str]:
+    """GMIA 自己的锁（只有 GMIA 的写入方用）。**只试一次、不等待**：拿不到就返回 (None, 原因)，
+    调用方照常发布（今天本来就没有锁）。普通异常都不外漏；中断（KeyboardInterrupt 等）照常上传，fd 已关。"""
+    import fcntl
+    root = _state_root()
+    if root is None:
+        return None, "no-state-root"
+    fd = None
+    try:
+        root.mkdir(parents=True, exist_ok=True)
+        fd = _open_regular(root / "lock", os.O_RDWR | os.O_CREAT)
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        held, fd = fd, None
+        return held, "held"
+    except BlockingIOError:
         _warn("GMIA 发布锁被占用（另一个 GMIA 发布正在进行？），不持锁照常发布")
-    return None, state
+        return None, "busy"
+    except Exception as e:  # noqa: BLE001
+        _warn(f"GMIA 发布锁出错（{type(e).__name__}: {e}），不持锁照常发布")
+        return None, "error"
+    finally:
+        _close_quietly(fd)
 
 
 def _backup_live(page: Path) -> str | None:
@@ -2272,15 +2242,15 @@ def _backup_live(page: Path) -> str | None:
     root = _state_root()
     if root is None:
         return None
-    try:
-        st = os.lstat(page)
-    except FileNotFoundError:
-        return None
-    if not stat.S_ISREG(st.st_mode):
-        _warn(f"{page} 不是普通文件，跳过备份")
-        return None
     bdir = None
     try:
+        try:
+            st = os.lstat(page)
+        except FileNotFoundError:
+            return None
+        if not stat.S_ISREG(st.st_mode):
+            _warn(f"{page} 不是普通文件，跳过备份")
+            return None
         gz = page.with_name(page.name + ".gz")
         gz_ok = os.path.lexists(gz) and stat.S_ISREG(os.lstat(gz).st_mode)
         size = st.st_size + (os.lstat(gz).st_size if gz_ok else 0)
@@ -2306,98 +2276,59 @@ def _backup_live(page: Path) -> str | None:
         shutil.copy2(page, bdir / page.name)
         if gz_ok:
             shutil.copy2(gz, bdir / gz.name)
-        return str(bdir)
-    except BaseException as e:  # noqa: BLE001 -- 含 _SideStepTimeout
+        done, bdir = str(bdir), None
+        return done
+    except Exception as e:  # noqa: BLE001
         _warn(f"发布前备份失败（{type(e).__name__}: {e}），照常发布")
-        if bdir is not None:
-            shutil.rmtree(bdir, ignore_errors=True)
-        if not isinstance(e, Exception) and not isinstance(e, _SideStepTimeout):
-            raise
         return None
+    finally:
+        if bdir is not None:                       # 失败或被中断：删掉这份残件
+            shutil.rmtree(bdir, ignore_errors=True)
 
 
 def _record(rec: dict) -> None:
-    """追加一行发布记录。记录文件过大时，在**非阻塞的记录锁**下只保留最后一半；拿不到记录锁就只追加。"""
-    import fcntl
+    """追加一行发布记录（一次 write；写不全只告警）。不截短。"""
     root = _state_root()
     if root is None:
         return
     line = (json.dumps(rec, ensure_ascii=False) + "\n").encode("utf-8")
     root.mkdir(parents=True, exist_ok=True)
-    f = root / "records.jsonl"
-    lk = None
+    fd = _open_regular(root / "records.jsonl", os.O_WRONLY | os.O_APPEND | os.O_CREAT)
     try:
-        lk = _open_regular(root / "records.lock", os.O_RDWR | os.O_CREAT)
-        fcntl.flock(lk, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        if os.path.lexists(f) and os.lstat(f).st_size > RECORDS_MAX_BYTES:
-            keep = RECORDS_MAX_BYTES // 2
-            rfd = _open_regular(f, os.O_RDONLY)
-            try:
-                os.lseek(rfd, -keep, os.SEEK_END)
-                tail = os.read(rfd, keep)
-            finally:
-                os.close(rfd)
-            tail = tail[tail.find(b"\n") + 1:]
-            tmp = root / f"records.jsonl.tmp.{os.getpid()}"
-            wfd = _open_regular(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL)
-            try:
-                os.write(wfd, tail)
-            finally:
-                os.close(wfd)
-            os.replace(tmp, f)
-    except BlockingIOError:
-        pass                       # 别人正在截短：本次只追加
-    finally:
-        if lk is not None:
-            os.close(lk)
-    fd = _open_regular(f, os.O_WRONLY | os.O_APPEND | os.O_CREAT)
-    try:
-        os.write(fd, line)
+        n = os.write(fd, line)
     finally:
         os.close(fd)
+    if n != len(line):
+        _warn(f"发布记录只写入 {n}/{len(line)} 字节")
 
 
 def publish_live(output_file: Path, html_content: str) -> Path:
     """写线上时用（site-publish 第 3 期 V0.5）：试一次 GMIA 锁 → 持锁才备份 → **原样的 publish_html** → 记一行记录。
-    锁、备份、记录都尽力而为：任何异常、卡住（各 10 秒硬时限）只告警，绝不挡住发布；只有 publish_html
-    自己的失败才失败（同以前）。不在站点根（预览、开发机）或正文/.gz 落点不成对时，直接 publish_html。"""
-    try:
-        live = _live_pair(Path(output_file))
-    except Exception:  # noqa: BLE001
-        live = False
-    if not live:
+    锁、备份、记录都尽力而为：普通异常只告警，绝不挡住发布；只有 publish_html 自己的失败才失败（同以前）。
+    不在站点根（预览、开发机）或正文/.gz 落点不成对时，直接 publish_html，与以前完全相同。"""
+    if not _live_pair(Path(output_file)):
         return publish_html(output_file, html_content)
     fd, lock_state, backup = None, "error", None
     try:
-        fd, lock_state = _try_lock()
-        if fd is not None:
-            with _time_limit(SIDE_STEP_SECONDS):
+        try:
+            fd, lock_state = _try_lock()
+            if fd is not None:
                 backup = _backup_live(Path(os.path.realpath(output_file)))
-    except BaseException as e:  # noqa: BLE001
-        if not isinstance(e, (Exception, _SideStepTimeout)):
-            raise
-        _warn(f"发布前附加步骤出错（{type(e).__name__}: {e}），照常发布")
-    try:
+        except Exception as e:  # noqa: BLE001
+            _warn(f"发布前附加步骤出错（{type(e).__name__}: {e}），照常发布")
         gz = publish_html(output_file, html_content)
         try:
-            with _time_limit(SIDE_STEP_SECONDS):
-                now = datetime.now(timezone.utc)
-                _record({"ts_utc": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                         "ts_bjt": now.astimezone(BJT).strftime("%Y-%m-%d %H:%M BJT"),
-                         "page": Path(output_file).name,
-                         "html_sha256": hashlib.sha256(html_content.encode("utf-8")).hexdigest(),
-                         "backup_dir": backup, "lock": lock_state, "pid": os.getpid()})
-        except BaseException as e:  # noqa: BLE001
-            if not isinstance(e, (Exception, _SideStepTimeout)):
-                raise
+            now = datetime.now(timezone.utc)
+            _record({"ts_utc": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                     "ts_bjt": now.astimezone(BJT).strftime("%Y-%m-%d %H:%M BJT"),
+                     "page": Path(output_file).name,
+                     "html_sha256": hashlib.sha256(html_content.encode("utf-8")).hexdigest(),
+                     "backup_dir": backup, "lock": lock_state, "pid": os.getpid()})
+        except Exception as e:  # noqa: BLE001
             _warn(f"发布记录写入失败（{type(e).__name__}: {e}）")
         return gz
     finally:
-        if fd is not None:
-            try:
-                os.close(fd)
-            except Exception:  # noqa: BLE001
-                pass
+        _close_quietly(fd)
 
 
 # publish.py exit code when the dashboard was written but the docs-site sync

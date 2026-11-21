@@ -68,13 +68,12 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 # site-publish 第 3 期：GMIA 发布锁/备份/记录的状态根。在任何测试模块导入 publish 之前设好环境变量，
 # 让本进程与子进程（profile-refresh、pipeline 的 shell 测试）都落到临时目录，绝不碰 ~/.local/state/gmia-publish。
 import tempfile as _tempfile  # noqa: E402
-if not os.environ.get("GMIA_PUBLISH_STATE_ROOT"):
-    os.environ["GMIA_PUBLISH_STATE_ROOT"] = _tempfile.mkdtemp(prefix="gmia-publish-state-test-")
-    import atexit as _atexit
-    import shutil as _shutil
-    _atexit.register(_shutil.rmtree, os.environ["GMIA_PUBLISH_STATE_ROOT"], True)
-if "/.local/state/gmia-publish" in os.environ["GMIA_PUBLISH_STATE_ROOT"]:
-    raise RuntimeError("测试的 GMIA_PUBLISH_STATE_ROOT 指向生产目录，拒绝运行")
+import atexit as _atexit  # noqa: E402
+import shutil as _shutil  # noqa: E402
+# 无条件新建：不沿用外面传进来的值（可能是指向生产的别名）。
+GMIA_TEST_STATE_ROOT = os.path.realpath(_tempfile.mkdtemp(prefix="gmia-publish-state-test-"))
+os.environ["GMIA_PUBLISH_STATE_ROOT"] = GMIA_TEST_STATE_ROOT
+_atexit.register(_shutil.rmtree, GMIA_TEST_STATE_ROOT, True)
 
 PRODUCTION_DIRS = ("logs", "config", "data", "content", "pending_profiles")
 
