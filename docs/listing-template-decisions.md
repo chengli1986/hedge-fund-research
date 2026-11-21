@@ -42,7 +42,7 @@ Shapes with no template type today: `sitemap_plus_page` (2),
 `attestation` (2), `card_list_paginated` (1). Each is one source short of
 being worth building.
 
-## TEMPLATE — card_list (16)
+## TEMPLATE — card_list (17)
 
 | source | note |
 | --- | --- |
@@ -62,6 +62,7 @@ being worth building.
 | fairtree | SSR resource-hub grid of `div.report-card`s, one full-card link + `h3` title; `path_prefix=/resource-hub/` keeps tag/author masks out. No date on the card (dates stay empty). Video/podcast cards (Macro Pulse, Equity Explorer) have no `div.right-content` and are refused by the extractor (title-only) |
 | ariel-investments | SSR `.ar-listing-paged` grid of `a.article` cards (the card is the link), `.ar-article-title` + `.ar-article-date`; `path_prefix=/article/`, `sort=date_desc`. Listing is the `?tags=31` commentary filter |
 | fiera-capital | WordPress /en/insights/ card grid (div.insight-inner, title link + .insight-date), one card per insight, plain SSR; the page carries only a lead, the body is the linked PDF, read by `_fetch_content_fiera_capital` (paced 20s per request: the site 429s after about five requests a minute) |
+| doubleline | SSR WordPress /markets-insights/ grid of `div.insight-item` cards (`.item-title h4` + `.item-date span`), one card per post; `path_prefix=/markets-insights/`, `sort=date_desc`. Weekly Market Update pages carry only a ~250-char lead and the extractor refuses them (title-only). Template-only (auto-promoted 2026-11-22, no hand-written function) |
 
 ## TEMPLATE — rss_feed (9)
 

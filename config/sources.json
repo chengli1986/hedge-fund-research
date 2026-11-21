@@ -1288,6 +1288,32 @@
         "sort": "date_desc"
       },
       "listing_template_active": true
+    },
+    {
+      "id": "doubleline",
+      "strategy_tags": [
+        "fixed_income",
+        "macro"
+      ],
+      "name": "DoubleLine Capital",
+      "short_name": "DoubleLine",
+      "url": "https://doubleline.com/markets-insights/",
+      "method": "ssr",
+      "frequency": "weekly",
+      "description": "Bond-focused asset manager founded in 2009 by Jeffrey Gundlach (~$94B AUM as of 30 June 2026), headquartered in Tampa. Known for mortgage-backed securities and active fixed income across agency/non-agency MBS, credit and emerging-market debt, plus Shiller CAPE-based equity strategies.",
+      "notable_authors": [],
+      "expected_hostname": "doubleline.com",
+      "listing_template": {
+        "type": "card_list",
+        "fetch": "requests",
+        "card": "div.results-listing div.insight-item",
+        "link": "a",
+        "title": ".item-title h4",
+        "date": ".item-date span",
+        "path_prefix": "/markets-insights/",
+        "sort": "date_desc"
+      },
+      "listing_template_active": true
     }
   ]
 }

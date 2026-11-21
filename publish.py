@@ -106,6 +106,7 @@ BADGE_COLORS: dict[str, str] = {
     "fairtree": "#5010ac",                  # Fairtree indigo-violet (grid search over WCAG-AA colors, HLS saturation <=0.85 and lightness >=0.25, with all 49 existing: min RGB dist 61.0 — 61.0 to #5e3a82 Apollo, 61.5 to #3949ab, 62.2 to #6014e8; WCAG AA 10.4:1 on white)
     "ariel-investments": "#c04888",         # Ariel raspberry-rose (same grid search, HLS saturation <=0.85 and lightness >=0.25, with all 50 existing: min RGB dist 57.0 — 57.0 to #a31fa3 Loomis orchid, 57.8 to #b85450 Ares coral, 65.8 to #c2185b Research Affiliates; WCAG AA 4.64:1 on white)
     "fiera-capital": "#9034e0",             # Fiera violet (same grid search, HLS saturation <=0.85 and lightness >=0.25, with all 51 existing: min RGB dist 56.1 — 56.1 to #9b6be0 GMO violet, 56.1 to #c018e8 Fulcrum, 57.2 to #7a4cb1 JPMAM purple; WCAG AA 5.59:1 on white)
+    "doubleline": "#508070",                # DoubleLine sage/grey-green (same grid search, HLS saturation <=0.85 and lightness >=0.25, with all 52 existing: min RGB dist 52.9 — 52.9 to #2d6a4f Robeco, 56.0 to #4a6fa5 GSAM, 58.8 to #887078 Madison; WCAG AA 4.5:1 on white)
 }
 
 INITIAL_VISIBLE = 20
@@ -483,6 +484,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "总部位于蒙特利尔的独立资产管理公司，2003 年由 Jean-Guy Desjardins 创立，管理资产约 C$151B（截至 2026-09-30）。业务横跨公开市场（加拿大及全球股票、固定收益、多资产）与私募市场（房地产、基础设施、农业、私募信贷），服务机构、中介与私人财富客户。",
         "notable_en": "Its Global Asset Allocation team publishes a monthly market update and a quarterly Investment Outlook & Portfolio Strategy; the private-markets teams publish research on Canadian real estate, mid-market infrastructure debt and forestry, often as full papers behind a short web lead.",
         "notable_zh": "全球资产配置团队每月发布市场更新、每季度发布《投资展望与组合策略》；私募市场团队发表加拿大房地产、中型基础设施债与林业方面的研究，多为网页导语加完整 PDF 报告。",
+    },
+    "doubleline": {
+        "founded": "2009", "aum": "~$94B", "hq": "Tampa, USA",
+        "type_en": "Asset Manager (Fixed Income Specialist)", "type_zh": "资产管理（固定收益专长）",
+        "desc_zh": "2009 年 12 月由 Jeffrey Gundlach 创立的债券型资产管理公司，总部位于佛罗里达州坦帕，管理资产约 $94B（截至 2026-06-30）。以抵押贷款支持证券（机构与非机构 MBS）起家，覆盖主动固定收益、信用、新兴市场债，并有基于 Shiller CAPE 的股票策略。",
+        "notable_en": "Founder Jeffrey Gundlach, dubbed the 'Bond King', is known for his macro webcasts; the firm publishes the weekly 'Between the Lines' macro blog and the 'DLine Minutes' market-recap podcast.",
+        "notable_zh": "创始人 Jeffrey Gundlach 被称为“新债王”，以宏观网络直播著称；公司每周发布宏观博客《Between the Lines》和市场回顾播客《DLine Minutes》。",
     },
 }
 

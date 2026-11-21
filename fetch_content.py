@@ -2927,6 +2927,47 @@ def _fetch_content_fiera_capital(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+def _fetch_content_doubleline(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch DoubleLine Capital insight content via requests (SSR WordPress).
+
+    The listing is doubleline.com/markets-insights/ (a card_list template).
+    The body sits in `div.insight-body section.post-content` (3,375 chars of
+    paragraphs on "An Economy That Keeps Beating Expectations", measured
+    2026-11-21); the page's other <p> blocks are the site search box and the
+    header. The "Weekly Market Update" pages carry only a ~250-char lead
+    there, so they fall under the 500-char floor and stay title-only; the
+    "DLine Minutes" podcast and TV-clip pages carry a 1.2-1.4k-char written
+    recap of the discussion, which is stored.
+    """
+    url = article["url"]
+    log.info("  DoubleLine: fetching article page %s", url)
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  DoubleLine: fetch failed: %s", e)
+        return None
+
+    soup = BeautifulSoup(resp.text, "html.parser")
+    body = soup.select_one("div.insight-body section.post-content") or soup.select_one(
+        "section.post-content"
+    )
+    if body is None:
+        log.warning("  DoubleLine: no section.post-content on page: %s", url)
+        return None
+    for tag in body.select("script, style, aside, nav"):
+        tag.decompose()
+    text = _normalize_html(str(body), "p, li, h2, h3, h4")
+    if not _check_min_content_length(text, 500):
+        log.warning("  DoubleLine: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  DoubleLine: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -2980,6 +3021,7 @@ CONTENT_FETCHERS = {
     "fairtree": _fetch_content_fairtree,
     "ariel-investments": _fetch_content_ariel_investments,
     "fiera-capital": _fetch_content_fiera_capital,
+    "doubleline": _fetch_content_doubleline,
 }
 
 
