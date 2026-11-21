@@ -37,6 +37,24 @@ def _records(state):
     return [json.loads(l) for l in p.read_text().splitlines()] if p.exists() else []
 
 
+
+class _Hung(Exception):
+    pass
+
+
+@pytest.fixture
+def bounded():
+    """用例内自带上限：超时直接以 _Hung 失败，而不是挂住整个测试进程。"""
+    import signal
+
+    def _raise(signum, frame):
+        raise _Hung("调用挂住超过上限")
+    old = signal.signal(signal.SIGALRM, _raise)
+    signal.alarm(5)
+    yield
+    signal.alarm(0)
+    signal.signal(signal.SIGALRM, old)
+
 def test_state_root_is_redirected_in_tests():
     """conftest 必须把状态根重定向走（本进程与子进程），测试绝不碰 ~/.local/state/gmia-publish。"""
     assert ".local/state/gmia-publish" not in str(publish.GMIA_STATE_ROOT)
@@ -246,7 +264,7 @@ def test_exists_raising_in_backup_does_not_block(site, monkeypatch):
     assert page.read_text() == "<html>NEW</html>"
 
 
-def test_records_fifo_does_not_hang(site):
+def test_records_fifo_does_not_hang(bounded, site):
     root, state = site
     state.mkdir(parents=True)
     os.mkfifo(state / "records.jsonl")
@@ -257,7 +275,7 @@ def test_records_fifo_does_not_hang(site):
     assert (root / "hedge-fund-research.html").read_text() == "<html>F</html>"
 
 
-def test_lock_fifo_does_not_hang(site):
+def test_lock_fifo_does_not_hang(bounded, site):
     root, state = site
     state.mkdir(parents=True)
     os.mkfifo(state / "lock")
@@ -323,7 +341,7 @@ def test_record_is_one_full_line_each(site):
     assert len(lines) == 5 and all(json.loads(l)["page"] == "hedge-fund-research.html" for l in lines)
 
 
-def test_backup_source_swapped_to_fifo_does_not_hang(site, monkeypatch):
+def test_backup_source_swapped_to_fifo_does_not_hang(bounded, site, monkeypatch):
     """lstat 判完是普通文件后源被换成 FIFO：非阻塞打开 + fstat 拒掉，不卡，照常发布。"""
     import time
     root, state = site
@@ -332,7 +350,7 @@ def test_backup_source_swapped_to_fifo_does_not_hang(site, monkeypatch):
     fifo = root / "swapped.fifo"
     os.mkfifo(fifo)
     real = publish._copy_regular
-    monkeypatch.setattr(publish, "_copy_regular", lambda src, dst: real(fifo, dst))
+    monkeypatch.setattr(publish, "_copy_regular", lambda src, dst, budget: real(fifo, dst, budget))
     t0 = time.monotonic()
     publish.publish_live(page, "<html>NEW</html>")
     assert time.monotonic() - t0 < 3
@@ -360,3 +378,73 @@ def test_record_after_partial_line_is_still_parseable(site):
     publish.publish_live(root / "hedge-fund-research.html", "<html>P</html>")
     last = (state / "records.jsonl").read_text().splitlines()[-1]
     assert json.loads(last)["page"] == "hedge-fund-research.html"
+
+
+def test_record_lock_busy_skips_record_but_publishes(site, capsys):
+    root, state = site
+    state.mkdir(parents=True)
+    with open(state / "records.lock", "a") as f:
+        fcntl.flock(f, fcntl.LOCK_EX)
+        publish.publish_live(root / "hedge-fund-research.html", "<html>R</html>")
+    assert (root / "hedge-fund-research.html").read_text() == "<html>R</html>"
+    assert not (state / "records.jsonl").exists()
+    assert "记录锁被占用" in capsys.readouterr().err
+
+
+def test_records_are_pure_ascii_and_survive_truncated_utf8(site):
+    root, state = site
+    state.mkdir(parents=True)
+    (state / "records.jsonl").write_bytes('{"page": "研'.encode("utf-8")[:-1])   # 截在多字节字符中间
+    publish.publish_live(root / "hedge-fund-research.html", "<html>U</html>")
+    raw = (state / "records.jsonl").read_bytes()
+    last = raw.split(b"\n")[-2]
+    assert last.isascii() and json.loads(last)["page"] == "hedge-fund-research.html"
+
+
+def test_backup_stops_when_source_grows_past_budget(site, monkeypatch):
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    publish.publish_html(page, "<html>OLD</html>")
+    monkeypatch.setattr(publish, "BACKUP_MAX_BYTES", 150)         # 预检时正文+.gz 约 93 字节，能过；加 200 后超
+    real = publish._copy_regular
+    calls = []
+    def grow(src, dst, budget):
+        calls.append(src)
+        with open(src, "a") as f:
+            f.write("x" * 200)                                     # 打开前被换大
+        return real(src, dst, budget)
+    monkeypatch.setattr(publish, "_copy_regular", grow)
+    publish.publish_live(page, "<html>NEW</html>")
+    assert page.read_text() == "<html>NEW</html>"
+    assert calls, "确实走到了复制"
+    assert _records(state)[-1]["backup_dir"] is None
+    assert not list((state / "backup").iterdir()), "残件已删"
+
+
+def test_backup_stops_when_source_grows_during_copy(site, monkeypatch):
+    """打开时 fstat 显示很小、实际读到的更多（复制中还在长）：复制循环里的上限拦住，残件删掉。"""
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    publish.publish_html(page, "<html>OLD</html>" + "y" * 400)
+    monkeypatch.setattr(publish, "BACKUP_MAX_BYTES", 10_000)
+    real_fstat = os.fstat
+    def small(fd):
+        st = real_fstat(fd)
+        if st.st_size < 300:                                     # 只伪装那个大正文
+            return st
+        return os.stat_result((st.st_mode, st.st_ino, st.st_dev, st.st_nlink, st.st_uid, st.st_gid, 1,
+                               st.st_atime, st.st_mtime, st.st_ctime),
+                              {"st_atime_ns": st.st_atime_ns, "st_mtime_ns": st.st_mtime_ns,
+                               "st_ctime_ns": st.st_ctime_ns})
+    real = publish._copy_regular
+    calls = []
+    def tight(src, dst, budget):
+        calls.append(src)
+        return real(src, dst, 100)                               # 余额 100，但正文 >400 字节
+    monkeypatch.setattr(publish.os, "fstat", small)
+    monkeypatch.setattr(publish, "_copy_regular", tight)
+    publish.publish_live(page, "<html>NEW</html>")
+    monkeypatch.setattr(publish.os, "fstat", real_fstat)
+    assert calls and page.read_text() == "<html>NEW</html>"
+    assert _records(state)[-1]["backup_dir"] is None
+    assert not list((state / "backup").iterdir())

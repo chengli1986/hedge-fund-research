@@ -2236,23 +2236,31 @@ def _try_lock() -> tuple[int | None, str]:
         _close_quietly(fd)
 
 
-def _copy_regular(src: Path, dst: Path) -> None:
-    """从「非阻塞打开、fstat 确认是普通文件」的同一个 fd 复制（源在检查后被换成 FIFO 也不会卡）；保留 mtime。"""
+def _copy_regular(src: Path, dst: Path, budget: int) -> int:
+    """从「非阻塞打开、fstat 确认是普通文件」的同一个 fd 复制（源在检查后被换成 FIFO 也不会卡）；保留 mtime。
+    实际复制量超过 budget 字节（源被换大或还在长）就报错，由调用方删残件。返回复制的字节数。"""
     sfd = _open_regular(src, os.O_RDONLY)
+    copied = 0
     try:
         st = os.fstat(sfd)
+        if st.st_size > budget:
+            raise OSError(f"{src} 实际大小 {st.st_size} 超过备份余额 {budget}")
         dfd = _open_regular(dst, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
         try:
             while True:
                 chunk = os.read(sfd, 1 << 20)
                 if not chunk:
                     break
+                copied += len(chunk)
+                if copied > budget:
+                    raise OSError(f"{src} 复制中超过备份余额 {budget}")
                 view = memoryview(chunk)
                 while view:
                     view = view[os.write(dfd, view):]
         finally:
             os.close(dfd)
         os.utime(dst, ns=(st.st_atime_ns, st.st_mtime_ns))
+        return copied
     finally:
         os.close(sfd)
 
@@ -2295,9 +2303,9 @@ def _backup_live(page: Path) -> str | None:
         stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
         bdir = broot / f"{stamp}-{os.getpid()}-{page.name}"
         bdir.mkdir()
-        _copy_regular(page, bdir / page.name)
+        left = BACKUP_MAX_BYTES - _copy_regular(page, bdir / page.name, BACKUP_MAX_BYTES)
         if gz_ok:
-            _copy_regular(gz, bdir / gz.name)
+            _copy_regular(gz, bdir / gz.name, left)
         done, bdir = str(bdir), None
         return done
     except Exception as e:  # noqa: BLE001
@@ -2309,13 +2317,28 @@ def _backup_live(page: Path) -> str | None:
 
 
 def _record(rec: dict) -> None:
-    """追加一行发布记录（一次 write；写不全只告警）。不截短。"""
+    """追加一行发布记录（纯 ASCII；一次 write；写不全只告警）。不截短。
+    所有写入方先抢同一把非阻塞记录锁，抢不到就告警并跳过这一行（不与别人交错）。"""
+    import fcntl
     root = _state_root()
     if root is None:
         return
-    line = (json.dumps(rec, ensure_ascii=False) + "\n").encode("utf-8")
+    line = (json.dumps(rec, ensure_ascii=True) + "\n").encode("ascii")
     root.mkdir(parents=True, exist_ok=True)
-    fd = _open_regular(root / "records.jsonl", os.O_RDWR | os.O_APPEND | os.O_CREAT)
+    lk = _open_regular(root / "records.lock", os.O_RDWR | os.O_CREAT)
+    try:
+        try:
+            fcntl.flock(lk, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            _warn("发布记录锁被占用，跳过本次记录")
+            return
+        _append_record(root / "records.jsonl", line)
+    finally:
+        os.close(lk)
+
+
+def _append_record(path: Path, line: bytes) -> None:
+    fd = _open_regular(path, os.O_RDWR | os.O_APPEND | os.O_CREAT)
     try:
         size = os.fstat(fd).st_size
         if size and os.pread(fd, 1, size - 1) != b"\n":
