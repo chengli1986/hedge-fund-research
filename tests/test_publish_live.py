@@ -506,6 +506,20 @@ def test_gz_check_is_bounded_on_a_bomb(bounded, site, monkeypatch):
     publish.publish_html(page, "<html>OLD</html>")
     (root / "hedge-fund-research.html.gz").write_bytes(_gz.compress(b"\0" * (20 * 1024 * 1024)))
     monkeypatch.setattr(publish.gzip, "decompress", lambda *a, **k: (_ for _ in ()).throw(_Hung("不许整块解压")))
+    real_open = _gz.open
+    class Watch:
+        def __init__(self, f): self.f = f
+        def __enter__(self): self.f.__enter__(); return self
+        def __exit__(self, *a): return self.f.__exit__(*a)
+        def __getattr__(self, name): return getattr(self.f, name)
+        def read(self, size=-1):
+            if size is None or size < 0 or size > (1 << 20):
+                raise _Hung(f"无上限或超过 1 MiB 的读取：{size}")
+            return self.f.read(size)
+    def watched(path, mode="rb", *a, **k):
+        f = real_open(path, mode, *a, **k)
+        return Watch(f) if "r" in mode else f            # 只监测读（publish_html 写 .gz 不受影响）
+    monkeypatch.setattr(publish.gzip, "open", watched)
     publish.publish_live(page, "<html>NEW</html>")
     assert page.read_text() == "<html>NEW</html>"
     assert _records(state)[-1]["backup_dir"] is None
