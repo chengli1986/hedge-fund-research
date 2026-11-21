@@ -1314,6 +1314,27 @@
         "sort": "date_desc"
       },
       "listing_template_active": true
+    },
+    {
+      "id": "crescat-capital",
+      "strategy_tags": [
+        "macro",
+        "equity"
+      ],
+      "name": "Crescat Capital",
+      "short_name": "Crescat",
+      "url": "https://www.crescat.net/category/quarterly-letter/crescat-updates/research-letter-performance-update-crescat-updates/feed/",
+      "method": "rss",
+      "frequency": "monthly",
+      "description": "Denver-based global macro hedge fund manager founded by Kevin C. Smith (track record from 1999; ~$550M AUM). Concentrated, contrarian macro calls — long precious-metals miners, short overvalued US equities — set out in long, chart-heavy research letters.",
+      "notable_authors": [],
+      "expected_hostname": "crescat.net",
+      "listing_template": {
+        "type": "rss_feed",
+        "feed": "url",
+        "sort": "date_desc"
+      },
+      "listing_template_active": true
     }
   ]
 }

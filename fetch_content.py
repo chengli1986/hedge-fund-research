@@ -2968,6 +2968,57 @@ def _fetch_content_doubleline(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+# First paragraph of the contact block / disclosure that ends every Crescat letter.
+_CRESCAT_TAIL_MARKS = (
+    "For more information, including how to invest",
+    "Important Disclosures",
+)
+
+
+def _fetch_content_crescat_capital(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Crescat Capital research letters via requests (SSR WordPress).
+
+    The listing is the research-letter category RSS feed (an rss_feed
+    template). The letter is `article .entry-content` (17-23k chars,
+    measured 2026-11-21); every letter ends with the same contact block
+    ("For more information, including how to invest, please contact:"),
+    then "Important Disclosures", performance notes and benchmark
+    definitions (~4.5k chars). Everything from the first of those
+    paragraphs on is cut.
+    """
+    url = article["url"]
+    log.info("  Crescat: fetching article page %s", url)
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Crescat: fetch failed: %s", e)
+        return None
+
+    soup = BeautifulSoup(resp.text, "html.parser")
+    body = soup.select_one("article .entry-content") or soup.select_one(".entry-content")
+    if body is None:
+        log.warning("  Crescat: no .entry-content on page: %s", url)
+        return None
+    for tag in body.select("script, style, aside, nav"):
+        tag.decompose()
+    children = body.find_all(recursive=False)
+    for i, child in enumerate(children):
+        if child.get_text(" ", strip=True).startswith(_CRESCAT_TAIL_MARKS):
+            for rest in children[i:]:
+                rest.decompose()
+            break
+    text = _normalize_html(str(body), "p, li, h2, h3, h4")
+    if not _check_min_content_length(text, 500):
+        log.warning("  Crescat: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Crescat: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -3022,6 +3073,7 @@ CONTENT_FETCHERS = {
     "ariel-investments": _fetch_content_ariel_investments,
     "fiera-capital": _fetch_content_fiera_capital,
     "doubleline": _fetch_content_doubleline,
+    "crescat-capital": _fetch_content_crescat_capital,
 }
 
 

@@ -64,7 +64,7 @@ being worth building.
 | fiera-capital | WordPress /en/insights/ card grid (div.insight-inner, title link + .insight-date), one card per insight, plain SSR; the page carries only a lead, the body is the linked PDF, read by `_fetch_content_fiera_capital` (paced 20s per request: the site 429s after about five requests a minute) |
 | doubleline | SSR WordPress /markets-insights/ grid of `div.insight-item` cards (`.item-title h4` + `.item-date span`), one card per post; `path_prefix=/markets-insights/`, `sort=date_desc`. Weekly Market Update pages carry only a ~250-char lead and the extractor refuses them (title-only). Template-only (auto-promoted 2026-11-22, no hand-written function) |
 
-## TEMPLATE — rss_feed (9)
+## TEMPLATE — rss_feed (10)
 
 | source | note |
 | --- | --- |
@@ -77,6 +77,7 @@ being worth building.
 | bnp-paribas-am | WordPress feed of the en-au insights site (Front of mind / Portfolio perspectives / Forward thinking); every item is an article, dated pubDate, no filter needed. Template-only (auto-promoted 2026-10-31, no hand-written function). 2026-11-17: the site dropped `/financial-advisors/` from every path (old feed 404, old article URLs 301 to the new ones); feed moved to `/en-au/feed/` and the 20 stored rows were re-keyed to the new URLs |
 | capital-fund-management | WordPress site feed `/feed/`, every item an insight post dated pubDate, no filter needed; podcast announcements are listed but the content fetcher refuses them (141 chars), so they stay title-only. Template-only (auto-promoted 2026-11-02, no hand-written function) |
 | madison-investments | WordPress site feed `/feed/`, every item an Insights post dated pubDate (podcast episodes carry a full transcript in the page body), no filter needed; `sort`. Template-only (auto-promoted 2026-11-06, no hand-written function) |
+| crescat-capital | WordPress category feed of the research letters (`/category/.../research-letter-performance-update-crescat-updates/feed/`), every item a letter dated pubDate, no filter needed; `sort`. The extractor cuts the contact block and disclosures that end every letter. Template-only (auto-promoted 2026-11-22, no hand-written function) |
 
 ## TEMPLATE — api_json (3)
 
