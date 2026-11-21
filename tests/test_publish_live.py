@@ -1,0 +1,537 @@
+"""publish_live：GMIA 写线上时外加自己的锁、写前备份、发布记录（site-publish 第 3 期 V0.4）。
+
+publish_html 本身一行不改；这里加的三样都是「尽力而为」——任何一样出错只告警，绝不挡住发布。
+测试只写 tmp_path（站点根用 HEDGE_FUND_RESEARCH_SITE_ROOT 指过去，状态根由 conftest 重定向到 sink）。
+"""
+import fcntl
+import gzip
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+
+REPO = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO))
+import publish  # noqa: E402
+
+
+@pytest.fixture
+def site(tmp_path, monkeypatch):
+    root = tmp_path / "www"
+    root.mkdir()
+    state = tmp_path / "state"
+    monkeypatch.setattr(publish, "SITE_ROOT", root)
+    monkeypatch.setattr(publish, "GMIA_STATE_ROOT", state)
+    # 正常用例固定「余量充足」，不依赖测试机临时盘的真实剩余（GM-05）
+    import collections
+    VFS = collections.namedtuple("VFS", "f_bavail f_frsize f_favail")
+    monkeypatch.setattr(publish.os, "statvfs", lambda p: VFS(10 ** 9, 4096, 10 ** 7))
+    return root, state
+
+
+def _records(state):
+    p = state / "records.jsonl"
+    return [json.loads(l) for l in p.read_text().splitlines()] if p.exists() else []
+
+
+
+class _Hung(BaseException):          # 不是 Exception：发布代码的降级处理吞不掉它
+    pass
+
+
+@pytest.fixture
+def bounded():
+    """用例内自带上限：超时直接以 _Hung 失败，而不是挂住整个测试进程。"""
+    import signal
+
+    def _raise(signum, frame):
+        raise _Hung("调用挂住超过上限")
+    old = signal.signal(signal.SIGALRM, _raise)
+    signal.alarm(5)
+    yield
+    signal.alarm(0)
+    signal.signal(signal.SIGALRM, old)
+
+def test_state_root_is_redirected_in_tests():
+    """conftest 必须把状态根重定向走（本进程与子进程），测试绝不碰 ~/.local/state/gmia-publish。"""
+    assert ".local/state/gmia-publish" not in str(publish.GMIA_STATE_ROOT)
+    assert ".local/state/gmia-publish" not in os.environ["GMIA_PUBLISH_STATE_ROOT"]
+    import conftest
+    r = subprocess.run([sys.executable, "-c", "import os, publish; print(os.path.realpath(publish.GMIA_STATE_ROOT))"],
+                       cwd=REPO, capture_output=True, text=True)
+    assert r.returncode == 0
+    assert r.stdout.strip() == conftest.GMIA_TEST_STATE_ROOT, "子进程的状态根（按真实路径）就是测试临时根"
+
+
+def test_preview_path_goes_straight_to_publish_html(site, tmp_path, monkeypatch):
+    root, state = site
+    called = []
+    monkeypatch.setattr(publish, "publish_html", lambda p, h: called.append(p) or p.with_suffix(".html.gz"))
+    out = tmp_path / "preview" / "hedge-fund-research.html"
+    publish.publish_live(out, "<html>x</html>")
+    assert called == [out]
+    assert not state.exists(), "预览不拿锁、不备份、不记录"
+
+
+def test_live_publish_backs_up_records_and_publishes(site):
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    publish.publish_html(page, "<html>OLD</html>")
+    publish.publish_live(page, "<html>NEW</html>")
+    assert page.read_text() == "<html>NEW</html>"
+    assert gzip.open(str(page) + ".gz", "rt").read() == "<html>NEW</html>"
+    rec = _records(state)[-1]
+    assert rec["page"] == "hedge-fund-research.html" and rec["lock"] == "held"
+    b = Path(rec["backup_dir"])
+    assert (b / "hedge-fund-research.html").read_text() == "<html>OLD</html>"
+    assert gzip.open(b / "hedge-fund-research.html.gz", "rt").read() == "<html>OLD</html>"
+
+
+def test_first_ever_publish_without_existing_page(site):
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    publish.publish_live(page, "<html>FIRST</html>")
+    assert page.read_text() == "<html>FIRST</html>"
+    assert _records(state)[-1]["backup_dir"] is None
+
+
+def test_keeps_only_three_backups_per_page(site):
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    for i in range(6):
+        publish.publish_live(page, f"<html>v{i}</html>")
+    dirs = sorted((state / "backup").iterdir())
+    assert len([d for d in dirs if (d / "hedge-fund-research.html").exists()]) == 3
+
+
+def test_lock_busy_still_publishes_and_warns(bounded, site, capsys):
+    root, state = site
+    state.mkdir(parents=True)
+    page = root / "hedge-fund-research.html"
+    with open(state / "lock", "a") as f:
+        fcntl.flock(f, fcntl.LOCK_EX)
+        publish.publish_live(page, "<html>X</html>")
+    assert page.read_text() == "<html>X</html>", "锁被占也要发（不劣于今天的无锁）"
+    assert "WARN" in capsys.readouterr().err
+    rec = _records(state)[-1]
+    assert rec["lock"] == "busy" and rec["backup_dir"] is None, "没拿到锁就不备份"
+
+
+def test_unwritable_state_root_still_publishes(site, monkeypatch, capsys):
+    root, state = site
+    state.parent.mkdir(exist_ok=True)
+    state.write_text("not a dir")             # 状态根是个文件：锁、备份、记录全失败
+    page = root / "hedge-fund-research.html"
+    publish.publish_live(page, "<html>Y</html>")
+    assert page.read_text() == "<html>Y</html>"
+    assert "WARN" in capsys.readouterr().err
+
+
+def test_backup_failure_does_not_block(site, monkeypatch, capsys):
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    publish.publish_html(page, "<html>OLD</html>")
+    called = []
+    monkeypatch.setattr(publish, "_copy_regular", lambda *a, **k: (called.append(1), (_ for _ in ()).throw(OSError("full")))[1])
+    publish.publish_live(page, "<html>NEW</html>")
+    assert called, "复制确实被调用（不是因为磁盘余量而跳过）"
+    assert page.read_text() == "<html>NEW</html>"
+    assert "备份失败" in capsys.readouterr().err
+    assert not [d for d in (state / "backup").iterdir()], "残件已删"
+
+
+def test_publish_html_failure_propagates_and_releases_lock(bounded, site, monkeypatch):
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    monkeypatch.setattr(publish, "publish_html", lambda p, h: (_ for _ in ()).throw(OSError("disk")))
+    with pytest.raises(OSError):
+        publish.publish_live(page, "<html>Z</html>")
+    with open(state / "lock", "a") as f:
+        fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)   # 锁已释放，拿得到
+
+
+def test_symlinked_output_into_site_root_is_live(site, tmp_path):
+    root, state = site
+    alias = tmp_path / "alias"
+    alias.symlink_to(root)
+    publish.publish_live(alias / "hedge-fund-research.html", "<html>A</html>")
+    assert _records(state), "经链接指到站点根也算线上"
+
+
+def test_main_uses_publish_live_for_live_output(site, monkeypatch):
+    root, state = site
+    monkeypatch.setattr(publish, "_precheck", lambda html, articles: [])
+    monkeypatch.setattr(publish, "load_articles", lambda: [])
+    monkeypatch.setattr(publish, "generate_html", lambda articles: "<html>M</html>")
+    monkeypatch.setattr(publish, "sync_docs_site", lambda repo, html: True)
+    monkeypatch.setattr(sys, "argv", ["publish.py", "--output", str(root / "hedge-fund-research.html")])
+    assert publish.main() == 0
+    assert _records(state)[-1]["page"] == "hedge-fund-research.html"
+
+
+def test_health_page_uses_publish_live(site, monkeypatch):
+    root, state = site
+    sys.path.insert(0, str(REPO / "scripts"))
+    import publish_health
+    monkeypatch.setattr(publish_health, "DEPLOY_DIR", root)
+    monkeypatch.setattr(publish_health, "load_inputs", lambda now: {})
+    monkeypatch.setattr(publish_health, "build_health", lambda **k: {"stale": []})
+    monkeypatch.setattr(publish_health, "render_html", lambda h: "<html>H</html>")
+    monkeypatch.setattr(publish_health, "exit_code", lambda h: 0)
+    monkeypatch.setattr(publish, "sync_docs_site", lambda repo, html, relpath=None: True)
+    assert publish_health.main([]) == 0
+    assert _records(state)[-1]["page"] == publish_health.OUTPUT_NAME
+
+
+
+def test_no_wait_on_busy_lock(bounded, site):
+    """不等锁：被占时立刻返回发布，耗时远小于 1 秒。"""
+    import time
+    root, state = site
+    state.mkdir(parents=True)
+    with open(state / "lock", "a") as f:
+        fcntl.flock(f, fcntl.LOCK_EX)
+        t0 = time.monotonic()
+        publish.publish_live(root / "hedge-fund-research.html", "<html>Q</html>")
+        assert time.monotonic() - t0 < 1.0
+
+
+def test_gz_pointing_elsewhere_falls_back_to_plain_publish(site, tmp_path, monkeypatch):
+    """正文在站点根、.gz 是指向别处的链接：不算线上配对，不加锁不备份，直接 publish_html（同以前）。"""
+    root, state = site
+    other = tmp_path / "elsewhere.gz"
+    other.write_bytes(b"x")
+    (root / "hedge-fund-research.html.gz").symlink_to(other)
+    called = []
+    monkeypatch.setattr(publish, "publish_html", lambda p, h: called.append(p) or p)
+    publish.publish_live(root / "hedge-fund-research.html", "<html>G</html>")
+    assert called and not state.exists()
+
+
+def test_backup_skipped_when_disk_low(site, monkeypatch, capsys):
+    import collections
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    publish.publish_html(page, "<html>OLD</html>")
+    VFS = collections.namedtuple("VFS", "f_bavail f_frsize f_favail")
+    monkeypatch.setattr(publish.os, "statvfs", lambda p: VFS(1, 4096, 10 ** 7))
+    publish.publish_live(page, "<html>NEW</html>")
+    assert page.read_text() == "<html>NEW</html>"
+    assert _records(state)[-1]["backup_dir"] is None
+    assert "磁盘余量" in capsys.readouterr().err
+
+
+def test_exit_codes_unchanged_for_main(site, monkeypatch):
+    """docs-site 同步失败仍返回 3，precheck 失败仍返回 4（publish_live 不改语义）。"""
+    root, state = site
+    monkeypatch.setattr(publish, "load_articles", lambda: [])
+    monkeypatch.setattr(publish, "generate_html", lambda articles: "<html>M</html>")
+    monkeypatch.setattr(sys, "argv", ["publish.py", "--output", str(root / "hedge-fund-research.html")])
+    monkeypatch.setattr(publish, "_precheck", lambda html, articles: [])
+    monkeypatch.setattr(publish, "sync_docs_site", lambda repo, html: False)
+    assert publish.main() == 3
+    monkeypatch.setattr(publish, "_precheck", lambda html, articles: ["x: bad"])
+    assert publish.main() == 4
+
+
+
+# ---------- Codex GM-01～07 ----------
+
+def test_close_failure_after_busy_lock_does_not_block(bounded, site, monkeypatch):
+    root, state = site
+    state.mkdir(parents=True)
+    real_close = os.close
+    with open(state / "lock", "a") as f:
+        fcntl.flock(f, fcntl.LOCK_EX)
+        monkeypatch.setattr(publish.os, "close", lambda fd: (_ for _ in ()).throw(OSError("EIO")))
+        publish.publish_live(root / "hedge-fund-research.html", "<html>C</html>")
+        monkeypatch.setattr(publish.os, "close", real_close)
+    assert (root / "hedge-fund-research.html").read_text() == "<html>C</html>"
+
+
+def test_exists_raising_in_backup_does_not_block(site, monkeypatch):
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    publish.publish_html(page, "<html>OLD</html>")
+    real_lstat = os.lstat
+    monkeypatch.setattr(publish.os, "lstat", lambda p, *a, **k: (_ for _ in ()).throw(OSError(5, "EIO"))
+                        if str(p).endswith("hedge-fund-research.html") else real_lstat(p, *a, **k))
+    publish.publish_live(page, "<html>NEW</html>")
+    monkeypatch.setattr(publish.os, "lstat", real_lstat)
+    assert page.read_text() == "<html>NEW</html>"
+
+
+def test_records_fifo_does_not_hang(bounded, site):
+    root, state = site
+    state.mkdir(parents=True)
+    os.mkfifo(state / "records.jsonl")
+    import time
+    t0 = time.monotonic()
+    publish.publish_live(root / "hedge-fund-research.html", "<html>F</html>")
+    assert time.monotonic() - t0 < 5
+    assert (root / "hedge-fund-research.html").read_text() == "<html>F</html>"
+
+
+def test_lock_fifo_does_not_hang(bounded, site):
+    root, state = site
+    state.mkdir(parents=True)
+    os.mkfifo(state / "lock")
+    publish.publish_live(root / "hedge-fund-research.html", "<html>L</html>")
+    assert (root / "hedge-fund-research.html").read_text() == "<html>L</html>"
+
+
+def test_missing_ubuntu_account_does_not_break_import(monkeypatch):
+    monkeypatch.delenv("GMIA_PUBLISH_STATE_ROOT", raising=False)
+    import pwd
+    monkeypatch.setattr(pwd, "getpwnam", lambda n: (_ for _ in ()).throw(KeyError(n)))
+    assert publish._default_state_root() is None
+
+
+def test_no_state_root_still_publishes(site, monkeypatch):
+    root, state = site
+    monkeypatch.setattr(publish, "GMIA_STATE_ROOT", None)
+    publish.publish_live(root / "hedge-fund-research.html", "<html>N</html>")
+    assert (root / "hedge-fund-research.html").read_text() == "<html>N</html>"
+
+
+def test_inode_shortage_skips_backup(site, monkeypatch):
+    import collections
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    publish.publish_html(page, "<html>OLD</html>")
+    VFS = collections.namedtuple("VFS", "f_bavail f_frsize f_favail")
+    monkeypatch.setattr(publish.os, "statvfs", lambda p: VFS(10 ** 9, 4096, 5))
+    publish.publish_live(page, "<html>NEW</html>")
+    assert _records(state)[-1]["backup_dir"] is None
+
+
+def test_undeletable_old_backup_skips_new_backup(site, monkeypatch):
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    for i in range(4):          # 第一次没有旧页不备份 → 4 次后正好 3 份
+        publish.publish_live(page, f"<html>{i}</html>")
+    assert len(list((state / "backup").iterdir())) == 3
+    monkeypatch.setattr(publish.shutil, "rmtree", lambda *a, **k: None)   # 删不掉
+    publish.publish_live(page, "<html>X</html>")
+    assert _records(state)[-1]["backup_dir"] is None
+    assert len(list((state / "backup").iterdir())) == 3
+
+
+def test_keyboard_interrupt_during_backup_releases_lock(bounded, site, monkeypatch):
+    """中断照常上传，但锁 fd 已释放（下一个发布能立刻拿到锁），残件已删。"""
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    publish.publish_html(page, "<html>OLD</html>")
+    monkeypatch.setattr(publish, "_copy_regular", lambda *a, **k: (_ for _ in ()).throw(KeyboardInterrupt()))
+    with pytest.raises(KeyboardInterrupt):
+        publish.publish_live(page, "<html>NEW</html>")
+    with open(state / "lock", "a") as f:
+        fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)      # 拿得到 = 已释放
+    assert not list((state / "backup").iterdir())
+
+
+def test_record_is_one_full_line_each(site):
+    root, state = site
+    for i in range(5):
+        publish.publish_live(root / "hedge-fund-research.html", f"<html>{i}</html>")
+    lines = (state / "records.jsonl").read_text().splitlines()
+    assert len(lines) == 5 and all(json.loads(l)["page"] == "hedge-fund-research.html" for l in lines)
+
+
+def test_backup_source_swapped_to_fifo_does_not_hang(bounded, site, monkeypatch):
+    """lstat 判完是普通文件后源被换成 FIFO：非阻塞打开 + fstat 拒掉，不卡，照常发布。"""
+    import time
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    publish.publish_html(page, "<html>OLD</html>")
+    fifo = root / "swapped.fifo"
+    os.mkfifo(fifo)
+    real = publish._copy_regular
+    monkeypatch.setattr(publish, "_copy_regular", lambda src, dst, budget: real(fifo, dst, budget))
+    t0 = time.monotonic()
+    publish.publish_live(page, "<html>NEW</html>")
+    assert time.monotonic() - t0 < 3
+    assert page.read_text() == "<html>NEW</html>"
+    assert _records(state)[-1]["backup_dir"] is None
+
+
+def test_backup_copy_keeps_bytes_and_mtime(site):
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    publish.publish_html(page, "<html>OLD</html>")
+    old_m = page.stat().st_mtime_ns
+    publish.publish_live(page, "<html>NEW</html>")
+    b = Path(_records(state)[-1]["backup_dir"])
+    assert (b / page.name).read_text() == "<html>OLD</html>"
+    assert (b / page.name).stat().st_mtime_ns == old_m
+    import gzip as _gz
+    assert _gz.decompress((b / (page.name + ".gz")).read_bytes()) == b"<html>OLD</html>"
+
+
+def test_record_after_partial_line_is_still_parseable(site):
+    root, state = site
+    state.mkdir(parents=True)
+    (state / "records.jsonl").write_bytes(b'{"page": "half')
+    publish.publish_live(root / "hedge-fund-research.html", "<html>P</html>")
+    last = (state / "records.jsonl").read_text().splitlines()[-1]
+    assert json.loads(last)["page"] == "hedge-fund-research.html"
+
+
+def test_record_lock_busy_skips_record_but_publishes(bounded, site, capsys):
+    root, state = site
+    state.mkdir(parents=True)
+    with open(state / "records.lock", "a") as f:
+        fcntl.flock(f, fcntl.LOCK_EX)
+        publish.publish_live(root / "hedge-fund-research.html", "<html>R</html>")
+    assert (root / "hedge-fund-research.html").read_text() == "<html>R</html>"
+    assert not (state / "records.jsonl").exists()
+    assert "记录锁被占用" in capsys.readouterr().err
+
+
+def test_records_are_pure_ascii_and_survive_truncated_utf8(site):
+    root, state = site
+    state.mkdir(parents=True)
+    (state / "records.jsonl").write_bytes('{"page": "研'.encode("utf-8")[:-1])   # 截在多字节字符中间
+    publish.publish_live(root / "hedge-fund-research.html", "<html>U</html>")
+    raw = (state / "records.jsonl").read_bytes()
+    last = raw.split(b"\n")[-2]
+    assert last.isascii() and json.loads(last)["page"] == "hedge-fund-research.html"
+
+
+def test_backup_stops_when_source_grows_past_budget(site, monkeypatch):
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    publish.publish_html(page, "<html>OLD</html>")
+    monkeypatch.setattr(publish, "BACKUP_MAX_BYTES", 150)         # 预检时正文+.gz 约 93 字节，能过；加 200 后超
+    real = publish._copy_regular
+    calls = []
+    def grow(src, dst, budget):
+        calls.append(src)
+        with open(src, "a") as f:
+            f.write("x" * 200)                                     # 打开前被换大
+        return real(src, dst, budget)
+    monkeypatch.setattr(publish, "_copy_regular", grow)
+    publish.publish_live(page, "<html>NEW</html>")
+    assert page.read_text() == "<html>NEW</html>"
+    assert calls, "确实走到了复制"
+    assert _records(state)[-1]["backup_dir"] is None
+    assert not list((state / "backup").iterdir()), "残件已删"
+
+
+def test_backup_stops_when_source_grows_during_copy(site, monkeypatch):
+    """打开时 fstat 显示很小、实际读到的更多（复制中还在长）：复制循环里的上限拦住，残件删掉。"""
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    publish.publish_html(page, "<html>OLD</html>" + "y" * 400)
+    monkeypatch.setattr(publish, "BACKUP_MAX_BYTES", 10_000)
+    real_fstat = os.fstat
+    def small(fd):
+        st = real_fstat(fd)
+        if st.st_size < 300:                                     # 只伪装那个大正文
+            return st
+        return os.stat_result((st.st_mode, st.st_ino, st.st_dev, st.st_nlink, st.st_uid, st.st_gid, 1,
+                               st.st_atime, st.st_mtime, st.st_ctime),
+                              {"st_atime_ns": st.st_atime_ns, "st_mtime_ns": st.st_mtime_ns,
+                               "st_ctime_ns": st.st_ctime_ns})
+    real = publish._copy_regular
+    calls = []
+    def tight(src, dst, budget):
+        calls.append(src)
+        return real(src, dst, 100)                               # 余额 100，但正文 >400 字节
+    monkeypatch.setattr(publish.os, "fstat", small)
+    monkeypatch.setattr(publish, "_copy_regular", tight)
+    publish.publish_live(page, "<html>NEW</html>")
+    monkeypatch.setattr(publish.os, "fstat", real_fstat)
+    assert calls and page.read_text() == "<html>NEW</html>"
+    assert _records(state)[-1]["backup_dir"] is None
+    assert not list((state / "backup").iterdir())
+
+
+def test_new_records_escape_non_ascii(site):
+    """新记录里真有非 ASCII 值：原始行必须是纯 ASCII，解析回来与原值相同。"""
+    root, state = site
+    publish._record({"page": "研报.html", "note": "备份 → ok"})
+    raw = (state / "records.jsonl").read_bytes().splitlines()[-1]
+    assert raw.isascii()
+    assert json.loads(raw) == {"page": "研报.html", "note": "备份 → ok"}
+
+
+def test_gz_uses_only_the_remaining_budget(site, monkeypatch):
+    """正文复制成功后 .gz 变大：.gz 单独不超上限、两者合计超 → 整份备份清掉，发布照常。"""
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    publish.publish_html(page, "<html>OLD</html>" + "z" * 300)
+    gz = root / "hedge-fund-research.html.gz"
+    body_size, gz_size = page.stat().st_size, gz.stat().st_size
+    monkeypatch.setattr(publish, "BACKUP_MAX_BYTES", body_size + gz_size + 50)
+    real = publish._copy_regular
+    def grow_gz(src, dst, budget):
+        if src.name.endswith(".gz"):
+            with open(src, "ab") as f:
+                f.write(b"\0" * 200)               # .gz 单独 < 上限，但正文 + .gz > 上限
+            assert src.stat().st_size < publish.BACKUP_MAX_BYTES
+        return real(src, dst, budget)
+    monkeypatch.setattr(publish, "_copy_regular", grow_gz)
+    publish.publish_live(page, "<html>NEW</html>")
+    assert page.read_text() == "<html>NEW</html>"
+    assert _records(state)[-1]["backup_dir"] is None
+    assert not list((state / "backup").iterdir())
+
+
+def test_backup_from_two_versions_is_discarded(site, monkeypatch):
+    """复制完正文后、复制 .gz 前，另一个（锁忙降级的）发布改写了页面：这份备份不算成功并被清理。"""
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    publish.publish_html(page, "<html>OLD</html>")
+    real = publish._copy_regular
+    def racing(src, dst, budget):
+        if src.name.endswith(".gz"):
+            publish.publish_html(page, "<html>OTHER</html>")
+        return real(src, dst, budget)
+    monkeypatch.setattr(publish, "_copy_regular", racing)
+    publish.publish_live(page, "<html>NEW</html>")
+    assert page.read_text() == "<html>NEW</html>"
+    assert _records(state)[-1]["backup_dir"] is None
+    assert not list((state / "backup").iterdir())
+
+
+def test_gz_check_is_bounded_on_a_bomb(bounded, site, monkeypatch):
+    """线上 .gz 与正文不配套且解压后极大：校验逐块读、超过正文长度即停；不整块解压，备份丢弃，发布照常。"""
+    import gzip as _gz
+    root, state = site
+    page = root / "hedge-fund-research.html"
+    publish.publish_html(page, "<html>OLD</html>")
+    (root / "hedge-fund-research.html.gz").write_bytes(_gz.compress(b"\0" * (20 * 1024 * 1024)))
+    monkeypatch.setattr(publish.gzip, "decompress", lambda *a, **k: (_ for _ in ()).throw(_Hung("不许整块解压")))
+    real_open = _gz.open
+    class Watch:
+        def __init__(self, f): self.f = f
+        def __enter__(self): self.f.__enter__(); return self
+        def __exit__(self, *a): return self.f.__exit__(*a)
+        def __getattr__(self, name): return getattr(self.f, name)
+        def read(self, size=-1):
+            if size is None or size < 0 or size > (1 << 20):
+                raise _Hung(f"无上限或超过 1 MiB 的读取：{size}")
+            return self.f.read(size)
+    def watched(path, mode="rb", *a, **k):
+        f = real_open(path, mode, *a, **k)
+        return Watch(f) if "r" in mode else f            # 只监测读（publish_html 写 .gz 不受影响）
+    monkeypatch.setattr(publish.gzip, "open", watched)
+    publish.publish_live(page, "<html>NEW</html>")
+    assert page.read_text() == "<html>NEW</html>"
+    assert _records(state)[-1]["backup_dir"] is None
+    assert not list((state / "backup").iterdir())
+
+
+def test_gz_matches_unit(tmp_path):
+    import gzip as _gz
+    b = tmp_path / "b"; g = tmp_path / "g"
+    b.write_bytes(b"abc" * 1000); g.write_bytes(_gz.compress(b"abc" * 1000))
+    assert publish._gz_matches(g, b)
+    g.write_bytes(_gz.compress(b"abc" * 1000 + b"x"))
+    assert not publish._gz_matches(g, b)
+    g.write_bytes(_gz.compress(b"abc" * 999))
+    assert not publish._gz_matches(g, b)

@@ -65,6 +65,16 @@ def pytest_configure(config):
 # ---------------------------------------------------------------------------
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+# site-publish 第 3 期：GMIA 发布锁/备份/记录的状态根。在任何测试模块导入 publish 之前设好环境变量，
+# 让本进程与子进程（profile-refresh、pipeline 的 shell 测试）都落到临时目录，绝不碰 ~/.local/state/gmia-publish。
+import tempfile as _tempfile  # noqa: E402
+import atexit as _atexit  # noqa: E402
+import shutil as _shutil  # noqa: E402
+# 无条件新建：不沿用外面传进来的值（可能是指向生产的别名）。
+GMIA_TEST_STATE_ROOT = os.path.realpath(_tempfile.mkdtemp(prefix="gmia-publish-state-test-"))
+os.environ["GMIA_PUBLISH_STATE_ROOT"] = GMIA_TEST_STATE_ROOT
+_atexit.register(_shutil.rmtree, GMIA_TEST_STATE_ROOT, True)
+
 PRODUCTION_DIRS = ("logs", "config", "data", "content", "pending_profiles")
 
 # Filled by the redirect fixture with each module's TRUE path, captured before
@@ -76,7 +86,8 @@ PRODUCTION_PATHS: dict[str, Path] = {}
 _REDIRECTED = (("analyze_articles", "USAGE_LOG_FILE"),
                ("analyze_articles", "TAG_USAGE_LOG_FILE"),
                ("fetch_articles", "INSPECTION_STATE_FILE"),
-               ("fetch_content", "CONTENT_FAILURE_LOG"))
+               ("fetch_content", "CONTENT_FAILURE_LOG"),
+               ("publish", "GMIA_STATE_ROOT"))       # site-publish 第 3 期：GMIA 发布锁/备份/记录
 
 
 @pytest.fixture(scope="session")
@@ -105,7 +116,11 @@ def _redirect_production_writes(_production_sink, monkeypatch):
             mod = importlib.import_module(mod_name)
         except Exception:
             continue
+        if (mod_name, attr) == ("publish", "GMIA_STATE_ROOT") and not hasattr(mod, attr):
+            continue              # 只对这一项放宽：profile-refresh 测试用的假 publish.py 没有它
         real = getattr(mod, attr)
+        if real is None:
+            continue
         PRODUCTION_PATHS[attr] = real
         monkeypatch.setattr(mod, attr, _production_sink / real.name)
 
