@@ -10,6 +10,8 @@ Dark GitHub-style theme matching docs.sinostor.com.cn.
 
 import html
 import gzip
+import hashlib
+import shutil
 import json
 import re
 from collections import Counter, defaultdict
@@ -32,6 +34,13 @@ BASE_DIR = Path(__file__).resolve().parent
 DATA_FILE = BASE_DIR / "data" / "articles.jsonl"
 SOURCES_FILE = BASE_DIR / "config" / "sources.json"
 OUTPUT_FILE = Path("/var/www/overview/hedge-fund-research.html")
+# site-publish 第 3 期（docs-site docs/2026-11-21-site-publish-phase3-5-design.md V0.4）：
+# 写线上时外加 GMIA 自己的锁 + 写前备份 + 发布记录。环境变量只供测试副本改指向。
+SITE_ROOT = Path(os.environ.get("HEDGE_FUND_RESEARCH_SITE_ROOT", "/var/www/overview"))
+GMIA_STATE_ROOT = Path(os.environ.get("GMIA_PUBLISH_STATE_ROOT",
+                                      str(Path(__import__("pwd").getpwnam("ubuntu").pw_dir)
+                                          / ".local" / "state" / "gmia-publish")))
+KEEP_BACKUPS = 3
 
 BADGE_COLORS: dict[str, str] = {
     "man-group": "#58a6ff",
@@ -2136,6 +2145,129 @@ def publish_html(output_file: Path, html_content: str) -> Path:
     return gzip_path
 
 
+def _warn(msg: str) -> None:
+    try:
+        print(f"WARN: {msg}", file=sys.stderr)
+    except Exception:  # noqa: BLE001 -- 告警本身失败也不能影响发布
+        pass
+
+
+BACKUP_MAX_BYTES = 32 * 1024 * 1024      # 单页超过这个大小就不备份
+BACKUP_MIN_FREE = 2 * 1024 ** 3          # 状态目录所在盘剩余不足 2 GiB 就不备份（把空间留给发布）
+RECORDS_MAX_BYTES = 1024 * 1024          # 记录文件超过 1 MiB 截掉前一半
+
+
+def _live_pair(output_file: Path) -> bool:
+    """正文与 .gz 的实际落点（分别 realpath）都恰好在站点根下、且同名配对，才算线上发布。"""
+    try:
+        root = os.path.realpath(SITE_ROOT)
+        body = os.path.realpath(output_file)
+        gz = os.path.realpath(output_file.with_suffix(output_file.suffix + ".gz"))
+        return (os.path.dirname(body) == root and os.path.dirname(gz) == root
+                and os.path.basename(gz) == os.path.basename(body) + ".gz")
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def _try_lock():
+    """GMIA 自己的锁（只有 GMIA 的写入方用）。**只试一次、不等待**：拿不到就返回 (None, 原因)，
+    调用方照常发布（今天本来就没有锁），不占用 cron 的时间预算。"""
+    import fcntl
+    try:
+        GMIA_STATE_ROOT.mkdir(parents=True, exist_ok=True)
+        fd = os.open(GMIA_STATE_ROOT / "lock", os.O_RDWR | os.O_CREAT, 0o600)
+    except Exception as e:  # noqa: BLE001
+        _warn(f"GMIA 发布锁打不开（{type(e).__name__}: {e}），不持锁照常发布")
+        return None, "error"
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        return fd, "held"
+    except Exception as e:  # noqa: BLE001
+        os.close(fd)
+        _warn(f"GMIA 发布锁被占用或出错（{type(e).__name__}），不持锁照常发布")
+        return None, "busy"
+
+
+def _backup_live(page: Path) -> str | None:
+    """持锁时才备份：线上现有正文与 .gz 复制进备份目录，每页只留最近 KEEP_BACKUPS 份。
+    空间不足、页面过大、任何错误 → 跳过并告警；复制到一半失败会删掉这份残件。"""
+    if not page.exists():
+        return None
+    bdir = None
+    try:
+        gz = page.with_name(page.name + ".gz")
+        size = page.stat().st_size + (gz.stat().st_size if gz.exists() else 0)
+        if size > BACKUP_MAX_BYTES:
+            _warn(f"页面 {size} 字节超过备份上限，跳过备份")
+            return None
+        GMIA_STATE_ROOT.mkdir(parents=True, exist_ok=True)
+        if shutil.disk_usage(GMIA_STATE_ROOT).free < BACKUP_MIN_FREE + 2 * size:
+            _warn("磁盘余量不足，跳过发布前备份（把空间留给发布）")
+            return None
+        broot = GMIA_STATE_ROOT / "backup"
+        broot.mkdir(parents=True, exist_ok=True)
+        mine = sorted(d for d in broot.iterdir() if d.name.endswith("-" + page.name))
+        for old in mine[:max(len(mine) - (KEEP_BACKUPS - 1), 0)]:   # 先删旧的，再写新的
+            shutil.rmtree(old, ignore_errors=True)
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+        bdir = broot / f"{stamp}-{os.getpid()}-{page.name}"
+        bdir.mkdir()
+        for f in (page, gz):
+            if f.exists():
+                shutil.copy2(f, bdir / f.name)
+        return str(bdir)
+    except Exception as e:  # noqa: BLE001
+        _warn(f"发布前备份失败（{type(e).__name__}: {e}），照常发布")
+        if bdir is not None:
+            shutil.rmtree(bdir, ignore_errors=True)
+        return None
+
+
+def _record(rec: dict) -> None:
+    try:
+        GMIA_STATE_ROOT.mkdir(parents=True, exist_ok=True)
+        f = GMIA_STATE_ROOT / "records.jsonl"
+        if f.exists() and f.stat().st_size > RECORDS_MAX_BYTES:
+            lines = f.read_text(encoding="utf-8").splitlines(keepends=True)
+            f.write_text("".join(lines[len(lines) // 2:]), encoding="utf-8")
+        with open(f, "a", encoding="utf-8") as fh:
+            fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    except Exception as e:  # noqa: BLE001
+        _warn(f"发布记录写入失败（{type(e).__name__}: {e}）")
+
+
+def publish_live(output_file: Path, html_content: str) -> Path:
+    """写线上时用（site-publish 第 3 期 V0.5）：试一次 GMIA 锁 → 持锁才备份 → **原样的 publish_html** → 记一行记录。
+    锁、备份、记录都尽力而为：出错只告警，绝不挡住发布；只有 publish_html 自己的失败才失败（同以前）。
+    不在站点根（预览、开发机）或正文/.gz 落点不成对时，直接 publish_html，与以前完全相同。"""
+    try:
+        live = _live_pair(Path(output_file))
+    except Exception:  # noqa: BLE001
+        live = False
+    if not live:
+        return publish_html(output_file, html_content)
+    fd, lock_state = _try_lock()
+    try:
+        backup = _backup_live(Path(os.path.realpath(output_file))) if fd is not None else None
+        gz = publish_html(output_file, html_content)
+        try:
+            now = datetime.now(timezone.utc)
+            _record({"ts_utc": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                     "ts_bjt": now.astimezone(BJT).strftime("%Y-%m-%d %H:%M BJT"),
+                     "page": Path(output_file).name,
+                     "html_sha256": hashlib.sha256(html_content.encode("utf-8")).hexdigest(),
+                     "backup_dir": backup, "lock": lock_state, "pid": os.getpid()})
+        except Exception as e:  # noqa: BLE001
+            _warn(f"发布记录失败（{type(e).__name__}: {e}）")
+        return gz
+    finally:
+        if fd is not None:
+            try:
+                os.close(fd)
+            except Exception:  # noqa: BLE001
+                pass
+
+
 # publish.py exit code when the dashboard was written but the docs-site sync
 # failed. run_pipeline.sh records it as Stage4:docs-sync and still runs Stage 5.
 DOCS_SYNC_FAILED = 3
@@ -2250,7 +2382,7 @@ def main() -> int:
         return PRECHECK_FAILED
 
     output_file = Path(args.output)
-    gzip_path = publish_html(output_file, html_content)
+    gzip_path = publish_live(output_file, html_content)
     print(f"Written {len(html_content)} bytes to {output_file}")
     print(f"Gzipped: {gzip_path}")
 

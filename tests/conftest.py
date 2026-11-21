@@ -76,7 +76,8 @@ PRODUCTION_PATHS: dict[str, Path] = {}
 _REDIRECTED = (("analyze_articles", "USAGE_LOG_FILE"),
                ("analyze_articles", "TAG_USAGE_LOG_FILE"),
                ("fetch_articles", "INSPECTION_STATE_FILE"),
-               ("fetch_content", "CONTENT_FAILURE_LOG"))
+               ("fetch_content", "CONTENT_FAILURE_LOG"),
+               ("publish", "GMIA_STATE_ROOT"))       # site-publish 第 3 期：GMIA 发布锁/备份/记录
 
 
 @pytest.fixture(scope="session")
@@ -105,7 +106,9 @@ def _redirect_production_writes(_production_sink, monkeypatch):
             mod = importlib.import_module(mod_name)
         except Exception:
             continue
-        real = getattr(mod, attr)
+        real = getattr(mod, attr, None)
+        if real is None:          # 测试替身模块里没有这个属性（如 profile-refresh 测试用的假 publish.py）
+            continue
         PRODUCTION_PATHS[attr] = real
         monkeypatch.setattr(mod, attr, _production_sink / real.name)
 

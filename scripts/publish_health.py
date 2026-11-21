@@ -563,7 +563,7 @@ def main(argv: list[str] | None = None) -> int:
 
     page = render_html(health)
     out_dir = Path(args.out) if args.out else DEPLOY_DIR
-    publish.publish_html(out_dir / OUTPUT_NAME, page)
+    publish.publish_live(out_dir / OUTPUT_NAME, page)   # 站点根外（--out 预览）照旧直写
     print(f"wrote {out_dir / OUTPUT_NAME}")
 
     if not args.out:
