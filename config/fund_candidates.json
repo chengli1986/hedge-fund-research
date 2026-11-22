@@ -5670,15 +5670,16 @@
     "strategy_tags": [
       "private_equity",
       "real_assets",
+      "private_credit",
       "multi_asset"
     ],
     "added_at": "2026-11-17",
     "status_since": "2026-11-17T09:03:52.683395+08:00",
     "quality": "MEDIUM",
     "quality_score": 0.6,
-    "topics": "alternatives, private equity, real assets, hedge funds",
-    "notes": "Investment Perspectives, ~monthly; site 403s bots",
-    "last_deep_analyzed_at": "2026-11-18T01:03:56+00:00"
+    "topics": "private equity, absolute return, infrastructure, credit",
+    "notes": "Monthly alts perspectives; /investment-perspectives/",
+    "last_deep_analyzed_at": "2026-11-22T01:03:39Z"
   },
   {
     "id": "ubs-asset-management",
@@ -5687,17 +5688,17 @@
     "source": "manual",
     "status": "seed",
     "strategy_tags": [
+      "macro",
       "multi_asset",
-      "private_credit",
-      "emerging_markets"
+      "private_equity"
     ],
     "added_at": "2026-11-18",
     "status_since": "2026-11-18T09:04:10.622142+08:00",
-    "last_deep_analyzed_at": "2026-11-19T01:03:41.098601+00:00",
+    "last_deep_analyzed_at": "2026-11-22T01:03:39Z",
     "quality": "MEDIUM",
-    "quality_score": 0.5,
-    "topics": "multi-asset, alternatives, EM, sustainable",
-    "notes": "Insights index empty on fetch; Red Thread undated"
+    "quality_score": 0.55,
+    "topics": "macro, alternatives, private markets, hedge funds",
+    "notes": "Red Thread + HF bulletins; hub JS-loaded, no dated index"
   },
   {
     "id": "eagle-capital",
