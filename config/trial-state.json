@@ -13623,6 +13623,25 @@
           ],
           "error": null,
           "fetcher_used": false
+        },
+        "2026-11-22": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 0,
+          "newest_date": null,
+          "article_urls": [
+            "https://www.polencapital.com/insights/investing-at-the-speed-of-change",
+            "https://www.polencapital.com/insights/compute-to-capacity",
+            "https://www.polencapital.com/insights/commentary/focus-growth",
+            "https://www.polencapital.com/insights/2026-high-yield-and-leveraged-loan-mid-year-review-and",
+            "https://www.polencapital.com/insights/ais-second-act-from-suppliers-to-appliers",
+            "https://www.polencapital.com/insights/news/5perspectives-etf-launch",
+            "https://www.polencapital.com/insights/commentary/5perspectives-large-growth",
+            "https://www.polencapital.com/insights/beyond-the-25-year-milestone",
+            "https://www.polencapital.com/insights/navigating-credit-risk-lessons-from-the-first-brands-default"
+          ],
+          "error": null,
+          "fetcher_used": false
         }
       },
       "auto_decided": false,
@@ -13740,6 +13759,14 @@
           "error": "No new (un-sampled) article links available",
           "day": 4,
           "date": "2026-11-21"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 5,
+          "date": "2026-11-22"
         }
       ]
     },
@@ -13755,6 +13782,20 @@
       "end_date": null,
       "daily_checks": {
         "2026-11-21": {
+          "accessible": true,
+          "article_count": 12,
+          "date_count": 0,
+          "newest_date": null,
+          "article_urls": [
+            "https://www.eaglecap.com/letter/q3-2026-investor-letter",
+            "https://www.eaglecap.com/letter/q2-2026-investor-letter",
+            "https://www.eaglecap.com/insights/graham-doddsville-eagle-co-cios-on-finding-value-in-overlooked-places",
+            "https://www.eaglecap.com/insights/capital-allocators-podcast-active-equity-excellence-with-adrian-meli"
+          ],
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-11-22": {
           "accessible": true,
           "article_count": 12,
           "date_count": 0,
@@ -13806,6 +13847,25 @@
           "js_only_checked": 0,
           "day": 1,
           "date": "2026-11-21"
+        },
+        {
+          "sampled": 1,
+          "articles": [
+            {
+              "url": "https://www.eaglecap.com/insights/capital-allocators-podcast-active-equity-excellence-with-adrian-meli",
+              "relevance": 0.6,
+              "depth": 0.3,
+              "extractable": 0.4,
+              "overall": 0.44,
+              "notes": "Podcast announcement about active equity investing philosophy; mostly promotional with minimal substantive content or data"
+            }
+          ],
+          "avg_score": 0.44,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 2,
+          "date": "2026-11-22"
         }
       ]
     },
@@ -13821,6 +13881,26 @@
       "end_date": null,
       "daily_checks": {
         "2026-11-21": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "newest_date": "2026-09-30",
+          "article_urls": [
+            "https://oakmark.com/news-insights/a-conversation-with-shareholders-u-s-equity-market-commentary-3q-2026/",
+            "https://oakmark.com/news-insights/a-conversation-with-shareholders-international-equity-market-commentary-3q-2026/",
+            "https://oakmark.com/news-insights/the-business-behind-the-bond-fixed-income-market-commentary-3q-2026/",
+            "https://oakmark.com/news-insights/oakmark-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-select-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-global-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-global-select-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-international-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-international-small-cap-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-equity-and-income-fund-third-quarter-2026/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-11-22": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -13878,9 +13958,44 @@
           "js_only_checked": 0,
           "day": 1,
           "date": "2026-11-21"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://oakmark.com/news-insights/oakmark-fund-third-quarter-2026/",
+              "relevance": 0.75,
+              "depth": 0.45,
+              "extractable": 0.6,
+              "overall": 0.6,
+              "notes": "Oakmark Fund Q3 2026 quarterly performance commentary with sector attribution but minimal substantive analysis; heavily boilerplate disclaimers; text truncated."
+            },
+            {
+              "url": "https://oakmark.com/news-insights/oakmark-select-fund-third-quarter-2026/",
+              "relevance": 0.75,
+              "depth": 0.45,
+              "extractable": 0.6,
+              "overall": 0.6,
+              "notes": "Oakmark Select Fund Q3 2026 quarterly performance commentary with sector attribution; similar structure and depth to Article 1; text truncated."
+            },
+            {
+              "url": "https://oakmark.com/news-insights/oakmark-global-fund-third-quarter-2026/",
+              "relevance": 0.8,
+              "depth": 0.5,
+              "extractable": 0.55,
+              "overall": 0.63,
+              "notes": "Oakmark Global Fund Q3 2026 quarterly performance with geographic and sector breakdown; slightly more substantive than domestic funds but still primarily performance summary; text truncated."
+            }
+          ],
+          "avg_score": 0.61,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 2,
+          "date": "2026-11-22"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-11-21"
+  "last_summary_sent_date": "2026-11-22"
 }
