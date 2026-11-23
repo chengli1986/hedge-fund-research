@@ -274,6 +274,12 @@ def _alerts(rendered: list[dict], ab: list[dict], corrupt_backups: list[str],
         alerts.append({"kind": "ab_upstream", "source": "",
                        "detail": "A/B 闸门：对方网站暂时不可用，本次未比对（下次仍不可用即判失败）："
                                  + ", ".join(last_ab["upstream"])})
+    if ab and last_ab.get("known_block"):
+        # 2026-11-23: a known_block source whose site refused this server was
+        # not compared; the gate passed, so say which ones it skipped.
+        alerts.append({"kind": "ab_known_block", "source": "",
+                       "detail": "A/B 闸门：已知被拦、已决定不比对（sources.json known_block）："
+                                 + ", ".join(last_ab["known_block"])})
     for backup in corrupt_backups:
         alerts.append({"kind": "corrupt_state", "source": "",
                        "detail": f"状态文件损坏备份：{backup}"})
@@ -419,7 +425,7 @@ def render_html(health: dict) -> str:
     if stage["alerts"]:
         kind_labels = {"consecutive_zero": "连续零抓取", "refusal": "抓取被拒收",
                        "probe_fail": "探针失败", "probe_warn": "探针告警", "probe_upstream": "对方暂不可用",
-                       "ab_gate": "A/B 不一致", "ab_upstream": "A/B 未比对", "corrupt_state": "状态文件损坏",
+                       "ab_gate": "A/B 不一致", "ab_upstream": "A/B 未比对", "ab_known_block": "A/B 已知拦截", "corrupt_state": "状态文件损坏",
                        "not_inspected": "该源未抓取", "stale_input": "数据过期",
                        "known_block": "已知拦截", "known_media_mix": "已知视频为主"}
         rows = "".join(

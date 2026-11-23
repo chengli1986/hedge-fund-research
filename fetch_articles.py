@@ -2328,6 +2328,10 @@ _METLIFE_PUBLIC_PREFIX = "https://www.metlife.com/investments/en-us/"
 # Both forms map to the same public URL, so ids of stored rows are unchanged.
 _METLIFE_PUBLIC_PATH_PREFIX = "/investments/en-us/"
 _METLIFE_HOST = "https://www.metlife.com"
+# Whatever form the path takes, only an insight page is an article: the
+# servlet is asked for the insights tree, but nothing else checks that, and a
+# disclaimer page or a PDF with a title would take one of the max_articles slots.
+_METLIFE_INSIGHTS_URL_PREFIX = _METLIFE_HOST + "/investments/en-us/insights/"
 
 
 def fetch_metlife_im(source: dict) -> list[dict]:
@@ -2398,6 +2402,8 @@ def fetch_metlife_im(source: dict) -> list[dict]:
         elif path.startswith(_METLIFE_PUBLIC_PATH_PREFIX):
             url = _METLIFE_HOST + path
         else:
+            continue
+        if not url.startswith(_METLIFE_INSIGHTS_URL_PREFIX) or url.lower().endswith(".pdf"):
             continue
         if not _validate_hostname(url, expected_host):
             continue

@@ -77,9 +77,21 @@ KNOWN_BLOCK_EVIDENCE = re.compile(r"\b403\b|blocked_by_bot_protection|Attention 
 
 
 def is_known_block(r: dict, source: dict) -> bool:
-    """A failed comparison that is the refusal the source's known_block records."""
-    return bool(not r["agree"] and r["error"] and source.get("known_block")
-                and KNOWN_BLOCK_EVIDENCE.search(r["error"]))
+    """A failed comparison that is the refusal the source's known_block records.
+
+    The HTTP status decides when there is one (only 403 is the refusal); a site
+    that is down (502/503/504) gets the upstream grace, never this exemption.
+    Without a status the error text is matched with URLs removed, so a "403"
+    that is only part of an address does not count.
+    """
+    if r["agree"] or not r["error"] or not source.get("known_block"):
+        return False
+    if r.get("upstream_down"):
+        return False
+    status = r.get("http_status")
+    if status is not None:
+        return status == 403
+    return bool(KNOWN_BLOCK_EVIDENCE.search(re.sub(r"https?://\S+", "", r["error"])))
 
 
 def has_hand_written(source_id: str) -> bool:
@@ -99,7 +111,8 @@ def compare_source(source: dict) -> dict:
     """{agree, bespoke, template, only_bespoke, only_template, order_differs, error, upstream_down}"""
     out = {"source_id": source["id"], "agree": False, "error": None, "upstream_down": None,
            "bespoke": 0, "template": 0, "only_bespoke": [], "only_template": [],
-           "order_differs": False, "dropped_fields": [], "both_empty": False}
+           "order_differs": False, "dropped_fields": [], "both_empty": False,
+           "http_status": None}
     try:
         url = fa.get_source_url(dict(source), fa.load_entrypoints())
         bespoke = fa.FETCHERS[source["id"]](dict(source, url=url))
@@ -107,6 +120,7 @@ def compare_source(source: dict) -> dict:
     except Exception as exc:
         out["error"] = f"{type(exc).__name__}: {exc}"[:300]
         out["upstream_down"] = _upstream_down_status(exc)
+        out["http_status"] = getattr(getattr(exc, "response", None), "status_code", None)
         return out
     b = [_key(r) for r in bespoke]
     t = [_key(r) for r in template]
@@ -235,6 +249,11 @@ def main() -> int:
             second = compare_source(by_id[r["source_id"]])
             second["rechecked"] = True
             second["known_block"] = is_known_block(second, by_id[r["source_id"]])
+            if second["known_block"] and not r["error"]:
+                # The first try compared and found a difference; a refusal on
+                # the recheck proves nothing about it, so the difference stands.
+                r["rechecked"] = True
+                continue
             results[i] = second
     apply_upstream_grace(results)
     if args.json:
