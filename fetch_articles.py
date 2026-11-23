@@ -2331,7 +2331,7 @@ _METLIFE_HOST = "https://www.metlife.com"
 # Whatever form the path takes, only an insight page is an article: the
 # servlet is asked for the insights tree, but nothing else checks that, and a
 # disclaimer page or a PDF with a title would take one of the max_articles slots.
-_METLIFE_INSIGHTS_URL_PREFIX = _METLIFE_HOST + "/investments/en-us/insights/"
+_METLIFE_INSIGHTS_PATH_PREFIX = "/investments/en-us/insights/"
 
 
 def fetch_metlife_im(source: dict) -> list[dict]:
@@ -2403,7 +2403,10 @@ def fetch_metlife_im(source: dict) -> list[dict]:
             url = _METLIFE_HOST + path
         else:
             continue
-        if not url.startswith(_METLIFE_INSIGHTS_URL_PREFIX) or url.lower().endswith(".pdf"):
+        url_path = urlparse(url).path
+        if (not url.startswith(_METLIFE_HOST + "/")
+                or not url_path.startswith(_METLIFE_INSIGHTS_PATH_PREFIX)
+                or url_path.lower().endswith(".pdf")):
             continue
         if not _validate_hostname(url, expected_host):
             continue

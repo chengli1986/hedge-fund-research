@@ -66,6 +66,10 @@ def test_only_insight_pages_are_kept_in_either_form(monkeypatch):
         {"path": "/investments/en-us/insights/report.pdf", "headlineTitle": "PDF", "publishedDate": "NOV 1, 2026"},
         {"path": fa._METLIFE_CONTENT_PREFIX + "about-us/leadership/x/", "headlineTitle": "Bio",
          "publishedDate": "NOV 1, 2026"},
+        {"path": "/investments/en-us/insights/report.pdf?download=1", "headlineTitle": "PDF q",
+         "publishedDate": "NOV 1, 2026"},
+        {"path": fa._METLIFE_CONTENT_PREFIX + "insights/report.PDF#page=2", "headlineTitle": "PDF f",
+         "publishedDate": "NOV 1, 2026"},
         {"path": "/investments/en-us/insights/a/", "headlineTitle": "Kept", "publishedDate": "NOV 1, 2026"},
     ])
     assert [r["title"] for r in rows] == ["Kept"]
@@ -115,12 +119,11 @@ def test_a_title_differing_in_words_still_disagrees(monkeypatch):
     assert cf.compare_source(dict(SRC))["agree"] is False
 
 
-def test_the_evidence_pattern_matches_the_health_probe():
-    # Read, not imported: loading the health script a second time under
-    # another module name opens its log handlers again.
-    text = (REPO / "scripts" / "gmia-fetcher-health.py").read_text()
-    m = re.search(r'^KNOWN_BLOCK_EVIDENCE = re\.compile\(r"(.*)"\)$', text, re.M)
-    assert m and m.group(1) == cf.KNOWN_BLOCK_EVIDENCE.pattern
+def test_without_a_status_only_an_explicit_refusal_counts():
+    """Stricter than the health probe on purpose (Codex r2): a bare 403 is not a refusal."""
+    assert not cf.KNOWN_BLOCK_EVIDENCE.search("ValueError: expected 403 cards")
+    assert cf.KNOWN_BLOCK_EVIDENCE.search("HTTPError: 403 Client Error: Forbidden for url: ")
+    assert cf.KNOWN_BLOCK_EVIDENCE.search("returned None (blocked_by_bot_protection: HTTP 403)")
 
 
 FORBIDDEN = "HTTPError: 403 Client Error: Forbidden for url: https://site.test/i"
@@ -143,7 +146,8 @@ def _gate(monkeypatch, tmp_path, errors, known=True, history=()):
             return {"source_id": s["id"], "agree": False, "error": None, "upstream_down": None,
                     "bespoke": 2, "template": 1, "only_bespoke": [["A", "u", "d"]],
                     "only_template": [], "order_differs": False, "dropped_fields": []}
-        return {"source_id": s["id"], "agree": err is None, "error": err, "upstream_down": None,
+        down = 503 if err and "503 Server Error" in err else None
+        return {"source_id": s["id"], "agree": err is None, "error": err, "upstream_down": down,
                 "bespoke": 0 if err else 1, "template": 0 if err else 1, "only_bespoke": [],
                 "only_template": [], "order_differs": False, "dropped_fields": []}
 
@@ -245,3 +249,27 @@ def test_the_health_page_names_sources_the_gate_skipped_as_known_blocks():
 def test_an_older_snapshot_without_the_field_adds_nothing():
     ab = [{"at": "2026-11-16T07:22:00+08:00", "agree": True, "disagreed": []}]
     assert ph._alerts([], ab, [], []) == []
+
+
+def test_a_site_down_recheck_does_not_clear_a_real_difference(monkeypatch, tmp_path):
+    """Codex r2 MAJOR (also on main before this PR): difference, then 503 on the recheck."""
+    code, rows, calls = _gate(monkeypatch, tmp_path, ["DISAGREE", "HTTPError: 503 Server Error"],
+                              known=False)
+    assert code == 1 and calls == ["t", "t"]
+    assert rows[-1]["disagreed"] == ["t"] and rows[-1]["upstream"] == []
+
+
+def test_a_refusal_on_the_recheck_does_not_clear_another_error(monkeypatch, tmp_path):
+    """Codex r2: a selector error first, then the decided 403 -- the selector error stands."""
+    code, rows, _ = _gate(monkeypatch, tmp_path, ["ValueError: invalid selector", FORBIDDEN])
+    assert code == 1 and rows[-1]["disagreed"] == ["t"] and rows[-1]["known_block"] == []
+
+
+def test_a_recheck_that_compares_still_replaces_the_first_try(monkeypatch, tmp_path):
+    code, rows, _ = _gate(monkeypatch, tmp_path, ["DISAGREE", None], known=False)
+    assert code == 0 and rows[-1]["disagreed"] == []
+
+
+def test_a_real_403_status_wins_over_text_that_looks_like_a_5xx():
+    err = "HTTPError: 403 Client Error (body: upstream said 503 Server Error)"
+    assert cf.is_known_block(_r(err, status=403, down=503), KB)

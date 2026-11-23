@@ -72,8 +72,10 @@ def _upstream_down_status(exc: Exception) -> int | None:
 # "known_block" in the snapshot, not in the exit code, not re-run. Only while
 # the error still looks like that refusal -- any other error fails as usual.
 # Added 2026-11-23 for rothschild-co-am (Cloudflare challenge on every page).
-# Keep in step with gmia-fetcher-health.py KNOWN_BLOCK_EVIDENCE (a test checks).
-KNOWN_BLOCK_EVIDENCE = re.compile(r"\b403\b|blocked_by_bot_protection|Attention Required")
+# Stricter than the health probe's KNOWN_BLOCK_EVIDENCE: without an HTTP status
+# only an explicit refusal counts, never a bare "403" in some other message.
+KNOWN_BLOCK_EVIDENCE = re.compile(
+    r"\b403 (?:Client Error|Forbidden)\b|blocked_by_bot_protection|Attention Required")
 
 
 def is_known_block(r: dict, source: dict) -> bool:
@@ -86,12 +88,12 @@ def is_known_block(r: dict, source: dict) -> bool:
     """
     if r["agree"] or not r["error"] or not source.get("known_block"):
         return False
-    if r.get("upstream_down"):
-        return False
     status = r.get("http_status")
     if status is not None:
         return status == 403
-    return bool(KNOWN_BLOCK_EVIDENCE.search(re.sub(r"https?://\S+", "", r["error"])))
+    if r.get("upstream_down"):
+        return False
+    return bool(KNOWN_BLOCK_EVIDENCE.search(re.sub(r"(?i)https?://\S+", "", r["error"])))
 
 
 def has_hand_written(source_id: str) -> bool:
@@ -249,9 +251,12 @@ def main() -> int:
             second = compare_source(by_id[r["source_id"]])
             second["rechecked"] = True
             second["known_block"] = is_known_block(second, by_id[r["source_id"]])
-            if second["known_block"] and not r["error"]:
-                # The first try compared and found a difference; a refusal on
-                # the recheck proves nothing about it, so the difference stands.
+            if second["known_block"] or (second["error"] and not r["error"]):
+                # A recheck that could not compare (refused, site down, any
+                # error) proves nothing about what the first try found: a
+                # difference, or a failure that is not the decided refusal,
+                # stands. Only a recheck that compared, or failed the same
+                # undecided way, replaces it.
                 r["rechecked"] = True
                 continue
             results[i] = second
