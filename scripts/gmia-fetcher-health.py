@@ -259,8 +259,11 @@ def _upstream_down_status(exc: Exception) -> int | None:
     something else keeps requests' "503 Server Error" wording in the message.
     """
     code = getattr(getattr(exc, "response", None), "status_code", None)
-    if code in UPSTREAM_DOWN_CODES:
-        return code
+    if code is not None:
+        # A real status decides; a 403 quoting "503 Server Error" is the
+        # refusal, not the site being down (same rule as compare_fetchers.py,
+        # 2026-11-23).
+        return code if code in UPSTREAM_DOWN_CODES else None
     m = _UPSTREAM_DOWN_MSG.search(str(exc))
     return int(m.group(1)) if m else None
 

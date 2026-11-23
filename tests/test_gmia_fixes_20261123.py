@@ -359,3 +359,31 @@ def test_the_health_page_shows_a_zero_article_warn_of_a_known_blocked_source():
     alerts = ph._alerts([_health_row("WARN", "fetch_articles returned 0 articles")], [], [], [])
     kinds = [a["kind"] for a in alerts]
     assert "known_block" not in kinds and "probe_warn" in kinds and "consecutive_zero" in kinds
+
+
+def _http_error(code, text):
+    import requests
+    resp = requests.Response()
+    resp.status_code = code
+    return requests.HTTPError(text, response=resp)
+
+
+def test_the_probe_reads_a_real_403_quoting_a_503_as_the_refusal():
+    """Codex r5: same status-first rule as the A/B gate, both directions."""
+    assert gfh._upstream_down_status(_http_error(403, "403 Client Error (body: 503 Server Error)")) is None
+    assert gfh._upstream_down_status(_http_error(503, "503 Server Error (incident 403)")) == 503
+    assert gfh._upstream_down_status(RuntimeError("listing failed: 504 Server Error")) == 504
+
+
+def test_a_real_403_quoting_a_503_becomes_known_through_the_probe(monkeypatch):
+    err = _http_error(403, "403 Client Error: Forbidden (body: 503 Server Error)")
+    src = {"id": "rothschild-co-am", "known_block": "Decided 2026-11-23: x",
+           "url": "https://www.rothschildandco.com/en/newsroom/insights/"}
+    # _probe_once imports fetch_articles inside the function: patch the module
+    # it will get, whichever object sys.modules holds at this point.
+    monkeypatch.setattr(__import__("fetch_articles"), "listing_fetcher",
+                        lambda s: (lambda _s: (_ for _ in ()).throw(err)))
+    result = gfh._probe_once(src)
+    assert result["status"] == "FAIL" and not result.get("upstream_down")
+    gfh.apply_known_blocks({"rothschild-co-am": result}, [src])
+    assert result["status"] == "KNOWN"
