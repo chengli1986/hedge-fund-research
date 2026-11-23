@@ -1,6 +1,6 @@
 #!/bin/bash
 # Candidate fund discovery pipeline runner
-# Called by OpenClaw cron job or manually
+# Called by cron or manually
 # Runs all 3 stages sequentially, outputs JSON summary
 
 set -uo pipefail
