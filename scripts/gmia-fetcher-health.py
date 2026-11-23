@@ -624,6 +624,11 @@ def apply_known_blocks(per_source: dict[str, dict], sources: list[dict]) -> None
             continue
         if result["status"] == "OK":
             result["known_block_lifted"] = True
+        elif result.get("upstream_down"):
+            # The site answered 502/503/504: that is the site being down, not
+            # the decided refusal, even if the message happens to contain
+            # "403"; it keeps its FAIL and the upstream grace (2026-11-23).
+            pass
         elif KNOWN_BLOCK_EVIDENCE.search(result.get("reason") or ""):
             result["status"] = "KNOWN"
             result["known_block"] = note

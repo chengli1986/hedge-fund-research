@@ -327,3 +327,35 @@ def test_the_health_page_alerts_another_failure_of_a_known_blocked_source():
     kinds = [a["kind"] for a in alerts]
     assert "known_block" not in kinds and "probe_fail" in kinds
     assert any("returned 0 articles" in a["detail"] for a in alerts)
+
+
+# ── health probe ─────────────────────────────────────────────────────────────
+
+_g_spec = importlib.util.spec_from_file_location("gfh_gmia_fixes", REPO / "scripts" / "gmia-fetcher-health.py")
+gfh = importlib.util.module_from_spec(_g_spec)
+sys.modules["gfh_gmia_fixes"] = gfh
+_g_spec.loader.exec_module(gfh)
+
+
+def test_a_site_down_probe_is_not_turned_into_a_known_block():
+    """Codex r4: 503 whose message happens to contain 403 keeps FAIL (then UPSTREAM grace)."""
+    per = {"rothschild-co-am": {"status": "FAIL", "upstream_down": 503,
+                                "reason": "fetch_articles raised HTTPError: 503 Server Error (incident 403)"}}
+    gfh.apply_known_blocks(per, [{"id": "rothschild-co-am", "known_block": "Decided 2026-11-23: x"}])
+    assert per["rothschild-co-am"]["status"] == "FAIL"
+    gfh.apply_upstream_grace(per, {"sources": {}})
+    assert per["rothschild-co-am"]["status"] == "UPSTREAM"
+
+
+def test_the_decided_refusal_still_becomes_known_in_the_probe():
+    per = {"rothschild-co-am": {"status": "FAIL",
+                                "reason": "fetch_articles raised HTTPError: 403 Client Error: Forbidden"}}
+    gfh.apply_known_blocks(per, [{"id": "rothschild-co-am", "known_block": "Decided 2026-11-23: x"}])
+    assert per["rothschild-co-am"]["status"] == "KNOWN"
+
+
+def test_the_health_page_shows_a_zero_article_warn_of_a_known_blocked_source():
+    """Codex r4 MINOR: the probe writes WARN (not FAIL) for an empty listing."""
+    alerts = ph._alerts([_health_row("WARN", "fetch_articles returned 0 articles")], [], [], [])
+    kinds = [a["kind"] for a in alerts]
+    assert "known_block" not in kinds and "probe_warn" in kinds and "consecutive_zero" in kinds
