@@ -2322,6 +2322,12 @@ _METLIFE_LISTING_ENDPOINT = (
 _METLIFE_INSIGHTS_ROOT = "/content/metlife/mim/investments/en-us/homepage/insights"
 _METLIFE_CONTENT_PREFIX = "/content/metlife/mim/investments/en-us/homepage/"
 _METLIFE_PUBLIC_PREFIX = "https://www.metlife.com/investments/en-us/"
+# Since 2026-11-21 the servlet returns the public path itself
+# ("/investments/en-us/insights/...") instead of the repository path; every
+# entry failed the prefix check and the source fetched 0 for three nights.
+# Both forms map to the same public URL, so ids of stored rows are unchanged.
+_METLIFE_PUBLIC_PATH_PREFIX = "/investments/en-us/"
+_METLIFE_HOST = "https://www.metlife.com"
 
 
 def fetch_metlife_im(source: dict) -> list[dict]:
@@ -2351,8 +2357,9 @@ def fetch_metlife_im(source: dict) -> list[dict]:
        `publishedDate` + repository path as JSON, already sorted newest-first,
        which is strictly better than what the sitemap ever gave us.
 
-    Paths come back as AEM repository paths under `/content/metlife/mim/...`;
-    the public URL is the same tail under `/investments/en-us/`.
+    Paths came back as AEM repository paths under `/content/metlife/mim/...`
+    (the public URL is the same tail under `/investments/en-us/`); since
+    2026-11-21 they come back as that public path already. Both are accepted.
     """
     expected_host = source["expected_hostname"]
     max_articles = source.get("max_articles", 10)
@@ -2384,10 +2391,14 @@ def fetch_metlife_im(source: dict) -> list[dict]:
         # Tactical Asset Allocation", "Fixed Income Outlook:&nbsp; Stay").
         title = " ".join(html.unescape(entry.get("headlineTitle") or "").split())
         date_raw = (entry.get("publishedDate") or "").strip()
-        if not path.startswith(_METLIFE_CONTENT_PREFIX) or not title:
+        if not title:
             continue
-
-        url = _METLIFE_PUBLIC_PREFIX + path[len(_METLIFE_CONTENT_PREFIX):]
+        if path.startswith(_METLIFE_CONTENT_PREFIX):
+            url = _METLIFE_PUBLIC_PREFIX + path[len(_METLIFE_CONTENT_PREFIX):]
+        elif path.startswith(_METLIFE_PUBLIC_PATH_PREFIX):
+            url = _METLIFE_HOST + path
+        else:
+            continue
         if not _validate_hostname(url, expected_host):
             continue
 

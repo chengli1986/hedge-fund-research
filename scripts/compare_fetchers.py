@@ -66,13 +66,33 @@ def _upstream_down_status(exc: Exception) -> int | None:
     return int(m.group(1)) if m else None
 
 
+# A source the user marked "known_block" in sources.json (the same decided
+# state gmia-fetcher-health.py reports under KNOWN BLOCKED) whose site refuses
+# this server cannot be compared, and that is not drift: listed, recorded under
+# "known_block" in the snapshot, not in the exit code, not re-run. Only while
+# the error still looks like that refusal -- any other error fails as usual.
+# Added 2026-11-23 for rothschild-co-am (Cloudflare challenge on every page).
+# Keep in step with gmia-fetcher-health.py KNOWN_BLOCK_EVIDENCE (a test checks).
+KNOWN_BLOCK_EVIDENCE = re.compile(r"\b403\b|blocked_by_bot_protection|Attention Required")
+
+
+def is_known_block(r: dict, source: dict) -> bool:
+    """A failed comparison that is the refusal the source's known_block records."""
+    return bool(not r["agree"] and r["error"] and source.get("known_block")
+                and KNOWN_BLOCK_EVIDENCE.search(r["error"]))
+
+
 def has_hand_written(source_id: str) -> bool:
     """Whether there is a hand-written fetcher to A/B the template against."""
     return source_id in fa.FETCHERS
 
 
 def _key(row: dict) -> tuple:
-    return tuple(row.get(f) for f in FIELDS)
+    # Runs of whitespace inside a title are not content: amundi's hand-written
+    # fetcher kept a double space the template collapses, and the gate failed
+    # on it (2026-11-23). Only the comparison is normalised, not what is stored.
+    return tuple(" ".join(v.split()) if f == "title" and isinstance(v, str) else v
+                 for f, v in ((f, row.get(f)) for f in FIELDS))
 
 
 def compare_source(source: dict) -> dict:
@@ -119,7 +139,7 @@ def compare_source(source: dict) -> dict:
 
 
 def _passes(r: dict) -> bool:
-    return r["agree"] or bool(r.get("upstream_grace"))
+    return r["agree"] or bool(r.get("upstream_grace")) or bool(r.get("known_block"))
 
 
 def _previously_down() -> set[str]:
@@ -154,6 +174,7 @@ def _record(results: list[dict]) -> None:
            "disagreed": [r["source_id"] for r in results if not _passes(r)],
            "errors": [r["source_id"] for r in results if r["error"]],
            "upstream": [r["source_id"] for r in results if r.get("upstream_grace")],
+           "known_block": [r["source_id"] for r in results if r.get("known_block")],
            "site_down": [r["source_id"] for r in results if not r["agree"] and r.get("upstream_down")]}
     try:
         HISTORY.parent.mkdir(parents=True, exist_ok=True)
@@ -203,20 +224,27 @@ def main() -> int:
         return 0
 
     results = [compare_source(s) for s in chosen]
+    by_id = {s["id"]: s for s in chosen}
+    for r in results:
+        r["known_block"] = is_known_block(r, by_id[r["source_id"]])
     if args.recheck:
-        by_id = {s["id"]: s for s in chosen}
         for i, r in enumerate(results):
-            if r["agree"]:
+            if r["agree"] or r["known_block"]:
                 continue
             print(f"  … {r['source_id']}: {'error' if r['error'] else 'disagreed'}, re-running once")
             second = compare_source(by_id[r["source_id"]])
             second["rechecked"] = True
+            second["known_block"] = is_known_block(second, by_id[r["source_id"]])
             results[i] = second
     apply_upstream_grace(results)
     if args.json:
         print(json.dumps(results, ensure_ascii=False, indent=1))
     else:
         for r in results:
+            if r.get("known_block"):
+                print(f"  \U0001f512 {r['source_id']:24s} known block (decided, see sources.json), "
+                      f"not compared: {r['error']}")
+                continue
             if r.get("upstream_grace"):
                 print(f"  ⏳ {r['source_id']:24s} site temporarily down (HTTP {r['upstream_down']}), "
                       "not compared this run -- fails if still down next run")
