@@ -60,15 +60,20 @@ _UPSTREAM_DOWN_MSG = re.compile(r"\b(502|503|504) Server Error\b")
 def _upstream_down_status(exc: Exception) -> int | None:
     """The 5xx code if this failure means the site is down, else None."""
     code = getattr(getattr(exc, "response", None), "status_code", None)
-    if code in UPSTREAM_DOWN_CODES:
-        return code
+    if code is not None:
+        # A real status decides; text that mentions a 5xx (a quoted body) does
+        # not turn a 403 into the site being down (Codex r3, 2026-11-23).
+        return code if code in UPSTREAM_DOWN_CODES else None
     m = _UPSTREAM_DOWN_MSG.search(str(exc))
     return int(m.group(1)) if m else None
 
 
 # A source the user marked "known_block" in sources.json (the same decided
-# state gmia-fetcher-health.py reports under KNOWN BLOCKED) whose site refuses
-# this server cannot be compared, and that is not drift: listed, recorded under
+# state gmia-fetcher-health.py reports under KNOWN BLOCKED) AND
+# "known_block_listing": true -- the refusal covers the listing itself, not only
+# article pages (ark-invest's block is article pages; its RSS listing works and
+# must keep failing the gate if it ever refuses) -- cannot be compared, and
+# that is not drift: listed, recorded under
 # "known_block" in the snapshot, not in the exit code, not re-run. Only while
 # the error still looks like that refusal -- any other error fails as usual.
 # Added 2026-11-23 for rothschild-co-am (Cloudflare challenge on every page).
@@ -86,7 +91,9 @@ def is_known_block(r: dict, source: dict) -> bool:
     Without a status the error text is matched with URLs removed, so a "403"
     that is only part of an address does not count.
     """
-    if r["agree"] or not r["error"] or not source.get("known_block"):
+    if r["agree"] or not r["error"]:
+        return False
+    if not (source.get("known_block") and source.get("known_block_listing") is True):
         return False
     status = r.get("http_status")
     if status is not None:

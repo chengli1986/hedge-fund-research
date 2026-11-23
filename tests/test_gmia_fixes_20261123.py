@@ -134,7 +134,7 @@ def _gate(monkeypatch, tmp_path, errors, known=True, history=()):
     hist = tmp_path / "ab-gate.jsonl"
     hist.write_text("".join(json.dumps(r) + "\n" for r in history))
     monkeypatch.setattr(cf, "HISTORY", hist)
-    src = dict(SRC, known_block="Decided 2026-11-23: keep as is.") if known else dict(SRC)
+    src = dict(SRC, known_block="Decided 2026-11-23: keep as is.", known_block_listing=True) if known else dict(SRC)
     monkeypatch.setattr(cf, "_load_sources", lambda: [src])
     seq = list(errors)
     calls = []
@@ -186,6 +186,14 @@ def test_rothschild_carries_a_decided_known_block():
     sources = json.loads((REPO / "config" / "sources.json").read_text())["sources"]
     note = next(s for s in sources if s["id"] == "rothschild-co-am").get("known_block", "")
     assert "Decided 2026-11-23" in note and "no bypass" in note
+    assert next(s for s in sources if s["id"] == "rothschild-co-am").get("known_block_listing") is True
+
+
+def test_ark_blocks_article_pages_only_so_its_listing_is_not_exempt():
+    sources = json.loads((REPO / "config" / "sources.json").read_text())["sources"]
+    ark = next(s for s in sources if s["id"] == "ark-invest")
+    assert ark.get("known_block") and not ark.get("known_block_listing")
+    assert not cf.is_known_block(_r("HTTPError: 403 Client Error: Forbidden", status=403), ark)
 
 
 def test_a_refusal_on_the_recheck_does_not_clear_a_real_difference(monkeypatch, tmp_path):
@@ -199,7 +207,7 @@ def _r(error, status=None, down=None):
     return {"agree": False, "error": error, "http_status": status, "upstream_down": down}
 
 
-KB = {"known_block": "Decided 2026-11-23: keep as is."}
+KB = {"known_block": "Decided 2026-11-23: keep as is.", "known_block_listing": True}
 
 
 def test_the_status_decides_when_there_is_one():
@@ -273,3 +281,49 @@ def test_a_recheck_that_compares_still_replaces_the_first_try(monkeypatch, tmp_p
 def test_a_real_403_status_wins_over_text_that_looks_like_a_5xx():
     err = "HTTPError: 403 Client Error (body: upstream said 503 Server Error)"
     assert cf.is_known_block(_r(err, status=403, down=503), KB)
+
+
+def test_a_known_block_without_the_listing_flag_still_fails_the_gate(monkeypatch, tmp_path):
+    """Codex r3: ark-invest's decision is about article pages; a refused feed must fail."""
+    hist = tmp_path / "ab-gate.jsonl"
+    hist.write_text("")
+    monkeypatch.setattr(cf, "HISTORY", hist)
+    monkeypatch.setattr(cf, "_load_sources", lambda: [dict(SRC, known_block="Decided 2026-10-16: x")])
+    monkeypatch.setattr(cf, "compare_source", lambda s: {
+        "source_id": s["id"], "agree": False, "error": FORBIDDEN, "upstream_down": None,
+        "http_status": 403, "bespoke": 0, "template": 0, "only_bespoke": [], "only_template": [],
+        "order_differs": False, "dropped_fields": []})
+    monkeypatch.setattr(cf.sys, "argv", ["compare_fetchers.py", "--all", "--recheck"])
+    assert cf.main() == 1
+
+
+def test_a_real_403_quoting_a_5xx_is_not_the_site_being_down(monkeypatch):
+    import requests
+    resp = requests.Response()
+    resp.status_code = 403
+    err = requests.HTTPError("403 Client Error (body: 503 Server Error upstream)", response=resp)
+    monkeypatch.setitem(fa.FETCHERS, "t", lambda s: (_ for _ in ()).throw(err))
+    monkeypatch.setattr(lt, "fetch", lambda s: [])
+    monkeypatch.setattr(fa, "load_entrypoints", lambda: {})
+    out = cf.compare_source(dict(SRC, **KB))
+    assert out["http_status"] == 403 and out["upstream_down"] is None
+    assert cf.is_known_block(out, dict(SRC, **KB))
+
+
+def _health_row(status, reason):
+    return {"id": "rothschild-co-am", "consecutive_zero": 3, "last_refusal": None,
+            "not_inspected_hours": 1, "probe_status": status, "probe_reason": reason,
+            "known_block": "Decided 2026-11-23: keep as is."}
+
+
+def test_the_health_page_keeps_the_known_line_for_the_decided_refusal():
+    alerts = ph._alerts([_health_row("KNOWN", "HTTPError: 403 Client Error")], [], [], [])
+    assert [a["kind"] for a in alerts] == ["known_block"]
+
+
+def test_the_health_page_alerts_another_failure_of_a_known_blocked_source():
+    """Codex r3: the site answers again but the selector broke -- say that, not 'known block'."""
+    alerts = ph._alerts([_health_row("FAIL", "fetch_articles returned 0 articles")], [], [], [])
+    kinds = [a["kind"] for a in alerts]
+    assert "known_block" not in kinds and "probe_fail" in kinds
+    assert any("returned 0 articles" in a["detail"] for a in alerts)

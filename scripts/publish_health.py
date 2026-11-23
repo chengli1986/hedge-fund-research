@@ -235,9 +235,11 @@ def _alerts(rendered: list[dict], ab: list[dict], corrupt_backups: list[str],
             stale: list[dict]) -> list[dict]:
     alerts: list[dict] = []
     for row in rendered:
-        if row.get("known_block"):
+        if row.get("known_block") and row["probe_status"] not in ("FAIL", "WARN", "UPSTREAM"):
             # A decided refusal (sources.json "known_block"): one line saying
-            # so instead of a zero-streak and a probe alert every night.
+            # so instead of a zero-streak and a probe alert every night. The
+            # probe marks the refusal itself KNOWN; a FAIL/WARN/UPSTREAM is
+            # some other failure and alerts below as usual (2026-11-23).
             if row["consecutive_zero"] >= ZERO_ALERT_AT or row["probe_status"] in ("FAIL", "KNOWN"):
                 alerts.append({"kind": "known_block", "source": row["id"],
                                "detail": "已知被拦、已决定保持现状：" + row["known_block"]})

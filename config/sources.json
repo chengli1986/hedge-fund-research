@@ -785,7 +785,8 @@
         "date_attr": "datetime"
       },
       "listing_template_active": true,
-      "known_block": "Every page refuses this server: the listing, sitemap.xml and /en/rss/ all answer 403 with a Cloudflare \"Just a moment...\" challenge since 2026-11-22 (last good fetch 2026-11-21); robots.txt still answers 200 and allows these paths, and a plain browser User-Agent was already sent. Decided 2026-11-23: keep the source as is, no bypass."
+      "known_block": "Every page refuses this server: the listing, sitemap.xml and /en/rss/ all answer 403 with a Cloudflare \"Just a moment...\" challenge since 2026-11-22 (last good fetch 2026-11-21); robots.txt still answers 200 and allows these paths, and a plain browser User-Agent was already sent. Decided 2026-11-23: keep the source as is, no bypass.",
+      "known_block_listing": true
     },
     {
       "id": "goehring-rozencwajg",
