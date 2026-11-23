@@ -13642,6 +13642,25 @@
           ],
           "error": null,
           "fetcher_used": false
+        },
+        "2026-11-23": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 0,
+          "newest_date": null,
+          "article_urls": [
+            "https://www.polencapital.com/insights/investing-at-the-speed-of-change",
+            "https://www.polencapital.com/insights/compute-to-capacity",
+            "https://www.polencapital.com/insights/commentary/focus-growth",
+            "https://www.polencapital.com/insights/2026-high-yield-and-leveraged-loan-mid-year-review-and",
+            "https://www.polencapital.com/insights/ais-second-act-from-suppliers-to-appliers",
+            "https://www.polencapital.com/insights/news/5perspectives-etf-launch",
+            "https://www.polencapital.com/insights/commentary/5perspectives-large-growth",
+            "https://www.polencapital.com/insights/beyond-the-25-year-milestone",
+            "https://www.polencapital.com/insights/navigating-credit-risk-lessons-from-the-first-brands-default"
+          ],
+          "error": null,
+          "fetcher_used": false
         }
       },
       "auto_decided": false,
@@ -13767,6 +13786,14 @@
           "error": "No new (un-sampled) article links available",
           "day": 5,
           "date": "2026-11-22"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 6,
+          "date": "2026-11-23"
         }
       ]
     },
@@ -13796,6 +13823,20 @@
           "fetcher_used": false
         },
         "2026-11-22": {
+          "accessible": true,
+          "article_count": 12,
+          "date_count": 0,
+          "newest_date": null,
+          "article_urls": [
+            "https://www.eaglecap.com/letter/q3-2026-investor-letter",
+            "https://www.eaglecap.com/letter/q2-2026-investor-letter",
+            "https://www.eaglecap.com/insights/graham-doddsville-eagle-co-cios-on-finding-value-in-overlooked-places",
+            "https://www.eaglecap.com/insights/capital-allocators-podcast-active-equity-excellence-with-adrian-meli"
+          ],
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-11-23": {
           "accessible": true,
           "article_count": 12,
           "date_count": 0,
@@ -13866,6 +13907,14 @@
           "js_only_checked": 0,
           "day": 2,
           "date": "2026-11-22"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 3,
+          "date": "2026-11-23"
         }
       ]
     },
@@ -13901,6 +13950,26 @@
           "fetcher_used": true
         },
         "2026-11-22": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "newest_date": "2026-09-30",
+          "article_urls": [
+            "https://oakmark.com/news-insights/a-conversation-with-shareholders-u-s-equity-market-commentary-3q-2026/",
+            "https://oakmark.com/news-insights/a-conversation-with-shareholders-international-equity-market-commentary-3q-2026/",
+            "https://oakmark.com/news-insights/the-business-behind-the-bond-fixed-income-market-commentary-3q-2026/",
+            "https://oakmark.com/news-insights/oakmark-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-select-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-global-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-global-select-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-international-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-international-small-cap-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-equity-and-income-fund-third-quarter-2026/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-11-23": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -13993,9 +14062,44 @@
           "js_only_checked": 0,
           "day": 2,
           "date": "2026-11-22"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://oakmark.com/news-insights/oakmark-global-select-fund-third-quarter-2026/",
+              "relevance": 0.75,
+              "depth": 0.45,
+              "extractable": 0.85,
+              "overall": 0.65,
+              "notes": "Oakmark Global Select Fund Q3 2026 performance report with sector/geographic attribution and value investing philosophy"
+            },
+            {
+              "url": "https://oakmark.com/news-insights/oakmark-international-fund-third-quarter-2026/",
+              "relevance": 0.75,
+              "depth": 0.45,
+              "extractable": 0.85,
+              "overall": 0.65,
+              "notes": "Oakmark International Fund Q3 2026 performance report with international market allocation and underperformance vs benchmark"
+            },
+            {
+              "url": "https://oakmark.com/news-insights/oakmark-international-small-cap-fund-third-quarter-2026/",
+              "relevance": 0.75,
+              "depth": 0.45,
+              "extractable": 0.85,
+              "overall": 0.65,
+              "notes": "Oakmark International Small Cap Fund Q3 2026 performance report with small-cap geographic and sector breakdown"
+            }
+          ],
+          "avg_score": 0.65,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 3,
+          "date": "2026-11-23"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-11-22"
+  "last_summary_sent_date": "2026-11-23"
 }
