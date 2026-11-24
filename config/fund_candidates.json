@@ -4201,19 +4201,19 @@
     "name": "Ninety One",
     "homepage_url": "https://ninetyone.com/en/insights",
     "source": "manual",
-    "status": "inaccessible",
+    "status": "rejected",
     "strategy_tags": [
       "emerging_markets",
       "macro",
       "equity",
       "fixed_income"
     ],
-    "status_since": "2026-11-12T09:04:54.667585+08:00",
+    "status_since": "2026-11-24T09:04:54.904257+08:00",
     "last_deep_analyzed_at": "2026-10-05T01:00:40Z",
     "quality": "MEDIUM",
     "quality_score": 0.55,
     "topics": "emerging markets, macro, equity, fixed income",
-    "notes": "Trial aborted on day 1: index reachable but no article links in static HTML — needs a fetcher. Routed to fetcher-synthesis queue.",
+    "notes": "Auto-rejected 2026-11-24: fetcher-synthesis failed 3 times (>= 3 threshold). Original notes: Trial aborted on day 1: index reachable but no article links in static HTML — needs a fetcher. Routed to fetcher-synthesis queue.",
     "added_at": "2026-09-25",
     "template_attempts": [
       {
@@ -5663,14 +5663,70 @@
     "topics": "equity, growth, credit, AI",
     "notes": "RECOMMEND: trial passed (7/7 days with articles, quality=0.75)",
     "synthesis_priority": true,
-    "synthesis_priority_set_at": "2026-11-24T09:04:35.314436+08:00"
+    "synthesis_priority_set_at": "2026-11-24T09:04:35.314436+08:00",
+    "template_attempts": [
+      {
+        "at": "2026-11-24T01:05:28+00:00",
+        "type": "card_list",
+        "spec": {
+          "type": "card_list",
+          "fetch": "requests",
+          "card": "a.ih-featured__card, a.ih-card",
+          "link": "self",
+          "title": "h2, h3",
+          "date": "[class*=__meta]",
+          "date_separator": "·",
+          "date_part": "before",
+          "path_prefix": "/insights/"
+        },
+        "listing_url": "https://www.polencapital.com/insights?hsLang=en",
+        "ok": true,
+        "rows": 10,
+        "dated": 6,
+        "problems": [],
+        "sample": [
+          {
+            "title": "Investing at the Speed of Change: Why Adaptability Matters in the AI Era",
+            "url": "https://www.polencapital.com/insights/investing-at-the-speed-of-change?hsLang=en",
+            "date": null
+          },
+          {
+            "title": "From Compute to Capacity: A Real SMID Opportunity",
+            "url": "https://www.polencapital.com/insights/compute-to-capacity?hsLang=en",
+            "date": "2026-07-31"
+          },
+          {
+            "title": "3Q 2026 Focus Growth Commentary",
+            "url": "https://www.polencapital.com/insights/commentary/focus-growth?hsLang=en",
+            "date": null
+          }
+        ]
+      }
+    ],
+    "listing_template": {
+      "type": "card_list",
+      "fetch": "requests",
+      "card": "a.ih-featured__card, a.ih-card",
+      "link": "self",
+      "title": "h2, h3",
+      "date": "[class*=__meta]",
+      "date_separator": "·",
+      "date_part": "before",
+      "path_prefix": "/insights/"
+    },
+    "listing_url": "https://www.polencapital.com/insights?hsLang=en",
+    "expected_hostname": "polencapital.com",
+    "synthesis_attempted_at": "2026-11-24T01:06:05.536697+00:00",
+    "synthesis_outcome": "success",
+    "promoted_at": "2026-11-24T01:06:05.536697+00:00",
+    "promoted_reason": "fetcher_synthesis_success (trial-PASS shortcut)"
   },
   {
     "id": "gcm-grosvenor",
     "name": "GCM Grosvenor",
     "homepage_url": "https://www.gcmgrosvenor.com",
     "source": "manual",
-    "status": "inaccessible",
+    "status": "visitable",
     "strategy_tags": [
       "private_equity",
       "real_assets",
@@ -5678,12 +5734,77 @@
       "multi_asset"
     ],
     "added_at": "2026-11-17",
-    "status_since": "2026-11-24T09:04:33.327332+08:00",
+    "status_since": "2026-11-24T09:06:05.536730+08:00",
     "quality": "MEDIUM",
     "quality_score": 0.6,
     "topics": "private equity, absolute return, infrastructure, credit",
     "notes": "[auto-stall 2026-11-24] seed->inaccessible after 7d stuck Monthly alts perspectives; /investment-perspectives/",
-    "last_deep_analyzed_at": "2026-11-22T01:03:39Z"
+    "last_deep_analyzed_at": "2026-11-22T01:03:39Z",
+    "template_attempts": [
+      {
+        "at": "2026-11-24T01:05:50+00:00",
+        "type": "rss_feed",
+        "spec": {
+          "type": "rss_feed",
+          "feed": "https://www.gcmgrosvenor.com/feed/",
+          "categories": [
+            "Investment Perspectives"
+          ]
+        },
+        "listing_url": "https://www.gcmgrosvenor.com/feed/",
+        "ok": false,
+        "rows": 0,
+        "problems": [
+          "ValueError: listing_template feed 'https://www.gcmgrosvenor.com/feed/' is not one of ('rss_url', 'url'); it names the config key holding the feed URL, not the URL itself"
+        ]
+      },
+      {
+        "at": "2026-11-24T01:05:54+00:00",
+        "type": "rss_feed",
+        "spec": {
+          "type": "rss_feed",
+          "feed": "url",
+          "categories": [
+            "Investment Perspectives"
+          ],
+          "sort": "date_desc"
+        },
+        "listing_url": "https://www.gcmgrosvenor.com/feed/",
+        "ok": true,
+        "rows": 6,
+        "dated": 6,
+        "problems": [],
+        "sample": [
+          {
+            "title": "The Blueprint for Continuation Vehicles: Expanding the Opportunity Set in Private Equity",
+            "url": "https://www.gcmgrosvenor.com/2026/11/23/the-blueprint-for-continuation-vehicles-expanding-the-opportunity-set-in-private-equity/",
+            "date": "2026-11-23"
+          },
+          {
+            "title": "Beyond the Track Record: Identifying the Next Generation of Investment Managers",
+            "url": "https://www.gcmgrosvenor.com/2026/11/17/beyond-the-track-record-identifying-the-next-generation-of-investment-managers/",
+            "date": "2026-11-17"
+          },
+          {
+            "title": "From Funds to Platforms: The Shift to Enterprise Value in Real Estate Investing",
+            "url": "https://www.gcmgrosvenor.com/2026/10/20/from-funds-to-platforms-the-shift-to-enterprise-value-in-real-estate-investing/",
+            "date": "2026-10-20"
+          }
+        ]
+      }
+    ],
+    "listing_template": {
+      "type": "rss_feed",
+      "feed": "url",
+      "categories": [
+        "Investment Perspectives"
+      ],
+      "sort": "date_desc"
+    },
+    "listing_url": "https://www.gcmgrosvenor.com/feed/",
+    "expected_hostname": "gcmgrosvenor.com",
+    "synthesis_attempted_at": "2026-11-24T01:06:05.536697+00:00",
+    "synthesis_outcome": "success"
   },
   {
     "id": "ubs-asset-management",
