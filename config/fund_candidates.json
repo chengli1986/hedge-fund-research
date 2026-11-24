@@ -5603,7 +5603,7 @@
     "name": "Polen Capital",
     "homepage_url": "https://www.polencapital.com",
     "source": "manual",
-    "status": "visitable",
+    "status": "promoted",
     "strategy_tags": [
       "equity",
       "fixed_income"
@@ -5637,7 +5637,7 @@
         "path": "insights"
       }
     ],
-    "status_since": "2026-11-17T09:03:06.774998+08:00",
+    "status_since": "2026-11-24T09:04:35.314396+08:00",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-11-16T09:03:47.684759+08:00",
     "added_at": "2026-11-16",
@@ -5661,7 +5661,9 @@
     "quality": "MEDIUM",
     "quality_score": 0.62,
     "topics": "equity, growth, credit, AI",
-    "notes": "Open growth/credit commentary, irregular cadence"
+    "notes": "RECOMMEND: trial passed (7/7 days with articles, quality=0.75)",
+    "synthesis_priority": true,
+    "synthesis_priority_set_at": "2026-11-24T09:04:35.314436+08:00"
   },
   {
     "id": "gcm-grosvenor",

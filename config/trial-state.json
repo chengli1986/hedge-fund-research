@@ -13534,9 +13534,7 @@
       "days_with_articles": 7,
       "avg_quality_score": 0.783,
       "newest_article_date": "2026-10-30"
-    }
-  ],
-  "active_trials": [
+    },
     {
       "id": "polen-capital",
       "name": "Polen Capital",
@@ -13546,7 +13544,7 @@
       "quality": "MEDIUM",
       "topics": "equity, growth, credit, AI",
       "start_date": "2026-11-18",
-      "end_date": null,
+      "end_date": "2026-11-24",
       "daily_checks": {
         "2026-11-18": {
           "accessible": true,
@@ -13661,10 +13659,29 @@
           ],
           "error": null,
           "fetcher_used": false
+        },
+        "2026-11-24": {
+          "accessible": true,
+          "article_count": 20,
+          "date_count": 0,
+          "newest_date": null,
+          "article_urls": [
+            "https://www.polencapital.com/insights/investing-at-the-speed-of-change",
+            "https://www.polencapital.com/insights/compute-to-capacity",
+            "https://www.polencapital.com/insights/commentary/focus-growth",
+            "https://www.polencapital.com/insights/2026-high-yield-and-leveraged-loan-mid-year-review-and",
+            "https://www.polencapital.com/insights/ais-second-act-from-suppliers-to-appliers",
+            "https://www.polencapital.com/insights/news/5perspectives-etf-launch",
+            "https://www.polencapital.com/insights/commentary/5perspectives-large-growth",
+            "https://www.polencapital.com/insights/beyond-the-25-year-milestone",
+            "https://www.polencapital.com/insights/navigating-credit-risk-lessons-from-the-first-brands-default"
+          ],
+          "error": null,
+          "fetcher_used": false
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -13794,9 +13811,22 @@
           "error": "No new (un-sampled) article links available",
           "day": 6,
           "date": "2026-11-23"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 7,
+          "date": "2026-11-24"
         }
-      ]
-    },
+      ],
+      "total_articles": 140,
+      "days_with_articles": 7,
+      "avg_quality_score": 0.746
+    }
+  ],
+  "active_trials": [
     {
       "id": "eagle-capital",
       "name": "Eagle Capital Management",
@@ -13837,6 +13867,20 @@
           "fetcher_used": false
         },
         "2026-11-23": {
+          "accessible": true,
+          "article_count": 12,
+          "date_count": 0,
+          "newest_date": null,
+          "article_urls": [
+            "https://www.eaglecap.com/letter/q3-2026-investor-letter",
+            "https://www.eaglecap.com/letter/q2-2026-investor-letter",
+            "https://www.eaglecap.com/insights/graham-doddsville-eagle-co-cios-on-finding-value-in-overlooked-places",
+            "https://www.eaglecap.com/insights/capital-allocators-podcast-active-equity-excellence-with-adrian-meli"
+          ],
+          "error": null,
+          "fetcher_used": false
+        },
+        "2026-11-24": {
           "accessible": true,
           "article_count": 12,
           "date_count": 0,
@@ -13915,6 +13959,14 @@
           "error": "No new (un-sampled) article links available",
           "day": 3,
           "date": "2026-11-23"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 4,
+          "date": "2026-11-24"
         }
       ]
     },
@@ -13970,6 +14022,26 @@
           "fetcher_used": true
         },
         "2026-11-23": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "newest_date": "2026-09-30",
+          "article_urls": [
+            "https://oakmark.com/news-insights/a-conversation-with-shareholders-u-s-equity-market-commentary-3q-2026/",
+            "https://oakmark.com/news-insights/a-conversation-with-shareholders-international-equity-market-commentary-3q-2026/",
+            "https://oakmark.com/news-insights/the-business-behind-the-bond-fixed-income-market-commentary-3q-2026/",
+            "https://oakmark.com/news-insights/oakmark-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-select-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-global-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-global-select-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-international-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-international-small-cap-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-equity-and-income-fund-third-quarter-2026/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-11-24": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -14097,9 +14169,100 @@
           "js_only_checked": 0,
           "day": 3,
           "date": "2026-11-23"
+        },
+        {
+          "sampled": 1,
+          "articles": [
+            {
+              "url": "https://oakmark.com/news-insights/oakmark-equity-and-income-fund-third-quarter-2026/",
+              "relevance": 0.7,
+              "depth": 0.4,
+              "extractable": 0.8,
+              "overall": 0.6,
+              "notes": "Quarterly fund performance commentary with sector attribution; light on substantive analysis, heavy on disclaimers"
+            }
+          ],
+          "avg_score": 0.6,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 4,
+          "date": "2026-11-24"
+        }
+      ]
+    },
+    {
+      "id": "partners-capital",
+      "name": "Partners Capital",
+      "research_url": "https://www.partners-cap.com",
+      "homepage_url": "https://www.partners-cap.com",
+      "fit_score": null,
+      "quality": "MEDIUM",
+      "topics": "multi-asset, macro, private equity, sustainable investing",
+      "start_date": "2026-11-24",
+      "end_date": null,
+      "daily_checks": {
+        "2026-11-24": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "newest_date": "2026-11-10",
+          "article_urls": [
+            "https://partners-cap.com/insights/the-liquidity-event-a-hundred-year-decision/",
+            "https://partners-cap.com/insights/inflections-us-midterms-deliver-seismic-shift/",
+            "https://partners-cap.com/insights/inflections-bond-yields-rising-like-its-1999/",
+            "https://partners-cap.com/insights/inflections-a-long-term-framework-for-investing-in-an-ai-world/",
+            "https://partners-cap.com/insights/inflections-spacex-and-the-2026-ipo-wave-what-it-means-for-the-broader-market/",
+            "https://partners-cap.com/insights/beyond-the-split-screen-inflation-meets-bonds-and-equities/",
+            "https://partners-cap.com/insights/sustainable-investing-report-2025-26/",
+            "https://partners-cap.com/insights/insights-2026/insights-2026-absolute-return/",
+            "https://partners-cap.com/insights/insights-2026-view-on-venture-capital/",
+            "https://partners-cap.com/insights/insights-2026/insights-2026-real-estate-and-infrastructure/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://partners-cap.com/insights/the-liquidity-event-a-hundred-year-decision/",
+              "relevance": 0.85,
+              "depth": 0.55,
+              "extractable": 0.75,
+              "overall": 0.71,
+              "notes": "Whitepaper on wealth management strategy for founders post-liquidity event; focuses on portfolio construction, tax efficiency, and family governance for multi-generational wealth."
+            },
+            {
+              "url": "https://partners-cap.com/insights/inflections-us-midterms-deliver-seismic-shift/",
+              "relevance": 0.9,
+              "depth": 0.75,
+              "extractable": 0.6,
+              "overall": 0.78,
+              "notes": "Macro analysis of 2026 US midterm election results and implications for AI capex, monetary policy, and equity markets; includes economic data and forward guidance."
+            },
+            {
+              "url": "https://partners-cap.com/insights/inflections-bond-yields-rising-like-its-1999/",
+              "relevance": 0.95,
+              "depth": 0.8,
+              "extractable": 0.5,
+              "overall": 0.8,
+              "notes": "Fixed income analysis examining rising global bond yields driven by above-potential growth rather than inflation/fiscal concerns; includes Fed forecasts and inflation expectations data (text truncated)."
+            }
+          ],
+          "avg_score": 0.763,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 1,
+          "date": "2026-11-24"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-11-23"
+  "last_summary_sent_date": "2026-11-24"
 }
