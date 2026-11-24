@@ -561,7 +561,7 @@
     "is_publicly_accessible": false,
     "has_article_index": false,
     "fit_score": 0.8843,
-    "notes": "Weekly/monthly market commentary, broad coverage",
+    "notes": "Real analysis; listing dates unreliable (future dates)",
     "research_links": [
       {
         "url": "https://www.wellington.com/en/insights",
@@ -640,9 +640,9 @@
       "article_signals": 0
     },
     "screening_reason": "Login/paywall detected",
-    "last_deep_analyzed_at": "2026-10-03T01:00:38Z",
+    "last_deep_analyzed_at": "2026-11-24T01:04:20Z",
     "quality": "MEDIUM",
-    "topics": "asset allocation, macro, equity, fixed income, AI",
+    "topics": "asset allocation, fixed income, private markets, macro",
     "strategy_tags": [
       "multi_asset",
       "macro",
@@ -650,7 +650,7 @@
       "fixed_income"
     ],
     "source": "manual",
-    "quality_score": 0.62,
+    "quality_score": 0.6,
     "status_since": "2026-04-19T09:01:46.368072+08:00",
     "added_at": "2026-04-06"
   },
@@ -2953,7 +2953,7 @@
     "status_since": "2026-08-06T09:03:11.081278+08:00",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-07-30T09:00:10.684084+08:00",
-    "notes": "Monthly private markets thought leadership, some marketing",
+    "notes": "Sparse, marketing-heavy private credit explainers",
     "is_publicly_accessible": true,
     "has_article_index": true,
     "last_screened_at": "2026-07-30T09:00:13.428935+08:00",
@@ -2970,10 +2970,10 @@
     "screening_reason": "Research index detected",
     "fit_score": 0.925,
     "last_validated_at": "2026-07-30T09:00:18.054065+08:00",
-    "last_deep_analyzed_at": "2026-09-29T01:00:46Z",
+    "last_deep_analyzed_at": "2026-11-24T01:04:20Z",
     "quality": "MEDIUM",
-    "quality_score": 0.62,
-    "topics": "private markets, credit, real assets, PE",
+    "quality_score": 0.5,
+    "topics": "private credit, direct lending, PE, real assets",
     "synthesis_priority_set_at": "2026-08-06T09:03:11.081305+08:00",
     "synthesis_attempted_at": "2026-08-06T01:05:19.362016+00:00",
     "synthesis_outcome": "success",
@@ -3080,11 +3080,11 @@
     "status_since": "2026-08-08T09:02:21.620976+08:00",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-07-30T09:02:50.327072+08:00",
-    "last_deep_analyzed_at": "2026-09-29T01:00:46Z",
-    "quality": "HIGH",
-    "quality_score": 0.8,
-    "topics": "fixed income, macro, securitized credit, insurance",
-    "notes": "RECOMMEND: Frequent fixed income/macro research, free",
+    "last_deep_analyzed_at": "2026-11-24T01:04:20Z",
+    "quality": "MEDIUM",
+    "quality_score": 0.75,
+    "topics": "fixed income, macro, emerging markets, equity",
+    "notes": "Frequent free FI/EM research, some promotion",
     "is_publicly_accessible": true,
     "has_article_index": true,
     "last_screened_at": "2026-08-01T09:00:11.611862+08:00",
@@ -5755,5 +5755,29 @@
     "quality_score": 0.78,
     "topics": "equity, long-term investing, AI",
     "notes": "RECOMMEND: Quarterly equity letters, free, stock theses"
+  },
+  {
+    "id": "sculptor-capital",
+    "name": "Sculptor Capital Management",
+    "homepage_url": "https://www.sculptor.com",
+    "source": "manual",
+    "status": "discovered",
+    "strategy_tags": [
+      "event_driven",
+      "private_credit",
+      "multi_asset"
+    ],
+    "research_url": "https://www.sculptor.com/news/insights",
+    "official_domain": "www.sculptor.com",
+    "research_links": [
+      {
+        "url": "https://www.sculptor.com/news/insights",
+        "label": "Insights",
+        "path": "news/insights"
+      }
+    ],
+    "status_since": "2026-11-24T09:04:21.245572+08:00",
+    "discovery_method": "discover_fund_sites",
+    "last_discovered_at": "2026-11-24T09:04:21.245533+08:00"
   }
 ]
