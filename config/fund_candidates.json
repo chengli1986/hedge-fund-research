@@ -5668,7 +5668,7 @@
     "name": "GCM Grosvenor",
     "homepage_url": "https://www.gcmgrosvenor.com",
     "source": "manual",
-    "status": "seed",
+    "status": "inaccessible",
     "strategy_tags": [
       "private_equity",
       "real_assets",
@@ -5676,11 +5676,11 @@
       "multi_asset"
     ],
     "added_at": "2026-11-17",
-    "status_since": "2026-11-17T09:03:52.683395+08:00",
+    "status_since": "2026-11-24T09:04:33.327332+08:00",
     "quality": "MEDIUM",
     "quality_score": 0.6,
     "topics": "private equity, absolute return, infrastructure, credit",
-    "notes": "Monthly alts perspectives; /investment-perspectives/",
+    "notes": "[auto-stall 2026-11-24] seed->inaccessible after 7d stuck Monthly alts perspectives; /investment-perspectives/",
     "last_deep_analyzed_at": "2026-11-22T01:03:39Z"
   },
   {
