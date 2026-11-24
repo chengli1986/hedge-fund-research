@@ -108,7 +108,6 @@ BADGE_COLORS: dict[str, str] = {
     "fiera-capital": "#9034e0",             # Fiera violet (same grid search, HLS saturation <=0.85 and lightness >=0.25, with all 51 existing: min RGB dist 56.1 — 56.1 to #9b6be0 GMO violet, 56.1 to #c018e8 Fulcrum, 57.2 to #7a4cb1 JPMAM purple; WCAG AA 5.59:1 on white)
     "doubleline": "#508070",                # DoubleLine sage/grey-green (same grid search, HLS saturation <=0.85 and lightness >=0.25, with all 52 existing: min RGB dist 52.9 — 52.9 to #2d6a4f Robeco, 56.0 to #4a6fa5 GSAM, 58.8 to #887078 Madison; WCAG AA 4.5:1 on white)
     "crescat-capital": "#2818e8",           # Crescat vivid ultramarine (same grid search with DoubleLine added, all 53 existing: min RGB dist 50.5 — 50.5 to #1f49e0 MSCI cobalt, 54.3 to #1010b8 RBC BlueBay, 56.1 to #6014e8 Hamilton Lane; WCAG AAA 8.8:1 on white)
-    "polen-capital": "#806048",             # Polen warm taupe-brown (same grid search, HLS saturation <=0.85 and lightness >=0.25, with all 54 existing: min RGB dist 50.4 — 50.4 to #5d4037 Acadian umber, 50.9 to #556b2f KKR olive, 51.2 to #887078 Madison; WCAG AA 5.7:1 on white)
 }
 
 INITIAL_VISIBLE = 20
@@ -500,13 +499,6 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "总部位于科罗拉多州丹佛的全球宏观资产管理公司，由 Kevin C. Smith 创立，业绩记录始于 1999 年，三大策略管理资产约 $550M。以集中、逆向的宏观押注著称：做多贵金属矿业股、做空估值过高的美股，兼做信用与股票多空。",
         "notable_en": "Its long, chart-heavy research letters argue contrarian macro theses, such as buying gold miners while shorting an AI-driven S&P 500 valuation bubble; the long/short hedge fund dates from early 2000.",
         "notable_zh": "长篇、图表密集的研究信以逆向宏观论点著称，例如做多金矿股、同时做空由 AI 推动的标普 500 估值泡沫；多空对冲基金始于 2000 年初。",
-    },
-    "polen-capital": {
-        "founded": "1979", "aum": "~$30B", "hq": "Boca Raton, Florida",
-        "type_en": "Asset Manager (Growth Equity / Credit)", "type_zh": "资产管理（成长股 / 信用）",
-        "desc_zh": "1979 年由 David Polen 创立、总部位于佛罗里达州博卡拉顿的员工持股资产管理公司，管理规模约 $30B。以集中持股的优质成长股投资（Focus Growth）起家，现为多团队平台：Quality Growth、多基金经理的 5Perspectives Growth，以及高收益债 / 杠杆贷款为主的 Leveraged Credit。",
-        "notable_en": "Built its name on the concentrated Focus Growth large-cap quality-growth strategy; now four autonomous investment franchises with offices in Boca Raton, Chicago, Boston and London, publishing quarterly strategy commentaries and thematic research on AI and leveraged credit.",
-        "notable_zh": "以集中持股的 Focus Growth 大盘优质成长策略成名；现有四个独立投资团队，办公室分布在博卡拉顿、芝加哥、波士顿和伦敦，定期发布各策略季度评述，以及 AI 主题与杠杆信用研究。",
     },
 }
 

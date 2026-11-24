@@ -1337,33 +1337,6 @@
         "sort": "date_desc"
       },
       "listing_template_active": true
-    },
-    {
-      "id": "polen-capital",
-      "strategy_tags": [
-        "equity",
-        "fixed_income"
-      ],
-      "name": "Polen Capital",
-      "short_name": "Polen",
-      "url": "https://www.polencapital.com/insights?hsLang=en",
-      "method": "ssr",
-      "frequency": "monthly",
-      "description": "Employee-owned growth investor founded in 1979 by David Polen (~$30B AUM), headquartered in Boca Raton. Concentrated quality-growth equity (Focus Growth), the multi-PM 5Perspectives Growth franchise and leveraged credit (high yield / leveraged loans).",
-      "notable_authors": [],
-      "expected_hostname": "polencapital.com",
-      "listing_template": {
-        "type": "card_list",
-        "fetch": "requests",
-        "card": "a.ih-featured__card, a.ih-card",
-        "link": "self",
-        "title": "h2, h3",
-        "date": "[class*=__meta]",
-        "date_separator": "·",
-        "date_part": "before",
-        "path_prefix": "/insights/"
-      },
-      "listing_template_active": true
     }
   ]
 }

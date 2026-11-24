@@ -3019,47 +3019,6 @@ def _fetch_content_crescat_capital(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
-def _fetch_content_polen_capital(article: dict) -> Optional[tuple[Path, str]]:
-    """Fetch Polen Capital insight content via requests (SSR HubSpot CMS).
-
-    The listing is polencapital.com/insights (a card_list template). Each
-    page type has its own HubSpot rich-text module whose id ends in
-    ``_body`` (``hs_cos_wrapper_iap_body`` for insight articles,
-    ``qc_body`` for quarterly commentaries, ``wr_body`` for webinars);
-    the disclosures, sidebar, FAQ and related-links modules are separate
-    ``_disclosures``/``_sidebar``/... spans and are not read (measured
-    2026-11-24: "From Compute to Capacity" body 2.8k chars, 3Q Focus
-    Growth commentary 16.5k). Webinar pages hold only a ~120-char
-    subscribe box there, so they fall under the 500-char floor and stay
-    title-only.
-    """
-    url = article["url"]
-    log.info("  Polen: fetching article page %s", url)
-    try:
-        resp = requests.get(url, headers=HEADERS, timeout=30)
-        resp.raise_for_status()
-    except Exception as e:
-        log.error("  Polen: fetch failed: %s", e)
-        return None
-
-    soup = BeautifulSoup(resp.text, "html.parser")
-    body = soup.select_one('span.hs_cos_wrapper_type_rich_text[id^="hs_cos_wrapper_"][id$="_body"]')
-    if body is None:
-        log.warning("  Polen: no *_body rich-text module on page: %s", url)
-        return None
-    for tag in body.select("script, style, aside, nav, form, button"):
-        tag.decompose()
-    text = _normalize_html(str(body), "p, li, h2, h3, h4")
-    if not _check_min_content_length(text, 500):
-        log.warning("  Polen: extracted text too short (%d chars)", len(text))
-        return None
-
-    content_path = CONTENT_DIR / f"{article['id']}.txt"
-    _atomic_write(content_path, text.encode("utf-8"))
-    log.info("  Polen: saved %d chars to %s", len(text), content_path.name)
-    return (content_path, "ok")
-
-
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -3115,7 +3074,6 @@ CONTENT_FETCHERS = {
     "fiera-capital": _fetch_content_fiera_capital,
     "doubleline": _fetch_content_doubleline,
     "crescat-capital": _fetch_content_crescat_capital,
-    "polen-capital": _fetch_content_polen_capital,
 }
 
 
