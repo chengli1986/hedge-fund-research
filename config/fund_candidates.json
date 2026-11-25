@@ -5701,6 +5701,43 @@
             "date": null
           }
         ]
+      },
+      {
+        "at": "2026-11-25T18:30:57+00:00",
+        "type": "card_list",
+        "spec": {
+          "type": "card_list",
+          "fetch": "requests",
+          "card": "a.ih-featured__card, a.ih-card",
+          "link": "self",
+          "title": "h2, h3",
+          "date": "[class*=__meta], [class*=__author-meta]",
+          "date_separator": "·",
+          "date_part": "before",
+          "path_prefix": "/insights/"
+        },
+        "listing_url": "https://www.polencapital.com/insights?hsLang=en",
+        "ok": true,
+        "rows": 10,
+        "dated": 7,
+        "problems": [],
+        "sample": [
+          {
+            "title": "Investing at the Speed of Change: Why Adaptability Matters in the AI Era",
+            "url": "https://www.polencapital.com/insights/investing-at-the-speed-of-change?hsLang=en",
+            "date": "2026-11-30"
+          },
+          {
+            "title": "From Compute to Capacity: A Real SMID Opportunity",
+            "url": "https://www.polencapital.com/insights/compute-to-capacity?hsLang=en",
+            "date": "2026-07-31"
+          },
+          {
+            "title": "3Q 2026 Focus Growth Commentary",
+            "url": "https://www.polencapital.com/insights/commentary/focus-growth?hsLang=en",
+            "date": null
+          }
+        ]
       }
     ],
     "listing_template": {
@@ -5709,7 +5746,7 @@
       "card": "a.ih-featured__card, a.ih-card",
       "link": "self",
       "title": "h2, h3",
-      "date": "[class*=__meta]",
+      "date": "[class*=__meta], [class*=__author-meta]",
       "date_separator": "·",
       "date_part": "before",
       "path_prefix": "/insights/"
