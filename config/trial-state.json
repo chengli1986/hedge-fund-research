@@ -13893,6 +13893,20 @@
           ],
           "error": null,
           "fetcher_used": false
+        },
+        "2026-11-25": {
+          "accessible": true,
+          "article_count": 12,
+          "date_count": 0,
+          "newest_date": null,
+          "article_urls": [
+            "https://www.eaglecap.com/letter/q3-2026-investor-letter",
+            "https://www.eaglecap.com/letter/q2-2026-investor-letter",
+            "https://www.eaglecap.com/insights/graham-doddsville-eagle-co-cios-on-finding-value-in-overlooked-places",
+            "https://www.eaglecap.com/insights/capital-allocators-podcast-active-equity-excellence-with-adrian-meli"
+          ],
+          "error": null,
+          "fetcher_used": false
         }
       },
       "auto_decided": false,
@@ -13967,6 +13981,14 @@
           "error": "No new (un-sampled) article links available",
           "day": 4,
           "date": "2026-11-24"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 5,
+          "date": "2026-11-25"
         }
       ]
     },
@@ -14042,6 +14064,26 @@
           "fetcher_used": true
         },
         "2026-11-24": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "newest_date": "2026-09-30",
+          "article_urls": [
+            "https://oakmark.com/news-insights/a-conversation-with-shareholders-u-s-equity-market-commentary-3q-2026/",
+            "https://oakmark.com/news-insights/a-conversation-with-shareholders-international-equity-market-commentary-3q-2026/",
+            "https://oakmark.com/news-insights/the-business-behind-the-bond-fixed-income-market-commentary-3q-2026/",
+            "https://oakmark.com/news-insights/oakmark-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-select-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-global-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-global-select-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-international-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-international-small-cap-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-equity-and-income-fund-third-quarter-2026/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-11-25": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -14188,6 +14230,14 @@
           "js_only_checked": 0,
           "day": 4,
           "date": "2026-11-24"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 5,
+          "date": "2026-11-25"
         }
       ]
     },
@@ -14203,6 +14253,26 @@
       "end_date": null,
       "daily_checks": {
         "2026-11-24": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "newest_date": "2026-11-10",
+          "article_urls": [
+            "https://partners-cap.com/insights/the-liquidity-event-a-hundred-year-decision/",
+            "https://partners-cap.com/insights/inflections-us-midterms-deliver-seismic-shift/",
+            "https://partners-cap.com/insights/inflections-bond-yields-rising-like-its-1999/",
+            "https://partners-cap.com/insights/inflections-a-long-term-framework-for-investing-in-an-ai-world/",
+            "https://partners-cap.com/insights/inflections-spacex-and-the-2026-ipo-wave-what-it-means-for-the-broader-market/",
+            "https://partners-cap.com/insights/beyond-the-split-screen-inflation-meets-bonds-and-equities/",
+            "https://partners-cap.com/insights/sustainable-investing-report-2025-26/",
+            "https://partners-cap.com/insights/insights-2026/insights-2026-absolute-return/",
+            "https://partners-cap.com/insights/insights-2026-view-on-venture-capital/",
+            "https://partners-cap.com/insights/insights-2026/insights-2026-real-estate-and-infrastructure/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-11-25": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -14260,9 +14330,44 @@
           "js_only_checked": 0,
           "day": 1,
           "date": "2026-11-24"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://partners-cap.com/insights/inflections-a-long-term-framework-for-investing-in-an-ai-world/",
+              "relevance": 0.95,
+              "depth": 0.85,
+              "extractable": 0.7,
+              "overall": 0.86,
+              "notes": "Framework for AI investment scenarios as GPT; analyzes hyperscaler capex/FCF dynamics and market inflections across software, semiconductors, and cloud sectors."
+            },
+            {
+              "url": "https://partners-cap.com/insights/inflections-spacex-and-the-2026-ipo-wave-what-it-means-for-the-broader-market/",
+              "relevance": 0.9,
+              "depth": 0.75,
+              "extractable": 0.65,
+              "overall": 0.79,
+              "notes": "SpaceX IPO valuation analysis with orbital AI data center thesis; compares market price ($2.2T) vs. Morningstar scenarios ($63/share fair value); discusses technical constraints and Musk track record."
+            },
+            {
+              "url": "https://partners-cap.com/insights/beyond-the-split-screen-inflation-meets-bonds-and-equities/",
+              "relevance": 0.92,
+              "depth": 0.8,
+              "extractable": 0.65,
+              "overall": 0.818,
+              "notes": "Macro analysis of inflation resurgence (energy, semiconductors, services) and bond-equity inflection; argues for diversification into absolute return strategies as correlations rise."
+            }
+          ],
+          "avg_score": 0.823,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 2,
+          "date": "2026-11-25"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-11-24"
+  "last_summary_sent_date": "2026-11-25"
 }
