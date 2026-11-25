@@ -5,6 +5,10 @@ Root cause (2026-06-02): Capital Group articles sit behind an Akamai
 /advisor/public/authentication-0.htm. The old stateless httpx.get() always
 landed on the gate, and _is_likely_js_only() misread the gate as a JS shell,
 flipping a sampler failure into a (wrong) LOW QUALITY verdict.
+
+2026-11-26: the helper moved from httpx.Client to requests.Session (same
+client as production); these fakes now stand in for the Session. The real
+Session over an offline transport is covered in test_trial_requests_client.py.
 """
 
 import importlib.util
@@ -39,14 +43,18 @@ class _FakeResponse:
         self.url = url
         self.status_code = status_code
         self.text = text
+        self.headers = {"Content-Type": "text/html; charset=UTF-8"}
+        self.encoding = None
 
 
 class _CookieGateClient:
     """Simulates Akamai content gate: first GET (no cookies) lands on the auth
-    page and sets a cookie; subsequent GETs pass through to real content."""
+    page and sets a cookie; subsequent GETs pass through to real content.
+    Stands in for requests.Session (headers.update, get(url, **kwargs))."""
 
     def __init__(self, *args, **kwargs):
         self.cookies = {}
+        self.headers = {}
         self.calls = 0
 
     def __enter__(self):
@@ -55,7 +63,7 @@ class _CookieGateClient:
     def __exit__(self, *exc):
         return False
 
-    def get(self, url):
+    def get(self, url, **kwargs):
         self.calls += 1
         if not self.cookies:
             self.cookies["ADVISOR_CHECK"] = "1"
@@ -66,7 +74,7 @@ class _CookieGateClient:
 class _HardGateClient(_CookieGateClient):
     """A gate that never lets you through (real login wall)."""
 
-    def get(self, url):
+    def get(self, url, **kwargs):
         self.calls += 1
         self.cookies["SESSION"] = "1"
         return _FakeResponse(url=GATE_URL, text=GATE_HTML)
@@ -75,7 +83,7 @@ class _HardGateClient(_CookieGateClient):
 class _NoGateClient(_CookieGateClient):
     """No gate at all — content served on first request."""
 
-    def get(self, url):
+    def get(self, url, **kwargs):
         self.calls += 1
         return _FakeResponse(url=url, text=REAL_CONTENT_HTML)
 
@@ -115,7 +123,7 @@ def test_auth_gate_login_redirect_is_gate():
 # ── _get_with_auth_retry ──────────────────────────────────────────────────────
 
 def test_retry_passes_cookie_gate(monkeypatch):
-    monkeypatch.setattr(tm.httpx, "Client", _CookieGateClient)
+    monkeypatch.setattr(tm.requests, "Session", _CookieGateClient)
     resp = tm._get_with_auth_retry(ARTICLE_URL)
     assert resp is not None
     assert "real investment research" in resp.text
@@ -123,7 +131,7 @@ def test_retry_passes_cookie_gate(monkeypatch):
 
 
 def test_retry_gives_up_on_hard_gate(monkeypatch):
-    monkeypatch.setattr(tm.httpx, "Client", _HardGateClient)
+    monkeypatch.setattr(tm.requests, "Session", _HardGateClient)
     resp = tm._get_with_auth_retry(ARTICLE_URL)
     # 重试一次后仍在 gate 上 → 返回 gate response（调用方负责判断）
     assert resp is not None
@@ -138,7 +146,7 @@ def test_no_gate_only_fetches_once(monkeypatch):
             super().__init__(*a, **k)
             holder["client"] = self
 
-    monkeypatch.setattr(tm.httpx, "Client", _Recording)
+    monkeypatch.setattr(tm.requests, "Session", _Recording)
     resp = tm._get_with_auth_retry(ARTICLE_URL)
     assert resp is not None
     assert holder["client"].calls == 1
@@ -148,7 +156,7 @@ def test_no_gate_only_fetches_once(monkeypatch):
 
 def test_extract_article_text_passes_cookie_gate(monkeypatch):
     """有 cookie 软门禁的文章：重试后应提取到正文（修复前返回 None）。"""
-    monkeypatch.setattr(tm.httpx, "Client", _CookieGateClient)
+    monkeypatch.setattr(tm.requests, "Session", _CookieGateClient)
     text = tm._extract_article_text(ARTICLE_URL)
     assert text is not None
     assert "real investment research" in text
@@ -156,13 +164,13 @@ def test_extract_article_text_passes_cookie_gate(monkeypatch):
 
 def test_extract_article_text_returns_none_on_hard_gate(monkeypatch):
     """硬登录墙：重试后仍在 gate 上 → 返回 None（而不是把 gate 页面当正文）。"""
-    monkeypatch.setattr(tm.httpx, "Client", _HardGateClient)
+    monkeypatch.setattr(tm.requests, "Session", _HardGateClient)
     assert tm._extract_article_text(ARTICLE_URL) is None
 
 
 def test_is_likely_js_only_false_for_auth_gate(monkeypatch):
     """核心 bug 修复：auth gate（大 HTML + 无正文）不得再被判为 js_only。"""
-    monkeypatch.setattr(tm.httpx, "Client", _HardGateClient)
+    monkeypatch.setattr(tm.requests, "Session", _HardGateClient)
     assert tm._is_likely_js_only(ARTICLE_URL) is False
 
 
@@ -170,7 +178,7 @@ def test_is_likely_js_only_still_true_for_real_js_shell(monkeypatch):
     """回归保护：真正的 JS shell（200 + 大 HTML + 无正文 + 无重定向）仍判为 True。"""
 
     class _JsShellClient(_CookieGateClient):
-        def get(self, url):
+        def get(self, url, **kwargs):
             self.calls += 1
             # 同 URL 返回（无重定向），大体积 HTML 但没有可提取正文
             return _FakeResponse(
@@ -179,7 +187,7 @@ def test_is_likely_js_only_still_true_for_real_js_shell(monkeypatch):
                      + "</head><body><div id='root'></div></body></html>",
             )
 
-    monkeypatch.setattr(tm.httpx, "Client", _JsShellClient)
+    monkeypatch.setattr(tm.requests, "Session", _JsShellClient)
     assert tm._is_likely_js_only(ARTICLE_URL) is True
 
 
