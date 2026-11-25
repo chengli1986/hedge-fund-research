@@ -1634,8 +1634,8 @@
     "quality": "LOW",
     "quality_score": 0.2,
     "topics": "fixed income, credit (site inactive since Apr 2026)",
-    "notes": "rejected: site moved to metlife-im (308 redirect verified)",
-    "last_deep_analyzed_at": "2026-09-27T01:00:57Z",
+    "notes": "rejected: still 308 to metlife.com (rechecked 11-25)",
+    "last_deep_analyzed_at": "2026-11-25T01:03:54Z",
     "is_publicly_accessible": true,
     "has_article_index": true,
     "research_url": "https://www.pinebridge.com/en/all-insights",
@@ -3784,11 +3784,11 @@
     "status_since": "2026-09-08T09:03:17.581240+08:00",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-08-31T09:02:19.247166+08:00",
-    "last_deep_analyzed_at": "2026-10-03T01:00:38Z",
+    "last_deep_analyzed_at": "2026-11-25T01:03:54Z",
     "quality": "HIGH",
-    "quality_score": 0.72,
-    "topics": "private equity, private credit, infrastructure",
-    "notes": "Quarterly PE/credit updates, fills private mkts gap",
+    "quality_score": 0.74,
+    "topics": "private equity, private credit, infrastructure, secondaries",
+    "notes": "RECOMMEND: Qtly PE/credit updates w/ data, Nov 2026",
     "is_publicly_accessible": true,
     "has_article_index": true,
     "last_screened_at": "2026-09-01T09:01:39.073955+08:00",
@@ -3829,11 +3829,11 @@
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-09-02T09:00:15.201191+08:00",
     "status_since": "2026-09-02T09:04:08.773409+08:00",
-    "last_deep_analyzed_at": "2026-10-04T01:00:20Z",
+    "last_deep_analyzed_at": "2026-11-25T01:03:54Z",
     "quality": "LOW",
     "quality_score": 0.35,
     "topics": "macro, multi-strategy, manager selection, blockchain venture capital",
-    "notes": "Podcasts/sparse posts, no article index; stay rejected",
+    "notes": "Mostly podcasts; 1 article series Jun 2026; stay rej",
     "added_at": "2026-09-01"
   },
   {
@@ -5884,7 +5884,7 @@
     "name": "Sculptor Capital Management",
     "homepage_url": "https://www.sculptor.com",
     "source": "manual",
-    "status": "discovered",
+    "status": "inaccessible",
     "strategy_tags": [
       "event_driven",
       "private_credit",
@@ -5899,9 +5899,30 @@
         "path": "news/insights"
       }
     ],
-    "status_since": "2026-11-24T09:04:31.575950+08:00",
+    "status_since": "2026-11-25T09:03:06.729737+08:00",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-11-24T09:04:21.245533+08:00",
-    "added_at": "2026-11-24"
+    "added_at": "2026-11-24",
+    "is_publicly_accessible": false,
+    "has_article_index": false,
+    "last_screened_at": "2026-11-25T09:03:02.890113+08:00",
+    "screening_signals": {
+      "status_code": 200,
+      "has_password_input": false,
+      "login_marker_count": 0,
+      "article_tags": 0,
+      "time_tags": 0,
+      "date_patterns": 0,
+      "h2_tags": 2,
+      "article_signals": 0
+    },
+    "screening_reason": "Insufficient article index signals",
+    "fit_score": 0.76,
+    "last_validated_at": "2026-11-25T09:03:06.729715+08:00",
+    "quality": "MEDIUM",
+    "quality_score": 0.58,
+    "topics": "credit, asset-based finance, convertible arb, multi-strategy",
+    "notes": "Sparse Q&A pieces; Oct-2026 items are videos",
+    "last_deep_analyzed_at": "2026-11-25T01:03:54Z"
   }
 ]

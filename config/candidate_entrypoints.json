@@ -2018,6 +2018,68 @@
           "label": "bad"
         }
       ]
+    },
+    "sculptor-capital": {
+      "last_discovered_at": "2026-11-25T09:03:06.729715+08:00",
+      "discovered_by": "discover_candidate_entrypoints",
+      "entrypoints": [
+        {
+          "url": "https://www.sculptor.com/news/insights",
+          "final_score": 0.76,
+          "domain_score": 1.0,
+          "path_score": 1.0,
+          "structure_score": 0.4,
+          "gate_penalty": 0.3,
+          "active": true
+        },
+        {
+          "url": "https://www.sculptor.com/what-we-do/responsible-investing",
+          "final_score": 0.73,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.8,
+          "gate_penalty": 0.3,
+          "active": false
+        },
+        {
+          "url": "https://www.sculptor.com/news/2025-11-01-what-we-see-unlocking-value-across-the-vast-universe-of-asset-based-finance",
+          "final_score": 0.73,
+          "domain_score": 1.0,
+          "path_score": 0.5,
+          "structure_score": 0.8,
+          "gate_penalty": 0.3,
+          "active": false
+        }
+      ],
+      "rejected_pages": [
+        {
+          "url": "https://www.sculptor.com/about-sculptor/index",
+          "final_score": 0.46,
+          "domain_score": 1.0,
+          "path_score": 0.0,
+          "structure_score": 0.4,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        },
+        {
+          "url": "https://www.sculptor.com/about-sculptor/our-clients",
+          "final_score": 0.46,
+          "domain_score": 1.0,
+          "path_score": 0.0,
+          "structure_score": 0.4,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        },
+        {
+          "url": "https://www.sculptor.com/about-sculptor/leadership",
+          "final_score": 0.46,
+          "domain_score": 1.0,
+          "path_score": 0.0,
+          "structure_score": 0.4,
+          "gate_penalty": 0.3,
+          "label": "bad"
+        }
+      ]
     }
   }
 }
