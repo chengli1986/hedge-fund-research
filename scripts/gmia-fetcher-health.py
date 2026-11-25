@@ -69,10 +69,18 @@ ENV_FILE = Path.home() / ".stock-monitor.env"
 # ares-management failure mode where status flipped to "visitable" but the
 # saved research_url was 404 — no test or daily cron noticed for 2 days.
 CANDIDATE_PROBE_TIMEOUT_S = 15
-CANDIDATE_PROBE_UA = (
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-)
+# The probe sends what production sends: requests with fetch_articles.HEADERS
+# (2026-11-26). It used httpx with its own Chrome/120 UA, and gcm-grosvenor
+# answered httpx with a "Checking your browser" 403 while requests got the
+# feed (same URL, same headers), so the run exited 1 for a site production can
+# read. Copied, not imported (fetch_articles sets up logging on import);
+# tests/test_candidate_probe_requests.py keeps the two equal.
+CANDIDATE_PROBE_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                  "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+}
 CANDIDATE_SHELL_HTML_THRESHOLD = 5000  # below this is probably an error page
 
 WARN_ALERT_THRESHOLD = 3        # send WARN email after this many consecutive WARNs
@@ -1680,7 +1688,7 @@ def probe_candidate_url(candidate: dict) -> dict:
       content_size: bytes
       elapsed_ms: int
     """
-    import httpx  # local import — only needed for this code path
+    import requests  # local import — only needed for this code path
 
     url = candidate_probe_url(candidate)
     if not url:
@@ -1690,26 +1698,22 @@ def probe_candidate_url(candidate: dict) -> dict:
 
     started = time.monotonic()
     try:
-        with httpx.Client(
-            headers={"User-Agent": CANDIDATE_PROBE_UA},
-            timeout=CANDIDATE_PROBE_TIMEOUT_S,
-            follow_redirects=True,
-        ) as client:
-            resp = client.get(url)
-            elapsed_ms = int((time.monotonic() - started) * 1000)
-            size = len(resp.content)
-            if resp.status_code >= 400:
-                return {"status": "FAIL", "http_code": resp.status_code,
-                        "content_size": size, "elapsed_ms": elapsed_ms,
-                        "reason": f"HTTP {resp.status_code}"}
-            if size < CANDIDATE_SHELL_HTML_THRESHOLD:
-                return {"status": "WARN", "http_code": resp.status_code,
-                        "content_size": size, "elapsed_ms": elapsed_ms,
-                        "reason": f"thin body ({size}b < {CANDIDATE_SHELL_HTML_THRESHOLD}b) "
-                                  f"— likely shell HTML or error page"}
-            return {"status": "OK", "http_code": resp.status_code,
+        resp = requests.get(url, headers=CANDIDATE_PROBE_HEADERS,
+                            timeout=CANDIDATE_PROBE_TIMEOUT_S, allow_redirects=True)
+        elapsed_ms = int((time.monotonic() - started) * 1000)
+        size = len(resp.content)
+        if resp.status_code >= 400:
+            return {"status": "FAIL", "http_code": resp.status_code,
                     "content_size": size, "elapsed_ms": elapsed_ms,
-                    "reason": "ok"}
+                    "reason": f"HTTP {resp.status_code}"}
+        if size < CANDIDATE_SHELL_HTML_THRESHOLD:
+            return {"status": "WARN", "http_code": resp.status_code,
+                    "content_size": size, "elapsed_ms": elapsed_ms,
+                    "reason": f"thin body ({size}b < {CANDIDATE_SHELL_HTML_THRESHOLD}b) "
+                              f"— likely shell HTML or error page"}
+        return {"status": "OK", "http_code": resp.status_code,
+                "content_size": size, "elapsed_ms": elapsed_ms,
+                "reason": "ok"}
     except Exception as exc:
         elapsed_ms = int((time.monotonic() - started) * 1000)
         return {"status": "FAIL", "http_code": None, "content_size": 0,
