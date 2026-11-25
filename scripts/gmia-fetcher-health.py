@@ -70,10 +70,12 @@ ENV_FILE = Path.home() / ".stock-monitor.env"
 # saved research_url was 404 — no test or daily cron noticed for 2 days.
 CANDIDATE_PROBE_TIMEOUT_S = 15
 # The probe sends what production sends: requests with fetch_articles.HEADERS
-# (2026-11-26). It used httpx with its own Chrome/120 UA, and gcm-grosvenor
-# answered httpx with a "Checking your browser" 403 while requests got the
-# feed (same URL, same headers), so the run exited 1 for a site production can
-# read. Copied, not imported (fetch_articles sets up logging on import);
+# (2026-11-26). It used httpx with its own Chrome/120 UA; the runs of 11-25
+# and 11-26 exited 1 on gcm-grosvenor's feed URL, and one comparison of that
+# URL at the time got httpx a "Checking your browser" 403 (1,762 bytes) and
+# requests, with the same headers, 200 and 93,862 bytes of feed. That is one
+# measurement of one URL, not a promise the site serves requests.
+# Copied, not imported (fetch_articles sets up logging on import);
 # tests/test_candidate_probe_requests.py keeps the two equal.
 CANDIDATE_PROBE_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
