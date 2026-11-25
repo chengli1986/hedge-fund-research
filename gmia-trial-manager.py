@@ -428,7 +428,7 @@ def _is_auth_gate_url(requested_url: str, final_url: str) -> bool:
 
 
 def _apply_charset_rule(resp: "requests.Response") -> None:
-    """Decode a requests response the way httpx 0.28 decodes it.
+    """Pick the response charset by the rule httpx 0.28 uses.
 
     Without a charset, requests reads ``text/html``/``text/xml`` as ISO-8859-1
     (UTF-8 bytes turn into "cafÃ©") and guesses for other types; httpx uses
@@ -437,6 +437,13 @@ def _apply_charset_rule(resp: "requests.Response") -> None:
     parser httpx uses (``email.message.Message``; requests' own header split
     is fooled by a quoted ";") and is always set explicitly: a known charset
     as declared, a missing, empty or unknown one as UTF-8.
+
+    What this guarantees is the charset *selection*, not byte-identical
+    decoding: httpx decodes incrementally, requests' ``.text`` in one call, and
+    the two can still differ for the same charset. Known case: ``charset=utf-16``
+    over UTF-16LE bytes without a BOM -- httpx 0.28.1 raises UnicodeError,
+    requests 2.31 decodes it in the machine's byte order (recorded in
+    tests/test_trial_requests_client.py).
     """
     msg = email.message.Message()
     msg["content-type"] = resp.headers.get("Content-Type", "")
@@ -462,10 +469,14 @@ def _get_with_auth_retry(url: str, timeout: int = 20) -> "requests.Response | No
     Uses requests, the client production lists and fetches bodies with
     (listing_templates.py, fetch_content.py), not httpx: on 2026-11-25
     gcm-grosvenor answered httpx with a "Checking your browser" 403 and
-    requests with the page, same URL and headers, so an httpx sampler would
-    have scored nothing for a client difference. One Session per call; every
-    GET passes the timeout and follows redirects explicitly. The text is
-    decoded as httpx did (``_apply_charset_rule``).
+    requests with the page, same URL and headers (one measured moment). Had
+    that held for the whole trial, an httpx sampler would have scored nothing
+    and -- if the quantity and freshness gates passed and fewer than 3 valid
+    samples were collected over the trial -- ended "inconclusive" and sent the
+    candidate to watchlist for a client difference. One Session per call; every
+    GET passes the timeout and follows redirects explicitly. The charset is
+    chosen by httpx's rule (``_apply_charset_rule``; selection, not
+    byte-identical decoding).
 
     Returns the final requests.Response (which may still be the gate page for
     a hard login wall — callers must check with _is_auth_gate_url), or None
