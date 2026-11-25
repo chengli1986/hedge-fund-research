@@ -677,6 +677,27 @@ def _assert_prompt_articles(prompt: str, nums_and_urls) -> None:
         assert all(_snippet(k) not in block for k in range(1, 13) if k != body)
 
 
+def _assert_old_urls_absent(prompt: str, old_nums) -> None:
+    """Already-scored articles appear nowhere in the prompt: not as a header,
+    not in the preamble, not as a link or body text inside another block."""
+    for n in old_nums:
+        assert _art_url(n) not in prompt
+        assert _snippet(n) not in prompt
+
+
+def _assert_saved_scores(sample: dict, urls, scores: dict) -> None:
+    """The saved articles carry the model's own scores, matched by article
+    number to URL (not the zero fill for an article the model dropped)."""
+    assert [a["url"] for a in sample["articles"]] == list(urls)
+    overall = []
+    for n, (a, url) in enumerate(zip(sample["articles"], urls), 1):
+        r, d, e = scores[n]
+        assert (a["url"], a["relevance"], a["depth"], a["extractable"]) == (url, r, d, e)
+        assert a["overall"] == round(0.4 * r + 0.4 * d + 0.2 * e, 3) > 0
+        overall.append(a["overall"])
+    assert sample["avg_score"] == round(sum(overall) / len(overall), 3)
+
+
 def _article_block(prompt: str, n: int, url: str) -> str:
     """The text between Article n's header and the next one."""
     start = prompt.index(f"--- Article {n} (URL: {url}) ---")
@@ -737,6 +758,9 @@ def test_resumed_trial_excludes_old_urls_and_keeps_old_samples(daily_run):
     assert out["article_gets"] == [_art_url(n) for n in (7, 8, 9)]   # 1-6 never fetched
     assert len(out["prompts"]) == 1
     _assert_prompt_articles(out["prompts"][0], [(i, _art_url(n)) for i, n in enumerate((7, 8, 9), 1)])
+    _assert_old_urls_absent(out["prompts"][0], range(1, 7))
+    _assert_saved_scores(new, [_art_url(n) for n in (7, 8, 9)],
+                         {1: (0.8, 0.8, 0.8), 2: (0.8, 0.8, 0.8), 3: (0.8, 0.8, 0.8)})
     assert not trial["auto_decided"] and out["state"]["history"] == []
 
 
@@ -781,6 +805,11 @@ def test_resumed_trial_interrupted_after_todays_count_samples_once(daily_run):
     assert out["article_gets"] == [_art_url(n) for n in (7, 8, 9)]
     assert len(out["prompts"]) == 1
     _assert_prompt_articles(out["prompts"][0], [(i, _art_url(n)) for i, n in enumerate((7, 8, 9), 1)])
+    _assert_old_urls_absent(out["prompts"][0], range(1, 7))
+    # the scores on disk are the model's, URL by URL: (0.78 + 0.60 + 0.90) / 3
+    _assert_saved_scores(new, [_art_url(n) for n in (7, 8, 9)],
+                         {1: (0.8, 0.7, 0.9), 2: (0.6, 0.6, 0.6), 3: (0.9, 0.9, 0.9)})
+    assert new["avg_score"] == 0.76
     # today's sample reaches disk in one save, and no save carries it twice
     per_save = [[s["day"] for s in st["active_trials"][0]["quality_samples"]]
                 for st in out["saves"]]
