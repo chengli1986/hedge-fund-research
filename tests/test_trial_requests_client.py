@@ -22,6 +22,7 @@ import email.message
 import importlib.util
 import io
 import json
+import re
 import sys
 from datetime import datetime, timedelta
 from email.utils import format_datetime
@@ -505,6 +506,20 @@ def test_netrc_behaviour_on_redirects_is_recorded(transport, monkeypatch, tmp_pa
 # rss_feed template served by the offline transport, every body is fetched by
 # the requests helper, only the Haiku call is faked, and the assertions read
 # back the trial-state file cmd_run wrote.
+#
+# One frozen clock: every datetime.now() in the trial manager (cmd_run's
+# today and elapsed days, the freshness check) and every date the fixtures
+# build read the same instant, mid-morning BJT, so a run that straddles BJT
+# midnight cannot see two different days.
+
+NOW = datetime(2026, 11, 26, 10, 0, 0, tzinfo=tm.BJT)
+
+
+class _FrozenDatetime(datetime):
+    @classmethod
+    def now(cls, tz=None):
+        return NOW.astimezone(tz) if tz is not None else NOW.replace(tzinfo=None)
+
 
 FEED_URL = HOST + "/feed/"
 CAND_ID = "example-fund"
@@ -512,7 +527,8 @@ RSS_SPEC = {"type": "rss_feed", "feed": "url"}     # listing_url holds the feed
 
 
 def _day(offset: int) -> str:
-    return (datetime.now(tm.BJT).date() - timedelta(days=offset)).strftime("%Y-%m-%d")
+    """The BJT date ``offset`` days before the frozen NOW."""
+    return (NOW.date() - timedelta(days=offset)).strftime("%Y-%m-%d")
 
 
 def _art_url(n: int) -> str:
@@ -529,20 +545,24 @@ def _art_page(n: int) -> str:
 
 
 def _feed_xml(nums) -> str:
-    pub = format_datetime(datetime.now(tm.BJT) - timedelta(days=1))
+    pub = format_datetime(NOW - timedelta(days=1))
     items = "".join(f"<item><title>Piece {n}</title><link>{_art_url(n)}</link>"
                     f"<pubDate>{pub}</pubDate></item>" for n in nums)
     return ('<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel>'
             f"<title>Example Fund</title>{items}</channel></rss>")
 
 
-def _old_sample(day: int, nums, score: float) -> dict:
+def _old_sample(start_offset: int, day: int, nums, score: float) -> dict:
+    """A saved sample for trial ``day`` of a trial that started ``start_offset``
+    days before NOW; its date is derived from that start (day 1 = start)."""
+    assert 1 <= day <= start_offset + 1
     arts = [{"url": _art_url(n), "relevance": score, "depth": score,
              "extractable": score, "overall": score, "notes": f"old {n}"} for n in nums]
     return {"sampled": len(arts), "articles": arts,
             "avg_score": score if arts else 0.0,
             "error": None if arts else "No new (un-sampled) article links available",
-            "js_only_count": 0, "js_only_checked": 0, "day": day, "date": _day(7 - day)}
+            "js_only_count": 0, "js_only_checked": 0, "day": day,
+            "date": _day(start_offset - (day - 1))}
 
 
 def _active_trial(start_offset: int, check_offsets, samples) -> dict:
@@ -589,6 +609,7 @@ def daily_run(tmp_path, monkeypatch, transport):
     monkeypatch.setattr(tm, "AUTO_PROMOTE_LOG", tmp_path / "auto-promote-history.jsonl")
     monkeypatch.setattr(tm, "PENDING_PROFILES_DIR", tmp_path / "pending_profiles")
     assert CAND_ID not in tm._load_fetchers()              # template path, no fetcher
+    monkeypatch.setattr(tm, "datetime", _FrozenDatetime)
 
     mails = {"trial": [], "summary": []}
     monkeypatch.setattr(tm, "send_trial_email",
@@ -622,8 +643,17 @@ def daily_run(tmp_path, monkeypatch, transport):
                  "notes": f"piece {n}"} for n, (r, d, e) in sorted(scores.items(), reverse=True)]}
         monkeypatch.setattr(tm, "_call_haiku", fake_haiku)
 
+        saves = []
+        real_save = tm.save_state
+
+        def recording_save(st):
+            saves.append(json.loads(json.dumps(st)))
+            real_save(st)
+        monkeypatch.setattr(tm, "save_state", recording_save)
+
         tm.cmd_run()
         return {"state": json.loads(state_file.read_text()),
+                "saves": saves,
                 "prompts": prompts,
                 "article_gets": [r.url for r in adapter.sent if r.url != FEED_URL],
                 "feed_gets": sum(1 for r in adapter.sent if r.url == FEED_URL),
@@ -631,6 +661,20 @@ def daily_run(tmp_path, monkeypatch, transport):
                 "mails": mails}
 
     return run
+
+
+_HEADER_RE = re.compile(r"--- Article (\d+) \(URL: (.*?)\) ---")
+
+
+def _assert_prompt_articles(prompt: str, nums_and_urls) -> None:
+    """The prompt holds exactly these article headers, in this order, and each
+    block carries its own body and no other article's."""
+    assert _HEADER_RE.findall(prompt) == [(str(n), u) for n, u in nums_and_urls]
+    for n, u in nums_and_urls:
+        block = _article_block(prompt, n, u)
+        body = int(u.rstrip("/").rsplit("-", 1)[1])          # piece-<k>
+        assert _snippet(body) in block
+        assert all(_snippet(k) not in block for k in range(1, 13) if k != body)
 
 
 def _article_block(prompt: str, n: int, url: str) -> str:
@@ -659,11 +703,7 @@ def test_daily_run_starts_a_templated_trial_and_saves_three_model_scores(daily_r
     assert out["feed_gets"] == 2                          # count, then sampling links
     assert out["article_gets"] == urls                    # each body once, via requests
     assert len(out["prompts"]) == 1
-    prompt = out["prompts"][0]
-    for n, url in enumerate(urls, 1):
-        block = _article_block(prompt, n, url)
-        assert _snippet(n) in block
-        assert all(_snippet(m) not in block for m in (1, 2, 3) if m != n)
+    _assert_prompt_articles(out["prompts"][0], list(enumerate(urls, 1)))
 
     samples = trial["quality_samples"]
     assert len(samples) == 1
@@ -683,7 +723,7 @@ def test_resumed_trial_excludes_old_urls_and_keeps_old_samples(daily_run):
     """Plan §5 mid-trial switch: the excluded URLs come from the saved
     trial-state, the earlier samples stay as they were, and today's sample is
     appended for new URLs only."""
-    old = [_old_sample(1, (1, 2, 3), 0.5), _old_sample(2, (4, 5, 6), 0.6)]
+    old = [_old_sample(2, 1, (1, 2, 3), 0.5), _old_sample(2, 2, (4, 5, 6), 0.6)]
     state = {"active_trials": [_active_trial(2, (2, 1), old)], "history": []}
     out = daily_run(list(range(1, 10)), json.loads(json.dumps(state)),
                     {1: (0.8, 0.8, 0.8), 2: (0.8, 0.8, 0.8), 3: (0.8, 0.8, 0.8)})
@@ -695,16 +735,17 @@ def test_resumed_trial_excludes_old_urls_and_keeps_old_samples(daily_run):
     assert (new["day"], new["date"], new["error"]) == (3, _day(0), None)
     assert [a["url"] for a in new["articles"]] == [_art_url(n) for n in (7, 8, 9)]
     assert out["article_gets"] == [_art_url(n) for n in (7, 8, 9)]   # 1-6 never fetched
-    assert all(_art_url(n) not in out["prompts"][0] for n in range(1, 7))
+    assert len(out["prompts"]) == 1
+    _assert_prompt_articles(out["prompts"][0], [(i, _art_url(n)) for i, n in enumerate((7, 8, 9), 1)])
     assert not trial["auto_decided"] and out["state"]["history"] == []
 
 
 def test_resumed_trial_skips_a_day_already_sampled(daily_run):
     """Same trial day already recorded (a second run that day): no fetch, no
     Haiku call, the saved samples and checks unchanged."""
-    old = [_old_sample(1, (1, 2, 3), 0.5), _old_sample(2, (4, 5, 6), 0.6),
-           _old_sample(3, (7, 8, 9), 0.7)]
-    old[2]["date"] = _day(0)
+    old = [_old_sample(2, 1, (1, 2, 3), 0.5), _old_sample(2, 2, (4, 5, 6), 0.6),
+           _old_sample(2, 3, (7, 8, 9), 0.7)]
+    assert old[2]["date"] == _day(0)
     seeded = _active_trial(2, (2, 1, 0), old)
     state = {"active_trials": [seeded], "history": []}
     out = daily_run(list(range(1, 13)), json.loads(json.dumps(state)),
@@ -717,12 +758,41 @@ def test_resumed_trial_skips_a_day_already_sampled(daily_run):
     assert out["article_gets"] == [] and out["feed_gets"] == 0
 
 
+def test_resumed_trial_interrupted_after_todays_count_samples_once(daily_run):
+    """Interrupted between cmd_run's two saves: today's daily_check is on disk,
+    today's quality sample is not.  The rerun reuses the saved count (no
+    listing fetch for counting, the seeded record unchanged), samples only
+    URLs not scored before, and writes today's sample to disk exactly once."""
+    old = [_old_sample(2, 1, (1, 2, 3), 0.5), _old_sample(2, 2, (4, 5, 6), 0.6)]
+    seeded = _active_trial(2, (2, 1, 0), old)
+    seeded["daily_checks"][_day(0)]["article_count"] = 7     # marker: not what the feed lists
+    state = {"active_trials": [seeded], "history": []}
+    out = daily_run(list(range(1, 10)), json.loads(json.dumps(state)),
+                    {1: (0.8, 0.7, 0.9), 2: (0.6, 0.6, 0.6), 3: (0.9, 0.9, 0.9)})
+
+    trial = out["state"]["active_trials"][0]
+    assert trial["daily_checks"] == seeded["daily_checks"]   # count reused, not redone
+    assert out["feed_gets"] == 1                             # the sampling listing only
+    assert trial["quality_samples"][:2] == old
+    assert len(trial["quality_samples"]) == 3
+    new = trial["quality_samples"][2]
+    assert (new["day"], new["date"], new["error"], new["sampled"]) == (3, _day(0), None, 3)
+    assert [a["url"] for a in new["articles"]] == [_art_url(n) for n in (7, 8, 9)]
+    assert out["article_gets"] == [_art_url(n) for n in (7, 8, 9)]
+    assert len(out["prompts"]) == 1
+    _assert_prompt_articles(out["prompts"][0], [(i, _art_url(n)) for i, n in enumerate((7, 8, 9), 1)])
+    # today's sample reaches disk in one save, and no save carries it twice
+    per_save = [[s["day"] for s in st["active_trials"][0]["quality_samples"]]
+                for st in out["saves"]]
+    assert per_save == [[1, 2, 3]]
+
+
 def test_verdict_combines_old_and_new_scores(daily_run):
     """Day 7: the verdict averages the saved scores from earlier days with
     today's.  Old alone (0.30) would fail quality, new alone would average
     0.90; only the combined 3.9/7 = 0.557 is right."""
-    old = ([_old_sample(1, (1, 2), 0.3), _old_sample(2, (3, 4), 0.3)]
-           + [_old_sample(d, (), 0.0) for d in (3, 4, 5, 6)])
+    old = ([_old_sample(6, 1, (1, 2), 0.3), _old_sample(6, 2, (3, 4), 0.3)]
+           + [_old_sample(6, d, (), 0.0) for d in (3, 4, 5, 6)])
     state = {"active_trials": [_active_trial(6, (6, 5, 4, 3, 2, 1), old)], "history": []}
     out = daily_run(list(range(1, 8)), json.loads(json.dumps(state)),
                     {1: (0.9, 0.9, 0.9), 2: (0.9, 0.9, 0.9), 3: (0.9, 0.9, 0.9)})
