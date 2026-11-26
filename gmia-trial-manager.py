@@ -25,6 +25,8 @@ CLI:
   python3 gmia-trial-manager.py skip     — skip active trial, move to next candidate
 """
 
+import codecs
+import email.message
 import html
 import json
 import os
@@ -38,6 +40,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import httpx
+import requests
 from bs4 import BeautifulSoup
 
 from status_util import set_status, write_json_atomic
@@ -424,26 +427,68 @@ def _is_auth_gate_url(requested_url: str, final_url: str) -> bool:
     return any(marker in fin_path for marker in AUTH_GATE_MARKERS)
 
 
-def _get_with_auth_retry(url: str, timeout: int = 20) -> "httpx.Response | None":
+def _apply_charset_rule(resp: "requests.Response") -> None:
+    """Pick the response charset by the rule httpx 0.28 uses.
+
+    Without a charset, requests reads ``text/html``/``text/xml`` as ISO-8859-1
+    (UTF-8 bytes turn into "cafÃ©") and guesses for other types; httpx uses
+    UTF-8. The sampler moved from httpx to requests on 2026-11-26, so the
+    charset is taken from the final response's Content-Type with the same
+    parser httpx uses (``email.message.Message``; requests' own header split
+    is fooled by a quoted ";") and is always set explicitly: a known charset
+    as declared, a missing, empty or unknown one as UTF-8.
+
+    What this guarantees is the charset *selection*, not byte-identical
+    decoding: httpx decodes incrementally, requests' ``.text`` in one call, and
+    the two can still differ for the same charset. Known case: ``charset=utf-16``
+    over UTF-16LE bytes without a BOM -- httpx 0.28.1 raises UnicodeError,
+    requests 2.31 decodes it in the machine's byte order (recorded in
+    tests/test_trial_requests_client.py).
+    """
+    msg = email.message.Message()
+    msg["content-type"] = resp.headers.get("Content-Type", "")
+    charset = msg.get_content_charset(failobj=None)
+    if charset:
+        try:
+            codecs.lookup(charset)
+        except LookupError:
+            charset = None
+    resp.encoding = charset or "utf-8"
+
+
+def _get_with_auth_retry(url: str, timeout: int = 20) -> "requests.Response | None":
     """GET a URL with cookie persistence and a single auth-gate retry.
 
     Sites behind a cookie content-gate (e.g. Capital Group's Akamai "Content
     Gate" edge worker) 302-redirect cookie-less first visits to an auth page
     that *sets* session cookies; a second request with those cookies passes
-    through to the real content. A stateless httpx.get() therefore always
-    lands on the gate — this helper detects that and retries once inside the
-    same cookie session.
+    through to the real content. A stateless GET therefore always lands on
+    the gate — this helper detects that and retries once inside the same
+    cookie session.
 
-    Returns the final httpx.Response (which may still be the gate page for a
-    hard login wall — callers must check with _is_auth_gate_url), or None on
-    network error.
+    Uses requests, the client production lists and fetches bodies with
+    (listing_templates.py, fetch_content.py), not httpx: on 2026-11-25
+    gcm-grosvenor answered httpx with a "Checking your browser" 403 and
+    requests with the page, same URL and headers (one measured moment). Had
+    that held for the whole trial, an httpx sampler would have scored nothing
+    and -- if the quantity and freshness gates passed and fewer than 3 valid
+    samples were collected over the trial -- ended "inconclusive" and sent the
+    candidate to watchlist for a client difference. One Session per call; every
+    GET passes the timeout and follows redirects explicitly. The charset is
+    chosen by httpx's rule (``_apply_charset_rule``; selection, not
+    byte-identical decoding).
+
+    Returns the final requests.Response (which may still be the gate page for
+    a hard login wall — callers must check with _is_auth_gate_url), or None
+    on network error.
     """
     try:
-        with httpx.Client(headers=HEADERS, timeout=timeout,
-                          follow_redirects=True) as client:
-            resp = client.get(url)
-            if _is_auth_gate_url(url, str(resp.url)) and client.cookies:
-                resp = client.get(url)
+        with requests.Session() as session:
+            session.headers.update(HEADERS)
+            resp = session.get(url, timeout=timeout, allow_redirects=True)
+            if _is_auth_gate_url(url, str(resp.url)) and session.cookies:
+                resp = session.get(url, timeout=timeout, allow_redirects=True)
+            _apply_charset_rule(resp)
             return resp
     except Exception:
         return None
@@ -499,7 +544,7 @@ def _extract_body_from_soup(soup: "BeautifulSoup") -> str | None:
 
 
 def _extract_article_text(url: str, timeout: int = 20) -> str | None:
-    """Fetch a single article page (httpx) and extract clean body text."""
+    """Fetch a single article page (requests) and extract clean body text."""
     try:
         resp = _get_with_auth_retry(url, timeout=timeout)
         if resp is None or resp.status_code != 200:
