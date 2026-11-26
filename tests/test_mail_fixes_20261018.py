@@ -34,18 +34,11 @@ gfh = _load("gfh_20261018", "scripts/gmia-fetcher-health.py")
 
 # --- 1 ------------------------------------------------------------------------
 class _Client:
+    """Stands in for requests.get (the probe moved off httpx on 2026-11-26)."""
     seen = []
 
-    def __init__(self, **kw):
-        pass
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *a):
-        return False
-
-    def get(self, url):
+    @staticmethod
+    def get(url, **kw):
         _Client.seen.append(url)
         return type("R", (), {"status_code": 200, "content": b"x" * 20000})()
 
@@ -56,8 +49,8 @@ class _Client:
     ({"homepage_url": "https://a"}, "https://a"),
 ])
 def test_candidate_probe_falls_back_to_listing_then_homepage(monkeypatch, cand, want):
-    import httpx
-    monkeypatch.setattr(httpx, "Client", _Client)
+    import requests
+    monkeypatch.setattr(requests, "get", _Client.get)
     _Client.seen = []
     assert gfh.probe_candidate_url(cand)["status"] == "OK"
     assert _Client.seen == [want]
