@@ -13907,6 +13907,20 @@
           ],
           "error": null,
           "fetcher_used": false
+        },
+        "2026-11-26": {
+          "accessible": true,
+          "article_count": 12,
+          "date_count": 0,
+          "newest_date": null,
+          "article_urls": [
+            "https://www.eaglecap.com/letter/q3-2026-investor-letter",
+            "https://www.eaglecap.com/letter/q2-2026-investor-letter",
+            "https://www.eaglecap.com/insights/graham-doddsville-eagle-co-cios-on-finding-value-in-overlooked-places",
+            "https://www.eaglecap.com/insights/capital-allocators-podcast-active-equity-excellence-with-adrian-meli"
+          ],
+          "error": null,
+          "fetcher_used": false
         }
       },
       "auto_decided": false,
@@ -13989,6 +14003,14 @@
           "error": "No new (un-sampled) article links available",
           "day": 5,
           "date": "2026-11-25"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 6,
+          "date": "2026-11-26"
         }
       ]
     },
@@ -14084,6 +14106,26 @@
           "fetcher_used": true
         },
         "2026-11-25": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "newest_date": "2026-09-30",
+          "article_urls": [
+            "https://oakmark.com/news-insights/a-conversation-with-shareholders-u-s-equity-market-commentary-3q-2026/",
+            "https://oakmark.com/news-insights/a-conversation-with-shareholders-international-equity-market-commentary-3q-2026/",
+            "https://oakmark.com/news-insights/the-business-behind-the-bond-fixed-income-market-commentary-3q-2026/",
+            "https://oakmark.com/news-insights/oakmark-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-select-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-global-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-global-select-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-international-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-international-small-cap-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-equity-and-income-fund-third-quarter-2026/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-11-26": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -14238,6 +14280,14 @@
           "error": "No new (un-sampled) article links available",
           "day": 5,
           "date": "2026-11-25"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 6,
+          "date": "2026-11-26"
         }
       ]
     },
@@ -14273,6 +14323,26 @@
           "fetcher_used": true
         },
         "2026-11-25": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "newest_date": "2026-11-10",
+          "article_urls": [
+            "https://partners-cap.com/insights/the-liquidity-event-a-hundred-year-decision/",
+            "https://partners-cap.com/insights/inflections-us-midterms-deliver-seismic-shift/",
+            "https://partners-cap.com/insights/inflections-bond-yields-rising-like-its-1999/",
+            "https://partners-cap.com/insights/inflections-a-long-term-framework-for-investing-in-an-ai-world/",
+            "https://partners-cap.com/insights/inflections-spacex-and-the-2026-ipo-wave-what-it-means-for-the-broader-market/",
+            "https://partners-cap.com/insights/beyond-the-split-screen-inflation-meets-bonds-and-equities/",
+            "https://partners-cap.com/insights/sustainable-investing-report-2025-26/",
+            "https://partners-cap.com/insights/insights-2026/insights-2026-absolute-return/",
+            "https://partners-cap.com/insights/insights-2026-view-on-venture-capital/",
+            "https://partners-cap.com/insights/insights-2026/insights-2026-real-estate-and-infrastructure/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-11-26": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -14365,9 +14435,44 @@
           "js_only_checked": 0,
           "day": 2,
           "date": "2026-11-25"
+        },
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://partners-cap.com/insights/sustainable-investing-report-2025-26/",
+              "relevance": 0.85,
+              "depth": 0.55,
+              "extractable": 0.9,
+              "overall": 0.74,
+              "notes": "Sustainable investing program review with manager assessment data and allocation metrics, but lacks detailed analysis or investment thesis."
+            },
+            {
+              "url": "https://partners-cap.com/insights/insights-2026/insights-2026-absolute-return/",
+              "relevance": 0.9,
+              "depth": 0.6,
+              "extractable": 0.95,
+              "overall": 0.79,
+              "notes": "Portfolio strategy outlook for absolute return strategies with macro observations and tactical positioning, moderate depth with key takeaways."
+            },
+            {
+              "url": "https://partners-cap.com/insights/insights-2026-view-on-venture-capital/",
+              "relevance": 0.95,
+              "depth": 0.65,
+              "extractable": 0.95,
+              "overall": 0.83,
+              "notes": "Venture capital market analysis focused on AI dominance, deal concentration, and LP/GP dynamics with specific allocation recommendations for 2026."
+            }
+          ],
+          "avg_score": 0.787,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 3,
+          "date": "2026-11-26"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-11-25"
+  "last_summary_sent_date": "2026-11-26"
 }
