@@ -3472,11 +3472,11 @@
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-10-15T09:00:08.250466+08:00",
     "status_since": "2026-10-24T09:01:06.717104+08:00",
-    "last_deep_analyzed_at": "2026-10-06T01:00:39Z",
+    "last_deep_analyzed_at": "2026-11-26T01:12:00Z",
     "quality": "HIGH",
     "quality_score": 0.8,
     "topics": "macro, multi-asset, alternative credit, FX",
-    "notes": "RECOMMEND: trial passed (7/7 days with articles, quality=0.73)",
+    "notes": "Weekly insights (mostly video/podcast); quality unchanged",
     "added_at": "2026-08-22",
     "template_attempts": [
       {
@@ -3708,11 +3708,11 @@
       "macro"
     ],
     "status_since": "2026-10-31T09:04:25.100581+08:00",
-    "last_deep_analyzed_at": "2026-10-05T01:00:40Z",
-    "quality": "HIGH",
-    "quality_score": 0.85,
-    "topics": "quant, market microstructure, systematic trading",
-    "notes": "RECOMMEND: trial passed (7/7 days with articles, quality=0.64)",
+    "last_deep_analyzed_at": "2026-11-26T01:10:00Z",
+    "quality": "MEDIUM",
+    "quality_score": 0.5,
+    "topics": "quant, trend-following, liquidity, market commentary",
+    "notes": "~Weekly blog; many podcasts, light original research",
     "official_domain": "www.cfm.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
@@ -4209,11 +4209,11 @@
       "fixed_income"
     ],
     "status_since": "2026-11-24T09:04:54.904257+08:00",
-    "last_deep_analyzed_at": "2026-10-05T01:00:40Z",
+    "last_deep_analyzed_at": "2026-11-26T01:10:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.55,
     "topics": "emerging markets, macro, equity, fixed income",
-    "notes": "Auto-rejected 2026-11-24: fetcher-synthesis failed 3 times (>= 3 threshold). Original notes: Trial aborted on day 1: index reachable but no article links in static HTML — needs a fetcher. Routed to fetcher-synthesis queue.",
+    "notes": "Recheck 2026-11-26: insights index 403; stays rejected",
     "added_at": "2026-09-25",
     "template_attempts": [
       {
