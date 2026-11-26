@@ -5848,19 +5848,19 @@
     "name": "UBS Asset Management",
     "homepage_url": "https://www.ubs.com/global/en/assetmanagement.html",
     "source": "manual",
-    "status": "seed",
+    "status": "inaccessible",
     "strategy_tags": [
       "macro",
       "multi_asset",
       "private_equity"
     ],
     "added_at": "2026-11-18",
-    "status_since": "2026-11-18T09:04:10.622142+08:00",
+    "status_since": "2026-11-26T09:04:14.028000+08:00",
     "last_deep_analyzed_at": "2026-11-22T01:03:39Z",
     "quality": "MEDIUM",
     "quality_score": 0.55,
     "topics": "macro, alternatives, private markets, hedge funds",
-    "notes": "Red Thread + HF bulletins; hub JS-loaded, no dated index"
+    "notes": "[auto-stall 2026-11-26] seed->inaccessible after 8d stuck Red Thread + HF bulletins; hub JS-loaded, no dated index"
   },
   {
     "id": "eagle-capital",
