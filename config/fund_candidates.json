@@ -5989,7 +5989,7 @@
     "name": "Sculptor Capital Management",
     "homepage_url": "https://www.sculptor.com",
     "source": "manual",
-    "status": "inaccessible",
+    "status": "visitable",
     "strategy_tags": [
       "event_driven",
       "private_credit",
@@ -6004,7 +6004,7 @@
         "path": "news/insights"
       }
     ],
-    "status_since": "2026-11-25T09:03:06.729737+08:00",
+    "status_since": "2026-11-27T09:08:03.563696+08:00",
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-11-24T09:04:21.245533+08:00",
     "added_at": "2026-11-24",
@@ -6028,6 +6028,52 @@
     "quality_score": 0.58,
     "topics": "credit, asset-based finance, convertible arb, multi-strategy",
     "notes": "Sparse Q&A pieces; Oct-2026 items are videos",
-    "last_deep_analyzed_at": "2026-11-25T01:03:54Z"
+    "last_deep_analyzed_at": "2026-11-25T01:03:54Z",
+    "template_attempts": [
+      {
+        "at": "2026-11-27T01:07:53+00:00",
+        "type": "card_list",
+        "spec": {
+          "type": "card_list",
+          "fetch": "requests",
+          "card": "div.news-card",
+          "link": "a.title",
+          "date": "span.date"
+        },
+        "listing_url": "https://www.sculptor.com/news/insights",
+        "ok": true,
+        "rows": 10,
+        "dated": 10,
+        "problems": [],
+        "sample": [
+          {
+            "title": "Asset Based Finance – Structure, Collateral, Control",
+            "url": "https://www.sculptor.com/news/2026-10-13-asset-based-finance-structure-collateral-control",
+            "date": "2026-10-13"
+          },
+          {
+            "title": "Credit – Investing Across the Spectrum and Cycle",
+            "url": "https://www.sculptor.com/news/2026-10-13-credit-investing-across-the-spectrum-and-cycle",
+            "date": "2026-10-13"
+          },
+          {
+            "title": "Multi-Strategy – Dynamic Capital Allocation",
+            "url": "https://www.sculptor.com/news/2026-10-13-multi-strategy-dynamic-capital-allocation",
+            "date": "2026-10-13"
+          }
+        ]
+      }
+    ],
+    "listing_template": {
+      "type": "card_list",
+      "fetch": "requests",
+      "card": "div.news-card",
+      "link": "a.title",
+      "date": "span.date"
+    },
+    "listing_url": "https://www.sculptor.com/news/insights",
+    "expected_hostname": "sculptor.com",
+    "synthesis_attempted_at": "2026-11-27T01:08:03.563668+00:00",
+    "synthesis_outcome": "success"
   }
 ]
