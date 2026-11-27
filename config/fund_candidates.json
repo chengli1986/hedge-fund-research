@@ -5918,7 +5918,12 @@
     "topics": "equity, long-term investing, AI",
     "notes": "RECOMMEND: trial passed (7/7 days with articles, quality=0.71)",
     "synthesis_priority": true,
-    "synthesis_priority_set_at": "2026-11-27T09:04:20.517686+08:00"
+    "synthesis_priority_set_at": "2026-11-27T09:04:20.517686+08:00",
+    "synthesis_attempted_at": "2026-11-27T01:07:21.565389+00:00",
+    "synthesis_outcome": "success",
+    "synthesis_template_skip_reason": "card_list on /archive-letters returned only 2 rows: 13 of 15 a.fk-letters-card link straight to PDFs on cdn.prod.website-files.com (off-host); the on-site /letter/<slug> page exists for each (sitemap.xml) but mapping PDF filename -> page needs code. Period labels 'Q3 2026' are not parsed by parse_date (-> None), fetcher maps them to quarter end.",
+    "promoted_at": "2026-11-27T01:07:21.565389+00:00",
+    "promoted_reason": "fetcher_synthesis_success (trial-PASS shortcut)"
   },
   {
     "id": "sculptor-capital",

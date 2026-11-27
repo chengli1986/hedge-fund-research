@@ -3589,6 +3589,70 @@ def fetch_hamilton_lane(source: dict) -> list[dict]:
     return articles[:source.get("max_articles", 10)]
 
 
+_EAGLE_QUARTER_END = {"1": "03-31", "2": "06-30", "3": "09-30", "4": "12-31"}
+
+
+def fetch_eagle_capital(source: dict) -> list[dict]:
+    """Fetch Eagle Capital Management quarterly letters (SSR, Webflow).
+
+    ``/archive-letters`` lists every letter as ``a.fk-letters-card`` with a
+    ``p.fk-letters-card-period`` label ("Q3 2026") and an ``h3`` title.  Only
+    the newest two cards link to the on-site ``/letter/<slug>`` page; older
+    cards link straight to the PDF on the Webflow CDN
+    (``cdn.prod.website-files.com/.../<hash>_q1-2026-investor-letter.pdf``),
+    which is off-host.  Every letter also has an on-site page
+    (``/letter/q1-2026-investor-letter``, listed in sitemap.xml), so a PDF
+    card is mapped to that page via the slug in the file name, and kept only
+    when the sitemap lists it.  Listing dates are quarter labels only; the
+    letter page itself states the quarter-end date ("September 30, 2026"),
+    so the date is the quarter end and ``date_raw`` keeps the label.
+    """
+    base_url = _site_base(source["url"])
+    expected_host = source.get("expected_hostname") or urlparse(source["url"]).hostname
+    resp = requests.get(f"{base_url}/archive-letters", headers=HEADERS, timeout=20)
+    resp.raise_for_status()
+    soup = BeautifulSoup(resp.text, "html.parser")
+
+    letter_paths: set[str] = set()
+    try:
+        sm = requests.get(f"{base_url}/sitemap.xml", headers=HEADERS, timeout=20)
+        sm.raise_for_status()
+        letter_paths = {urlparse(u).path.rstrip("/") for u in
+                        re.findall(r"<loc>([^<]+/letter/[^<]+)</loc>", sm.text)}
+    except requests.RequestException as exc:
+        log.warning("eagle-capital: sitemap unavailable (%s); PDF cards skipped", exc)
+
+    articles = []
+    seen = set()
+    for card in soup.select("a.fk-letters-card"):
+        href = card.get("href") or ""
+        title_el = card.select_one("h3")
+        title = re.sub(r"\s+", " ", title_el.get_text(" ", strip=True) if title_el else "").strip()
+        if not href or not title:
+            continue
+        url = urljoin(base_url, href)
+        if not _validate_hostname(url, expected_host):
+            # PDF on the CDN -> the letter's own page, if the sitemap has it
+            m = re.search(r"_([a-z0-9-]+?)(?:-letter-\d{8})?\.pdf$", urlparse(url).path)
+            path = f"/letter/{m.group(1)}" if m else ""
+            if not path or path not in letter_paths:
+                continue
+            url = urljoin(base_url, path)
+        if url in seen:
+            continue
+
+        period_el = card.select_one(".fk-letters-card-period")
+        date_raw = re.sub(r"\s+", " ", period_el.get_text(" ", strip=True) if period_el else "").strip()
+        q = re.search(r"\bQ([1-4])\s+(\d{4})\b", date_raw)
+        date = f"{q.group(2)}-{_EAGLE_QUARTER_END[q.group(1)]}" if q else (
+            parse_date(date_raw) if date_raw else None)
+        seen.add(url)
+        articles.append({"title": title, "url": url, "date": date, "date_raw": date_raw})
+
+    articles.sort(key=lambda a: a["date"] or "", reverse=True)
+    return articles[:source.get("max_articles", 10)]
+
+
 # FETCHER_SYNTHESIS_INSERTION_POINT — auto-generated fetchers inserted above this line
 
 
@@ -3936,6 +4000,7 @@ FETCHERS = {
     "aberdeen": fetch_aberdeen,
     "research-affiliates": fetch_researchaffiliates,
     "pimco": fetch_pimco,
+    "eagle-capital": fetch_eagle_capital,
     "hamilton-lane": fetch_hamilton_lane,
     "northleaf-capital": fetch_northleaf_capital,
     "mfs-investment-management": fetch_mfs_investment_management,
