@@ -5302,12 +5302,12 @@
     "name": "Oakmark (Harris Associates)",
     "homepage_url": "https://www.oakmark.com",
     "source": "manual",
-    "status": "visitable",
+    "status": "promoted",
     "strategy_tags": [
       "equity"
     ],
     "added_at": "2026-11-05",
-    "status_since": "2026-11-18T09:06:21.965360+08:00",
+    "status_since": "2026-11-27T09:04:25.376993+08:00",
     "official_domain": "www.oakmark.com",
     "research_links": [],
     "discovery_method": "discover_fund_sites",
@@ -5315,7 +5315,7 @@
     "quality": "MEDIUM",
     "quality_score": 0.55,
     "topics": "equity, value investing, quarterly commentary",
-    "notes": "[auto-stall 2026-11-12] seed->inaccessible after 7d stuck Quarterly fund commentary at /news-insights/commentary",
+    "notes": "RECOMMEND: trial passed (7/7 days with articles, quality=0.65)",
     "last_deep_analyzed_at": "2026-11-06T01:03:38Z",
     "template_attempts": [
       {
@@ -5356,7 +5356,9 @@
     "listing_url": "https://oakmark.com/news-insights/category/commentary/feed/",
     "expected_hostname": "oakmark.com",
     "synthesis_attempted_at": "2026-11-18T01:06:21.965328+00:00",
-    "synthesis_outcome": "success"
+    "synthesis_outcome": "success",
+    "synthesis_priority": true,
+    "synthesis_priority_set_at": "2026-11-27T09:04:25.377032+08:00"
   },
   {
     "id": "fiera-capital",
@@ -5867,12 +5869,12 @@
     "name": "Eagle Capital Management",
     "homepage_url": "https://www.eaglecap.com",
     "source": "manual",
-    "status": "visitable",
+    "status": "promoted",
     "strategy_tags": [
       "equity"
     ],
     "added_at": "2026-11-20",
-    "status_since": "2026-11-21T09:03:03.965170+08:00",
+    "status_since": "2026-11-27T09:04:20.517647+08:00",
     "research_url": "https://www.eaglecap.com/letters",
     "official_domain": "www.eaglecap.com",
     "research_links": [
@@ -5914,7 +5916,9 @@
     "quality": "HIGH",
     "quality_score": 0.78,
     "topics": "equity, long-term investing, AI",
-    "notes": "RECOMMEND: Quarterly equity letters, free, stock theses"
+    "notes": "RECOMMEND: trial passed (7/7 days with articles, quality=0.71)",
+    "synthesis_priority": true,
+    "synthesis_priority_set_at": "2026-11-27T09:04:20.517686+08:00"
   },
   {
     "id": "sculptor-capital",

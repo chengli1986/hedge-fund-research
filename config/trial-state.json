@@ -13824,9 +13824,7 @@
       "total_articles": 140,
       "days_with_articles": 7,
       "avg_quality_score": 0.746
-    }
-  ],
-  "active_trials": [
+    },
     {
       "id": "eagle-capital",
       "name": "Eagle Capital Management",
@@ -13836,7 +13834,7 @@
       "quality": "HIGH",
       "topics": "equity, long-term investing, AI",
       "start_date": "2026-11-21",
-      "end_date": null,
+      "end_date": "2026-11-27",
       "daily_checks": {
         "2026-11-21": {
           "accessible": true,
@@ -13921,10 +13919,24 @@
           ],
           "error": null,
           "fetcher_used": false
+        },
+        "2026-11-27": {
+          "accessible": true,
+          "article_count": 12,
+          "date_count": 0,
+          "newest_date": null,
+          "article_urls": [
+            "https://www.eaglecap.com/letter/q3-2026-investor-letter",
+            "https://www.eaglecap.com/letter/q2-2026-investor-letter",
+            "https://www.eaglecap.com/insights/graham-doddsville-eagle-co-cios-on-finding-value-in-overlooked-places",
+            "https://www.eaglecap.com/insights/capital-allocators-podcast-active-equity-excellence-with-adrian-meli"
+          ],
+          "error": null,
+          "fetcher_used": false
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -14011,8 +14023,19 @@
           "error": "No new (un-sampled) article links available",
           "day": 6,
           "date": "2026-11-26"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 7,
+          "date": "2026-11-27"
         }
-      ]
+      ],
+      "total_articles": 84,
+      "days_with_articles": 7,
+      "avg_quality_score": 0.708
     },
     {
       "id": "oakmark",
@@ -14023,7 +14046,7 @@
       "quality": "MEDIUM",
       "topics": "equity, value investing, quarterly commentary",
       "start_date": "2026-11-21",
-      "end_date": null,
+      "end_date": "2026-11-27",
       "daily_checks": {
         "2026-11-21": {
           "accessible": true,
@@ -14144,10 +14167,30 @@
           ],
           "error": null,
           "fetcher_used": true
+        },
+        "2026-11-27": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "newest_date": "2026-09-30",
+          "article_urls": [
+            "https://oakmark.com/news-insights/a-conversation-with-shareholders-u-s-equity-market-commentary-3q-2026/",
+            "https://oakmark.com/news-insights/a-conversation-with-shareholders-international-equity-market-commentary-3q-2026/",
+            "https://oakmark.com/news-insights/the-business-behind-the-bond-fixed-income-market-commentary-3q-2026/",
+            "https://oakmark.com/news-insights/oakmark-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-select-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-global-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-global-select-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-international-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-international-small-cap-fund-third-quarter-2026/",
+            "https://oakmark.com/news-insights/oakmark-equity-and-income-fund-third-quarter-2026/"
+          ],
+          "error": null,
+          "fetcher_used": true
         }
       },
-      "auto_decided": false,
-      "outcome": null,
+      "auto_decided": true,
+      "outcome": "pass",
       "quality_samples": [
         {
           "sampled": 3,
@@ -14288,9 +14331,23 @@
           "error": "No new (un-sampled) article links available",
           "day": 6,
           "date": "2026-11-26"
+        },
+        {
+          "sampled": 0,
+          "articles": [],
+          "avg_score": 0.0,
+          "error": "No new (un-sampled) article links available",
+          "day": 7,
+          "date": "2026-11-27"
         }
-      ]
-    },
+      ],
+      "total_articles": 70,
+      "days_with_articles": 7,
+      "avg_quality_score": 0.65,
+      "newest_article_date": "2026-09-30"
+    }
+  ],
+  "active_trials": [
     {
       "id": "partners-capital",
       "name": "Partners Capital",
@@ -14343,6 +14400,26 @@
           "fetcher_used": true
         },
         "2026-11-26": {
+          "accessible": true,
+          "article_count": 10,
+          "date_count": 10,
+          "newest_date": "2026-11-10",
+          "article_urls": [
+            "https://partners-cap.com/insights/the-liquidity-event-a-hundred-year-decision/",
+            "https://partners-cap.com/insights/inflections-us-midterms-deliver-seismic-shift/",
+            "https://partners-cap.com/insights/inflections-bond-yields-rising-like-its-1999/",
+            "https://partners-cap.com/insights/inflections-a-long-term-framework-for-investing-in-an-ai-world/",
+            "https://partners-cap.com/insights/inflections-spacex-and-the-2026-ipo-wave-what-it-means-for-the-broader-market/",
+            "https://partners-cap.com/insights/beyond-the-split-screen-inflation-meets-bonds-and-equities/",
+            "https://partners-cap.com/insights/sustainable-investing-report-2025-26/",
+            "https://partners-cap.com/insights/insights-2026/insights-2026-absolute-return/",
+            "https://partners-cap.com/insights/insights-2026-view-on-venture-capital/",
+            "https://partners-cap.com/insights/insights-2026/insights-2026-real-estate-and-infrastructure/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        },
+        "2026-11-27": {
           "accessible": true,
           "article_count": 10,
           "date_count": 10,
@@ -14470,9 +14547,96 @@
           "js_only_checked": 0,
           "day": 3,
           "date": "2026-11-26"
+        },
+        {
+          "sampled": 1,
+          "articles": [
+            {
+              "url": "https://partners-cap.com/insights/insights-2026/insights-2026-real-estate-and-infrastructure/",
+              "relevance": 0.85,
+              "depth": 0.55,
+              "extractable": 0.75,
+              "overall": 0.71,
+              "notes": "Hedge fund macro outlook on real estate and infrastructure as inflation-hedged assets; identifies market dislocations and secular tailwinds (AI, power demand) but lacks detailed data/analysis"
+            }
+          ],
+          "avg_score": 0.71,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 4,
+          "date": "2026-11-27"
+        }
+      ]
+    },
+    {
+      "id": "gcm-grosvenor",
+      "name": "GCM Grosvenor",
+      "research_url": "https://www.gcmgrosvenor.com",
+      "homepage_url": "https://www.gcmgrosvenor.com",
+      "fit_score": null,
+      "quality": "MEDIUM",
+      "topics": "private equity, absolute return, infrastructure, credit",
+      "start_date": "2026-11-27",
+      "end_date": null,
+      "daily_checks": {
+        "2026-11-27": {
+          "accessible": true,
+          "article_count": 6,
+          "date_count": 6,
+          "newest_date": "2026-11-23",
+          "article_urls": [
+            "https://www.gcmgrosvenor.com/2026/11/23/the-blueprint-for-continuation-vehicles-expanding-the-opportunity-set-in-private-equity/",
+            "https://www.gcmgrosvenor.com/2026/11/17/beyond-the-track-record-identifying-the-next-generation-of-investment-managers/",
+            "https://www.gcmgrosvenor.com/2026/10/20/from-funds-to-platforms-the-shift-to-enterprise-value-in-real-estate-investing/",
+            "https://www.gcmgrosvenor.com/2026/09/29/in-conversation-how-gcm-grosvenor-is-evolving-for-opportunity/",
+            "https://www.gcmgrosvenor.com/2026/09/18/the-blueprint-for-co-investments-investing-directly-in-private-equity/",
+            "https://www.gcmgrosvenor.com/2026/08/04/tailwinds-for-opportunistic-investing-today/"
+          ],
+          "error": null,
+          "fetcher_used": true
+        }
+      },
+      "auto_decided": false,
+      "outcome": null,
+      "quality_samples": [
+        {
+          "sampled": 3,
+          "articles": [
+            {
+              "url": "https://www.gcmgrosvenor.com/2026/11/23/the-blueprint-for-continuation-vehicles-expanding-the-opportunity-set-in-private-equity/",
+              "relevance": 0.95,
+              "depth": 0.75,
+              "extractable": 0.85,
+              "overall": 0.85,
+              "notes": "Deep dive into continuation vehicles as a private equity strategy, explaining structure, mechanics, and investor implications with clear framework."
+            },
+            {
+              "url": "https://www.gcmgrosvenor.com/2026/11/17/beyond-the-track-record-identifying-the-next-generation-of-investment-managers/",
+              "relevance": 0.9,
+              "depth": 0.65,
+              "extractable": 0.8,
+              "overall": 0.78,
+              "notes": "Analysis of emerging manager selection criteria with case studies; focuses on differentiation, institutional foundations, and fundraising dynamics."
+            },
+            {
+              "url": "https://www.gcmgrosvenor.com/2026/10/20/from-funds-to-platforms-the-shift-to-enterprise-value-in-real-estate-investing/",
+              "relevance": 0.92,
+              "depth": 0.7,
+              "extractable": 0.75,
+              "overall": 0.798,
+              "notes": "Historical evolution of real estate investing from fund model to platform investing; includes market data and structural analysis but text appears truncated."
+            }
+          ],
+          "avg_score": 0.809,
+          "error": null,
+          "js_only_count": 0,
+          "js_only_checked": 0,
+          "day": 1,
+          "date": "2026-11-27"
         }
       ]
     }
   ],
-  "last_summary_sent_date": "2026-11-26"
+  "last_summary_sent_date": "2026-11-27"
 }
