@@ -109,6 +109,7 @@ BADGE_COLORS: dict[str, str] = {
     "doubleline": "#508070",                # DoubleLine sage/grey-green (same grid search, HLS saturation <=0.85 and lightness >=0.25, with all 52 existing: min RGB dist 52.9 — 52.9 to #2d6a4f Robeco, 56.0 to #4a6fa5 GSAM, 58.8 to #887078 Madison; WCAG AA 4.5:1 on white)
     "crescat-capital": "#2818e8",           # Crescat vivid ultramarine (same grid search with DoubleLine added, all 53 existing: min RGB dist 50.5 — 50.5 to #1f49e0 MSCI cobalt, 54.3 to #1010b8 RBC BlueBay, 56.1 to #6014e8 Hamilton Lane; WCAG AAA 8.8:1 on white)
     "polen-capital": "#806048",             # Polen warm taupe-brown (same grid search, HLS saturation <=0.85 and lightness >=0.25, with all 54 existing: min RGB dist 50.4 — 50.4 to #5d4037 Acadian umber, 50.9 to #556b2f KKR olive, 51.2 to #887078 Madison; WCAG AA 5.7:1 on white)
+    "oakmark": "#308010",                   # Oakmark oak-leaf green (same grid search with all 55 existing: min RGB dist 49.4 — 49.4 to #1e7f3e Brookfield, 52.6 to #556b2f KKR olive; WCAG AA 5.0:1 on white)
 }
 
 INITIAL_VISIBLE = 20
@@ -507,6 +508,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "1979 年由 David Polen 创立、总部位于佛罗里达州博卡拉顿的员工持股资产管理公司，管理规模约 $30B。以集中持股的优质成长股投资（Focus Growth）起家，现为多团队平台：Quality Growth、多基金经理的 5Perspectives Growth，以及高收益债 / 杠杆贷款为主的 Leveraged Credit。",
         "notable_en": "Built its name on the concentrated Focus Growth large-cap quality-growth strategy; now four autonomous investment franchises with offices in Boca Raton, Chicago, Boston and London, publishing quarterly strategy commentaries and thematic research on AI and leveraged credit.",
         "notable_zh": "以集中持股的 Focus Growth 大盘优质成长策略成名；现有四个独立投资团队，办公室分布在博卡拉顿、芝加哥、波士顿和伦敦，定期发布各策略季度评述，以及 AI 主题与杠杆信用研究。",
+    },
+    "oakmark": {
+        "founded": "1976", "aum": "~$107B", "hq": "Chicago, USA",
+        "type_en": "Asset Manager (Value Equity)", "type_zh": "资产管理（价值投资）",
+        "desc_zh": "芝加哥价值投资机构 Harris Associates（Oakmark 基金顾问），1976 年由 Irving Harris 家族办公室分拆成立，现属 Natixis IM，管理规模约 1070 亿美元。坚持自下而上的内在价值选股：以明显低于内在价值的价格买入优质企业并长期持有，覆盖美国、全球、国际股票及固定收益。",
+        "notable_en": "Bill Nygren, manager of the Oakmark Fund and Oakmark Select, is one of the best-known U.S. value investors; the firm's quarterly fund letters and annual shareholder Q&A lay out its contrarian value calls in detail.",
+        "notable_zh": "Oakmark Fund 与 Oakmark Select 基金经理 Bill Nygren 是美国最知名的价值投资者之一；每季度的基金信和年度股东问答详细阐述其逆向价值判断。",
     },
 }
 

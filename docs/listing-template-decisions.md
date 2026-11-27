@@ -65,7 +65,7 @@ being worth building.
 | doubleline | SSR WordPress /markets-insights/ grid of `div.insight-item` cards (`.item-title h4` + `.item-date span`), one card per post; `path_prefix=/markets-insights/`, `sort=date_desc`. Weekly Market Update pages carry only a ~250-char lead and the extractor refuses them (title-only). Template-only (auto-promoted 2026-11-22, no hand-written function) |
 | polen-capital | SSR HubSpot /insights grid of `a.ih-featured__card` / `a.ih-card` links (the card is the link), `h2, h3` title, "Month YYYY · N min read" meta: `date_separator=·` + `date_part=before`; `path_prefix=/insights/`. Quarterly commentaries are dated "Q3 2026" (no day, `date` stays empty). Webinar pages hold only a subscribe box and the extractor refuses them (title-only). Template-only (auto-promoted 2026-11-24, no hand-written function) |
 
-## TEMPLATE — rss_feed (10)
+## TEMPLATE — rss_feed (11)
 
 | source | note |
 | --- | --- |
@@ -79,6 +79,7 @@ being worth building.
 | capital-fund-management | WordPress site feed `/feed/`, every item an insight post dated pubDate, no filter needed; podcast announcements are listed but the content fetcher refuses them (141 chars), so they stay title-only. Template-only (auto-promoted 2026-11-02, no hand-written function) |
 | madison-investments | WordPress site feed `/feed/`, every item an Insights post dated pubDate (podcast episodes carry a full transcript in the page body), no filter needed; `sort`. Template-only (auto-promoted 2026-11-06, no hand-written function) |
 | crescat-capital | WordPress category feed of the research letters (`/category/.../research-letter-performance-update-crescat-updates/feed/`), every item a letter dated pubDate, no filter needed; `sort`. The extractor cuts the contact block and disclosures that end every letter. Template-only (auto-promoted 2026-11-22, no hand-written function) |
+| oakmark | WordPress category feed of the commentary posts (`/news-insights/category/commentary/feed/`): quarterly market commentaries and per-fund quarterly letters, every item dated pubDate, no filter needed. Template-only (auto-promoted 2026-11-27, no hand-written function) |
 
 ## TEMPLATE — api_json (3)
 

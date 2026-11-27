@@ -1364,6 +1364,25 @@
         "path_prefix": "/insights/"
       },
       "listing_template_active": true
+    },
+    {
+      "id": "oakmark",
+      "strategy_tags": [
+        "equity"
+      ],
+      "name": "Oakmark (Harris Associates)",
+      "short_name": "Oakmark",
+      "url": "https://oakmark.com/news-insights/category/commentary/feed/",
+      "method": "rss",
+      "frequency": "quarterly",
+      "description": "Chicago-based value investor Harris Associates (founded 1976, ~$107B AUM; owned by Natixis IM), adviser to the Oakmark Funds. Bottom-up intrinsic-value stock picking — buying businesses at a discount to value and holding them long-term — across U.S., global and international equity plus fixed income.",
+      "notable_authors": [],
+      "expected_hostname": "oakmark.com",
+      "listing_template": {
+        "type": "rss_feed",
+        "feed": "url"
+      },
+      "listing_template_active": true
     }
   ]
 }

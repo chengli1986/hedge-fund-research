@@ -3060,6 +3060,43 @@ def _fetch_content_polen_capital(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+def _fetch_content_oakmark(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch Oakmark commentary content via requests (SSR WordPress).
+
+    The listing is the commentary category RSS feed (an rss_feed template).
+    Each commentary page carries the full text in ``article.the-content``;
+    the fund disclaimer is a separate ``div.disclaimer`` outside it
+    (measured 2026-11-27: U.S. equity market commentary 3Q26 ~8.1k chars,
+    Oakmark Fund 3Q26 ~3.4k).
+    """
+    url = article["url"]
+    log.info("  Oakmark: fetching article page %s", url)
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Oakmark: fetch failed: %s", e)
+        return None
+
+    soup = BeautifulSoup(resp.text, "html.parser")
+    body = soup.select_one("article.the-content")
+    if body is None:
+        log.warning("  Oakmark: no article.the-content on page: %s", url)
+        return None
+    for tag in body.select("script, style, aside, nav, form, button, .disclaimer"):
+        tag.decompose()
+    text = _normalize_html(str(body), "p, li, h2, h3, h4")
+    if not _check_min_content_length(text, 500):
+        log.warning("  Oakmark: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Oakmark: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
+
+
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
     "oaktree": _fetch_content_oaktree,
@@ -3116,6 +3153,7 @@ CONTENT_FETCHERS = {
     "doubleline": _fetch_content_doubleline,
     "crescat-capital": _fetch_content_crescat_capital,
     "polen-capital": _fetch_content_polen_capital,
+    "oakmark": _fetch_content_oakmark,
 }
 
 
