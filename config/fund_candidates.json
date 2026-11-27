@@ -5923,7 +5923,66 @@
     "synthesis_outcome": "success",
     "synthesis_template_skip_reason": "card_list on /archive-letters returned only 2 rows: 13 of 15 a.fk-letters-card link straight to PDFs on cdn.prod.website-files.com (off-host); the on-site /letter/<slug> page exists for each (sitemap.xml) but mapping PDF filename -> page needs code. Period labels 'Q3 2026' are not parsed by parse_date (-> None), fetcher maps them to quarter end.",
     "promoted_at": "2026-11-27T01:07:21.565389+00:00",
-    "promoted_reason": "fetcher_synthesis_success (trial-PASS shortcut)"
+    "promoted_reason": "fetcher_synthesis_success (trial-PASS shortcut)",
+    "template_attempts": [
+      {
+        "at": "2026-11-27T01:07:41+00:00",
+        "type": "card_list",
+        "spec": {
+          "type": "card_list",
+          "fetch": "requests",
+          "card": "a.fk-letters-card",
+          "link": "self",
+          "title": "h3.fk-letters-card-title",
+          "date": "p.fk-letters-card-period"
+        },
+        "listing_url": "https://www.eaglecap.com/archive-letters",
+        "ok": false,
+        "rows": 2,
+        "dated": 0,
+        "problems": [
+          "only 2 row(s), need 3"
+        ],
+        "sample": [
+          {
+            "title": "What Won't Change",
+            "url": "https://www.eaglecap.com/letter/q3-2026-investor-letter",
+            "date": null
+          },
+          {
+            "title": "One Theme, Many Futures",
+            "url": "https://www.eaglecap.com/letter/q2-2026-investor-letter",
+            "date": null
+          }
+        ]
+      },
+      {
+        "at": "2026-11-27T01:07:41+00:00",
+        "type": "card_list",
+        "spec": {
+          "type": "card_list",
+          "fetch": "requests",
+          "card": "a.fk-letters-card",
+          "link": "self",
+          "title": "h3.fk-letters-card-title",
+          "date": "p.fk-letters-card-period"
+        },
+        "listing_url": "https://www.eaglecap.com/letters",
+        "ok": false,
+        "rows": 1,
+        "dated": 0,
+        "problems": [
+          "only 1 row(s), need 3"
+        ],
+        "sample": [
+          {
+            "title": "One Theme, Many Futures",
+            "url": "https://www.eaglecap.com/letter/q2-2026-investor-letter",
+            "date": null
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "sculptor-capital",
