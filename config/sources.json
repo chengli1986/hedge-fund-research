@@ -1383,6 +1383,21 @@
         "feed": "url"
       },
       "listing_template_active": true
+    },
+    {
+      "id": "eagle-capital",
+      "strategy_tags": [
+        "equity"
+      ],
+      "name": "Eagle Capital Management",
+      "short_name": "Eagle",
+      "url": "https://www.eaglecap.com/letters",
+      "method": "ssr",
+      "frequency": "quarterly",
+      "description": "New York value investor founded in 1988 by Ravenel Curry (~$36.5B total assets), an independent, employee-owned partnership led by the Curry family. Concentrated long-only U.S. large-cap equity held with a five-to-ten-year view; duration, value orientation and conviction are its three pillars.",
+      "notable_authors": [],
+      "expected_hostname": "eaglecap.com",
+      "fetch_shape": "card_list"
     }
   ]
 }

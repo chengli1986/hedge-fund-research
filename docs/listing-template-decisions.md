@@ -89,7 +89,7 @@ being worth building.
 | mfs-investment-management | Solr endpoint with params; entity-in-title fixed on the hand-written side first |
 | rbc-bluebay | the insights page's own `/en/api/insights/` JSON (title, link, author.date), one call. Template-only (auto-promoted 2026-10-24, no hand-written function) |
 
-## HAND-WRITTEN — the listing needs code (15)
+## HAND-WRITTEN — the listing needs code (16)
 
 | source | why |
 | --- | --- |
@@ -108,6 +108,7 @@ being worth building.
 | matthews-asia | **A/B agrees today.** Its fetcher rejoins titles split across an `h4` and the following `p`; two different pieces were once both stored as "China Innovation:". Losing it corrupts data silently |
 | franklin-templeton | **A/B agrees today.** It requires a date so undated hub/collection tiles never become rows, and re-sorts by date. Neither is exercised right now |
 | hamilton-lane | an api_json endpoint, but the tiles need code: "Chaptered" series hubs (Weekly Research Briefing, annual overviews) are flattened into their `ChapteredArticles` and the hub itself dropped, and Video / Podcast / "Report/Premium Content" tiles are skipped. The api_json template has no knob for either; without them hubs and text-less tiles would become rows |
+| eagle-capital | `card_list` on `/archive-letters` keeps only 2 rows: 13 of 15 `a.fk-letters-card` link straight to off-host PDFs on the Webflow CDN, so the fetcher maps each PDF file name to its on-site `/letter/<slug>` page (kept only if sitemap.xml lists it), and turns the "Q3 2026" labels parse_date cannot read into quarter-end dates. Auto-promoted 2026-11-27 |
 
 ## HAND-WRITTEN — the source is a different kind of thing (9)
 

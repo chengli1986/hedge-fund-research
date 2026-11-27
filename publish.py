@@ -110,6 +110,7 @@ BADGE_COLORS: dict[str, str] = {
     "crescat-capital": "#2818e8",           # Crescat vivid ultramarine (same grid search with DoubleLine added, all 53 existing: min RGB dist 50.5 — 50.5 to #1f49e0 MSCI cobalt, 54.3 to #1010b8 RBC BlueBay, 56.1 to #6014e8 Hamilton Lane; WCAG AAA 8.8:1 on white)
     "polen-capital": "#806048",             # Polen warm taupe-brown (same grid search, HLS saturation <=0.85 and lightness >=0.25, with all 54 existing: min RGB dist 50.4 — 50.4 to #5d4037 Acadian umber, 50.9 to #556b2f KKR olive, 51.2 to #887078 Madison; WCAG AA 5.7:1 on white)
     "oakmark": "#308010",                   # Oakmark oak-leaf green (same grid search with all 55 existing: min RGB dist 49.4 — 49.4 to #1e7f3e Brookfield, 52.6 to #556b2f KKR olive; WCAG AA 5.0:1 on white)
+    "eagle-capital": "#b048c0",             # Eagle orchid (same grid search with all 56 existing: min RGB dist 49.5 — 49.5 to #9034e0 Fiera, 51.9 to #9b6be0 GMO, 51.9 to #a31fa3 Loomis; WCAG AA 4.6:1 on white)
 }
 
 INITIAL_VISIBLE = 20
@@ -515,6 +516,13 @@ _FUND_PROFILES: dict[str, dict] = {
         "desc_zh": "芝加哥价值投资机构 Harris Associates（Oakmark 基金顾问），1976 年由 Irving Harris 家族办公室分拆成立，现属 Natixis IM，管理规模约 1070 亿美元。坚持自下而上的内在价值选股：以明显低于内在价值的价格买入优质企业并长期持有，覆盖美国、全球、国际股票及固定收益。",
         "notable_en": "Bill Nygren, manager of the Oakmark Fund and Oakmark Select, is one of the best-known U.S. value investors; the firm's quarterly fund letters and annual shareholder Q&A lay out its contrarian value calls in detail.",
         "notable_zh": "Oakmark Fund 与 Oakmark Select 基金经理 Bill Nygren 是美国最知名的价值投资者之一；每季度的基金信和年度股东问答详细阐述其逆向价值判断。",
+    },
+    "eagle-capital": {
+        "founded": "1988", "aum": "~$36.5B", "hq": "New York, USA",
+        "type_en": "Asset Manager (Long-only Value Equity)", "type_zh": "资产管理（长线价值股票）",
+        "desc_zh": "纽约长线价值投资机构，1988 年由曾为 Duke Endowment 管理投资的 Ravenel Curry 创立，100% 员工持有的独立合伙企业，总资产约 365 亿美元。集中持有美国大盘股，以五到十年的视角投资，投资理念建立在持有期限、价值导向与高信念三大支柱上。",
+        "notable_en": "Run by Ravenel Curry and his son Boykin Curry; the firm's quarterly investor letters are long single-theme essays (AI capex, passive investing, private equity's capital cycle) explaining how it holds a concentrated portfolio through fast change.",
+        "notable_zh": "由 Ravenel Curry 与其子 Boykin Curry 共同掌舵；季度投资者信件每期围绕一个主题长文（AI 资本开支、被动投资、私募股权资本周期等），阐述如何在快速变化中长期持有集中组合。",
     },
 }
 

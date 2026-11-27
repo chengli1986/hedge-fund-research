@@ -3096,6 +3096,40 @@ def _fetch_content_oakmark(article: dict) -> Optional[tuple[Path, str]]:
     return (content_path, "ok")
 
 
+def _fetch_content_eagle_capital(article: dict) -> Optional[tuple[Path, str]]:
+    """Fetch an Eagle Capital quarterly letter via requests (SSR Webflow).
+
+    ``fetch_eagle_capital`` always yields the on-site ``/letter/<slug>``
+    page; the letter text is in ``div.fk-investor-body`` and the legal
+    disclosure in a separate ``div.fk-disclosure-body`` that is not read
+    (measured 2026-11-27: Q3 2026 "What Won't Change" ~17k chars).
+    """
+    url = article["url"]
+    log.info("  Eagle Capital: fetching letter page %s", url)
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("  Eagle Capital: fetch failed: %s", e)
+        return None
+
+    soup = BeautifulSoup(resp.text, "html.parser")
+    body = soup.select_one("div.fk-investor-body")
+    if body is None:
+        log.warning("  Eagle Capital: no div.fk-investor-body on page: %s", url)
+        return None
+    for tag in body.select("script, style, aside, nav, form, button"):
+        tag.decompose()
+    text = _normalize_html(str(body), "p, li, h2, h3, h4")
+    if not _check_min_content_length(text, 500):
+        log.warning("  Eagle Capital: extracted text too short (%d chars)", len(text))
+        return None
+
+    content_path = CONTENT_DIR / f"{article['id']}.txt"
+    _atomic_write(content_path, text.encode("utf-8"))
+    log.info("  Eagle Capital: saved %d chars to %s", len(text), content_path.name)
+    return (content_path, "ok")
+
 
 CONTENT_FETCHERS = {
     "gmo": _fetch_content_gmo,
@@ -3154,6 +3188,7 @@ CONTENT_FETCHERS = {
     "crescat-capital": _fetch_content_crescat_capital,
     "polen-capital": _fetch_content_polen_capital,
     "oakmark": _fetch_content_oakmark,
+    "eagle-capital": _fetch_content_eagle_capital,
 }
 
 
