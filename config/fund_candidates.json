@@ -3637,10 +3637,10 @@
     "last_discovered_at": "2026-10-15T09:00:08.643495+08:00",
     "status_since": "2026-11-07T09:04:02.897652+08:00",
     "quality": "MEDIUM",
-    "quality_score": 0.62,
-    "topics": "credit, high yield, EM, CLOs, macro",
-    "notes": "RECOMMEND: trial passed (7/7 days with articles, quality=0.69)",
-    "last_deep_analyzed_at": "2026-10-11T01:00:53Z",
+    "quality_score": 0.65,
+    "topics": "credit, high yield, EM debt, macro, asset allocation",
+    "notes": "Weekly credit/EM comment; sampled piece substantive",
+    "last_deep_analyzed_at": "2026-11-28T01:10:00Z",
     "added_at": "2026-08-25",
     "template_attempts": [
       {
@@ -3897,7 +3897,7 @@
     "discovery_method": "discover_fund_sites",
     "last_discovered_at": "2026-10-12T09:00:10.807489+08:00",
     "status_since": "2026-11-13T12:16:04.807047+08:00",
-    "last_deep_analyzed_at": "2026-10-11T01:00:53Z",
+    "last_deep_analyzed_at": "2026-11-28T01:10:00Z",
     "quality": "MEDIUM",
     "quality_score": 0.6,
     "topics": "macro, trend-following, quant, volatility",
@@ -4015,11 +4015,11 @@
     "screening_reason": "Login/paywall detected",
     "fit_score": 0.92,
     "last_validated_at": "2026-09-07T09:00:32.874588+08:00",
-    "last_deep_analyzed_at": "2026-10-09T01:00:26Z",
+    "last_deep_analyzed_at": "2026-11-28T01:10:00Z",
     "quality": "LOW",
-    "quality_score": 0.2,
-    "topics": "credit, ESG/climate, multi-asset, thematic",
-    "notes": "Full papers gated behind login; index-only preview",
+    "quality_score": 0.35,
+    "topics": "PE, tech, ESG/climate, US politics, multi-asset",
+    "notes": "Fresh viewpoints; premium papers behind member login",
     "added_at": "2026-09-06"
   },
   {
@@ -4056,11 +4056,11 @@
       "macro"
     ],
     "status_since": "2026-10-31T09:04:49.852009+08:00",
-    "last_deep_analyzed_at": "2026-10-12T01:00:37Z",
-    "quality": "HIGH",
-    "quality_score": 0.75,
-    "topics": "real assets, infrastructure, macro, real estate",
-    "notes": "Trial failed: low quality (0.47)",
+    "last_deep_analyzed_at": "2026-11-28T01:10:00Z",
+    "quality": "MEDIUM",
+    "quality_score": 0.62,
+    "topics": "real estate, listed REITs, infrastructure, macro",
+    "notes": "Weekly RE research w/ data; trial quality was 0.47",
     "added_at": "2026-09-11",
     "template_attempts": [
       {
